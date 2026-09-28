@@ -22,6 +22,8 @@ const DEFAULT_ENTRIES = Object.freeze([
   { rewardKey: 'blackjack_ace', kind: 'item', itemId: 'blackjack_ace', name: 'Át Chủ Bài', tier: 'UR', amount: 1, weight: 100 },
   { rewardKey: 'horse_jackpot', kind: 'item', itemId: 'horse_jackpot', name: 'Trúng Đậm', tier: 'UR', amount: 1, weight: 100 },
   { rewardKey: 'living_dictionary', kind: 'item', itemId: 'living_dictionary', name: 'Từ Điển Sống', tier: 'UR', amount: 1, weight: 100 },
+  { rewardKey: 'vietnamese_syllable_lengths', kind: 'item', itemId: 'vietnamese_syllable_lengths', name: 'Đếm Âm Tiết', tier: 'SR', amount: 1, weight: 400 },
+  { rewardKey: 'vietnamese_first_word', kind: 'item', itemId: 'vietnamese_first_word', name: 'Mở Đầu Từ Điển', tier: 'SSR', amount: 1, weight: 250 },
   { rewardKey: 'chinchiro_karma_charm', kind: 'item', itemId: 'chinchiro_karma_charm', name: 'Bùa Trả Đũa', tier: 'UR', amount: 1, weight: 100 },
 ]);
 

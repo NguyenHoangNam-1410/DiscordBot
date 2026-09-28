@@ -28,8 +28,18 @@ function raceAnimationEmbed(round, plan, frameIndex, { horses, frameCount, anima
 function resultEmbed(settled, horses) {
   const medals = ['🥇', '🥈', '🥉']; const podium = settled.order.slice(0, 3).map((key, index) => `${medals[index]} ${horses[key].emoji} **${horses[key].name}**`).join('\n');
   const winner = horses[settled.winner]; const totalPot = settled.settlements.reduce((sum, item) => sum + item.stake, 0);
+  const winners = settled.settlements.filter(item => item.bets.some(bet => bet.payout > 0)).sort((a, b) => b.payout - a.payout).slice(0, 15);
+  const winnerSummary = winners.length
+    ? winners.map(item => {
+      const guessed = item.bets.filter(bet => bet.payout > 0).map(bet => `${horses[bet.choice]?.emoji || '🐎'} ${horses[bet.choice]?.name || bet.choice}`).join(', ');
+      return `<@${item.userId}> đoán **${guessed}** · nhận **${formatCoins(item.payout)} xu**`;
+    }).join('\n')
+    : 'Không có người chơi đoán trúng.';
   return new EmbedBuilder().setColor(winner.special ? 0xFF69B4 : 0xFFD700).setTitle(winner.special ? '🌟 ĐUA NGỰA · CHUNG CUỘC' : '🏆 ĐUA NGỰA · CHUNG CUỘC')
-    .setDescription(podium).addFields({ name: 'Tổng kết', value: `👥 **${settled.settlements.length}** người chơi · 💰 Pot **${formatCoins(totalPot)} xu**` })
+    .setDescription(podium).addFields(
+      { name: '🎯 Người đoán trúng', value: winnerSummary },
+      { name: 'Tổng kết', value: `👥 **${settled.settlements.length}** người chơi · 💰 Pot **${formatCoins(totalPot)} xu**` },
+    )
     .setFooter({ text: `Mã ván: ${settled.round.id} • Dùng các nút bên dưới để xem chi tiết` }).setTimestamp();
 }
 function resultRows(roundId) { return [new ActionRowBuilder().addComponents(

@@ -120,7 +120,26 @@ const shakeTx = db.transaction((sessionId, userId) => {
   if (!session || session.user_id !== String(userId)) throw new Error('INVALID_SESSION');
   const state = JSON.parse(session.state_json);
   const maxRolls = state.effect === 'chinchiro_soundproof_bowl' ? 4 : 3;
-  state.player = rollTurn({ seed: state.fair.serverSeed, side: 'player', maxRolls, effect: state.effect, shonben: true });
+  state.player ||= { attempts: [], hand: null };
+  if (!state.player.attempts.length && fairInt(state.fair.serverSeed, 'player:shonben', 0, 100) === 0) {
+    state.player.hand = { kind: 'shonben', label: 'Shonben - rớt xúc xắc' };
+  } else {
+    const attemptIndex = state.player.attempts.length;
+    const dice = [0, 1, 2].map(index => {
+      if (state.effect === 'chinchiro_otsuki_dice') return die(state.fair.serverSeed, `player:${attemptIndex}:otsuki`, index, 4, 6);
+      if (state.effect === 'chinchiro_weighted_dice' && index === 0) return die(state.fair.serverSeed, `player:${attemptIndex}:weighted`, index, 4, 6);
+      return die(state.fair.serverSeed, `player:${attemptIndex}:normal`, index);
+    });
+    const hand = evaluateDice(dice);
+    state.player.attempts.push({ dice, hand });
+    if (hand) state.player.hand = hand;
+    else if (state.player.attempts.length >= maxRolls) state.player.hand = { kind: 'menashi', label: 'Menashi - Vô tướng' };
+  }
+  if (!state.player.hand) {
+    db.prepare('UPDATE chinchiro_sessions SET state_json=?,updated_at=? WHERE id=?')
+      .run(JSON.stringify(state), Date.now(), session.id);
+    return { session, state, complete: false };
+  }
   let decision = playerDecision(state.player.hand, state.dealer.hand);
   let extraPenalty = 0; let karmaTriggered = false;
   if (decision.outcome === 'hifumi' && state.effect === 'chinchiro_karma') {
@@ -137,7 +156,7 @@ const shakeTx = db.transaction((sessionId, userId) => {
   result.karmaTriggered = karmaTriggered;
   state.status = 'complete'; state.result = result;
   db.prepare('DELETE FROM chinchiro_sessions WHERE id=?').run(session.id);
-  return { session, state, result };
+  return { session, state, result, complete: true };
 });
 
 function shakeChinchiro(sessionId, userId) { return shakeTx(sessionId, userId); }
@@ -153,7 +172,7 @@ function rollLines(turn) {
 
 function resultText(state) {
   const result = state.result;
-  if (!result) return '🎲 Bấm nút bên dưới để lắc xúc xắc.';
+  if (!result) return `🎲 Đã lắc **${state.player?.attempts?.length || 0}/${state.effect === 'chinchiro_soundproof_bowl' ? 4 : 3}** lượt. Bấm nút để lắc tiếp.`;
   if (result.karmaTriggered) return `🪬 **Bùa Trả Đũa kích hoạt!** Hifumi bị đẩy sang Nhà cái. Bạn lãi **+${formatCoins(result.profit)} xu**.`;
   if (result.outcome === 'win') return `🏆 **NGƯỜI CHƠI THẮNG!** Lãi **+${formatCoins(result.profit)} xu**.`;
   if (result.outcome === 'draw') return '🤝 **HÒA!** Hoàn lại toàn bộ tiền cược.';

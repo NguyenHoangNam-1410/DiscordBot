@@ -2,14 +2,14 @@ const { db } = require('../db');
 const { getAccount, creditCoins } = require('./economyService');
 
 const ACHIEVEMENTS = Object.freeze([
-  { id: 'first_game', name: 'Bước chân đầu tiên', description: 'Chơi ván đầu tiên', target: 1, reward: 5_000, metric: 'games' },
-  { id: 'games_10', name: 'Người chơi quen mặt', description: 'Chơi 10 ván', target: 10, reward: 15_000, metric: 'games' },
-  { id: 'games_100', name: 'Cựu binh Game Hub', description: 'Chơi 100 ván', target: 100, reward: 100_000, metric: 'games' },
-  { id: 'wins_5', name: 'Chuỗi chiến thắng', description: 'Thắng 5 ván', target: 5, reward: 20_000, metric: 'wins' },
-  { id: 'wins_50', name: 'Nhà vô địch', description: 'Thắng 50 ván', target: 50, reward: 150_000, metric: 'wins' },
-  { id: 'games_3_types', name: 'Kẻ khám phá', description: 'Thử ít nhất 3 trò chơi', target: 3, reward: 25_000, metric: 'gameTypes' },
-  { id: 'balance_100k', name: 'Túi xu nặng trĩu', description: 'Sở hữu 100.000 xu', target: 100_000, reward: 30_000, metric: 'balance' },
-  { id: 'hardcore_10', name: 'Sống sót trong bóng tối', description: 'Đạt tầng 10 Sinh tồn', target: 10, reward: 50_000, metric: 'hardcoreFloor' },
+  { id: 'first_game', name: 'Bước chân đầu tiên', description: 'Chơi ván đầu tiên', target: 1, reward: 200, metric: 'games' },
+  { id: 'games_10', name: 'Người chơi quen mặt', description: 'Chơi 10 ván', target: 10, reward: 500, metric: 'games' },
+  { id: 'games_100', name: 'Cựu binh Game Hub', description: 'Chơi 100 ván', target: 100, reward: 3_000, metric: 'games' },
+  { id: 'wins_5', name: 'Chuỗi chiến thắng', description: 'Thắng 5 ván', target: 5, reward: 800, metric: 'wins' },
+  { id: 'wins_50', name: 'Nhà vô địch', description: 'Thắng 50 ván', target: 50, reward: 5_000, metric: 'wins' },
+  { id: 'games_3_types', name: 'Kẻ khám phá', description: 'Thử ít nhất 3 trò chơi', target: 3, reward: 1_000, metric: 'gameTypes' },
+  { id: 'balance_100k', name: 'Túi xu nặng trĩu', description: 'Sở hữu 100.000 xu', target: 100_000, reward: 500, metric: 'balance' },
+  { id: 'hardcore_10', name: 'Sống sót trong bóng tối', description: 'Đạt tầng 10 Sinh tồn', target: 10, reward: 2_500, metric: 'hardcoreFloor' },
 ]);
 
 function metrics(guildId, userId) {

@@ -16,12 +16,15 @@ const gachaCommand = require('./commands/gacha');
 const useCommand = require('./commands/use');
 const leaderboardCommand = require('./commands/xephang');
 const helpCommand = require('./commands/trogiup');
+const gameCommand = require('./commands/game');
 
 const ROUTES = Object.freeze([
   { kind: 'button', prefix: 'replay:', handle: (interaction, logger) => handleReplayButton(interaction, logger) },
   { kind: 'select', prefix: 'hoso:', handle: interaction => profileCommand.handleSelect(interaction) },
   { kind: 'select', prefix: 'shop:', handle: interaction => shopCommand.handleSelect(interaction) },
   { kind: 'select', prefix: 'use:', handle: interaction => useCommand.handleSelect(interaction) },
+  { kind: 'select', prefix: 'use-filter:', handle: interaction => useCommand.handleFilter(interaction) },
+  { kind: 'select', prefix: 'game-config-select', handle: interaction => gameCommand.handleConfigSelect(interaction) },
   { kind: 'select', prefix: 'xephang:', handle: interaction => leaderboardCommand.handleSelect(interaction) },
   { kind: 'select', prefix: 'trogiup:', handle: interaction => helpCommand.handleSelect(interaction) },
   { kind: 'button', prefix: 'gacha:', handle: interaction => gachaCommand.handleButton(interaction) },
@@ -39,6 +42,7 @@ const ROUTES = Object.freeze([
   { kind: 'modal', prefix: 'horserace-modal:', handle: handleHorseModal },
   { kind: 'modal', prefix: 'gamebet-modal:', handle: handleBetModal },
   { kind: 'modal', prefix: 'poker-modal:', handle: handlePokerModal },
+  { kind: 'modal', prefix: 'game-config-modal:', handle: interaction => gameCommand.handleConfigModal(interaction) },
 ]);
 
 function interactionKind(interaction) {

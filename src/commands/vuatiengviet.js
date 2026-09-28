@@ -29,6 +29,7 @@ module.exports = {
         .setDescription(`Sắp xếp các chữ cái thành từ hoặc cụm từ có nghĩa:\n\n${vuaQuestionText(session.question)}`)
         .addFields(
           { name: 'Thưởng cho người trả lời đúng', value: `${formatCoins(reward)} xu`, inline: true },
+          ...(session.question.hard ? [{ name: 'Thưởng câu khó', value: '10 💎', inline: true }] : []),
           { name: 'Thời gian', value: session.question.hard ? `${session.question.durationSeconds} giây` : 'Không giới hạn', inline: true },
         )
         .setFooter({ text: 'Nhập đáp án trực tiếp trong channel • Dùng /choi vtv boqua nếu cần' });

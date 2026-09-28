@@ -5,16 +5,12 @@ const {
   setShopStock, setShopDiscount,
 } = require('../services/shopService');
 const { formatCoins } = require('../utils/economy');
+const { GAME_FILTERS, itemMatchesGame, gameLabels } = require('../services/itemGameService');
 
 const RARITY_ICON = { common: '⚪', rare: '🔵', epic: '🟣', legendary: '🟠', mythic: '🔴', R: '⚪', SR: '🔵', SSR: '🟠', UR: '🔴' };
 const SHOP_TABS = Object.freeze([
-  { id: 'all', label: 'Tất cả nổi bật', emoji: '🏪', description: 'Toàn bộ vật phẩm đang bán' },
-  { id: 'luck', label: 'May rủi & Đua ngựa', emoji: '🎲', description: 'Bầu cua, Tài xỉu, Đua ngựa và Oẳn tù tì' },
-  { id: 'cards', label: 'Xì dách & Poker', emoji: '🃏', description: 'Đổi bài, Át và bảo hiểm Poker' },
-  { id: 'mines', label: 'Mines', emoji: '💣', description: 'Radar và giáp chống nổ' },
-  { id: 'quiz', label: 'Vua tiếng Việt', emoji: '🧠', description: 'Tự giải câu hỏi khó' },
-  { id: 'chinchiro', label: 'Chinchiro', emoji: '🎲', description: 'Bát và xúc xắc ngầm' },
-  { id: 'profile', label: 'Trang trí hồ sơ', emoji: '🎨', description: 'Màu sắc dùng cho /hoso' },
+  { id: 'all', label: 'Tất cả', emoji: '🏪', description: 'Toàn bộ vật phẩm đang bán' },
+  ...GAME_FILTERS.map(game => ({ ...game, description: `Vật phẩm áp dụng cho ${game.label}` })),
 ]);
 function isAdmin(interaction) {
   const ids = String(process.env.ADMIN_USER_ID || '').split(/[,;\n]/).map(id => id.trim()).filter(Boolean);
@@ -27,14 +23,6 @@ function conditionOptions(command) {
     .addIntegerOption(o => o.setName('min_wins').setDescription('Số trận thắng tối thiểu').setMinValue(0).setMaxValue(1000000))
     .addIntegerOption(o => o.setName('min_balance').setDescription('Số dư tối thiểu').setMinValue(0).setMaxValue(1000000));
 }
-function itemTab(item) {
-  if (item?.type === 'color') return 'profile';
-  if (String(item?.effect).startsWith('quiz_')) return 'quiz';
-  if (String(item?.effect).startsWith('mines_')) return 'mines';
-  if (String(item?.effect).startsWith('chinchiro_')) return 'chinchiro';
-  if (String(item?.effect).startsWith('blackjack_') || item?.effect === 'poker_insurance') return 'cards';
-  return 'luck';
-}
 function shopSelectRow(ownerId, selected = 'all') {
   const menu = new StringSelectMenuBuilder().setCustomId(`shop:${ownerId}`).setPlaceholder('Chọn nhóm vật phẩm…')
     .addOptions(SHOP_TABS.map(tab => new StringSelectMenuOptionBuilder().setLabel(tab.label).setValue(tab.id).setEmoji(tab.emoji)
@@ -43,14 +31,16 @@ function shopSelectRow(ownerId, selected = 'all') {
 }
 function shopEmbed(guildId, selected = 'all') {
   const tab = SHOP_TABS.find(item => item.id === selected) || SHOP_TABS[0];
-  const items = listShopItems(guildId).filter(row => tab.id === 'all' || itemTab(row.catalog) === tab.id);
+  const items = listShopItems(guildId).filter(row => itemMatchesGame(row.catalog, tab.id));
   const description = items.length ? items.map(row => {
     const item = row.catalog;
     const price = row.final_price < row.price ? `~~${formatCoins(row.price)}~~ **${formatCoins(row.final_price)} xu**` : `**${formatCoins(row.price)} xu**`;
     const stock = row.stock === null ? '∞' : Math.max(0, row.stock - row.sold_count);
     const conditions = [row.min_games ? `${row.min_games} ván` : null, row.min_wins ? `${row.min_wins} thắng` : null, row.min_balance ? `số dư ${formatCoins(row.min_balance)}` : null].filter(Boolean).join(' · ');
     const rarity = ['R', 'SR', 'SSR', 'UR'].includes(item?.rarity) ? ` [${item.rarity}]` : '';
-    return `${RARITY_ICON[item?.rarity] || '⚪'} **${row.display_name}${rarity}** · \`${row.item_id}\`\n${item?.description || ''}\n💰 ${price} · Kho: **${stock}**${conditions ? ` · Yêu cầu: ${conditions}` : ''}`;
+    const games = gameLabels(item);
+    const scope = games ? `Áp dụng: ${games.join(', ')}` : 'Dùng chung · hiện ở mọi bộ lọc';
+    return `${RARITY_ICON[item?.rarity] || '⚪'} **${row.display_name}${rarity}** · \`${row.item_id}\`\n_${scope}_\n${item?.description || ''}\n💰 ${price} · Kho: **${stock}**${conditions ? ` · Yêu cầu: ${conditions}` : ''}`;
   }).join('\n\n') : 'Không có vật phẩm thuộc mục này trong vòng xoay hôm nay.';
   return new EmbedBuilder().setColor(0xC0392B).setTitle(`${tab.emoji} CỬA HÀNG · ${tab.label.toUpperCase()}`).setDescription(description.slice(0, 4096))
     .setFooter({ text: 'Dùng menu để đổi mục • Cửa hàng tự xoay mỗi ngày • /vatpham mua để mua' });

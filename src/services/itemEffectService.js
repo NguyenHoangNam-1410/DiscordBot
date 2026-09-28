@@ -93,6 +93,17 @@ function useLivingDictionary(guildId, channelId, userId) {
   return `📖 Từ Điển Sống điền đáp án **${answer}** và trao **${formatCoins(reward)} xu**.${bonus ? `\n🎊 Drop sau ván: ${bonus.replace(/\n/g, ' · ')}` : ''}\n\nCâu tiếp theo:\n${games.vuaQuestionText(result.nextQuestion)}`;
 }
 
+function useVietnameseHint(guildId, channelId, effect) {
+  if (!channelHasGame(guildId, channelId, 'vuatiengviet')) throw new Error('WRONG_EFFECT_CHANNEL');
+  const session = games.getVuaSession(guildId);
+  if (!session) throw new Error('NO_ACTIVE_GAME');
+  if (games.isExpiredChallenge(session.question)) throw new Error('QUESTION_EXPIRED');
+  const syllables = String(session.question.answer).trim().split(/\s+/u);
+  if (effect === 'quiz_first_word') return `🔎 Gợi ý riêng cho bạn: tiếng đầu tiên trong đáp án là **${syllables[0]}**.`;
+  const lengths = syllables.map(word => Array.from(word).length);
+  return `🔢 Gợi ý riêng cho bạn: số chữ cái mỗi tiếng là **[${lengths.join('] [')}]**.`;
+}
+
 function armedMessage(item) {
   const messages = {
     blackjack_redraw: '🃏 Thẻ Rút Lại đã sẵn sàng cho ván Xì dách kế tiếp.',
@@ -121,9 +132,14 @@ function useItem({ guildId, userId, channelId, itemId }) {
   if (item.effect === 'dice_divine_eye') return { item, message: useDivineEye(guildId, userId, channelId, item.id), ephemeral: true };
   if (item.effect === 'mines_radar') { const message = useMinesRadar(guildId, userId, channelId); consumeInventory(guildId, userId, item.id); return { item, message, ephemeral: true }; }
   if (item.effect === 'quiz_living_dictionary') { const message = useLivingDictionary(guildId, channelId, userId); consumeInventory(guildId, userId, item.id); return { item, message }; }
+  if (item.effect === 'quiz_first_word' || item.effect === 'quiz_syllable_lengths') {
+    const message = useVietnameseHint(guildId, channelId, item.effect);
+    consumeInventory(guildId, userId, item.id);
+    return { item, message, ephemeral: true };
+  }
   const message = armedMessage(item);
   if (message) { activateEffect(guildId, userId, item.id, item.effect); return { item, message }; }
   throw new Error('ITEM_NOT_USABLE');
 }
 
-module.exports = { getActiveEffect, activateEffect, consumeActiveEffect, useItem, useBaucuaMagnifier, useMagneticDice, useMinesRadar };
+module.exports = { getActiveEffect, activateEffect, consumeActiveEffect, useItem, useBaucuaMagnifier, useMagneticDice, useMinesRadar, useVietnameseHint };
