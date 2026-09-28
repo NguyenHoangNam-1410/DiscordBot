@@ -18,6 +18,7 @@ const leaderboardCommand = require('./commands/xephang');
 const helpCommand = require('./commands/trogiup');
 const gameCommand = require('./commands/game');
 const vuaTiengVietCommand = require('./commands/vuatiengviet');
+const itemCatalogViewCommand = require('./commands/itemCatalogView');
 
 const ROUTES = Object.freeze([
   { kind: 'button', prefix: 'replay:', handle: (interaction, logger) => handleReplayButton(interaction, logger) },
@@ -25,6 +26,7 @@ const ROUTES = Object.freeze([
   { kind: 'select', prefix: 'shop:', handle: interaction => shopCommand.handleSelect(interaction) },
   { kind: 'select', prefix: 'use:', handle: interaction => useCommand.handleSelect(interaction) },
   { kind: 'select', prefix: 'use-filter:', handle: interaction => useCommand.handleFilter(interaction) },
+  { kind: 'select', prefix: 'iteminfo-filter:', handle: interaction => itemCatalogViewCommand.handleFilter(interaction) },
   { kind: 'select', prefix: 'game-config-select', handle: interaction => gameCommand.handleConfigSelect(interaction) },
   { kind: 'select', prefix: 'xephang:', handle: interaction => leaderboardCommand.handleSelect(interaction) },
   { kind: 'select', prefix: 'trogiup:', handle: interaction => helpCommand.handleSelect(interaction) },
@@ -32,6 +34,7 @@ const ROUTES = Object.freeze([
   { kind: 'button', prefix: 'rpsbot:', handle: handleRpsBotButton },
   { kind: 'button', prefix: 'chinchiro:', handle: handleChinchiroButton },
   { kind: 'button', prefix: 'vuatiengviet:', handle: interaction => vuaTiengVietCommand.handleButton(interaction) },
+  { kind: 'button', prefix: 'iteminfo-page:', handle: interaction => itemCatalogViewCommand.handlePage(interaction) },
   { kind: 'button', prefix: 'anxin:', handle: handleCoinRequestButton },
   { kind: 'button', prefix: 'rpsduel:', handle: handleRpsDuelButton },
   { kind: 'button', prefix: 'bjduel:', handle: handleBlackjackDuelButton },

@@ -3,7 +3,7 @@ const { remapOptions, renamedOption, commandData } = require('../utils/commandAl
 
 const commands = {
   cuahang: require('./shop'), mua: require('./buy'), tui: require('./inventory'),
-  sudung: require('./use'), tang: require('./giftitem'), quay: require('./gacha'),
+  sudung: require('./use'), tang: require('./giftitem'), quay: require('./gacha'), chitiet: require('./itemCatalogView'),
 };
 const COMMON_NAMES = { item: 'vatpham', quantity: 'soluong' };
 const OPTION_NAMES = {
@@ -30,6 +30,7 @@ const options = [
   subcommand('sudung', commands.sudung, 'Chọn vật phẩm để sử dụng'),
   subcommand('tang', commands.tang, 'Tặng vật phẩm cho người chơi khác'),
   subcommand('quay', commands.quay, 'Quay Gacha bằng kim cương'),
+  subcommand('chitiet', commands.chitiet, 'Xem item theo game và số lượng đang sở hữu'),
 ];
 
 function route(interaction) {

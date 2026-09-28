@@ -41,6 +41,7 @@ const PAGES = Object.freeze({
     fields: [
       ['🛒 Mua sắm', '`/vatpham cuahang` — xem các tab cửa hàng; `/vatpham mua` — mua vật phẩm.'],
       ['🎒 Túi đồ', '`/vatpham tui` — xem vật phẩm; `/vatpham sudung` — chọn vật phẩm để dùng.'],
+      ['📚 Catalog vật phẩm', '`/vatpham chitiet` — lọc item theo game, xem mô tả và số lượng sở hữu; không hiện giá.'],
       ['🎁 Tặng và quay', '`/vatpham tang` — tặng vật phẩm; `/vatpham quay` — quay Gacha bằng kim cương.'],
     ],
   },
