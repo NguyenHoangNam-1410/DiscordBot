@@ -38,7 +38,7 @@ const options = [
   simpleGame('oantuti', games.oantuti, 'Chơi Oẳn tù tì với bot hoặc người khác'),
   simpleGame('ott', games.oantuti, 'Chơi Oẳn tù tì với bot hoặc người khác'),
   simpleGame('xidach', games.xidach, 'Chơi Xì dách với nhà cái hoặc người khác'),
-  simpleGame('poker', games.poker, 'Chơi Poker với hai bot'),
+  simpleGame('poker', games.poker, 'Chơi Poker với bot hoặc mời một người chơi'),
   simpleGame('duangua', games.duangua, 'Mở cuộc Đua ngựa nhiều người'),
   simpleGame('domin', games.domin, 'Dò mìn và săn hệ số thưởng', { min: 'somin' }),
   gameGroup('sinhton', games.sinhton, 'Chơi Sinh tồn vượt tầng', { top: 'xephang', rates: 'tyle' }, { class: 'nhanvat', user: 'nguoidung' }),

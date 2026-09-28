@@ -69,7 +69,7 @@ function messageInteraction(message, options = {}) {
 function help(prefix, command) {
   if (command === 'oantuti') return `Cách dùng: \`${prefix}ott <bua|keo|bao> <số xu>\` hoặc \`${prefix}ott solo @người_chơi <số xu>\``;
   if (command === 'blackjack') return `Cách dùng: \`${prefix}xidach <số xu>\` hoặc \`${prefix}xidach solo @người_chơi <số xu>\``;
-  if (command === 'poker') return `Cách dùng: \`${prefix}poker <texas|sixplus|pineapple|omaha>\``;
+  if (command === 'poker') return `Cách dùng: \`${prefix}poker <texas|sixplus|pineapple|omaha> [bot|banbe]\``;
   if (command === 'chinchiro') return `Cách dùng: \`${prefix}chinchiro <số xu>\``;
   if (command === 'mines') return `Cách dùng: \`${prefix}domin <số xu> <số mìn 1–7>\``;
   if (command === 'hardcore') return `Cách dùng: \`${prefix}sinhton <số xu> <barbarian|assassin|sorceress>\` hoặc \`${prefix}sinhton <hoso|xephang|tyle>\``;
@@ -174,10 +174,11 @@ async function handleGamePrefix(message) {
     options = { integers: { xu: amount } };
   } else if (name === 'poker') {
     const variant = normalizeSearch(parts[0] || '').replace('+', 'plus');
-    if (!['texas', 'sixplus', 'pineapple', 'omaha'].includes(variant)) {
+    const mode = normalizeSearch(parts[1] || 'bot');
+    if (!['texas', 'sixplus', 'pineapple', 'omaha'].includes(variant) || !['bot', 'banbe', 'nguoichoi'].includes(mode)) {
       await message.reply({ content: help(prefix, name), allowedMentions: { repliedUser: false } }); return true;
     }
-    options = { strings: { chedo: variant } };
+    options = { strings: { chedo: variant, chedochoi: mode === 'bot' ? 'bot' : 'nguoichoi' } };
   } else if (name === 'mines') {
     const amount = Number(parts[0]);
     const mineCount = Number(parts[1]);

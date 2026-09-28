@@ -5,7 +5,7 @@ const RULES = {
   chinchiro: ['Chinchiro', 'Nhà cái lắc trước. So điểm khi cả hai có tướng; Shigoro lãi x2, Bão x3, Pin-Zoro x5. Hifumi 1-2-3 bị phạt thêm x1 tiền cược.'],
   oantuti: ['Oẳn tù tì', 'Búa thắng Kéo, Kéo thắng Bao, Bao thắng Búa. Thắng nhận x2, hòa hoàn cược.'],
   blackjack: ['Xì dách', 'Gần 21 nhất mà không quá 21. Nhà cái dừng từ 17; thắng thường nhận 1,9×, Blackjack tự nhiên nhận 2,5×; nếu cả người chơi và nhà cái cùng quắc thì hòa.'],
-  poker: ['Poker', 'Chơi với hai bot. Theo, tố hoặc bỏ; Main Pot và Side Pot được chia tự động.'],
+  poker: ['Poker', 'Chọn đấu với hai bot hoặc mời một người chơi. Theo, tố hoặc bỏ; xem bài tẩy bằng nút riêng tư. Main Pot và Side Pot được chia tự động.'],
   duangua: ['Đua ngựa', 'Chọn một trong sáu ngựa. Hệ số khóa khi mở bàn; debuff chỉ lộ sau khi khóa cược.'],
   mines: ['Mines', 'Mở ô an toàn để tăng hệ số rồi rút. Trúng mìn mất cược; ô sao tăng thêm x1,5.'],
   hardcore: ['Sinh tồn', 'Vượt tầng và quyết định lúc rút. Chết mất payout tạm giữ; tầng 100 là mốc hoàn thành.'],

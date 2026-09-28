@@ -9,6 +9,7 @@ const { createFairness, fairInt } = require('./fairnessService');
 const { getGameConfig } = require('./gameConfigService');
 const { addExperienceField } = require('../utils/progressionView');
 const { consumeActiveEffect } = require('./effectStateService');
+const pokerMultiplayerService = require('./pokerMultiplayerService');
 
 const configuredAnte = Number(process.env.POKER_ANTE);
 const POKER_ANTE = Number.isSafeInteger(configuredAnte) && configuredAnte >= 10 && configuredAnte <= 100_000 ? configuredAnte : 50;
@@ -25,7 +26,7 @@ function getSession(id) { return db.prepare('SELECT * FROM poker_sessions WHERE 
 function getUserSession(guildId, userId) { return db.prepare('SELECT * FROM poker_sessions WHERE guild_id=? AND user_id=?').get(String(guildId), String(userId)) || null; }
 function parseState(session) {
   const state = JSON.parse(session.state_json);
-  for (const bot of state.players?.slice(1) || []) bot.revealedCard ||= bot.hole?.[0];
+  if (state.mode !== 'multiplayer') for (const bot of state.players?.slice(1) || []) bot.revealedCard ||= bot.hole?.[0];
   return state;
 }
 function saveState(session, state) { const now = Date.now(); db.prepare('UPDATE poker_sessions SET state_json=?,expires_at=?,updated_at=? WHERE id=?').run(JSON.stringify(state), now + SESSION_TTL_MS, now, session.id); }
@@ -48,7 +49,7 @@ function maxRaiseAmount(state, guildId) {
 
 function startPoker({ guildId, channelId, userId, variant, forcedDeck = null }) {
   if (!VARIANTS[variant]) throw new Error('INVALID_VARIANT');
-  if (getUserSession(guildId, userId)) throw new Error('ACTIVE_SESSION');
+  if (getUserSession(guildId, userId) || pokerMultiplayerService.hasActiveTable(guildId, userId)) throw new Error('ACTIVE_SESSION');
   return db.transaction(() => {
     const maxBet = getGameBetLimit(guildId, 'poker');
     const ante = Math.min(getGameConfig(guildId, 'POKER_ANTE'), maxBet);
@@ -243,6 +244,8 @@ function pokerRows(sessionId, state) {
   )];
 }
 async function handlePokerButton(interaction) {
+  const [, sessionId] = interaction.customId.split(':'); const existingSession = getSession(sessionId);
+  if (existingSession && JSON.parse(existingSession.state_json).mode === 'multiplayer') return pokerMultiplayerService.handlePokerButton(interaction);
   const [, id, action, rawIndex] = interaction.customId.split(':'); const session = getSession(id);
   if (!session || session.user_id !== interaction.user.id) return interaction.reply({ content: 'Ván Poker không tồn tại hoặc không phải của bạn.', flags: MessageFlags.Ephemeral });
   if (action === 'raise') {
@@ -258,6 +261,8 @@ async function handlePokerButton(interaction) {
   catch (error) { return interaction.reply({ content: 'Không thể thực hiện hành động này ở thời điểm hiện tại.', flags: MessageFlags.Ephemeral }); }
 }
 async function handlePokerModal(interaction) {
+  const [, sessionId] = interaction.customId.split(':'); const existingSession = getSession(sessionId);
+  if (existingSession && JSON.parse(existingSession.state_json).mode === 'multiplayer') return pokerMultiplayerService.handlePokerModal(interaction);
   const [, id] = interaction.customId.split(':'); const text = interaction.fields.getTextInputValue('amount').trim(); const amount = Number(text);
   if (!/^\d+$/.test(text)) return interaction.reply({ content: 'Số xu tố không hợp lệ.', flags: MessageFlags.Ephemeral });
   try { const state = playerAction(id, interaction.user.id, 'raise', amount); return interaction.update({ embeds: [pokerEmbed(state, interaction.user.id)], components: pokerRows(id, state), allowedMentions: { parse: [] } }); }
@@ -267,6 +272,7 @@ async function expirePokerSessions(client, logger = console, now = Date.now()) {
   const sessions = db.prepare('SELECT * FROM poker_sessions WHERE expires_at <= ?').all(now); let expired = 0;
   for (const session of sessions) {
     try {
+      if (JSON.parse(session.state_json).mode === 'multiplayer') { await pokerMultiplayerService.expirePokerTable(session, client); expired += 1; continue; }
       const state = parseState(session); state.players[0].folded = true; state.log.push('⌛ Hết thời gian — tự động bỏ bài.'); settle(session, state, 'timeout'); expired += 1;
       if (session.message_id) { const channel = await client.channels.fetch(session.channel_id).catch(() => null); const message = await channel?.messages?.fetch(session.message_id).catch(() => null); if (message) await message.edit({ embeds: [pokerEmbed(state, session.user_id)], components: [] }); }
     } catch (error) { logger.error?.({ err: error, pokerSessionId: session.id }, 'poker expiry failed'); }
