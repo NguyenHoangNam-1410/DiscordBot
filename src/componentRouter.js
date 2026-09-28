@@ -17,6 +17,7 @@ const useCommand = require('./commands/use');
 const leaderboardCommand = require('./commands/xephang');
 const helpCommand = require('./commands/trogiup');
 const gameCommand = require('./commands/game');
+const vuaTiengVietCommand = require('./commands/vuatiengviet');
 
 const ROUTES = Object.freeze([
   { kind: 'button', prefix: 'replay:', handle: (interaction, logger) => handleReplayButton(interaction, logger) },
@@ -30,6 +31,7 @@ const ROUTES = Object.freeze([
   { kind: 'button', prefix: 'gacha:', handle: interaction => gachaCommand.handleButton(interaction) },
   { kind: 'button', prefix: 'rpsbot:', handle: handleRpsBotButton },
   { kind: 'button', prefix: 'chinchiro:', handle: handleChinchiroButton },
+  { kind: 'button', prefix: 'vuatiengviet:', handle: interaction => vuaTiengVietCommand.handleButton(interaction) },
   { kind: 'button', prefix: 'anxin:', handle: handleCoinRequestButton },
   { kind: 'button', prefix: 'rpsduel:', handle: handleRpsDuelButton },
   { kind: 'button', prefix: 'bjduel:', handle: handleBlackjackDuelButton },

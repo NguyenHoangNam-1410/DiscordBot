@@ -88,7 +88,7 @@ Các lệnh thông thường có trong `/trogiup` (chọn mục bằng dropdown)
 
 Quản trị viên có thể dùng `/quantri kinhte` để xem tổng cung và dòng xu trong 24 giờ, hoặc `/quantri trangthai` để kiểm tra tính toàn vẹn database, backup gần nhất, phiên đang hoạt động và lỗi runtime.
 
-Các biến cân bằng game không còn bắt buộc phải sửa file rồi khởi động lại bot. Dùng `/quantri xemcauhinh` để xem, `/quantri datcauhinh` để đổi và `/quantri khoiphuc` để trở về giá trị `.env`/mặc định theo từng server. Hiện hỗ trợ cấu hình economy, phần thưởng game, tỷ lệ câu khó, ante Poker và hệ số EXP/level; thay đổi áp dụng ngay, riêng xu khởi đầu chỉ áp dụng cho tài khoản được tạo mới.
+Các biến cân bằng game không còn bắt buộc phải sửa file rồi khởi động lại bot. Dùng `/quantri xemcauhinh` để xem và chỉnh giá trị bằng menu, hoặc `/quantri khoiphuc` để trở về giá trị `.env`/mặc định theo từng server. Hiện hỗ trợ cấu hình economy, phần thưởng game, tỷ lệ câu khó, ante Poker và hệ số EXP/level; thay đổi áp dụng ngay, riêng xu khởi đầu chỉ áp dụng cho tài khoản được tạo mới.
 
 ## Vận hành và cân bằng
 

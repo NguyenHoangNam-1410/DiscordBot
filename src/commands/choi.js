@@ -42,8 +42,7 @@ const options = [
   simpleGame('duangua', games.duangua, 'Mở cuộc Đua ngựa nhiều người'),
   simpleGame('domin', games.domin, 'Dò mìn và săn hệ số thưởng', { min: 'somin' }),
   gameGroup('sinhton', games.sinhton, 'Chơi Sinh tồn vượt tầng', { top: 'xephang', rates: 'tyle' }, { class: 'nhanvat', user: 'nguoidung' }),
-  gameGroup('vuatiengviet', games.vuatiengviet, 'Sắp xếp chữ thành từ có nghĩa'),
-  gameGroup('vtv', games.vuatiengviet, 'Sắp xếp chữ thành từ có nghĩa'),
+  simpleGame('vtv', games.vuatiengviet, 'Bắt đầu phiên; bỏ qua câu bằng nút trên bàn'),
 ];
 
 function selected(interaction) {

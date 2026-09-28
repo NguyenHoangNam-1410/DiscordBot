@@ -7,7 +7,7 @@ const shop = require('./shop');
 const GAME_NAMES = {
   setup: 'datkenh', channels: 'xemkenh', reward: 'datthuong', rewards: 'xemthuong',
   maxbet: 'datgioihan', maxbets: 'xemgioihan', economy: 'kinhte', health: 'trangthai',
-  configs: 'xemcauhinh', config: 'datcauhinh', configreset: 'khoiphuc',
+  configs: 'xemcauhinh', configreset: 'khoiphuc',
   roleweeklyset: 'datthuongvaitro', roleweeklyremove: 'xoathuongvaitro', roleweeklylist: 'xemthuongvaitro',
   gachaadd: 'themgacha', gacharate: 'dattylegacha', gachapool: 'xemgacha', buffset: 'datbuff', buffs: 'xembuff',
 };
@@ -37,7 +37,7 @@ function adminOptions(command, names, excluded = []) {
   }));
 }
 const options = [
-  ...adminOptions(game, GAME_NAMES),
+  ...adminOptions(game, GAME_NAMES, ['config']),
   ...adminOptions(shop, SHOP_NAMES, ['xem']),
   {
     type: ApplicationCommandOptionType.Subcommand,
