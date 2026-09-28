@@ -1,6 +1,6 @@
-const { ApplicationCommandOptionType, MessageFlags, PermissionFlagsBits } = require('discord.js');
+const { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, MessageFlags, PermissionFlagsBits } = require('discord.js');
 const { remapOptions, renamedOption, commandData } = require('../utils/commandAlias');
-const { clearPlayerData } = require('../services/adminDataService');
+const { clearPlayerData, countPlayersForClear, clearAllPlayerData } = require('../services/adminDataService');
 const game = require('./game');
 const shop = require('./shop');
 
@@ -24,6 +24,7 @@ const CLEAR_SCOPES = [
   { name: 'EXP và cấp', value: 'xp' },
   { name: 'Toàn bộ (xu, kim cương, EXP/cấp)', value: 'all' },
 ];
+const CLEAR_SCOPE_LABELS = Object.fromEntries(CLEAR_SCOPES.map(item => [item.value, item.name]));
 
 function isAdmin(interaction) {
   const ids = String(process.env.ADMIN_USER_ID || '').split(/[,;\n]/).map(id => id.trim()).filter(Boolean);
@@ -42,10 +43,10 @@ const options = [
   {
     type: ApplicationCommandOptionType.Subcommand,
     name: 'xoadulieu',
-    description: 'Admin: đặt xu, kim cương hoặc EXP của người chơi về 0',
+    description: 'Admin: xóa dữ liệu một người chơi hoặc toàn server',
     options: [
-      { type: ApplicationCommandOptionType.User, name: 'nguoi', description: 'Người chơi cần xóa dữ liệu', required: true },
       { type: ApplicationCommandOptionType.String, name: 'dulieu', description: 'Loại dữ liệu cần xóa', required: true, choices: CLEAR_SCOPES },
+      { type: ApplicationCommandOptionType.User, name: 'nguoi', description: 'Bỏ trống để áp dụng cho tất cả người chơi', required: false },
     ],
   },
 ];
@@ -61,8 +62,16 @@ module.exports = {
     if (interaction.options.getSubcommand() === 'xoadulieu') {
       if (!interaction.guildId) return interaction.reply({ content: 'Lệnh này chỉ dùng trong server.', flags: MessageFlags.Ephemeral });
       if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được xóa dữ liệu người chơi.', flags: MessageFlags.Ephemeral });
-      const target = interaction.options.getUser('nguoi', true);
       const scope = interaction.options.getString('dulieu', true);
+      const target = interaction.options.getUser('nguoi');
+      if (!target) {
+        const count = countPlayersForClear(interaction.guildId, scope);
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId(`admin-clear-all:${scope}:${interaction.user.id}:confirm`).setLabel('Xác nhận xóa').setEmoji('🧹').setStyle(ButtonStyle.Danger),
+          new ButtonBuilder().setCustomId(`admin-clear-all:${scope}:${interaction.user.id}:cancel`).setLabel('Hủy').setStyle(ButtonStyle.Secondary),
+        );
+        return interaction.reply({ content: `⚠️ Bạn sắp xóa **${CLEAR_SCOPE_LABELS[scope]}** của **${count.toLocaleString('vi-VN')} người chơi** trong server này.\n\nLịch sử giao dịch và các dữ liệu khác sẽ được giữ nguyên. Nhấn **Xác nhận xóa** để tiếp tục.`, components: [row], flags: MessageFlags.Ephemeral });
+      }
       const result = clearPlayerData({ guildId: interaction.guildId, userId: target.id, scope, adminId: interaction.user.id });
       const parts = [];
       if (scope === 'coins' || scope === 'all') parts.push(`**${result.coins.toLocaleString('vi-VN')} xu**`);
@@ -71,6 +80,14 @@ module.exports = {
       return interaction.reply({ content: `🧹 Đã xóa dữ liệu ${parts.join(', ')} của <@${target.id}>. Lịch sử giao dịch và dữ liệu khác được giữ nguyên.`, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
     }
     const item = route(interaction); return item.command.execute(remapOptions(interaction, item));
+  },
+  async handleClearAllButton(interaction) {
+    const [, scope, ownerId, action] = interaction.customId.split(':');
+    if (interaction.user.id !== ownerId || !isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin đã tạo yêu cầu này mới được xác nhận.', flags: MessageFlags.Ephemeral });
+    if (action === 'cancel') return interaction.update({ content: 'Đã hủy thao tác xóa dữ liệu toàn server.', components: [] });
+    if (action !== 'confirm' || !CLEAR_SCOPES.some(item => item.value === scope)) return interaction.reply({ content: 'Yêu cầu xóa dữ liệu không hợp lệ.', flags: MessageFlags.Ephemeral });
+    const result = clearAllPlayerData({ guildId: interaction.guildId, scope, adminId: interaction.user.id });
+    return interaction.update({ content: `🧹 Đã xóa **${CLEAR_SCOPE_LABELS[scope]}** cho **${result.players.toLocaleString('vi-VN')} người chơi** trong server. Lịch sử giao dịch và dữ liệu khác được giữ nguyên.`, components: [] });
   },
   autocomplete(interaction) { const item = route(interaction); return item.command.autocomplete?.(remapOptions(interaction, item)); },
 };

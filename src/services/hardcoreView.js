@@ -6,17 +6,25 @@ const { addExperienceField } = require('../utils/progressionView');
 function rankLabel(rank) { return { normal: 'Thường', elite: 'Elite', boss: 'BOSS', mimic: 'Mimic', ancient_mimic: 'Ancient Mimic' }[rank] || rank; }
 function encounterText(state) {
   const encounter = state.encounter;
-  if (state.phase === 'upgrade') return `🎁 **NÂNG CẤP SAU MỐC TẦNG ${encounter.milestone}**\nChọn một chỉ số. Nâng cấp chỉ tồn tại trong run.`;
-  if (state.phase === 'summit') return '🏆 **ĐÃ CHINH PHỤC TẦNG 999**\nĐây là giới hạn kỹ thuật của Sinh tồn.';
-  if (encounter.type === 'combat') return `👹 **${encounter.name}** · ${rankLabel(encounter.rank)}\n❤️ ${formatCoins(encounter.hp)}/${formatCoins(encounter.maxHp)} HP · ⚔️ ${formatCoins(encounter.damageMin)}–${formatCoins(encounter.damageMax)} · 🛡️ ${formatCoins(encounter.defense)}`;
-  if (encounter.type === 'chest') return `📦 **HÒM BÍ ẨN**${encounter.inspected ? '\nBạn đã kiểm tra chiếc hòm này.' : '\nCó thể mở, kiểm tra hoặc bán.'}`;
-  if (encounter.type === 'shrine') return '🗿 **SHRINE KHÔNG RÕ NGUỒN GỐC**\nChạm vào có thể nhận buff hoặc một bài học.';
-  if (encounter.type === 'rngesus') return '☠️ **RNGesus · HP ∞ · KHÔNG THỂ BỊ ĐÁNH BẠI**\nBạn có đúng một quyết định.';
+  if (state.phase === 'upgrade') return `🎁 **NÂNG CẤP SAU MỐC TẦNG ${encounter.milestone}**\nChọn đúng một nút để nhận nâng cấp trong phần còn lại của run. +HP tăng giới hạn tối đa và hồi tối đa 20 HP; Rút thưởng chốt payout.`;
+  if (state.phase === 'summit') return '🏆 **ĐÃ CHINH PHỤC TẦNG 999**\nĐây là giới hạn Sinh tồn. Bấm **Rút thưởng** để nhận payout hiện tại.';
+  if (encounter.type === 'combat') {
+    const skillHint = state.classKey === 'assassin' ? 'Shadow Step gây thêm sát thương và né phản công.'
+      : state.classKey === 'sorceress' ? 'Arcane Burst gây sát thương phép mạnh.'
+        : 'Iron Will gây thêm sát thương.';
+    return `👹 **${encounter.name}** · ${rankLabel(encounter.rank)}\n❤️ ${formatCoins(encounter.hp)}/${formatCoins(encounter.maxHp)} HP · ⚔️ ${formatCoins(encounter.damageMin)}–${formatCoins(encounter.damageMax)} · 🛡️ ${formatCoins(encounter.defense)}\n**Tấn công:** đánh và hồi 1 năng lượng. **Phòng thủ:** giảm đòn kế tiếp, hồi 1 năng lượng. **Kỹ năng:** tốn 2 năng lượng — ${skillHint}\n**Bình máu:** hồi 35% HP tối đa; quái vẫn đánh trả nếu còn sống.`;
+  }
+  if (encounter.type === 'chest') return `📦 **HÒM BÍ ẨN**\n${encounter.inspected ? 'Đã kiểm tra một lần; kết quả có thể không phát hiện được Mimic.' : 'Kiểm tra một lần để thử phát hiện Mimic; Mở để nhận đồ hoặc có thể phải đánh Mimic; Bán để lấy thêm 15% tiền cược vào payout.'}${encounter.revealed ? '\n🚨 Mimic đã bị phát hiện: **Tránh Mimic** để đi tiếp an toàn.' : ''}`;
+  if (encounter.type === 'shrine') return '🗿 **SHRINE KHÔNG RÕ NGUỒN GỐC**\n**Chạm Shrine** để nhận hiệu ứng ngẫu nhiên (có cả hiệu ứng gây hại), hoặc **Bỏ qua** để đi tiếp.';
+  if (encounter.type === 'rngesus') return '☠️ **RNGesus · HP ∞ · KHÔNG THỂ BỊ ĐÁNH BẠI**\nChiến đấu là chết. Bỏ chạy: 65% sống; Hối lộ: mất 40% payout; Cầu nguyện: 10% nhận Legendary, nếu trượt sẽ chết; Vé: tiêu thụ 1 vé để thoát.';
   if (encounter.type === 'trap') {
     const names = { tax_collector: '🧾 TAX COLLECTOR', potion_thief: '🦹 KẺ TRỘM BÌNH MÁU', wrong_portal: '🌀 WRONG PORTAL' };
-    return `**${names[encounter.kind]}**\nBạn phải xử lý sự kiện để đi tiếp.`;
+    const detail = encounter.kind === 'tax_collector' ? 'Đi tiếp sẽ giảm payout 15%.'
+      : encounter.kind === 'potion_thief' ? 'Đi tiếp có thể mất 1 bình máu.'
+        : 'Đi tiếp sẽ giữ nguyên tầng và roll sự kiện mới.';
+    return `**${names[encounter.kind]}**\nChọn **Chấp nhận số phận** để xử lý: ${detail}`;
   }
-  return '🕳️ **PHÒNG TRỐNG**\nKhông quái, không đồ, không lý do tồn tại.';
+  return '🕳️ **PHÒNG TRỐNG**\nBấm **Đi tiếp** để vượt tầng. Có thể rút thưởng thay vì tiếp tục.';
 }
 function chaosLabel(state) {
   const chance = state.lastChaosChance || 0;

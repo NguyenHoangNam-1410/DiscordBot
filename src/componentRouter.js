@@ -19,6 +19,7 @@ const helpCommand = require('./commands/trogiup');
 const gameCommand = require('./commands/game');
 const vuaTiengVietCommand = require('./commands/vuatiengviet');
 const itemCatalogViewCommand = require('./commands/itemCatalogView');
+const adminCommand = require('./commands/quantri');
 
 const ROUTES = Object.freeze([
   { kind: 'button', prefix: 'replay:', handle: (interaction, logger) => handleReplayButton(interaction, logger) },
@@ -35,6 +36,7 @@ const ROUTES = Object.freeze([
   { kind: 'button', prefix: 'chinchiro:', handle: handleChinchiroButton },
   { kind: 'button', prefix: 'vuatiengviet:', handle: interaction => vuaTiengVietCommand.handleButton(interaction) },
   { kind: 'button', prefix: 'iteminfo-page:', handle: interaction => itemCatalogViewCommand.handlePage(interaction) },
+  { kind: 'button', prefix: 'admin-clear-all:', handle: interaction => adminCommand.handleClearAllButton(interaction) },
   { kind: 'button', prefix: 'anxin:', handle: handleCoinRequestButton },
   { kind: 'button', prefix: 'rpsduel:', handle: handleRpsDuelButton },
   { kind: 'button', prefix: 'bjduel:', handle: handleBlackjackDuelButton },

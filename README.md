@@ -90,6 +90,8 @@ Quản trị viên có thể dùng `/quantri kinhte` để xem tổng cung và d
 
 Các biến cân bằng game không còn bắt buộc phải sửa file rồi khởi động lại bot. Dùng `/quantri xemcauhinh` để xem và chỉnh giá trị bằng menu, hoặc `/quantri khoiphuc` để trở về giá trị `.env`/mặc định theo từng server. Hiện hỗ trợ cấu hình economy, phần thưởng game, tỷ lệ câu khó, ante Poker và hệ số EXP/level; thay đổi áp dụng ngay, riêng xu khởi đầu chỉ áp dụng cho tài khoản được tạo mới.
 
+Admin dùng `/quantri xoadulieu` để xóa xu, kim cương, EXP/cấp của một người chơi. Bỏ trống người chơi để xem trước số tài khoản bị ảnh hưởng và xác nhận thao tác trên toàn server.
+
 ## Vận hành và cân bằng
 
 - `npm run test:coverage`: chạy test và bắt buộc đạt ngưỡng coverage trong CI.

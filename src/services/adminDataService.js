@@ -38,4 +38,39 @@ const clearPlayerDataTx = db.transaction(({ guildId, userId, scope, adminId, now
 
 function clearPlayerData(args) { return clearPlayerDataTx(args); }
 
-module.exports = { clearPlayerData };
+function countPlayersForClear(guildId, scope) {
+  if (!['coins', 'diamonds', 'xp', 'all'].includes(scope)) throw new Error('INVALID_CLEAR_SCOPE');
+  const guild = String(guildId);
+  let query;
+  if (scope === 'coins') query = 'SELECT COUNT(*) AS count FROM economy_accounts WHERE guild_id=?';
+  else if (scope === 'diamonds' || scope === 'xp') query = 'SELECT COUNT(*) AS count FROM player_currencies WHERE guild_id=?';
+  else query = `SELECT COUNT(*) AS count FROM (
+    SELECT user_id FROM economy_accounts WHERE guild_id=?
+    UNION SELECT user_id FROM player_currencies WHERE guild_id=?
+  )`;
+  const row = scope === 'all' ? db.prepare(query).get(guild, guild) : db.prepare(query).get(guild);
+  return row?.count || 0;
+}
+
+const clearAllPlayerDataTx = db.transaction(({ guildId, scope, adminId, now = Date.now() }) => {
+  if (!['coins', 'diamonds', 'xp', 'all'].includes(scope)) throw new Error('INVALID_CLEAR_SCOPE');
+  const guild = String(guildId);
+  const rows = scope === 'coins'
+    ? db.prepare('SELECT user_id FROM economy_accounts WHERE guild_id=?').all(guild)
+    : scope === 'diamonds' || scope === 'xp'
+      ? db.prepare('SELECT user_id FROM player_currencies WHERE guild_id=?').all(guild)
+      : db.prepare(`SELECT user_id FROM economy_accounts WHERE guild_id=?
+          UNION SELECT user_id FROM player_currencies WHERE guild_id=?`).all(guild, guild);
+  const totals = { players: rows.length, coins: 0, diamonds: 0, experience: 0 };
+  for (const row of rows) {
+    const result = clearPlayerDataTx({ guildId: guild, userId: row.user_id, scope, adminId, now });
+    totals.coins += result.coins;
+    totals.diamonds += result.diamonds;
+    totals.experience += result.experience;
+  }
+  return totals;
+});
+
+function clearAllPlayerData(args) { return clearAllPlayerDataTx(args); }
+
+module.exports = { clearPlayerData, countPlayersForClear, clearAllPlayerData };

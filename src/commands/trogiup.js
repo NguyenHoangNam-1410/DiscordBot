@@ -30,7 +30,7 @@ const PAGES = Object.freeze({
     fields: [
       ['🎲 Game cược', '`/choi baucua` · `/choi taixiu` · `/choi chinchiro` · `/choi ott` · `/choi xidach` · `/choi poker`'],
       ['🏇 Thử thách khác', '`/choi duangua` · `/choi domin`'],
-      ['⚔️ Sinh tồn', '`/choi sinhton batdau` — bắt đầu; `hoso` — thành tích; `xephang` — top tầng; `tyle` — tỷ lệ sự kiện.'],
+      ['⚔️ Sinh tồn', '`/choi sinhton batdau` — chọn cược và nhân vật; dùng các nút để đánh, dùng vật phẩm, xử lý sự kiện hoặc rút thưởng. `/luat trochoi: Sinh tồn` giải thích cơ chế và từng hành động; `hoso` — thành tích; `xephang` — top tầng; `tyle` — tỷ lệ sự kiện.'],
       ['🔤 Vua tiếng Việt', '`/choi vtv` — bắt đầu; dùng nút trên bàn để bỏ qua câu hoặc kết thúc phiên (admin).'],
       ['📖 Xem luật', '`/luat trochoi:<game>` — xem tóm tắt luật của một game.'],
     ],
@@ -75,7 +75,7 @@ const PAGES = Object.freeze({
       ['🎁 Drop sau ván', '`xemcauhinh` — chỉnh tỷ lệ và khoảng min–max của xu, kim cương, lượt quay bằng menu.'],
       ['🎊 Buff sự kiện', '`datbuff` — nhân lượng drop hoặc tăng may mắn Gacha; `xembuff` — xem thời gian còn lại.'],
       ['🎁 Thưởng vai trò', '`datthuongvaitro` · `xoathuongvaitro` · `xemthuongvaitro`'],
-      ['🧹 Dữ liệu người chơi', '`xoadulieu` — xóa xu, kim cương, EXP/cấp hoặc cả ba của người chơi được chọn.'],
+      ['🧹 Dữ liệu người chơi', '`xoadulieu` — chọn người chơi để xóa riêng; bỏ trống người chơi để xem trước và xác nhận xóa toàn server.'],
       ['🛒 Cửa hàng', '`themvatpham` · `suavatpham` · `xoavatpham` · `xoaycuahang` · `tonkho` · `giamgia`'],
       ['⌨️ Lệnh prefix', '`!addgem` — cộng kim cương cho người chơi (nếu server bật lệnh prefix).'],
     ],
