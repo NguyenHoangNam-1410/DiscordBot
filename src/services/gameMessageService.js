@@ -24,8 +24,8 @@ async function handleVuaMessage(message, answer) {
     ? addDiamonds(message.guildId, message.author.id, 10, { reason: 'vuatiengviet:hard-answer' })
     : null;
   const bonus = bonusDropText(account.bonusDrops);
-  const diamondText = diamonds ? ` và **10 kim cương** (số dư: **${diamonds.diamonds} 💎**)` : '';
-  await reply(message, `🎉 <@${message.author.id}> trả lời đúng **${result.question.answer}** và nhận **${formatCoins(reward)} xu**${diamondText}!${bonus ? `\n🎊 Drop sau ván: ${bonus.replace(/\n/g, ' · ')}` : ''}\n\nCâu tiếp theo:\n${vuaQuestionText(result.nextQuestion)}\nSố dư: **${formatCoins(account.balance)} xu**.`);
+  const diamondText = diamonds ? ' và **10 kim cương**' : '';
+  await reply(message, `🎉 <@${message.author.id}> trả lời đúng **${result.question.answer}** và nhận **${formatCoins(reward)} xu**${diamondText}!${bonus ? `\n🎊 Drop sau ván: ${bonus.replace(/\n/g, ' · ')}` : ''}\n\nCâu tiếp theo:\n${vuaQuestionText(result.nextQuestion)}`);
   return true;
 }
 

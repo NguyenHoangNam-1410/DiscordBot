@@ -195,7 +195,6 @@ function chinchiroEmbed(state, userId) {
     chinchiro_otsuki_dice: 'Xúc Xắc Của Quản Đốc · chỉ có mặt 4–5–6', chinchiro_karma: 'Bùa Trả Đũa · tự động chặn Hifumi',
   })[state.effect] });
   if (state.result) {
-    embed.setFooter({ text: `Số dư: ${formatCoins(state.result.balance)} xu` });
     addExperienceField(embed, state.result);
     const drops = bonusDropText(state.result.bonusDrops); if (drops) embed.addFields({ name: '🎊 Drop sau ván', value: drops });
   }

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require('discord.js');
-const { getAccount, getTransactionHistory, transferCoins } = require('../services/economyService');
+const { getTransactionHistory, transferCoins } = require('../services/economyService');
 const { formatCoins } = require('../utils/economy');
 const { getGameHistory } = require('../services/progressionService');
 
@@ -26,7 +26,7 @@ function transactionLabel(reason) {
 
 module.exports = {
   data: new SlashCommandBuilder().setName('xu').setDescription('Quản lý xu game của server')
-    .addSubcommand(command => command.setName('sodu').setDescription('Xem số xu hiện tại'))
+    .addSubcommand(command => command.setName('sodu').setDescription('Chuyển sang hồ sơ để xem số dư'))
     .addSubcommand(command => command.setName('lichsu').setDescription('Xem 10 giao dịch xu gần nhất'))
     .addSubcommand(command => command.setName('vanchoi').setDescription('Xem 10 ván gần nhất'))
     .addSubcommand(command => command.setName('chuyen').setDescription('Chuyển xu cho người chơi khác')
@@ -36,14 +36,13 @@ module.exports = {
     if (!interaction.guildId) return interaction.reply({ content: 'Lệnh này chỉ dùng được trong server.', flags: MessageFlags.Ephemeral });
     const subcommand = interaction.options.getSubcommand();
     if (subcommand === 'sodu') {
-      const account = getAccount(interaction.guildId, interaction.user.id);
-      return interaction.reply({ content: `Bạn đang có **${formatCoins(account.balance)} xu**. Dùng \`/hoso\` để xem profile đầy đủ.`, flags: MessageFlags.Ephemeral });
+      return interaction.reply({ content: 'Hãy dùng `/hoso` để xem số dư của bạn.', flags: MessageFlags.Ephemeral });
     }
     if (subcommand === 'lichsu') {
       const rows = getTransactionHistory(interaction.guildId, interaction.user.id, 10);
       const description = rows.length ? rows.map(row => {
         const amount = `${row.amount >= 0 ? '+' : ''}${formatCoins(row.amount)}`;
-        return `${row.amount >= 0 ? '🟢' : '🔴'} **${amount} xu** · ${transactionLabel(row.reason)}\n<t:${Math.floor(row.created_at / 1000)}:R> · Còn ${formatCoins(row.balance_after)} xu`;
+        return `${row.amount >= 0 ? '🟢' : '🔴'} **${amount} xu** · ${transactionLabel(row.reason)}\n<t:${Math.floor(row.created_at / 1000)}:R>`;
       }).join('\n\n') : 'Bạn chưa có giao dịch nào.';
       const embed = new EmbedBuilder().setColor(0x3498DB).setTitle('📜 LỊCH SỬ XU').setDescription(description).setFooter({ text: 'Hiển thị 10 giao dịch gần nhất' });
       return interaction.reply({ embeds: [embed], allowedMentions: { parse: [] }, flags: MessageFlags.Ephemeral });
@@ -62,10 +61,10 @@ module.exports = {
       let result;
       try { result = transferCoins({ guildId: interaction.guildId, fromUserId: interaction.user.id, toUserId: receiver.id, amount }); }
       catch (error) {
-        if (error.code === 'INSUFFICIENT_FUNDS') return interaction.reply({ content: `Bạn không đủ xu. Số dư hiện tại: **${formatCoins(error.balance)} xu**.`, flags: MessageFlags.Ephemeral });
+        if (error.code === 'INSUFFICIENT_FUNDS') return interaction.reply({ content: 'Bạn không đủ xu để chuyển khoản này.', flags: MessageFlags.Ephemeral });
         throw error;
       }
-      return interaction.reply({ content: `💸 <@${interaction.user.id}> đã chuyển **${formatCoins(result.amount)} xu** cho <@${receiver.id}>. Số dư còn lại: **${formatCoins(result.senderBalance)} xu**.`, allowedMentions: { users: [receiver.id] } });
+      return interaction.reply({ content: `💸 <@${interaction.user.id}> đã chuyển **${formatCoins(result.amount)} xu** cho <@${receiver.id}>.`, allowedMentions: { users: [receiver.id] } });
     }
     return interaction.reply({ content: 'Tùy chọn không hợp lệ. Dùng `/xephang` để xem bảng xếp hạng.', flags: MessageFlags.Ephemeral });
   },

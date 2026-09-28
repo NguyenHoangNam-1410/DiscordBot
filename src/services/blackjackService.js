@@ -215,8 +215,7 @@ function blackjackEmbed(state, userId, result = null) {
       : result.outcome === 'win' ? `🎉 Thắng! Nhận lại **${formatCoins(result.payout)} xu**.`
         : result.outcome === 'draw' ? `🤝 Hòa! Nhận lại **${formatCoins(result.payout)} xu**.`
           : '💥 Nhà cái thắng.';
-    embed.addFields({ name: '🏆 KẾT QUẢ', value: `### ${summary}\n**Tổng cược:** ${formatCoins(result.stake)} xu` })
-      .setFooter({ text: `Số dư: ${formatCoins(result.balance)} xu` });
+    embed.addFields({ name: '🏆 KẾT QUẢ', value: `### ${summary}\n**Tổng cược:** ${formatCoins(result.stake)} xu` });
     addExperienceField(embed, result);
     if (result.achievements?.length) embed.addFields({ name: '🏅 Thành tựu mới', value: result.achievements.map(item => `**${item.name}**`).join('\n') });
   } else embed.setFooter({ text: 'Nhà cái dừng ở soft 17 • Xì dách tự nhiên trả 3:2 • Không thu phí mở ván' });
@@ -255,7 +254,7 @@ async function handleBlackjackButton(interaction) {
     const played = playAction({ sessionId, userId: interaction.user.id, action, cardIndex: rawIndex === undefined ? null : Number(rawIndex) });
     return interaction.update({ embeds: [blackjackEmbed(played.state, interaction.user.id, played.result)], components: actionRows(sessionId, played.state, played.settled), allowedMentions: { parse: [] } });
   } catch (error) {
-    const content = error.code === 'INSUFFICIENT_FUNDS' ? `Bạn không đủ xu để thực hiện. Số dư: **${formatCoins(error.balance)} xu**.`
+    const content = error.code === 'INSUFFICIENT_FUNDS' ? 'Bạn không đủ xu để thực hiện thao tác này.'
       : error.message === 'BET_LIMIT' ? `Thao tác này vượt giới hạn cược **${formatCoins(error.maxBet)} xu/người/ván**.`
       : error.message === 'CANNOT_DOUBLE' ? 'Chỉ được gấp đôi khi tay bài có đúng hai lá.'
         : error.message === 'CANNOT_SPLIT' ? 'Chỉ được tách một lần khi hai lá đầu cùng hạng.'

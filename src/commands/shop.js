@@ -39,7 +39,7 @@ function shopEmbed(guildId, selected = 'all') {
     const conditions = [row.min_games ? `${row.min_games} ván` : null, row.min_wins ? `${row.min_wins} thắng` : null, row.min_balance ? `số dư ${formatCoins(row.min_balance)}` : null].filter(Boolean).join(' · ');
     const rarity = ['R', 'SR', 'SSR', 'UR'].includes(item?.rarity) ? ` [${item.rarity}]` : '';
     const games = gameLabels(item);
-    const scope = games ? `Áp dụng: ${games.join(', ')}` : 'Dùng chung · hiện ở mọi bộ lọc';
+    const scope = games?.length ? `Áp dụng: ${games.join(', ')}` : games ? 'Vật phẩm hồ sơ · không gắn với game' : 'Dùng chung · hiện ở mọi bộ lọc';
     return `${RARITY_ICON[item?.rarity] || '⚪'} **${row.display_name}${rarity}** · \`${row.item_id}\`\n_${scope}_\n${item?.description || ''}\n💰 ${price} · Kho: **${stock}**${conditions ? ` · Yêu cầu: ${conditions}` : ''}`;
   }).join('\n\n') : 'Không có vật phẩm thuộc mục này trong vòng xoay hôm nay.';
   return new EmbedBuilder().setColor(0xC0392B).setTitle(`${tab.emoji} CỬA HÀNG · ${tab.label.toUpperCase()}`).setDescription(description.slice(0, 4096))

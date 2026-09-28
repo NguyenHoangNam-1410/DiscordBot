@@ -115,7 +115,7 @@ async function handleCoinRequestButton(interaction) {
       embeds: [requestEmbed(request, 'accepted')], components: [], allowedMentions: { users: [request.target_id, request.requester_id] },
     });
   } catch (error) {
-    if (error.code === 'INSUFFICIENT_FUNDS') return interaction.reply({ content: `Bạn không đủ xu để chấp nhận. Số dư hiện tại: **${formatCoins(error.balance)} xu**.`, flags: MessageFlags.Ephemeral });
+    if (error.code === 'INSUFFICIENT_FUNDS') return interaction.reply({ content: 'Bạn không đủ xu để chấp nhận yêu cầu này.', flags: MessageFlags.Ephemeral });
     if (error.message === 'REQUEST_EXPIRED') return interaction.update({ embeds: [requestEmbed(request, 'expired')], components: [] });
     if (error.message === 'REQUEST_CLOSED') return interaction.reply({ content: 'Yêu cầu này đã được xử lý.', flags: MessageFlags.Ephemeral });
     throw error;

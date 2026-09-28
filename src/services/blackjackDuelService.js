@@ -220,7 +220,7 @@ async function handleBlackjackDuelButton(interaction) {
     await interaction.reply({ content: privateHandText(played.duel, interaction.user.id), flags: MessageFlags.Ephemeral });
     if (!played.viewed) await interaction.message.edit({ content: null, embeds: [blackjackDuelEmbed(played.duel)], components: played.settled ? replayButtons(played.duel) : playButtons(id), allowedMentions: { parse: [] } });
   } catch (error) {
-    if (error.code === 'INSUFFICIENT_FUNDS') return interaction.reply({ content: `Một người không đủ xu. Số dư kiểm tra được: **${formatCoins(error.balance)} xu**.`, flags: MessageFlags.Ephemeral });
+    if (error.code === 'INSUFFICIENT_FUNDS') return interaction.reply({ content: 'Một người chơi không đủ xu để tham gia ván này.', flags: MessageFlags.Ephemeral });
     const messages = { NOT_OPPONENT: 'Chỉ người được thách đấu mới có thể bấm nút này.', DUEL_CLOSED: 'Lời thách đấu đã được xử lý.', ACTIVE_SESSION: 'Một người đang có ván Xì dách khác.', DUEL_NOT_PLAYING: 'Ván chưa bắt đầu hoặc đã kết thúc.', NOT_DUEL_PLAYER: 'Chỉ hai người trong ván được thao tác.', PLAYER_FINISHED: 'Bạn đã chốt tay bài và không thể rút thêm.', DUEL_EXPIRED: 'Ván đã hết hạn.' };
     if (messages[error.message]) return interaction.reply({ content: messages[error.message], flags: MessageFlags.Ephemeral });
     throw error;

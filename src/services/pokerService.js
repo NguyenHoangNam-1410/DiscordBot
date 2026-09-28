@@ -223,7 +223,7 @@ function pokerEmbed(state, userId) {
   else {
     const reveals = state.players.map(player => { const score = state.result.scores[player.id]; return `${player.folded ? '🏳️' : '🃏'} **${player.name}:** ${cardText(player.hole)}${score ? ` — **${score.name}**` : ' — Đã bỏ bài'}`; }).join('\n');
     const pots = state.result.pots.map((potItem, index) => `**${index === 0 ? 'Main Pot' : `Side Pot ${index}`} ${formatCoins(potItem.amount)}:** ${potItem.winners.map(id => state.players.find(player => player.id === id)?.name).join(', ')}`).join('\n') || 'Không có pot tranh chấp.';
-    embed.addFields({ name: 'Showdown', value: reveals }, { name: 'Chia Pot', value: pots }, { name: state.result.outcome === 'win' ? '🏆 Bạn thắng!' : state.result.outcome === 'draw' ? '🤝 Hòa vốn' : '💥 Bạn thua', value: `Nhận lại **${formatCoins(state.result.payout)} xu** · Số dư **${formatCoins(state.result.balance)} xu**${state.result.insurance ? `\n🛡️ Bảo hiểm Poker hoàn **${state.result.insurancePercent}% = ${formatCoins(state.result.insurance)} xu**` : ''}` });
+    embed.addFields({ name: 'Showdown', value: reveals }, { name: 'Chia Pot', value: pots }, { name: state.result.outcome === 'win' ? '🏆 Bạn thắng!' : state.result.outcome === 'draw' ? '🤝 Hòa vốn' : '💥 Bạn thua', value: `Nhận lại **${formatCoins(state.result.payout)} xu**${state.result.insurance ? `\n🛡️ Bảo hiểm Poker hoàn **${state.result.insurancePercent}% = ${formatCoins(state.result.insurance)} xu**` : ''}` });
     addExperienceField(embed, state.result);
     if (state.result.achievements?.length) embed.addFields({ name: '🏅 Thành tựu mới', value: state.result.achievements.map(item => `**${item.name}**`).join('\n') });
   }
@@ -268,6 +268,9 @@ async function handlePokerModal(interaction) {
   try { const state = playerAction(id, interaction.user.id, 'raise', amount); return interaction.update({ embeds: [pokerEmbed(state, interaction.user.id)], components: pokerRows(id, state), allowedMentions: { parse: [] } }); }
   catch (error) { return interaction.reply({ content: error.message === 'BET_LIMIT' ? `Bạn chỉ có thể tố thêm tối đa **${formatCoins(error.maxRaise)} xu** trong giới hạn **${formatCoins(error.maxBet)} xu/ván**.` : error.message === 'INVALID_RAISE' ? 'Mức tố tối thiểu là 10 xu.' : 'Không thể tố lúc này.', flags: MessageFlags.Ephemeral }); }
 }
+async function handlePokerPrivateButton(interaction) {
+  return pokerMultiplayerService.handlePokerPrivateButton(interaction);
+}
 async function expirePokerSessions(client, logger = console, now = Date.now()) {
   const sessions = db.prepare('SELECT * FROM poker_sessions WHERE expires_at <= ?').all(now); let expired = 0;
   for (const session of sessions) {
@@ -280,4 +283,4 @@ async function expirePokerSessions(client, logger = console, now = Date.now()) {
   return expired;
 }
 function startPokerMaintenance(client, logger = console) { const run = () => expirePokerSessions(client, logger).catch(error => logger.error?.({ err: error }, 'poker maintenance failed')); run(); const timer = setInterval(run, 30_000); timer.unref?.(); return timer; }
-module.exports = { POKER_ANTE, VARIANTS, startPoker, getSession, setPokerMessage, playerAction, discardCard, playerEval, botEvaluation, choosePineappleDiscard, maxRaiseAmount, pokerEmbed, pokerRows, handlePokerButton, handlePokerModal, expirePokerSessions, startPokerMaintenance };
+module.exports = { POKER_ANTE, VARIANTS, startPoker, getSession, setPokerMessage, playerAction, discardCard, playerEval, botEvaluation, choosePineappleDiscard, maxRaiseAmount, pokerEmbed, pokerRows, handlePokerButton, handlePokerPrivateButton, handlePokerModal, expirePokerSessions, startPokerMaintenance };

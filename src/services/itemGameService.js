@@ -8,7 +8,6 @@ const GAME_FILTERS = Object.freeze([
   { id: 'mines', label: 'Mines', emoji: '💣' },
   { id: 'vuatiengviet', label: 'Vua tiếng Việt', emoji: '🧠' },
   { id: 'chinchiro', label: 'Chinchiro', emoji: '🎲' },
-  { id: 'profile', label: 'Hồ sơ', emoji: '🎨' },
 ]);
 
 const EFFECT_GAMES = Object.freeze({
@@ -35,6 +34,7 @@ const EFFECT_GAMES = Object.freeze({
 });
 
 function itemGames(item) {
+  if (item?.type === 'color') return [];
   const mapped = EFFECT_GAMES[item?.effect];
   if (mapped) return mapped;
   // Items without a game-specific effect are shared and remain visible in every filter.
@@ -44,12 +44,12 @@ function itemGames(item) {
 function itemMatchesGame(item, gameId) {
   if (!gameId || gameId === 'all') return true;
   const games = itemGames(item);
-  return !games || games.includes(gameId);
+  return games === null || games.includes(gameId);
 }
 
 function gameLabels(item) {
   const games = itemGames(item);
-  return games ? games.map(id => GAME_FILTERS.find(game => game.id === id)?.label || id) : null;
+  return games === null ? null : games.map(id => GAME_FILTERS.find(game => game.id === id)?.label || id);
 }
 
 module.exports = { GAME_FILTERS, EFFECT_GAMES, itemGames, itemMatchesGame, gameLabels };

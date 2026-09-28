@@ -12,7 +12,7 @@ function cooldownText(milliseconds) {
 
 async function economyError(interaction, error) {
   const content = error?.code === 'INSUFFICIENT_FUNDS'
-    ? `Bạn không đủ xu. Số dư hiện tại: **${formatCoins(error.balance)} xu**.`
+    ? 'Bạn không đủ xu để thực hiện giao dịch này.'
     : error?.message === 'INVALID_BET'
       ? 'Mức cược phải từ **10 đến 100.000 xu**.'
       : 'Không thể xử lý giao dịch xu lúc này.';

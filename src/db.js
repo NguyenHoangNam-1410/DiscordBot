@@ -751,4 +751,8 @@ runMigration(18, 'allow multiple games per channel', () => {
   db.exec('CREATE INDEX IF NOT EXISTS idx_game_channels_channel ON game_channels(guild_id, channel_id)');
 });
 
+runMigration(19, 'remove default shop listings', () => {
+  db.prepare(`UPDATE shop_items SET listed=0,active=0,updated_at=? WHERE created_by='system'`).run(Date.now());
+});
+
 module.exports = { db, dbPath, runMigration };

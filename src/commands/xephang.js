@@ -5,7 +5,6 @@ const {
 const { getLeaderboard } = require('../services/economyService');
 const { getGameLeaderboard } = require('../services/progressionService');
 const { getHardcoreTop } = require('../services/hardcoreService');
-const { formatCoins } = require('../utils/economy');
 
 const GAMES = Object.freeze([
   ['baucua', 'Bầu cua', '🎲'], ['taixiu', 'Tài xỉu', '🎯'],
@@ -28,10 +27,10 @@ function leaderboardRow(ownerId, selected = 'assets') {
 function assetsEmbed(guildId, serverName = 'Server hiện tại') {
   const rows = getLeaderboard(guildId, 10);
   const description = rows.length
-    ? rows.map((row, index) => `${index + 1}. <@${row.user_id}> — **${formatCoins(row.balance)} xu** · ${row.wins}/${row.games_played} thắng`).join('\n')
+    ? rows.map((row, index) => `${index + 1}. <@${row.user_id}> · ${row.wins}/${row.games_played} thắng`).join('\n')
     : 'Server chưa có dữ liệu tài sản.';
   return new EmbedBuilder().setColor(0xF1C40F).setTitle(`🏠 ${serverName.toUpperCase()}\n💰 XẾP HẠNG TÀI SẢN`).setDescription(description)
-    .setFooter({ text: 'Xếp theo số dư xu hiện tại' }).setTimestamp();
+    .setFooter({ text: 'Xếp theo số dư xu hiện tại; số dư xem trong /hoso' }).setTimestamp();
 }
 
 function gameEmbed(guildId, game, serverName = 'Server hiện tại') {

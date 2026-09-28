@@ -190,7 +190,7 @@ function discardCard(sessionId, userId, index) {
   return db.transaction(() => {
     const session = getSession(sessionId); if (!session) throw new Error('TABLE_CLOSED');
     const state = parseState(session); const user = String(userId);
-    if (state.phase !== 'discard' || !state.discardPending.includes(user) || ![0, 1, 2].includes(index)) throw new Error('INVALID_PHASE');
+    if (state.phase !== 'discard' || state.turnUserId !== user || !state.discardPending.includes(user) || ![0, 1, 2].includes(index)) throw new Error('INVALID_PHASE');
     const player = playerById(state, user); if (!player || player.hole.length !== 3) throw new Error('INVALID_PHASE');
     const removed = player.hole.splice(index, 1)[0]; state.discardPending = state.discardPending.filter(id => id !== user);
     state.log.push(`🍍 <@${user}> đã bỏ một lá tẩy.`);
@@ -219,12 +219,12 @@ function pokerTableEmbed(state) {
     .addFields({ name: state.phase === 'lobby' ? '🪑 NGƯỜI CHƠI' : '🎴 STACK VÀ CƯỢC', value: state.players.map(player => `${player.folded ? '🏳️' : player.allIn ? '🔥' : '🎴'} <@${player.id}>\nCòn **${formatCoins(player.stack)} xu** · Đã cược **${formatCoins(player.committed)} xu**`).join('\n\n') });
   if (state.phase === 'lobby') embed.addFields({ name: '📨 BÀN ĐANG CHỜ', value: `Cược vào bàn **${formatCoins(state.ante)} xu/người**. Cần ${MAX_PLAYERS - state.players.length} người nữa. Chủ bàn bấm **Bắt đầu ván** khi đủ người. Hết hạn sau <t:${Math.floor((Date.now() + TURN_TTL_MS) / 1000)}:R>.` });
   else if (state.phase === 'betting' || state.phase === 'discard') embed.addFields(
-    { name: state.phase === 'discard' ? '🍍 CHỌN LÁ BỎ' : `🎯 LƯỢT ${state.street.toUpperCase()} · ĐANG TỚI LƯỢT`, value: state.phase === 'discard' ? `Mỗi người chọn một lá bằng nút **Bỏ lá 1/2/3**. Bài tẩy được giữ riêng.` : `<@${state.turnUserId}> · Cần theo **${formatCoins(Math.max(0, state.currentBet - (playerById(state, state.turnUserId)?.streetBet || 0)))} xu**\nBấm **Xem bài riêng** để xem bài tẩy.`, inline: false },
+    { name: state.phase === 'discard' ? '🍍 CHỌN LÁ BỎ' : `🎯 LƯỢT ${state.street.toUpperCase()} · ĐANG TỚI LƯỢT`, value: state.phase === 'discard' ? `Mỗi người chọn một lá bằng nút **Bỏ lá 1/2/3**. Bài tẩy được giữ riêng.` : `<@${state.turnUserId}> · Cần theo **${formatCoins(Math.max(0, state.currentBet - (playerById(state, state.turnUserId)?.streetBet || 0)))} xu**\nBấm **Xem bài tẩy** để mở bảng thao tác riêng.`, inline: false },
     { name: '📜 DIỄN BIẾN', value: state.log.slice(-5).map(line => `• ${line}`).join('\n') || '—' },
   );
   else if (complete) {
     const pots = state.result.pots.map((item, index) => `**${index ? `Side Pot ${index}` : 'Main Pot'} ${formatCoins(item.amount)}:** ${item.winners.map(id => `<@${id}>`).join(', ')}`).join('\n') || 'Không có pot tranh chấp.';
-    const outcomes = state.result.players.map(row => `<@${row.userId}> ${row.outcome === 'win' ? 'thắng' : row.outcome === 'draw' ? 'hòa' : 'thua'} · nhận **${formatCoins(row.payout)} xu** · số dư **${formatCoins(row.balance)} xu**${row.insurance ? ` · bảo hiểm ${row.insurancePercent}%` : ''}`).join('\n');
+    const outcomes = state.result.players.map(row => `<@${row.userId}> ${row.outcome === 'win' ? 'thắng' : row.outcome === 'draw' ? 'hòa' : 'thua'} · nhận **${formatCoins(row.payout)} xu**${row.insurance ? ` · bảo hiểm ${row.insurancePercent}%` : ''}`).join('\n');
     if (state.result.reason === 'showdown') {
       const reveals = state.players.map(player => { const score = state.result.scores[player.id]; return player.folded ? `🏳️ <@${player.id}>: Đã bỏ bài (bài tẩy được giữ kín)` : `🃏 <@${player.id}>: ${cardsText(player.hole)}${score ? ` — **${score.name}**` : ''}`; }).join('\n');
       embed.addFields({ name: 'LẬT BÀI', value: reveals });
@@ -240,19 +240,41 @@ function pokerTableRows(session, state) {
     new ButtonBuilder().setCustomId(`poker:${session.id}:join`).setLabel('Tham gia bàn').setEmoji('🪑').setStyle(ButtonStyle.Success).setDisabled(state.players.length >= MAX_PLAYERS),
     new ButtonBuilder().setCustomId(`poker:${session.id}:start`).setLabel('Bắt đầu ván').setEmoji('🃏').setStyle(ButtonStyle.Primary).setDisabled(state.players.length < MAX_PLAYERS),
   )];
-  if (state.phase === 'discard') return state.players.some(player => player.id === session.user_id)
-    ? [new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId(`poker:${session.id}:view`).setLabel('Xem bài riêng').setEmoji('👁️').setStyle(ButtonStyle.Secondary), ...[0, 1, 2].map(index => new ButtonBuilder().setCustomId(`poker:${session.id}:discard:${index}`).setLabel(`Bỏ lá ${index + 1}`).setStyle(ButtonStyle.Primary)))]
-    : [];
-  const player = playerById(state, state.turnUserId); const canRaise = player && maxRaiseAmount(state, player, session.guild_id) >= 10;
-  const call = player ? Math.max(0, state.currentBet - player.streetBet) : 0; const available = player ? availableBet(state, player, session.guild_id) : 0;
   return [new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(`poker:${session.id}:view`).setLabel('Xem bài riêng').setEmoji('👁️').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(`poker:${session.id}:raise`).setLabel('Tố').setEmoji('⬆️').setStyle(ButtonStyle.Primary).setDisabled(!canRaise),
-    new ButtonBuilder().setCustomId(`poker:${session.id}:call`).setLabel(call > available ? `All-in ${formatCoins(available)}` : call ? `Theo ${formatCoins(call)}` : 'Check').setEmoji('✅').setStyle(ButtonStyle.Success).setDisabled(!player),
-    new ButtonBuilder().setCustomId(`poker:${session.id}:fold`).setLabel('Bỏ bài').setEmoji('🏳️').setStyle(ButtonStyle.Danger).setDisabled(!player),
+    new ButtonBuilder().setCustomId(`poker:${session.id}:view`).setLabel('Xem bài tẩy').setEmoji('👁️').setStyle(ButtonStyle.Secondary),
+  )];
+}
+function pokerPrivateRows(session, state, userId) {
+  const player = playerById(state, userId);
+  const view = new ButtonBuilder().setCustomId(`poker-private:${session.id}:view`).setLabel('Xem bài tẩy').setEmoji('👁️').setStyle(ButtonStyle.Secondary);
+  if (state.phase === 'complete' || state.phase === 'lobby' || !player) return [new ActionRowBuilder().addComponents(view)];
+  if (state.phase === 'discard') {
+    const canDiscard = state.turnUserId === String(userId) && state.discardPending.includes(String(userId));
+    return [new ActionRowBuilder().addComponents(view, ...[0, 1, 2].map(index => new ButtonBuilder()
+      .setCustomId(`poker-private:${session.id}:discard:${index}`).setLabel(`Bỏ lá ${index + 1}`).setStyle(ButtonStyle.Primary).setDisabled(!canDiscard)))];
+  }
+  const canAct = state.phase === 'betting' && state.turnUserId === String(userId) && !player.folded && !player.allIn;
+  const canRaise = canAct && maxRaiseAmount(state, player, session.guild_id) >= 10;
+  const call = Math.max(0, state.currentBet - player.streetBet); const available = availableBet(state, player, session.guild_id);
+  return [new ActionRowBuilder().addComponents(
+    view,
+    new ButtonBuilder().setCustomId(`poker-private:${session.id}:raise`).setLabel('Tố').setEmoji('⬆️').setStyle(ButtonStyle.Primary).setDisabled(!canRaise),
+    new ButtonBuilder().setCustomId(`poker-private:${session.id}:call`).setLabel(call > available ? `All-in ${formatCoins(available)}` : call ? `Theo ${formatCoins(call)}` : 'Check').setEmoji('✅').setStyle(ButtonStyle.Success).setDisabled(!canAct),
+    new ButtonBuilder().setCustomId(`poker-private:${session.id}:fold`).setLabel('Bỏ bài').setEmoji('🏳️').setStyle(ButtonStyle.Danger).setDisabled(!canAct),
   )];
 }
 function setPokerMessage(id, messageId) { db.prepare('UPDATE poker_sessions SET message_id=?,updated_at=? WHERE id=?').run(String(messageId), Date.now(), String(id)); }
+
+async function editPublicTable(client, session, state) {
+  if (!session.message_id) return;
+  try {
+    const channel = await client.channels.fetch(session.channel_id);
+    const message = channel?.isTextBased?.() ? await channel.messages.fetch(session.message_id) : null;
+    if (message) await message.edit({ embeds: [pokerTableEmbed(state)], components: pokerTableRows(session, state), allowedMentions: { parse: [] } });
+  } catch (error) {
+    console.warn?.(`[poker] Could not update table ${session.id}: ${error.message}`);
+  }
+}
 
 async function handlePokerButton(interaction) {
   const [, id, action, rawIndex] = interaction.customId.split(':'); const session = getSession(id);
@@ -262,7 +284,8 @@ async function handlePokerButton(interaction) {
     return interaction.update({ embeds: [pokerTableEmbed(expiredState)], components: [], allowedMentions: { parse: [] } });
   }
   let state = parseState(session);
-  if (action === 'view') return interaction.reply({ content: privateHandText(state, interaction.user.id), flags: MessageFlags.Ephemeral });
+  if (action === 'view') return interaction.reply({ content: privateHandText(state, interaction.user.id), components: pokerPrivateRows(session, state, interaction.user.id), flags: MessageFlags.Ephemeral });
+  if (!['join', 'start'].includes(action)) return interaction.reply({ content: 'Hãy mở bảng thao tác riêng bằng nút **Xem bài tẩy** để thực hiện lượt của bạn.', flags: MessageFlags.Ephemeral });
   try {
     if (action === 'join') state = joinPokerTable(id, interaction.user.id, interaction.user.username);
     else if (action === 'start') state = startPokerHand(id, interaction.user.id);
@@ -278,7 +301,35 @@ async function handlePokerButton(interaction) {
     const latestSession = getSession(id) || session;
     return interaction.update({ embeds: [pokerTableEmbed(state)], components: latestSession ? pokerTableRows(latestSession, state) : [], allowedMentions: { parse: [] } });
   } catch (error) {
-    const messages = { TABLE_CLOSED: 'Bàn đã bắt đầu hoặc đã kết thúc.', ALREADY_SEATED: 'Bạn đã ngồi ở bàn này.', TABLE_FULL: 'Bàn đã đủ người.', ACTIVE_SESSION: 'Bạn đang có một ván Poker chưa kết thúc.', NOT_HOST: 'Chỉ người tạo bàn mới có thể bắt đầu.', NEED_OPPONENT: 'Cần đủ 2 người mới bắt đầu được.', NOT_YOUR_TURN: 'Chưa tới lượt bạn.', CANNOT_RAISE: 'Bạn không thể tố thêm lúc này.', INSUFFICIENT_FUNDS: `Bạn không đủ xu để vào bàn. Số dư: ${formatCoins(error.balance)} xu.`, INVALID_RAISE: 'Mức tố tối thiểu là 10 xu.', INVALID_PHASE: 'Lựa chọn này không còn hợp lệ.' };
+    const messages = { TABLE_CLOSED: 'Bàn đã bắt đầu hoặc đã kết thúc.', ALREADY_SEATED: 'Bạn đã ngồi ở bàn này.', TABLE_FULL: 'Bàn đã đủ người.', ACTIVE_SESSION: 'Bạn đang có một ván Poker chưa kết thúc.', NOT_HOST: 'Chỉ người tạo bàn mới có thể bắt đầu.', NEED_OPPONENT: 'Cần đủ 2 người mới bắt đầu được.', NOT_YOUR_TURN: 'Chưa tới lượt bạn.', CANNOT_RAISE: 'Bạn không thể tố thêm lúc này.', INSUFFICIENT_FUNDS: 'Bạn không đủ xu để vào bàn.', INVALID_RAISE: 'Mức tố tối thiểu là 10 xu.', INVALID_PHASE: 'Lựa chọn này không còn hợp lệ.' };
+    return interaction.reply({ content: messages[error.message] || 'Không thể thực hiện hành động này.', flags: MessageFlags.Ephemeral });
+  }
+}
+
+async function handlePokerPrivateButton(interaction) {
+  const [, id, action, rawIndex] = interaction.customId.split(':'); const session = getSession(id);
+  if (!session || session.guild_id !== interaction.guildId || session.channel_id !== interaction.channelId) return interaction.reply({ content: 'Bàn Poker này không còn tồn tại.', flags: MessageFlags.Ephemeral });
+  if (session.expires_at <= Date.now()) {
+    const state = await expirePokerTable(session, null, false);
+    await editPublicTable(interaction.client, session, state);
+    return interaction.update({ content: privateHandText(state, interaction.user.id), components: pokerPrivateRows(session, state, interaction.user.id) });
+  }
+  const state = parseState(session);
+  if (action === 'view') return interaction.update({ content: privateHandText(state, interaction.user.id), components: pokerPrivateRows(session, state, interaction.user.id) });
+  try {
+    if (action === 'raise') {
+      const player = playerById(state, interaction.user.id);
+      if (!player || !userCanAct(session, state, interaction.user.id)) throw new Error('NOT_YOUR_TURN');
+      const max = maxRaiseAmount(state, player, session.guild_id);
+      if (max < 10) throw new Error('CANNOT_RAISE');
+      const modal = new ModalBuilder().setCustomId(`poker-private-modal:${id}:raise`).setTitle('Tố thêm xu').addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('amount').setLabel(`Số xu tố thêm (10–${max})`).setStyle(TextInputStyle.Short).setRequired(true)));
+      return interaction.showModal(modal);
+    }
+    const nextState = action === 'discard' ? discardCard(id, interaction.user.id, Number(rawIndex)) : playerAction(id, interaction.user.id, action);
+    await editPublicTable(interaction.client, session, nextState);
+    return interaction.update({ content: privateHandText(nextState, interaction.user.id), components: pokerPrivateRows(session, nextState, interaction.user.id), allowedMentions: { parse: [] } });
+  } catch (error) {
+    const messages = { NOT_YOUR_TURN: 'Chưa tới lượt bạn.', INVALID_PHASE: 'Lựa chọn này không còn hợp lệ.', CANNOT_RAISE: 'Bạn không thể tố thêm lúc này.', INVALID_RAISE: 'Mức tố tối thiểu là 10 xu.' };
     return interaction.reply({ content: messages[error.message] || 'Không thể thực hiện hành động này.', flags: MessageFlags.Ephemeral });
   }
 }
@@ -288,10 +339,11 @@ async function handlePokerModal(interaction) {
   if (!/^\d+$/.test(text)) return interaction.reply({ content: 'Số xu tố không hợp lệ.', flags: MessageFlags.Ephemeral });
   const session = getSession(id);
   if (!session || session.guild_id !== interaction.guildId || session.channel_id !== interaction.channelId) return interaction.reply({ content: 'Bàn Poker này không còn tồn tại.', flags: MessageFlags.Ephemeral });
-  if (session.expires_at <= Date.now()) { await expirePokerTable(session, null, false); return interaction.reply({ content: 'Bàn đã hết thời gian. Tiền cược được hoàn lại.', flags: MessageFlags.Ephemeral }); }
+  if (session.expires_at <= Date.now()) { const state = await expirePokerTable(session, null, false); await editPublicTable(interaction.client, session, state); return interaction.reply({ content: 'Bàn đã hết thời gian. Tiền cược được hoàn lại.', flags: MessageFlags.Ephemeral }); }
   try {
-    const state = playerAction(id, interaction.user.id, 'raise', Number(text)); const session = getSession(id);
-    return interaction.update({ embeds: [pokerTableEmbed(state)], components: session ? pokerTableRows(session, state) : [], allowedMentions: { parse: [] } });
+    const state = playerAction(id, interaction.user.id, 'raise', Number(text));
+    await editPublicTable(interaction.client, session, state);
+    return interaction.update({ content: privateHandText(state, interaction.user.id), components: pokerPrivateRows(session, state, interaction.user.id), allowedMentions: { parse: [] } });
   } catch (error) {
     return interaction.reply({ content: error.message === 'NOT_YOUR_TURN' ? 'Hết lượt của bạn.' : error.message === 'BET_LIMIT' ? `Bạn chỉ có thể tố thêm tối đa ${formatCoins(error.maxRaise)} xu trong giới hạn ${formatCoins(error.maxBet)} xu/ván.` : error.message === 'INVALID_RAISE' ? 'Mức tố tối thiểu là 10 xu.' : 'Không thể tố lúc này.', flags: MessageFlags.Ephemeral });
   }
@@ -316,4 +368,4 @@ async function expirePokerTable(session, client, updateMessage = true) {
   }
 }
 
-module.exports = { VARIANTS, createPokerLobby, hasActiveTable, setPokerMessage, pokerTableEmbed, pokerTableRows, handlePokerButton, handlePokerModal, expirePokerTable };
+module.exports = { VARIANTS, createPokerLobby, hasActiveTable, setPokerMessage, pokerTableEmbed, pokerTableRows, handlePokerButton, handlePokerPrivateButton, handlePokerModal, expirePokerTable };

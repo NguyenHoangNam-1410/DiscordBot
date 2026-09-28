@@ -1,7 +1,7 @@
 const { handleBetButton, handleBetModal } = require('./services/multiplayerGameService');
 const { handleBlackjackButton } = require('./services/blackjackService');
 const { handleBlackjackDuelButton } = require('./services/blackjackDuelService');
-const { handlePokerButton, handlePokerModal } = require('./services/pokerService');
+const { handlePokerButton, handlePokerPrivateButton, handlePokerModal } = require('./services/pokerService');
 const { handleHorseButton, handleHorseModal } = require('./services/horseRaceService');
 const { handleMinesButton } = require('./services/minesService');
 const { handleHardcoreButton } = require('./services/hardcoreService');
@@ -40,6 +40,7 @@ const ROUTES = Object.freeze([
   { kind: 'button', prefix: 'anxin:', handle: handleCoinRequestButton },
   { kind: 'button', prefix: 'rpsduel:', handle: handleRpsDuelButton },
   { kind: 'button', prefix: 'bjduel:', handle: handleBlackjackDuelButton },
+  { kind: 'button', prefix: 'poker-private:', handle: handlePokerPrivateButton },
   { kind: 'button', prefix: 'poker:', handle: handlePokerButton },
   { kind: 'button', prefix: 'hardcore:', handle: handleHardcoreButton },
   { kind: 'button', prefix: 'mines:', handle: handleMinesButton },
@@ -49,6 +50,7 @@ const ROUTES = Object.freeze([
   { kind: 'modal', prefix: 'horserace-modal:', handle: handleHorseModal },
   { kind: 'modal', prefix: 'gamebet-modal:', handle: handleBetModal },
   { kind: 'modal', prefix: 'poker-modal:', handle: handlePokerModal },
+  { kind: 'modal', prefix: 'poker-private-modal:', handle: handlePokerModal },
   { kind: 'modal', prefix: 'game-config-modal:', handle: interaction => gameCommand.handleConfigModal(interaction) },
 ]);
 

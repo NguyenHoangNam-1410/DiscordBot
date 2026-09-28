@@ -22,7 +22,7 @@ function usePanel(guildId, userId, status = null, selectedGame = 'all') {
     .setDescription(inventory.length
       ? `${status ? `${status}\n\n` : ''}Chọn game để lọc, sau đó chọn vật phẩm muốn dùng hoặc trang bị.\n\n${inventory.map(entry => {
         const labels = gameLabels(entry.item);
-        const scope = labels ? `Dùng trong: ${labels.join(', ')}` : 'Dùng chung · hiện ở mọi bộ lọc';
+        const scope = labels?.length ? `Dùng trong: ${labels.join(', ')}` : labels ? 'Vật phẩm hồ sơ · không gắn với game' : 'Dùng chung · hiện ở mọi bộ lọc';
         return `${RARITY_EMOJI[entry.item.rarity] || '▫️'} **${entry.item.name}${['R', 'SR', 'SSR', 'UR'].includes(entry.item.rarity) ? ` [${entry.item.rarity}]` : ''}** ×${entry.quantity}\n_${scope}_\n_${entry.item.description}_`;
       }).join('\n')}`
       : `${status ? `${status}\n\n` : ''}${allInventory.length ? 'Không có vật phẩm áp dụng cho game này.' : 'Kho đồ chưa có vật phẩm có thể sử dụng.'}`)

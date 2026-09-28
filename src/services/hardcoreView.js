@@ -49,7 +49,7 @@ function hardcoreEmbed(state, userId, result, classes) {
     const text = result.reason === 'cashout' || result.reason === 'summit' ? `💰 Kết thúc run và nhận **${formatCoins(result.payout)} xu**.`
       : result.reason === 'forfeit' ? `🏳️ Bỏ run trước khi vượt tầng đầu, mất **${formatCoins(state.stake)} xu**.`
         : `💀 Run kết thúc tại tầng ${state.floor}. Mất toàn bộ payout tạm giữ.`;
-    embed.addFields({ name: 'Kết quả', value: text }).setFooter({ text: `Số dư: ${formatCoins(result.balance)} xu` });
+    embed.addFields({ name: 'Kết quả', value: text });
     addExperienceField(embed, result);
     if (result.achievements?.length) embed.addFields({ name: '🏅 Thành tựu mới', value: result.achievements.map(item => `**${item.name}**`).join('\n') });
   } else embed.setFooter({ text: `Lượt ${state.turn} • Cược ${formatCoins(state.stake)} xu • Tầng 100 hoàn thành • Tối đa 999` });

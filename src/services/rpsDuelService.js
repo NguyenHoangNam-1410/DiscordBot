@@ -198,7 +198,7 @@ async function handleRpsDuelButton(interaction) {
     }
   } catch (error) {
     if (error.message === 'BET_LIMIT') return interaction.reply({ content: `Giới hạn cược Oẳn tù tì hiện tại là **${formatCoins(error.maxBet)} xu**.`, flags: MessageFlags.Ephemeral });
-    if (error.code === 'INSUFFICIENT_FUNDS') return interaction.reply({ content: `Một trong hai người không đủ xu. Số dư kiểm tra được: **${formatCoins(error.balance)} xu**.`, flags: MessageFlags.Ephemeral });
+    if (error.code === 'INSUFFICIENT_FUNDS') return interaction.reply({ content: 'Một người chơi không đủ xu để tham gia ván này.', flags: MessageFlags.Ephemeral });
     const messages = {
       NOT_OPPONENT: 'Chỉ người được thách đấu mới có thể quyết định.', DUEL_CLOSED: 'Lời thách đấu này đã được xử lý.',
       DUEL_NOT_PLAYING: 'Ván đấu chưa bắt đầu hoặc đã kết thúc.', NOT_DUEL_PLAYER: 'Chỉ hai người trong ván mới được chọn.',

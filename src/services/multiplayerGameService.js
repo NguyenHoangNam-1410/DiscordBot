@@ -279,10 +279,10 @@ async function handleBetModal(interaction) {
   if (!/^\d+$/.test(amountText) || !Number.isSafeInteger(amount)) return interaction.reply({ content: 'Số xu cược không hợp lệ.', flags: MessageFlags.Ephemeral });
   try {
     const placed = placeBetTx({ roundId, userId: interaction.user.id, choice, amount });
-    await interaction.reply({ content: `✅ Đã cược **${formatCoins(amount)} xu** vào **${choiceLabel(game, choice)}**. Tổng cược ván này: **${formatCoins(placed.totalAmount)} xu**. Số dư: **${formatCoins(placed.account.balance)} xu**.`, flags: MessageFlags.Ephemeral });
+    await interaction.reply({ content: `✅ Đã cược **${formatCoins(amount)} xu** vào **${choiceLabel(game, choice)}**. Tổng cược ván này: **${formatCoins(placed.totalAmount)} xu**.`, flags: MessageFlags.Ephemeral });
     await refreshRoundMessage(placed.round, interaction.client);
   } catch (error) {
-    const content = error.code === 'INSUFFICIENT_FUNDS' ? `Bạn không đủ xu. Số dư: **${formatCoins(error.balance)} xu**.`
+    const content = error.code === 'INSUFFICIENT_FUNDS' ? 'Bạn không đủ xu để đặt cược.'
       : error.message === 'ROUND_CLOSED' ? 'Ván đã khóa cược.'
         : error.message === 'BET_LIMIT' ? `Tổng cược tối đa của bạn trong ván này là ${formatCoins(error.maxBet)} xu.`
           : 'Mức cược phải là số nguyên từ 10 đến 100.000 xu.';

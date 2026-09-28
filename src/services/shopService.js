@@ -2,7 +2,7 @@ const crypto = require('node:crypto');
 const { db } = require('../db');
 const { getAccount, spendCoins } = require('./economyService');
 const { getCosmetic, getProfileAppearance, grantCosmetic, equipCosmetic } = require('./profileCosmeticService');
-const { getCatalogItem, listCatalog } = require('./itemCatalogService');
+const { getCatalogItem } = require('./itemCatalogService');
 
 const MAX_PRICE = 100_000_000;
 const ROTATION_MS = 86_400_000;
@@ -41,26 +41,8 @@ function upsertShopItem({ guildId, catalogId, displayName, price, stock = null, 
 }
 
 function seedShop(guildId) {
-  const guild = String(guildId); const now = Date.now();
-  const insert = db.prepare(`INSERT OR IGNORE INTO shop_items
-    (guild_id,item_id,cosmetic_id,display_name,price,stock,min_games,min_wins,min_balance,active,created_by,created_at,updated_at)
-    VALUES (?,?,?,?,?,NULL,0,0,0,0,'system',?,?)`);
-  const refreshSystemPrice = db.prepare(`UPDATE shop_items SET price=?,display_name=?,updated_at=?
-    WHERE guild_id=? AND cosmetic_id=? AND created_by='system' AND (price<>? OR display_name<>?)`);
-  const retireUnavailableItem = db.prepare('UPDATE shop_items SET listed=0,active=0,updated_at=? WHERE guild_id=? AND cosmetic_id=? AND (listed<>0 OR active<>0)');
-  let added = 0;
-  db.transaction(() => {
-    const eligible = listCatalog({ shopEligible: true });
-    const eligibleIds = new Set(eligible.map(item => item.id));
-    for (const item of eligible) {
-      added += insert.run(guild, itemCode(item.id), item.id, item.name, item.price, now, now).changes;
-      refreshSystemPrice.run(item.price, item.name, now, guild, item.id, item.price, item.name);
-    }
-    for (const row of db.prepare('SELECT cosmetic_id FROM shop_items WHERE guild_id=?').all(guild)) {
-      if (!eligibleIds.has(row.cosmetic_id)) retireUnavailableItem.run(now, guild, row.cosmetic_id);
-    }
-  })();
-  return added;
+  return db.prepare(`UPDATE shop_items SET listed=0,active=0,updated_at=?
+    WHERE guild_id=? AND created_by='system' AND (listed<>0 OR active<>0)`).run(Date.now(), String(guildId)).changes;
 }
 function randomPick(pool, count) {
   const values = [...pool];
@@ -71,6 +53,15 @@ function rotateShop(guildId, size = 8, now = Date.now()) {
   const count = integer(size, 6, 10); seedShop(guildId);
   const entries = db.prepare('SELECT * FROM shop_items WHERE guild_id = ? AND listed = 1').all(String(guildId))
     .map(row => ({ row, item: getCatalogItem(row.cosmetic_id) })).filter(entry => entry.item);
+  if (!entries.length) {
+    db.transaction(() => {
+      db.prepare('UPDATE shop_items SET active=0 WHERE guild_id=?').run(String(guildId));
+      db.prepare(`INSERT INTO shop_settings (guild_id,rotation_size,next_rotation_at,updated_at) VALUES (?,?,?,?)
+        ON CONFLICT(guild_id) DO UPDATE SET rotation_size=excluded.rotation_size,next_rotation_at=excluded.next_rotation_at,updated_at=excluded.updated_at`)
+        .run(String(guildId), count, now + ROTATION_MS, now);
+    })();
+    return [];
+  }
   const chosen = new Map();
   for (const entry of [
     ...randomPick(entries.filter(x => x.item.type === 'chest'), 1),
@@ -92,15 +83,23 @@ function rotateShop(guildId, size = 8, now = Date.now()) {
   return listShopItems(guildId, { activeOnly: true, skipRotation: true });
 }
 function ensureRotation(guildId, now = Date.now()) {
-  const added = seedShop(guildId);
+  seedShop(guildId);
+  const listed = db.prepare('SELECT cosmetic_id FROM shop_items WHERE guild_id=? AND listed=1').all(String(guildId))
+    .map(row => getCatalogItem(row.cosmetic_id)).filter(Boolean);
+  if (!listed.length) {
+    db.prepare('UPDATE shop_items SET active=0 WHERE guild_id=?').run(String(guildId));
+    return null;
+  }
   const settings = db.prepare('SELECT * FROM shop_settings WHERE guild_id = ?').get(String(guildId));
-  if (added || !settings || settings.next_rotation_at <= now || settings.next_rotation_at > now + ROTATION_MS) return rotateShop(guildId, settings?.rotation_size || 8, now);
+  if (!settings || settings.next_rotation_at <= now || settings.next_rotation_at > now + ROTATION_MS) return rotateShop(guildId, settings?.rotation_size || 8, now);
   const active = db.prepare('SELECT cosmetic_id FROM shop_items WHERE guild_id=? AND listed=1 AND active=1').all(String(guildId))
     .map(row => getCatalogItem(row.cosmetic_id)).filter(Boolean);
-  const minimumGameItems = Math.min(settings.rotation_size - 1, 5);
-  if (active.length !== settings.rotation_size
+  const targetSize = Math.min(settings.rotation_size, listed.length);
+  const availableGameItems = listed.filter(item => ['chest', 'consumable'].includes(item.type)).length;
+  const minimumGameItems = Math.min(targetSize - 1, 5, availableGameItems);
+  if (active.length !== targetSize
     || active.filter(item => ['chest', 'consumable'].includes(item.type)).length < minimumGameItems
-    || active.filter(item => item.type === 'color').length > 1) return rotateShop(guildId, settings.rotation_size || 8, now);
+    || active.filter(item => item.type === 'color').length > Math.min(1, targetSize)) return rotateShop(guildId, settings.rotation_size || 8, now);
   return null;
 }
 function listShopItems(guildId, { activeOnly = true, skipRotation = false } = {}) {

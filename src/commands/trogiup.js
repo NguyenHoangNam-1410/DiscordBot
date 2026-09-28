@@ -59,7 +59,7 @@ const PAGES = Object.freeze({
     description: 'Hồ sơ, số dư và các bảng xếp hạng là riêng cho từng server.',
     fields: [
       ['👤 Hồ sơ và xếp hạng', '`/hoso` — xem hồ sơ và thống kê từng game; `/xephang` — chọn tài sản hoặc game bằng menu.'],
-      ['💰 Xu', '`/xu sodu` — xem số dư; `/xu lichsu` — giao dịch; `/xu vanchoi` — 10 ván gần nhất; `/xu chuyen` — chuyển xu.'],
+      ['💰 Xu', '`/hoso` — xem số dư; `/xu lichsu` — giao dịch; `/xu vanchoi` — 10 ván gần nhất; `/xu chuyen` — chuyển xu.'],
       ['🪙 Hỗ trợ', '`/anxin` — xin xu khi đủ điều kiện; tối đa 5 lần mỗi ngày.'],
       ['🎁 Drop sau ván', 'Mỗi ván có thể rơi xu, gem và lượt quay Gacha theo cấu hình của server.'],
     ],

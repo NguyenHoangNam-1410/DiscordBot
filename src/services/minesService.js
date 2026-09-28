@@ -195,7 +195,7 @@ function minesEmbed(state, userId, result = null) {
     const text = result.reason === 'mine' ? `💥 Trúng mìn, mất **${formatCoins(state.stake)} xu**.`
       : result.reason === 'forfeit' ? `🏳️ Đã bỏ ván và mất **${formatCoins(state.stake)} xu**.`
         : `💰 Đã rút **${formatCoins(result.payout)} xu** ở x${multiplier.toFixed(2)}.${state.specialFound ? '\n🌟 Phần thưởng đã bao gồm bonus ô đặc biệt.' : ''}`;
-    embed.addFields({ name: '🏆 KẾT QUẢ', value: `### ${text}` }).setFooter({ text: `Số dư: ${formatCoins(result.balance)} xu` });
+    embed.addFields({ name: '🏆 KẾT QUẢ', value: `### ${text}` });
     addExperienceField(embed, result);
     if (result.achievements?.length) embed.addFields({ name: '🏅 Thành tựu mới', value: result.achievements.map(item => `**${item.name}**`).join('\n') });
   } else embed.setFooter({ text: 'Tín hiệu hàng/cột chỉ hiện trong thông báo riêng • 🌟 = bonus multiplier • 💣 = thua ván' });

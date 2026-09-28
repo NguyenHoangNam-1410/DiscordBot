@@ -85,7 +85,7 @@ async function handlePrefixMessage(message, logger = console) {
   try {
     if (isRemove) {
       const account = removeCoinsByAdmin({ guildId: message.guildId, userId: parsed.userId, amount: parsed.amount, adminId: message.author.id, reason: parsed.reason });
-      await message.reply({ content: `⚠️ Đã trừ **${formatCoins(account.deducted)} xu** của <@${parsed.userId}>. Lý do: **${parsed.reason}**. Số dư mới: **${formatCoins(account.balance)} xu**.`, allowedMentions: { users: [parsed.userId], repliedUser: false } });
+      await message.reply({ content: `⚠️ Đã trừ **${formatCoins(account.deducted)} xu** của <@${parsed.userId}>. Lý do: **${parsed.reason}**.`, allowedMentions: { users: [parsed.userId], repliedUser: false } });
       logger.info?.({ adminId: message.author.id, userId: parsed.userId, guildId: message.guildId, requested: parsed.amount, deducted: account.deducted, reason: parsed.reason }, 'admin removed gold');
     } else {
       addCoinsByAdmin({ guildId: message.guildId, userId: parsed.userId, amount: parsed.amount, adminId: message.author.id, reason: parsed.reason });
