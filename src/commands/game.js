@@ -1,0 +1,273 @@
+const { ChannelType, EmbedBuilder, MessageFlags, PermissionFlagsBits, SlashCommandBuilder } = require('discord.js');
+const { GAMES, setGameChannel, listGameChannels } = require('../services/gameChannelService');
+const { REWARD_GAMES, setGameReward, listGameRewards } = require('../services/gameRewardService');
+const { formatCoins } = require('../utils/economy');
+const { BET_GAMES, setGameBetLimit, listGameBetLimits } = require('../services/gameBetLimitService');
+const { getEconomyDashboard } = require('../services/economyService');
+const { getOperationalHealth } = require('../services/operationalHealthService');
+const { GAME_CONFIG_KEYS, GAME_CONFIG_SPECS, listGameConfigs, setGameConfig, resetGameConfig } = require('../services/gameConfigService');
+const { MAX_WEEKLY_ROLE_REWARD, listWeeklyRoleRewards, setWeeklyRoleReward, removeWeeklyRoleReward } = require('../services/weeklyRoleRewardService');
+const { listGachaPool, addGachaItem, setGachaRate, gachaItemChoices } = require('../services/gachaPoolService');
+const { listBuffs, setBuff, removeBuff } = require('../services/gameBuffService');
+
+const LABELS = { baucua: 'Bầu cua', oantuti: 'Oẳn tù tì', taixiu: 'Tài xỉu', chinchiro: 'Chinchiro', blackjack: 'Xì dách', poker: 'Poker', duangua: 'Đua ngựa', mines: 'Dò mìn', hardcore: 'Sinh tồn', vuatiengviet: 'Vua tiếng Việt' };
+const choices = GAMES.map(game => ({ name: LABELS[game], value: game }));
+const rewardChoices = REWARD_GAMES.map(game => ({ name: LABELS[game], value: game }));
+const betChoices = BET_GAMES.map(game => ({ name: LABELS[game], value: game }));
+const configChoices = GAME_CONFIG_KEYS.map(key => ({ name: `${GAME_CONFIG_SPECS[key].label} (${key})`, value: key }));
+const tierChoices = ['R', 'SR', 'SSR', 'UR'].map(value => ({ name: value, value }));
+const buffChoices = [
+  { name: 'Nhân số xu drop', value: 'coins' },
+  { name: 'Nhân số gem drop', value: 'diamonds' },
+  { name: 'Nhân số lượt Gacha drop', value: 'free_pull' },
+  { name: 'Tăng tỷ lệ ra vật phẩm Gacha', value: 'gacha_luck' },
+];
+const buffLabels = Object.fromEntries(buffChoices.map(item => [item.value, item.name]));
+
+function isAdmin(interaction) {
+  const ids = String(process.env.ADMIN_USER_ID || '').split(/[,;\n]/).map(id => id.trim()).filter(Boolean);
+  return ids.includes(interaction.user.id) || interaction.memberPermissions?.has(PermissionFlagsBits.Administrator);
+}
+function durationText(seconds) {
+  const days = Math.floor(seconds / 86400); const hours = Math.floor((seconds % 86400) / 3600); const minutes = Math.floor((seconds % 3600) / 60);
+  return [days && `${days} ngày`, hours && `${hours} giờ`, minutes && `${minutes} phút`].filter(Boolean).join(' ') || '< 1 phút';
+}
+function sizeText(bytes) { return bytes >= 1_048_576 ? `${(bytes / 1_048_576).toFixed(1)} MB` : `${Math.ceil(bytes / 1024)} KB`; }
+function configValueText(item) {
+  if (item.key === 'HARD_QUESTION_CHANCE' || item.key.endsWith('_DROP_CHANCE')) return `${item.value} (${(item.value * 100).toFixed(2).replace(/\.00$/, '')}%)`;
+  if (item.key === 'HARD_QUESTION_DURATION_SECONDS') return `${item.value} giây`;
+  return item.key === 'ECONOMY_STARTING_COINS' || item.key === 'VUATIENGVIET_REWARD' || item.key === 'POKER_ANTE'
+    ? `${formatCoins(item.value)} xu` : String(item.value);
+}
+
+module.exports = {
+  data: new SlashCommandBuilder().setName('game').setDescription('Quản trị trò chơi, economy và vận hành bot')
+    .addSubcommand(command => command.setName('setup').setDescription('Chọn channel cho một game')
+      .addStringOption(option => option.setName('trochoi').setDescription('Trò chơi').setRequired(true).addChoices(...choices))
+      .addChannelOption(option => option.setName('channel').setDescription('Channel chứa game; có thể dùng chung').setRequired(true).addChannelTypes(ChannelType.GuildText)))
+    .addSubcommand(command => command.setName('channels').setDescription('Xem channel đã thiết lập'))
+    .addSubcommand(command => command.setName('reward').setDescription('Đặt phần thưởng xu cho một game')
+      .addStringOption(option => option.setName('trochoi').setDescription('Game có thưởng cố định').setRequired(true).addChoices(...rewardChoices))
+      .addIntegerOption(option => option.setName('xu').setDescription('Số xu thưởng (0–100.000)').setRequired(true).setMinValue(0).setMaxValue(100000)))
+    .addSubcommand(command => command.setName('rewards').setDescription('Xem phần thưởng của từng game'))
+    .addSubcommand(command => command.setName('maxbet').setDescription('Đặt giới hạn cược tối đa cho một game')
+      .addStringOption(option => option.setName('trochoi').setDescription('Game đặt cược').setRequired(true).addChoices(...betChoices))
+      .addIntegerOption(option => option.setName('xu').setDescription('Giới hạn mỗi người/ván (10–100.000)').setRequired(true).setMinValue(10).setMaxValue(100000)))
+    .addSubcommand(command => command.setName('maxbets').setDescription('Xem giới hạn cược của các game'))
+    .addSubcommand(command => command.setName('economy').setDescription('Xem sức khỏe nền kinh tế trong 24 giờ'))
+    .addSubcommand(command => command.setName('health').setDescription('Kiểm tra database, backup và phiên đang chạy'))
+    .addSubcommand(command => command.setName('configs').setDescription('Xem các biến cân bằng game của server'))
+    .addSubcommand(command => command.setName('config').setDescription('Thay đổi một biến cân bằng game')
+      .addStringOption(option => option.setName('bien').setDescription('Biến cần thay đổi').setRequired(true).addChoices(...configChoices))
+      .addNumberOption(option => option.setName('giatri').setDescription('Giá trị mới').setRequired(true).setMinValue(0).setMaxValue(1_000_000)))
+    .addSubcommand(command => command.setName('configreset').setDescription('Khôi phục một biến về giá trị .env/mặc định')
+      .addStringOption(option => option.setName('bien').setDescription('Biến cần khôi phục').setRequired(true).addChoices(...configChoices)))
+    .addSubcommand(command => command.setName('roleweeklyset').setDescription('Đặt xu thưởng hàng tuần cho một role')
+      .addRoleOption(option => option.setName('role').setDescription('Role nhận thưởng').setRequired(true))
+      .addIntegerOption(option => option.setName('xu').setDescription('Số xu mỗi thành viên nhận').setRequired(true).setMinValue(1).setMaxValue(MAX_WEEKLY_ROLE_REWARD)))
+    .addSubcommand(command => command.setName('roleweeklyremove').setDescription('Xóa thưởng hàng tuần của một role')
+      .addRoleOption(option => option.setName('role').setDescription('Role cần xóa cấu hình').setRequired(true)))
+    .addSubcommand(command => command.setName('roleweeklylist').setDescription('Xem các role đang nhận thưởng hàng tuần'))
+    .addSubcommand(command => command.setName('gachaadd').setDescription('Thêm vật phẩm catalog vào pool Gacha')
+      .addStringOption(option => option.setName('item').setDescription('Vật phẩm').setRequired(true).setAutocomplete(true))
+      .addStringOption(option => option.setName('tier').setDescription('Bậc hiếm').setRequired(true).addChoices(...tierChoices))
+      .addNumberOption(option => option.setName('percent').setDescription('Tỷ lệ mục tiêu, từ 0 đến dưới 100%').setRequired(true).setMinValue(0).setMaxValue(99.99)))
+    .addSubcommand(command => command.setName('gacharate').setDescription('Điều chỉnh tỷ lệ một phần thưởng trong pool Gacha')
+      .addStringOption(option => option.setName('reward').setDescription('Phần thưởng trong pool').setRequired(true).setAutocomplete(true))
+      .addNumberOption(option => option.setName('percent').setDescription('Tỷ lệ mục tiêu, 0% để tắt').setRequired(true).setMinValue(0).setMaxValue(99.99)))
+    .addSubcommand(command => command.setName('gachapool').setDescription('Xem pool và tỷ lệ Gacha hiện tại'))
+    .addSubcommand(command => command.setName('buffset').setDescription('Bật hoặc tắt buff sự kiện có thời hạn')
+      .addStringOption(option => option.setName('action').setDescription('Thao tác').setRequired(true)
+        .addChoices({ name: 'Bật/cập nhật', value: 'set' }, { name: 'Tắt', value: 'remove' }))
+      .addStringOption(option => option.setName('type').setDescription('Loại buff').setRequired(true).addChoices(...buffChoices))
+      .addNumberOption(option => option.setName('percent').setDescription('Hệ số 100–1000%; ví dụ 200% là nhân đôi').setMinValue(100).setMaxValue(1000))
+      .addNumberOption(option => option.setName('hours').setDescription('Thời lượng buff, tối đa 720 giờ').setMinValue(0.1).setMaxValue(720)))
+    .addSubcommand(command => command.setName('buffs').setDescription('Xem các buff sự kiện đang hoạt động')),
+  async execute(interaction) {
+    if (!interaction.guildId) return interaction.reply({ content: 'Lệnh này chỉ dùng được trong server.', flags: MessageFlags.Ephemeral });
+    const subcommand = interaction.options.getSubcommand();
+    if (subcommand === 'setup') {
+      if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được thiết lập channel game.', flags: MessageFlags.Ephemeral });
+      const game = interaction.options.getString('trochoi', true);
+      const channel = interaction.options.getChannel('channel', true);
+      setGameChannel(interaction.guildId, game, channel.id);
+      return interaction.reply({ content: `✅ Đã đặt <#${channel.id}> làm channel chơi **${LABELS[game]}**. Channel này có thể chứa thêm game khác.`, flags: MessageFlags.Ephemeral });
+    }
+    if (subcommand === 'reward') {
+      if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được thay đổi phần thưởng game.', flags: MessageFlags.Ephemeral });
+      const game = interaction.options.getString('trochoi', true);
+      const reward = interaction.options.getInteger('xu', true);
+      setGameReward(interaction.guildId, game, reward);
+      return interaction.reply({ content: `✅ Phần thưởng **${LABELS[game]}** đã đặt thành **${formatCoins(reward)} xu** mỗi đáp án đúng.`, flags: MessageFlags.Ephemeral });
+    }
+    if (subcommand === 'rewards') {
+      const description = listGameRewards(interaction.guildId).map(item => `**${LABELS[item.game]}:** ${formatCoins(item.reward)} xu`).join('\n');
+      return interaction.reply({ embeds: [new EmbedBuilder().setColor(0xF1C40F).setTitle('💰 PHẦN THƯỞNG GAME').setDescription(description)], flags: MessageFlags.Ephemeral });
+    }
+    if (subcommand === 'maxbet') {
+      if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được thay đổi giới hạn cược.', flags: MessageFlags.Ephemeral });
+      const game = interaction.options.getString('trochoi', true);
+      const maxBet = interaction.options.getInteger('xu', true);
+      setGameBetLimit(interaction.guildId, game, maxBet);
+      return interaction.reply({ content: `✅ Giới hạn cược của **${LABELS[game]}** là **${formatCoins(maxBet)} xu/người/ván**.`, flags: MessageFlags.Ephemeral });
+    }
+    if (subcommand === 'maxbets') {
+      const description = listGameBetLimits(interaction.guildId).map(item => `**${LABELS[item.game]}:** ${formatCoins(item.maxBet)} xu/người/ván`).join('\n');
+      return interaction.reply({ embeds: [new EmbedBuilder().setColor(0xE67E22).setTitle('🎚️ GIỚI HẠN CƯỢC').setDescription(description)], flags: MessageFlags.Ephemeral });
+    }
+    if (subcommand === 'economy') {
+      if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được xem bảng điều khiển economy.', flags: MessageFlags.Ephemeral });
+      const stats = getEconomyDashboard(interaction.guildId);
+      const direction = stats.net > 0 ? '📈 Tăng' : stats.net < 0 ? '📉 Giảm' : '➖ Không đổi';
+      const categories = stats.categories.length ? stats.categories.map(item =>
+        `**${item.category}:** +${formatCoins(item.incoming)} / −${formatCoins(item.outgoing)} · ${item.transactions} giao dịch`).join('\n') : 'Chưa có giao dịch trong 24 giờ qua.';
+      const embed = new EmbedBuilder().setColor(stats.net > 0 ? 0x2ECC71 : stats.net < 0 ? 0xE74C3C : 0x95A5A6)
+        .setTitle('📊 SỨC KHỎE ECONOMY · 24 GIỜ')
+        .addFields(
+          { name: 'Tổng cung', value: `${formatCoins(stats.supply)} xu`, inline: true },
+          { name: 'Người chơi', value: `${stats.users} tổng · ${stats.activeUsers} hoạt động`, inline: true },
+          { name: 'Trung bình', value: `${formatCoins(stats.average)} xu/người`, inline: true },
+          { name: 'Dòng vào', value: `+${formatCoins(stats.minted)} xu`, inline: true },
+          { name: 'Dòng ra', value: `−${formatCoins(stats.spent)} xu`, inline: true },
+          { name: 'Biến động', value: `${direction} ${formatCoins(Math.abs(stats.net))} xu`, inline: true },
+          { name: 'Nguồn giao dịch lớn nhất', value: categories },
+        )
+        .setFooter({ text: `${stats.transactions} giao dịch trong 24 giờ · Chỉ admin nhìn thấy` })
+        .setTimestamp();
+      return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    }
+    if (subcommand === 'health') {
+      if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được xem trạng thái vận hành.', flags: MessageFlags.Ephemeral });
+      const health = getOperationalHealth();
+      const backupTime = health.backup.lastSuccessAt
+        ? `<t:${Math.floor(new Date(health.backup.lastSuccessAt).getTime() / 1000)}:R>`
+        : health.backup.running ? 'Đang tạo bản sao đầu tiên' : 'Chưa có trong phiên chạy này';
+      const healthy = health.database.check === 'ok' && !health.backup.lastError;
+      const embed = new EmbedBuilder().setColor(healthy ? 0x2ECC71 : 0xE67E22)
+        .setTitle(`${healthy ? '✅' : '⚠️'} TRẠNG THÁI VẬN HÀNH`)
+        .addFields(
+          { name: 'Database', value: `${health.database.check === 'ok' ? 'Toàn vẹn' : health.database.check} · ${sizeText(health.database.bytes)} · schema v${health.database.migration}`, inline: true },
+          { name: 'Thời gian chạy', value: durationText(health.runtime.uptimeSeconds), inline: true },
+          { name: 'Lỗi runtime', value: String(health.runtime.runtimeErrors), inline: true },
+          { name: 'Phiên hoạt động', value: `${health.active.total} tổng · ${health.active.sessions} cá nhân · ${health.active.multiplayer} bàn chung · ${health.active.duels} solo` },
+          { name: 'Backup gần nhất', value: `${backupTime}\nLịch: mỗi ${health.backup.intervalHours} giờ · giữ ${health.backup.retention} bản${health.backup.lastError ? `\n⚠️ ${health.backup.lastError}` : ''}` },
+        )
+        .setTimestamp();
+      return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    }
+    if (subcommand === 'configs') {
+      if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được xem cấu hình game.', flags: MessageFlags.Ephemeral });
+      const description = listGameConfigs(interaction.guildId).map(item =>
+        `**${item.label}** · \`${item.key}\`\n${configValueText(item)} · ${item.customized ? '🟢 đặt trong bot' : '⚪ .env/mặc định'}\n_${item.note}_`).join('\n\n');
+      return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x5865F2).setTitle('⚙️ CẤU HÌNH CÂN BẰNG GAME')
+        .setDescription(description).setFooter({ text: 'Thay đổi áp dụng ngay trong server này.' })], flags: MessageFlags.Ephemeral });
+    }
+    if (subcommand === 'config') {
+      if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được thay đổi cấu hình game.', flags: MessageFlags.Ephemeral });
+      const key = interaction.options.getString('bien', true);
+      const value = interaction.options.getNumber('giatri', true);
+      try {
+        const item = setGameConfig(interaction.guildId, key, value, interaction.user.id);
+        return interaction.reply({ content: `✅ **${item.label}** đã đổi thành **${configValueText(item)}** và áp dụng ngay cho server này.\n_${item.note}_`, flags: MessageFlags.Ephemeral });
+      } catch (error) {
+        if (error.message === 'INVALID_DROP_RANGE') return interaction.reply({ content: 'Khoảng drop không hợp lệ: giá trị tối thiểu không được lớn hơn giá trị tối đa.', flags: MessageFlags.Ephemeral });
+        if (error.message !== 'INVALID_GAME_CONFIG_VALUE') throw error;
+        const spec = error.spec;
+        return interaction.reply({ content: `Giá trị không hợp lệ. **${spec.label}** nhận ${spec.type === 'integer' ? 'số nguyên ' : 'số '}từ **${spec.min}** đến **${spec.max}**.`, flags: MessageFlags.Ephemeral });
+      }
+    }
+    if (subcommand === 'configreset') {
+      if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được khôi phục cấu hình game.', flags: MessageFlags.Ephemeral });
+      const key = interaction.options.getString('bien', true);
+      const item = resetGameConfig(interaction.guildId, key);
+      return interaction.reply({ content: `↩️ **${item.label}** đã trở về **${configValueText(item)}** từ .env/mặc định.`, flags: MessageFlags.Ephemeral });
+    }
+    if (subcommand === 'roleweeklyset') {
+      if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được cấu hình thưởng role hàng tuần.', flags: MessageFlags.Ephemeral });
+      const role = interaction.options.getRole('role', true);
+      const amount = interaction.options.getInteger('xu', true);
+      const config = setWeeklyRoleReward({ guildId: interaction.guildId, roleId: role.id, amount, createdBy: interaction.user.id });
+      return interaction.reply({ content: `✅ <@&${role.id}> được nhận **${formatCoins(config.amount)} xu/người/tuần**, áp dụng từ tuần **${config.starts_week_key}**. Thành viên dùng \`/nhiemvu thuongvaitro\` để nhận.`, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+    }
+    if (subcommand === 'roleweeklyremove') {
+      if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được xóa cấu hình thưởng role.', flags: MessageFlags.Ephemeral });
+      const role = interaction.options.getRole('role', true);
+      const removed = removeWeeklyRoleReward(interaction.guildId, role.id);
+      return interaction.reply({ content: removed ? `✅ Đã xóa thưởng hàng tuần của <@&${role.id}>.` : 'Role này chưa có cấu hình thưởng hàng tuần.', flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+    }
+    if (subcommand === 'roleweeklylist') {
+      if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được xem cấu hình thưởng role.', flags: MessageFlags.Ephemeral });
+      const configs = listWeeklyRoleRewards(interaction.guildId);
+      const description = configs.length ? configs.map(item => `<@&${item.role_id}> — **${formatCoins(item.amount)} xu/người/tuần**\nÁp dụng từ tuần: **${item.starts_week_key}**`).join('\n\n') : 'Chưa cấu hình role nhận thưởng hàng tuần.';
+      return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x2ECC71).setTitle('🎁 THƯỞNG ROLE HÀNG TUẦN').setDescription(description)
+        .setFooter({ text: 'Người chơi dùng /nhiemvu thuongvaitro · Không truy lĩnh tuần đã quên' })], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+    }
+    if (subcommand === 'gachaadd') {
+      if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được thay đổi pool Gacha.', flags: MessageFlags.Ephemeral });
+      try {
+        const entry = addGachaItem(interaction.guildId, interaction.options.getString('item', true),
+          interaction.options.getString('tier', true), interaction.options.getNumber('percent', true), interaction.user.id);
+        return interaction.reply({ content: `✅ Đã thêm/cập nhật **${entry.name}** ở bậc **${entry.tier}**. Tỷ lệ thực tế hiện tại: **${entry.rate.toFixed(2)}%**.`, flags: MessageFlags.Ephemeral });
+      } catch (error) {
+        if (error.message === 'INVALID_GACHA_ITEM') return interaction.reply({ content: 'Vật phẩm không tồn tại trong catalog.', flags: MessageFlags.Ephemeral });
+        if (error.message === 'INVALID_GACHA_TIER') return interaction.reply({ content: 'Bậc Gacha phải trùng với phân loại R/SR/SSR/UR của vật phẩm.', flags: MessageFlags.Ephemeral });
+        throw error;
+      }
+    }
+    if (subcommand === 'gacharate') {
+      if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được thay đổi tỷ lệ Gacha.', flags: MessageFlags.Ephemeral });
+      try {
+        const entry = setGachaRate(interaction.guildId, interaction.options.getString('reward', true),
+          interaction.options.getNumber('percent', true), interaction.user.id);
+        return interaction.reply({ content: `✅ Tỷ lệ **${entry.name}** đã đặt thành **${entry.rate.toFixed(2)}%**${entry.weight === 0 ? ' (đã tắt)' : ''}.`, flags: MessageFlags.Ephemeral });
+      } catch (error) {
+        if (error.message === 'INVALID_GACHA_REWARD') return interaction.reply({ content: 'Phần thưởng này không có trong pool Gacha.', flags: MessageFlags.Ephemeral });
+        if (error.message === 'GACHA_REQUIRES_HIGH_TIER') return interaction.reply({ content: 'Không thể tắt phần thưởng SR+ cuối cùng vì gói 10 lượt cần bảo đảm ít nhất SR.', flags: MessageFlags.Ephemeral });
+        if (error.message === 'EMPTY_GACHA_POOL') return interaction.reply({ content: 'Không thể tắt phần thưởng cuối cùng trong pool Gacha.', flags: MessageFlags.Ephemeral });
+        throw error;
+      }
+    }
+    if (subcommand === 'gachapool') {
+      if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được xem cấu hình Gacha.', flags: MessageFlags.Ephemeral });
+      const description = listGachaPool(interaction.guildId).map(entry =>
+        `**${entry.tier} · ${entry.name}** — ${entry.rate.toFixed(2)}%${entry.customized ? ' · tùy chỉnh' : ''}`).join('\n');
+      return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x9B59B6).setTitle('🎰 POOL GACHA').setDescription(description)
+        .setFooter({ text: 'Tỷ lệ được chuẩn hóa tự động trên tổng trọng số của pool.' })], flags: MessageFlags.Ephemeral });
+    }
+    if (subcommand === 'buffset') {
+      if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được điều chỉnh buff sự kiện.', flags: MessageFlags.Ephemeral });
+      const type = interaction.options.getString('type', true);
+      if (interaction.options.getString('action', true) === 'remove') {
+        const removed = removeBuff(interaction.guildId, type);
+        return interaction.reply({ content: removed ? `✅ Đã tắt **${buffLabels[type]}**.` : 'Buff này hiện không hoạt động.', flags: MessageFlags.Ephemeral });
+      }
+      const percent = interaction.options.getNumber('percent'); const hours = interaction.options.getNumber('hours');
+      if (percent === null || hours === null) return interaction.reply({ content: 'Khi bật buff, cần nhập `phantram` và `sogio`.', flags: MessageFlags.Ephemeral });
+      const buff = setBuff({ guildId: interaction.guildId, type, percent, hours, updatedBy: interaction.user.id });
+      const detail = type === 'gacha_luck' ? `nhân trọng số vật phẩm lên **${percent}%**` : `nhân lượng drop lên **${percent}%**`;
+      return interaction.reply({ content: `✅ Đã bật **${buffLabels[type]}**: ${detail}, kết thúc <t:${Math.floor(buff.ends_at / 1000)}:R>.`, flags: MessageFlags.Ephemeral });
+    }
+    if (subcommand === 'buffs') {
+      if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được xem buff sự kiện.', flags: MessageFlags.Ephemeral });
+      const buffs = listBuffs(interaction.guildId);
+      const description = buffs.length ? buffs.map(buff =>
+        `**${buffLabels[buff.buff_type]}:** ×${(buff.chance_bps / 10_000).toFixed(2).replace(/\.00$/, '')} · hết hạn <t:${Math.floor(buff.ends_at / 1000)}:R>`).join('\n')
+        : 'Không có buff sự kiện nào đang hoạt động.';
+      return interaction.reply({ embeds: [new EmbedBuilder().setColor(0xF1C40F).setTitle('🎊 BUFF SỰ KIỆN').setDescription(description)], flags: MessageFlags.Ephemeral });
+    }
+    const settings = new Map(listGameChannels(interaction.guildId).map(row => [row.game, row.channel_id]));
+    const description = GAMES.map(game => `**${LABELS[game]}:** ${settings.has(game) ? `<#${settings.get(game)}>` : 'Chưa thiết lập'}`).join('\n');
+    return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x5865F2).setTitle('🎮 CHANNEL TRÒ CHƠI').setDescription(description)], flags: MessageFlags.Ephemeral });
+  },
+  async autocomplete(interaction) {
+    const subcommand = interaction.options.getSubcommand();
+    const focused = interaction.options.getFocused?.() || '';
+    const source = subcommand === 'gachaadd'
+      ? gachaItemChoices()
+      : subcommand === 'gacharate'
+        ? listGachaPool(interaction.guildId).map(entry => ({ name: `${entry.tier} · ${entry.name} · ${entry.rate.toFixed(2)}%`, value: entry.rewardKey }))
+        : [];
+    const query = String(focused).toLocaleLowerCase('vi');
+    return interaction.respond(source.filter(item => item.name.toLocaleLowerCase('vi').includes(query) || item.value.includes(query)).slice(0, 25));
+  },
+};

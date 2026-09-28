@@ -1,0 +1,42 @@
+const { db } = require('../db');
+
+const CATALOG = Object.freeze([
+  { id: 'color_red', type: 'color', name: 'Đỏ Rực', value: '#ef4444' },
+  { id: 'color_violet', type: 'color', name: 'Tím Huyền Bí', value: '#a855f7', rarity: 'epic' },
+  { id: 'color_blue', type: 'color', name: 'Xanh Băng', value: '#38bdf8' },
+  { id: 'color_green', type: 'color', name: 'Xanh Lá', value: '#22c55e' },
+  { id: 'color_gold', type: 'color', name: 'Vàng Kim', value: '#fbbf24' },
+  { id: 'color_cyan', type: 'color', name: 'Xanh Cyan', value: '#22d3ee', rarity: 'epic' },
+  { id: 'color_rose', type: 'color', name: 'Hồng Rose', value: '#f472b6', rarity: 'epic' },
+  { id: 'color_emerald', type: 'color', name: 'Lục Bảo', value: '#34d399' },
+  { id: 'color_century', type: 'color', name: 'Hào Quang Bách Cấp', value: '#ff4fd8', rarity: 'mythic', shopEligible: false },
+]);
+const BY_ID = new Map(CATALOG.map(item => [item.id, item]));
+const DEFAULT_IDS = Object.freeze(['color_red']);
+const grantStatement = db.prepare('INSERT OR IGNORE INTO profile_cosmetics (guild_id,user_id,cosmetic_id,acquired_at) VALUES (?,?,?,?)');
+const loadoutStatement = db.prepare('SELECT * FROM profile_loadouts WHERE guild_id=? AND user_id=?');
+const ensureProfileTx = db.transaction((guildId, userId, now) => {
+  grantStatement.run(guildId, userId, 'color_red', now);
+  db.prepare("INSERT OR IGNORE INTO user_inventory (guild_id,user_id,item_id,quantity,acquired_at,updated_at) VALUES (?,?,'color_red',1,?,?)").run(guildId, userId, now, now);
+  db.prepare("INSERT OR IGNORE INTO profile_loadouts (guild_id,user_id,color_id,updated_at) VALUES (?,?,'color_red',?)").run(guildId, userId, now);
+  return loadoutStatement.get(guildId, userId);
+});
+function ensureProfile(guildId, userId, now = Date.now()) { return ensureProfileTx(String(guildId), String(userId), now); }
+function ownsCosmetic(guildId, userId, cosmeticId) { return Boolean(db.prepare('SELECT 1 FROM profile_cosmetics WHERE guild_id=? AND user_id=? AND cosmetic_id=?').get(String(guildId), String(userId), String(cosmeticId))); }
+function getCosmetic(cosmeticId) { return BY_ID.get(String(cosmeticId)) || null; }
+function grantCosmetic(guildId, userId, cosmeticId, now = Date.now()) {
+  const item = getCosmetic(cosmeticId); if (!item) throw new Error('UNKNOWN_COSMETIC'); ensureProfile(guildId, userId, now);
+  const result = grantStatement.run(String(guildId), String(userId), item.id, now); return { item, newlyOwned: result.changes > 0 };
+}
+function equipCosmetic(guildId, userId, cosmeticId, now = Date.now()) {
+  const item = getCosmetic(cosmeticId); if (!item) throw new Error('UNKNOWN_COSMETIC'); ensureProfile(guildId, userId, now);
+  if (!ownsCosmetic(guildId, userId, item.id)) throw new Error('COSMETIC_NOT_OWNED');
+  db.prepare('UPDATE profile_loadouts SET color_id=?,updated_at=? WHERE guild_id=? AND user_id=?').run(item.id, now, String(guildId), String(userId));
+  return getProfileAppearance(guildId, userId);
+}
+function getOwnedCosmetics(guildId, userId) {
+  ensureProfile(guildId, userId);
+  return db.prepare('SELECT cosmetic_id,acquired_at FROM profile_cosmetics WHERE guild_id=? AND user_id=? ORDER BY acquired_at,cosmetic_id').all(String(guildId), String(userId)).map(row => ({ ...row, item: getCosmetic(row.cosmetic_id) })).filter(row => row.item);
+}
+function getProfileAppearance(guildId, userId) { const row = ensureProfile(guildId, userId); return { color: getCosmetic(row.color_id) || getCosmetic('color_red') }; }
+module.exports = { CATALOG, DEFAULT_IDS, getCosmetic, getProfileAppearance, getOwnedCosmetics, grantCosmetic, equipCosmetic, ownsCosmetic };

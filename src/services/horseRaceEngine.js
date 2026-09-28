@@ -1,0 +1,3 @@
+function applyDebuff(market, debuff) { const horses = {}; for (const key of market.selected) { const original = market.horses[key]; const modifier = debuff.effects.find(effect => effect.horse === key)?.modifier || 1; horses[key] = { ...original, weight: Math.max(1, Math.round(original.weight * modifier)), debuffModifier: modifier }; } return { ...market, horses }; }
+function selectWeighted(randomValue, keys, weights) { const total = keys.reduce((sum, key) => sum + weights[key], 0); let roll = Math.max(0, Math.min(total - 1, Math.floor(randomValue))); for (const key of keys) { if (roll < weights[key]) return key; roll -= weights[key]; } return keys[0]; }
+module.exports = { applyDebuff, selectWeighted };
