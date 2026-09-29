@@ -46,10 +46,13 @@ const generatedVuaQuestions = gameWordData.vuaWords.map(answer => {
 });
 const VUA_QUESTIONS = [...new Map([...generatedVuaQuestions, ...CURATED_VUA_QUESTIONS]
   .map(question => [normalizeVietnamese(question.answer), question])).values()];
-const HARD_VUA_QUESTIONS = [...new Map([...VUA_QUESTIONS.filter(question => {
+function isHardVuaQuestion(question) {
   const letters = Array.from(question.answer.replace(/\s+/g, '')).length;
-  return question.answer.split(/\s+/).length >= 3 || letters >= 13;
-}), ...CURATED_HARD_VUA_QUESTIONS].map(question => [normalizeVietnamese(question.answer), question])).values()];
+  return question.answer.trim().split(/\s+/).length >= 3 || letters >= 13;
+}
+const NORMAL_VUA_QUESTIONS = VUA_QUESTIONS.filter(question => !isHardVuaQuestion(question));
+const HARD_VUA_QUESTIONS = [...new Map([...VUA_QUESTIONS.filter(isHardVuaQuestion), ...CURATED_HARD_VUA_QUESTIONS]
+  .map(question => [normalizeVietnamese(question.answer), question])).values()];
 const RECENT_WORD_LIMIT = 2_000;
 
 function saveSession(guildId, game, state) {
@@ -121,7 +124,7 @@ function makeVuaQuestion(base, hard = false, now = Date.now(), durationSeconds =
 
 function nextVuaQuestion(recent = [], options = {}) {
   const hard = shouldBeHard(options);
-  const pool = hard ? HARD_VUA_QUESTIONS : VUA_QUESTIONS;
+  const pool = hard ? HARD_VUA_QUESTIONS : NORMAL_VUA_QUESTIONS;
   const recentSet = new Set(recent.map(normalizeVietnamese));
   const candidates = pool.filter(question => !recentSet.has(normalizeVietnamese(question.answer)));
   return makeVuaQuestion(randomItem(candidates.length ? candidates : pool), hard, options.now, options.hardDurationSeconds);
@@ -152,7 +155,11 @@ function getVuaSession(guildId) {
         stored.question = makeVuaQuestion(stored.question, Boolean(stored.question?.hard), Date.now(),
           getGameConfig(guildId, 'HARD_QUESTION_DURATION_SECONDS'));
       }
-      stored.question.hard = Boolean(stored.question.hard);
+      stored.question.hard = Boolean(stored.question.hard || isHardVuaQuestion(stored.question));
+      if (stored.question.hard && !stored.question.expiresAt) {
+        stored.question.expiresAt = Date.now() + getGameConfig(guildId, 'HARD_QUESTION_DURATION_SECONDS') * 1000;
+        stored.question.durationSeconds = getGameConfig(guildId, 'HARD_QUESTION_DURATION_SECONDS');
+      }
       stored.question.expiresAt ||= null;
       stored.question.durationSeconds ||= stored.question.hard ? HARD_DURATION_MS / 1000 : null;
       stored.recent ||= [normalizeVietnamese(stored.question.answer)];
