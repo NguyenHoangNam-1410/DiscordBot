@@ -817,4 +817,11 @@ runMigration(23, 'remove effect cleanser from gacha pool', () => {
   db.prepare("DELETE FROM gacha_pool_entries WHERE reward_key='effect_cleanser' OR item_id='effect_cleanser'").run();
 });
 
+runMigration(24, 'remove Vietnamese first-letter item', () => {
+  db.prepare('DELETE FROM user_inventory WHERE item_id=?').run('vietnamese_first_letter');
+  db.prepare('DELETE FROM shop_items WHERE cosmetic_id=?').run('vietnamese_first_letter');
+  db.prepare('DELETE FROM gacha_pool_entries WHERE item_id=? OR reward_key=?').run('vietnamese_first_letter', 'vietnamese_first_letter');
+  db.prepare('DELETE FROM user_item_effects WHERE effect_id=?').run('quiz_first_letter');
+});
+
 module.exports = { db, dbPath, runMigration };
