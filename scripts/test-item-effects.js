@@ -26,6 +26,8 @@ const NEW_ITEMS = {
   taixiu_edge_insurance: 'SR', baucua_blank_insurance: 'SSR', horse_consolation: 'R', rps_loss_shield: 'R',
   blackjack_bust_guard: 'R', poker_fold_coupon: 'R', effect_cleanser: 'SSR',
 };
+const gameConfig = require('../src/services/gameConfigService');
+const noDrops = guildId => { for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_GACHA_DROP_CHANCE']) gameConfig.setGameConfig(guildId, key, 0, 'test'); };
 const fund = (guildId, userId, amount = 100_000) => economy.creditCoins({ guildId, userId, amount, reason: 'test-fund' });
 const giveAndUse = (guildId, userId, channelId, itemId) => {
   shop.addInventory(guildId, userId, itemId, 1);
@@ -127,7 +129,7 @@ db.prepare("UPDATE multiplayer_rounds SET status='closed' WHERE id=?").run(taixi
 
 // Bảo hiểm Bầu cua
 (async () => {
-  const blankGuild = 'blank-insurance-guild';
+  const blankGuild = 'blank-insurance-guild'; noDrops(blankGuild);
   const blankRound = openRound(blankGuild, 'c', 'baucua');
   const blankSymbols = multiplayer.rollResult('baucua', null, blankRound.fair.serverSeed).symbols;
   const missing = Object.keys(multiplayer.BAUCUA).find(symbol => !blankSymbols.includes(symbol));
@@ -221,7 +223,7 @@ db.prepare("UPDATE multiplayer_rounds SET status='closed' WHERE id=?").run(taixi
 
   // Xì dách: Miếng Đệm Quắc (quắc đúng 22 điểm)
   const blackjack = require('../src/services/blackjackService');
-  const bjGuild = 'bj-item-guild';
+  const bjGuild = 'bj-item-guild'; noDrops(bjGuild);
   fund(bjGuild, 'alice');
   effects.addEffectCharge(bjGuild, 'alice', 'blackjack_bust_guard');
   const bustDeck = ['10♠', '4♦', '2♠', '6♥', 'K♦', '5♣', '10♣'];
