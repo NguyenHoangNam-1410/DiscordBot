@@ -5,21 +5,21 @@ const DAY_MS = 86_400_000;
 const TIME_ZONE = process.env.ECONOMY_TIME_ZONE || 'Asia/Bangkok';
 
 const DAILY_MISSIONS = Object.freeze([
-  { id: 'play2', label: 'Chơi 2 ván', field: 'games', target: 2, coins: 20_000, experience: 50 },
-  { id: 'play3', label: 'Chơi 3 ván', field: 'games', target: 3, coins: 20_000, experience: 50 },
-  { id: 'play5', label: 'Chơi 5 ván', field: 'games', target: 5, coins: 20_000, experience: 50 },
-  { id: 'win1', label: 'Thắng 1 ván', field: 'wins', target: 1, coins: 20_000, experience: 50 },
-  { id: 'win2', label: 'Thắng 2 ván', field: 'wins', target: 2, coins: 20_000, experience: 50 },
-  { id: 'win3', label: 'Thắng 3 ván', field: 'wins', target: 3, coins: 20_000, experience: 50 },
-  { id: 'quiz1', label: 'Trả lời đúng 1 câu đố', field: 'quizWins', target: 1, coins: 20_000, experience: 50 },
-  { id: 'quiz2', label: 'Trả lời đúng 2 câu đố', field: 'quizWins', target: 2, coins: 20_000, experience: 50 },
-  { id: 'wager25k', label: 'Cược tổng cộng 25.000 xu', field: 'wagered', target: 25_000, coins: 20_000, experience: 50 },
-  { id: 'wager100k', label: 'Cược tổng cộng 100.000 xu', field: 'wagered', target: 100_000, coins: 20_000, experience: 50 },
+  { id: 'play2', label: 'Chơi 2 ván', field: 'games', target: 2, coins: 10_000, experience: 50, diamonds: 100 },
+  { id: 'play3', label: 'Chơi 3 ván', field: 'games', target: 3, coins: 10_000, experience: 50, diamonds: 100 },
+  { id: 'play5', label: 'Chơi 5 ván', field: 'games', target: 5, coins: 10_000, experience: 50, diamonds: 100 },
+  { id: 'win1', label: 'Thắng 1 ván', field: 'wins', target: 1, coins: 10_000, experience: 50, diamonds: 100 },
+  { id: 'win2', label: 'Thắng 2 ván', field: 'wins', target: 2, coins: 10_000, experience: 50, diamonds: 100 },
+  { id: 'win3', label: 'Thắng 3 ván', field: 'wins', target: 3, coins: 10_000, experience: 50, diamonds: 100 },
+  { id: 'quiz1', label: 'Trả lời đúng 1 câu đố', field: 'quizWins', target: 1, coins: 10_000, experience: 50, diamonds: 100 },
+  { id: 'quiz2', label: 'Trả lời đúng 2 câu đố', field: 'quizWins', target: 2, coins: 10_000, experience: 50, diamonds: 100 },
+  { id: 'wager25k', label: 'Cược tổng cộng 25.000 xu', field: 'wagered', target: 25_000, coins: 10_000, experience: 50, diamonds: 100 },
+  { id: 'wager100k', label: 'Cược tổng cộng 100.000 xu', field: 'wagered', target: 100_000, coins: 10_000, experience: 50, diamonds: 100 },
 ]);
 const WEEKLY_MISSIONS = Object.freeze([
-  { id: 'play20', label: 'Chơi 20 ván', field: 'games', target: 20, coins: 150_000 },
-  { id: 'win10', label: 'Thắng 10 ván', field: 'wins', target: 10, coins: 250_000 },
-  { id: 'quiz10', label: 'Trả lời đúng 10 câu đố', field: 'quizWins', target: 10, item: 'rps_counter_charm', quantity: 1 },
+  { id: 'play20', label: 'Chơi 20 ván', field: 'games', target: 20, coins: 50_000, diamonds: 100 },
+  { id: 'win10', label: 'Thắng 10 ván', field: 'wins', target: 10, coins: 75_000, diamonds: 100 },
+  { id: 'quiz10', label: 'Trả lời đúng 10 câu đố', field: 'quizWins', target: 10, coins: 30_000, diamonds: 100, item: 'rps_counter_charm', quantity: 1 },
 ]);
 
 function localParts(now = Date.now()) {
