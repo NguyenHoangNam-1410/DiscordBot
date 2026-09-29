@@ -59,8 +59,9 @@ Các game cược tiếp tục dùng seed và HMAC-SHA256 nội bộ để tạo
 
 ### Xì dách
 
-- Mở bàn Xì dách làm nhà cái: `/choi xidach ante:<số xu>`; tối đa 3 người vào bàn trong 30 giây.
-- Với prefix: `!xidach <ante>`
+- Chọn đối thủ bằng `chedochoi`: **nhà cái bot** (mặc định, chơi một mình với gấp đôi và tách bài) hoặc **người chơi khác**: `/choi xidach ante:<số xu> chedochoi:nguoichoi` mở bàn, bạn làm nhà cái, tối đa 3 người vào bàn trong 30 giây.
+- Ở bàn nhiều người, bài mỗi người được giữ kín: bấm **Xem bài của tôi** để xem bài và Rút bài/Dừng trong bảng riêng (chỉ bạn thấy); bot nhắc người đến lượt trong kênh và bài chỉ lộ khi ván kết thúc.
+- Với prefix: `!xidach <số xu> [bot|nguoichoi]` (mặc định bot).
 
 Trong ván với nhà cái, thắng thường nhận 1,9× tổng cược, Xì dách tự nhiên nhận 2,5× và người chơi quắc trên 21 luôn thua ngay, kể cả khi nhà cái cũng quắc sau đó. Ngũ linh (đủ 5 lá không quắc) thắng nhà cái không có Ngũ linh. Trong ván 1v1, mỗi người xem tay bài bằng nút riêng, sau đó chọn Rút bài hoặc Dừng. Người có tay gần 21 nhất thắng toàn bộ tiền cược; Xì dách tự nhiên được ưu tiên cao nhất. Nếu ván hết hạn, cược được hoàn cho cả hai.
 

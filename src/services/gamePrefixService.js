@@ -68,7 +68,7 @@ function messageInteraction(message, options = {}) {
 
 function help(prefix, command) {
   if (command === 'oantuti') return `Cách dùng: \`${prefix}ott <bua|keo|bao> <số xu>\` hoặc \`${prefix}ott solo @người_chơi <số xu>\``;
-  if (command === 'blackjack') return `Cách dùng: \`${prefix}xidach <ante>\` — mở bàn Xì dách và làm nhà cái (tối đa 3 người vào bàn)`;
+  if (command === 'blackjack') return `Cách dùng: \`${prefix}xidach <số xu> [bot|nguoichoi]\` — mặc định chơi với nhà cái bot; \`nguoichoi\` mở bàn làm nhà cái cho tối đa 3 người`;
   if (command === 'poker') return `Cách dùng: \`${prefix}poker <texas|sixplus|pineapple|omaha> [bot|banbe]\``;
   if (command === 'chinchiro') return `Cách dùng: \`${prefix}chinchiro <số xu>\``;
   if (command === 'mines') return `Cách dùng: \`${prefix}domin <số xu> <số mìn 2–7>\``;
@@ -151,11 +151,12 @@ async function handleGamePrefix(message) {
     }
   } else if (name === 'blackjack') {
     const ante = Number(parts[0]);
-    if (parts.length !== 1 || !Number.isSafeInteger(ante)) {
+    const mode = normalizeSearch(parts[1] || 'bot');
+    if (parts.length > 2 || !Number.isSafeInteger(ante) || !['bot', 'banbe', 'nguoichoi'].includes(mode)) {
       await message.reply({ content: help(prefix, name), allowedMentions: { repliedUser: false } });
       return true;
     }
-    options = { integers: { ante } };
+    options = { integers: { ante }, strings: { chedochoi: mode === 'bot' ? 'bot' : 'nguoichoi' } };
   } else if (name === 'chinchiro') {
     const amount = Number(parts[0]);
     if (!Number.isSafeInteger(amount)) {

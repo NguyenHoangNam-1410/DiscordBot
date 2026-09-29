@@ -342,11 +342,87 @@ function bet(guildId, roundId, userId, choice, amount) {
   assert.equal(await gamePrefix.handleGamePrefix(prefixMessage('!xidach solo <@123456789> 100')), true);
   assert.match(prefixReplies.at(-1).content, /Cách dùng/); assert(!/solo/.test(prefixReplies.at(-1).content), 'hướng dẫn không được nhắc solo');
   assert.equal(db.prepare('SELECT COUNT(*) AS count FROM blackjack_tables WHERE guild_id=?').get(prefixGuild).count, 0);
-  assert.equal(await gamePrefix.handleGamePrefix(prefixMessage('!xidach 100')), true);
+  assert.equal(await gamePrefix.handleGamePrefix(prefixMessage('!xidach 100 nguoichoi')), true);
   const prefixTable = db.prepare('SELECT * FROM blackjack_tables WHERE guild_id=?').get(prefixGuild);
-  assert(prefixTable, '!xidach 100 phải mở bàn'); assert.equal(prefixTable.ante, 100); assert.equal(prefixTable.dealer_id, 'dealer');
+  assert(prefixTable, '!xidach 100 nguoichoi phải mở bàn'); assert.equal(prefixTable.ante, 100); assert.equal(prefixTable.dealer_id, 'dealer');
   assert.equal(balance(prefixGuild, 'dealer'), START - 300, 'nhà cái phải ký quỹ ante × 3');
   assert(prefixReplies.at(-1).embeds, 'phải hiện bàn Xì dách');
+  const soloMessage = { ...prefixMessage('!xidach 100'), author: { id: 'solo-player', bot: false, username: 'solo' } };
+  assert.equal(await gamePrefix.handleGamePrefix(soloMessage), true);
+  const soloSession = db.prepare('SELECT * FROM blackjack_sessions WHERE guild_id=? AND user_id=?').get(prefixGuild, 'solo-player');
+  assert(soloSession, '!xidach 100 mặc định chơi với nhà cái bot'); assert.equal(balance(prefixGuild, 'solo-player'), START - 100);
+  assert.equal(await gamePrefix.handleGamePrefix({ ...prefixMessage('!xidach 100 linhtinh'), author: { id: 'typo', bot: false, username: 'typo' } }), true);
+  assert.match(prefixReplies.at(-1).content, /Cách dùng/);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM blackjack_sessions WHERE guild_id=? AND user_id=?').get(prefixGuild, 'typo').count, 0);
+
+  // Lệnh /xidach: chọn nhà cái bot hoặc người chơi khác
+  const bjCommand = require('../src/commands/blackjack');
+  const modeOption = bjCommand.data.toJSON().options.find(option => option.name === 'chedochoi');
+  assert.deepEqual(modeOption.choices.map(choice => choice.value), ['bot', 'nguoichoi']);
+  assert.notEqual(modeOption.required, true, 'mặc định phải là nhà cái bot');
+  const commandGuild = 'blackjack-command';
+  require('../src/services/gameChannelService').setGameChannel(commandGuild, 'blackjack', 'c');
+  const runBlackjackCommand = async (userId, mode) => {
+    const replies = [];
+    await bjCommand.execute({ guildId: commandGuild, channelId: 'c', user: { id: userId }, options: { getInteger: () => 200, getString: () => mode },
+      reply: async payload => { replies.push(payload); return { resource: { message: { id: `msg-${userId}` } } }; } });
+    return replies;
+  };
+  const botReplies = await runBlackjackCommand('bot-player', null);
+  assert(botReplies[0].components.length && botReplies[0].embeds, 'chế độ bot hiện nút Rút bài/Dừng');
+  const botSession = db.prepare('SELECT * FROM blackjack_sessions WHERE guild_id=? AND user_id=?').get(commandGuild, 'bot-player');
+  if (botSession) { assert.equal(botSession.message_id, 'msg-bot-player'); assert.equal(balance(commandGuild, 'bot-player'), START - 200); }
+  else assert.equal(db.prepare('SELECT COUNT(*) AS count FROM game_history WHERE guild_id=? AND user_id=?').get(commandGuild, 'bot-player').count, 1, 'Xì dách tự nhiên kết thúc ngay');
+  const tableReplies = await runBlackjackCommand('table-dealer', 'nguoichoi');
+  const commandTable = db.prepare('SELECT * FROM blackjack_tables WHERE guild_id=?').get(commandGuild);
+  assert.equal(commandTable.dealer_id, 'table-dealer'); assert.equal(commandTable.message_id, 'msg-table-dealer');
+  assert.match(JSON.stringify(tableReplies[0].embeds[0].toJSON()), /NHÀ CÁI NGƯỜI CHƠI/);
+
+  // Bàn nhiều người: bài giữ kín, xem và thao tác trong bảng riêng
+  const privateGuild = 'blackjack-private';
+  const privateTableId = crypto.randomBytes(4).toString('hex');
+  const privateState = { phase: 'playing', turn: 0, dealer: ['10♣', '6♥'], deck: ['2♠', '3♠', '4♠'], results: null, players: [
+    { id: 'p1', name: 'p1', stake: 100, cards: ['5♣', '6♣'], status: 'playing' }, { id: 'p2', name: 'p2', stake: 100, cards: ['9♦', '7♦'], status: 'playing' }] };
+  for (const userId of ['p1', 'p2']) economy.spendCoins({ guildId: privateGuild, userId, amount: 100, reason: 'test-private' });
+  economy.spendCoins({ guildId: privateGuild, userId: 'boss', amount: 300, reason: 'test-private' });
+  db.prepare("INSERT INTO blackjack_tables(id,guild_id,channel_id,message_id,dealer_id,ante,state_json,status,expires_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,'playing',?,?,?)")
+    .run(privateTableId, privateGuild, 'c', 'public-msg', 'boss', 100, JSON.stringify(privateState), Date.now() + 60_000, Date.now(), Date.now());
+  for (const [userId, role] of [['p1', 'player'], ['p2', 'player'], ['boss', 'dealer']]) db.prepare('INSERT INTO blackjack_table_locks(guild_id,user_id,table_id,role,created_at) VALUES (?,?,?,?,?)').run(privateGuild, userId, privateTableId, role, Date.now());
+  const bjService = require('../src/services/blackjackService');
+  const publicJson = () => bjService.blackjackTableEmbed(bjService.getBlackjackTable(privateTableId)).toJSON();
+  const playersField = () => publicJson().fields.find(field => field.name.includes('Người chơi')).value;
+  assert(!/[♠♥♦♣]/.test(playersField()), 'bài người chơi không được hiện công khai khi đang chơi');
+  assert.match(playersField(), /Đến lượt/); assert.match(playersField(), /Chờ lượt/);
+  const tableRows = bjService.blackjackTableRows(bjService.getBlackjackTable(privateTableId));
+  assert.deepEqual(tableRows[0].components.map(button => button.data.custom_id), [`blackjack-table:${privateTableId}:view`]);
+  const publicEdits = []; const channelMessages = [];
+  const privateClient = { channels: { fetch: async () => ({ send: async payload => { channelMessages.push(payload); }, messages: { fetch: async () => ({ edit: async payload => { publicEdits.push(payload); } }) } }) } };
+  const privateInteraction = (userId, action) => {
+    const calls = { updates: [], replies: [] };
+    return { calls, interaction: { customId: `blackjack-table-private:${privateTableId}:${action}`, guildId: privateGuild, channelId: 'c', user: { id: userId }, client: privateClient,
+      update: async payload => { calls.updates.push(payload); return payload; }, reply: async payload => { calls.replies.push(payload); return payload; } } };
+  };
+  const viewOne = privateInteraction('p1', 'view'); await bjService.handleBlackjackTablePrivateButton(viewOne.interaction);
+  assert.match(viewOne.calls.updates[0].content, /5♣/); assert.match(viewOne.calls.updates[0].content, /11 điểm/);
+  const enabled = component => !component.data.disabled;
+  assert(viewOne.calls.updates[0].components[0].components.filter(enabled).length === 3, 'người đến lượt được Rút bài/Dừng');
+  const viewTwo = privateInteraction('p2', 'view'); await bjService.handleBlackjackTablePrivateButton(viewTwo.interaction);
+  assert.match(viewTwo.calls.updates[0].content, /9♦/); assert(!/5♣/.test(viewTwo.calls.updates[0].content), 'không được thấy bài người khác');
+  assert.equal(viewTwo.calls.updates[0].components[0].components.filter(enabled).length, 1, 'chưa đến lượt thì chỉ có nút làm mới');
+  const early = privateInteraction('p2', 'hit'); await bjService.handleBlackjackTablePrivateButton(early.interaction);
+  assert.match(early.calls.replies[0].content, /Chưa đến lượt/);
+  const outsider = privateInteraction('stranger', 'view'); await bjService.handleBlackjackTablePrivateButton(outsider.interaction);
+  assert.match(outsider.calls.replies[0].content, /không ngồi ở bàn/);
+  const hit = privateInteraction('p1', 'hit'); await bjService.handleBlackjackTablePrivateButton(hit.interaction);
+  assert.match(hit.calls.updates[0].content, /4♠/, 'người rút thấy lá mới trong bảng riêng');
+  assert(publicEdits.length >= 1, 'bảng công khai được cập nhật'); assert(!/[♠♥♦♣]/.test(JSON.stringify(publicEdits.at(-1).embeds[0].toJSON().fields.find(field => field.name.includes('Người chơi')))), 'bảng công khai vẫn giữ kín bài');
+  const standOne = privateInteraction('p1', 'stand'); await bjService.handleBlackjackTablePrivateButton(standOne.interaction);
+  assert(channelMessages.some(message => /<@p2>/.test(message.content)), 'bot nhắc người kế tiếp đến lượt');
+  const standTwo = privateInteraction('p2', 'stand'); await bjService.handleBlackjackTablePrivateButton(standTwo.interaction);
+  assert.equal(bjService.getBlackjackTable(privateTableId).status, 'completed');
+  const finalPublic = publicEdits.at(-1).embeds[0].toJSON();
+  assert.match(JSON.stringify(finalPublic), /♣|♦|♠|♥/, 'kết thúc ván thì bài được lộ công khai');
+  assert.match(standTwo.calls.updates[0].content, /nhận/, 'bảng riêng hiện kết quả cuối');
 
   // Từ Điển Sống trao cả 10 kim cương của câu khó
   const dictGuild = 'dictionary-guild'; const dictChannel = 'dictionary-channel';
@@ -420,7 +496,7 @@ function bet(guildId, roundId, userId, choice, amount) {
   }
   const now = Date.now();
   assert.equal(stale.expireStaleSoloSessionsSync(now).length, 0, 'ván còn mới không được dọn');
-  const expired = stale.expireStaleSoloSessionsSync(now + stale.SOLO_SESSION_TTL_MS + 1_000);
+  const expired = stale.expireStaleSoloSessionsSync(now + stale.SOLO_SESSION_TTL_MS + 1_000).filter(item => item.row.guild_id === g);
   assert.equal(expired.length, 4);
   assert(expired.every(item => item.forfeit), 'ván treo sau khi đã có tin nhắn phải bị xử thua');
   for (const [table, id] of Object.entries(ids)) {
@@ -428,12 +504,12 @@ function bet(guildId, roundId, userId, choice, amount) {
     assert.equal(balance(g, owners[table]), START - 100, `${table}: người để ván hết hạn không được hoàn cược`);
   }
   assert.equal(db.prepare("SELECT COUNT(*) AS count FROM economy_transactions WHERE guild_id=? AND reason LIKE '%timeout-%'").get(g).count, 0, 'xử thua không tạo giao dịch hoàn tiền');
-  assert.equal(stale.expireStaleSoloSessionsSync(now + stale.SOLO_SESSION_TTL_MS + 2_000).length, 0, 'không hoàn tiền hai lần');
+  assert.equal(stale.expireStaleSoloSessionsSync(now + stale.SOLO_SESSION_TTL_MS + 2_000).filter(item => item.row.guild_id === g).length, 0, 'không hoàn tiền hai lần');
 
   // Ván tạo xong nhưng tin nhắn không gửi được (message_id rỗng) được dọn sau 2 phút
   const orphan = mines.startMines({ guildId: g, channelId: 'c', userId: 'orphan', stake: 100, mineCount: 3, forcedMines: [0, 1, 2], forcedSpecial: 19 });
-  assert.equal(stale.expireStaleSoloSessionsSync(Date.now() + 60_000).length, 0);
-  const orphanExpired = stale.expireStaleSoloSessionsSync(Date.now() + stale.NO_MESSAGE_TTL_MS + 1_000);
+  assert.equal(stale.expireStaleSoloSessionsSync(Date.now() + 60_000).filter(item => item.row.guild_id === g).length, 0);
+  const orphanExpired = stale.expireStaleSoloSessionsSync(Date.now() + stale.NO_MESSAGE_TTL_MS + 1_000).filter(item => item.row.guild_id === g);
   assert.equal(orphanExpired.length, 1);
   assert.equal(orphanExpired[0].forfeit, false, 'lỗi gửi tin nhắn không phải lỗi người chơi');
   assert.equal(balance(g, 'orphan'), START, 'ván chưa có tin nhắn phải được hoàn cược');
