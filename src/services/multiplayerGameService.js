@@ -171,11 +171,15 @@ const settleTx = db.transaction((roundId, forcedDice = null) => {
   const result = rollResult(round.game, forcedDice, forcedDice ? null : stored.fair?.serverSeed, stored.modifiers);
   const bets = db.prepare('SELECT * FROM multiplayer_bets WHERE round_id = ?').all(roundId);
   const users = new Map();
+  const individualBets = new Map();
   for (const bet of bets) {
     const summary = users.get(bet.user_id) || { stake: 0, payout: 0 };
     summary.stake += bet.amount;
-    summary.payout += calculatePayout(round.game, bet.choice, bet.amount, result);
+    const payout = calculatePayout(round.game, bet.choice, bet.amount, result);
+    summary.payout += payout;
     users.set(bet.user_id, summary);
+    if (!individualBets.has(bet.user_id)) individualBets.set(bet.user_id, []);
+    individualBets.get(bet.user_id).push({ choice: bet.choice, amount: bet.amount, payout });
   }
   const settlements = [];
   for (const [userId, summary] of users) {
@@ -184,7 +188,7 @@ const settleTx = db.transaction((roundId, forcedDice = null) => {
     const outcome = summary.payout > summary.stake ? 'win' : summary.payout === summary.stake ? 'draw' : 'loss';
     const account = settleReservedGame({ guildId: round.guild_id, userId, payout: summary.payout, stake: summary.stake, game: round.game, outcome,
       operationId: `settle:${round.game}:${round.id}:${userId}` });
-    settlements.push({ userId, ...summary, outcome, balance: account.balance, achievements: account.unlockedAchievements, experienceGained: account.experienceGained, levelUps: account.levelUps, bonusDrops: account.bonusDrops });
+    settlements.push({ userId, ...summary, outcome, balance: account.balance, achievements: account.unlockedAchievements, experienceGained: account.experienceGained, levelUps: account.levelUps, bonusDrops: account.bonusDrops, bets: individualBets.get(userId) || [] });
   }
   db.prepare("UPDATE multiplayer_rounds SET status = 'closed', result_json = ? WHERE id = ?").run(JSON.stringify({ result, settlements, fair: stored.fair }), roundId);
   return { round: { ...round, status: 'closed' }, result, settlements, bets, fair: stored.fair };
@@ -195,10 +199,20 @@ function resultEmbed(settled) {
   const resultText = round.game === 'baucua'
     ? result.symbols.map(symbol => BAUCUA[symbol][0]).join('  ')
     : `${result.dice.map(value => DICE[value - 1]).join(' ')}\n**${result.total} điểm · ${result.triple ? 'BỘ BA' : result.total >= 11 ? 'TÀI' : 'XỈU'} · ${result.total % 2 ? 'LẺ' : 'CHẴN'}**`;
-  const winners = settlements.filter(item => item.outcome !== 'loss').sort((a, b) => b.payout - a.payout).slice(0, 15);
-  const summary = winners.length
-    ? winners.map(item => `<@${item.userId}>: cược ${formatCoins(item.stake)} → nhận ${formatCoins(item.payout)} xu`).join('\n')
-    : 'Không có cửa cược thắng.';
+  const betLines = [];
+  for (const item of settlements) {
+    if (item.bets?.length > 1) {
+      for (const bet of item.bets) {
+        const betLabel = choiceLabel(round.game, bet.choice);
+        betLines.push(`<@${item.userId}> → **${betLabel}**: ${formatCoins(bet.amount)} xu → ${formatCoins(bet.payout)} xu`);
+      }
+    } else if (item.bets?.length === 1) {
+      const bet = item.bets[0];
+      const betLabel = choiceLabel(round.game, bet.choice);
+      betLines.push(`<@${item.userId}> → **${betLabel}**: ${formatCoins(bet.amount)} xu → ${formatCoins(bet.payout)} xu`);
+    }
+  }
+  const summary = betLines.length > 0 ? betLines.slice(0, 15).join('\n') : 'Không có cửa cược thắng.';
   const embed = new EmbedBuilder().setColor(0x2ECC71).setTitle(`🎲 ${gameLabel(round.game)} · KẾT QUẢ`)
     .setDescription(`## ${resultText}`)
     .addFields({ name: '💰 THANH TOÁN', value: summary })
