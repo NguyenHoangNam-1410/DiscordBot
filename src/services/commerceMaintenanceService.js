@@ -4,6 +4,7 @@ const { cleanupProgressionData } = require('./progressionService');
 const { cleanupGachaHistory } = require('./gachaService');
 const { cleanupDiamondTransactions } = require('./playerLevelService');
 const { cleanupOldRounds } = require('./multiplayerGameService');
+const { cleanupFinishedGameRecords } = require('./gameRecordCleanupService');
 
 function startCommerceMaintenance(client, logger = console) {
   const run = async () => {
@@ -13,7 +14,8 @@ function startCommerceMaintenance(client, logger = console) {
     const gachaHistory = cleanupGachaHistory();
     const diamondTransactions = cleanupDiamondTransactions();
     const rounds = cleanupOldRounds(logger);
-    logger.info?.({ purchases, requests: requests.records, messages: requests.messages, progression, gachaHistory, diamondTransactions, rounds }, 'commerce maintenance completed');
+    const gameRecords = cleanupFinishedGameRecords();
+    logger.info?.({ purchases, requests: requests.records, messages: requests.messages, progression, gachaHistory, diamondTransactions, rounds, gameRecords }, 'commerce maintenance completed');
   };
   run().catch(error => logger.error?.({ err: error }, 'commerce maintenance failed'));
   const timer = setInterval(() => {

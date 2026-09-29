@@ -196,15 +196,15 @@ function settle(session, state, reason = 'showdown') {
   state.phase = 'complete'; state.result = { reason, scores, pots: awarded.pots, refunds: awarded.refunds, payout, outcome, insurance, insurancePercent, foldRefund, balance: account.balance, achievements: account.unlockedAchievements, experienceGained: account.experienceGained, levelUps: account.levelUps, bonusDrops: account.bonusDrops };
   db.prepare('DELETE FROM poker_sessions WHERE id=?').run(session.id); return state;
 }
-function forceEndPokerSession(id, guildId, adminId) {
+function forceEndPokerSession(id, guildId, adminId, { forfeit = false, forfeitUserId = null } = {}) {
   return db.transaction(() => {
     const current = getActiveSession(id, guildId); if (!current) return null;
     const state = parseState(current);
-    if (state.mode === 'multiplayer') return pokerMultiplayerService.forceEndPokerTable(current, adminId);
+    if (state.mode === 'multiplayer') return pokerMultiplayerService.forceEndPokerTable(current, adminId, { forfeitUserId });
     const human = state.players[0];
     // human.stack is table chips: only what was committed (ante, calls, raises) was actually deducted from the wallet.
     const refund = human.committed;
-    creditCoins({ guildId: current.guild_id, userId: human.id, amount: refund,
+    if (!forfeit) creditCoins({ guildId: current.guild_id, userId: human.id, amount: refund,
       reason: `poker:admin-refund:${adminId}:${current.id}`, operationId: `refund:poker-admin:${current.id}:${human.id}` });
     state.phase = 'complete'; state.turnUserId = null;
     state.result = { reason: 'admin-ended', scores: {}, pots: [], refunds: {}, payout: refund, outcome: 'draw', insurance: 0, insurancePercent: 0 };

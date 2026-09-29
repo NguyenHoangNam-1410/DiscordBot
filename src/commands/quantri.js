@@ -111,14 +111,14 @@ module.exports = {
           new ButtonBuilder().setCustomId(`admin-clear-all:${scope}:${interaction.user.id}:cancel`).setLabel('Hủy').setStyle(ButtonStyle.Secondary),
         );
         if (scope === 'server') return interaction.reply({ content: `🚨 Bạn sắp **RESET SERVER**: xóa toàn bộ dữ liệu của **${count.toLocaleString('vi-VN')} người chơi** (xu, kim cương, cấp/EXP, túi đồ, hiệu ứng, Gacha, nhiệm vụ, thành tựu, thống kê, lịch sử, xếp hạng, ván đang chơi).\n\n**Được giữ nguyên:** channel game, phần thưởng, giới hạn cược, cấu hình cân bằng, cửa hàng, pool Gacha, buff sự kiện, thưởng theo role.\n\nKhông thể hoàn tác. Nhấn **XÁC NHẬN RESET SERVER** để tiếp tục.`, components: [row], flags: MessageFlags.Ephemeral });
-        return interaction.reply({ content: `⚠️ Bạn sắp xóa **${CLEAR_SCOPE_LABELS[scope]}** của **${count.toLocaleString('vi-VN')} người chơi** trong server này.\n\nLịch sử giao dịch và các dữ liệu khác sẽ được giữ nguyên. Nhấn **Xác nhận xóa** để tiếp tục.`, components: [row], flags: MessageFlags.Ephemeral });
+        return interaction.reply({ content: `⚠️ Bạn sắp xóa **${CLEAR_SCOPE_LABELS[scope]}** của **${count.toLocaleString('vi-VN')} người chơi** trong server này.\n\n${scope === 'coins' || scope === 'all' ? 'Ván đang chơi của họ sẽ bị hủy và tiền cược đang khóa trong ván bị tịch thu. ' : ''}Lịch sử giao dịch và các dữ liệu khác sẽ được giữ nguyên. Nhấn **Xác nhận xóa** để tiếp tục.`, components: [row], flags: MessageFlags.Ephemeral });
       }
       const result = clearPlayerData({ guildId: interaction.guildId, userId: target.id, scope, adminId: interaction.user.id });
       const parts = [];
       if (scope === 'coins' || scope === 'all') parts.push(`**${result.coins.toLocaleString('vi-VN')} xu**`);
       if (scope === 'diamonds' || scope === 'all') parts.push(`**${result.diamonds.toLocaleString('vi-VN')} kim cương**`);
       if (scope === 'xp' || scope === 'all') parts.push(`cấp **${result.level}** và **${result.experience.toLocaleString('vi-VN')} EXP**`);
-      return interaction.reply({ content: `🧹 Đã xóa dữ liệu ${parts.join(', ')} của <@${target.id}>. Lịch sử giao dịch và dữ liệu khác được giữ nguyên.`, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+      return interaction.reply({ content: `🧹 Đã xóa dữ liệu ${parts.join(', ')} của <@${target.id}>.${result.forfeitedGames ? ` Đã hủy **${result.forfeitedGames}** ván đang chơi và tịch thu **${result.forfeitedStake.toLocaleString('vi-VN')} xu** đang khóa trong ván.` : ''} Lịch sử giao dịch và dữ liệu khác được giữ nguyên.`, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
     }
     const item = route(interaction); return item.command.execute(remapOptions(interaction, item));
   },
@@ -132,7 +132,7 @@ module.exports = {
       return interaction.update({ content: `🚨 Đã reset server: xóa dữ liệu của **${reset.players.toLocaleString('vi-VN')} người chơi** (${reset.rows.toLocaleString('vi-VN')} bản ghi). Cấu hình hệ thống được giữ nguyên.`, components: [] });
     }
     const result = clearAllPlayerData({ guildId: interaction.guildId, scope, adminId: interaction.user.id });
-    return interaction.update({ content: `🧹 Đã xóa **${CLEAR_SCOPE_LABELS[scope]}** cho **${result.players.toLocaleString('vi-VN')} người chơi** trong server. Lịch sử giao dịch và dữ liệu khác được giữ nguyên.`, components: [] });
+    return interaction.update({ content: `🧹 Đã xóa **${CLEAR_SCOPE_LABELS[scope]}** cho **${result.players.toLocaleString('vi-VN')} người chơi** trong server.${result.forfeitedGames ? ` Đã hủy **${result.forfeitedGames.toLocaleString('vi-VN')}** ván đang chơi và tịch thu **${result.forfeitedStake.toLocaleString('vi-VN')} xu** đang khóa trong ván.` : ''} Lịch sử giao dịch và dữ liệu khác được giữ nguyên.`, components: [] });
   },
   autocomplete(interaction) { const item = route(interaction); return item.command.autocomplete?.(remapOptions(interaction, item)); },
 };

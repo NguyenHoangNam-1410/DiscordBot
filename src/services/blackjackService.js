@@ -498,15 +498,15 @@ function expireBlackjackTableTx(table, now = Date.now()) {
   }
   state.phase = 'expired'; saveTable(table, state, 'expired', now, now); db.prepare('DELETE FROM blackjack_table_locks WHERE table_id=?').run(table.id); return state;
 }
-function forceEndBlackjackTable(id, guildId, adminId) {
+function forceEndBlackjackTable(id, guildId, adminId, { forfeitUserId = null } = {}) {
   return db.transaction(() => {
     const table = getActiveBlackjackTable(id, guildId); if (!table) return null;
     const state = tableState(table);
     const participantIds = [...new Set([table.dealer_id, ...state.players.map(player => player.id)])];
     const dealerRefund = table.ante * TABLE_GUESTS;
-    creditCoins({ guildId: table.guild_id, userId: table.dealer_id, amount: dealerRefund,
+    if (table.dealer_id !== String(forfeitUserId)) creditCoins({ guildId: table.guild_id, userId: table.dealer_id, amount: dealerRefund,
       reason: `blackjack-table:admin-refund:${adminId}:${table.id}`, operationId: `refund:blackjack-table-admin:${table.id}:${table.dealer_id}` });
-    for (const player of state.players) creditCoins({ guildId: table.guild_id, userId: player.id, amount: player.stake,
+    for (const player of state.players) if (player.id !== String(forfeitUserId)) creditCoins({ guildId: table.guild_id, userId: player.id, amount: player.stake,
       reason: `blackjack-table:admin-refund:${adminId}:${table.id}`, operationId: `refund:blackjack-table-admin:${table.id}:${player.id}` });
     state.phase = 'expired'; state.results = null;
     saveTable(table, state, 'expired', Date.now());

@@ -131,12 +131,13 @@ const expireTx = db.transaction((id, now) => {
 
 function expireDuel(id, now = Date.now()) { return expireTx(String(id), now); }
 
-function forceEndRpsDuel(id, guildId, adminId, now = Date.now()) {
+function forceEndRpsDuel(id, guildId, adminId, now = Date.now(), { forfeitUserId = null } = {}) {
   return db.transaction(() => {
     const duel = getDuel(id);
     if (!duel || duel.guild_id !== String(guildId) || !['invited', 'playing'].includes(duel.status)) return null;
     const refunded = duel.status === 'playing';
     if (refunded) for (const userId of [duel.challenger_id, duel.opponent_id]) {
+      if (userId === String(forfeitUserId)) continue;
       creditCoins({ guildId: duel.guild_id, userId, amount: duel.stake, reason: `oantuti-solo:admin-refund:${adminId}:${duel.id}`,
         operationId: `refund:oantuti-duel:${duel.id}:${userId}` });
     }
