@@ -202,7 +202,8 @@ function forceEndPokerSession(id, guildId, adminId) {
     const state = parseState(current);
     if (state.mode === 'multiplayer') return pokerMultiplayerService.forceEndPokerTable(current, adminId);
     const human = state.players[0];
-    const refund = human.committed + human.stack;
+    // human.stack is table chips: only what was committed (ante, calls, raises) was actually deducted from the wallet.
+    const refund = human.committed;
     creditCoins({ guildId: current.guild_id, userId: human.id, amount: refund,
       reason: `poker:admin-refund:${adminId}:${current.id}`, operationId: `refund:poker-admin:${current.id}:${human.id}` });
     state.phase = 'complete'; state.turnUserId = null;

@@ -84,6 +84,21 @@ function bet(guildId, roundId, userId, choice, amount) {
   assert.match(replies[0].content, /Đã buộc kết thúc/);
   assert.equal(balance(quantriGuild, 'alice'), START);
 
+  // Poker với bot: hoàn đúng số xu đã trừ, không tạo thêm xu từ stack bàn
+  const poker = require('../src/services/pokerService');
+  const pokerGuild = 'force-poker';
+  const anteOnly = poker.startPoker({ guildId: pokerGuild, channelId: 'c', userId: 'alice', variant: 'texas' });
+  assert.equal(balance(pokerGuild, 'alice'), START - anteOnly.state.ante);
+  assert(anteOnly.state.players[0].stack > anteOnly.state.ante, 'stack bàn phải lớn hơn ante để kiểm tra lỗi tạo xu');
+  assert.equal(poker.forceEndPokerSession(anteOnly.session.id, pokerGuild, 'admin').state.result.payout, anteOnly.state.ante);
+  assert.equal(balance(pokerGuild, 'alice'), START, 'kết thúc ván Poker không được tạo hoặc mất xu');
+  assert.equal(poker.forceEndPokerSession(anteOnly.session.id, pokerGuild, 'admin'), null);
+  const raised = poker.startPoker({ guildId: pokerGuild, channelId: 'c', userId: 'bob', variant: 'texas' });
+  poker.playerAction(raised.session.id, 'bob', 'raise', 20);
+  assert(balance(pokerGuild, 'bob') < START - raised.state.ante, 'tố thêm phải trừ xu');
+  poker.forceEndPokerSession(raised.session.id, pokerGuild, 'admin');
+  assert.equal(balance(pokerGuild, 'bob'), START, 'phải hoàn cả ante và số xu đã tố');
+
   // Ván solo bị kẹt tự được dọn và hoàn cược
   const stale = require('../src/services/staleSessionService');
   const blackjack = require('../src/services/blackjackService');
