@@ -28,12 +28,13 @@ function combination(n, r) {
 
 function multiplierFor(opened, mineCount, stake = MIN_BET) {
   if (opened <= 0) return 1;
-  const remaining = CELL_COUNT - opened;
-  if (remaining < mineCount) return Math.floor((MAX_PAYOUT / stake) * 100) / 100;
+  // A Blast Shield turns a mine into an opened cell, so `opened` can exceed the safe-cell count; extra cells never raise the multiplier.
+  const priced = Math.min(opened, CELL_COUNT - mineCount);
+  const remaining = CELL_COUNT - priced;
   const fair = combination(CELL_COUNT, mineCount) / combination(remaining, mineCount);
   // The star is hidden among safe cells; its 1.5x bonus must be priced into the base multiplier.
-  const expectedStar = 1 + (opened / (CELL_COUNT - mineCount)) * (SPECIAL_MULTIPLIER_BONUS - 1);
-  const capped = Math.min(fair * HOUSE_FACTOR ** opened / expectedStar, MAX_PAYOUT / stake);
+  const expectedStar = 1 + (priced / (CELL_COUNT - mineCount)) * (SPECIAL_MULTIPLIER_BONUS - 1);
+  const capped = Math.min(fair * HOUSE_FACTOR ** priced / expectedStar, MAX_PAYOUT / stake);
   return Math.max(1.01, Math.floor(capped * 100) / 100);
 }
 
