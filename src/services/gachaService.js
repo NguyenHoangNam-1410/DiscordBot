@@ -40,7 +40,6 @@ function getGachaPity(guildId, userId) {
     .get(String(guildId), String(userId)) || { since_sr: 0, since_ssr: 0, since_ur: 0 };
 }
 function advancePity(pity, result) {
-  if (result.kind !== 'item') return;
   pity.since_sr = TIER_ORDER[result.tier] >= TIER_ORDER.SR ? 0 : pity.since_sr + 1;
   pity.since_ssr = TIER_ORDER[result.tier] >= TIER_ORDER.SSR ? 0 : pity.since_ssr + 1;
   pity.since_ur = TIER_ORDER[result.tier] >= TIER_ORDER.UR ? 0 : pity.since_ur + 1;
@@ -78,11 +77,9 @@ function pullGacha({ guildId, userId, pulls = 1, now = Date.now(), rolls = null,
     for (let index = 0; index < count; index += 1) {
       const normal = rollGacha(rolls?.[index], guildId, now, tierBoost);
       let minimum = null;
-      if (normal.kind === 'item') {
-        if (pity.since_ur >= 49) minimum = 'UR';
-        else if (pity.since_ssr >= 24) minimum = 'SSR';
-        else if (pity.since_sr >= 9) minimum = 'SR';
-      }
+      if (pity.since_ur >= 49) minimum = 'UR';
+      else if (pity.since_ssr >= 24) minimum = 'SSR';
+      else if (pity.since_sr >= 9) minimum = 'SR';
       if (index === count - 1 && paymentType === TICKETS[10] && !results.some(result => result.kind === 'item' && TIER_ORDER[result.tier] >= TIER_ORDER.SSR) && (TIER_ORDER[minimum] || 0) < TIER_ORDER.SSR) minimum = 'SSR';
       else if (index === count - 1 && paymentType === TICKETS[1] && (TIER_ORDER[minimum] || 0) < TIER_ORDER.SSR) minimum = 'SSR';
       else if (index === count - 1 && count === 10 && !results.some(result => result.kind === 'item' && TIER_ORDER[result.tier] >= TIER_ORDER.SR) && (TIER_ORDER[minimum] || 0) < TIER_ORDER.SR) minimum = 'SR';

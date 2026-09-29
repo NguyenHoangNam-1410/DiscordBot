@@ -70,6 +70,31 @@ const ticketPull = gacha.pullGacha({ guildId: 'ticket-guild', userId: 'alice', p
 assert.equal(ticketPull.paymentType, gacha.TICKETS[10]);
 assert(ticketPull.results.some(result => result.kind === 'item' && ['SSR', 'UR'].includes(result.tier)));
 
+// Bảo hiểm Gacha tính cả lượt ra xu
+const pityGuild = 'pity-guild';
+const setPity = (userId, sr, ssr, ur) => db.prepare(`INSERT INTO gacha_pity(guild_id,user_id,since_sr,since_ssr,since_ur) VALUES(?,?,?,?,?)
+  ON CONFLICT(guild_id,user_id) DO UPDATE SET since_sr=excluded.since_sr,since_ssr=excluded.since_ssr,since_ur=excluded.since_ur`).run(pityGuild, userId, sr, ssr, ur);
+require('../src/services/playerLevelService').addDiamonds(pityGuild, 'alice', 5_000, { reason: 'test' });
+setPity('alice', 9, 24, 49);
+const coinRollAtPity = gacha.pullGacha({ guildId: pityGuild, userId: 'alice', pulls: 1, rolls: [0] });
+assert.equal(coinRollAtPity.results[0].kind, 'item', 'chạm bảo hiểm UR thì lượt ra xu phải bị thay bằng vật phẩm');
+assert.equal(coinRollAtPity.results[0].tier, 'UR');
+assert.deepEqual([coinRollAtPity.pity.since_sr, coinRollAtPity.pity.since_ssr, coinRollAtPity.pity.since_ur], [0, 0, 0]);
+setPity('alice', 9, 24, 40);
+const ssrPity = gacha.pullGacha({ guildId: pityGuild, userId: 'alice', pulls: 1, rolls: [0] });
+assert(['SSR', 'UR'].includes(ssrPity.results[0].tier), 'chạm bảo hiểm SSR');
+setPity('alice', 9, 3, 3);
+const srPity = gacha.pullGacha({ guildId: pityGuild, userId: 'alice', pulls: 1, rolls: [0] });
+assert(['SR', 'SSR', 'UR'].includes(srPity.results[0].tier) && srPity.results[0].kind === 'item', 'chạm bảo hiểm SR');
+setPity('alice', 0, 0, 0);
+const coinCounts = gacha.pullGacha({ guildId: pityGuild, userId: 'alice', pulls: 1, rolls: [0] });
+assert.equal(coinCounts.results[0].kind, 'coins');
+assert.deepEqual([coinCounts.pity.since_sr, coinCounts.pity.since_ssr, coinCounts.pity.since_ur], [1, 1, 1], 'lượt ra xu phải được tính vào bộ đếm');
+setPity('alice', 8, 0, 0);
+const chained = gacha.pullGacha({ guildId: pityGuild, userId: 'alice', pulls: 10, rolls: Array(10).fill(0) });
+assert(chained.results.slice(0, 1).every(result => result.kind === 'coins'));
+assert(chained.results.some(result => result.kind === 'item' && ['SR', 'SSR', 'UR'].includes(result.tier)), '10 lượt xu liên tiếp vẫn phải chạm bảo hiểm SR');
+
 // Vua tiếng Việt
 const vuaGuild = 'vua-item-guild'; const vuaChannel = 'vua-channel';
 channels.setGameChannel(vuaGuild, 'vuatiengviet', vuaChannel);

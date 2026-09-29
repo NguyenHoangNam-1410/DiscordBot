@@ -149,7 +149,7 @@ assert.deepEqual([0, 2500, 4500, 5500, 8000, 9500, 9900].map(roll => gacha.rollG
 const singlePull = gacha.pullGacha({ guildId: 'gacha-guild', userId: 'alice', pulls: 1, rolls: [0], now: 1000 });
 assert.equal(singlePull.results[0].coins, 10_000);
 const tenPull = gacha.pullGacha({ guildId: 'gacha-guild', userId: 'alice', pulls: 10, rolls: Array(10).fill(0), now: 2000 });
-assert(['SR', 'SSR', 'UR'].includes(tenPull.results[9].tier));
+assert(tenPull.results.some(result => result.kind === 'item' && ['SR', 'SSR', 'UR'].includes(result.tier)), '10 lượt luôn có ít nhất một SR+');
 assert.equal(tenPull.progression.diamonds, 0);
 require('../src/services/shopService').addInventory('gacha-guild', 'alice', gacha.TICKETS[1], 1, 3000);
 const ticketsBefore = gacha.getTicketBalances('gacha-guild', 'alice').single;
