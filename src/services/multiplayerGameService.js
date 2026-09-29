@@ -288,6 +288,8 @@ async function handleBetModal(interaction) {
           : 'Mức cược phải là số nguyên từ 10 đến 100.000 xu.';
     return interaction.reply({ content, flags: MessageFlags.Ephemeral });
   }
+  const publicMessage = `<@${interaction.user.id}> đặt cược **${formatCoins(amount)} xu** vào **${choiceLabel(game, choice)}** 🎲`;
+  await interaction.channel?.send({ content: publicMessage }).catch(() => {});
   return null;
 }
 
