@@ -15,7 +15,7 @@ function forfeitActiveGames({ guildId, userId, adminId }) {
   return db.transaction(() => {
     let games = 0; let amount = 0;
     const solo = [
-      ['blackjack_sessions', blackjack.forceEndBlackjackSession], ['mines_sessions', mines.forceEndMinesSession],
+      ['blackjack_sessions', blackjack.forceEndBlackjackSession], ['mines_sessions', mines.forceEndMinesSession], ['coquay_sessions', require('./coquayService').forceEndCoquaySession],
       ['chinchiro_sessions', chinchiro.forceEndChinchiroSession], ['hardcore_sessions', hardcore.forceEndHardcoreSession],
     ];
     for (const [table, forceEnd] of solo) {

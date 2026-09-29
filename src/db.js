@@ -300,6 +300,18 @@ CREATE TABLE IF NOT EXISTS mines_sessions (
 );
 CREATE INDEX IF NOT EXISTS idx_mines_channel ON mines_sessions(guild_id, channel_id);
 
+CREATE TABLE IF NOT EXISTS coquay_sessions (
+  id TEXT PRIMARY KEY,
+  guild_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  channel_id TEXT NOT NULL,
+  message_id TEXT,
+  state_json TEXT NOT NULL,
+  created_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL,
+  UNIQUE (guild_id, user_id)
+);
+
 CREATE TABLE IF NOT EXISTS chinchiro_sessions (
   id TEXT PRIMARY KEY,
   guild_id TEXT NOT NULL,

@@ -2,7 +2,7 @@ const { db } = require('../db');
 
 const DEFAULT_MAX_BET = 100_000;
 const MIN_MAX_BET = 10;
-const BET_GAMES = Object.freeze(['baucua', 'taixiu', 'chinchiro', 'oantuti', 'blackjack', 'poker', 'duangua', 'mines', 'hardcore']);
+const BET_GAMES = Object.freeze(['baucua', 'taixiu', 'chinchiro', 'oantuti', 'blackjack', 'poker', 'duangua', 'mines', 'coquay', 'hardcore']);
 
 function validate(game, maxBet = DEFAULT_MAX_BET) {
   if (!BET_GAMES.includes(game)) throw new Error('INVALID_BET_GAME');

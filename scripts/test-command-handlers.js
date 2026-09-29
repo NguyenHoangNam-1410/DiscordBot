@@ -162,7 +162,7 @@ async function run() {
 
   const leaderboard = require('../src/commands/xephang');
   assert.equal(leaderboard.data.toJSON().options?.length || 0, 0);
-  assert.equal(leaderboard.leaderboardRow('alice').components[0].options.length, 10);
+  assert.equal(leaderboard.leaderboardRow('alice').components[0].options.length, 11);
   assert(!leaderboard.leaderboardRow('alice').components[0].options.some(option => option.data.value === 'vuatiengviet'));
   require('../src/services/economyService').recordGameResult({ guildId: 'command-guild', userId: 'alice', game: 'mines', outcome: 'win' });
   assert.match(leaderboard.gameEmbed('empty-leaderboard-guild', 'mines').toJSON().description, /chưa có dữ liệu/i);

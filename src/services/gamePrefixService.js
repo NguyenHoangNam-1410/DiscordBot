@@ -7,6 +7,7 @@ const blackjack = require('../commands/blackjack');
 const poker = require('../commands/poker');
 const duangua = require('../commands/duangua');
 const mines = require('../commands/mines');
+const coquay = require('../commands/coquay');
 const hardcore = require('../commands/hardcore');
 const vuatiengviet = require('../commands/vuatiengviet');
 const trochoi = require('../commands/trochoi');
@@ -16,17 +17,17 @@ const { REWARD_GAMES, setGameReward, listGameRewards } = require('./gameRewardSe
 const { formatCoins } = require('../utils/economy');
 const { BET_GAMES, setGameBetLimit, listGameBetLimits } = require('./gameBetLimitService');
 
-const COMMANDS = { baucua, taixiu, chinchiro, oantuti, blackjack, poker, duangua, mines, hardcore, vuatiengviet, trochoi, use };
+const COMMANDS = { baucua, taixiu, chinchiro, oantuti, blackjack, poker, duangua, mines, coquay, hardcore, vuatiengviet, trochoi, use };
 const NAME_ALIASES = {
   vua: 'vuatiengviet', vtv: 'vuatiengviet', vutiengviet: 'vuatiengviet', ott: 'oantuti',
   xidach: 'blackjack', xi_dach: 'blackjack', hc: 'hardcore', sinhton: 'hardcore',
   domin: 'mines', huongdan: 'trochoi', games: 'trochoi', gamehelp: 'trochoi', sudung: 'use',
-  xucxacngam: 'chinchiro',
+  xucxacngam: 'chinchiro', coquaynga: 'coquay', cqn: 'coquay',
   datthuong: 'setreward', xemthuong: 'rewards', datgioihan: 'setmaxbet', xemgioihan: 'maxbets',
 };
 const SUB_ALIASES = { start: 'batdau', batdau: 'batdau', skip: 'boqua', boqua: 'boqua', end: 'ketthuc', ketthuc: 'ketthuc' };
 const REWARD_LABELS = { vuatiengviet: 'Vua tiếng Việt' };
-const BET_LABELS = { baucua: 'Bầu cua', taixiu: 'Tài xỉu', chinchiro: 'Chinchiro', oantuti: 'Oẳn tù tì', blackjack: 'Xì dách', poker: 'Poker', duangua: 'Đua ngựa', mines: 'Mines', hardcore: 'Sinh tồn' };
+const BET_LABELS = { baucua: 'Bầu cua', taixiu: 'Tài xỉu', chinchiro: 'Chinchiro', oantuti: 'Oẳn tù tì', blackjack: 'Xì dách', poker: 'Poker', duangua: 'Đua ngựa', mines: 'Mines', coquay: 'Cò quay Nga', hardcore: 'Sinh tồn' };
 
 function isAdmin(message) {
   const ids = String(process.env.ADMIN_USER_ID || '').split(/[,;\n]/).map(id => id.trim()).filter(Boolean);
@@ -71,6 +72,7 @@ function help(prefix, command) {
   if (command === 'blackjack') return `Cách dùng: \`${prefix}xidach <số xu> [bot|nguoichoi]\` — mặc định chơi với nhà cái bot; \`nguoichoi\` mở bàn làm nhà cái cho tối đa 3 người`;
   if (command === 'poker') return `Cách dùng: \`${prefix}poker <texas|sixplus|pineapple|omaha> [bot|banbe]\``;
   if (command === 'chinchiro') return `Cách dùng: \`${prefix}chinchiro <số xu>\``;
+  if (command === 'coquay') return `Cách dùng: \`${prefix}coquay <số xu>\``;
   if (command === 'mines') return `Cách dùng: \`${prefix}domin <số xu> <số mìn 2–7>\``;
   if (command === 'hardcore') return `Cách dùng: \`${prefix}sinhton <số xu> <barbarian|assassin|sorceress>\` hoặc \`${prefix}sinhton <hoso|xephang|tyle>\``;
   if (command === 'vuatiengviet') return `Cách dùng: \`${prefix}vtv <batdau|boqua|ketthuc>\``;
@@ -170,6 +172,10 @@ async function handleGamePrefix(message) {
       await message.reply({ content: help(prefix, name), allowedMentions: { repliedUser: false } }); return true;
     }
     options = { strings: { chedo: variant, chedochoi: mode === 'bot' ? 'bot' : 'nguoichoi' } };
+  } else if (name === 'coquay') {
+    const amount = Number(parts[0]);
+    if (!Number.isSafeInteger(amount)) { await message.reply({ content: help(prefix, name), allowedMentions: { repliedUser: false } }); return true; }
+    options = { integers: { cuoc: amount } };
   } else if (name === 'mines') {
     const amount = Number(parts[0]);
     const mineCount = Number(parts[1]);

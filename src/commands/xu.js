@@ -3,7 +3,7 @@ const { getTransactionHistory, transferCoins } = require('../services/economySer
 const { formatCoins } = require('../utils/economy');
 const { getGameHistory } = require('../services/progressionService');
 
-const GAME_LABELS = { vuatiengviet: 'Vua tiếng Việt', baucua: 'Bầu cua', taixiu: 'Tài xỉu', chinchiro: 'Chinchiro', oantuti: 'Oẳn tù tì', blackjack: 'Xì dách', poker: 'Poker', duangua: 'Đua ngựa', mines: 'Dò mìn', hardcore: 'Sinh tồn' };
+const GAME_LABELS = { vuatiengviet: 'Vua tiếng Việt', baucua: 'Bầu cua', taixiu: 'Tài xỉu', chinchiro: 'Chinchiro', oantuti: 'Oẳn tù tì', blackjack: 'Xì dách', poker: 'Poker', duangua: 'Đua ngựa', mines: 'Dò mìn', coquay: 'Cò quay Nga', hardcore: 'Sinh tồn' };
 function transactionLabel(reason) {
   const value = String(reason || '');
   if (value === 'daily') return 'Quà xu hằng ngày';

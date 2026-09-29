@@ -194,6 +194,7 @@ function useItem({ guildId, userId, channelId, itemId }) {
   const item = getCatalogItem(itemId);
   if (!item || getInventoryQuantity(guildId, userId, itemId) < 1) throw new Error('ITEM_NOT_OWNED');
   if (item.type === 'gacha') throw new Error('ITEM_NOT_USABLE');
+  if (String(item.effect).startsWith('coquay_')) throw new Error('COQUAY_IN_GAME_ITEM');
   if (item.type === 'color') { equipOwnedCosmetic(guildId, userId, item.id); const icon = item.emoji || '🎨'; return { item, message: `${icon} Đã trang bị **${item.name}**. Dùng \`/hoso\` để xem.`, ephemeral: true }; }
   if (item.effect === 'baucua_magnifier') { const result = useBaucuaMagnifier(guildId, channelId); consumeInventory(guildId, userId, item.id); return { item, message: result.message, ephemeral: true }; }
   if (item.effect === 'baucua_small_lens') { const result = useBaucuaSmallLens(guildId, channelId); consumeInventory(guildId, userId, item.id); return { item, message: result.message, ephemeral: true }; }

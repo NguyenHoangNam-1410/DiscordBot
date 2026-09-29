@@ -6,6 +6,7 @@ const { handleBlackjackDuelButton } = require('./services/blackjackDuelService')
 const { handlePokerButton, handlePokerPrivateButton, handlePokerModal } = require('./services/pokerService');
 const { handleHorseButton, handleHorseModal } = require('./services/horseRaceService');
 const { handleMinesButton } = require('./services/minesService');
+const { handleCoquayButton } = require('./services/coquayService');
 const { handleHardcoreButton } = require('./services/hardcoreService');
 const { handleCoinRequestButton } = require('./services/coinRequestService');
 const { handleRpsDuelButton } = require('./services/rpsDuelService');
@@ -49,6 +50,7 @@ const ROUTES = Object.freeze([
   { kind: 'button', prefix: 'poker:', handle: handlePokerButton },
   { kind: 'button', prefix: 'hardcore:', handle: handleHardcoreButton },
   { kind: 'button', prefix: 'mines:', handle: handleMinesButton },
+  { kind: 'button', prefix: 'coquay:', handle: handleCoquayButton },
   { kind: 'button', prefix: 'horserace:', handle: handleHorseButton },
   { kind: 'button', prefix: 'blackjack:', handle: handleBlackjackButton },
   { kind: 'button', prefix: 'blackjack-table-private:', handle: handleBlackjackTablePrivateButton },
@@ -73,7 +75,7 @@ async function routeComponentInteraction(interaction, logger) {
   if (!kind) return false;
   const route = ROUTES.find(item => item.kind === kind && interaction.customId.startsWith(item.prefix));
   if (!route) return false;
-  const gameAction = /^(replay:|rpsbot:|chinchiro:|rpsduel:|bjduel:|poker:|poker-private:|hardcore:|mines:|horserace:|blackjack:|gamebet:|gamebet-modal:|poker-modal:|poker-private-modal:|horserace-modal:)/.test(interaction.customId);
+  const gameAction = /^(replay:|rpsbot:|chinchiro:|rpsduel:|bjduel:|poker:|poker-private:|hardcore:|mines:|coquay:|horserace:|blackjack:|gamebet:|gamebet-modal:|poker-modal:|poker-private-modal:|horserace-modal:)/.test(interaction.customId);
   if (gameAction && interaction.guildId && !interaction.customId.startsWith('blackjack-table:')
     && getBlackjackTableLock(interaction.guildId, interaction.user.id)) {
     await interaction.reply({ content: 'Bạn đang ở bàn Xì dách và chỉ có thể thao tác tại bàn đó cho đến khi ván kết thúc.', flags: MessageFlags.Ephemeral });

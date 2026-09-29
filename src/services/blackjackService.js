@@ -327,7 +327,7 @@ function tableStatusResult(player, dealer, dealerNatural) {
 function hasOtherWagerSession(guildId, userId) {
   const guild = String(guildId); const user = String(userId);
   const checks = [
-    ['blackjack_sessions', 'user_id'], ['chinchiro_sessions', 'user_id'], ['mines_sessions', 'user_id'],
+    ['blackjack_sessions', 'user_id'], ['chinchiro_sessions', 'user_id'], ['mines_sessions', 'user_id'], ['coquay_sessions', 'user_id'],
     ['hardcore_sessions', 'user_id'], ['poker_sessions', 'user_id'],
   ];
   if (checks.some(([table, column]) => db.prepare(`SELECT 1 FROM ${table} WHERE guild_id=? AND ${column}=? LIMIT 1`).get(guild, user))) return true;

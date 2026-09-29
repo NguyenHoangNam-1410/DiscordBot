@@ -2,6 +2,7 @@ const { EmbedBuilder } = require('discord.js');
 const { db } = require('../db');
 const { forceEndBlackjackSession } = require('./blackjackService');
 const { forceEndMinesSession } = require('./minesService');
+const { forceEndCoquaySession } = require('./coquayService');
 const { forceEndChinchiroSession } = require('./chinchiroService');
 const { forceEndHardcoreSession } = require('./hardcoreService');
 
@@ -11,6 +12,7 @@ const NO_MESSAGE_TTL_MS = 2 * 60_000;
 const SOLO_GAMES = Object.freeze([
   { table: 'blackjack_sessions', name: 'XÌ DÁCH', forceEnd: forceEndBlackjackSession },
   { table: 'mines_sessions', name: 'DÒ MÌN', forceEnd: forceEndMinesSession },
+  { table: 'coquay_sessions', name: 'CÒ QUAY NGA', forceEnd: forceEndCoquaySession },
   { table: 'chinchiro_sessions', name: 'CHINCHIRO', forceEnd: forceEndChinchiroSession },
   { table: 'hardcore_sessions', name: 'SINH TỒN', forceEnd: forceEndHardcoreSession },
 ]);
