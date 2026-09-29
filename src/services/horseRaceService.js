@@ -476,6 +476,8 @@ async function handleHorseModal(interaction) {
     const market = marketForRound(placed.round);
     await interaction.reply({ content: `## ✅ ĐẶT CƯỢC THÀNH CÔNG\n🐎 **Ngựa:** ${horseLabel(horse, market)}\n💰 **Lần này:** ${formatCoins(amount)} xu\n🎟️ **Tổng cược trong ván:** ${formatCoins(placed.totalAmount)} xu`, flags: MessageFlags.Ephemeral });
     await refreshRace(placed.round, interaction.client);
+    const publicMessage = `<@${interaction.user.id}> đặt cược **${formatCoins(amount)} xu** vào **${horseLabel(horse, market)}** 🐎`;
+    await interaction.channel?.send({ content: publicMessage }).catch(() => {});
   } catch (error) {
     const content = error.code === 'INSUFFICIENT_FUNDS' ? 'Bạn không đủ xu để đặt cược.'
       : error.message === 'ROUND_CLOSED' ? 'Ván đua đã khóa cược.'
