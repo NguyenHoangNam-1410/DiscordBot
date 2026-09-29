@@ -20,9 +20,6 @@ function cardsLine(cards, style = 'bold') {
   const hasEmoji = cards.some(card => { const name = cardEmojiName(card); return name && appEmoji(name, '') !== ''; });
   return cards.map(card => cardMarkup(card, style)).join(style === 'code' ? ' ' : hasEmoji ? ' ' : '　');
 }
-// Dòng bài dạng tiêu đề: emoji trong tiêu đề cấp 1 hiển thị lớn hơn nhiều so với emoji thường; chưa có emoji thì giữ cỡ cũ.
-function hasCardEmoji(text) { return /<a?:card/.test(String(text)); }
-function cardHeading(text) { return `${hasCardEmoji(text) ? '#' : '###'} ${text}`; }
 function hiddenCard() {
   for (const name of CARD_BACK_CANDIDATES()) { const markup = appEmoji(name, ''); if (markup) return markup; }
   return '**??**';
@@ -34,4 +31,4 @@ function styleCardButton(button, card, verb) {
   return emoji ? button.setLabel(verb).setEmoji(emoji) : button.setLabel(`${verb} ${card}`);
 }
 
-module.exports = { hasCardEmoji, cardHeading, SUIT_NAMES, cardEmojiName, cardMarkup, cardsLine, hiddenCard, hiddenCards, styleCardButton };
+module.exports = { SUIT_NAMES, cardEmojiName, cardMarkup, cardsLine, hiddenCard, hiddenCards, styleCardButton };
