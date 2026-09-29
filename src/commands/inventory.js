@@ -13,7 +13,7 @@ module.exports = {
     const effects = listActiveEffects(interaction.guildId, user.id);
     const effectItems = new Map(listCatalog().map(item => [item.effect, item]));
     const grouped = new Map();
-    for (const row of rows) { const list = grouped.get(row.item.type) || []; const rarity = ['R', 'SR', 'SSR', 'UR'].includes(row.item.rarity) ? ` [${row.item.rarity}]` : ''; const icon = `${itemIcon(row.item)} `; list.push(`• ${icon}**${row.item.name}${rarity}** ×${row.quantity} · \`${row.item_id}\``); grouped.set(row.item.type, list); }
+    for (const row of rows) { const list = grouped.get(row.item.type) || []; const rarity = ['R', 'SR', 'SSR', 'UR'].includes(row.item.rarity) ? ` [${row.item.rarity}]` : ''; const icon = `${itemIcon(row.item)} `; list.push(`• ${icon}**${row.item.name}${rarity}** ×${row.quantity}`); grouped.set(row.item.type, list); }
     const embed = new EmbedBuilder().setColor(0x8E44AD).setTitle(`🎒 KHO ĐỒ · ${user.globalName || user.username}`)
       .setDescription(rows.length ? [...grouped].map(([type, list]) => `**${TYPE_NAMES[type] || type.toUpperCase()}**\n${list.join('\n')}`).join('\n\n').slice(0, 4096) : 'Kho đồ đang trống.')
       .setFooter({ text: 'Dùng /vatpham sudung để dùng • /vatpham tang để tặng' });

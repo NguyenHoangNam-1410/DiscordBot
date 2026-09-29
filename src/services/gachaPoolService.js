@@ -2,9 +2,9 @@ const { db } = require('../db');
 const { getCatalogItem, listCatalog } = require('./itemCatalogService');
 
 const DEFAULT_ENTRIES = Object.freeze([
-  { rewardKey: 'coins_50000', kind: 'coins', itemId: null, name: '50.000 xu', tier: 'XU', amount: 50_000, weight: 2_200 },
-  { rewardKey: 'coins_100000', kind: 'coins', itemId: null, name: '100.000 xu', tier: 'XU', amount: 100_000, weight: 1_800 },
-  { rewardKey: 'coins_300000', kind: 'coins', itemId: null, name: '300.000 xu', tier: 'XU', amount: 300_000, weight: 1_100 },
+  { rewardKey: 'coins_10000', kind: 'coins', itemId: null, name: '10.000 xu', tier: 'XU', amount: 10_000, weight: 2_200 },
+  { rewardKey: 'coins_20000', kind: 'coins', itemId: null, name: '20.000 xu', tier: 'XU', amount: 20_000, weight: 1_800 },
+  { rewardKey: 'coins_50000', kind: 'coins', itemId: null, name: '50.000 xu', tier: 'XU', amount: 50_000, weight: 1_100 },
   { rewardKey: 'chinchiro_soundproof_bowl', kind: 'item', itemId: 'chinchiro_soundproof_bowl', name: 'Bát Cách Âm', tier: 'R', amount: 1, weight: 500 },
   { rewardKey: 'baucua_magnifier', kind: 'item', itemId: 'baucua_magnifier', name: 'Kính Lúp Bầu Cua', tier: 'SR', amount: 1, weight: 400 },
   { rewardKey: 'taixiu_magnetic_dice', kind: 'item', itemId: 'taixiu_magnetic_dice', name: 'Xúc Xắc Từ Tính', tier: 'SR', amount: 1, weight: 400 },

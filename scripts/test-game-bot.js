@@ -147,7 +147,7 @@ levels.addDiamonds('gacha-guild', 'alice', 1_000);
 const gacha = require('../src/services/gachaService');
 assert.deepEqual([0, 2500, 4500, 5500, 8000, 9500, 9900].map(roll => gacha.rollGacha(roll).tier), ['XU', 'XU', 'XU', 'R', 'SSR', 'SSR', 'UR']);
 const singlePull = gacha.pullGacha({ guildId: 'gacha-guild', userId: 'alice', pulls: 1, rolls: [0], now: 1000 });
-assert.equal(singlePull.results[0].coins, 50_000);
+assert.equal(singlePull.results[0].coins, 10_000);
 const tenPull = gacha.pullGacha({ guildId: 'gacha-guild', userId: 'alice', pulls: 10, rolls: Array(10).fill(0), now: 2000 });
 assert(['SR', 'SSR', 'UR'].includes(tenPull.results[9].tier));
 assert.equal(tenPull.progression.diamonds, 0);
@@ -157,7 +157,7 @@ const ticketPull = gacha.pullGacha({ guildId: 'gacha-guild', userId: 'alice', pu
 assert.equal(ticketPull.usedFreePull, true);
 assert.equal(ticketPull.paymentType, gacha.TICKETS[1]);
 assert(['SSR', 'UR'].includes(ticketPull.results[0].tier));
-assert.equal(ticketPull.tickets.single, ticketsBefore - 1);
+assert.equal(ticketPull.tickets.single, ticketsBefore - 1 + (ticketPull.results[0].itemId === gacha.TICKETS[1] ? 1 : 0));
 const ledgerFirst = levels.addDiamonds('ledger-guild', 'alice', 250, { now: 3100, reason: 'test', operationId: 'diamond:test:1' });
 const ledgerDuplicate = levels.addDiamonds('ledger-guild', 'alice', 250, { now: 3101, reason: 'test', operationId: 'diamond:test:1' });
 assert.equal(ledgerFirst.diamonds, 250);
