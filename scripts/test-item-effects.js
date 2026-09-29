@@ -281,5 +281,49 @@ db.prepare("UPDATE multiplayer_rounds SET status='closed' WHERE id=?").run(taixi
   assert.throws(() => itemEffects.useItem({ guildId: cleanGuild, userId: 'alice', channelId: 'c', itemId: 'effect_cleanser' }), /NO_EFFECT_TO_REMOVE/);
   assert(effects.getActiveEffect(cleanGuild, 'alice', 'dice_divine_eye'));
 
+  // Reset server: chỉ xóa dữ liệu người chơi, giữ cấu hình, không ảnh hưởng server khác
+  const admin = require('../src/services/adminDataService');
+  const configuredGuild = 'reset-guild'; const otherGuild = 'reset-other-guild';
+  for (const guildId of [configuredGuild, otherGuild]) {
+    channels.setGameChannel(guildId, 'baucua', 'casino');
+    gameConfig.setGameConfig(guildId, 'ECONOMY_STARTING_COINS', 777, 'admin');
+    require('../src/services/gameBetLimitService').setGameBetLimit(guildId, 'poker', 1234);
+    pool.addGachaItem(guildId, 'living_dictionary', 'UR', 10, 'admin');
+    shop.upsertShopItem({ guildId, catalogId: 'mines_row_scanner', price: 5000, stock: 5, createdBy: 'admin' });
+    require('../src/services/weeklyRoleRewardService').setWeeklyRoleReward({ guildId, roleId: 'role-1', amount: 500, createdBy: 'admin' });
+    require('../src/services/gameBuffService').setBuff({ guildId, type: 'coins', percent: 200, hours: 2, updatedBy: 'admin' });
+    fund(guildId, 'alice', 5000); shop.addInventory(guildId, 'alice', 'mines_radar', 3);
+    effects.addEffectCharge(guildId, 'alice', 'rps_counter');
+    require('../src/services/playerLevelService').addDiamonds(guildId, 'alice', 500, { reason: 'test' });
+    require('../src/services/onboardingService').claimStarterPack(guildId, 'alice');
+    db.prepare("INSERT INTO gacha_history(guild_id,user_id,pulls,diamond_cost,results_json,created_at,operation_id,payment_type) VALUES(?,?,?,?,?,?,?,?)").run(guildId, 'alice', 1, 100, '[]', Date.now(), null, 'diamonds');
+    economy.rewardGame({ guildId, userId: 'alice', amount: 100, game: 'mines', outcome: 'win' });
+  }
+  const GUILD_TABLES = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all()
+    .map(row => row.name).filter(name => db.prepare(`PRAGMA table_info(${name})`).all().some(column => column.name === 'guild_id'));
+  const KEPT_CONFIG_TABLES = ['game_bet_limits', 'game_channels', 'game_reward_buffs', 'game_rewards', 'game_sessions', 'game_settings', 'gacha_pool_entries',
+    'multiplayer_rounds', 'shop_items', 'shop_settings', 'weekly_reward_settings', 'weekly_role_rewards'];
+  for (const table of GUILD_TABLES) assert(admin.RESET_PLAYER_TABLES.includes(table) || KEPT_CONFIG_TABLES.includes(table), `bảng ${table} chưa được phân loại khi reset server`);
+  const shopRow = db.prepare('SELECT item_id FROM shop_items WHERE guild_id=?').get(configuredGuild);
+  db.prepare('UPDATE shop_items SET sold_count=3 WHERE guild_id=?').run(configuredGuild);
+  const resetRound = openRound(configuredGuild, 'c', 'taixiu'); addBet(configuredGuild, resetRound.id, 'alice', 'tai', 100);
+  const countRows = (table, guildId) => db.prepare(`SELECT COUNT(*) AS count FROM ${table} WHERE guild_id=?`).get(guildId).count;
+  const configTables = ['game_channels', 'game_bet_limits', 'game_settings', 'gacha_pool_entries', 'shop_items', 'weekly_role_rewards', 'game_reward_buffs'];
+  const configBefore = Object.fromEntries(configTables.map(table => [table, countRows(table, configuredGuild)]));
+  assert(configTables.every(table => configBefore[table] > 0), 'thiếu dữ liệu cấu hình mẫu');
+  const otherBefore = admin.RESET_PLAYER_TABLES.map(table => [table, countRows(table, otherGuild)]);
+  const resetResult = admin.resetServerPlayerData({ guildId: configuredGuild });
+  assert(resetResult.players >= 1 && resetResult.rows > 0);
+  for (const table of admin.RESET_PLAYER_TABLES) assert.equal(countRows(table, configuredGuild), 0, `${table} chưa được xóa`);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM multiplayer_rounds WHERE guild_id=?').get(configuredGuild).count, 0);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM multiplayer_bets WHERE round_id=?').get(resetRound.id).count, 0);
+  for (const table of configTables) assert.equal(countRows(table, configuredGuild), configBefore[table], `${table} bị xóa nhầm`);
+  assert.equal(db.prepare('SELECT sold_count FROM shop_items WHERE guild_id=? AND item_id=?').get(configuredGuild, shopRow.item_id).sold_count, 0);
+  assert.equal(gameConfig.getGameConfig(configuredGuild, 'ECONOMY_STARTING_COINS'), 777);
+  assert.equal(economy.getAccount(configuredGuild, 'alice').balance, 777);
+  for (const [table, before] of otherBefore) assert.equal(countRows(table, otherGuild), before, `${table} của server khác bị ảnh hưởng`);
+  assert(db.prepare('SELECT COUNT(*) AS count FROM multiplayer_rounds WHERE guild_id=?').get(otherGuild).count >= 0);
+  assert.equal(admin.countPlayersForClear(configuredGuild, 'server'), admin.countPlayersForClear(configuredGuild, 'all'));
+
   console.log(JSON.stringify({ ok: true, newItems: Object.keys(NEW_ITEMS).length }));
 })().catch(error => { console.error(error); process.exit(1); });

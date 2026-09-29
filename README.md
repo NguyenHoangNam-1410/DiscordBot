@@ -92,6 +92,8 @@ Các biến cân bằng game không còn bắt buộc phải sửa file rồi kh
 
 Admin dùng `/quantri xoadulieu` để xóa xu, kim cương, EXP/cấp của một người chơi. Bỏ trống người chơi để xem trước số tài khoản bị ảnh hưởng và xác nhận thao tác trên toàn server.
 
+`/quantri xoadulieu dulieu:RESET SERVER` (bỏ trống người chơi) xóa **mọi dữ liệu người chơi** của server: tài khoản xu, kim cương, cấp/EXP, túi đồ, hiệu ứng, lịch sử và pity Gacha, nhiệm vụ, thành tựu, thống kê, xếp hạng, quà đã nhận và ván đang chơi. **Cấu hình được giữ nguyên**: channel game, phần thưởng, giới hạn cược, cân bằng game, cửa hàng, pool Gacha, buff sự kiện và thưởng theo role. Có bước xác nhận và không thể hoàn tác.
+
 ## Vận hành và cân bằng
 
 - `npm run test:coverage`: chạy test và bắt buộc đạt ngưỡng coverage trong CI.
