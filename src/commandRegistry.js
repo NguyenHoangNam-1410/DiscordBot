@@ -1,5 +1,5 @@
 const COMMAND_FILES = Object.freeze([
-  'batdau', 'trogiup', 'huongdan', 'choi', 'luat', 'hoso', 'xu', 'vatpham', 'nhiemvu',
+  'batdau', 'trogiup', 'huongdan', 'choi', 'luat', 'hoso', 'xu', 'vatpham', 'nhiemvu', 'checklist', 'thanthuvip',
   'xephang', 'anxin', 'quantri', 'vtv',
 ]);
 

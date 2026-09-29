@@ -5,6 +5,7 @@ const shopPrice = basePrice => basePrice * DEFAULT_PRICE_MULTIPLIER;
 const DEFAULT_PROFILE_ITEMS = new Set(DEFAULT_IDS);
 
 const UTILITY_ITEMS = [
+  { id: 'gacha_ticket_x10', type: 'consumable', name: 'Vé Gacha ×10', effect: 'gacha_x10_pull', rarity: 'SSR', price: 0, stackable: true, tradeable: false, description: 'Dùng để quay 10 lần miễn phí tại Gacha. Bất khả trao đổi.' },
   { id: 'baucua_magnifier', type: 'consumable', name: 'Kính Lúp Bầu Cua', effect: 'baucua_magnifier', rarity: 'SR', price: shopPrice(1000), stackable: true, tradeable: true, description: 'Loại trừ 2 linh vật chắc chắn không xuất hiện trong ván Bầu cua đang mở.' },
   { id: 'taixiu_magnetic_dice', type: 'consumable', name: 'Xúc Xắc Từ Tính', effect: 'taixiu_no_triple', rarity: 'SR', price: shopPrice(1200), stackable: true, tradeable: true, description: 'Loại bỏ kết quả bộ ba trong ván Tài xỉu đang mở.' },
   { id: 'divine_eye', type: 'consumable', name: 'Mắt Thần', effect: 'dice_divine_eye', rarity: 'UR', price: shopPrice(5000), stackable: true, tradeable: true, description: 'Tiết lộ 1 mặt chắc chắn xuất hiện; ván đó áp dụng giới hạn cược an toàn.' },
