@@ -194,6 +194,13 @@ async function handleRpsDuelButton(interaction) {
     if (action === 'choose') {
       const result = chooseHand(id, interaction.user.id, choice);
       await interaction.reply({ content: `Bạn đã chọn ${HANDS[choice].emoji} **${HANDS[choice].label}**.`, flags: MessageFlags.Ephemeral });
+      const publicMessage = `<@${interaction.user.id}> đã khóa lựa chọn ${HANDS[choice].emoji} ${HANDS[choice].label}`;
+      await interaction.channel?.send({ content: publicMessage }).catch(() => {});
+      if (result.completed) {
+        const draw = !result.duel.winner_id;
+        const resultText = draw ? `🤝 **Hòa**: <@${result.duel.challenger_id}> vs <@${result.duel.opponent_id}>. Cả hai nhận lại **${formatCoins(result.duel.stake)} xu**.` : `🏆 **<@${result.duel.winner_id}> thắng!** Nhận **${formatCoins(result.duel.stake * 2)} xu**. Đối thủ thua **${formatCoins(result.duel.stake)} xu**.`;
+        await interaction.channel?.send({ content: resultText }).catch(() => {});
+      }
       return interaction.message.edit({ embeds: [duelEmbed(result.duel, result)], components: result.completed ? replayButtons(result.duel) : handButtons(id) });
     }
   } catch (error) {
