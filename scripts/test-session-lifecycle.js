@@ -286,6 +286,105 @@ function bet(guildId, roundId, userId, choice, amount) {
     }
   }
 
+  // Xóa xu không được để tiền đang khóa trong ván quay lại tài khoản
+  const adminData = require('../src/services/adminDataService');
+  const lockedGuild = 'clear-locked';
+  const blackjackForClear = require('../src/services/blackjackService');
+  const lockedBlackjack = blackjackForClear.startBlackjack({ guildId: lockedGuild, channelId: 'c', userId: 'alice', stake: 100, forcedDeck: ['2♣', '3♣', '4♠', '5♦', '6♥'] });
+  assert.equal(balance(lockedGuild, 'alice'), START - 100);
+  const cleared = adminData.clearPlayerData({ guildId: lockedGuild, userId: 'alice', scope: 'coins', adminId: 'admin' });
+  assert.equal(cleared.forfeitedGames, 1); assert.equal(cleared.forfeitedStake, 100);
+  assert.equal(balance(lockedGuild, 'alice'), 0);
+  assert.equal(blackjackForClear.forceEndBlackjackSession(lockedBlackjack.session.id, lockedGuild, 'admin'), null, 'ván đã bị hủy, admin không thể hoàn cược');
+  assert.throws(() => blackjackForClear.playAction({ sessionId: lockedBlackjack.session.id, userId: 'alice', action: 'stand' }), /INVALID_SESSION/);
+  assert.equal(balance(lockedGuild, 'alice'), 0, 'xu đã xóa không được quay lại');
+
+  const clearRound = openRound(lockedGuild, 'baucua');
+  bet(lockedGuild, clearRound, 'bob', 'bau', 200);
+  bet(lockedGuild, clearRound, 'carol', 'bau', 200);
+  assert.equal(adminData.clearPlayerData({ guildId: lockedGuild, userId: 'bob', scope: 'all', adminId: 'admin' }).forfeitedStake, 200);
+  const clearedRound = await multiplayer.settleRound(clearRound, null, console, ['bau', 'bau', 'bau']);
+  assert(!clearedRound.settlements.some(item => item.userId === 'bob'), 'cược của người bị xóa xu không được thanh toán');
+  assert.equal(balance(lockedGuild, 'bob'), 0, 'ván thắng cũng không được trả xu cho người đã bị xóa');
+  assert(balance(lockedGuild, 'carol') > START - 200, 'người khác trong ván vẫn được thanh toán');
+
+  const clearDuel = rps.createDuel({ guildId: lockedGuild, channelId: 'c', challengerId: 'dave', opponentId: 'erin', stake: 100 });
+  rps.acceptDuel(clearDuel.id, 'erin');
+  adminData.clearPlayerData({ guildId: lockedGuild, userId: 'dave', scope: 'coins', adminId: 'admin' });
+  assert.equal(balance(lockedGuild, 'dave'), 0, 'người bị xóa xu không nhận lại cược duel');
+  assert.equal(balance(lockedGuild, 'erin'), START, 'đối thủ được hoàn cược');
+  assert.equal(rps.getDuel(clearDuel.id).status, 'expired');
+
+  const clearPoker = require('../src/services/pokerService').startPoker({ guildId: lockedGuild, channelId: 'c', userId: 'frank', variant: 'texas' });
+  assert.equal(adminData.clearPlayerData({ guildId: lockedGuild, userId: 'frank', scope: 'coins', adminId: 'admin' }).forfeitedGames, 1);
+  assert.equal(balance(lockedGuild, 'frank'), 0);
+  assert.equal(require('../src/services/pokerService').getSession(clearPoker.session.id), null);
+
+  const bulkGuild = 'clear-bulk';
+  const bulkMines = require('../src/services/minesService').startMines({ guildId: bulkGuild, channelId: 'c', userId: 'fay', stake: 100, mineCount: 2, forcedMines: [0, 1], forcedSpecial: 19 });
+  const bulkBlackjack = blackjackForClear.startBlackjack({ guildId: bulkGuild, channelId: 'c', userId: 'gus', stake: 100, forcedDeck: ['2♣', '3♣', '4♠', '5♦', '6♥'] });
+  const bulkTotals = adminData.clearAllPlayerData({ guildId: bulkGuild, scope: 'coins', adminId: 'admin' });
+  assert.equal(bulkTotals.forfeitedGames, 2); assert.equal(bulkTotals.forfeitedStake, 200);
+  for (const user of ['fay', 'gus']) assert.equal(balance(bulkGuild, user), 0);
+  assert.equal(require('../src/services/minesService').getMinesByUser(bulkGuild, 'fay'), null);
+  assert.equal(blackjackForClear.getSessionByUser(bulkGuild, 'gus'), null);
+  void bulkMines; void bulkBlackjack;
+  const diamondOnly = adminData.clearPlayerData({ guildId: 'clear-diamonds', userId: 'hal', scope: 'diamonds', adminId: 'admin' });
+  assert.equal(diamondOnly.forfeitedGames, 0, 'chỉ xóa kim cương thì không hủy ván');
+
+  // Lệnh prefix Xì dách mở bàn bằng ante và không còn cú pháp solo
+  const prefixGuild = 'prefix-blackjack';
+  require('../src/services/gameChannelService').setGameChannel(prefixGuild, 'blackjack', 'prefix-channel');
+  const prefixReplies = [];
+  const prefixMessage = content => ({ guildId: prefixGuild, channelId: 'prefix-channel', content, author: { id: 'dealer', bot: false, username: 'dealer' },
+    reply: async payload => { prefixReplies.push(payload); return { id: `reply-${prefixReplies.length}` }; } });
+  const gamePrefix = require('../src/services/gamePrefixService');
+  assert.equal(await gamePrefix.handleGamePrefix(prefixMessage('!xidach solo <@123456789> 100')), true);
+  assert.match(prefixReplies.at(-1).content, /Cách dùng/); assert(!/solo/.test(prefixReplies.at(-1).content), 'hướng dẫn không được nhắc solo');
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM blackjack_tables WHERE guild_id=?').get(prefixGuild).count, 0);
+  assert.equal(await gamePrefix.handleGamePrefix(prefixMessage('!xidach 100')), true);
+  const prefixTable = db.prepare('SELECT * FROM blackjack_tables WHERE guild_id=?').get(prefixGuild);
+  assert(prefixTable, '!xidach 100 phải mở bàn'); assert.equal(prefixTable.ante, 100); assert.equal(prefixTable.dealer_id, 'dealer');
+  assert.equal(balance(prefixGuild, 'dealer'), START - 300, 'nhà cái phải ký quỹ ante × 3');
+  assert(prefixReplies.at(-1).embeds, 'phải hiện bàn Xì dách');
+
+  // Từ Điển Sống trao cả 10 kim cương của câu khó
+  const dictGuild = 'dictionary-guild'; const dictChannel = 'dictionary-channel';
+  require('../src/services/gameChannelService').setGameChannel(dictGuild, 'vuatiengviet', dictChannel);
+  for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_GACHA_DROP_CHANCE']) require('../src/services/gameConfigService').setGameConfig(dictGuild, key, 0, 'test');
+  const funForDictionary = require('../src/services/funGameService');
+  funForDictionary.startVuaSession(dictGuild, { forceHard: true });
+  const levelsForDictionary = require('../src/services/playerLevelService');
+  const diamondsBefore = levelsForDictionary.getPlayerProgression(dictGuild, 'alice').diamonds;
+  require('../src/services/shopService').addInventory(dictGuild, 'alice', 'living_dictionary', 1);
+  const dictionaryUse = require('../src/services/itemEffectService').useItem({ guildId: dictGuild, userId: 'alice', channelId: dictChannel, itemId: 'living_dictionary' });
+  assert.equal(levelsForDictionary.getPlayerProgression(dictGuild, 'alice').diamonds, diamondsBefore + 10, 'phải nhận 10 kim cương như trả lời câu khó thông thường');
+  assert.match(dictionaryUse.message, /10 kim cương/);
+  assert.match(require('../src/services/itemCatalogService').getCatalogItem('living_dictionary').description, /10 kim cương/);
+
+  // Dọn duel và bàn Xì dách đã kết thúc
+  const recordCleanup = require('../src/services/gameRecordCleanupService');
+  const recordGuild = 'record-cleanup';
+  const oldRecordTime = Date.now() - 30 * 86_400_000;
+  const makeDuel = (table, status, updatedAt) => {
+    const id = crypto.randomBytes(4).toString('hex');
+    if (table === 'rps_duels') db.prepare("INSERT INTO rps_duels(id,guild_id,channel_id,message_id,challenger_id,opponent_id,stake,status,expires_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)").run(id, recordGuild, 'c', null, 'a', 'b', 100, status, updatedAt, updatedAt, updatedAt);
+    else db.prepare("INSERT INTO blackjack_duels(id,guild_id,channel_id,message_id,challenger_id,opponent_id,stake,state_json,status,expires_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)").run(id, recordGuild, 'c', null, 'a', 'b', 100, '{}', status, updatedAt, updatedAt, updatedAt);
+    return id;
+  };
+  const makeTable = (status, updatedAt) => {
+    const id = crypto.randomBytes(4).toString('hex');
+    db.prepare("INSERT INTO blackjack_tables(id,guild_id,channel_id,message_id,dealer_id,ante,state_json,status,expires_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)").run(id, recordGuild, 'c', null, 'a', 100, '{}', status, updatedAt, updatedAt, updatedAt);
+    return id;
+  };
+  const oldRecords = { rps_duels: ['completed', 'declined', 'expired'].map(status => makeDuel('rps_duels', status, oldRecordTime)), blackjack_duels: ['completed', 'expired'].map(status => makeDuel('blackjack_duels', status, oldRecordTime)), blackjack_tables: ['completed', 'expired'].map(status => makeTable(status, oldRecordTime)) };
+  const keptRecords = { rps_duels: [makeDuel('rps_duels', 'playing', oldRecordTime), makeDuel('rps_duels', 'completed', Date.now())], blackjack_duels: [makeDuel('blackjack_duels', 'invited', oldRecordTime)], blackjack_tables: [makeTable('playing', oldRecordTime), makeTable('lobby', oldRecordTime), makeTable('completed', Date.now())] };
+  const cleanupResult = recordCleanup.cleanupFinishedGameRecords();
+  assert.deepEqual(cleanupResult, { rpsDuels: 3, blackjackDuels: 2, blackjackTables: 2 });
+  for (const [table, ids] of Object.entries(oldRecords)) for (const id of ids) assert.equal(db.prepare(`SELECT COUNT(*) AS count FROM ${table} WHERE id=?`).get(id).count, 0, `${table} cũ chưa được xóa`);
+  for (const [table, ids] of Object.entries(keptRecords)) for (const id of ids) assert.equal(db.prepare(`SELECT COUNT(*) AS count FROM ${table} WHERE id=?`).get(id).count, 1, `${table} đang hoạt động hoặc còn mới không được xóa`);
+  assert.deepEqual(recordCleanup.cleanupFinishedGameRecords(), { rpsDuels: 0, blackjackDuels: 0, blackjackTables: 0 });
+
   // Poker với bot: hoàn đúng số xu đã trừ, không tạo thêm xu từ stack bàn
   const poker = require('../src/services/pokerService');
   const pokerGuild = 'force-poker';

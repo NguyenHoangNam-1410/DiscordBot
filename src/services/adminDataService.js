@@ -3,9 +3,11 @@ const { db } = require('../db');
 const clearPlayerDataTx = db.transaction(({ guildId, userId, scope, adminId, now = Date.now() }) => {
   if (!['coins', 'diamonds', 'xp', 'all'].includes(scope)) throw new Error('INVALID_CLEAR_SCOPE');
   const guild = String(guildId); const user = String(userId); const admin = String(adminId);
-  const cleared = { coins: 0, diamonds: 0, level: 1, experience: 0 };
+  const cleared = { coins: 0, diamonds: 0, level: 1, experience: 0, forfeitedGames: 0, forfeitedStake: 0 };
 
   if (scope === 'coins' || scope === 'all') {
+    const forfeited = require('./playerForfeitService').forfeitActiveGames({ guildId: guild, userId: user, adminId: admin });
+    cleared.forfeitedGames = forfeited.games; cleared.forfeitedStake = forfeited.amount;
     const account = db.prepare('SELECT balance FROM economy_accounts WHERE guild_id=? AND user_id=?').get(guild, user);
     if (account?.balance > 0) {
       cleared.coins = account.balance;
@@ -88,12 +90,13 @@ const clearAllPlayerDataTx = db.transaction(({ guildId, scope, adminId, now = Da
       ? db.prepare('SELECT user_id FROM player_currencies WHERE guild_id=?').all(guild)
       : db.prepare(`SELECT user_id FROM economy_accounts WHERE guild_id=?
           UNION SELECT user_id FROM player_currencies WHERE guild_id=?`).all(guild, guild);
-  const totals = { players: rows.length, coins: 0, diamonds: 0, experience: 0 };
+  const totals = { players: rows.length, coins: 0, diamonds: 0, experience: 0, forfeitedGames: 0, forfeitedStake: 0 };
   for (const row of rows) {
     const result = clearPlayerDataTx({ guildId: guild, userId: row.user_id, scope, adminId, now });
     totals.coins += result.coins;
     totals.diamonds += result.diamonds;
     totals.experience += result.experience;
+    totals.forfeitedGames += result.forfeitedGames; totals.forfeitedStake += result.forfeitedStake;
   }
   return totals;
 });

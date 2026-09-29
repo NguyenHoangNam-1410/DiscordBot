@@ -231,12 +231,13 @@ async function handleBlackjackDuelButton(interaction) {
   }
 }
 
-function forceEndBlackjackDuel(id, guildId, adminId, now = Date.now()) {
+function forceEndBlackjackDuel(id, guildId, adminId, now = Date.now(), { forfeitUserId = null } = {}) {
   return db.transaction(() => {
     const duel = getBlackjackDuel(id);
     if (!duel || duel.guild_id !== String(guildId) || !['invited', 'playing'].includes(duel.status)) return null;
     const refunded = duel.status === 'playing';
     if (refunded) for (const userId of [duel.challenger_id, duel.opponent_id]) {
+      if (userId === String(forfeitUserId)) continue;
       creditCoins({ guildId: duel.guild_id, userId, amount: duel.stake, reason: `blackjack-duel:admin-refund:${adminId}:${duel.id}`,
         operationId: `refund:blackjack-duel:${duel.id}:${userId}` });
     }

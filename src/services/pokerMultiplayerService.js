@@ -17,13 +17,13 @@ const VARIANTS = Object.freeze({
 });
 
 function getSession(id) { return db.prepare('SELECT * FROM poker_sessions WHERE id=?').get(String(id)) || null; }
-function forceEndPokerTable(session, adminId) {
+function forceEndPokerTable(session, adminId, { forfeitUserId = null } = {}) {
   return db.transaction(() => {
     const current = getSession(session.id); if (!current || current.guild_id !== session.guild_id) return null;
     const state = parseState(current); const participants = [];
     for (const player of state.players) {
       const refund = player.committed + (player.lobbyAnte || 0);
-      if (refund > 0) creditCoins({ guildId: current.guild_id, userId: player.id, amount: refund,
+      if (refund > 0 && player.id !== String(forfeitUserId)) creditCoins({ guildId: current.guild_id, userId: player.id, amount: refund,
         reason: `poker:admin-refund:${adminId}:${current.id}`, operationId: `refund:poker-admin:${current.id}:${player.id}` });
       participants.push(player.id);
     }
