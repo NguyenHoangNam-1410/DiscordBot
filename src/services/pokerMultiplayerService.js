@@ -8,6 +8,7 @@ const { createDeck, bestHand, compareHands, describeHand, awardPots } = require(
 const { createFairness, fairInt } = require('./fairnessService');
 const { getGameConfig } = require('./gameConfigService');
 const { consumeActiveEffect } = require('./effectStateService');
+const { cardsLine, hiddenCards } = require('../utils/cardEmoji');
 
 const MAX_PLAYERS = 2;
 const TURN_TTL_MS = 3 * 60_000;
@@ -235,7 +236,7 @@ function discardCard(sessionId, userId, index) {
   })();
 }
 
-function cardsText(cards) { return cards.map(card => `\`${card}\``).join(' '); }
+function cardsText(cards) { return cardsLine(cards, 'code'); }
 function privateHandText(state, userId) {
   const player = playerById(state, userId); if (!player) return 'Bạn chưa ngồi vào bàn Poker này.';
   const hand = state.board.length >= 3 ? bestHand(player.hole, state.board, state.variant) : null;
@@ -243,9 +244,9 @@ function privateHandText(state, userId) {
 }
 function pokerTableEmbed(state, sessionId = null) {
   const complete = state.phase === 'complete'; const pot = state.players.reduce((sum, player) => sum + player.committed, 0);
-  const board = state.board.length ? state.board.map(card => `**${card}**`).join('　') : 'Đang chờ bắt đầu ván';
+  const board = state.board.length ? cardsLine(state.board) : 'Đang chờ bắt đầu ván';
   const embed = new EmbedBuilder().setColor(complete ? 0x2ECC71 : 0x8E44AD).setTitle(`♠️ POKER · ${VARIANTS[state.variant].name.toUpperCase()} · ĐẤU ĐÔI`)
-    .setDescription(`## 🃏 BÀI CHUNG\n### ${board}${state.phase === 'betting' || state.phase === 'discard' ? `　${'**??**　'.repeat(5 - state.board.length)}` : ''}\n\n## 💰 POT: ${formatCoins(pot)} XU`)
+    .setDescription(`## 🃏 BÀI CHUNG\n### ${board}${state.phase === 'betting' || state.phase === 'discard' ? `　${hiddenCards(5 - state.board.length)}` : ''}\n\n## 💰 POT: ${formatCoins(pot)} XU`)
     .addFields({ name: state.phase === 'lobby' ? '🪑 NGƯỜI CHƠI' : '🎴 STACK VÀ CƯỢC', value: state.players.map(player => `${player.folded ? '🏳️' : player.allIn ? '🔥' : '🎴'} <@${player.id}>\nCòn **${formatCoins(player.stack)} xu** · Đã cược **${formatCoins(player.committed)} xu**`).join('\n\n') });
   if (state.phase === 'lobby') embed.addFields({ name: '📨 BÀN ĐANG CHỜ', value: `Cược vào bàn **${formatCoins(state.ante)} xu/người**. Cần ${MAX_PLAYERS - state.players.length} người nữa. Chủ bàn bấm **Bắt đầu ván** khi đủ người. Hết hạn sau <t:${Math.floor((Date.now() + TURN_TTL_MS) / 1000)}:R>.` });
   else if (state.phase === 'betting' || state.phase === 'discard') embed.addFields(

@@ -115,4 +115,4 @@ Khi nhận `SIGINT` hoặc `SIGTERM`, bot dừng các tác vụ nền, chờ b�
 
 ## Emoji của ứng dụng (Developer Portal → Bot → Emojis)
 
-Emoji tải lên ở Developer Portal dùng được ở mọi server mà bot có mặt. Khi khởi động bot tự tải danh sách và tra id theo **tên**, nên chỉ cần đặt đúng tên. Xúc xắc Chinchiro dùng `dieWhite1`–`dieWhite6`; thiếu emoji nào thì tự dùng emoji chuẩn (`:one:`…). Trong code dùng `appEmoji('tên', 'dự phòng')` (chuỗi `<:tên:id>`) hoặc `appEmojiObject('tên')` cho nút/menu (`src/utils/appEmoji.js`).
+Emoji tải lên ở Developer Portal dùng được ở mọi server mà bot có mặt. Khi khởi động bot tự tải danh sách và tra id theo **tên**, nên chỉ cần đặt đúng tên. Xúc xắc Chinchiro dùng `dieWhite1`–`dieWhite6`; thiếu emoji nào thì tự dùng emoji chuẩn (`:one:`…). Lá bài Xì dách/Poker dùng `card<Chất><Hạng>` (`cardSpades2`…`cardSpadesA`, `cardHearts10`, `cardDiamondsQ`, `cardClubsK`…) và lưng bài `cardBack_blue1` cho lá úp (đổi bằng biến `CARD_BACK_EMOJI`, ví dụ `cardBack_red3`); thiếu thì hiện chữ như `A♠`, `??`. Trong code dùng `appEmoji('tên', 'dự phòng')` (chuỗi `<:tên:id>`) hoặc `appEmojiObject('tên')` cho nút/menu (`src/utils/appEmoji.js`).

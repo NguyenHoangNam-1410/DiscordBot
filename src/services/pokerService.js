@@ -11,6 +11,7 @@ const { addExperienceField } = require('../utils/progressionView');
 const { consumeActiveEffect, getActiveEffect } = require('./effectStateService');
 const pokerMultiplayerService = require('./pokerMultiplayerService');
 const pokerBotBrain = require('./pokerBotBrain');
+const { cardMarkup, cardsLine, hiddenCards, styleCardButton } = require('../utils/cardEmoji');
 
 const configuredAnte = Number(process.env.POKER_ANTE);
 const POKER_ANTE = Number.isSafeInteger(configuredAnte) && configuredAnte >= 10 && configuredAnte <= 100_000 ? configuredAnte : 50;
@@ -250,8 +251,8 @@ function discardCard(sessionId, userId, index) {
     state.phase = 'betting'; state.street = 'turn'; state.board.push(draw(state)); resetStreet(state); state.log.push(`🍍 Bạn bỏ ${removed}.`, '🃏 Mở Turn — vòng cược mới.'); saveState(session, state); return state;
   })();
 }
-function cardText(cards) { return cards.map(card => `\`${card}\``).join(' '); }
-function largeCardText(cards) { return cards.map(card => `**${card}**`).join('　'); }
+function cardText(cards) { return cardsLine(cards, 'code'); }
+function largeCardText(cards) { return cardsLine(cards, 'bold'); }
 function playerEval(state) {
   const human = state.players[0];
   if (human.folded) return 'Đã bỏ bài';
@@ -262,11 +263,11 @@ function pokerEmbed(state, userId, sessionId = null) {
   const pot = state.players.reduce((sum, player) => sum + player.committed, 0); const human = state.players[0]; const complete = state.phase === 'complete';
   const exposedBots = state.players.slice(1).map(bot => {
     const hidden = Math.max(0, bot.hole.length - 1);
-    return `### 🤖 ${bot.name}: **${bot.revealedCard || bot.hole[0]}**${hidden ? `　${'**??**　'.repeat(hidden)}` : ''}`;
+    return `### 🤖 ${bot.name}: ${cardMarkup(bot.revealedCard || bot.hole[0])}${hidden ? `　${hiddenCards(hidden)}` : ''}`;
   }).join('\n');
   const embed = new EmbedBuilder().setColor(complete ? (state.result.outcome === 'win' ? 0x2ECC71 : state.result.outcome === 'draw' ? 0xF1C40F : 0xE74C3C) : 0x8E44AD)
     .setTitle(`♠️ POKER · ${VARIANTS[state.variant].name.toUpperCase()}`)
-    .setDescription(`## 🃏 BÀI CHUNG\n### ${largeCardText(state.board)}${state.board.length < 5 ? `　${'**??**　'.repeat(5 - state.board.length)}` : ''}\n\n## 👤 BÀI CỦA <@${userId}>\n### ${largeCardText(human.hole)}\n**Set mạnh nhất hiện tại:** ${playerEval(state)}\n\n## 🤖 BÀI CỦA BOT\n${exposedBots}\n\n## 💰 POT: ${formatCoins(pot)} XU`)
+    .setDescription(`## 🃏 BÀI CHUNG\n### ${largeCardText(state.board)}${state.board.length < 5 ? `　${hiddenCards(5 - state.board.length)}` : ''}\n\n## 👤 BÀI CỦA <@${userId}>\n### ${largeCardText(human.hole)}\n**Set mạnh nhất hiện tại:** ${playerEval(state)}\n\n## 🤖 BÀI CỦA BOT\n${exposedBots}\n\n## 💰 POT: ${formatCoins(pot)} XU`)
     .addFields({ name: '🎴 STACK VÀ TIỀN ĐÃ CƯỢC', value: state.players.map(player => `${player.folded ? '🏳️' : player.allIn ? '🔥' : '🎴'} **${player.name}**\nCòn **${formatCoins(player.stack)}** · Đã cược **${formatCoins(player.committed)} xu**`).join('\n\n') });
   if (!complete) embed.addFields({ name: `🎯 LƯỢT ${state.street.toUpperCase()} · CẦN THEO ${formatCoins(Math.max(0, state.currentBet - human.streetBet))} XU`, value: state.log.slice(-4).map(line => `• ${line}`).join('\n') });
   else {
@@ -280,7 +281,7 @@ function pokerEmbed(state, userId, sessionId = null) {
 }
 function pokerRows(sessionId, state) {
   if (state.phase === 'complete') return [new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId(`replay:poker:${state.variant}`).setLabel('Chơi lại').setEmoji('🔁').setStyle(ButtonStyle.Success))];
-  if (state.phase === 'discard') return [new ActionRowBuilder().addComponents(...state.players[0].hole.map((card, index) => new ButtonBuilder().setCustomId(`poker:${sessionId}:discard:${index}`).setLabel(`Bỏ ${card}`).setStyle(ButtonStyle.Secondary)))];
+  if (state.phase === 'discard') return [new ActionRowBuilder().addComponents(...state.players[0].hole.map((card, index) => styleCardButton(new ButtonBuilder().setCustomId(`poker:${sessionId}:discard:${index}`).setStyle(ButtonStyle.Secondary), card, 'Bỏ')))];
   const human = state.players[0]; const call = Math.max(0, state.currentBet - human.streetBet);
   const guildId = getSession(sessionId)?.guild_id;
   const remaining = availableBet(state, guildId);
