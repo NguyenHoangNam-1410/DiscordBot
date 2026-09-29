@@ -399,10 +399,14 @@ async function runHorseRace(roundId, client, logger = console, forcedWinner = nu
   if (!started) return null;
   const message = await fetchRaceMessage(started.round, client);
   if (message) {
+    const cancelled = () => getRound(roundId)?.status === 'cancelled';
     for (let index = 0; index < RACE_FRAME_COUNT; index += 1) {
+      if (cancelled()) return null;
       await message.edit({ content: null, embeds: [raceAnimationEmbed(started.round, started.plan, index)], components: [] }).catch(() => {});
+      if (cancelled()) return null;
       await new Promise(resolve => setTimeout(resolve, RACE_FRAME_MS));
     }
+    if (cancelled()) return null;
   }
   let settled;
   try { settled = settleHorseTx(roundId, forcedWinner); }

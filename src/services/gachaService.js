@@ -100,6 +100,9 @@ function pullGacha({ guildId, userId, pulls = 1, now = Date.now(), rolls = null,
     return { pulls: count, diamondCost, paymentType, usedFreePull: paymentType === TICKETS[1], results, progression: levels.getPlayerProgression(guildId, userId, now), tickets: getTicketBalances(guildId, userId), pity, duplicate: false };
   })());
 }
-function cleanupGachaHistory() { return 0; }
+function cleanupGachaHistory(now = Date.now(), retentionDays = Number(process.env.GACHA_HISTORY_RETENTION_DAYS) || 180) {
+  const days = Math.max(7, Math.min(3650, Math.floor(retentionDays)));
+  return db.prepare('DELETE FROM gacha_history WHERE created_at<?').run(now - days * 86_400_000).changes;
+}
 
 module.exports = { COSTS, TICKETS, rollGacha, rollGuaranteedHigh, pullGacha, getTicketBalances, getGachaPity, getGachaHistory, cleanupGachaHistory };

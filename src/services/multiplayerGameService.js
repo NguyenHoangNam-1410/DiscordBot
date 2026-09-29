@@ -329,9 +329,9 @@ async function handleBetModal(interaction) {
   return null;
 }
 
-function resumeOpenRounds(client, logger = console) {
-  const cutoff = Date.now() - ROUND_RETENTION_DAYS * 24 * 60 * 60 * 1000;
-  const oldIds = db.prepare("SELECT id FROM multiplayer_rounds WHERE status = 'closed' AND created_at < ?").all(cutoff).map(row => row.id);
+function cleanupOldRounds(logger = console, now = Date.now()) {
+  const cutoff = now - ROUND_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+  const oldIds = db.prepare("SELECT id FROM multiplayer_rounds WHERE status IN ('closed', 'cancelled') AND created_at < ?").all(cutoff).map(row => row.id);
   const cleanup = db.transaction(() => {
     const deleteBets = db.prepare('DELETE FROM multiplayer_bets WHERE round_id = ?');
     const deleteRound = db.prepare('DELETE FROM multiplayer_rounds WHERE id = ?');
@@ -339,6 +339,11 @@ function resumeOpenRounds(client, logger = console) {
   });
   cleanup();
   if (oldIds.length) logger.info?.({ deletedRounds: oldIds.length, retentionDays: ROUND_RETENTION_DAYS }, 'multiplayer round history cleaned');
+  return oldIds.length;
+}
+
+function resumeOpenRounds(client, logger = console) {
+  cleanupOldRounds(logger);
   const rounds = db.prepare("SELECT * FROM multiplayer_rounds WHERE status = 'open' AND game IN ('baucua', 'taixiu')").all();
   for (const round of rounds) scheduleRound(round, client, logger);
   return rounds.length;
@@ -347,5 +352,5 @@ function resumeOpenRounds(client, logger = console) {
 module.exports = {
   ROUND_MS, ROUND_RETENTION_DAYS, TOTAL_RATIOS, BAUCUA, TAIXIU,
   calculatePayout, rollResult, effectiveBetLimit, getRound, getOpenRound, createRound,
-  handleBetButton, handleBetModal, settleRound, resumeOpenRounds, resultEmbed,
+  handleBetButton, handleBetModal, settleRound, resumeOpenRounds, cleanupOldRounds, resultEmbed,
 };
