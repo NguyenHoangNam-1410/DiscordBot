@@ -81,7 +81,7 @@ const PAGES = Object.freeze({
     fields: [
       [
         "🎲 Game cược",
-        "`/choi baucua` · `/choi taixiu` · `/choi chinchiro` · `/choi ott` · `/choi xidach` · `/choi poker` — mở bàn hoặc chơi theo lựa chọn của từng game",
+        "`/choi baucua` · `/choi taixiu` · `/choi chinchiro` · `/choi oantuti` · `/choi xidach` · `/choi poker` — mở bàn hoặc chơi theo lựa chọn của từng game",
       ],
       ["🏇 Thử thách khác", "`/choi duangua` · `/choi domin`"],
       [

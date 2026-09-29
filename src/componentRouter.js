@@ -1,7 +1,7 @@
 const { MessageFlags } = require('discord.js');
 const { handleBetButton, handleBetModal } = require('./services/multiplayerGameService');
 const { handleBlackjackButton } = require('./services/blackjackService');
-const { handleBlackjackTableButton, getBlackjackTableLock } = require('./services/blackjackService');
+const { handleBlackjackTableButton, handleBlackjackTablePrivateButton, getBlackjackTableLock } = require('./services/blackjackService');
 const { handleBlackjackDuelButton } = require('./services/blackjackDuelService');
 const { handlePokerButton, handlePokerPrivateButton, handlePokerModal } = require('./services/pokerService');
 const { handleHorseButton, handleHorseModal } = require('./services/horseRaceService');
@@ -51,6 +51,7 @@ const ROUTES = Object.freeze([
   { kind: 'button', prefix: 'mines:', handle: handleMinesButton },
   { kind: 'button', prefix: 'horserace:', handle: handleHorseButton },
   { kind: 'button', prefix: 'blackjack:', handle: handleBlackjackButton },
+  { kind: 'button', prefix: 'blackjack-table-private:', handle: handleBlackjackTablePrivateButton },
   { kind: 'button', prefix: 'blackjack-table:', handle: handleBlackjackTableButton },
   { kind: 'button', prefix: 'gamebet:', handle: handleBetButton },
   { kind: 'modal', prefix: 'horserace-modal:', handle: handleHorseModal },

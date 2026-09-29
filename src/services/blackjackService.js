@@ -438,6 +438,11 @@ function blackjackTableEmbed(table, state = tableState(table)) {
     const dealerCards = complete ? state.dealer.map(card => `**${card}**`).join('　') : `**${state.dealer[0]}**　**??**`;
     embed.addFields({ name: '🏦 Bài nhà cái', value: `${dealerCards}${complete ? ` · ${handScore(state.dealer).total} điểm` : ''}` },
       { name: '👥 Người chơi', value: state.players.map(player => {
+        if (!complete) {
+          const turn = state.players[state.turn]?.id === player.id && table.status === 'playing';
+          const status = turn ? '👉 Đến lượt' : player.status === 'playing' ? '⏳ Chờ lượt' : '✅ Đã xong lượt';
+          return `<@${player.id}> · ${status} · 🂠 ×${player.cards.length}`;
+        }
         const score = handScore(player.cards).total; const result = state.results?.find(item => item.userId === player.id);
         return `<@${player.id}>${state.players[state.turn]?.id === player.id && !complete ? ' · 👉 Đến lượt' : ''}\n${player.cards.map(card => `**${card}**`).join('　')} · ${score} điểm${handType(player.cards) === 'ngulinh' ? ' · **NGŨ LINH**' : ''}${result ? ` · **${result.label}** · nhận ${formatCoins(result.payout)} xu` : ''}`;
       }).join('\n\n') });
@@ -459,18 +464,73 @@ function forceEndBlackjackSession(id, guildId, adminId, { label = 'admin-refund'
 function blackjackTableRows(table, state = tableState(table)) {
   if (table.status === 'lobby') return [new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId(`blackjack-table:${table.id}:join`).setLabel('Vào bàn').setEmoji('🪑').setStyle(ButtonStyle.Success).setDisabled(state.players.length >= TABLE_GUESTS))];
   if (table.status !== 'playing') return [];
-  const player = state.players[state.turn]; if (!player) return [];
   return [new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(`blackjack-table:${table.id}:hit`).setLabel('Rút bài').setEmoji('➕').setStyle(ButtonStyle.Primary),
-    new ButtonBuilder().setCustomId(`blackjack-table:${table.id}:stand`).setLabel('Dừng').setEmoji('✋').setStyle(ButtonStyle.Success))];
+    new ButtonBuilder().setCustomId(`blackjack-table:${table.id}:view`).setLabel('Xem bài của tôi').setEmoji('👁️').setStyle(ButtonStyle.Secondary))];
+}
+function tablePrivateText(table, state, userId) {
+  const player = state.players.find(item => item.id === String(userId));
+  if (!player) return table.dealer_id === String(userId) ? '🏦 Bạn là nhà cái của bàn này; bài nhà cái được chia tự động và giữ kín cho đến khi kết thúc.' : 'Bạn không ngồi ở bàn này.';
+  const score = handScore(player.cards).total;
+  const hand = `🃏 **Bài của bạn:** ${largeCards(player.cards)} — **${score} điểm**${handType(player.cards) === 'ngulinh' ? ' · **NGŨ LINH**' : ''}\n🏦 Nhà cái đang lộ: **${state.dealer[0]}**　**??**`;
+  const result = state.results?.find(item => item.userId === player.id);
+  if (result) return `${hand}\n\n🏆 **${result.label}** · nhận **${formatCoins(result.payout)} xu**`;
+  if (table.status === 'expired') return `${hand}\n\n⌛ Bàn đã hết hạn.`;
+  if (state.players[state.turn]?.id === player.id && player.status === 'playing') return `${hand}\n\n👉 Đến lượt bạn: chọn **Rút bài** hoặc **Dừng**.`;
+  if (player.status === 'playing') return `${hand}\n\n⏳ Chưa đến lượt bạn; hãy chờ người trước hoàn tất.`;
+  return `${hand}\n\n✅ Bạn đã xong lượt${player.status === 'bust' ? ' (quắc)' : ''}. Chờ những người còn lại.`;
+}
+function tablePrivateRows(table, state, userId) {
+  const turn = table.status === 'playing' && state.players[state.turn]?.id === String(userId) && state.players[state.turn].status === 'playing';
+  return [new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId(`blackjack-table-private:${table.id}:view`).setLabel('Làm mới').setEmoji('👁️').setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder().setCustomId(`blackjack-table-private:${table.id}:hit`).setLabel('Rút bài').setEmoji('➕').setStyle(ButtonStyle.Primary).setDisabled(!turn),
+    new ButtonBuilder().setCustomId(`blackjack-table-private:${table.id}:stand`).setLabel('Dừng').setEmoji('✋').setStyle(ButtonStyle.Success).setDisabled(!turn))];
+}
+async function editPublicTable(client, table, state) {
+  if (!table.message_id || !client?.channels?.fetch) return;
+  const channel = await client.channels.fetch(table.channel_id).catch(() => null);
+  const message = channel?.messages ? await channel.messages.fetch(table.message_id).catch(() => null) : null;
+  if (message) await message.edit({ embeds: [blackjackTableEmbed(table, state)], components: blackjackTableRows(table, state), allowedMentions: { parse: [] } }).catch(() => {});
+}
+async function pingTableTurn(client, table, state) {
+  const next = table.status === 'playing' ? state.players[state.turn] : null;
+  if (!next || !client?.channels?.fetch) return;
+  const channel = await client.channels.fetch(table.channel_id).catch(() => null);
+  await channel?.send?.({ content: `👉 <@${next.id}>, đến lượt bạn ở bàn Xì dách \`${table.id}\` — bấm **Xem bài của tôi**.`, allowedMentions: { users: [next.id] } }).catch(() => {});
+}
+async function handleBlackjackTablePrivateButton(interaction) {
+  const [, id, action] = interaction.customId.split(':');
+  const table = getBlackjackTable(id);
+  if (!table || table.guild_id !== interaction.guildId) return interaction.update({ content: 'Bàn Xì dách này không còn tồn tại.', components: [] });
+  try {
+    let state = tableState(table);
+    if (!state.players.some(player => player.id === interaction.user.id)) return interaction.reply({ content: 'Bạn không ngồi ở bàn này.', flags: MessageFlags.Ephemeral });
+    if (['hit', 'stand'].includes(action)) {
+      const played = playBlackjackTable(id, interaction.user.id, action);
+      state = played.state;
+      const fresh = getBlackjackTable(id);
+      await interaction.update({ content: tablePrivateText(fresh, state, interaction.user.id), components: tablePrivateRows(fresh, state, interaction.user.id) });
+      await editPublicTable(interaction.client, fresh, state);
+      if (!played.settled) await pingTableTurn(interaction.client, fresh, state);
+      return null;
+    }
+    return interaction.update({ content: tablePrivateText(table, state, interaction.user.id), components: tablePrivateRows(table, state, interaction.user.id) });
+  } catch (error) {
+    const content = error.message === 'NOT_YOUR_TURN' ? 'Chưa đến lượt của bạn.' : error.message === 'TABLE_CLOSED' ? 'Bàn Xì dách đã đóng hoặc hết hạn.' : 'Không thể thực hiện thao tác này.';
+    return interaction.reply({ content, flags: MessageFlags.Ephemeral });
+  }
 }
 async function handleBlackjackTableButton(interaction) {
   const [, id, action] = interaction.customId.split(':');
   try {
     let table = getBlackjackTable(id); if (!table || table.guild_id !== interaction.guildId || table.channel_id !== interaction.channelId) throw new Error('TABLE_CLOSED');
     let state;
-    if (action === 'join') state = joinBlackjackTable(id, interaction.user.id, interaction.user.username);
-    else { const played = playBlackjackTable(id, interaction.user.id, action); state = played.state; }
+    if (action === 'view') {
+      state = tableState(table);
+      return interaction.reply({ content: tablePrivateText(table, state, interaction.user.id), components: state.players.some(player => player.id === interaction.user.id) ? tablePrivateRows(table, state, interaction.user.id) : [], flags: MessageFlags.Ephemeral });
+    }
+    if (action !== 'join') return interaction.reply({ content: 'Hãy bấm **Xem bài của tôi** để xem bài và thực hiện lượt trong bảng riêng.', flags: MessageFlags.Ephemeral });
+    state = joinBlackjackTable(id, interaction.user.id, interaction.user.username);
     table = getBlackjackTable(id);
     return interaction.update({ embeds: [blackjackTableEmbed(table, state)], components: blackjackTableRows(table, state), allowedMentions: { parse: [] } });
   } catch (error) {
@@ -524,6 +584,7 @@ async function maintainBlackjackTables(client) {
     const channel = await client.channels.fetch(table.channel_id).catch(() => null);
     const message = await channel?.messages?.fetch(table.message_id).catch(() => null);
     if (message) await message.edit({ embeds: [blackjackTableEmbed(table, state)], components: blackjackTableRows(table, state) }).catch(() => {});
+    await pingTableTurn(client, table, state);
   }
 }
 function startBlackjackTableMaintenance(client) { const run = () => maintainBlackjackTables(client).catch(() => {}); run(); const timer = setInterval(run, 5_000); timer.unref?.(); return timer; }
@@ -531,6 +592,6 @@ function startBlackjackTableMaintenance(client) { const run = () => maintainBlac
 module.exports = {
   MIN_BET, MAX_BET, REGULAR_WIN_MULTIPLIER, expireBlackjackTableTx, getBlackjackTable, handScore, isBlackjack, handType, evaluateHand, initialResult, createShoe, putAceOnTop, startBlackjack, playAction, forceEndBlackjackSession,
   getSessionByUser, setMessageId, blackjackEmbed, actionRows, handleBlackjackButton,
-  createBlackjackTable, setBlackjackTableMessage, blackjackTableEmbed, blackjackTableRows, handleBlackjackTableButton, startBlackjackTableMaintenance, forceEndBlackjackTable,
+  createBlackjackTable, setBlackjackTableMessage, blackjackTableEmbed, blackjackTableRows, handleBlackjackTableButton, handleBlackjackTablePrivateButton, tablePrivateText, tablePrivateRows, joinBlackjackTable, playBlackjackTable, beginBlackjackTableTx, startBlackjackTableMaintenance, forceEndBlackjackTable,
   getBlackjackTableLock,
 };
