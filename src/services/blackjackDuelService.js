@@ -7,7 +7,6 @@ const { createShoe, handScore, isBlackjack, getSessionByUser } = require('./blac
 const { formatCoins } = require('../utils/economy');
 const { createFairness } = require('./fairnessService');
 const { experienceLines } = require('../utils/progressionView');
-const { cardsLine, cardHeading } = require('../utils/cardEmoji');
 
 const INVITE_TTL_MS = 60_000;
 const PLAY_TTL_MS = 180_000;
@@ -161,12 +160,12 @@ const expireTx = db.transaction((id, now) => {
   return { ...duel, status: 'expired', refunded, forfeited };
 });
 
-function cardsText(cards) { return cardsLine(cards, 'code'); }
+function cardsText(cards) { return cards.map(card => `\`${card}\``).join(' '); }
 function privateHandText(duel, userId) {
   const player = duelState(duel)?.players?.[String(userId)];
   if (!player) return 'Không tìm thấy tay bài.';
   const result = playerResult(player);
-  return `## 🃏 BÀI CỦA BẠN\n${cardHeading(cardsText(player.cards))}\n## ${result.label}\n${player.status === 'playing' ? 'Bạn có thể rút thêm hoặc dừng.' : 'Bạn đã chốt tay bài.'}`;
+  return `## 🃏 BÀI CỦA BẠN\n### ${cardsText(player.cards)}\n## ${result.label}\n${player.status === 'playing' ? 'Bạn có thể rút thêm hoặc dừng.' : 'Bạn đã chốt tay bài.'}`;
 }
 
 function blackjackDuelEmbed(duel) {
@@ -184,7 +183,7 @@ function blackjackDuelEmbed(duel) {
     );
   }
   if (done) {
-    const handField = (id, icon) => { const player = state.players[id]; const result = playerResult(player); return { name: `${icon} TAY BÀI`, value: `### <@${id}>\n${cardHeading(cardsText(player.cards))}\n**${result.label}**`, inline: true }; };
+    const handField = (id, icon) => { const player = state.players[id]; const result = playerResult(player); return { name: `${icon} TAY BÀI`, value: `### <@${id}>\n### ${cardsText(player.cards)}\n**${result.label}**`, inline: true }; };
     embed.addFields(handField(duel.challenger_id, '🔵'), handField(duel.opponent_id, '🔴'),
       { name: duel.winner_id ? '🏆 CHIẾN THẮNG' : '🤝 HÒA', value: duel.winner_id ? `<@${duel.winner_id}> nhận **${formatCoins(duel.stake * 2)} xu**` : 'Hai người được hoàn lại toàn bộ tiền cược.' });
     const exp = experienceLines(duel.progression || []);
