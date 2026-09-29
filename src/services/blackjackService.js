@@ -442,17 +442,18 @@ function blackjackTableEmbed(table, state = tableState(table)) {
         return `<@${player.id}>${state.players[state.turn]?.id === player.id && !complete ? ' · 👉 Đến lượt' : ''}\n${player.cards.map(card => `**${card}**`).join('　')} · ${score} điểm${handType(player.cards) === 'ngulinh' ? ' · **NGŨ LINH**' : ''}${result ? ` · **${result.label}** · nhận ${formatCoins(result.payout)} xu` : ''}`;
       }).join('\n\n') });
     if (complete) embed.addFields({ name: 'Kết quả', value: `Ván đã kết thúc. Ante **${formatCoins(table.ante)} xu/người**.` });
+    else if (table.status === 'expired') embed.addFields({ name: '⌛ Bàn đã hết hạn', value: state.staller ? `<@${state.staller}> không thao tác kịp nên **mất tiền cược**; nhà cái và người chơi còn lại được hoàn tiền.` : 'Bàn hết hạn; tiền cược đã được hoàn lại.' });
   }
   return embed.setFooter({ text: `Mã ván: ${table.id}` });
 }
-function forceEndBlackjackSession(id, guildId, adminId, { label = 'admin-refund' } = {}) {
+function forceEndBlackjackSession(id, guildId, adminId, { label = 'admin-refund', forfeit = false } = {}) {
   return db.transaction(() => {
     const session = getActiveSession(id, guildId); if (!session) return null;
     const state = parseState(session); const refund = totalBet(state);
-    creditCoins({ guildId: session.guild_id, userId: session.user_id, amount: refund,
+    if (!forfeit) creditCoins({ guildId: session.guild_id, userId: session.user_id, amount: refund,
       reason: `blackjack:${label}:${adminId}:${session.id}`, operationId: `refund:blackjack-admin:${session.id}:${session.user_id}` });
     db.prepare('DELETE FROM blackjack_sessions WHERE id=?').run(session.id);
-    return { session, state, participants: [session.user_id], refund };
+    return { session, state, participants: [session.user_id], refund: forfeit ? 0 : refund, forfeited: forfeit ? refund : 0 };
   })();
 }
 function blackjackTableRows(table, state = tableState(table)) {
@@ -489,7 +490,10 @@ function expireBlackjackTableTx(table, now = Date.now()) {
   if (table.status === 'lobby' && state.players.length) return beginBlackjackTableTx(table, now);
   if (table.status === 'lobby') creditCoins({ guildId: table.guild_id, userId: table.dealer_id, amount: table.ante * TABLE_GUESTS, reason: `blackjack-table:refund:${table.id}`, operationId: `refund:blackjack-table:${table.id}:dealer` });
   else {
-    for (const player of state.players) creditCoins({ guildId: table.guild_id, userId: player.id, amount: player.stake, reason: `blackjack-table:refund:${table.id}`, operationId: `refund:blackjack-table:${table.id}:${player.id}` });
+    // The guest whose turn it was when time ran out caused the expiry and forfeits the stake; everyone else is refunded.
+    const staller = state.phase === 'playing' ? state.players[state.turn]?.id || null : null;
+    state.staller = staller;
+    for (const player of state.players) if (player.id !== staller) creditCoins({ guildId: table.guild_id, userId: player.id, amount: player.stake, reason: `blackjack-table:refund:${table.id}`, operationId: `refund:blackjack-table:${table.id}:${player.id}` });
     creditCoins({ guildId: table.guild_id, userId: table.dealer_id, amount: table.ante * TABLE_GUESTS, reason: `blackjack-table:refund:${table.id}`, operationId: `refund:blackjack-table:${table.id}:dealer` });
   }
   state.phase = 'expired'; saveTable(table, state, 'expired', now, now); db.prepare('DELETE FROM blackjack_table_locks WHERE table_id=?').run(table.id); return state;
@@ -525,7 +529,7 @@ async function maintainBlackjackTables(client) {
 function startBlackjackTableMaintenance(client) { const run = () => maintainBlackjackTables(client).catch(() => {}); run(); const timer = setInterval(run, 5_000); timer.unref?.(); return timer; }
 
 module.exports = {
-  MIN_BET, MAX_BET, REGULAR_WIN_MULTIPLIER, handScore, isBlackjack, handType, evaluateHand, initialResult, createShoe, putAceOnTop, startBlackjack, playAction, forceEndBlackjackSession,
+  MIN_BET, MAX_BET, REGULAR_WIN_MULTIPLIER, expireBlackjackTableTx, getBlackjackTable, handScore, isBlackjack, handType, evaluateHand, initialResult, createShoe, putAceOnTop, startBlackjack, playAction, forceEndBlackjackSession,
   getSessionByUser, setMessageId, blackjackEmbed, actionRows, handleBlackjackButton,
   createBlackjackTable, setBlackjackTableMessage, blackjackTableEmbed, blackjackTableRows, handleBlackjackTableButton, startBlackjackTableMaintenance, forceEndBlackjackTable,
   getBlackjackTableLock,

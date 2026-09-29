@@ -71,14 +71,14 @@ function playerDecision(player, dealer) {
 
 function getSession(id) { return db.prepare('SELECT * FROM chinchiro_sessions WHERE id=?').get(String(id)) || null; }
 function getActiveSession(id, guildId) { return db.prepare('SELECT * FROM chinchiro_sessions WHERE id=? AND guild_id=?').get(String(id), String(guildId)) || null; }
-function forceEndChinchiroSession(id, guildId, adminId, { label = 'admin-refund' } = {}) {
+function forceEndChinchiroSession(id, guildId, adminId, { label = 'admin-refund', forfeit = false } = {}) {
   return db.transaction(() => {
     const session = getActiveSession(id, guildId); if (!session) return null;
     const state = JSON.parse(session.state_json);
-    creditCoins({ guildId: session.guild_id, userId: session.user_id, amount: session.stake,
+    if (!forfeit) creditCoins({ guildId: session.guild_id, userId: session.user_id, amount: session.stake,
       reason: `chinchiro:${label}:${adminId}:${session.id}`, operationId: `refund:chinchiro-admin:${session.id}:${session.user_id}` });
     db.prepare('DELETE FROM chinchiro_sessions WHERE id=?').run(session.id);
-    return { session, state, participants: [session.user_id] };
+    return { session, state, participants: [session.user_id], forfeited: forfeit ? session.stake : 0 };
   })();
 }
 function getSessionByUser(guildId, userId) {

@@ -116,14 +116,17 @@ function chooseHand(id, actorId, choice, now = Date.now()) { return chooseTx(Str
 const expireTx = db.transaction((id, now) => {
   const duel = getDuel(id);
   if (!duel || !['invited', 'playing'].includes(duel.status) || duel.expires_at > now) return null;
+  // A player who has not chosen when the duel times out caused the expiry and forfeits the stake; anyone who did act is refunded.
+  const forfeited = [];
   if (duel.status === 'playing') {
-    creditCoins({ guildId: duel.guild_id, userId: duel.challenger_id, amount: duel.stake, reason: `oantuti-solo:refund:${duel.id}`,
-      operationId: `refund:oantuti-duel:${duel.id}:${duel.challenger_id}` });
-    creditCoins({ guildId: duel.guild_id, userId: duel.opponent_id, amount: duel.stake, reason: `oantuti-solo:refund:${duel.id}`,
-      operationId: `refund:oantuti-duel:${duel.id}:${duel.opponent_id}` });
+    for (const [userId, choice] of [[duel.challenger_id, duel.challenger_choice], [duel.opponent_id, duel.opponent_choice]]) {
+      if (!choice) { forfeited.push(userId); continue; }
+      creditCoins({ guildId: duel.guild_id, userId, amount: duel.stake, reason: `oantuti-solo:refund:${duel.id}`,
+        operationId: `refund:oantuti-duel:${duel.id}:${userId}` });
+    }
   }
   db.prepare("UPDATE rps_duels SET status = 'expired', updated_at = ? WHERE id = ?").run(now, id);
-  return { ...duel, status: 'expired', refunded: duel.status === 'playing' };
+  return { ...duel, status: 'expired', refunded: duel.status === 'playing' && forfeited.length < 2, forfeited };
 });
 
 function expireDuel(id, now = Date.now()) { return expireTx(String(id), now); }
@@ -167,7 +170,7 @@ function duelEmbed(duel, settlement = null) {
     if (exp.length) embed.addFields({ name: ':test_tube: EXP NHẬN ĐƯỢC', value: exp.join('\n') });
   }
   if (duel.status === 'declined') embed.addFields({ name: 'Kết quả', value: '❌ Đối thủ đã từ chối lời thách đấu.' });
-  if (duel.status === 'expired') embed.addFields({ name: 'Kết quả', value: '⌛ Ván đã hết hạn.' + (duel.refunded ? ' Tiền cược đã được hoàn.' : '') });
+  if (duel.status === 'expired') embed.addFields({ name: 'Kết quả', value: '⌛ Ván đã hết hạn.' + (duel.forfeited?.length ? ` ${duel.forfeited.map(id => `<@${id}>`).join(', ')} không chọn kịp nên **mất tiền cược**${duel.refunded ? '; người còn lại được hoàn tiền' : ''}.` : duel.refunded ? ' Tiền cược đã được hoàn.' : '') });
   return embed.setFooter({ text: `Mã trận ${duel.id} · Kéo thắng Bao · Bao thắng Búa · Búa thắng Kéo` });
 }
 

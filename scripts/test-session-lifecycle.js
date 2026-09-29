@@ -150,6 +150,64 @@ function bet(guildId, roundId, userId, choice, amount) {
   assert.equal(gachaService.cleanupGachaHistory(Date.now(), 1), 0, 'retention tối thiểu 7 ngày');
   assert.deepEqual(db.prepare("SELECT user_id FROM gacha_history WHERE guild_id='cleanup'").all().map(row => row.user_id), ['new']);
 
+  // Ván hết hạn: người làm hết hạn mất cược, người đã thao tác được hoàn
+  const afk = 'afk-expiry';
+  const expiryTime = Date.now() + rps.PLAY_TTL_MS + 1_000;
+  const rpsExpiry = rps.createDuel({ guildId: afk, channelId: 'c', challengerId: 'alice', opponentId: 'bob', stake: 100 });
+  rps.acceptDuel(rpsExpiry.id, 'bob');
+  rps.chooseHand(rpsExpiry.id, 'alice', 'bua');
+  const rpsExpired = rps.expireDuel(rpsExpiry.id, expiryTime);
+  assert.deepEqual(rpsExpired.forfeited, ['bob']);
+  assert.equal(balance(afk, 'alice'), START, 'người đã chọn được hoàn cược');
+  assert.equal(balance(afk, 'bob'), START - 100, 'người không chọn kịp mất cược');
+  const rpsBothAfk = rps.createDuel({ guildId: afk, channelId: 'c', challengerId: 'carol', opponentId: 'dave', stake: 100 });
+  rps.acceptDuel(rpsBothAfk.id, 'dave');
+  assert.deepEqual(rps.expireDuel(rpsBothAfk.id, expiryTime).forfeited.sort(), ['carol', 'dave']);
+  assert.equal(balance(afk, 'carol'), START - 100); assert.equal(balance(afk, 'dave'), START - 100);
+  assert.match(JSON.stringify(rps.duelEmbed(rps.getDuel(rpsExpiry.id)).toJSON()), /{"name":"Kết quả"/);
+  const invitedOnly = rps.createDuel({ guildId: afk, channelId: 'c', challengerId: 'erin', opponentId: 'frank', stake: 100 });
+  assert.deepEqual(rps.expireDuel(invitedOnly.id, Date.now() + rps.INVITE_TTL_MS + 1_000).forfeited, [], 'lời mời chưa chấp nhận không có ai mất cược');
+  assert.equal(balance(afk, 'erin'), START);
+
+  const bjExpiry = bjDuel.createBlackjackDuel({ guildId: afk, channelId: 'c', challengerId: 'gina', opponentId: 'hank', stake: 100 });
+  bjDuel.acceptBlackjackDuel(bjExpiry.id, 'hank', Date.now(), ['9♣', '8♣', '4♠', '5♦', 'A♥']);
+  bjDuel.playBlackjackDuel(bjExpiry.id, 'gina', 'stand');
+  const bjExpired = bjDuel.expireBlackjackDuel(bjExpiry.id, Date.now() + bjDuel.PLAY_TTL_MS + 1_000);
+  assert.deepEqual(bjExpired.forfeited, ['hank'], 'người chưa hoàn tất lượt phải mất cược');
+  assert.equal(balance(afk, 'gina'), START); assert.equal(balance(afk, 'hank'), START - 100);
+
+  const blackjackModule = require('../src/services/blackjackService');
+  const tableId = crypto.randomBytes(4).toString('hex');
+  const tableState = { phase: 'playing', turn: 1, dealer: ['10♣', '7♦'], deck: [], players: [
+    { id: 'ivy', stake: 100, cards: ['9♣', '8♣'], status: 'stand' }, { id: 'jack', stake: 100, cards: ['5♣', '6♣'], status: 'playing' }] };
+  for (const userId of ['ivy', 'jack', 'kate']) economy.spendCoins({ guildId: afk, userId, amount: userId === 'kate' ? 300 : 100, reason: 'test-table' });
+  db.prepare("INSERT INTO blackjack_tables(id,guild_id,channel_id,message_id,dealer_id,ante,state_json,status,expires_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,'playing',?,?,?)")
+    .run(tableId, afk, 'c', null, 'kate', 100, JSON.stringify(tableState), Date.now() - 1, Date.now(), Date.now());
+  const expiredTableState = blackjackModule.expireBlackjackTableTx(blackjackModule.getBlackjackTable(tableId));
+  assert.equal(expiredTableState.staller, 'jack');
+  assert.equal(balance(afk, 'ivy'), START, 'người chơi đã dừng được hoàn cược');
+  assert.equal(balance(afk, 'kate'), START, 'nhà cái được hoàn ký quỹ');
+  assert.equal(balance(afk, 'jack'), START - 100, 'người đến lượt mà để bàn hết hạn mất cược');
+  assert.match(JSON.stringify(blackjackModule.blackjackTableEmbed(blackjackModule.getBlackjackTable(tableId), expiredTableState).toJSON()), /mất tiền cược/);
+
+  const pokerTable = require('../src/services/pokerMultiplayerService');
+  const pokerTableId = crypto.randomBytes(4).toString('hex');
+  const pokerPlayers = ['lena', 'mike', 'nora'].map(id => ({ id, name: id, stack: 500, committed: 50, streetBet: 0, lobbyAnte: 0, folded: false, allIn: false, hole: [] }));
+  for (const player of pokerPlayers) economy.spendCoins({ guildId: afk, userId: player.id, amount: 50, reason: 'test-poker-table' });
+  const pokerTableState = { mode: 'multiplayer', variant: 'texas', phase: 'betting', street: 'flop', turnUserId: 'mike', discardPending: [], pending: ['mike'], board: [], log: [], players: pokerPlayers };
+  db.prepare('INSERT INTO poker_sessions(id,guild_id,channel_id,message_id,user_id,variant,state_json,expires_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)')
+    .run(pokerTableId, afk, 'c', null, 'lena', 'texas', JSON.stringify(pokerTableState), Date.now() - 1, Date.now(), Date.now());
+  await pokerTable.expirePokerTable(db.prepare('SELECT * FROM poker_sessions WHERE id=?').get(pokerTableId), null, false);
+  assert.equal(balance(afk, 'lena'), START); assert.equal(balance(afk, 'nora'), START);
+  assert.equal(balance(afk, 'mike'), START - 50, 'người đến lượt mà để bàn Poker hết hạn mất cược');
+  const lobbyId = crypto.randomBytes(4).toString('hex');
+  const lobbyState = { ...pokerTableState, phase: 'lobby', street: 'lobby', turnUserId: null, pending: [], players: ['olga', 'pete'].map(id => ({ id, name: id, stack: 500, committed: 0, streetBet: 0, lobbyAnte: 50, folded: false, allIn: false, hole: [] })) };
+  for (const player of lobbyState.players) economy.spendCoins({ guildId: afk, userId: player.id, amount: 50, reason: 'test-poker-lobby' });
+  db.prepare('INSERT INTO poker_sessions(id,guild_id,channel_id,message_id,user_id,variant,state_json,expires_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)')
+    .run(lobbyId, afk, 'c', null, 'olga', 'texas', JSON.stringify(lobbyState), Date.now() - 1, Date.now(), Date.now());
+  await pokerTable.expirePokerTable(db.prepare('SELECT * FROM poker_sessions WHERE id=?').get(lobbyId), null, false);
+  assert.equal(balance(afk, 'olga'), START, 'bàn Poker hết hạn ở sảnh chờ không ai mất cược'); assert.equal(balance(afk, 'pete'), START);
+
   // Poker với bot: hoàn đúng số xu đã trừ, không tạo thêm xu từ stack bàn
   const poker = require('../src/services/pokerService');
   const pokerGuild = 'force-poker';
@@ -187,18 +245,21 @@ function bet(guildId, roundId, userId, choice, amount) {
   assert.equal(stale.expireStaleSoloSessionsSync(now).length, 0, 'ván còn mới không được dọn');
   const expired = stale.expireStaleSoloSessionsSync(now + stale.SOLO_SESSION_TTL_MS + 1_000);
   assert.equal(expired.length, 4);
+  assert(expired.every(item => item.forfeit), 'ván treo sau khi đã có tin nhắn phải bị xử thua');
   for (const [table, id] of Object.entries(ids)) {
     assert.equal(db.prepare(`SELECT COUNT(*) AS count FROM ${table} WHERE id=?`).get(id).count, 0, `${table} chưa được dọn`);
-    assert.equal(balance(g, owners[table]), START, `${table} chưa hoàn cược`);
+    assert.equal(balance(g, owners[table]), START - 100, `${table}: người để ván hết hạn không được hoàn cược`);
   }
-  assert(db.prepare("SELECT 1 FROM economy_transactions WHERE guild_id=? AND reason LIKE '%timeout-refund%'").get(g));
+  assert.equal(db.prepare("SELECT COUNT(*) AS count FROM economy_transactions WHERE guild_id=? AND reason LIKE '%timeout-%'").get(g).count, 0, 'xử thua không tạo giao dịch hoàn tiền');
   assert.equal(stale.expireStaleSoloSessionsSync(now + stale.SOLO_SESSION_TTL_MS + 2_000).length, 0, 'không hoàn tiền hai lần');
 
   // Ván tạo xong nhưng tin nhắn không gửi được (message_id rỗng) được dọn sau 2 phút
   const orphan = mines.startMines({ guildId: g, channelId: 'c', userId: 'orphan', stake: 100, mineCount: 3, forcedMines: [0, 1, 2], forcedSpecial: 19 });
   assert.equal(stale.expireStaleSoloSessionsSync(Date.now() + 60_000).length, 0);
-  assert.equal(stale.expireStaleSoloSessionsSync(Date.now() + stale.NO_MESSAGE_TTL_MS + 1_000).length, 1);
-  assert.equal(balance(g, 'orphan'), START);
+  const orphanExpired = stale.expireStaleSoloSessionsSync(Date.now() + stale.NO_MESSAGE_TTL_MS + 1_000);
+  assert.equal(orphanExpired.length, 1);
+  assert.equal(orphanExpired[0].forfeit, false, 'lỗi gửi tin nhắn không phải lỗi người chơi');
+  assert.equal(balance(g, 'orphan'), START, 'ván chưa có tin nhắn phải được hoàn cược');
   assert.equal(mines.getMinesByUser(g, 'orphan'), null);
   void orphan;
 
