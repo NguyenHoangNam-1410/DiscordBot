@@ -33,9 +33,14 @@ assert.equal(plainButton.label, 'Bỏ K♥'); assert.equal(plainButton.emoji, un
 appEmoji.setApplicationEmojisForTest(registry);
 assert.equal(cards.cardMarkup('10♥'), `<:cardHearts10:${id('cardHearts10')}>`);
 assert.equal(cards.cardsLine(['A♠', 'K♦']), `<:cardSpadesA:${id('cardSpadesA')}> <:cardDiamondsK:${id('cardDiamondsK')}>`);
-assert.equal(cards.hiddenCards(1), '**??**', 'chưa có cardBack thì dùng ??');
+assert.equal(cards.hiddenCards(1), '**??**', 'chưa có emoji lưng bài thì dùng ??');
+appEmoji.setApplicationEmojisForTest([...registry, ['cardBack_red3', '777'], ['cardBack_blue1', '888']]);
+assert.equal(cards.hiddenCards(2, ' '), '<:cardBack_blue1:888> <:cardBack_blue1:888>', 'mặc định dùng cardBack_blue1');
+process.env.CARD_BACK_EMOJI = 'cardBack_red3'; assert.equal(cards.hiddenCard(), '<:cardBack_red3:777>', 'đổi lưng bài bằng CARD_BACK_EMOJI');
+process.env.CARD_BACK_EMOJI = 'khong_ton_tai'; assert.equal(cards.hiddenCard(), '<:cardBack_blue1:888>', 'tên sai thì quay về mặc định'); delete process.env.CARD_BACK_EMOJI;
 appEmoji.setApplicationEmojisForTest([...registry, ['cardBack', '999']]);
-assert.equal(cards.hiddenCards(2, ' '), '<:cardBack:999> <:cardBack:999>');
+assert.equal(cards.hiddenCard(), '<:cardBack:999>', 'vẫn nhận tên cardBack');
+appEmoji.setApplicationEmojisForTest([...registry, ['cardBack_blue1', '999']]);
 const emojiButton = cards.styleCardButton(new ButtonBuilder().setCustomId('x').setStyle(ButtonStyle.Secondary), 'K♥', 'Bỏ').toJSON();
 assert.equal(emojiButton.label, 'Bỏ'); assert.deepEqual(emojiButton.emoji, { id: id('cardHeartsK'), name: 'cardHeartsK', animated: false });
 
@@ -43,7 +48,7 @@ assert.equal(emojiButton.label, 'Bỏ'); assert.deepEqual(emojiButton.emoji, { i
 const bjState = { stake: 100, hands: [{ cards: ['A♠', '10♥'], bet: 100, status: 'playing' }], active: 0, dealer: ['9♦', '5♣'], status: 'playing', fair: { commit: 'c' } };
 const bjText = JSON.stringify(blackjack.blackjackEmbed(bjState, 'u', null, 'sid').toJSON());
 assert(bjText.includes(`<:cardSpadesA:${id('cardSpadesA')}>`) && bjText.includes(`<:cardHearts10:${id('cardHearts10')}>`), 'bài người chơi dùng emoji');
-assert(bjText.includes(`<:cardDiamonds9:${id('cardDiamonds9')}>`) && bjText.includes('<:cardBack:999>') && !bjText.includes('5♣'), 'nhà cái chỉ lộ 1 lá, lá còn lại là cardBack và không lộ bài');
+assert(bjText.includes(`<:cardDiamonds9:${id('cardDiamonds9')}>`) && bjText.includes('<:cardBack_blue1:999>') && !bjText.includes('5♣'), 'nhà cái chỉ lộ 1 lá, lá còn lại là lưng bài và không lộ bài');
 
 // embed Poker: bài chung, bài người chơi, bot chỉ lộ 1 lá, lá chưa mở là cardBack
 const pkState = { variant: 'texas', mode: 'solo', phase: 'betting', street: 'flop', board: ['2♠', '3♥', '4♦'], pot: 100, currentBet: 0, raises: 0, ante: 50, startingStack: 1000, log: [], fair: { commit: 'c' },
@@ -54,7 +59,7 @@ const pkState = { variant: 'texas', mode: 'solo', phase: 'betting', street: 'flo
   ] };
 const pkText = JSON.stringify(poker.pokerEmbed(pkState, 'u', 'sid').toJSON());
 for (const name of ['cardSpades2', 'cardHearts3', 'cardDiamonds4', 'cardSpadesA', 'cardSpadesK', 'cardClubsQ', 'cardDiamonds7']) assert(pkText.includes(`<:${name}:${id(name)}>`), `thiếu ${name}`);
-assert(pkText.includes('<:cardBack:999>'), 'lá chưa mở dùng cardBack');
+assert(pkText.includes('<:cardBack_blue1:999>'), 'lá chưa mở dùng lưng bài');
 assert(!pkText.includes('J♣') && !pkText.includes('cardClubsJ') && !pkText.includes('cardDiamonds8'), 'lá tẩy của bot không bị lộ');
 // nút chọn lá bỏ (Pineapple)
 const discardRows = poker.pokerRows('sid', { ...pkState, phase: 'discard', players: [{ ...pkState.players[0], hole: ['A♠', 'K♠', '2♦'] }, ...pkState.players.slice(1)] }).map(row => row.toJSON());
