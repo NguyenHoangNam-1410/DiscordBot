@@ -4,7 +4,7 @@ const RULES = {
   taixiu: ['Tài xỉu', 'Tài 11–17, Xỉu 4–10; bộ ba làm Tài/Xỉu và Chẵn/Lẻ thua.'],
   chinchiro: ['Chinchiro', 'Nhà cái lắc trước. So điểm khi cả hai có tướng; Shigoro lãi x2, Bão x3, Pin-Zoro x5. Hifumi 1-2-3 bị phạt thêm x1 tiền cược.'],
   oantuti: ['Oẳn tù tì', 'Búa thắng Kéo, Kéo thắng Bao, Bao thắng Búa. Thắng nhận x2, hòa hoàn cược.'],
-  blackjack: ['Xì dách', 'Gần 21 nhất mà không quá 21. Nhà cái dừng từ 17; thắng thường nhận 1,9×, Blackjack tự nhiên nhận 2,5×; nếu cả người chơi và nhà cái cùng quắc thì hòa.'],
+  blackjack: ['Xì dách', 'Một người mở bàn làm nhà cái; tối đa 3 người chơi có 30 giây để vào. Nhà cái chọn ante, không quá 25% số dư của mình. Người chơi lần lượt rút hoặc dừng; nhà cái rút đến ít nhất 17. Ngũ linh (đủ 5 lá, không quắc) mạnh hơn Xì dách; nếu cả hai cùng Ngũ linh thì tay có tổng điểm nhỏ hơn thắng. Người quắc thua kể cả khi nhà cái cũng quắc. Thắng nhận lại 2× ante, hòa nhận lại ante. Người tham gia bị khóa khỏi cược game khác đến khi ván kết thúc.'],
   poker: ['Poker', 'Chọn đấu với hai bot hoặc mời một người chơi. Theo, tố hoặc bỏ; xem bài tẩy bằng nút riêng tư. Main Pot và Side Pot được chia tự động.'],
   duangua: ['Đua ngựa', 'Chọn một trong sáu ngựa. Hệ số khóa khi mở bàn; debuff chỉ lộ sau khi khóa cược.'],
   mines: ['Mines', 'Mở ô an toàn để tăng hệ số rồi rút. Trúng mìn mất cược; ô sao tăng thêm x1,5.'],

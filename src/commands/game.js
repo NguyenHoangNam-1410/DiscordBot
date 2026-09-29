@@ -19,7 +19,7 @@ const tierChoices = ['R', 'SR', 'SSR', 'UR'].map(value => ({ name: value, value 
 const buffChoices = [
   { name: 'Nhân số xu drop', value: 'coins' },
   { name: 'Nhân số gem drop', value: 'diamonds' },
-  { name: 'Nhân số lượt Gacha drop', value: 'free_pull' },
+  { name: 'Nhân số vé Gacha ×1 drop', value: 'free_pull' },
   { name: 'Tăng tỷ lệ ra vật phẩm Gacha', value: 'gacha_luck' },
 ];
 const buffLabels = Object.fromEntries(buffChoices.map(item => [item.value, item.name]));
@@ -245,7 +245,7 @@ module.exports = {
         return interaction.reply({ content: `✅ Tỷ lệ **${entry.name}** đã đặt thành **${entry.rate.toFixed(2)}%**${entry.weight === 0 ? ' (đã tắt)' : ''}.`, flags: MessageFlags.Ephemeral });
       } catch (error) {
         if (error.message === 'INVALID_GACHA_REWARD') return interaction.reply({ content: 'Phần thưởng này không có trong pool Gacha.', flags: MessageFlags.Ephemeral });
-        if (error.message === 'GACHA_REQUIRES_HIGH_TIER') return interaction.reply({ content: 'Không thể tắt phần thưởng SR+ cuối cùng vì gói 10 lượt cần bảo đảm ít nhất SR.', flags: MessageFlags.Ephemeral });
+        if (error.message === 'GACHA_REQUIRES_HIGH_TIER') return interaction.reply({ content: 'Không thể tắt phần thưởng bậc cao cuối cùng vì Gacha cần bảo đảm SR và UR.', flags: MessageFlags.Ephemeral });
         if (error.message === 'EMPTY_GACHA_POOL') return interaction.reply({ content: 'Không thể tắt phần thưởng cuối cùng trong pool Gacha.', flags: MessageFlags.Ephemeral });
         throw error;
       }

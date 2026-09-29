@@ -1,8 +1,14 @@
-const { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, MessageFlags, PermissionFlagsBits } = require('discord.js');
+const { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, PermissionFlagsBits } = require('discord.js');
 const { remapOptions, renamedOption, commandData } = require('../utils/commandAlias');
 const { clearPlayerData, countPlayersForClear, clearAllPlayerData } = require('../services/adminDataService');
 const game = require('./game');
 const shop = require('./shop');
+const { forceEndBlackjackSession, forceEndBlackjackTable, blackjackTableEmbed } = require('../services/blackjackService');
+const { forceEndPokerSession } = require('../services/pokerService');
+const { pokerTableEmbed } = require('../services/pokerMultiplayerService');
+const { forceEndMinesSession } = require('../services/minesService');
+const { forceEndChinchiroSession } = require('../services/chinchiroService');
+const { forceEndHardcoreSession } = require('../services/hardcoreService');
 
 const GAME_NAMES = {
   setup: 'datkenh', channels: 'xemkenh', reward: 'datthuong', rewards: 'xemthuong',
@@ -49,6 +55,12 @@ const options = [
       { type: ApplicationCommandOptionType.User, name: 'nguoi', description: 'Bỏ trống để áp dụng cho tất cả người chơi', required: false },
     ],
   },
+  {
+    type: ApplicationCommandOptionType.Subcommand,
+    name: 'ketthucvan',
+    description: 'Buộc kết thúc ván đang diễn ra theo mã ván',
+    options: [{ type: ApplicationCommandOptionType.String, name: 'mavan', description: 'Mã ván hiển thị trên giao diện game', required: true, min_length: 1, max_length: 32 }],
+  },
 ];
 
 function route(interaction) {
@@ -59,6 +71,29 @@ function route(interaction) {
 module.exports = {
   data: commandData('quantri', 'Thiết lập game, kinh tế và cửa hàng dành cho admin', options),
   execute(interaction) {
+    if (interaction.options.getSubcommand() === 'ketthucvan') {
+      if (!interaction.guildId) return interaction.reply({ content: 'Lệnh này chỉ dùng trong server.', flags: MessageFlags.Ephemeral });
+      if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được kết thúc ván đang diễn ra.', flags: MessageFlags.Ephemeral });
+      const id = interaction.options.getString('mavan', true).trim();
+      const handlers = [forceEndBlackjackTable, forceEndBlackjackSession, forceEndPokerSession, forceEndMinesSession, forceEndChinchiroSession, forceEndHardcoreSession];
+      let result = null;
+      for (const handler of handlers) {
+        result = handler(id, interaction.guildId, interaction.user.id);
+        if (result) break;
+      }
+      if (!result) return interaction.reply({ content: `Không tìm thấy ván đang diễn ra với mã \`${id}\` trong server này.`, flags: MessageFlags.Ephemeral });
+      const participantText = result.participants.map(userId => `<@${userId}>`).join(', ') || 'không có người chơi';
+      const session = result.session || result.table;
+      if (session?.message_id) interaction.client.channels.fetch(session.channel_id).then(channel => channel?.messages?.fetch(session.message_id)).then(message => {
+        if (!message) return;
+        if (result.table) return message.edit({ embeds: [blackjackTableEmbed(result.table, result.state)], components: [] });
+        if (session.variant === 'poker' && JSON.parse(session.state_json).mode === 'multiplayer') return message.edit({ embeds: [pokerTableEmbed(result.state, session.id)], components: [], allowedMentions: { parse: [] } });
+        const gameName = session.variant === 'blackjack' ? 'XÌ DÁCH' : session.variant === 'poker' ? 'POKER' : 'GAME';
+        const endedEmbed = new EmbedBuilder().setColor(0xE74C3C).setTitle(`🛑 ${gameName} ĐÃ ĐƯỢC KẾT THÚC`).setDescription(`Mã ván: \`${session.id}\`\nQuản trị viên đã đóng ván này. Tiền cược đã khóa được hoàn lại.`);
+        return message.edit({ embeds: [endedEmbed], components: [] });
+      }).catch(() => {});
+      return interaction.reply({ content: `🛑 Đã buộc kết thúc ván \`${id}\`. Tiền cược đã khóa được hoàn lại cho: ${participantText}.`, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+    }
     if (interaction.options.getSubcommand() === 'xoadulieu') {
       if (!interaction.guildId) return interaction.reply({ content: 'Lệnh này chỉ dùng trong server.', flags: MessageFlags.Ephemeral });
       if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được xóa dữ liệu người chơi.', flags: MessageFlags.Ephemeral });

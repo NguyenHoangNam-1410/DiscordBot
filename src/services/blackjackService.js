@@ -1,12 +1,16 @@
 const crypto = require('node:crypto');
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags } = require('discord.js');
 const { db } = require('../db');
-const { spendCoins, settleReservedGame } = require('./economyService');
+const { getAccount, spendCoins, settleReservedGame, creditCoins } = require('./economyService');
 const { formatCoins } = require('../utils/economy');
 const { getGameBetLimit } = require('./gameBetLimitService');
 const { consumeHighestEffect } = require('./effectStateService');
 const { createFairness, fairShuffle } = require('./fairnessService');
 const { addExperienceField } = require('../utils/progressionView');
+
+const TABLE_LOBBY_MS = 30_000;
+const TABLE_PLAY_MS = 3 * 60_000;
+const TABLE_GUESTS = 3;
 
 const MIN_BET = 10;
 const MAX_BET = 100_000;
@@ -29,6 +33,13 @@ function handScore(cards) {
 }
 
 function isBlackjack(cards) { return cards.length === 2 && handScore(cards).total === 21; }
+function handType(cards) {
+  const score = handScore(cards).total;
+  if (score > 21) return 'bust';
+  if (cards.length === 5) return 'ngulinh';
+  if (isBlackjack(cards)) return 'blackjack';
+  return 'normal';
+}
 
 function createShoe(decks = 6, serverSeed = null) {
   const cards = [];
@@ -53,6 +64,7 @@ function getSessionByUser(guildId, userId) {
   return db.prepare('SELECT * FROM blackjack_sessions WHERE guild_id = ? AND user_id = ?').get(String(guildId), String(userId)) || null;
 }
 function getSession(id) { return db.prepare('SELECT * FROM blackjack_sessions WHERE id = ?').get(String(id)) || null; }
+function getActiveSession(id, guildId) { return db.prepare('SELECT * FROM blackjack_sessions WHERE id=? AND guild_id=?').get(String(id), String(guildId)) || null; }
 function parseState(session) { return JSON.parse(session.state_json); }
 
 function saveState(session, state) {
@@ -69,7 +81,9 @@ function initialResult(state) {
   if (!playerBlackjack && !dealerBlackjack) return null;
   if (playerBlackjack && dealerBlackjack) return { outcome: 'draw', payout: state.hands[0].bet, reason: 'Cả hai cùng Xì dách' };
   if (playerBlackjack) return { outcome: 'win', payout: Math.floor(state.hands[0].bet * 2.5), reason: 'Xì dách tự nhiên trả 3:2' };
-  return { outcome: 'loss', payout: 0, reason: 'Nhà cái có Xì dách' };
+  // Ngũ linh ranks above Xì dách, so a dealer natural cannot end the hand
+  // before the player has had a chance to reach five cards.
+  return null;
 }
 
 function putAceOnTop(deck) {
@@ -110,7 +124,7 @@ const startTx = db.transaction(({ guildId, userId, channelId, stake, forcedDeck 
 function startBlackjack(args) { return startTx(args); }
 
 function dealerPlay(state) {
-  while (handScore(state.dealer).total < 17) state.dealer.push(draw(state));
+  while (handScore(state.dealer).total < 17 && handType(state.dealer) !== 'ngulinh') state.dealer.push(draw(state));
 }
 
 function settleState(session, state, reason = null) {
@@ -119,10 +133,19 @@ function settleState(session, state, reason = null) {
   let payout = 0;
   const results = state.hands.map(hand => {
     const score = handScore(hand.cards).total;
+    const playerType = handType(hand.cards); const dealerType = handType(state.dealer);
     let handPayout = 0;
     let label;
-    if (score > 21 && dealer > 21) { label = 'Cùng Bust · Hòa'; handPayout = hand.bet; }
-    else if (score > 21) label = 'Bust';
+    if (playerType === 'bust') label = 'Quắc · Thua';
+    else if (playerType === 'ngulinh' && dealerType !== 'ngulinh') { label = 'Ngũ linh · Thắng'; handPayout = Math.floor(hand.bet * REGULAR_WIN_MULTIPLIER); }
+    else if (dealerType === 'ngulinh' && playerType !== 'ngulinh') label = 'Thua · Nhà cái Ngũ linh';
+    else if (playerType === 'ngulinh' && dealerType === 'ngulinh') {
+      if (score < dealer) { label = 'Ngũ linh · Thắng'; handPayout = Math.floor(hand.bet * REGULAR_WIN_MULTIPLIER); }
+      else if (score === dealer) { label = 'Ngũ linh · Hòa'; handPayout = hand.bet; }
+      else label = 'Thua · Nhà cái Ngũ linh';
+    }
+    else if (dealerType === 'blackjack' && playerType !== 'blackjack') label = 'Thua · Nhà cái Xì dách';
+    else if (playerType === 'blackjack' && dealerType === 'blackjack') { label = 'Hòa · Cùng Xì dách'; handPayout = hand.bet; }
     else if (dealer > 21 || score > dealer) { label = 'Thắng'; handPayout = Math.floor(hand.bet * REGULAR_WIN_MULTIPLIER); }
     else if (score === dealer) { label = 'Hòa'; handPayout = hand.bet; }
     else label = 'Thua';
@@ -188,6 +211,7 @@ const actionTx = db.transaction(({ sessionId, userId, action, cardIndex = null }
     state.split = true;
     if (rank(first) === 'A') for (const splitHand of state.hands) splitHand.status = 'stand';
   } else throw new Error('INVALID_ACTION');
+  if (hand.status === 'playing' && handType(hand.cards) === 'ngulinh') hand.status = 'stand';
   if (['playing', 'redraw'].includes(state.hands[state.active]?.status)) { saveState(session, state); return { settled: false, state }; }
   return advanceOrSettle(session, state);
 });
@@ -203,7 +227,7 @@ function handText(hand, index, active, result = null) {
   return `${marker}**Tay ${index + 1}:** ${cardText(hand.cards)} — **${score} điểm** • Cược ${formatCoins(hand.bet)} xu${outcome}`;
 }
 
-function blackjackEmbed(state, userId, result = null) {
+function blackjackEmbed(state, userId, result = null, sessionId = null) {
   const dealerCards = result ? largeCards(state.dealer) : `${largeCards([state.dealer[0]])}　**??**`;
   const dealerScore = result ? ` · **${handScore(state.dealer).total} điểm**` : '';
   const hands = state.hands.map((hand, index) => handText(hand, index, state.active, result?.results?.[index])).join('\n');
@@ -218,7 +242,8 @@ function blackjackEmbed(state, userId, result = null) {
     embed.addFields({ name: '🏆 KẾT QUẢ', value: `### ${summary}\n**Tổng cược:** ${formatCoins(result.stake)} xu` });
     addExperienceField(embed, result);
     if (result.achievements?.length) embed.addFields({ name: '🏅 Thành tựu mới', value: result.achievements.map(item => `**${item.name}**`).join('\n') });
-  } else embed.setFooter({ text: 'Nhà cái dừng ở soft 17 • Xì dách tự nhiên trả 3:2 • Không thu phí mở ván' });
+  }
+  if (sessionId && !result) embed.setFooter({ text: `Mã ván: ${sessionId} • Nhà cái dừng ở soft 17 • Xì dách tự nhiên trả 3:2 • Không thu phí mở ván` });
   return embed;
 }
 
@@ -252,7 +277,7 @@ async function handleBlackjackButton(interaction) {
   if (session.user_id !== interaction.user.id) return interaction.reply({ content: 'Đây là ván Xì dách của người chơi khác.', flags: MessageFlags.Ephemeral });
   try {
     const played = playAction({ sessionId, userId: interaction.user.id, action, cardIndex: rawIndex === undefined ? null : Number(rawIndex) });
-    return interaction.update({ embeds: [blackjackEmbed(played.state, interaction.user.id, played.result)], components: actionRows(sessionId, played.state, played.settled), allowedMentions: { parse: [] } });
+    return interaction.update({ embeds: [blackjackEmbed(played.state, interaction.user.id, played.result, played.settled ? null : sessionId)], components: actionRows(sessionId, played.state, played.settled), allowedMentions: { parse: [] } });
   } catch (error) {
     const content = error.code === 'INSUFFICIENT_FUNDS' ? 'Bạn không đủ xu để thực hiện thao tác này.'
       : error.message === 'BET_LIMIT' ? `Thao tác này vượt giới hạn cược **${formatCoins(error.maxBet)} xu/người/ván**.`
@@ -263,7 +288,236 @@ async function handleBlackjackButton(interaction) {
   }
 }
 
+function getBlackjackTable(id) { return db.prepare('SELECT * FROM blackjack_tables WHERE id=?').get(String(id)) || null; }
+function getActiveBlackjackTable(id, guildId) { return db.prepare("SELECT * FROM blackjack_tables WHERE id=? AND guild_id=? AND status IN ('lobby','playing')").get(String(id), String(guildId)) || null; }
+function getBlackjackTableLock(guildId, userId) { return db.prepare('SELECT table_id,role FROM blackjack_table_locks WHERE guild_id=? AND user_id=?').get(String(guildId), String(userId)) || null; }
+function tableState(table) { return JSON.parse(table.state_json); }
+function saveTable(table, state, status = table.status, expiresAt = table.expires_at, now = Date.now()) {
+  db.prepare('UPDATE blackjack_tables SET state_json=?,status=?,expires_at=?,updated_at=? WHERE id=?')
+    .run(JSON.stringify(state), status, expiresAt, now, table.id);
+}
+function tableDraw(state) { return state.deck.pop(); }
+function tableStatusResult(player, dealer, dealerNatural) {
+  const score = handScore(player.cards).total; const natural = isBlackjack(player.cards);
+  const playerType = handType(player.cards); const dealerType = handType(dealer);
+  let outcome = 'loss';
+  const dealerScore = handScore(dealer).total;
+  if (playerType === 'bust') outcome = 'loss';
+  else if (playerType === 'ngulinh' && dealerType !== 'ngulinh') outcome = 'win';
+  else if (dealerType === 'ngulinh' && playerType !== 'ngulinh') outcome = 'loss';
+  else if (playerType === 'ngulinh' && dealerType === 'ngulinh') outcome = score < dealerScore ? 'win' : score === dealerScore ? 'draw' : 'loss';
+  else if (dealerNatural) outcome = natural ? 'draw' : 'loss';
+  else if (natural || dealerScore > 21 || score > dealerScore) outcome = 'win';
+  else if (score === dealerScore) outcome = 'draw';
+  const label = playerType === 'ngulinh' ? `Ngũ linh ${outcome === 'win' ? 'thắng' : outcome === 'draw' ? 'hòa' : 'thua'}`
+    : natural ? `Xì dách ${outcome === 'win' ? 'thắng' : outcome === 'draw' ? 'hòa' : 'thua'}`
+      : playerType === 'bust' ? 'Quắc · thua' : outcome === 'win' ? 'Thắng' : outcome === 'draw' ? 'Hòa' : 'Thua';
+  return { userId: player.id, score, natural, handType: playerType, outcome, label,
+    payout: outcome === 'win' ? player.stake * 2 : outcome === 'draw' ? player.stake : 0 };
+}
+function hasOtherWagerSession(guildId, userId) {
+  const guild = String(guildId); const user = String(userId);
+  const checks = [
+    ['blackjack_sessions', 'user_id'], ['chinchiro_sessions', 'user_id'], ['mines_sessions', 'user_id'],
+    ['hardcore_sessions', 'user_id'], ['poker_sessions', 'user_id'],
+  ];
+  if (checks.some(([table, column]) => db.prepare(`SELECT 1 FROM ${table} WHERE guild_id=? AND ${column}=? LIMIT 1`).get(guild, user))) return true;
+  if (db.prepare(`SELECT 1 FROM blackjack_duels WHERE guild_id=? AND status IN ('invited','playing')
+    AND (challenger_id=? OR opponent_id=?) LIMIT 1`).get(guild, user, user)) return true;
+  if (db.prepare(`SELECT 1 FROM rps_duels WHERE guild_id=? AND status IN ('invited','playing')
+    AND (challenger_id=? OR opponent_id=?) LIMIT 1`).get(guild, user, user)) return true;
+  const pokerSessions = db.prepare('SELECT state_json FROM poker_sessions WHERE guild_id=?').all(guild);
+  if (pokerSessions.some(row => { try { return JSON.parse(row.state_json).players?.some(player => player.id === user); } catch { return false; } })) return true;
+  return Boolean(db.prepare(`SELECT 1 FROM multiplayer_bets b JOIN multiplayer_rounds r ON r.id=b.round_id
+    WHERE r.guild_id=? AND r.status IN ('open','racing') AND b.user_id=? LIMIT 1`).get(guild, user));
+}
+function settleTableTx(table, state, now = Date.now()) {
+  const dealerNatural = isBlackjack(state.dealer);
+  if (!dealerNatural) while (handScore(state.dealer).total < 17 && handType(state.dealer) !== 'ngulinh') state.dealer.push(tableDraw(state));
+  const results = state.players.map(player => tableStatusResult(player, state.dealer, dealerNatural));
+  let dealerNet = 0;
+  for (const result of results) {
+    const player = state.players.find(item => item.id === result.userId);
+    dealerNet += player.stake - result.payout;
+    const outcome = result.outcome;
+    settleReservedGame({ guildId: table.guild_id, userId: result.userId, payout: result.payout,
+      stake: player.stake, game: 'blackjack', outcome,
+      operationId: `settle:blackjack-table:${table.id}:${result.userId}` });
+  }
+  const dealerReserve = table.ante * TABLE_GUESTS;
+  const dealerPayout = dealerReserve + dealerNet;
+  const dealerOutcome = dealerPayout > dealerReserve ? 'win' : dealerPayout < dealerReserve ? 'loss' : 'draw';
+  settleReservedGame({ guildId: table.guild_id, userId: table.dealer_id, payout: dealerPayout,
+    stake: dealerReserve, game: 'blackjack', outcome: dealerOutcome, operationId: `settle:blackjack-table:${table.id}:dealer` });
+  state.results = results; state.phase = 'complete';
+  saveTable(table, state, 'completed', now, now);
+  db.prepare('DELETE FROM blackjack_table_locks WHERE table_id=?').run(table.id);
+  return state;
+}
+function beginBlackjackTableTx(table, now = Date.now()) {
+  const state = tableState(table);
+  if (table.status !== 'lobby' || table.expires_at > now || !state.players.length) return null;
+  const fair = createFairness(); state.fair = fair; state.deck = createShoe(6, fair.serverSeed);
+  state.dealer = []; state.players.forEach(player => { player.cards = []; player.status = 'playing'; });
+  for (let i = 0; i < 2; i += 1) {
+    for (const player of state.players) player.cards.push(tableDraw(state));
+    state.dealer.push(tableDraw(state));
+  }
+  for (const player of state.players) if (isBlackjack(player.cards)) player.status = 'stand';
+  state.phase = 'playing'; state.turn = state.players.findIndex(player => player.status === 'playing');
+  saveTable(table, state, 'playing', now + TABLE_PLAY_MS, now);
+  if (state.players.every(player => player.status !== 'playing')) return settleTableTx(getBlackjackTable(table.id), state, now);
+  return state;
+}
+function createBlackjackTable({ guildId, channelId, dealerId, ante, now = Date.now() }) {
+  return db.transaction(() => {
+    const account = getAccount(guildId, dealerId); const cap = Math.floor(account.balance * 0.25);
+    const maxBet = getGameBetLimit(guildId, 'blackjack');
+    if (!Number.isSafeInteger(ante) || ante < MIN_BET || ante > Math.min(MAX_BET, maxBet, cap)) {
+      const error = new Error('DEALER_ANTE_LIMIT'); error.cap = Math.min(MAX_BET, maxBet, cap); throw error;
+    }
+    const lock = db.prepare('SELECT 1 FROM blackjack_table_locks WHERE guild_id=? AND user_id=?').get(String(guildId), String(dealerId));
+    if (lock || hasOtherWagerSession(guildId, dealerId)) throw new Error('ACTIVE_SESSION');
+    const id = crypto.randomBytes(6).toString('hex'); const reserve = ante * TABLE_GUESTS;
+    db.prepare('INSERT INTO blackjack_table_locks(guild_id,user_id,table_id,role,created_at) VALUES(?,?,? ,\'dealer\',?)')
+      .run(String(guildId), String(dealerId), id, now);
+    spendCoins({ guildId, userId: dealerId, amount: reserve, reason: `blackjack-table:reserve:${id}`, tableId: id });
+    const state = { phase: 'lobby', players: [], dealer: [], deck: [], turn: 0, results: null };
+    const table = { id, guild_id: String(guildId), channel_id: String(channelId), message_id: null, dealer_id: String(dealerId), ante,
+      status: 'lobby', expires_at: now + TABLE_LOBBY_MS, created_at: now, updated_at: now };
+    db.prepare(`INSERT INTO blackjack_tables(id,guild_id,channel_id,message_id,dealer_id,ante,state_json,status,expires_at,created_at,updated_at)
+      VALUES(?,?,?,NULL,?,?,?,'lobby',?,?,?)`).run(id, table.guild_id, table.channel_id, table.dealer_id, ante, JSON.stringify(state), table.expires_at, now, now);
+    return { table: getBlackjackTable(id), state, dealerBalance: account.balance, cap };
+  })();
+}
+function setBlackjackTableMessage(id, messageId) { db.prepare('UPDATE blackjack_tables SET message_id=?,updated_at=? WHERE id=?').run(String(messageId), Date.now(), String(id)); }
+function joinBlackjackTable(id, userId, username, now = Date.now()) {
+  return db.transaction(() => {
+    const table = getBlackjackTable(id); if (!table || table.status !== 'lobby' || table.expires_at <= now) throw new Error('TABLE_CLOSED');
+    if (table.dealer_id === String(userId)) throw new Error('DEALER_CANNOT_JOIN');
+    const state = tableState(table);
+    if (state.players.some(player => player.id === String(userId))) throw new Error('ALREADY_SEATED');
+    if (state.players.length >= TABLE_GUESTS) throw new Error('TABLE_FULL');
+    if (db.prepare('SELECT 1 FROM blackjack_table_locks WHERE guild_id=? AND user_id=?').get(table.guild_id, String(userId))) throw new Error('ACTIVE_BLACKJACK_TABLE');
+    if (hasOtherWagerSession(table.guild_id, userId)) throw new Error('ACTIVE_SESSION');
+    spendCoins({ guildId: table.guild_id, userId, amount: table.ante, reason: `blackjack-table:ante:${table.id}`, tableId: table.id });
+    db.prepare('INSERT INTO blackjack_table_locks(guild_id,user_id,table_id,role,created_at) VALUES(?,?,?,\'player\',?)')
+      .run(table.guild_id, String(userId), table.id, now);
+    state.players.push({ id: String(userId), name: String(username || 'Người chơi').slice(0, 64), cards: [], status: 'waiting', stake: table.ante });
+    saveTable(table, state, 'lobby', table.expires_at, now); return state;
+  })();
+}
+function playBlackjackTable(id, userId, action, now = Date.now()) {
+  return db.transaction(() => {
+    const table = getBlackjackTable(id); if (!table || table.status !== 'playing' || table.expires_at <= now) throw new Error('TABLE_CLOSED');
+    const state = tableState(table); const player = state.players[state.turn];
+    if (!player || player.id !== String(userId) || player.status !== 'playing') throw new Error('NOT_YOUR_TURN');
+    if (action === 'hit') { player.cards.push(tableDraw(state)); const score = handScore(player.cards).total; if (score >= 21 || handType(player.cards) === 'ngulinh') player.status = score > 21 ? 'bust' : 'stand'; }
+    else if (action === 'stand') player.status = 'stand'; else throw new Error('INVALID_ACTION');
+    const next = state.players.findIndex((candidate, index) => index > state.turn && candidate.status === 'playing');
+    state.turn = next;
+    if (next < 0) return { state: settleTableTx(table, state, now), settled: true };
+    saveTable(table, state, 'playing', now + TABLE_PLAY_MS, now); return { state, settled: false };
+  })();
+}
+function blackjackTableEmbed(table, state = tableState(table)) {
+  const lobby = table.status === 'lobby'; const complete = table.status === 'completed';
+  const embed = new EmbedBuilder().setColor(complete ? 0x2ECC71 : 0x34495E).setTitle('🃏 XÌ DÁCH · NHÀ CÁI NGƯỜI CHƠI')
+    .setDescription(`🏦 Nhà cái: <@${table.dealer_id}> · Ante: **${formatCoins(table.ante)} xu**\n${lobby ? `⏳ Đang nhận người chơi đến <t:${Math.floor(table.expires_at / 1000)}:R> · Tối đa ${TABLE_GUESTS} người.` : ''}`);
+  if (lobby) embed.addFields({ name: '🪑 Ghế', value: state.players.length ? state.players.map((player, index) => `${index + 1}. <@${player.id}>`).join('\n') : 'Chưa có người chơi. Bấm **Vào bàn** trong 30 giây.' });
+  else {
+    const dealerCards = complete ? state.dealer.map(card => `**${card}**`).join('　') : `**${state.dealer[0]}**　**??**`;
+    embed.addFields({ name: '🏦 Bài nhà cái', value: `${dealerCards}${complete ? ` · ${handScore(state.dealer).total} điểm` : ''}` },
+      { name: '👥 Người chơi', value: state.players.map(player => {
+        const score = handScore(player.cards).total; const result = state.results?.find(item => item.userId === player.id);
+        return `<@${player.id}>${state.players[state.turn]?.id === player.id && !complete ? ' · 👉 Đến lượt' : ''}\n${player.cards.map(card => `**${card}**`).join('　')} · ${score} điểm${handType(player.cards) === 'ngulinh' ? ' · **NGŨ LINH**' : ''}${result ? ` · **${result.label}** · nhận ${formatCoins(result.payout)} xu` : ''}`;
+      }).join('\n\n') });
+    if (complete) embed.addFields({ name: 'Kết quả', value: `Ván đã kết thúc. Ante **${formatCoins(table.ante)} xu/người**.` });
+  }
+  return embed.setFooter({ text: `Mã ván: ${table.id}` });
+}
+function forceEndBlackjackSession(id, guildId, adminId) {
+  return db.transaction(() => {
+    const session = getActiveSession(id, guildId); if (!session) return null;
+    const state = parseState(session); const refund = totalBet(state);
+    creditCoins({ guildId: session.guild_id, userId: session.user_id, amount: refund,
+      reason: `blackjack:admin-refund:${adminId}:${session.id}`, operationId: `refund:blackjack-admin:${session.id}:${session.user_id}` });
+    db.prepare('DELETE FROM blackjack_sessions WHERE id=?').run(session.id);
+    return { session, state, participants: [session.user_id], refund };
+  })();
+}
+function blackjackTableRows(table, state = tableState(table)) {
+  if (table.status === 'lobby') return [new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId(`blackjack-table:${table.id}:join`).setLabel('Vào bàn').setEmoji('🪑').setStyle(ButtonStyle.Success).setDisabled(state.players.length >= TABLE_GUESTS))];
+  if (table.status !== 'playing') return [];
+  const player = state.players[state.turn]; if (!player) return [];
+  return [new ActionRowBuilder().addComponents(
+    new ButtonBuilder().setCustomId(`blackjack-table:${table.id}:hit`).setLabel('Rút bài').setEmoji('➕').setStyle(ButtonStyle.Primary),
+    new ButtonBuilder().setCustomId(`blackjack-table:${table.id}:stand`).setLabel('Dừng').setEmoji('✋').setStyle(ButtonStyle.Success))];
+}
+async function handleBlackjackTableButton(interaction) {
+  const [, id, action] = interaction.customId.split(':');
+  try {
+    let table = getBlackjackTable(id); if (!table || table.guild_id !== interaction.guildId || table.channel_id !== interaction.channelId) throw new Error('TABLE_CLOSED');
+    let state;
+    if (action === 'join') state = joinBlackjackTable(id, interaction.user.id, interaction.user.username);
+    else { const played = playBlackjackTable(id, interaction.user.id, action); state = played.state; }
+    table = getBlackjackTable(id);
+    return interaction.update({ embeds: [blackjackTableEmbed(table, state)], components: blackjackTableRows(table, state), allowedMentions: { parse: [] } });
+  } catch (error) {
+    const content = error.message === 'ACTIVE_BLACKJACK_TABLE' ? 'Bạn đang ở một bàn Xì dách khác; hãy chờ ván đó kết thúc.'
+      : error.message === 'ACTIVE_SESSION' ? 'Bạn đang có một ván cược khác chưa kết thúc.'
+      : error.message === 'NOT_YOUR_TURN' ? 'Đợi đến lượt của bạn.'
+        : error.message === 'TABLE_FULL' ? 'Bàn đã đủ 3 người chơi.'
+          : error.message === 'DEALER_CANNOT_JOIN' ? 'Nhà cái không thể ngồi vào bàn làm người chơi.'
+            : error.message === 'ALREADY_SEATED' ? 'Bạn đã vào bàn này rồi.'
+              : error.code === 'INSUFFICIENT_FUNDS' ? 'Bạn không đủ xu để vào bàn.' : 'Bàn Xì dách đã đóng hoặc thao tác không hợp lệ.';
+    return interaction.reply({ content, flags: MessageFlags.Ephemeral });
+  }
+}
+function expireBlackjackTableTx(table, now = Date.now()) {
+  if (!table || !['lobby', 'playing'].includes(table.status) || table.expires_at > now) return null;
+  const state = tableState(table);
+  if (table.status === 'lobby' && state.players.length) return beginBlackjackTableTx(table, now);
+  if (table.status === 'lobby') creditCoins({ guildId: table.guild_id, userId: table.dealer_id, amount: table.ante * TABLE_GUESTS, reason: `blackjack-table:refund:${table.id}`, operationId: `refund:blackjack-table:${table.id}:dealer` });
+  else {
+    for (const player of state.players) creditCoins({ guildId: table.guild_id, userId: player.id, amount: player.stake, reason: `blackjack-table:refund:${table.id}`, operationId: `refund:blackjack-table:${table.id}:${player.id}` });
+    creditCoins({ guildId: table.guild_id, userId: table.dealer_id, amount: table.ante * TABLE_GUESTS, reason: `blackjack-table:refund:${table.id}`, operationId: `refund:blackjack-table:${table.id}:dealer` });
+  }
+  state.phase = 'expired'; saveTable(table, state, 'expired', now, now); db.prepare('DELETE FROM blackjack_table_locks WHERE table_id=?').run(table.id); return state;
+}
+function forceEndBlackjackTable(id, guildId, adminId) {
+  return db.transaction(() => {
+    const table = getActiveBlackjackTable(id, guildId); if (!table) return null;
+    const state = tableState(table);
+    const participantIds = [...new Set([table.dealer_id, ...state.players.map(player => player.id)])];
+    const dealerRefund = table.ante * TABLE_GUESTS;
+    creditCoins({ guildId: table.guild_id, userId: table.dealer_id, amount: dealerRefund,
+      reason: `blackjack-table:admin-refund:${adminId}:${table.id}`, operationId: `refund:blackjack-table-admin:${table.id}:${table.dealer_id}` });
+    for (const player of state.players) creditCoins({ guildId: table.guild_id, userId: player.id, amount: player.stake,
+      reason: `blackjack-table:admin-refund:${adminId}:${table.id}`, operationId: `refund:blackjack-table-admin:${table.id}:${player.id}` });
+    state.phase = 'expired'; state.results = null;
+    saveTable(table, state, 'expired', Date.now());
+    db.prepare('DELETE FROM blackjack_table_locks WHERE table_id=?').run(table.id);
+    const savedTable = getBlackjackTable(id);
+    return { table: savedTable, state, participants: participantIds };
+  })();
+}
+async function maintainBlackjackTables(client) {
+  const due = db.prepare("SELECT * FROM blackjack_tables WHERE status IN ('lobby','playing') AND expires_at<=?").all(Date.now());
+  for (const oldTable of due) {
+    const state = db.transaction(() => expireBlackjackTableTx(getBlackjackTable(oldTable.id)))();
+    if (!state || !oldTable.message_id) continue;
+    const table = getBlackjackTable(oldTable.id);
+    const channel = await client.channels.fetch(table.channel_id).catch(() => null);
+    const message = await channel?.messages?.fetch(table.message_id).catch(() => null);
+    if (message) await message.edit({ embeds: [blackjackTableEmbed(table, state)], components: blackjackTableRows(table, state) }).catch(() => {});
+  }
+}
+function startBlackjackTableMaintenance(client) { const run = () => maintainBlackjackTables(client).catch(() => {}); run(); const timer = setInterval(run, 5_000); timer.unref?.(); return timer; }
+
 module.exports = {
-  MIN_BET, MAX_BET, REGULAR_WIN_MULTIPLIER, handScore, isBlackjack, createShoe, putAceOnTop, startBlackjack, playAction,
+  MIN_BET, MAX_BET, REGULAR_WIN_MULTIPLIER, handScore, isBlackjack, handType, createShoe, putAceOnTop, startBlackjack, playAction, forceEndBlackjackSession,
   getSessionByUser, setMessageId, blackjackEmbed, actionRows, handleBlackjackButton,
+  createBlackjackTable, setBlackjackTableMessage, blackjackTableEmbed, blackjackTableRows, handleBlackjackTableButton, startBlackjackTableMaintenance, forceEndBlackjackTable,
+  getBlackjackTableLock,
 };

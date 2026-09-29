@@ -10,7 +10,7 @@ function helpEmbed(prefix = process.env.COMMAND_PREFIX || '!') {
       { name: '💰 Tài khoản', value: '`/hoso` · `/xu sodu|chuyen|lichsu|vanchoi` · `/xephang` · `/anxin`' },
       { name: '📖 Trợ giúp', value: '`/batdau` · `/luat` · `/trogiup` · `/huongdan`' },
       { name: '⌨️ Prefix tùy chọn', value: `Nếu server bật lệnh tin nhắn, các lệnh cũ như \`${prefix}baucua\` vẫn dùng được để tương thích.` },
-      { name: '🎁 Phần thưởng', value: 'Mỗi ván có cơ hội rơi thêm xu, gem và lượt quay Gacha theo cấu hình server.' },
+      { name: '🎁 Phần thưởng', value: 'Mỗi ván có cơ hội rơi thêm xu, gem và vé Gacha ×1 theo cấu hình server.' },
     ).setFooter({ text: 'Admin dùng /quantri • Discord sẽ tự gợi ý mọi tùy chọn' });
 }
 module.exports = {

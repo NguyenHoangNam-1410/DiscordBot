@@ -66,7 +66,7 @@ const GAME_CONFIG_SPECS = Object.freeze({
     note: 'Số gem cao nhất khi roll trúng drop.',
   }),
   GAME_GACHA_DROP_CHANCE: Object.freeze({
-    label: 'Tỷ lệ drop lượt Gacha', type: 'number', min: 0, max: 1, fallback: 0.01,
+    label: 'Tỷ lệ drop vé Gacha ×1', type: 'number', min: 0, max: 1, fallback: 0.01,
     note: 'Nhập từ 0 đến 1; ví dụ 0.01 tương ứng 1%.', clampEnv: true,
   }),
   GAME_GACHA_DROP_MIN: Object.freeze({

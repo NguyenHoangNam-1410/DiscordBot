@@ -14,11 +14,11 @@ module.exports = {
       const variant = interaction.options.getString('chedo', true);
       if (interaction.options.getString('chedochoi') === 'nguoichoi') {
         const started = createPokerLobby({ guildId: interaction.guildId, channelId: interaction.channelId, userId: interaction.user.id, username: interaction.user.username, variant });
-        const response = await interaction.reply({ embeds: [pokerTableEmbed(started.state)], components: pokerTableRows(started.session, started.state), allowedMentions: { parse: [] }, withResponse: true });
+        const response = await interaction.reply({ embeds: [pokerTableEmbed(started.state, started.session.id)], components: pokerTableRows(started.session, started.state), allowedMentions: { parse: [] }, withResponse: true });
         const messageId = response?.resource?.message?.id || response?.id; if (messageId) setPokerMessage(started.session.id, messageId); return started;
       }
       const started = startPoker({ guildId: interaction.guildId, channelId: interaction.channelId, userId: interaction.user.id, variant });
-      const response = await interaction.reply({ embeds: [pokerEmbed(started.state, interaction.user.id)], components: pokerRows(started.session.id, started.state), withResponse: true });
+      const response = await interaction.reply({ embeds: [pokerEmbed(started.state, interaction.user.id, started.session.id)], components: pokerRows(started.session.id, started.state), withResponse: true });
       const messageId = response?.resource?.message?.id || response?.id; if (messageId) setPokerMessage(started.session.id, messageId); return started;
     } catch (error) {
       if (error.message === 'ACTIVE_SESSION') return interaction.reply({ content: 'Bạn đang có một ván Poker chưa kết thúc.', flags: MessageFlags.Ephemeral });

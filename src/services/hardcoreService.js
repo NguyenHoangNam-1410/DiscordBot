@@ -2,7 +2,7 @@ const crypto = require('node:crypto');
 const { AsyncLocalStorage } = require('node:async_hooks');
 const { MessageFlags } = require('discord.js');
 const { db } = require('../db');
-const { spendCoins, settleReservedGame } = require('./economyService');
+const { spendCoins, settleReservedGame, creditCoins } = require('./economyService');
 const { getGameBetLimit } = require('./gameBetLimitService');
 const { createFairness, fairInt } = require('./fairnessService');
 const hardcoreRepository = require('./hardcoreRepository');
@@ -261,6 +261,16 @@ function finishRun(session, state, reason) {
   hardcoreRepository.deleteSession(session.id);
   return { reason, payout, outcome, balance: account.balance, achievements: account.unlockedAchievements, experienceGained: account.experienceGained, levelUps: account.levelUps, bonusDrops: account.bonusDrops };
 }
+function forceEndHardcoreSession(id, guildId, adminId) {
+  return db.transaction(() => {
+    const session = hardcoreRepository.getActiveSession(id, guildId); if (!session) return null;
+    const state = parseState(session);
+    creditCoins({ guildId: session.guild_id, userId: session.user_id, amount: state.stake,
+      reason: `hardcore:admin-refund:${adminId}:${session.id}`, operationId: `refund:hardcore-admin:${session.id}:${session.user_id}` });
+    hardcoreRepository.deleteSession(session.id);
+    return { session, state, participants: [session.user_id] };
+  })();
+}
 
 function enemyTurn(state, defend = false, dodge = false) {
   const enemy = state.encounter;
@@ -428,7 +438,7 @@ const actionTx = db.transaction(({ sessionId, userId, expectedTurn, action }) =>
 
 function playHardcore(args) { return actionTx(args); }
 
-function hardcoreEmbed(state, userId, result = null) { return hardcoreView.hardcoreEmbed(state, userId, result, CLASSES); }
+function hardcoreEmbed(state, userId, result = null, sessionId = null) { return hardcoreView.hardcoreEmbed(state, userId, result, CLASSES, sessionId); }
 function hardcoreRows(sessionId, state, disabled = false) { return hardcoreView.hardcoreRows(sessionId, state, disabled, CLASSES); }
 
 async function handleHardcoreButton(interaction) {
@@ -438,7 +448,7 @@ async function handleHardcoreButton(interaction) {
   if (session.user_id !== interaction.user.id) return interaction.reply({ content: 'Đây là lượt Sinh tồn của người chơi khác.', flags: MessageFlags.Ephemeral });
   try {
     const played = playHardcore({ sessionId, userId: interaction.user.id, expectedTurn: Number(rawTurn), action });
-    return interaction.update({ embeds: [hardcoreEmbed(played.state, interaction.user.id, played.result)], components: hardcoreRows(sessionId, played.state, played.settled), allowedMentions: { parse: [] } });
+    return interaction.update({ embeds: [hardcoreEmbed(played.state, interaction.user.id, played.result, sessionId)], components: hardcoreRows(sessionId, played.state, played.settled), allowedMentions: { parse: [] } });
   } catch (error) {
     const content = error.message === 'STALE_ACTION' ? 'Nút này thuộc lượt cũ. Hãy dùng các nút mới nhất.'
       : error.message === 'NO_ENERGY' ? 'Không đủ năng lượng dùng kỹ năng.'
@@ -469,7 +479,7 @@ module.exports = {
   MIN_BET, MAX_BET, MAX_PAYOUT, MAX_FLOOR, COMPLETION_FLOOR, CLASSES, ITEMS,
   hitChance, defenseReduction, physicalAfterDefense, magicAfterResistance, resolvePhysicalAttack,
   enemyScale, makeEnemy, rngesusChance, rollRngesus, chaosLabel, baseMultiplier, potentialPayout, generateEncounter,
-  startHardcore, playHardcore, getHardcoreByUser, setMessageId, hardcoreEmbed, hardcoreRows,
+  startHardcore, playHardcore, getHardcoreByUser, setMessageId, hardcoreEmbed, hardcoreRows, forceEndHardcoreSession,
   handleHardcoreButton, getHardcoreRecord, getHardcoreTop, cleanupStaleHardcoreSessions,
 };
 

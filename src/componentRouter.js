@@ -1,5 +1,7 @@
+const { MessageFlags } = require('discord.js');
 const { handleBetButton, handleBetModal } = require('./services/multiplayerGameService');
 const { handleBlackjackButton } = require('./services/blackjackService');
+const { handleBlackjackTableButton, getBlackjackTableLock } = require('./services/blackjackService');
 const { handleBlackjackDuelButton } = require('./services/blackjackDuelService');
 const { handlePokerButton, handlePokerPrivateButton, handlePokerModal } = require('./services/pokerService');
 const { handleHorseButton, handleHorseModal } = require('./services/horseRaceService');
@@ -33,6 +35,7 @@ const ROUTES = Object.freeze([
   { kind: 'select', prefix: 'xephang:', handle: interaction => leaderboardCommand.handleSelect(interaction) },
   { kind: 'select', prefix: 'trogiup:', handle: interaction => helpCommand.handleSelect(interaction) },
   { kind: 'select', prefix: 'checklist:', handle: interaction => checklistCommand.handleSelect(interaction) },
+  { kind: 'button', prefix: 'gacha-history:', handle: interaction => gachaCommand.handleHistoryButton(interaction) },
   { kind: 'button', prefix: 'gacha:', handle: interaction => gachaCommand.handleButton(interaction) },
   { kind: 'button', prefix: 'rpsbot:', handle: handleRpsBotButton },
   { kind: 'button', prefix: 'chinchiro:', handle: handleChinchiroButton },
@@ -48,6 +51,7 @@ const ROUTES = Object.freeze([
   { kind: 'button', prefix: 'mines:', handle: handleMinesButton },
   { kind: 'button', prefix: 'horserace:', handle: handleHorseButton },
   { kind: 'button', prefix: 'blackjack:', handle: handleBlackjackButton },
+  { kind: 'button', prefix: 'blackjack-table:', handle: handleBlackjackTableButton },
   { kind: 'button', prefix: 'gamebet:', handle: handleBetButton },
   { kind: 'modal', prefix: 'horserace-modal:', handle: handleHorseModal },
   { kind: 'modal', prefix: 'gamebet-modal:', handle: handleBetModal },
@@ -68,6 +72,12 @@ async function routeComponentInteraction(interaction, logger) {
   if (!kind) return false;
   const route = ROUTES.find(item => item.kind === kind && interaction.customId.startsWith(item.prefix));
   if (!route) return false;
+  const gameAction = /^(replay:|rpsbot:|chinchiro:|rpsduel:|bjduel:|poker:|poker-private:|hardcore:|mines:|horserace:|blackjack:|gamebet:|gamebet-modal:|poker-modal:|poker-private-modal:|horserace-modal:)/.test(interaction.customId);
+  if (gameAction && interaction.guildId && !interaction.customId.startsWith('blackjack-table:')
+    && getBlackjackTableLock(interaction.guildId, interaction.user.id)) {
+    await interaction.reply({ content: 'Bạn đang ở bàn Xì dách và chỉ có thể thao tác tại bàn đó cho đến khi ván kết thúc.', flags: MessageFlags.Ephemeral });
+    return true;
+  }
   await route.handle(interaction, logger);
   return true;
 }

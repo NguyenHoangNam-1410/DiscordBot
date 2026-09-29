@@ -13,6 +13,7 @@ const { handleGameMessage } = require('./services/gameMessageService');
 const { handleGamePrefix } = require('./services/gamePrefixService');
 const { resumeOpenRounds } = require('./services/multiplayerGameService');
 const { startBlackjackDuelMaintenance } = require('./services/blackjackDuelService');
+const { startBlackjackTableMaintenance } = require('./services/blackjackService');
 const { startPokerMaintenance } = require('./services/pokerService');
 const { resumeHorseRaces } = require('./services/horseRaceService');
 const { cleanupStaleHardcoreSessions } = require('./services/hardcoreService');
@@ -66,6 +67,7 @@ client.once(Events.ClientReady, () => {
   maintenanceTimers.push(startCommerceMaintenance(client, logger));
   maintenanceTimers.push(startRpsDuelMaintenance(client, logger));
   maintenanceTimers.push(startBlackjackDuelMaintenance(client, logger));
+  maintenanceTimers.push(startBlackjackTableMaintenance(client));
   maintenanceTimers.push(startPokerMaintenance(client, logger));
   backupManager = startDatabaseBackups(logger);
   logger.info({ user: client.user.tag, resumedRounds, resumedHorseRaces, expiredHardcoreRuns }, 'game bot ready');

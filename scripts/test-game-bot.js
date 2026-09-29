@@ -292,6 +292,9 @@ const shortFullHouse = pokerEngine.evaluateFive(['K♠', 'K♥', 'K♦', 'Q♣',
 assert(pokerEngine.compareHands(shortFlush, shortFullHouse) > 0);
 const omahaHand = pokerEngine.bestHand(['A♠', 'A♦', '2♣', '3♣', '4♣'], ['A♥', 'K♥', 'Q♥', 'J♥', '10♥'], 'omaha');
 assert.equal(omahaHand.name, 'Bộ ba');
+const omahaFullHouse = pokerEngine.bestHand(['Q♣', '2♥', 'A♦', '6♣', '10♦'], ['Q♠', 'K♥', 'K♣', 'Q♥'], 'omaha');
+assert.equal(omahaFullHouse.name, 'Cù lũ');
+assert.deepEqual(omahaFullHouse.kickers, [12, 13]);
 const potExample = pokerEngine.buildPots([
   { id: 'A', committed: 1000, folded: false }, { id: 'B', committed: 3000, folded: false }, { id: 'C', committed: 5000, folded: false },
 ]);

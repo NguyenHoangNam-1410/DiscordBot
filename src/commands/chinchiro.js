@@ -18,7 +18,7 @@ module.exports = {
       if (error.message === 'BET_LIMIT') return interaction.reply({ content: `Giới hạn cược Chinchiro của server là **${formatCoins(error.maxBet)} xu**.`, flags: MessageFlags.Ephemeral });
       return economyError(interaction, error);
     }
-    const response = await interaction.reply({ embeds: [chinchiroEmbed(started.state, interaction.user.id)],
+    const response = await interaction.reply({ embeds: [chinchiroEmbed(started.state, interaction.user.id, started.session?.id)],
       components: chinchiroRows(started.session?.id || 'complete', started.state), withResponse: true });
     const message = response?.resource?.message || response;
     if (!started.immediate && message?.id) setMessageId(started.session.id, message.id);

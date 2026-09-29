@@ -39,7 +39,7 @@ module.exports = {
         db.prepare('INSERT INTO vip_rewards(guild_id,user_id,claimed_at) VALUES(?,?,?)').run(guild, user, Date.now());
 
         addDiamonds(interaction.guildId, userId, 3000, { reason: 'vip_reward', operationId: `vip:${guild}:${user}` });
-        addInventory(interaction.guildId, userId, 'gacha_ticket_x10', 1, Date.now());
+        addInventory(interaction.guildId, userId, 'gacha_ticket_10', 1, Date.now());
 
         const progression = getPlayerProgression(interaction.guildId, userId);
 

@@ -1,17 +1,25 @@
 const { db } = require('../db');
 
 const CATALOG = Object.freeze([
-  { id: 'color_red', type: 'color', name: 'Đỏ Rực', value: '#ef4444' },
-  { id: 'color_violet', type: 'color', name: 'Tím Huyền Bí', value: '#a855f7', rarity: 'epic' },
-  { id: 'color_blue', type: 'color', name: 'Xanh Băng', value: '#38bdf8' },
-  { id: 'color_green', type: 'color', name: 'Xanh Lá', value: '#22c55e' },
-  { id: 'color_gold', type: 'color', name: 'Vàng Kim', value: '#fbbf24' },
-  { id: 'color_cyan', type: 'color', name: 'Xanh Cyan', value: '#22d3ee', rarity: 'epic' },
-  { id: 'color_rose', type: 'color', name: 'Hồng Rose', value: '#f472b6', rarity: 'epic' },
-  { id: 'color_emerald', type: 'color', name: 'Lục Bảo', value: '#34d399' },
-  { id: 'color_century', type: 'color', name: 'Hào Quang Bách Cấp', value: '#ff4fd8', rarity: 'mythic', shopEligible: false },
+  { id: 'color_black', type: 'color', emoji: '⚫', name: 'Đen Huyền', value: '#334155' },
+  { id: 'color_blue', type: 'color', emoji: '🔵', name: 'Xanh Lam', value: '#38bdf8' },
+  { id: 'color_brown', type: 'color', emoji: '🟤', name: 'Nâu Đất', value: '#92400e' },
+  { id: 'color_green', type: 'color', emoji: '🟢', name: 'Xanh Lá', value: '#22c55e' },
+  { id: 'color_orange', type: 'color', emoji: '🟠', name: 'Cam Tươi', value: '#f97316' },
+  { id: 'color_purple', type: 'color', emoji: '🟣', name: 'Tím Huyền Bí', value: '#a855f7' },
+  { id: 'color_red', type: 'color', emoji: '🔴', name: 'Đỏ Rực', value: '#ef4444' },
+  { id: 'color_white', type: 'color', emoji: '⚪', name: 'Trắng Sáng', value: '#f8fafc' },
+  { id: 'color_yellow', type: 'color', emoji: '🟡', name: 'Vàng Kim', value: '#fbbf24' },
+  { id: 'color_violet', type: 'color', emoji: '🟣', name: 'Tím Huyền Bí', value: '#a855f7', rarity: 'epic', shopEligible: false },
+  { id: 'color_gold', type: 'color', emoji: '🟡', name: 'Vàng Kim', value: '#fbbf24', rarity: 'rare', shopEligible: false },
+  { id: 'color_cyan', type: 'color', emoji: '🔵', name: 'Xanh Cyan', value: '#22d3ee', rarity: 'epic', shopEligible: false },
+  { id: 'color_rose', type: 'color', emoji: '🔴', name: 'Hồng Rose', value: '#f472b6', rarity: 'epic', shopEligible: false },
+  { id: 'color_emerald', type: 'color', emoji: '🟢', name: 'Lục Bảo', value: '#34d399', rarity: 'rare', shopEligible: false },
+  { id: 'color_century', type: 'color', emoji: '✨', name: 'Hào Quang Bách Cấp', value: '#ff4fd8', rarity: 'mythic', shopEligible: false },
 ]);
 const BY_ID = new Map(CATALOG.map(item => [item.id, item]));
+if (BY_ID.has('color_purple') && !BY_ID.has('color_violet')) BY_ID.set('color_violet', BY_ID.get('color_purple'));
+if (BY_ID.has('color_yellow') && !BY_ID.has('color_gold')) BY_ID.set('color_gold', BY_ID.get('color_yellow'));
 const DEFAULT_IDS = Object.freeze(['color_red']);
 const grantStatement = db.prepare('INSERT OR IGNORE INTO profile_cosmetics (guild_id,user_id,cosmetic_id,acquired_at) VALUES (?,?,?,?)');
 const loadoutStatement = db.prepare('SELECT * FROM profile_loadouts WHERE guild_id=? AND user_id=?');
@@ -22,7 +30,12 @@ const ensureProfileTx = db.transaction((guildId, userId, now) => {
   return loadoutStatement.get(guildId, userId);
 });
 function ensureProfile(guildId, userId, now = Date.now()) { return ensureProfileTx(String(guildId), String(userId), now); }
-function ownsCosmetic(guildId, userId, cosmeticId) { return Boolean(db.prepare('SELECT 1 FROM profile_cosmetics WHERE guild_id=? AND user_id=? AND cosmetic_id=?').get(String(guildId), String(userId), String(cosmeticId))); }
+function ownsCosmetic(guildId, userId, cosmeticId) {
+  const item = getCosmetic(cosmeticId);
+  const ids = item ? [item.id, String(cosmeticId)] : [String(cosmeticId)];
+  const placeholders = ids.map(() => '?').join(',');
+  return Boolean(db.prepare(`SELECT 1 FROM profile_cosmetics WHERE guild_id=? AND user_id=? AND cosmetic_id IN (${placeholders})`).get(String(guildId), String(userId), ...ids));
+}
 function getCosmetic(cosmeticId) { return BY_ID.get(String(cosmeticId)) || null; }
 function grantCosmetic(guildId, userId, cosmeticId, now = Date.now()) {
   const item = getCosmetic(cosmeticId); if (!item) throw new Error('UNKNOWN_COSMETIC'); ensureProfile(guildId, userId, now);
