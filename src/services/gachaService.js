@@ -40,7 +40,6 @@ function getGachaPity(guildId, userId) {
     .get(String(guildId), String(userId)) || { since_sr: 0, since_ssr: 0, since_ur: 0 };
 }
 function advancePity(pity, result) {
-  if (result.kind !== 'item') return;
   pity.since_sr = TIER_ORDER[result.tier] >= TIER_ORDER.SR ? 0 : pity.since_sr + 1;
   pity.since_ssr = TIER_ORDER[result.tier] >= TIER_ORDER.SSR ? 0 : pity.since_ssr + 1;
   pity.since_ur = TIER_ORDER[result.tier] >= TIER_ORDER.UR ? 0 : pity.since_ur + 1;
@@ -78,11 +77,9 @@ function pullGacha({ guildId, userId, pulls = 1, now = Date.now(), rolls = null,
     for (let index = 0; index < count; index += 1) {
       const normal = rollGacha(rolls?.[index], guildId, now, tierBoost);
       let minimum = null;
-      if (normal.kind === 'item') {
-        if (pity.since_ur >= 49) minimum = 'UR';
-        else if (pity.since_ssr >= 24) minimum = 'SSR';
-        else if (pity.since_sr >= 9) minimum = 'SR';
-      }
+      if (pity.since_ur >= 49) minimum = 'UR';
+      else if (pity.since_ssr >= 24) minimum = 'SSR';
+      else if (pity.since_sr >= 9) minimum = 'SR';
       if (index === count - 1 && paymentType === TICKETS[10] && !results.some(result => result.kind === 'item' && TIER_ORDER[result.tier] >= TIER_ORDER.SSR) && (TIER_ORDER[minimum] || 0) < TIER_ORDER.SSR) minimum = 'SSR';
       else if (index === count - 1 && paymentType === TICKETS[1] && (TIER_ORDER[minimum] || 0) < TIER_ORDER.SSR) minimum = 'SSR';
       else if (index === count - 1 && count === 10 && !results.some(result => result.kind === 'item' && TIER_ORDER[result.tier] >= TIER_ORDER.SR) && (TIER_ORDER[minimum] || 0) < TIER_ORDER.SR) minimum = 'SR';
@@ -103,6 +100,9 @@ function pullGacha({ guildId, userId, pulls = 1, now = Date.now(), rolls = null,
     return { pulls: count, diamondCost, paymentType, usedFreePull: paymentType === TICKETS[1], results, progression: levels.getPlayerProgression(guildId, userId, now), tickets: getTicketBalances(guildId, userId), pity, duplicate: false };
   })());
 }
-function cleanupGachaHistory() { return 0; }
+function cleanupGachaHistory(now = Date.now(), retentionDays = Number(process.env.GACHA_HISTORY_RETENTION_DAYS) || 180) {
+  const days = Math.max(7, Math.min(3650, Math.floor(retentionDays)));
+  return db.prepare('DELETE FROM gacha_history WHERE created_at<?').run(now - days * 86_400_000).changes;
+}
 
 module.exports = { COSTS, TICKETS, rollGacha, rollGuaranteedHigh, pullGacha, getTicketBalances, getGachaPity, getGachaHistory, cleanupGachaHistory };

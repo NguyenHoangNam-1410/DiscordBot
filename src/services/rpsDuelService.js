@@ -207,7 +207,7 @@ async function handleRpsDuelButton(interaction) {
     }
     if (action === 'choose') {
       const result = chooseHand(id, interaction.user.id, choice);
-      return interaction.message.edit({ embeds: [duelEmbed(result.duel, result)], components: result.completed ? replayButtons(result.duel) : handButtons(id) });
+      return interaction.update({ embeds: [duelEmbed(result.duel, result)], components: result.completed ? replayButtons(result.duel) : handButtons(id), allowedMentions: { parse: [] } });
     }
   } catch (error) {
     if (error.message === 'BET_LIMIT') return interaction.reply({ content: `Giới hạn cược Oẳn tù tì hiện tại là **${formatCoins(error.maxBet)} xu**.`, flags: MessageFlags.Ephemeral });

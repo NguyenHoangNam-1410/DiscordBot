@@ -84,6 +84,72 @@ function bet(guildId, roundId, userId, choice, amount) {
   assert.match(replies[0].content, /Đã buộc kết thúc/);
   assert.equal(balance(quantriGuild, 'alice'), START);
 
+  // Nút chọn Oẳn tù tì phải xác nhận interaction
+  const acknowledgeGuild = 'rps-ack';
+  const ackDuel = rps.createDuel({ guildId: acknowledgeGuild, channelId: 'c', challengerId: 'alice', opponentId: 'bob', stake: 100 });
+  rps.acceptDuel(ackDuel.id, 'bob');
+  const ackCalls = [];
+  const press = async (userId, choice) => {
+    const calls = [];
+    await rps.handleRpsDuelButton({ customId: `rpsduel:${ackDuel.id}:choose:${choice}`, guildId: acknowledgeGuild, channelId: 'c', user: { id: userId },
+      update: async payload => { calls.push(payload); return payload; },
+      reply: async payload => { calls.push({ reply: payload }); return payload; },
+      message: { edit: async () => { throw new Error('không được sửa message mà không xác nhận interaction'); } } });
+    return calls;
+  };
+  const firstPress = await press('alice', 'bua'); ackCalls.push(firstPress);
+  assert.equal(firstPress.length, 1); assert(firstPress[0].embeds, 'lượt chọn đầu phải cập nhật embed qua interaction.update');
+  const secondPress = await press('bob', 'keo'); ackCalls.push(secondPress);
+  assert.equal(secondPress.length, 1); assert(secondPress[0].embeds && secondPress[0].components.length, 'lượt chọn cuối cập nhật embed kết quả kèm nút tái đấu');
+
+  // Hủy đua ngựa đang chạy: dừng animation và không ghi đè thông báo hủy
+  const horse = require('../src/services/horseRaceService');
+  const horseRepo = require('../src/services/horseRaceRepository');
+  const { createFairness } = require('../src/services/fairnessService');
+  const raceGuild = 'cancel-race';
+  const market = horse.generateRaceMarket(Date.now(), { forceSpecial: false });
+  const raceId = crypto.randomBytes(4).toString('hex');
+  horseRepo.createRound({ id: raceId, guild_id: raceGuild, channel_id: 'c', status: 'open', closes_at: Date.now() - 1, created_at: Date.now() }, { market, fair: createFairness() });
+  db.prepare('UPDATE multiplayer_rounds SET message_id=? WHERE id=?').run('msg-1', raceId);
+  economy.spendCoins({ guildId: raceGuild, userId: 'alice', amount: 100, reason: 'test-horse' });
+  horseRepo.addBet(raceId, 'alice', market.selected[0], 100);
+  const raceEdits = [];
+  const fakeClient = { channels: { fetch: async () => ({ messages: { fetch: async () => ({ edit: async payload => {
+    raceEdits.push(payload);
+    if (raceEdits.length === 2) forceEndSharedRound(raceId, raceGuild, 'admin');
+    return payload;
+  } }) } }) } };
+  const raceResult = await horse.settleHorseRace(raceId, fakeClient, { error() {}, warn() {}, info() {} }, market.selected[0]);
+  assert.equal(raceResult, null, 'ván bị hủy không được chốt kết quả');
+  assert.equal(raceEdits.length, 2, 'không được phát thêm frame sau khi ván bị hủy');
+  assert.equal(db.prepare('SELECT status FROM multiplayer_rounds WHERE id=?').get(raceId).status, 'cancelled');
+  assert.equal(balance(raceGuild, 'alice'), START, 'phải hoàn cược đua ngựa bị hủy');
+
+  // Dọn ván bị hủy và lịch sử Gacha
+  const oldTime = Date.now() - 30 * 86_400_000;
+  const oldStatuses = ['closed', 'cancelled', 'open'];
+  const oldRoundIds = oldStatuses.map(status => {
+    const id = crypto.randomBytes(4).toString('hex');
+    db.prepare('INSERT INTO multiplayer_rounds (id,guild_id,game,channel_id,message_id,status,closes_at,result_json,created_at) VALUES (?,?,?,?,NULL,?,?,?,?)').run(id, 'cleanup', 'baucua', 'c', status, oldTime, '{}', oldTime);
+    db.prepare('INSERT INTO multiplayer_bets (round_id,user_id,choice,amount,created_at,updated_at) VALUES (?,?,?,?,?,?)').run(id, 'alice', 'bau', 10, oldTime, oldTime);
+    return id;
+  });
+  const recentCancelled = crypto.randomBytes(4).toString('hex');
+  db.prepare("INSERT INTO multiplayer_rounds (id,guild_id,game,channel_id,message_id,status,closes_at,result_json,created_at) VALUES (?,?,?,?,NULL,'cancelled',?,?,?)").run(recentCancelled, 'cleanup', 'baucua', 'c', Date.now(), '{}', Date.now());
+  assert.equal(multiplayer.cleanupOldRounds({}), 2, 'chỉ xóa ván closed và cancelled đã quá hạn');
+  const exists = id => Boolean(db.prepare('SELECT 1 FROM multiplayer_rounds WHERE id=?').get(id));
+  assert.equal(exists(oldRoundIds[0]), false); assert.equal(exists(oldRoundIds[1]), false);
+  assert.equal(exists(oldRoundIds[2]), true, 'ván đang mở không được xóa'); assert.equal(exists(recentCancelled), true);
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM multiplayer_bets WHERE round_id IN (?,?)').get(oldRoundIds[0], oldRoundIds[1]).count, 0);
+
+  const gachaService = require('../src/services/gachaService');
+  const insertHistory = (userId, createdAt) => db.prepare("INSERT INTO gacha_history(guild_id,user_id,pulls,diamond_cost,results_json,created_at,operation_id,payment_type) VALUES('cleanup',?,1,100,'[]',?,NULL,'diamonds')").run(userId, createdAt);
+  insertHistory('old', Date.now() - 200 * 86_400_000); insertHistory('mid', Date.now() - 100 * 86_400_000); insertHistory('new', Date.now() - 1_000);
+  assert.equal(gachaService.cleanupGachaHistory(Date.now(), 180), 1, 'mặc định giữ 180 ngày');
+  assert.equal(gachaService.cleanupGachaHistory(Date.now(), 30), 1, 'retention tùy chỉnh phải có tác dụng');
+  assert.equal(gachaService.cleanupGachaHistory(Date.now(), 1), 0, 'retention tối thiểu 7 ngày');
+  assert.deepEqual(db.prepare("SELECT user_id FROM gacha_history WHERE guild_id='cleanup'").all().map(row => row.user_id), ['new']);
+
   // Poker với bot: hoàn đúng số xu đã trừ, không tạo thêm xu từ stack bàn
   const poker = require('../src/services/pokerService');
   const pokerGuild = 'force-poker';
