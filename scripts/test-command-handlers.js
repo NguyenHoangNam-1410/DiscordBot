@@ -88,6 +88,7 @@ async function run() {
   assert.equal(gachaFollowUps.length, 1);
   assert.equal(gachaFollowUps[0].components[0].components.length, 2);
 
+  assert.match(require('../src/commands/nhiemvu').rewardText({ coins: 30000, diamonds: 100, item: 'rps_counter_charm', quantity: 1 }), /Bùa Khắc Chế ×1/);
   assert.deepEqual(require('../src/commands/nhiemvu').data.toJSON().options.map(option => option.name), ['kiemtra', 'nhan', 'diemdanh', 'tanthu']);
   const claimAll = interaction({ options: { getSubcommand: () => 'nhan', getString: () => null } });
   await require('../src/commands/nhiemvu').execute(claimAll);
