@@ -61,6 +61,16 @@ const pkText = JSON.stringify(poker.pokerEmbed(pkState, 'u', 'sid').toJSON());
 for (const name of ['cardSpades2', 'cardHearts3', 'cardDiamonds4', 'cardSpadesA', 'cardSpadesK', 'cardClubsQ', 'cardDiamonds7']) assert(pkText.includes(`<:${name}:${id(name)}>`), `thiếu ${name}`);
 assert(pkText.includes('<:cardBack_blue1:999>'), 'lá chưa mở dùng lưng bài');
 assert(!pkText.includes('J♣') && !pkText.includes('cardClubsJ') && !pkText.includes('cardDiamonds8'), 'lá tẩy của bot không bị lộ');
+// dòng bài dạng tiêu đề cấp 1 để emoji hiển thị lớn; chưa có emoji thì giữ tiêu đề cũ
+const pkDescription = poker.pokerEmbed(pkState, 'u', 'sid').toJSON().description;
+assert(/^# <:cardSpades2:/m.test(pkDescription) && /^# <:cardSpadesA:/m.test(pkDescription), 'bài chung và bài của bạn dùng tiêu đề lớn');
+assert(/^### 🤖 Luna$/m.test(pkDescription) && /^# <:cardClubsQ:/m.test(pkDescription), 'bot: tên một dòng, lá bài tiêu đề lớn ở dòng dưới');
+const bjDescription = blackjack.blackjackEmbed(bjState, 'u', null, 'sid').toJSON().description;
+assert(/^# <:cardDiamonds9:/m.test(bjDescription) && /^# <:cardSpadesA:/m.test(bjDescription) && /\*\*21 điểm\*\*/.test(bjDescription));
+appEmoji.setApplicationEmojisForTest([]);
+const plainPoker = poker.pokerEmbed(pkState, 'u', 'sid').toJSON().description;
+assert(/^### \*\*2♠\*\*/m.test(plainPoker) && !/^# /m.test(plainPoker), 'không có emoji thì giữ cỡ chữ cũ');
+appEmoji.setApplicationEmojisForTest([...registry, ['cardBack_blue1', '999']]);
 // nút chọn lá bỏ (Pineapple)
 const discardRows = poker.pokerRows('sid', { ...pkState, phase: 'discard', players: [{ ...pkState.players[0], hole: ['A♠', 'K♠', '2♦'] }, ...pkState.players.slice(1)] }).map(row => row.toJSON());
 assert.equal(discardRows[0].components.length, 3); assert(discardRows[0].components.every(button => button.label === 'Bỏ' && button.emoji?.id));
