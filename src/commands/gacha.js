@@ -21,7 +21,7 @@ function gachaRows(ownerId, progression, tickets = { single: 0, ten: 0 }) {
   )];
 }
 function resultPayload(result, ownerId) {
-  const payment = result.paymentType === TICKETS[1] ? '🎟️ Vé Gacha ×1 · SSR' : result.paymentType === TICKETS[10] ? '🎟️ Vé Gacha ×10 · UR' : `${result.diamondCost.toLocaleString('vi-VN')} :gem:`;
+  const payment = result.paymentType === TICKETS[1] ? '🎟️ Vé Gacha ×1 · SSR' : result.paymentType === TICKETS[10] ? '🎟️ Vé Gacha ×10 · SSR+' : `${result.diamondCost.toLocaleString('vi-VN')} :gem:`;
   const embed = new EmbedBuilder().setColor(result.results.some(x => x.tier === 'UR') ? 0xED4245 : 0x9B59B6)
     .setTitle(`🎰 GACHA · ${result.pulls} LƯỢT`).setDescription(groupedLines(result.results))
     .addFields(
@@ -78,7 +78,7 @@ module.exports = {
   data: new SlashCommandBuilder().setName('gacha').setDescription('Quay Gacha bằng vé hoặc kim cương')
     .addSubcommand(command => command.setName('quay').setDescription('Quay Gacha, ưu tiên vé trước kim cương')
       .addIntegerOption(option => option.setName('luot').setDescription('Số lượt quay').setRequired(true)
-        .addChoices({ name: '1 lượt · vé SSR hoặc 100 kim cương', value: 1 }, { name: '10 lượt · vé UR hoặc 900 kim cương', value: 10 })))
+        .addChoices({ name: '1 lượt · vé SSR hoặc 100 kim cương', value: 1 }, { name: '10 lượt · vé ×10 hoặc 900 kim cương', value: 10 })))
     .addSubcommand(command => command.setName('lichsu').setDescription('Xem lịch sử Gacha của bạn')),
   async execute(interaction) {
     if (!interaction.guildId) return interaction.reply({ content: 'Lệnh này chỉ dùng trong server.', flags: MessageFlags.Ephemeral });

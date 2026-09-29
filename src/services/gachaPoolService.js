@@ -20,20 +20,34 @@ const DEFAULT_ENTRIES = Object.freeze([
   { rewardKey: 'poker_insurance', kind: 'item', itemId: 'poker_insurance', name: 'Bảo Hiểm Cược Poker', tier: 'SSR', amount: 1, weight: 250 },
   { rewardKey: 'chinchiro_otsuki_dice', kind: 'item', itemId: 'chinchiro_otsuki_dice', name: 'Xúc Xắc Của Quản Đốc', tier: 'SSR', amount: 1, weight: 250 },
   { rewardKey: 'divine_eye', kind: 'item', itemId: 'divine_eye', name: 'Mắt Thần', tier: 'UR', amount: 1, weight: 100 },
-  { rewardKey: 'gacha_ticket_10', kind: 'item', itemId: 'gacha_ticket_10', name: 'Vé Gacha ×10 · UR', tier: 'UR', amount: 1, weight: 100 },
+  { rewardKey: 'gacha_ticket_10', kind: 'item', itemId: 'gacha_ticket_10', name: 'Vé Gacha ×10', tier: 'UR', amount: 1, weight: 100 },
   { rewardKey: 'blackjack_ace', kind: 'item', itemId: 'blackjack_ace', name: 'Át Chủ Bài', tier: 'UR', amount: 1, weight: 100 },
   { rewardKey: 'horse_jackpot', kind: 'item', itemId: 'horse_jackpot', name: 'Trúng Đậm', tier: 'UR', amount: 1, weight: 100 },
   { rewardKey: 'living_dictionary', kind: 'item', itemId: 'living_dictionary', name: 'Từ Điển Sống', tier: 'UR', amount: 1, weight: 100 },
   { rewardKey: 'vietnamese_syllable_lengths', kind: 'item', itemId: 'vietnamese_syllable_lengths', name: 'Đếm Âm Tiết', tier: 'SR', amount: 1, weight: 400 },
   { rewardKey: 'vietnamese_first_word', kind: 'item', itemId: 'vietnamese_first_word', name: 'Mở Đầu Từ Điển', tier: 'SSR', amount: 1, weight: 250 },
   { rewardKey: 'chinchiro_karma_charm', kind: 'item', itemId: 'chinchiro_karma_charm', name: 'Bùa Trả Đũa', tier: 'UR', amount: 1, weight: 100 },
+  { rewardKey: 'vietnamese_first_letter', kind: 'item', itemId: 'vietnamese_first_letter', name: 'Chữ Cái Khai Màn', tier: 'R', amount: 1, weight: 250 },
+  { rewardKey: 'vietnamese_word_count', kind: 'item', itemId: 'vietnamese_word_count', name: 'Máy Đếm Tiếng', tier: 'R', amount: 1, weight: 250 },
+  { rewardKey: 'mines_row_scanner', kind: 'item', itemId: 'mines_row_scanner', name: 'Máy Quét Hàng', tier: 'R', amount: 1, weight: 250 },
+  { rewardKey: 'mines_column_scanner', kind: 'item', itemId: 'mines_column_scanner', name: 'Máy Quét Cột', tier: 'R', amount: 1, weight: 250 },
+  { rewardKey: 'baucua_small_lens', kind: 'item', itemId: 'baucua_small_lens', name: 'Kính Lúp Nứt', tier: 'R', amount: 1, weight: 250 },
+  { rewardKey: 'taixiu_total_scope', kind: 'item', itemId: 'taixiu_total_scope', name: 'Ống Ngắm Tổng Điểm', tier: 'R', amount: 1, weight: 250 },
+  { rewardKey: 'horse_consolation', kind: 'item', itemId: 'horse_consolation', name: 'Vé Khán Đài', tier: 'R', amount: 1, weight: 250 },
+  { rewardKey: 'rps_loss_shield', kind: 'item', itemId: 'rps_loss_shield', name: 'Bùa Giảm Đau', tier: 'R', amount: 1, weight: 250 },
+  { rewardKey: 'blackjack_bust_guard', kind: 'item', itemId: 'blackjack_bust_guard', name: 'Miếng Đệm Quắc', tier: 'R', amount: 1, weight: 250 },
+  { rewardKey: 'poker_fold_coupon', kind: 'item', itemId: 'poker_fold_coupon', name: 'Phiếu Bỏ Bài', tier: 'R', amount: 1, weight: 250 },
+  { rewardKey: 'taixiu_edge_insurance', kind: 'item', itemId: 'taixiu_edge_insurance', name: 'Bảo Hiểm Sát Nút', tier: 'SR', amount: 1, weight: 300 },
+  { rewardKey: 'baucua_blank_insurance', kind: 'item', itemId: 'baucua_blank_insurance', name: 'Bảo Hiểm Trắng Tay', tier: 'SSR', amount: 1, weight: 200 },
+  { rewardKey: 'vietnamese_extra_time', kind: 'item', itemId: 'vietnamese_extra_time', name: 'Đồng Hồ Gia Hạn', tier: 'SSR', amount: 1, weight: 200 },
+  { rewardKey: 'effect_cleanser', kind: 'item', itemId: 'effect_cleanser', name: 'Nước Thanh Tẩy', tier: 'SSR', amount: 1, weight: 200 },
 ]);
 
 function configuredRows(guildId) {
   return db.prepare('SELECT * FROM gacha_pool_entries WHERE guild_id=?').all(String(guildId));
 }
 
-function listGachaPool(guildId, { luckMultiplier = 1 } = {}) {
+function listGachaPool(guildId, { luckMultiplier = 1, tierMultipliers = {} } = {}) {
   const overrides = new Map(configuredRows(guildId).map(row => [row.reward_key, row]));
   const defaults = DEFAULT_ENTRIES.map(entry => {
     const row = overrides.get(entry.rewardKey);
@@ -46,7 +60,7 @@ function listGachaPool(guildId, { luckMultiplier = 1 } = {}) {
     name: row.display_name, tier: row.tier, amount: row.amount, weight: row.weight, customized: true }));
   const multiplier = Number.isFinite(Number(luckMultiplier)) ? Math.max(1, Number(luckMultiplier)) : 1;
   const entries = [...defaults, ...custom].map(entry => ({ ...entry,
-    effectiveWeight: entry.kind === 'item' ? Math.round(entry.weight * multiplier) : entry.weight }));
+    effectiveWeight: entry.kind === 'item' ? Math.round(entry.weight * multiplier * (Number(tierMultipliers[entry.tier]) || 1)) : entry.weight }));
   const total = entries.reduce((sum, entry) => sum + entry.effectiveWeight, 0);
   return entries.map(entry => ({ ...entry, rate: total ? entry.effectiveWeight / total * 100 : 0 }));
 }

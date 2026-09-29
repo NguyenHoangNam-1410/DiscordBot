@@ -55,6 +55,8 @@ function errorText(error) {
     QUESTION_EXPIRED: 'Câu hỏi khó đã hết thời gian; vật phẩm không bị trừ.',
     HIGHER_EFFECT_ACTIVE: 'Ván này đã có hiệu ứng bậc cao hơn; chỉ hiệu ứng cao nhất được tính và vật phẩm không bị trừ.',
     EFFECT_ALREADY_ACTIVE: 'Hiệu ứng này đã sẵn sàng; không thể cộng dồn và vật phẩm không bị trừ.',
+    NO_EFFECT_TO_REMOVE: 'Bạn không có hiệu ứng vật phẩm nào đang chờ để hủy; Nước Thanh Tẩy không bị trừ.',
+    ALREADY_EXTENDED: 'Câu hỏi này đã được gia hạn; vật phẩm không bị trừ.',
     ITEM_NOT_USABLE: 'Vật phẩm này không thể sử dụng trực tiếp.',
   };
   return map[error.message] || 'Không thể sử dụng vật phẩm lúc này.';

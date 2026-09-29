@@ -434,7 +434,7 @@ CREATE TABLE IF NOT EXISTS onboarding_claims (
   PRIMARY KEY (guild_id,user_id)
 );
 
-CREATE TABLE IF NOT EXISTS vip_rewards (
+CREATE TABLE IF NOT EXISTS newbie_bonus_claims (
   guild_id TEXT NOT NULL,
   user_id TEXT NOT NULL,
   claimed_at INTEGER NOT NULL,

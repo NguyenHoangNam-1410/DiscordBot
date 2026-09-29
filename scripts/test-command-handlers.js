@@ -68,7 +68,7 @@ async function run() {
   assert.equal(levels.getPlayerProgression('silent-admin-guild', '123456789').diamonds, 25);
   if (previousAdmin === undefined) delete process.env.ADMIN_USER_ID; else process.env.ADMIN_USER_ID = previousAdmin;
   levels.addDiamonds('command-guild', 'alice', 100, { operationId: 'command-gacha-fund', reason: 'test' });
-  const gachaMock = interaction({ options: { getInteger: () => 1 } });
+  const gachaMock = interaction({ options: { getSubcommand: () => 'quay', getInteger: () => 1 } });
   await require('../src/commands/gacha').execute(gachaMock);
   assert.equal(gachaMock.replies.length, 1);
   assert.equal(gachaMock.replies[0].components[0].components.length, 2);
@@ -76,13 +76,38 @@ async function run() {
 
   levels.addDiamonds('command-guild', 'alice', 1_000, { operationId: 'command-gacha-button-fund', reason: 'test' });
   const gachaUpdates = [];
+  const gachaFollowUps = [];
   await require('../src/commands/gacha').handleButton({
     id: 'gacha-button-1', customId: 'gacha:alice:1', guildId: 'command-guild', user: { id: 'alice' },
     update: async payload => { gachaUpdates.push(payload); return payload; },
+    followUp: async payload => { gachaFollowUps.push(payload); return payload; },
     reply: async payload => payload,
   });
   assert.equal(gachaUpdates.length, 1);
-  assert.equal(gachaUpdates[0].components[0].components.length, 2);
+  assert.equal(gachaUpdates[0].components.length, 0);
+  assert.equal(gachaFollowUps.length, 1);
+  assert.equal(gachaFollowUps[0].components[0].components.length, 2);
+
+  const nhiemvuKiemtra = interaction({ options: { getSubcommand: () => 'kiemtra' } });
+  await require('../src/commands/nhiemvu').execute(nhiemvuKiemtra);
+  assert.match(nhiemvuKiemtra.replies[0].embeds[0].toJSON().title, /KIỂM TRA/);
+  assert.equal(nhiemvuKiemtra.replies[0].components[0].components[0].options.length, 8);
+  const kiemtraUpdates = [];
+  const kiemtraSelect = values => ({
+    customId: 'kiemtra:alice', values, guildId: 'command-guild', user: { id: 'alice' },
+    update: async payload => { kiemtraUpdates.push(payload); return payload; }, reply: async payload => payload,
+  });
+  await require('../src/commands/kiemtra').handleSelect(kiemtraSelect(['tanthu']));
+  assert.match(kiemtraUpdates[0].embeds[0].toJSON().title, /ĐÃ NHẬN THƯỞNG TÂN THỦ/);
+  await require('../src/commands/kiemtra').handleSelect(kiemtraSelect(['tanthu']));
+  assert.match(kiemtraUpdates[1].embeds[0].toJSON().description, /đã nhận thưởng tân thủ trước đây/);
+  const newbieAgain = interaction({ options: { getSubcommand: () => 'tanthu' } });
+  await require('../src/commands/nhiemvu').execute(newbieAgain);
+  assert.match(newbieAgain.replies[0].content, /đã nhận thưởng tân thủ/);
+  assert.equal(require('../src/services/gachaService').getTicketBalances('command-guild', 'alice').ten, 1);
+  const foreign = [];
+  await require('../src/commands/kiemtra').handleSelect({ ...kiemtraSelect(['ngay']), user: { id: 'bob' }, reply: async payload => { foreign.push(payload); return payload; } });
+  assert.equal(foreign.length, 1);
 
   const help = require('../src/commands/trogiup');
   assert.equal(help.helpRow('alice').components[0].options.length, help.TABS.length);

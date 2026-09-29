@@ -5,7 +5,7 @@ const games = require('./funGameService');
 const mines = require('./minesService');
 const { getCatalogItem } = require('./itemCatalogService');
 const { consumeInventory, getInventoryQuantity, equipOwnedCosmetic } = require('./shopService');
-const { getActiveEffect, addEffectCharge, consumeActiveEffect } = require('./effectStateService');
+const { getActiveEffect, addEffectCharge, consumeActiveEffect, listActiveEffects, removeActiveEffect } = require('./effectStateService');
 const { formatCoins } = require('../utils/economy');
 const { bonusDropText } = require('../utils/progressionView');
 
@@ -38,11 +38,34 @@ function useBaucuaMagnifier(guildId, channelId) {
   return { round, message: `🔎 Hai linh vật chắc chắn **không xuất hiện** trong ván \`${round.id}\`: ${absent.map(key => `${service.BAUCUA[key][0]} **${service.BAUCUA[key][1]}**`).join(' · ')}` };
 }
 
+function useBaucuaSmallLens(guildId, channelId) {
+  const round = activeSharedRound(guildId, channelId, 'baucua');
+  if (!round) throw new Error('NO_ACTIVE_SHARED_ROUND');
+  const stored = storedRoundResult(round);
+  const service = require('./multiplayerGameService');
+  const result = service.rollResult('baucua', null, stored.fair?.serverSeed);
+  const absent = Object.keys(service.BAUCUA).filter(symbol => !result.symbols.includes(symbol));
+  const pick = absent[crypto.randomInt(absent.length)];
+  return { round, message: `🔍 Một linh vật chắc chắn **không xuất hiện** trong ván \`${round.id}\`: ${service.BAUCUA[pick][0]} **${service.BAUCUA[pick][1]}**` };
+}
+
+const TOTAL_SCOPES = Object.freeze([[3, 7], [8, 13], [14, 18]]);
+function useTaixiuTotalScope(guildId, channelId) {
+  const round = activeSharedRound(guildId, channelId, 'taixiu');
+  if (!round) throw new Error('NO_ACTIVE_SHARED_ROUND');
+  const stored = storedRoundResult(round);
+  const result = require('./multiplayerGameService').rollResult('taixiu', null, stored.fair?.serverSeed, stored.modifiers);
+  const [low, high] = TOTAL_SCOPES.find(([from, to]) => result.total >= from && result.total <= to);
+  stored.modifiers = { ...(stored.modifiers || {}), scopeRevealed: true };
+  db.prepare('UPDATE multiplayer_rounds SET result_json=? WHERE id=?').run(JSON.stringify(stored), round.id);
+  return { round, message: `🔭 Tổng điểm ván Tài xỉu \`${round.id}\` nằm trong khoảng **${low}–${high}**.` };
+}
+
 function useMagneticDice(guildId, channelId) {
   const round = activeSharedRound(guildId, channelId, 'taixiu');
   if (!round) throw new Error('NO_ACTIVE_SHARED_ROUND');
   const stored = storedRoundResult(round);
-  if (stored.modifiers?.noTriple) throw new Error('ROUND_EFFECT_ACTIVE');
+  if (stored.modifiers?.noTriple || stored.modifiers?.scopeRevealed) throw new Error('ROUND_EFFECT_ACTIVE');
   stored.modifiers = { ...(stored.modifiers || {}), noTriple: true };
   db.prepare('UPDATE multiplayer_rounds SET result_json=? WHERE id=?').run(JSON.stringify(stored), round.id);
   return { round, message: `🧲 Ván Tài xỉu \`${round.id}\` đã loại bỏ hoàn toàn khả năng ra **Bộ ba**.` };
@@ -79,6 +102,39 @@ function useMinesRadar(guildId, userId, channelId) {
   return `📡 Radar quét vùng quanh **ô ${center + 1}** (${cells.map(cell => cell + 1).join(', ')}) và phát hiện chính xác **${mineCount} mìn**.`;
 }
 
+function useMinesScanner(guildId, userId, channelId, effect) {
+  const session = mines.getMinesByUser(guildId, userId);
+  if (!session || session.channel_id !== String(channelId)) throw new Error('NO_ACTIVE_MINES');
+  const state = JSON.parse(session.state_json);
+  if (state.blastShield && !state.shieldUsed) throw new Error('HIGHER_EFFECT_ACTIVE');
+  const isRow = effect === 'mines_row_scanner'; const columns = 5; const rows = mines.CELL_COUNT / columns;
+  const lineCells = line => Array.from({ length: isRow ? columns : rows }, (_, index) => isRow ? line * columns + index : index * columns + line);
+  const candidates = Array.from({ length: isRow ? rows : columns }, (_, line) => line).filter(line => lineCells(line).some(cell => !state.opened.includes(cell)));
+  if (!candidates.length) throw new Error('NO_RADAR_AREA');
+  const line = candidates[crypto.randomInt(candidates.length)]; const cells = lineCells(line);
+  const mineCount = cells.filter(cell => state.mines.includes(cell)).length;
+  return `${isRow ? '↔️' : '↕️'} ${isRow ? 'Hàng' : 'Cột'} **${line + 1}** (ô ${cells.map(cell => cell + 1).join(', ')}) có chính xác **${mineCount} mìn**.`;
+}
+
+function useVietnameseExtraTime(guildId, channelId) {
+  if (!channelHasGame(guildId, channelId, 'vuatiengviet')) throw new Error('WRONG_EFFECT_CHANNEL');
+  const result = games.extendVuaChallenge(guildId);
+  if (result.error === 'NO_SESSION') throw new Error('NO_ACTIVE_GAME');
+  if (result.error === 'HARD_QUESTION_REQUIRED') throw new Error('HARD_QUESTION_REQUIRED');
+  if (result.error === 'EXPIRED') throw new Error('QUESTION_EXPIRED');
+  if (result.error) throw new Error('ALREADY_EXTENDED');
+  return `⏱️ Đồng Hồ Gia Hạn cộng **${result.seconds} giây** cho câu khó hiện tại — hết hạn <t:${Math.floor(result.question.expiresAt / 1000)}:R>.`;
+}
+
+function removePendingEffect(guildId, userId) {
+  const armed = new Set(Object.keys(ARMED_MESSAGES));
+  const target = listActiveEffects(guildId, userId).find(row => armed.has(row.effect_id));
+  if (!target) throw new Error('NO_EFFECT_TO_REMOVE');
+  removeActiveEffect(guildId, userId, target.effect_id);
+  const item = require('./itemCatalogService').CATALOG.find(entry => entry.effect === target.effect_id);
+  return `🧼 Đã hủy hiệu ứng chờ **${item?.name || target.effect_id}**. Bạn có thể kích hoạt vật phẩm khác.`;
+}
+
 function useLivingDictionary(guildId, channelId, userId) {
   if (!channelHasGame(guildId, channelId, 'vuatiengviet')) throw new Error('WRONG_EFFECT_CHANNEL');
   const session = games.getVuaSession(guildId);
@@ -99,13 +155,14 @@ function useVietnameseHint(guildId, channelId, effect) {
   if (!session) throw new Error('NO_ACTIVE_GAME');
   if (games.isExpiredChallenge(session.question)) throw new Error('QUESTION_EXPIRED');
   const syllables = String(session.question.answer).trim().split(/\s+/u);
+  if (effect === 'quiz_first_letter') return `🔤 Gợi ý riêng cho bạn: đáp án bắt đầu bằng chữ **${Array.from(syllables[0])[0].toLocaleUpperCase('vi-VN')}**.`;
+  if (effect === 'quiz_word_count') return `🔢 Gợi ý riêng cho bạn: đáp án có **${syllables.length} tiếng**.`;
   if (effect === 'quiz_first_word') return `🔎 Gợi ý riêng cho bạn: tiếng đầu tiên trong đáp án là **${syllables[0]}**.`;
   const lengths = syllables.map(word => Array.from(word).length);
   return `🔢 Gợi ý riêng cho bạn: số chữ cái mỗi tiếng là **[${lengths.join('] [')}]**.`;
 }
 
-function armedMessage(item) {
-  const messages = {
+const ARMED_MESSAGES = {
     blackjack_redraw: '🃏 Thẻ Rút Lại đã sẵn sàng cho ván Xì dách kế tiếp.',
     blackjack_swap: '🃏 Lệnh Bài Đổi Trắng đã sẵn sàng cho ván Xì dách kế tiếp.',
     blackjack_first_ace: '🅰️ Át Chủ Bài đã sẵn sàng cho ván Xì dách kế tiếp.',
@@ -119,9 +176,14 @@ function armedMessage(item) {
     chinchiro_weighted_dice: '🎲 Xúc Xắc Chì đã sẵn sàng cho ván Chinchiro kế tiếp.',
     chinchiro_otsuki_dice: '🎲 Xúc Xắc Của Quản Đốc đã sẵn sàng cho ván Chinchiro kế tiếp.',
     chinchiro_karma: '🪬 Bùa Trả Đũa đã sẵn sàng và chỉ tiêu khi bạn ra Hifumi.',
-  };
-  return messages[item.effect];
-}
+    taixiu_edge_insurance: '🛡️ Bảo Hiểm Sát Nút đã sẵn sàng; chỉ tiêu khi được hoàn ở ván Tài xỉu.',
+    baucua_blank_insurance: '☂️ Bảo Hiểm Trắng Tay đã sẵn sàng; chỉ tiêu khi được hoàn ở ván Bầu cua.',
+    horse_consolation: '🎫 Vé Khán Đài đã sẵn sàng; chỉ tiêu khi ngựa bạn chọn về ba.',
+    rps_loss_shield: '🩹 Bùa Giảm Đau đã sẵn sàng; chỉ tiêu khi bạn thua bot.',
+    blackjack_bust_guard: '🧷 Miếng Đệm Quắc đã sẵn sàng; chỉ tiêu khi bạn quắc đúng 22 điểm.',
+    poker_fold_coupon: '🏳️ Phiếu Bỏ Bài đã sẵn sàng; chỉ tiêu khi bạn bỏ bài ở Flop chưa bỏ thêm xu.',
+};
+function armedMessage(item) { return ARMED_MESSAGES[item.effect]; }
 
 function useItem({ guildId, userId, channelId, itemId }) {
   const item = getCatalogItem(itemId);
@@ -129,11 +191,16 @@ function useItem({ guildId, userId, channelId, itemId }) {
   if (item.type === 'gacha') throw new Error('ITEM_NOT_USABLE');
   if (item.type === 'color') { equipOwnedCosmetic(guildId, userId, item.id); const icon = item.emoji || '🎨'; return { item, message: `${icon} Đã trang bị **${item.name}**. Dùng \`/hoso\` để xem.`, ephemeral: true }; }
   if (item.effect === 'baucua_magnifier') { const result = useBaucuaMagnifier(guildId, channelId); consumeInventory(guildId, userId, item.id); return { item, message: result.message, ephemeral: true }; }
+  if (item.effect === 'baucua_small_lens') { const result = useBaucuaSmallLens(guildId, channelId); consumeInventory(guildId, userId, item.id); return { item, message: result.message, ephemeral: true }; }
+  if (item.effect === 'taixiu_total_scope') { const result = db.transaction(() => { const value = useTaixiuTotalScope(guildId, channelId); consumeInventory(guildId, userId, item.id); return value; })(); return { item, message: result.message, ephemeral: true }; }
+  if (item.effect === 'mines_row_scanner' || item.effect === 'mines_column_scanner') { const message = useMinesScanner(guildId, userId, channelId, item.effect); consumeInventory(guildId, userId, item.id); return { item, message, ephemeral: true }; }
+  if (item.effect === 'quiz_extra_time') { const message = useVietnameseExtraTime(guildId, channelId); consumeInventory(guildId, userId, item.id); return { item, message }; }
+  if (item.effect === 'remove_active_game_effect') { const message = db.transaction(() => { const value = removePendingEffect(guildId, userId); consumeInventory(guildId, userId, item.id); return value; })(); return { item, message, ephemeral: true }; }
   if (item.effect === 'taixiu_no_triple') { const result = db.transaction(() => { const value = useMagneticDice(guildId, channelId); consumeInventory(guildId, userId, item.id); return value; })(); return { item, message: result.message }; }
   if (item.effect === 'dice_divine_eye') return { item, message: useDivineEye(guildId, userId, channelId, item.id), ephemeral: true };
   if (item.effect === 'mines_radar') { const message = useMinesRadar(guildId, userId, channelId); consumeInventory(guildId, userId, item.id); return { item, message, ephemeral: true }; }
   if (item.effect === 'quiz_living_dictionary') { const message = useLivingDictionary(guildId, channelId, userId); consumeInventory(guildId, userId, item.id); return { item, message }; }
-  if (item.effect === 'quiz_first_word' || item.effect === 'quiz_syllable_lengths') {
+  if (['quiz_first_word', 'quiz_syllable_lengths', 'quiz_first_letter', 'quiz_word_count'].includes(item.effect)) {
     const message = useVietnameseHint(guildId, channelId, item.effect);
     consumeInventory(guildId, userId, item.id);
     return { item, message, ephemeral: true };

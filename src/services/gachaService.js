@@ -11,9 +11,9 @@ function itemResult(tier, itemId, label = null) {
   const item = getCatalogItem(itemId);
   return { kind: 'item', tier, itemId, name: label || item?.name || itemId, quantity: 1 };
 }
-function rollGacha(value = null, guildId = null, now = Date.now()) {
+function rollGacha(value = null, guildId = null, now = Date.now(), tierMultipliers = {}) {
   const luckMultiplier = guildId ? gachaLuckMultiplier(guildId, now) : 1;
-  const pool = listGachaPool(guildId || '__default__', { luckMultiplier }).filter(entry => entry.effectiveWeight > 0);
+  const pool = listGachaPool(guildId || '__default__', { luckMultiplier, tierMultipliers }).filter(entry => entry.effectiveWeight > 0);
   const total = pool.reduce((sum, entry) => sum + entry.effectiveWeight, 0);
   if (!total) throw new Error('EMPTY_GACHA_POOL');
   let roll = value === null || value === undefined ? crypto.randomInt(total) : Math.max(0, Math.min(total - 1, Math.trunc(value)));
@@ -22,8 +22,8 @@ function rollGacha(value = null, guildId = null, now = Date.now()) {
     ? { kind: 'coins', tier: selected.tier, coins: selected.amount, name: selected.name }
     : itemResult(selected.tier, selected.itemId, selected.name);
 }
-function rollGuaranteedHigh(guildId = null, now = Date.now(), minimumTier = 'SR') {
-  const pool = listGachaPool(guildId || '__default__', { luckMultiplier: guildId ? gachaLuckMultiplier(guildId, now) : 1 })
+function rollGuaranteedHigh(guildId = null, now = Date.now(), minimumTier = 'SR', tierMultipliers = {}) {
+  const pool = listGachaPool(guildId || '__default__', { luckMultiplier: guildId ? gachaLuckMultiplier(guildId, now) : 1, tierMultipliers })
     .filter(entry => TIER_ORDER[entry.tier] >= TIER_ORDER[minimumTier] && entry.kind === 'item' && entry.effectiveWeight > 0);
   if (!pool.length) throw new Error('EMPTY_HIGH_GACHA_POOL');
   const total = pool.reduce((sum, entry) => sum + entry.effectiveWeight, 0);
@@ -74,19 +74,20 @@ function pullGacha({ guildId, userId, pulls = 1, now = Date.now(), rolls = null,
       operationId: normalizedOperation ? `gacha-spend:${normalizedOperation}` : null });
 
     const pity = getGachaPity(guildId, userId); const results = [];
+    const tierBoost = paymentType === TICKETS[10] ? { UR: 2 } : {};
     for (let index = 0; index < count; index += 1) {
-      const normal = rollGacha(rolls?.[index], guildId, now);
+      const normal = rollGacha(rolls?.[index], guildId, now, tierBoost);
       let minimum = null;
       if (normal.kind === 'item') {
         if (pity.since_ur >= 49) minimum = 'UR';
         else if (pity.since_ssr >= 24) minimum = 'SSR';
         else if (pity.since_sr >= 9) minimum = 'SR';
       }
-      if (index === count - 1 && paymentType === TICKETS[10] && !results.some(result => result.kind === 'item' && result.tier === 'UR')) minimum = 'UR';
+      if (index === count - 1 && paymentType === TICKETS[10] && !results.some(result => result.kind === 'item' && TIER_ORDER[result.tier] >= TIER_ORDER.SSR) && (TIER_ORDER[minimum] || 0) < TIER_ORDER.SSR) minimum = 'SSR';
       else if (index === count - 1 && paymentType === TICKETS[1] && (TIER_ORDER[minimum] || 0) < TIER_ORDER.SSR) minimum = 'SSR';
       else if (index === count - 1 && count === 10 && !results.some(result => result.kind === 'item' && TIER_ORDER[result.tier] >= TIER_ORDER.SR) && (TIER_ORDER[minimum] || 0) < TIER_ORDER.SR) minimum = 'SR';
       const result = minimum && (normal.kind !== 'item' || TIER_ORDER[normal.tier] < TIER_ORDER[minimum])
-        ? rollGuaranteedHigh(guildId, now, minimum) : normal;
+        ? rollGuaranteedHigh(guildId, now, minimum, tierBoost) : normal;
       results.push(result); advancePity(pity, result);
     }
     db.prepare(`INSERT INTO gacha_pity(guild_id,user_id,since_sr,since_ssr,since_ur) VALUES(?,?,?,?,?)

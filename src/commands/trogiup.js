@@ -50,6 +50,7 @@ const PAGES = Object.freeze({
     description: 'Theo dõi và nhận thưởng hoạt động bằng `/nhiemvu`.',
     fields: [
       ['📅 Hằng ngày và hằng tuần', '`/nhiemvu diemdanh` — điểm danh; `/nhiemvu xem` — xem tiến độ; `/nhiemvu nhan` — nhận thưởng hoàn thành.'],
+      ['🔎 Kiểm tra nhanh', '`/nhiemvu kiemtra` — menu xem/nhận nhiệm vụ, thành tựu, điểm danh; `/nhiemvu tanthu` — thưởng tân thủ (1 vé Gacha ×10 + 3000 :gem:).'],
       ['🏅 Thành tựu', '`/nhiemvu thanhtuu` — xem; `/nhiemvu nhanthanhtuu` — nhận thưởng.'],
       ['🎁 Vai trò', '`/nhiemvu thuongvaitro` — tự nhận xu theo vai trò mỗi tuần nếu server đã thiết lập.'],
     ],

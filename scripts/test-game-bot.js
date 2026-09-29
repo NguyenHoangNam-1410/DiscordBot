@@ -5,12 +5,12 @@ const path = require('node:path');
 const testDb = path.resolve(__dirname, '../data/test-game-bot.sqlite');
 for (const suffix of ['', '-wal', '-shm']) fs.rmSync(`${testDb}${suffix}`, { force: true });
 process.env.DB_PATH = testDb;
-const expectedCommandFiles = ['batdau', 'trogiup', 'huongdan', 'choi', 'luat', 'hoso', 'xu', 'vatpham', 'nhiemvu', 'xephang', 'anxin', 'quantri'];
-const expectedCommands = [...expectedCommandFiles];
+const expectedCommandFiles = ['batdau', 'trogiup', 'huongdan', 'choi', 'luat', 'hoso', 'xu', 'vatpham', 'nhiemvu', 'xephang', 'anxin', 'quantri', 'gacha', 'vtv'];
+const expectedCommands = expectedCommandFiles.map(file => file);
 assert.deepEqual([...require('../src/commandRegistry').COMMAND_FILES], expectedCommandFiles);
 
 for (const [index, file] of expectedCommandFiles.entries()) {
-  const command = require(`../src/commands/${file}`);
+  const command = file === 'vtv' ? require('../src/commands/vuatiengviet').playerCommand : require(`../src/commands/${file}`);
   assert.equal(command.data.toJSON().name, expectedCommands[index], `Sai schema command ${file}`);
 }
 const profileCommand = require('../src/commands/hoso');
@@ -26,13 +26,13 @@ assert.deepEqual(prefixAdmin.parseAddGem('!ADDGEM 123456789 1'), { userId: '1234
 assert.equal(prefixAdmin.parseAddGem('!addgem <@123456789>'), null);
 assert.deepEqual(prefixAdmin.parseAddGold('!congxu <@123456789> 2500'), { userId: '123456789', amount: 2500, reason: 'prefix' });
 assert.deepEqual(prefixAdmin.parseRemoveGold('!truxu 123456789 50 gian-lan'), { userId: '123456789', amount: 50, reason: 'gian-lan' });
-assert.deepEqual(require('../src/commands/poker').data.toJSON().options.map(option => option.name), ['chedo']);
+assert.deepEqual(require('../src/commands/poker').data.toJSON().options.map(option => option.name), ['chedo', 'chedochoi']);
 assert.equal(require('../src/commands/use').data.toJSON().options.length, 0);
 assert.deepEqual(require('../src/commands/choi').data.toJSON().options.map(option => option.name),
-  ['baucua', 'taixiu', 'chinchiro', 'oantuti', 'ott', 'xidach', 'poker', 'duangua', 'domin', 'sinhton', 'vuatiengviet', 'vtv']);
+  ['baucua', 'taixiu', 'chinchiro', 'oantuti', 'xidach', 'poker', 'duangua', 'domin', 'sinhton', 'vtv']);
 assert.deepEqual(require('../src/commands/vatpham').data.toJSON().options.map(option => option.name),
-  ['cuahang', 'mua', 'tui', 'sudung', 'tang', 'quay']);
-assert.equal(require('../src/commands/quantri').data.toJSON().options.length, 25);
+  ['cuahang', 'mua', 'tui', 'sudung', 'tang', 'quay', 'chitiet']);
+assert.equal(require('../src/commands/quantri').data.toJSON().options.length, 26);
 const adminOptionNames = require('../src/commands/quantri').data.toJSON().options.map(option => option.name);
 assert(['themgacha', 'dattylegacha', 'xemgacha', 'datbuff', 'xembuff'].every(name => adminOptionNames.includes(name)));
 assert(!require('../src/commands/xu').data.toJSON().options.some(option => option.name === 'top'));
@@ -51,7 +51,7 @@ assert.deepEqual(channelSettings.getGamesByChannel('shared-channel-guild', 'casi
 assert.equal(channelSettings.channelHasGame('shared-channel-guild', 'casino', 'taixiu'), true);
 const { listCatalog } = require('../src/services/itemCatalogService');
 const catalog = listCatalog();
-assert.equal(catalog.filter(item => item.type === 'consumable').length, 18);
+assert.equal(catalog.filter(item => item.type === 'consumable').length, 34);
 assert.deepEqual([...new Set(catalog.filter(item => item.type === 'consumable').map(item => item.rarity))].sort(), ['R', 'SR', 'SSR', 'UR']);
 assert(catalog.some(item => item.effect === 'mines_blast_shield'));
 assert(catalog.some(item => item.effect === 'quiz_living_dictionary'));
@@ -140,14 +140,19 @@ assert.equal(levels.gameExperience('loss', 999999, 1), 10);
 assert.equal(levels.gameExperience('win', 1_000_000, 0), 500);
 levels.addDiamonds('gacha-guild', 'alice', 1_000);
 const gacha = require('../src/services/gachaService');
-assert.deepEqual([0, 2500, 4500, 5500, 8000, 9500, 9900].map(roll => gacha.rollGacha(roll).tier), ['XU', 'XU', 'XU', 'R', 'SSR', 'UR', 'UR']);
+assert.deepEqual([0, 2500, 4500, 5500, 8000, 9500, 9900].map(roll => gacha.rollGacha(roll).tier), ['XU', 'XU', 'XU', 'R', 'SSR', 'SSR', 'UR']);
 const singlePull = gacha.pullGacha({ guildId: 'gacha-guild', userId: 'alice', pulls: 1, rolls: [0], now: 1000 });
 assert.equal(singlePull.results[0].coins, 50_000);
 const tenPull = gacha.pullGacha({ guildId: 'gacha-guild', userId: 'alice', pulls: 10, rolls: Array(10).fill(0), now: 2000 });
 assert(['SR', 'SSR', 'UR'].includes(tenPull.results[9].tier));
 assert.equal(tenPull.progression.diamonds, 0);
-levels.addFreePulls('gacha-guild', 'alice', 1, 3000);
-assert.equal(gacha.pullGacha({ guildId: 'gacha-guild', userId: 'alice', pulls: 1, rolls: [5500], now: 3001 }).usedFreePull, true);
+require('../src/services/shopService').addInventory('gacha-guild', 'alice', gacha.TICKETS[1], 1, 3000);
+const ticketsBefore = gacha.getTicketBalances('gacha-guild', 'alice').single;
+const ticketPull = gacha.pullGacha({ guildId: 'gacha-guild', userId: 'alice', pulls: 1, rolls: [5500], now: 3001 });
+assert.equal(ticketPull.usedFreePull, true);
+assert.equal(ticketPull.paymentType, gacha.TICKETS[1]);
+assert(['SSR', 'UR'].includes(ticketPull.results[0].tier));
+assert.equal(ticketPull.tickets.single, ticketsBefore - 1);
 const ledgerFirst = levels.addDiamonds('ledger-guild', 'alice', 250, { now: 3100, reason: 'test', operationId: 'diamond:test:1' });
 const ledgerDuplicate = levels.addDiamonds('ledger-guild', 'alice', 250, { now: 3101, reason: 'test', operationId: 'diamond:test:1' });
 assert.equal(ledgerFirst.diamonds, 250);
@@ -183,7 +188,7 @@ const buffSettlement = require('../src/services/economyService').recordGameResul
 assert.deepEqual(buffSettlement.bonusDrops.map(drop => drop.type), ['coins', 'diamonds', 'free_pull']);
 assert.equal(buffSettlement.balance, 1_500);
 assert.equal(levels.getPlayerProgression('buff-guild', 'alice').diamonds, 14);
-assert.equal(levels.getPlayerProgression('buff-guild', 'alice').free_gacha_pulls, 1);
+assert.equal(gacha.getTicketBalances('buff-guild', 'alice').single, 1);
 assert.equal(buffs.gachaLuckMultiplier('buff-guild', buffNow), 2);
 assert.equal(buffs.listBuffs('buff-guild', buffNow + 3 * 3_600_000).length, 0);
 for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_GACHA_DROP_CHANCE']) dropConfig.setGameConfig('drop-rate-guild', key, 0, 'admin');
@@ -212,7 +217,7 @@ assert.equal(missionRewards.length, 4);
 assert(missionRewards.some(reward => reward.id === '__daily_bonus__' && reward.diamonds === 20 && !reward.item));
 assert.equal(progressionPreview.claimMissions('mission-guild', 'alice', 'daily', missionNow).length, 0);
 const shopCommand = require('../src/commands/shop');
-assert.equal(shopCommand.shopSelectRow('alice').toJSON().components[0].options.length, 7);
+assert.equal(shopCommand.shopSelectRow('alice').toJSON().components[0].options.length, 11);
 const effects = require('../src/services/effectStateService');
 effects.addEffectCharge('stack-guild', 'alice', 'blackjack_redraw', { charges: 1 });
 effects.addEffectCharge('stack-guild', 'alice', 'blackjack_redraw', { charges: 1 });
@@ -292,9 +297,11 @@ const shortFullHouse = pokerEngine.evaluateFive(['K♠', 'K♥', 'K♦', 'Q♣',
 assert(pokerEngine.compareHands(shortFlush, shortFullHouse) > 0);
 const omahaHand = pokerEngine.bestHand(['A♠', 'A♦', '2♣', '3♣', '4♣'], ['A♥', 'K♥', 'Q♥', 'J♥', '10♥'], 'omaha');
 assert.equal(omahaHand.name, 'Bộ ba');
-const omahaFullHouse = pokerEngine.bestHand(['Q♣', '2♥', 'A♦', '6♣', '10♦'], ['Q♠', 'K♥', 'K♣', 'Q♥'], 'omaha');
+const omahaOneHoleQueen = pokerEngine.bestHand(['Q♣', '2♥', 'A♦', '6♣', '10♦'], ['Q♠', 'K♥', 'K♣', 'Q♥'], 'omaha');
+assert.equal(omahaOneHoleQueen.name, 'Bộ ba');
+const omahaFullHouse = pokerEngine.bestHand(['Q♣', 'K♦', 'A♦', '6♣', '10♦'], ['Q♠', 'K♥', 'K♣', 'Q♥'], 'omaha');
 assert.equal(omahaFullHouse.name, 'Cù lũ');
-assert.deepEqual(omahaFullHouse.kickers, [12, 13]);
+assert.deepEqual(omahaFullHouse.kickers, [13, 12]);
 const potExample = pokerEngine.buildPots([
   { id: 'A', committed: 1000, folded: false }, { id: 'B', committed: 3000, folded: false }, { id: 'C', committed: 5000, folded: false },
 ]);
@@ -317,7 +324,7 @@ const gameConfig = require('../src/services/gameConfigService');
 assert.equal(gameConfig.getGameConfig('config-guild', 'ECONOMY_STARTING_COINS'), economy.STARTING_COINS);
 gameConfig.setGameConfig('config-guild', 'ECONOMY_STARTING_COINS', 4321, 'admin');
 assert.equal(economy.getAccount('config-guild', 'new-player').balance, 4321);
-assert.equal(gameConfig.listGameConfigs('config-guild').length, 19);
+assert.equal(gameConfig.listGameConfigs('config-guild').length, 20);
 assert.throws(() => gameConfig.setGameConfig('config-guild', 'HARD_QUESTION_CHANCE', 2, 'admin'), /INVALID_GAME_CONFIG_VALUE/);
 assert.equal(gameConfig.resetGameConfig('config-guild', 'ECONOMY_STARTING_COINS').customized, false);
 gameConfig.setGameConfig('hard-config-guild', 'HARD_QUESTION_CHANCE', 1, 'admin');
@@ -346,7 +353,7 @@ assert.equal(economyDashboard.activeUsers, 2);
 assert(economyDashboard.categories.some(item => item.category === 'transfer'));
 const operationalHealth = require('../src/services/operationalHealthService').getOperationalHealth();
 assert.equal(operationalHealth.database.check, 'ok');
-assert.equal(operationalHealth.database.migration, 18);
+assert.equal(operationalHealth.database.migration, 22);
 assert(Number.isSafeInteger(operationalHealth.active.total));
 const starter = require('../src/services/onboardingService');
 const starterFirst = starter.claimStarterPack('starter-guild', 'alice', 1000);
@@ -448,16 +455,17 @@ assert.equal(expiredCardDuel.refunded, true);
 assert.equal(economy.getAccount('card-timeout', 'alice').balance, 1000);
 assert.equal(economy.getAccount('card-timeout', 'bob').balance, 1000);
 const blackjack = require('../src/services/blackjackService');
+// Người chơi quắc luôn thua dù nhà cái cũng quắc
 const bothBustStarted = blackjack.startBlackjack({ guildId: 'both-bust-guild', channelId: 'blackjack-channel', userId: 'alice', stake: 100,
   forcedDeck: ['10♣', '5♣', '6♥', '9♠', '10♥', '10♠'] });
 const bothBustResult = blackjack.playAction({ sessionId: bothBustStarted.session.id, userId: 'alice', action: 'hit' });
 assert.equal(bothBustResult.settled, true);
-assert.equal(bothBustResult.result.outcome, 'draw');
+assert.equal(bothBustResult.result.outcome, 'loss');
 assert.equal(bothBustResult.result.experienceGained, 10);
 assert.match(JSON.stringify(blackjack.blackjackEmbed(bothBustResult.state, 'alice', bothBustResult.result).toJSON()), /\+10 EXP/);
 assert.match(blackjack.blackjackEmbed(bothBustResult.state, 'alice', bothBustResult.result).toJSON().description, /10♠/);
-assert.equal(bothBustResult.result.results[0].label, 'Cùng Bust · Hòa');
-assert.equal(economy.getAccount('both-bust-guild', 'alice').balance, 1000);
+assert.equal(bothBustResult.result.results[0].label, 'Quắc · Thua');
+assert.equal(economy.getAccount('both-bust-guild', 'alice').balance, 900);
 const poker = require('../src/services/pokerService');
 assert.equal(poker.POKER_ANTE, 50);
 assert.equal(db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='word_suggestions'").get(), undefined);
