@@ -42,7 +42,7 @@ function evaluateFive(cards, shortDeck = false) {
   let category; let kickers;
   if (flush && straight) { category = 8; kickers = [straight]; }
   else if (groups[0][1] === 4) { category = 7; kickers = [groups[0][0], groups[1][0]]; }
-  else if (groups[0][1] === 3 && groups[1][1] === 2) { category = shortDeck ? 5 : 6; kickers = [groups[0][0], groups[1][0]]; }
+  else if (groups[0][1] === 3 && groups[1]?.[1] === 2) { category = shortDeck ? 5 : 6; kickers = [groups[0][0], groups[1][0]]; }
   else if (flush) { category = shortDeck ? 6 : 5; kickers = values; }
   else if (straight) { category = 4; kickers = [straight]; }
   else if (groups[0][1] === 3) { category = 3; kickers = [groups[0][0], ...groups.slice(1).map(group => group[0]).sort((a, b) => b - a)]; }

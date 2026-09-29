@@ -21,7 +21,8 @@ function catalogPanel(guildId, userId, selectedGame = 'all', requestedPage = 0) 
     const rarity = RARITY_LABELS[item.rarity] || item.rarity || 'Vật phẩm';
     const games = gameLabels(item);
     const scope = games?.length ? `Dùng trong: ${games.join(', ')}` : games ? 'Vật phẩm hồ sơ · không gắn với game' : 'Dùng chung · hiện ở mọi bộ lọc';
-    return `${item.type === 'color' ? '🎨' : '🎁'} **${item.name}** [${rarity}] · Sở hữu: **×${inventory.get(item.id) || 0}**\n_${scope}_\n${item.description}`;
+    const icon = item.emoji || (item.type === 'color' ? '🎨' : '🎁');
+    return `${icon} **${item.name}** [${rarity}] · Sở hữu: **×${inventory.get(item.id) || 0}**\n_${scope}_\n${item.description}`;
   });
 
   const filterMenu = new StringSelectMenuBuilder().setCustomId(`iteminfo-filter:${userId}`).setPlaceholder('Lọc theo game…')

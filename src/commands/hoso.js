@@ -71,11 +71,12 @@ function gameDetailEmbed(user, account, rank, appearance, item, serverName = 'Se
 }
 
 function fallbackEmbed(user, account, rank, appearance, badges = [], stats = [], progress, guildId = null, serverName = 'Server hiện tại') {
-  return new EmbedBuilder()
-    .setColor(Number.parseInt(appearance.color.value.slice(1), 16))
-    .setTitle(`🏠 ${serverName.toUpperCase()}\n${user.globalName || user.username} · #${rank}`)
-    .setThumbnail(user.displayAvatarURL({ extension: 'png', size: 256 }))
-    .setDescription(`Màu hồ sơ: **${appearance.color.name}**`)
+    const colorEmoji = appearance.color?.emoji ? `${appearance.color.emoji} ` : '';
+    return new EmbedBuilder()
+      .setColor(Number.parseInt(appearance.color.value.slice(1), 16))
+      .setTitle(`🏠 ${serverName.toUpperCase()}\n${user.globalName || user.username} · #${rank}`)
+      .setThumbnail(user.displayAvatarURL({ extension: 'png', size: 256 }))
+      .setDescription(`Màu hồ sơ: ${colorEmoji}**${appearance.color.name}**`)
     .addFields(
       { name: 'Số dư', value: `${Number(account.balance).toLocaleString('vi-VN')} xu`, inline: true },
       { name: 'Tổng số ván', value: String(account.games_played), inline: true },
@@ -123,7 +124,7 @@ module.exports = {
         .setDescription(badges.length ? `🏅 ${badges.map(item => `**${item.name}**`).join(' · ')}` : 'Chưa mở khóa huy hiệu thành tựu.')
         .addFields(levelField(levelProgress, interaction.guildId), overviewField(gameSummary))
         .setImage(`attachment://profile-${user.id}.png`)
-        .setFooter({ text: `Màu hồ sơ: ${appearance.color.name}` });
+        .setFooter({ text: `Màu hồ sơ: ${appearance.color?.emoji ? `${appearance.color.emoji} ` : ''}${appearance.color.name}` });
       return interaction.editReply({ embeds: [embed], files: [attachment], components: [profileSelectRow(interaction.user.id, user.id, gameStats)] });
     } catch (error) {
       console.error('[hoso] profile image render failed', error);

@@ -23,7 +23,8 @@ function usePanel(guildId, userId, status = null, selectedGame = 'all') {
       ? `${status ? `${status}\n\n` : ''}Chọn game để lọc, sau đó chọn vật phẩm muốn dùng hoặc trang bị.\n\n${inventory.map(entry => {
         const labels = gameLabels(entry.item);
         const scope = labels?.length ? `Dùng trong: ${labels.join(', ')}` : labels ? 'Vật phẩm hồ sơ · không gắn với game' : 'Dùng chung · hiện ở mọi bộ lọc';
-        return `${RARITY_EMOJI[entry.item.rarity] || '▫️'} **${entry.item.name}${['R', 'SR', 'SSR', 'UR'].includes(entry.item.rarity) ? ` [${entry.item.rarity}]` : ''}** ×${entry.quantity}\n_${scope}_\n_${entry.item.description}_`;
+        const icon = entry.item.emoji || RARITY_EMOJI[entry.item.rarity] || '▫️';
+        return `${icon} **${entry.item.name}${['R', 'SR', 'SSR', 'UR'].includes(entry.item.rarity) ? ` [${entry.item.rarity}]` : ''}** ×${entry.quantity}\n_${scope}_\n_${entry.item.description}_`;
       }).join('\n')}`
       : `${status ? `${status}\n\n` : ''}${allInventory.length ? 'Không có vật phẩm áp dụng cho game này.' : 'Kho đồ chưa có vật phẩm có thể sử dụng.'}`)
     .setFooter({ text: 'Menu chỉ người mở mới sử dụng được • Hiển thị tối đa 25 vật phẩm' });
@@ -34,7 +35,7 @@ function usePanel(guildId, userId, status = null, selectedGame = 'all') {
       .setLabel(`${entry.item.name} ×${entry.quantity}`.slice(0, 100))
       .setValue(entry.item_id)
       .setDescription(`${TYPE_LABELS[entry.item.type] || 'Vật phẩm'} · ${entry.item.description}`.slice(0, 100))
-      .setEmoji(RARITY_EMOJI[entry.item.rarity] || '▫️')));
+      .setEmoji(entry.item.emoji || RARITY_EMOJI[entry.item.rarity] || '▫️')));
   return { embeds: [embed], components: [useFilterRow(userId, selectedGame), new ActionRowBuilder().addComponents(select)] };
 }
 

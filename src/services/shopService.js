@@ -45,14 +45,22 @@ function seedShop(guildId) {
   const hiddenLegacy = db.prepare(`UPDATE shop_items SET listed=0,active=0,updated_at=?
     WHERE guild_id=? AND created_by='system' AND (listed<>0 OR active<>0)`).run(Date.now(), String(guildId)).changes;
   const colors = listCatalog({ shopEligible: true }).filter(item => item.type === 'color');
+  if (colors.length) {
+    const placeholders = colors.map(() => '?').join(',');
+    db.prepare(`UPDATE shop_items SET listed=0,active=0,updated_at=?
+      WHERE guild_id=? AND cosmetic_id LIKE 'color_%' AND created_by='catalog' AND cosmetic_id NOT IN (${placeholders})`)
+      .run(now, String(guildId), ...colors.map(c => c.id));
+  }
   const restoreLegacyColor = db.prepare(`UPDATE shop_items SET listed=1,active=0,created_by='catalog',updated_at=?
     WHERE guild_id=? AND cosmetic_id=? AND created_by='system'`);
   const insertColor = db.prepare(`INSERT OR IGNORE INTO shop_items
     (guild_id,item_id,cosmetic_id,display_name,price,stock,min_games,min_wins,min_balance,active,created_by,created_at,updated_at)
     VALUES(?,?,?,?,?,NULL,0,0,0,0,'catalog',?,?)`);
+  const updateColor = db.prepare(`UPDATE shop_items SET display_name=?,price=?,updated_at=? WHERE guild_id=? AND cosmetic_id=? AND created_by='catalog'`);
   for (const item of colors) {
     restoreLegacyColor.run(now, String(guildId), item.id);
     insertColor.run(String(guildId), item.id, item.id, item.name, item.price, now, now);
+    updateColor.run(item.name, item.price, now, String(guildId), item.id);
   }
   return hiddenLegacy;
 }

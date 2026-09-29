@@ -763,4 +763,19 @@ runMigration(20, 'daily VTV skips', () => {
   )`);
 });
 
+runMigration(21, 'multiplayer human dealer blackjack', () => {
+  db.exec(`CREATE TABLE IF NOT EXISTS blackjack_tables (
+    id TEXT PRIMARY KEY,guild_id TEXT NOT NULL,channel_id TEXT NOT NULL,message_id TEXT,
+    dealer_id TEXT NOT NULL,ante INTEGER NOT NULL,state_json TEXT NOT NULL,
+    status TEXT NOT NULL CHECK(status IN ('lobby','playing','completed','expired')),
+    expires_at INTEGER NOT NULL,created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_blackjack_tables_active ON blackjack_tables(guild_id,status,expires_at);
+  CREATE TABLE IF NOT EXISTS blackjack_table_locks (
+    guild_id TEXT NOT NULL,user_id TEXT NOT NULL,table_id TEXT NOT NULL,role TEXT NOT NULL,
+    created_at INTEGER NOT NULL,PRIMARY KEY(guild_id,user_id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_blackjack_table_locks_table ON blackjack_table_locks(table_id)`);
+});
+
 module.exports = { db, dbPath, runMigration };

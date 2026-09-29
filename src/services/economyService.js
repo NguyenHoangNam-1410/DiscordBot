@@ -95,14 +95,24 @@ function settleBet({ guildId, userId, stake, payout, game, outcome, operationId 
   const normalizedPayout = Math.floor(Number(payout));
   if (!Number.isInteger(normalizedStake) || normalizedStake < 10 || normalizedStake > 100_000) throw new Error('INVALID_BET');
   if (!Number.isInteger(normalizedPayout) || normalizedPayout < 0) throw new Error('INVALID_PAYOUT');
+  assertNoBlackjackTableLock(guildId, userId);
   return settleWithProgress(
     { guildId, userId, amount: normalizedPayout - normalizedStake, reason: `${game}:${outcome}`, outcome, operationId },
     { guildId, userId, game, outcome, amount: normalizedPayout, stake: normalizedStake },
   );
 }
 
-function spendCoins({ guildId, userId, amount, reason }) {
+function assertNoBlackjackTableLock(guildId, userId, tableId = null) {
+  const lock = db.prepare('SELECT table_id FROM blackjack_table_locks WHERE guild_id=? AND user_id=?')
+    .get(String(guildId), String(userId));
+  if (lock && lock.table_id !== String(tableId || '')) {
+    const error = new Error('ACTIVE_BLACKJACK_TABLE'); error.code = 'ACTIVE_BLACKJACK_TABLE'; error.tableId = lock.table_id; throw error;
+  }
+}
+
+function spendCoins({ guildId, userId, amount, reason, tableId = null }) {
   const value = validAmount(amount, SHOP_SPEND_MAX);
+  if (!String(reason || '').startsWith('shop:')) assertNoBlackjackTableLock(guildId, userId, tableId);
   return withBusyRetry(() => changeBalanceTx({ guildId, userId, amount: -value, reason }));
 }
 

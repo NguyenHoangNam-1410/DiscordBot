@@ -13,6 +13,8 @@ function cooldownText(milliseconds) {
 async function economyError(interaction, error) {
   const content = error?.code === 'INSUFFICIENT_FUNDS'
     ? 'Bạn không đủ xu để thực hiện giao dịch này.'
+    : error?.code === 'ACTIVE_BLACKJACK_TABLE'
+      ? 'Bạn đang ở một bàn Xì dách. Hãy chờ ván đó kết thúc trước khi tham gia cược khác.'
     : error?.message === 'INVALID_BET'
       ? 'Mức cược phải từ **10 đến 100.000 xu**.'
       : 'Không thể xử lý giao dịch xu lúc này.';

@@ -28,7 +28,7 @@ const PAGES = Object.freeze({
     title: '🎮 TRỢ GIÚP · TRÒ CHƠI',
     description: 'Mọi game đều nằm dưới `/choi`. Chọn game trong danh sách Discord hiện ra.',
     fields: [
-      ['🎲 Game cược', '`/choi baucua` · `/choi taixiu` · `/choi chinchiro` · `/choi ott` · `/choi xidach` · `/choi poker` — chọn bot hoặc mời người chơi'],
+      ['🎲 Game cược', '`/choi baucua` · `/choi taixiu` · `/choi chinchiro` · `/choi ott` · `/choi xidach` · `/choi poker` — mở bàn hoặc chơi theo lựa chọn của từng game'],
       ['🏇 Thử thách khác', '`/choi duangua` · `/choi domin`'],
       ['⚔️ Sinh tồn', '`/choi sinhton batdau` — chọn cược và nhân vật; dùng các nút để đánh, dùng vật phẩm, xử lý sự kiện hoặc rút thưởng. `/luat trochoi: Sinh tồn` giải thích cơ chế và từng hành động; `hoso` — thành tích; `xephang` — top tầng; `tyle` — tỷ lệ sự kiện.'],
       ['🔤 Vua tiếng Việt', '`/choi vtv` — admin bắt đầu phiên; người chơi dùng `/vtv boqua` để bỏ qua câu (mặc định 5 lượt/ngày).'],

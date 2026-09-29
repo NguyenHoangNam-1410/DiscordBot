@@ -58,8 +58,7 @@ Các game cược tiếp tục dùng seed và HMAC-SHA256 nội bộ để tạo
 
 ### Xì dách
 
-- Đấu nhà cái: `/choi xidach xu:<số xu>`
-- Thách đấu 1v1: `/choi xidach xu:<số xu> doithu:@người_chơi`
+- Mở bàn Xì dách làm nhà cái: `/choi xidach ante:<số xu>`; tối đa 3 người vào bàn trong 30 giây.
 - Với prefix: `!xidach solo @người_chơi <số xu>`
 
 Trong ván với nhà cái, thắng thường nhận 1,9× tổng cược, Xì dách tự nhiên nhận 2,5× và nếu cả người chơi lẫn nhà cái đều quắc trên 21 thì ván được tính hòa, hoàn cược. Trong ván 1v1, mỗi người xem tay bài bằng nút riêng, sau đó chọn Rút bài hoặc Dừng. Người có tay gần 21 nhất thắng toàn bộ tiền cược; Xì dách tự nhiên được ưu tiên cao nhất. Nếu ván hết hạn, cược được hoàn cho cả hai.
