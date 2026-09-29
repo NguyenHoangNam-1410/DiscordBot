@@ -1,5 +1,6 @@
 const { db } = require('../db');
 function getSession(id) { return db.prepare('SELECT * FROM hardcore_sessions WHERE id = ?').get(String(id)) || null; }
+function getActiveSession(id, guildId) { return db.prepare('SELECT * FROM hardcore_sessions WHERE id=? AND guild_id=?').get(String(id), String(guildId)) || null; }
 function getByUser(guildId, userId) { return db.prepare('SELECT * FROM hardcore_sessions WHERE guild_id = ? AND user_id = ?').get(String(guildId), String(userId)) || null; }
 function parseState(session) { return JSON.parse(session.state_json); }
 function saveState(session, state, now = Date.now()) { db.prepare('UPDATE hardcore_sessions SET state_json = ?, updated_at = ? WHERE id = ?').run(JSON.stringify(state), now, session.id); }
@@ -17,4 +18,4 @@ function upsertRecord(guildId, userId, values, now = Date.now()) {
 }
 function getRecord(guildId, userId) { return db.prepare('SELECT * FROM hardcore_records WHERE guild_id=? AND user_id=?').get(String(guildId), String(userId)) || null; }
 function getTop(guildId, limit) { return db.prepare('SELECT * FROM hardcore_records WHERE guild_id=? ORDER BY best_floor DESC,completions DESC,updated_at ASC LIMIT ?').all(String(guildId), limit); }
-module.exports = { getSession, getByUser, parseState, saveState, setMessageId, insertSession, deleteSession, listStale, upsertRecord, getRecord, getTop };
+module.exports = { getSession, getActiveSession, getByUser, parseState, saveState, setMessageId, insertSession, deleteSession, listStale, upsertRecord, getRecord, getTop };

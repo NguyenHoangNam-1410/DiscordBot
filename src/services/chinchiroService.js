@@ -1,7 +1,7 @@
 const crypto = require('node:crypto');
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags } = require('discord.js');
 const { db } = require('../db');
-const { spendCoins, settleReservedGame, getAccount } = require('./economyService');
+const { spendCoins, settleReservedGame, getAccount, creditCoins } = require('./economyService');
 const { getGameBetLimit } = require('./gameBetLimitService');
 const { createFairness, fairInt, commitment } = require('./fairnessService');
 const { getActiveEffect, consumeActiveEffect } = require('./effectStateService');
@@ -70,6 +70,17 @@ function playerDecision(player, dealer) {
 }
 
 function getSession(id) { return db.prepare('SELECT * FROM chinchiro_sessions WHERE id=?').get(String(id)) || null; }
+function getActiveSession(id, guildId) { return db.prepare('SELECT * FROM chinchiro_sessions WHERE id=? AND guild_id=?').get(String(id), String(guildId)) || null; }
+function forceEndChinchiroSession(id, guildId, adminId) {
+  return db.transaction(() => {
+    const session = getActiveSession(id, guildId); if (!session) return null;
+    const state = JSON.parse(session.state_json);
+    creditCoins({ guildId: session.guild_id, userId: session.user_id, amount: session.stake,
+      reason: `chinchiro:admin-refund:${adminId}:${session.id}`, operationId: `refund:chinchiro-admin:${session.id}:${session.user_id}` });
+    db.prepare('DELETE FROM chinchiro_sessions WHERE id=?').run(session.id);
+    return { session, state, participants: [session.user_id] };
+  })();
+}
 function getSessionByUser(guildId, userId) {
   return db.prepare('SELECT * FROM chinchiro_sessions WHERE guild_id=? AND user_id=?').get(String(guildId), String(userId)) || null;
 }
@@ -181,7 +192,7 @@ function resultText(state) {
     : `💥 **NGƯỜI CHƠI THUA!** Mất **${formatCoins(state.stake)} xu**.`;
 }
 
-function chinchiroEmbed(state, userId) {
+function chinchiroEmbed(state, userId, sessionId = null) {
   const embed = new EmbedBuilder().setColor(state.result?.outcome === 'win' ? 0x2ECC71 : state.result?.outcome === 'loss' ? 0xE74C3C : 0xD4A017)
     .setTitle('🎲 BÀN CƯỢC CHINCHIRO · XÚC XẮC NGẦM')
     .setDescription(`**Người chơi:** <@${userId}> · **Tiền cược:** ${formatCoins(state.stake)} xu`)
@@ -190,6 +201,7 @@ function chinchiroEmbed(state, userId) {
       { name: '👤 NGƯỜI CHƠI', value: rollLines(state.player) },
       { name: '🏁 KẾT QUẢ', value: resultText(state) },
     );
+  if (sessionId && !state.result) embed.setFooter({ text: `Mã ván: ${sessionId}` });
   if (state.effect) embed.addFields({ name: '✨ Vật phẩm', value: ({
     chinchiro_soundproof_bowl: 'Bát Cách Âm · tối đa 4 lần lắc', chinchiro_weighted_dice: 'Xúc Xắc Chì · viên đầu ra 4–6',
     chinchiro_otsuki_dice: 'Xúc Xắc Của Quản Đốc · chỉ có mặt 4–5–6', chinchiro_karma: 'Bùa Trả Đũa · tự động chặn Hifumi',
@@ -212,10 +224,10 @@ async function handleChinchiroButton(interaction) {
   if (!session || session.guild_id !== interaction.guildId || session.channel_id !== interaction.channelId) return interaction.reply({ content: 'Ván Chinchiro đã kết thúc hoặc nút không còn hợp lệ.', flags: MessageFlags.Ephemeral });
   if (session.user_id !== interaction.user.id) return interaction.reply({ content: 'Chỉ người đặt cược mới được lắc xúc xắc.', flags: MessageFlags.Ephemeral });
   const played = shakeChinchiro(sessionId, interaction.user.id);
-  return interaction.update({ embeds: [chinchiroEmbed(played.state, interaction.user.id)], components: chinchiroRows(sessionId, played.state), allowedMentions: { parse: [] } });
+  return interaction.update({ embeds: [chinchiroEmbed(played.state, interaction.user.id, sessionId)], components: chinchiroRows(sessionId, played.state), allowedMentions: { parse: [] } });
 }
 
 module.exports = {
   MIN_BET, MAX_BET, EFFECT_PRIORITY, evaluateDice, rollTurn, dealerDecision, playerDecision,
-  startChinchiro, shakeChinchiro, getSessionByUser, setMessageId, chinchiroEmbed, chinchiroRows, handleChinchiroButton,
+  startChinchiro, shakeChinchiro, getSessionByUser, setMessageId, chinchiroEmbed, chinchiroRows, handleChinchiroButton, forceEndChinchiroSession,
 };

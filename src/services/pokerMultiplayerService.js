@@ -17,6 +17,22 @@ const VARIANTS = Object.freeze({
 });
 
 function getSession(id) { return db.prepare('SELECT * FROM poker_sessions WHERE id=?').get(String(id)) || null; }
+function forceEndPokerTable(session, adminId) {
+  return db.transaction(() => {
+    const current = getSession(session.id); if (!current || current.guild_id !== session.guild_id) return null;
+    const state = parseState(current); const participants = [];
+    for (const player of state.players) {
+      const refund = player.committed + (player.lobbyAnte || 0);
+      if (refund > 0) creditCoins({ guildId: current.guild_id, userId: player.id, amount: refund,
+        reason: `poker:admin-refund:${adminId}:${current.id}`, operationId: `refund:poker-admin:${current.id}:${player.id}` });
+      participants.push(player.id);
+    }
+    state.phase = 'complete'; state.turnUserId = null; state.result = { reason: 'admin-ended', players: participants.map(userId => ({ userId, outcome: 'draw', payout: 0 })), pots: [], scores: {} };
+    state.log.push(`🛑 Quản trị viên kết thúc bàn ${current.id}; tiền cược đã được hoàn lại.`);
+    db.prepare('DELETE FROM poker_sessions WHERE id=?').run(current.id);
+    return { session: current, state, participants };
+  })();
+}
 function parseState(session) { return JSON.parse(session.state_json); }
 function saveState(session, state, now = Date.now()) {
   db.prepare('UPDATE poker_sessions SET state_json=?,expires_at=?,updated_at=? WHERE id=?')
@@ -211,7 +227,7 @@ function privateHandText(state, userId) {
   const hand = state.board.length >= 3 ? bestHand(player.hole, state.board, state.variant) : null;
   return `## 🃏 BÀI TẨY CỦA BẠN\n### ${cardsText(player.hole)}\n${player.folded ? 'Bạn đã bỏ bài.' : hand ? `**Bài mạnh nhất hiện tại:** ${hand.name} · ${describeHand(hand)}` : 'Bài chung chưa đủ để đánh giá.'}${state.phase === 'complete' ? `\n**Kết quả:** ${state.result.players.find(row => row.userId === player.id)?.outcome || '—'}` : ''}`;
 }
-function pokerTableEmbed(state) {
+function pokerTableEmbed(state, sessionId = null) {
   const complete = state.phase === 'complete'; const pot = state.players.reduce((sum, player) => sum + player.committed, 0);
   const board = state.board.length ? state.board.map(card => `**${card}**`).join('　') : 'Đang chờ bắt đầu ván';
   const embed = new EmbedBuilder().setColor(complete ? 0x2ECC71 : 0x8E44AD).setTitle(`♠️ POKER · ${VARIANTS[state.variant].name.toUpperCase()} · ĐẤU ĐÔI`)
@@ -228,11 +244,11 @@ function pokerTableEmbed(state) {
     if (state.result.reason === 'showdown') {
       const reveals = state.players.map(player => { const score = state.result.scores[player.id]; return player.folded ? `🏳️ <@${player.id}>: Đã bỏ bài (bài tẩy được giữ kín)` : `🃏 <@${player.id}>: ${cardsText(player.hole)}${score ? ` — **${score.name}**` : ''}`; }).join('\n');
       embed.addFields({ name: 'LẬT BÀI', value: reveals });
-    } else if (state.result.reason === 'expired') embed.addFields({ name: '⌛ BÀN ĐÃ HẾT HẠN', value: 'Ván bị hủy và tiền đã cược được hoàn lại.' });
+    } else if (state.result.reason === 'expired' || state.result.reason === 'admin-ended') embed.addFields({ name: '⌛ BÀN ĐÃ ĐÓNG', value: 'Ván bị hủy và tiền cược được hoàn lại.' });
     else embed.addFields({ name: '🏳️ VÁN KẾT THÚC', value: 'Tất cả người chơi còn lại đã bỏ bài; bài tẩy được giữ kín.' });
     embed.addFields({ name: 'CHIA POT', value: pots }, { name: 'KẾT QUẢ', value: outcomes });
   }
-  return embed.setFooter({ text: `${state.phase === 'lobby' ? 'Tiền cược được trừ khi ngồi vào bàn' : 'Bài tẩy chỉ bạn xem được bằng nút riêng'} · Hết hạn sau 3 phút không thao tác, tiền cược được hoàn` });
+  return embed.setFooter({ text: `${sessionId ? `Mã ván: ${sessionId} • ` : ''}${state.phase === 'lobby' ? 'Tiền cược được trừ khi ngồi vào bàn' : 'Bài tẩy chỉ bạn xem được bằng nút riêng'}${complete ? '' : ' · Hết hạn sau 3 phút không thao tác, tiền cược được hoàn'}` });
 }
 function pokerTableRows(session, state) {
   if (state.phase === 'complete') return [];
@@ -270,7 +286,7 @@ async function editPublicTable(client, session, state) {
   try {
     const channel = await client.channels.fetch(session.channel_id);
     const message = channel?.isTextBased?.() ? await channel.messages.fetch(session.message_id) : null;
-    if (message) await message.edit({ embeds: [pokerTableEmbed(state)], components: pokerTableRows(session, state), allowedMentions: { parse: [] } });
+    if (message) await message.edit({ embeds: [pokerTableEmbed(state, session.id)], components: pokerTableRows(session, state), allowedMentions: { parse: [] } });
   } catch (error) {
     console.warn?.(`[poker] Could not update table ${session.id}: ${error.message}`);
   }
@@ -281,7 +297,7 @@ async function handlePokerButton(interaction) {
   if (!session || session.guild_id !== interaction.guildId || session.channel_id !== interaction.channelId) return interaction.reply({ content: 'Bàn Poker này không còn tồn tại.', flags: MessageFlags.Ephemeral });
   if (session.expires_at <= Date.now()) {
     const expiredState = await expirePokerTable(session, null, false);
-    return interaction.update({ embeds: [pokerTableEmbed(expiredState)], components: [], allowedMentions: { parse: [] } });
+    return interaction.update({ embeds: [pokerTableEmbed(expiredState, session.id)], components: [], allowedMentions: { parse: [] } });
   }
   let state = parseState(session);
   if (action === 'view') return interaction.reply({ content: privateHandText(state, interaction.user.id), components: pokerPrivateRows(session, state, interaction.user.id), flags: MessageFlags.Ephemeral });
@@ -299,7 +315,7 @@ async function handlePokerButton(interaction) {
     } else if (action === 'discard') state = discardCard(id, interaction.user.id, Number(rawIndex));
     else state = playerAction(id, interaction.user.id, action);
     const latestSession = getSession(id) || session;
-    return interaction.update({ embeds: [pokerTableEmbed(state)], components: latestSession ? pokerTableRows(latestSession, state) : [], allowedMentions: { parse: [] } });
+    return interaction.update({ embeds: [pokerTableEmbed(state, session.id)], components: latestSession ? pokerTableRows(latestSession, state) : [], allowedMentions: { parse: [] } });
   } catch (error) {
     const messages = { TABLE_CLOSED: 'Bàn đã bắt đầu hoặc đã kết thúc.', ALREADY_SEATED: 'Bạn đã ngồi ở bàn này.', TABLE_FULL: 'Bàn đã đủ người.', ACTIVE_SESSION: 'Bạn đang có một ván Poker chưa kết thúc.', NOT_HOST: 'Chỉ người tạo bàn mới có thể bắt đầu.', NEED_OPPONENT: 'Cần đủ 2 người mới bắt đầu được.', NOT_YOUR_TURN: 'Chưa tới lượt bạn.', CANNOT_RAISE: 'Bạn không thể tố thêm lúc này.', INSUFFICIENT_FUNDS: 'Bạn không đủ xu để vào bàn.', INVALID_RAISE: 'Mức tố tối thiểu là 10 xu.', INVALID_PHASE: 'Lựa chọn này không còn hợp lệ.' };
     return interaction.reply({ content: messages[error.message] || 'Không thể thực hiện hành động này.', flags: MessageFlags.Ephemeral });
@@ -364,8 +380,8 @@ async function expirePokerTable(session, client, updateMessage = true) {
   db.prepare('DELETE FROM poker_sessions WHERE id=?').run(session.id);
   if (updateMessage && client && session.message_id) {
     const channel = await client.channels.fetch(session.channel_id).catch(() => null); const message = await channel?.messages?.fetch(session.message_id).catch(() => null);
-    if (message) await message.edit({ embeds: [pokerTableEmbed(state)], components: [], allowedMentions: { parse: [] } });
+    if (message) await message.edit({ embeds: [pokerTableEmbed(state, session.id)], components: [], allowedMentions: { parse: [] } });
   }
 }
 
-module.exports = { VARIANTS, createPokerLobby, hasActiveTable, setPokerMessage, pokerTableEmbed, pokerTableRows, handlePokerButton, handlePokerPrivateButton, handlePokerModal, expirePokerTable };
+module.exports = { VARIANTS, createPokerLobby, hasActiveTable, setPokerMessage, pokerTableEmbed, pokerTableRows, handlePokerButton, handlePokerPrivateButton, handlePokerModal, expirePokerTable, forceEndPokerTable };

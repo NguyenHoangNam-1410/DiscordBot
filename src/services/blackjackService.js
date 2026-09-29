@@ -64,6 +64,7 @@ function getSessionByUser(guildId, userId) {
   return db.prepare('SELECT * FROM blackjack_sessions WHERE guild_id = ? AND user_id = ?').get(String(guildId), String(userId)) || null;
 }
 function getSession(id) { return db.prepare('SELECT * FROM blackjack_sessions WHERE id = ?').get(String(id)) || null; }
+function getActiveSession(id, guildId) { return db.prepare('SELECT * FROM blackjack_sessions WHERE id=? AND guild_id=?').get(String(id), String(guildId)) || null; }
 function parseState(session) { return JSON.parse(session.state_json); }
 
 function saveState(session, state) {
@@ -226,7 +227,7 @@ function handText(hand, index, active, result = null) {
   return `${marker}**Tay ${index + 1}:** ${cardText(hand.cards)} — **${score} điểm** • Cược ${formatCoins(hand.bet)} xu${outcome}`;
 }
 
-function blackjackEmbed(state, userId, result = null) {
+function blackjackEmbed(state, userId, result = null, sessionId = null) {
   const dealerCards = result ? largeCards(state.dealer) : `${largeCards([state.dealer[0]])}　**??**`;
   const dealerScore = result ? ` · **${handScore(state.dealer).total} điểm**` : '';
   const hands = state.hands.map((hand, index) => handText(hand, index, state.active, result?.results?.[index])).join('\n');
@@ -241,7 +242,8 @@ function blackjackEmbed(state, userId, result = null) {
     embed.addFields({ name: '🏆 KẾT QUẢ', value: `### ${summary}\n**Tổng cược:** ${formatCoins(result.stake)} xu` });
     addExperienceField(embed, result);
     if (result.achievements?.length) embed.addFields({ name: '🏅 Thành tựu mới', value: result.achievements.map(item => `**${item.name}**`).join('\n') });
-  } else embed.setFooter({ text: 'Nhà cái dừng ở soft 17 • Xì dách tự nhiên trả 3:2 • Không thu phí mở ván' });
+  }
+  if (sessionId && !result) embed.setFooter({ text: `Mã ván: ${sessionId} • Nhà cái dừng ở soft 17 • Xì dách tự nhiên trả 3:2 • Không thu phí mở ván` });
   return embed;
 }
 
@@ -275,7 +277,7 @@ async function handleBlackjackButton(interaction) {
   if (session.user_id !== interaction.user.id) return interaction.reply({ content: 'Đây là ván Xì dách của người chơi khác.', flags: MessageFlags.Ephemeral });
   try {
     const played = playAction({ sessionId, userId: interaction.user.id, action, cardIndex: rawIndex === undefined ? null : Number(rawIndex) });
-    return interaction.update({ embeds: [blackjackEmbed(played.state, interaction.user.id, played.result)], components: actionRows(sessionId, played.state, played.settled), allowedMentions: { parse: [] } });
+    return interaction.update({ embeds: [blackjackEmbed(played.state, interaction.user.id, played.result, played.settled ? null : sessionId)], components: actionRows(sessionId, played.state, played.settled), allowedMentions: { parse: [] } });
   } catch (error) {
     const content = error.code === 'INSUFFICIENT_FUNDS' ? 'Bạn không đủ xu để thực hiện thao tác này.'
       : error.message === 'BET_LIMIT' ? `Thao tác này vượt giới hạn cược **${formatCoins(error.maxBet)} xu/người/ván**.`
@@ -287,6 +289,7 @@ async function handleBlackjackButton(interaction) {
 }
 
 function getBlackjackTable(id) { return db.prepare('SELECT * FROM blackjack_tables WHERE id=?').get(String(id)) || null; }
+function getActiveBlackjackTable(id, guildId) { return db.prepare("SELECT * FROM blackjack_tables WHERE id=? AND guild_id=? AND status IN ('lobby','playing')").get(String(id), String(guildId)) || null; }
 function getBlackjackTableLock(guildId, userId) { return db.prepare('SELECT table_id,role FROM blackjack_table_locks WHERE guild_id=? AND user_id=?').get(String(guildId), String(userId)) || null; }
 function tableState(table) { return JSON.parse(table.state_json); }
 function saveTable(table, state, status = table.status, expiresAt = table.expires_at, now = Date.now()) {
@@ -431,7 +434,17 @@ function blackjackTableEmbed(table, state = tableState(table)) {
       }).join('\n\n') });
     if (complete) embed.addFields({ name: 'Kết quả', value: `Ván đã kết thúc. Ante **${formatCoins(table.ante)} xu/người**.` });
   }
-  return embed;
+  return embed.setFooter({ text: `Mã ván: ${table.id}` });
+}
+function forceEndBlackjackSession(id, guildId, adminId) {
+  return db.transaction(() => {
+    const session = getActiveSession(id, guildId); if (!session) return null;
+    const state = parseState(session); const refund = totalBet(state);
+    creditCoins({ guildId: session.guild_id, userId: session.user_id, amount: refund,
+      reason: `blackjack:admin-refund:${adminId}:${session.id}`, operationId: `refund:blackjack-admin:${session.id}:${session.user_id}` });
+    db.prepare('DELETE FROM blackjack_sessions WHERE id=?').run(session.id);
+    return { session, state, participants: [session.user_id], refund };
+  })();
 }
 function blackjackTableRows(table, state = tableState(table)) {
   if (table.status === 'lobby') return [new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId(`blackjack-table:${table.id}:join`).setLabel('Vào bàn').setEmoji('🪑').setStyle(ButtonStyle.Success).setDisabled(state.players.length >= TABLE_GUESTS))];
@@ -472,6 +485,23 @@ function expireBlackjackTableTx(table, now = Date.now()) {
   }
   state.phase = 'expired'; saveTable(table, state, 'expired', now, now); db.prepare('DELETE FROM blackjack_table_locks WHERE table_id=?').run(table.id); return state;
 }
+function forceEndBlackjackTable(id, guildId, adminId) {
+  return db.transaction(() => {
+    const table = getActiveBlackjackTable(id, guildId); if (!table) return null;
+    const state = tableState(table);
+    const participantIds = [...new Set([table.dealer_id, ...state.players.map(player => player.id)])];
+    const dealerRefund = table.ante * TABLE_GUESTS;
+    creditCoins({ guildId: table.guild_id, userId: table.dealer_id, amount: dealerRefund,
+      reason: `blackjack-table:admin-refund:${adminId}:${table.id}`, operationId: `refund:blackjack-table-admin:${table.id}:${table.dealer_id}` });
+    for (const player of state.players) creditCoins({ guildId: table.guild_id, userId: player.id, amount: player.stake,
+      reason: `blackjack-table:admin-refund:${adminId}:${table.id}`, operationId: `refund:blackjack-table-admin:${table.id}:${player.id}` });
+    state.phase = 'expired'; state.results = null;
+    saveTable(table, state, 'expired', Date.now());
+    db.prepare('DELETE FROM blackjack_table_locks WHERE table_id=?').run(table.id);
+    const savedTable = getBlackjackTable(id);
+    return { table: savedTable, state, participants: participantIds };
+  })();
+}
 async function maintainBlackjackTables(client) {
   const due = db.prepare("SELECT * FROM blackjack_tables WHERE status IN ('lobby','playing') AND expires_at<=?").all(Date.now());
   for (const oldTable of due) {
@@ -486,8 +516,8 @@ async function maintainBlackjackTables(client) {
 function startBlackjackTableMaintenance(client) { const run = () => maintainBlackjackTables(client).catch(() => {}); run(); const timer = setInterval(run, 5_000); timer.unref?.(); return timer; }
 
 module.exports = {
-  MIN_BET, MAX_BET, REGULAR_WIN_MULTIPLIER, handScore, isBlackjack, handType, createShoe, putAceOnTop, startBlackjack, playAction,
+  MIN_BET, MAX_BET, REGULAR_WIN_MULTIPLIER, handScore, isBlackjack, handType, createShoe, putAceOnTop, startBlackjack, playAction, forceEndBlackjackSession,
   getSessionByUser, setMessageId, blackjackEmbed, actionRows, handleBlackjackButton,
-  createBlackjackTable, setBlackjackTableMessage, blackjackTableEmbed, blackjackTableRows, handleBlackjackTableButton, startBlackjackTableMaintenance,
+  createBlackjackTable, setBlackjackTableMessage, blackjackTableEmbed, blackjackTableRows, handleBlackjackTableButton, startBlackjackTableMaintenance, forceEndBlackjackTable,
   getBlackjackTableLock,
 };

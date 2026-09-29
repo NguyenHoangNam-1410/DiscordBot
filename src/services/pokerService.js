@@ -1,7 +1,7 @@
 const crypto = require('node:crypto');
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const { db } = require('../db');
-const { getAccount, spendCoins, settleReservedGame } = require('./economyService');
+const { getAccount, spendCoins, settleReservedGame, creditCoins } = require('./economyService');
 const { getGameBetLimit } = require('./gameBetLimitService');
 const { formatCoins } = require('../utils/economy');
 const { createDeck, cardRank, bestHand, describeHand, awardPots } = require('./pokerEngine');
@@ -23,6 +23,7 @@ const VARIANTS = Object.freeze({
 const BOT_NAMES = { bot_luna: 'Luna 🤖', bot_sol: 'Sol 🤖' };
 
 function getSession(id) { return db.prepare('SELECT * FROM poker_sessions WHERE id = ?').get(String(id)) || null; }
+function getActiveSession(id, guildId) { return db.prepare('SELECT * FROM poker_sessions WHERE id=? AND guild_id=?').get(String(id), String(guildId)) || null; }
 function getUserSession(guildId, userId) { return db.prepare('SELECT * FROM poker_sessions WHERE guild_id=? AND user_id=?').get(String(guildId), String(userId)) || null; }
 function parseState(session) {
   const state = JSON.parse(session.state_json);
@@ -164,6 +165,22 @@ function settle(session, state, reason = 'showdown') {
   state.phase = 'complete'; state.result = { reason, scores, pots: awarded.pots, refunds: awarded.refunds, payout, outcome, insurance, insurancePercent, balance: account.balance, achievements: account.unlockedAchievements, experienceGained: account.experienceGained, levelUps: account.levelUps, bonusDrops: account.bonusDrops };
   db.prepare('DELETE FROM poker_sessions WHERE id=?').run(session.id); return state;
 }
+function forceEndPokerSession(id, guildId, adminId) {
+  return db.transaction(() => {
+    const current = getActiveSession(id, guildId); if (!current) return null;
+    const state = parseState(current);
+    if (state.mode === 'multiplayer') return pokerMultiplayerService.forceEndPokerTable(current, adminId);
+    const human = state.players[0];
+    const refund = human.committed + human.stack;
+    creditCoins({ guildId: current.guild_id, userId: human.id, amount: refund,
+      reason: `poker:admin-refund:${adminId}:${current.id}`, operationId: `refund:poker-admin:${current.id}:${human.id}` });
+    state.phase = 'complete'; state.turnUserId = null;
+    state.result = { reason: 'admin-ended', scores: {}, pots: [], refunds: {}, payout: refund, outcome: 'draw', insurance: 0, insurancePercent: 0 };
+    state.log.push(`🛑 Quản trị viên kết thúc ván ${current.id}; tiền đã khóa được hoàn lại.`);
+    db.prepare('DELETE FROM poker_sessions WHERE id=?').run(current.id);
+    return { session: current, state, participants: [human.id] };
+  })();
+}
 function advance(session, state) {
   if (activePlayers(state).length === 1) return settle(session, state, 'everyone-folded');
   if (state.variant === 'pineapple' && state.street === 'flop' && state.players[0].hole.length === 3) { state.phase = 'discard'; state.log.push('🍍 Chọn 1 trong 3 lá tẩy để bỏ trước Turn.'); saveState(session, state); return state; }
@@ -209,7 +226,7 @@ function playerEval(state) {
   const score = bestHand(human.hole, state.board, state.variant);
   return `${score?.name || 'Chưa xác định'} · ${describeHand(score)}`;
 }
-function pokerEmbed(state, userId) {
+function pokerEmbed(state, userId, sessionId = null) {
   const pot = state.players.reduce((sum, player) => sum + player.committed, 0); const human = state.players[0]; const complete = state.phase === 'complete';
   const exposedBots = state.players.slice(1).map(bot => {
     const hidden = Math.max(0, bot.hole.length - 1);
@@ -227,7 +244,7 @@ function pokerEmbed(state, userId) {
     addExperienceField(embed, state.result);
     if (state.result.achievements?.length) embed.addFields({ name: '🏅 Thành tựu mới', value: state.result.achievements.map(item => `**${item.name}**`).join('\n') });
   }
-  return embed.setFooter({ text: `${VARIANTS[state.variant].description} • Main Pot và Side Pot tự động` });
+  return embed.setFooter({ text: `${sessionId && !complete ? `Mã ván: ${sessionId} • ` : ''}${VARIANTS[state.variant].description} • Main Pot và Side Pot tự động` });
 }
 function pokerRows(sessionId, state) {
   if (state.phase === 'complete') return [new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId(`replay:poker:${state.variant}`).setLabel('Chơi lại').setEmoji('🔁').setStyle(ButtonStyle.Success))];
@@ -251,13 +268,13 @@ async function handlePokerButton(interaction) {
   if (action === 'raise') {
     const state = parseState(session); const max = maxRaiseAmount(state, session.guild_id);
     if (max < 10) {
-      await interaction.update({ embeds: [pokerEmbed(state, interaction.user.id)], components: pokerRows(id, state), allowedMentions: { parse: [] } });
+      await interaction.update({ embeds: [pokerEmbed(state, interaction.user.id, id)], components: pokerRows(id, state), allowedMentions: { parse: [] } });
       return interaction.followUp({ content: 'Bạn không thể tố thêm vì đã đạt giới hạn cược của server hoặc không đủ stack.', flags: MessageFlags.Ephemeral });
     }
     const modal = new ModalBuilder().setCustomId(`poker-modal:${id}:raise`).setTitle('Tố thêm xu').addComponents(new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('amount').setLabel(`Số xu tố thêm (10–${max})`).setStyle(TextInputStyle.Short).setRequired(true)));
     return interaction.showModal(modal);
   }
-  try { const state = action === 'discard' ? discardCard(id, interaction.user.id, Number(rawIndex)) : playerAction(id, interaction.user.id, action); return interaction.update({ embeds: [pokerEmbed(state, interaction.user.id)], components: pokerRows(id, state), allowedMentions: { parse: [] } }); }
+  try { const state = action === 'discard' ? discardCard(id, interaction.user.id, Number(rawIndex)) : playerAction(id, interaction.user.id, action); return interaction.update({ embeds: [pokerEmbed(state, interaction.user.id, id)], components: pokerRows(id, state), allowedMentions: { parse: [] } }); }
   catch (error) { return interaction.reply({ content: 'Không thể thực hiện hành động này ở thời điểm hiện tại.', flags: MessageFlags.Ephemeral }); }
 }
 async function handlePokerModal(interaction) {
@@ -265,7 +282,7 @@ async function handlePokerModal(interaction) {
   if (existingSession && JSON.parse(existingSession.state_json).mode === 'multiplayer') return pokerMultiplayerService.handlePokerModal(interaction);
   const [, id] = interaction.customId.split(':'); const text = interaction.fields.getTextInputValue('amount').trim(); const amount = Number(text);
   if (!/^\d+$/.test(text)) return interaction.reply({ content: 'Số xu tố không hợp lệ.', flags: MessageFlags.Ephemeral });
-  try { const state = playerAction(id, interaction.user.id, 'raise', amount); return interaction.update({ embeds: [pokerEmbed(state, interaction.user.id)], components: pokerRows(id, state), allowedMentions: { parse: [] } }); }
+  try { const state = playerAction(id, interaction.user.id, 'raise', amount); return interaction.update({ embeds: [pokerEmbed(state, interaction.user.id, id)], components: pokerRows(id, state), allowedMentions: { parse: [] } }); }
   catch (error) { return interaction.reply({ content: error.message === 'BET_LIMIT' ? `Bạn chỉ có thể tố thêm tối đa **${formatCoins(error.maxRaise)} xu** trong giới hạn **${formatCoins(error.maxBet)} xu/ván**.` : error.message === 'INVALID_RAISE' ? 'Mức tố tối thiểu là 10 xu.' : 'Không thể tố lúc này.', flags: MessageFlags.Ephemeral }); }
 }
 async function handlePokerPrivateButton(interaction) {
@@ -277,10 +294,10 @@ async function expirePokerSessions(client, logger = console, now = Date.now()) {
     try {
       if (JSON.parse(session.state_json).mode === 'multiplayer') { await pokerMultiplayerService.expirePokerTable(session, client); expired += 1; continue; }
       const state = parseState(session); state.players[0].folded = true; state.log.push('⌛ Hết thời gian — tự động bỏ bài.'); settle(session, state, 'timeout'); expired += 1;
-      if (session.message_id) { const channel = await client.channels.fetch(session.channel_id).catch(() => null); const message = await channel?.messages?.fetch(session.message_id).catch(() => null); if (message) await message.edit({ embeds: [pokerEmbed(state, session.user_id)], components: [] }); }
+      if (session.message_id) { const channel = await client.channels.fetch(session.channel_id).catch(() => null); const message = await channel?.messages?.fetch(session.message_id).catch(() => null); if (message) await message.edit({ embeds: [pokerEmbed(state, session.user_id, session.id)], components: [] }); }
     } catch (error) { logger.error?.({ err: error, pokerSessionId: session.id }, 'poker expiry failed'); }
   }
   return expired;
 }
 function startPokerMaintenance(client, logger = console) { const run = () => expirePokerSessions(client, logger).catch(error => logger.error?.({ err: error }, 'poker maintenance failed')); run(); const timer = setInterval(run, 30_000); timer.unref?.(); return timer; }
-module.exports = { POKER_ANTE, VARIANTS, startPoker, getSession, setPokerMessage, playerAction, discardCard, playerEval, botEvaluation, choosePineappleDiscard, maxRaiseAmount, pokerEmbed, pokerRows, handlePokerButton, handlePokerPrivateButton, handlePokerModal, expirePokerSessions, startPokerMaintenance };
+module.exports = { POKER_ANTE, VARIANTS, startPoker, getSession, setPokerMessage, playerAction, discardCard, playerEval, botEvaluation, choosePineappleDiscard, maxRaiseAmount, pokerEmbed, pokerRows, handlePokerButton, handlePokerPrivateButton, handlePokerModal, expirePokerSessions, startPokerMaintenance, forceEndPokerSession };

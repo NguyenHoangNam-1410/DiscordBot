@@ -33,7 +33,7 @@ function chaosLabel(state) {
   if (chance < 0.03) return '🟡 Chaos: Bất ổn';
   return `🔴 Chaos: NGUY HIỂM${state.lastChaosSpike ? ' · SPIKE' : ''}`;
 }
-function hardcoreEmbed(state, userId, result, classes) {
+function hardcoreEmbed(state, userId, result, classes, sessionId = null) {
   const classInfo = classes[state.classKey]; const payout = potentialPayout(state);
   const items = state.items.length ? state.items.slice(-4).map(item => `• ${item.name} (${item.rarity})`).join('\n') : 'Chưa có';
   const embed = new EmbedBuilder().setColor(result ? (result.outcome === 'win' ? 0x2ECC71 : 0xE74C3C) : state.floor > 100 ? 0x9B59B6 : 0xE67E22)
@@ -52,7 +52,7 @@ function hardcoreEmbed(state, userId, result, classes) {
     embed.addFields({ name: 'Kết quả', value: text });
     addExperienceField(embed, result);
     if (result.achievements?.length) embed.addFields({ name: '🏅 Thành tựu mới', value: result.achievements.map(item => `**${item.name}**`).join('\n') });
-  } else embed.setFooter({ text: `Lượt ${state.turn} • Cược ${formatCoins(state.stake)} xu • Tầng 100 hoàn thành • Tối đa 999` });
+  } else embed.setFooter({ text: `${sessionId ? `Mã ván: ${sessionId} • ` : ''}Lượt ${state.turn} • Cược ${formatCoins(state.stake)} xu • Tầng 100 hoàn thành • Tối đa 999` });
   return embed;
 }
 function button(sessionId, turn, action, label, emoji, style, disabled = false) {

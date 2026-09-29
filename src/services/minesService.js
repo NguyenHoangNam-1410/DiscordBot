@@ -1,7 +1,7 @@
 const crypto = require('node:crypto');
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags } = require('discord.js');
 const { db } = require('../db');
-const { spendCoins, settleReservedGame } = require('./economyService');
+const { spendCoins, settleReservedGame, creditCoins } = require('./economyService');
 const { formatCoins } = require('../utils/economy');
 const { getGameBetLimit } = require('./gameBetLimitService');
 const { consumeActiveEffect } = require('./effectStateService');
@@ -69,6 +69,17 @@ function createSpecialPosition(mines, serverSeed = null) {
 }
 
 function getSession(id) { return db.prepare('SELECT * FROM mines_sessions WHERE id = ?').get(String(id)) || null; }
+function forceEndMinesSession(id, guildId, adminId) {
+  return db.transaction(() => {
+    const session = db.prepare('SELECT * FROM mines_sessions WHERE id=? AND guild_id=?').get(String(id), String(guildId)); if (!session) return null;
+    const state = parseState(session);
+    creditCoins({ guildId: session.guild_id, userId: session.user_id, amount: state.stake,
+      reason: `mines:admin-refund:${adminId}:${session.id}`, operationId: `refund:mines-admin:${session.id}:${session.user_id}` });
+    state.status = 'admin-ended';
+    db.prepare('DELETE FROM mines_sessions WHERE id=?').run(session.id);
+    return { session, state, participants: [session.user_id] };
+  })();
+}
 function getMinesByUser(guildId, userId) { return db.prepare('SELECT * FROM mines_sessions WHERE guild_id = ? AND user_id = ?').get(String(guildId), String(userId)) || null; }
 function parseState(session) {
   const state = JSON.parse(session.state_json);
@@ -177,7 +188,7 @@ function minesRows(sessionId, state, result = null) {
   return rows;
 }
 
-function minesEmbed(state, userId, result = null) {
+function minesEmbed(state, userId, result = null, sessionId = null) {
   const multiplier = currentMultiplier(state);
   const potential = payoutFor(state);
   const embed = new EmbedBuilder().setColor(result ? (result.outcome === 'win' ? 0x2ECC71 : 0xE74C3C) : 0x3498DB)
@@ -198,7 +209,7 @@ function minesEmbed(state, userId, result = null) {
     embed.addFields({ name: '🏆 KẾT QUẢ', value: `### ${text}` });
     addExperienceField(embed, result);
     if (result.achievements?.length) embed.addFields({ name: '🏅 Thành tựu mới', value: result.achievements.map(item => `**${item.name}**`).join('\n') });
-  } else embed.setFooter({ text: 'Tín hiệu hàng/cột chỉ hiện trong thông báo riêng • 🌟 = bonus multiplier • 💣 = thua ván' });
+  } else if (sessionId) embed.setFooter({ text: `Mã ván: ${sessionId} • Tín hiệu hàng/cột chỉ hiện trong thông báo riêng • 🌟 = bonus multiplier • 💣 = thua ván` });
   return embed;
 }
 
@@ -210,7 +221,7 @@ async function handleMinesButton(interaction) {
   try {
     const played = playMines({ sessionId, userId: interaction.user.id, action, cell: rawCell === undefined ? null : Number(rawCell) });
     if (played.result) played.result.exploded = played.exploded;
-    return interaction.update({ embeds: [minesEmbed(played.state, interaction.user.id, played.result)], components: minesRows(sessionId, played.state, played.result), allowedMentions: { parse: [] } });
+    return interaction.update({ embeds: [minesEmbed(played.state, interaction.user.id, played.result, sessionId)], components: minesRows(sessionId, played.state, played.result), allowedMentions: { parse: [] } });
   } catch (error) {
     const content = error.message === 'CANNOT_CASHOUT' ? 'Bạn phải mở ít nhất một ô an toàn trước khi rút.'
       : error.message === 'INVALID_CELL' ? 'Ô này đã mở hoặc không hợp lệ.' : 'Không thể thực hiện thao tác này.';
@@ -221,5 +232,5 @@ async function handleMinesButton(interaction) {
 module.exports = {
   CELL_COUNT, MIN_MINES, MAX_MINES, MIN_BET, MAX_BET, MAX_PAYOUT, GRID_COLUMNS, SPECIAL_MULTIPLIER_BONUS,
   combination, multiplierFor, currentMultiplier, payoutFor, sameSpecialLine, createMinePositions, createSpecialPosition, getMinesByUser,
-  startMines, playMines, setMessageId, minesRows, minesEmbed, handleMinesButton,
+  startMines, playMines, setMessageId, minesRows, minesEmbed, handleMinesButton, forceEndMinesSession,
 };

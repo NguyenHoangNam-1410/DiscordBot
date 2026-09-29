@@ -68,7 +68,7 @@ module.exports = {
       if (error.message === 'BET_LIMIT') return interaction.reply({ content: `Giới hạn cược Sinh tồn của server là **${formatCoins(error.maxBet)} xu**.`, flags: MessageFlags.Ephemeral });
       return economyError(interaction, error);
     }
-    const response = await interaction.reply({ embeds: [hardcoreEmbed(started.state, interaction.user.id)], components: hardcoreRows(started.session.id, started.state), withResponse: true });
+    const response = await interaction.reply({ embeds: [hardcoreEmbed(started.state, interaction.user.id, null, started.session.id)], components: hardcoreRows(started.session.id, started.state), withResponse: true });
     const message = response?.resource?.message;
     if (message?.id) setMessageId(started.session.id, message.id);
     return started;
