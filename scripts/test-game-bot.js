@@ -358,7 +358,7 @@ assert.equal(economyDashboard.activeUsers, 2);
 assert(economyDashboard.categories.some(item => item.category === 'transfer'));
 const operationalHealth = require('../src/services/operationalHealthService').getOperationalHealth();
 assert.equal(operationalHealth.database.check, 'ok');
-assert.equal(operationalHealth.database.migration, 22);
+assert.equal(operationalHealth.database.migration, 23);
 assert(Number.isSafeInteger(operationalHealth.active.total));
 const starter = require('../src/services/onboardingService');
 const starterFirst = starter.claimStarterPack('starter-guild', 'alice', 1000);

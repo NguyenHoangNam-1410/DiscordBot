@@ -44,10 +44,13 @@ for (const [id, rarity] of Object.entries(NEW_ITEMS)) {
   assert.equal(itemIcon(item), RARITY_ICON[rarity], `icon phải theo độ hiếm ${id}`);
   assert(itemGames(item) || item.effect === 'remove_active_game_effect', `thiếu game ${id}`);
   const entry = poolEntries.find(row => row.itemId === id);
+  if (item.gachaEligible === false) { assert(!entry, `${id} không được nằm trong pool Gacha`); continue; }
   assert(entry, `thiếu pool ${id}`);
   assert.equal(entry.tier, rarity, `sai bậc pool ${id}`);
 }
 assert(poolEntries.filter(row => row.kind === 'item').every(row => catalog.getCatalogItem(row.itemId)));
+assert.equal(catalog.getCatalogItem('effect_cleanser').shopEligible, true);
+assert.throws(() => pool.addGachaItem('catalog-guild', 'effect_cleanser', 'SSR', 5, 'admin'), /INVALID_GACHA_ITEM/);
 assert.equal(itemIcon(catalog.getCatalogItem('mines_radar')), RARITY_ICON.SR);
 assert.equal(itemIcon(catalog.getCatalogItem(gacha.TICKETS[10])), RARITY_ICON.UR);
 assert.equal(itemIcon(catalog.getCatalogItem('color_red')), catalog.getCatalogItem('color_red').emoji || '🎨');
