@@ -7,7 +7,15 @@ const users = Math.max(100, Math.min(5000, Number(process.argv[2]) || 500));
 const workers = Math.max(2, Math.min(16, Number(process.argv[3]) || 8));
 const dbPath = path.resolve(__dirname, '../data/stress-economy.sqlite');
 for (const suffix of ['', '-wal', '-shm']) fs.rmSync(`${dbPath}${suffix}`, { force: true });
-process.env.DB_PATH = dbPath; require('../src/db').db.close();
+process.env.DB_PATH = dbPath;
+const { STARTING_COINS } = require('../src/services/economyService');
+const { DEFAULT_ENTRIES } = require('../src/services/gachaPoolService');
+require('../src/db').db.close();
+// The worker rolls 0, which always lands on the first weighted pool entry; derive its prize instead of hard-coding it.
+const firstPrize = DEFAULT_ENTRIES.find(entry => entry.weight > 0);
+assert.equal(firstPrize.kind, 'coins', 'lượt roll 0 phải trúng phần thưởng xu đầu pool');
+const CREDIT_PER_USER = 10; const LOCK_USER_CREDIT = 77;
+const expectedSupply = users * (STARTING_COINS + CREDIT_PER_USER + firstPrize.amount) + STARTING_COINS + LOCK_USER_CREDIT;
 function runWorker(start, end) { return new Promise((resolve, reject) => { const worker = new Worker(path.resolve(__dirname, 'stress-worker.js'), { workerData: { dbPath, start, end } }); worker.once('message', result => result.ok ? resolve() : reject(new Error(result.error))); worker.once('error', reject); }); }
 function runDuringHeldLock(lockDb, operationId) { return new Promise((resolve, reject) => {
   const worker = new Worker(path.resolve(__dirname, 'stress-lock-worker.js'), { workerData: { dbPath, operationId } });
@@ -33,7 +41,7 @@ function runDuringHeldLock(lockDb, operationId) { return new Promise((resolve, r
   const gachaOperations = db.prepare("SELECT COUNT(*) count FROM gacha_history WHERE guild_id='stress'").get().count;
   const diamondSupply = db.prepare("SELECT COALESCE(SUM(diamonds),0) supply FROM player_currencies WHERE guild_id='stress'").get().supply;
   const restartOps = db.prepare("SELECT COUNT(*) count FROM economy_transactions WHERE operation_id='restart-safe-operation'").get().count;
-  assert.equal(summary.accounts, users + 1); assert.equal(summary.supply, users * 51_010 + 1077); assert.equal(operations, users);
+  assert.equal(summary.accounts, users + 1); assert.equal(summary.supply, expectedSupply); assert.equal(operations, users);
   assert.equal(diamondOperations, users * 2); assert.equal(gachaOperations, users); assert.equal(diamondSupply, 0);
   assert.equal(restartOps, 1); assert.equal(db.pragma('integrity_check', { simple: true }), 'ok'); db.close();
   for (const suffix of ['', '-wal', '-shm']) fs.rmSync(`${dbPath}${suffix}`, { force: true });
