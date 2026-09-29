@@ -107,6 +107,7 @@ async function run() {
     customId: 'kiemtra:alice', values, guildId: 'command-guild', user: { id: 'alice' },
     update: async payload => { kiemtraUpdates.push(payload); return payload; }, reply: async payload => payload,
   });
+  const tenTicketsBefore = require('../src/services/gachaService').getTicketBalances('command-guild', 'alice').ten;
   await require('../src/commands/kiemtra').handleSelect(kiemtraSelect(['tanthu']));
   assert.match(kiemtraUpdates[0].embeds[0].toJSON().title, /ĐÃ NHẬN THƯỞNG TÂN THỦ/);
   await require('../src/commands/kiemtra').handleSelect(kiemtraSelect(['tanthu']));
@@ -114,7 +115,7 @@ async function run() {
   const newbieAgain = interaction({ options: { getSubcommand: () => 'tanthu' } });
   await require('../src/commands/nhiemvu').execute(newbieAgain);
   assert.match(newbieAgain.replies[0].content, /đã nhận thưởng tân thủ/);
-  assert.equal(require('../src/services/gachaService').getTicketBalances('command-guild', 'alice').ten, 1);
+  assert.equal(require('../src/services/gachaService').getTicketBalances('command-guild', 'alice').ten, tenTicketsBefore + 1, 'thưởng tân thủ chỉ trao đúng 1 vé ×10, một lần');
   const foreign = [];
   await require('../src/commands/kiemtra').handleSelect({ ...kiemtraSelect(['ngay']), user: { id: 'bob' }, reply: async payload => { foreign.push(payload); return payload; } });
   assert.equal(foreign.length, 1);

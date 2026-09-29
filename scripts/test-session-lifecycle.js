@@ -200,6 +200,36 @@ function bet(guildId, roundId, userId, choice, amount) {
   await pokerTable.expirePokerTable(db.prepare('SELECT * FROM poker_sessions WHERE id=?').get(pokerTableId), null, false);
   assert.equal(balance(afk, 'lena'), START); assert.equal(balance(afk, 'nora'), START);
   assert.equal(balance(afk, 'mike'), START - 50, 'người đến lượt mà để bàn Poker hết hạn mất cược');
+  // Pineapple: chỉ người đang đến lượt bỏ bài mới bị phạt, người chưa đến lượt bỏ bài được hoàn
+  const pineappleId = crypto.randomBytes(4).toString('hex');
+  const pineapplePlayers = ['sam', 'tina', 'uma'].map(id => ({ id, name: id, stack: 500, committed: 50, streetBet: 0, lobbyAnte: 0, folded: false, allIn: false, hole: ['A♠', 'K♠', 'Q♠'] }));
+  for (const player of pineapplePlayers) economy.spendCoins({ guildId: afk, userId: player.id, amount: 50, reason: 'test-pineapple' });
+  db.prepare('INSERT INTO poker_sessions(id,guild_id,channel_id,message_id,user_id,variant,state_json,expires_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)')
+    .run(pineappleId, afk, 'c', null, 'sam', 'pineapple', JSON.stringify({ mode: 'multiplayer', variant: 'pineapple', phase: 'discard', street: 'flop', turnUserId: 'tina', discardPending: ['tina', 'uma'], pending: [], board: [], log: [], players: pineapplePlayers }), Date.now() - 1, Date.now(), Date.now());
+  const pineappleSession = db.prepare('SELECT * FROM poker_sessions WHERE id=?').get(pineappleId);
+  const pineappleState = await pokerTable.expirePokerTable(pineappleSession, null, false);
+  assert.deepEqual(pineappleState.result.stallers, ['tina'], 'chỉ người đến lượt bỏ bài là người làm hết hạn');
+  assert.equal(balance(afk, 'tina'), START - 50, 'người đến lượt bỏ bài mất cược');
+  assert.equal(balance(afk, 'sam'), START); assert.equal(balance(afk, 'uma'), START, 'người chưa đến lượt bỏ bài phải được hoàn');
+  assert.match(JSON.stringify(pokerTable.pokerTableEmbed(pineappleState, pineappleId).toJSON()), /mất tiền cược/);
+
+  // Thông báo riêng khi bàn hết hạn phải đúng với kết quả: người làm hết hạn mất cược, người khác được hoàn
+  const wordingIds = ['vic', 'wes'];
+  const wordingTable = crypto.randomBytes(4).toString('hex');
+  const wordingPlayers = wordingIds.map(id => ({ id, name: id, stack: 500, committed: 50, streetBet: 0, lobbyAnte: 0, folded: false, allIn: false, hole: [] }));
+  for (const player of wordingPlayers) economy.spendCoins({ guildId: afk, userId: player.id, amount: 50, reason: 'test-wording' });
+  db.prepare('INSERT INTO poker_sessions(id,guild_id,channel_id,message_id,user_id,variant,state_json,expires_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)')
+    .run(wordingTable, afk, 'c', null, 'vic', 'texas', JSON.stringify({ mode: 'multiplayer', variant: 'texas', phase: 'betting', street: 'flop', turnUserId: 'wes', discardPending: [], pending: ['wes'], board: [], log: [], players: wordingPlayers }), Date.now() - 1, Date.now(), Date.now());
+  const wordingFor = async userId => {
+    const calls = { follow: [] };
+    await pokerTable.handlePokerModal({ customId: `poker-private-modal:${wordingTable}:raise`, guildId: afk, channelId: 'c', user: { id: userId }, client: null,
+      fields: { getTextInputValue: () => '10' }, update: async () => {}, reply: async payload => { calls.follow.push(payload); }, followUp: async payload => { calls.follow.push(payload); } });
+    return calls.follow[0]?.content || '';
+  };
+  const staller = await wordingFor('wes');
+  assert.match(staller, /mất số tiền đã cược/, 'người làm hết hạn phải được báo là mất cược'); assert(!/được hoàn lại\.$/.test(staller.replace(/người chơi khác được hoàn lại\./, '')));
+  assert.equal(balance(afk, 'wes'), START - 50); assert.equal(balance(afk, 'vic'), START);
+
   const lobbyId = crypto.randomBytes(4).toString('hex');
   const lobbyState = { ...pokerTableState, phase: 'lobby', street: 'lobby', turnUserId: null, pending: [], players: ['olga', 'pete'].map(id => ({ id, name: id, stack: 500, committed: 0, streetBet: 0, lobbyAnte: 50, folded: false, allIn: false, hole: [] })) };
   for (const player of lobbyState.players) economy.spendCoins({ guildId: afk, userId: player.id, amount: 50, reason: 'test-poker-lobby' });
