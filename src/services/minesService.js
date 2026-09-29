@@ -69,15 +69,15 @@ function createSpecialPosition(mines, serverSeed = null) {
 }
 
 function getSession(id) { return db.prepare('SELECT * FROM mines_sessions WHERE id = ?').get(String(id)) || null; }
-function forceEndMinesSession(id, guildId, adminId, { label = 'admin-refund' } = {}) {
+function forceEndMinesSession(id, guildId, adminId, { label = 'admin-refund', forfeit = false } = {}) {
   return db.transaction(() => {
     const session = db.prepare('SELECT * FROM mines_sessions WHERE id=? AND guild_id=?').get(String(id), String(guildId)); if (!session) return null;
     const state = parseState(session);
-    creditCoins({ guildId: session.guild_id, userId: session.user_id, amount: state.stake,
+    if (!forfeit) creditCoins({ guildId: session.guild_id, userId: session.user_id, amount: state.stake,
       reason: `mines:${label}:${adminId}:${session.id}`, operationId: `refund:mines-admin:${session.id}:${session.user_id}` });
     state.status = 'admin-ended';
     db.prepare('DELETE FROM mines_sessions WHERE id=?').run(session.id);
-    return { session, state, participants: [session.user_id] };
+    return { session, state, participants: [session.user_id], forfeited: forfeit ? state.stake : 0 };
   })();
 }
 function getMinesByUser(guildId, userId) { return db.prepare('SELECT * FROM mines_sessions WHERE guild_id = ? AND user_id = ?').get(String(guildId), String(userId)) || null; }

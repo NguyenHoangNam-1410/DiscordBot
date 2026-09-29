@@ -437,9 +437,10 @@ assert.equal(economy.getAccount('duel-guild', 'bob').balance, 900);
 const timeout = rps.createDuel({ guildId: 'timeout-guild', channelId: 'duel-channel', challengerId: 'alice', opponentId: 'bob', stake: 250, now: 1000 });
 rps.acceptDuel(timeout.id, 'bob', 2000);
 const expired = rps.expireDuel(timeout.id, 2000 + rps.PLAY_TTL_MS + 1);
-assert.equal(expired.refunded, true);
-assert.equal(economy.getAccount('timeout-guild', 'alice').balance, 1000);
-assert.equal(economy.getAccount('timeout-guild', 'bob').balance, 1000);
+assert.equal(expired.refunded, false, 'không ai chọn kịp thì không ai được hoàn cược');
+assert.deepEqual(expired.forfeited.sort(), ['alice', 'bob']);
+assert.equal(economy.getAccount('timeout-guild', 'alice').balance, 750);
+assert.equal(economy.getAccount('timeout-guild', 'bob').balance, 750);
 const blackjackDuel = require('../src/services/blackjackDuelService');
 const cardDuel = blackjackDuel.createBlackjackDuel({ guildId: 'card-guild', channelId: 'card-channel', challengerId: 'alice', opponentId: 'bob', stake: 100, now: 1000 });
 const acceptedCardDuel = blackjackDuel.acceptBlackjackDuel(cardDuel.id, 'bob', 2000, ['9♣', '8♣', 'K♠', '7♦', 'A♥']);
@@ -456,9 +457,10 @@ assert.doesNotThrow(() => rps.duelEmbed(duelResult.duel).toJSON());
 const cardTimeout = blackjackDuel.createBlackjackDuel({ guildId: 'card-timeout', channelId: 'card-channel', challengerId: 'alice', opponentId: 'bob', stake: 200, now: 1000 });
 blackjackDuel.acceptBlackjackDuel(cardTimeout.id, 'bob', 2000, ['2♣', '3♣', '4♠', '5♦']);
 const expiredCardDuel = blackjackDuel.expireBlackjackDuel(cardTimeout.id, 2000 + blackjackDuel.PLAY_TTL_MS + 1);
-assert.equal(expiredCardDuel.refunded, true);
-assert.equal(economy.getAccount('card-timeout', 'alice').balance, 1000);
-assert.equal(economy.getAccount('card-timeout', 'bob').balance, 1000);
+assert.equal(expiredCardDuel.refunded, false, 'không ai hoàn tất lượt thì không ai được hoàn cược');
+assert.deepEqual(expiredCardDuel.forfeited.sort(), ['alice', 'bob']);
+assert.equal(economy.getAccount('card-timeout', 'alice').balance, 800);
+assert.equal(economy.getAccount('card-timeout', 'bob').balance, 800);
 const blackjack = require('../src/services/blackjackService');
 // Người chơi quắc luôn thua dù nhà cái cũng quắc
 const bothBustStarted = blackjack.startBlackjack({ guildId: 'both-bust-guild', channelId: 'blackjack-channel', userId: 'alice', stake: 100,

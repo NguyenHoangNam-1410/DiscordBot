@@ -21,8 +21,11 @@ function expireStaleSoloSessionsSync(now = Date.now()) {
     const rows = db.prepare(`SELECT id,guild_id,user_id,channel_id,message_id FROM ${game.table}
       WHERE updated_at < ? OR (message_id IS NULL AND updated_at < ?)`).all(now - SOLO_SESSION_TTL_MS, now - NO_MESSAGE_TTL_MS);
     for (const row of rows) {
-      const result = game.forceEnd(row.id, row.guild_id, 'system', { label: 'timeout-refund' });
-      if (result) expired.push({ game, row });
+      // The player let the game sit idle after the message was posted, so the stake is forfeited. If the message was never posted the
+      // player had no way to play (Discord or bot failure), so that stake is refunded.
+      const forfeit = Boolean(row.message_id);
+      const result = game.forceEnd(row.id, row.guild_id, 'system', { label: forfeit ? 'timeout-forfeit' : 'timeout-refund', forfeit });
+      if (result) expired.push({ game, row, forfeit });
     }
   }
   return expired;
@@ -30,13 +33,13 @@ function expireStaleSoloSessionsSync(now = Date.now()) {
 
 async function expireStaleSoloSessions(client, logger = console, now = Date.now()) {
   const expired = expireStaleSoloSessionsSync(now);
-  for (const { game, row } of expired) {
+  for (const { game, row, forfeit } of expired) {
     if (!row.message_id || !client?.channels?.fetch) continue;
     try {
       const channel = await client.channels.fetch(row.channel_id);
       const message = channel?.isTextBased?.() ? await channel.messages.fetch(row.message_id) : null;
       if (message) await message.edit({ embeds: [new EmbedBuilder().setColor(0x7F8C8D).setTitle(`⌛ ${game.name} ĐÃ HẾT THỜI GIAN`)
-        .setDescription(`Ván \`${row.id}\` không hoạt động quá lâu nên đã đóng. Tiền cược đã được hoàn lại cho <@${row.user_id}>.`)], components: [], allowedMentions: { parse: [] } });
+        .setDescription(`Ván \`${row.id}\` không hoạt động quá lâu nên đã đóng. ${forfeit ? `<@${row.user_id}> không thao tác kịp nên **mất tiền cược**.` : `Tiền cược đã được hoàn lại cho <@${row.user_id}>.`}`)], components: [], allowedMentions: { parse: [] } });
     } catch (error) {
       if (error?.code !== 10003 && error?.code !== 10008) logger.warn?.({ err: error, sessionId: row.id }, 'could not update expired solo session');
     }

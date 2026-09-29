@@ -329,7 +329,7 @@ db.prepare("UPDATE multiplayer_rounds SET status='closed' WHERE id=?").run(taixi
   }
   const GUILD_TABLES = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'").all()
     .map(row => row.name).filter(name => db.prepare(`PRAGMA table_info(${name})`).all().some(column => column.name === 'guild_id'));
-  const KEPT_CONFIG_TABLES = ['game_bet_limits', 'game_channels', 'game_reward_buffs', 'game_rewards', 'game_sessions', 'game_settings', 'gacha_pool_entries',
+  const KEPT_CONFIG_TABLES = ['game_bet_limits', 'game_channels', 'game_reward_buffs', 'game_rewards', 'game_settings', 'gacha_pool_entries',
     'multiplayer_rounds', 'shop_items', 'shop_settings', 'weekly_reward_settings', 'weekly_role_rewards'];
   for (const table of GUILD_TABLES) assert(admin.RESET_PLAYER_TABLES.includes(table) || KEPT_CONFIG_TABLES.includes(table), `bảng ${table} chưa được phân loại khi reset server`);
   const shopRow = db.prepare('SELECT item_id FROM shop_items WHERE guild_id=?').get(configuredGuild);

@@ -261,14 +261,15 @@ function finishRun(session, state, reason) {
   hardcoreRepository.deleteSession(session.id);
   return { reason, payout, outcome, balance: account.balance, achievements: account.unlockedAchievements, experienceGained: account.experienceGained, levelUps: account.levelUps, bonusDrops: account.bonusDrops };
 }
-function forceEndHardcoreSession(id, guildId, adminId, { label = 'admin-refund' } = {}) {
+function forceEndHardcoreSession(id, guildId, adminId, { label = 'admin-refund', forfeit = false } = {}) {
   return db.transaction(() => {
     const session = hardcoreRepository.getActiveSession(id, guildId); if (!session) return null;
     const state = parseState(session);
-    creditCoins({ guildId: session.guild_id, userId: session.user_id, amount: state.stake,
+    if (!forfeit) creditCoins({ guildId: session.guild_id, userId: session.user_id, amount: state.stake,
       reason: `hardcore:${label}:${adminId}:${session.id}`, operationId: `refund:hardcore-admin:${session.id}:${session.user_id}` });
+    if (forfeit) recordRun(session.guild_id, session.user_id, state, 'forfeit');
     hardcoreRepository.deleteSession(session.id);
-    return { session, state, participants: [session.user_id] };
+    return { session, state, participants: [session.user_id], forfeited: forfeit ? state.stake : 0 };
   })();
 }
 
@@ -390,11 +391,8 @@ const actionTx = db.transaction(({ sessionId, userId, expectedTurn, action }) =>
   } else if (state.encounter.type === 'shrine') {
     if (action === 'ignore') completeFloor(state, '🚶 Bạn bỏ qua Shrine.', 0);
     else if (action === 'touch') {
-      let log = applyShrine(state, state.encounter.kind);
-      if (state.hp <= 0) {
-        if (!reviveIfAvailable(session, state)) return { settled: true, state, result: finishRun(session, state, 'death') };
-        log += `\n❤️ Bùa Hồi Sinh kích hoạt: trở lại với ${state.hp} HP.`;
-      }
+      const log = applyShrine(state, state.encounter.kind);
+      if (state.hp <= 0) return { settled: true, state, result: finishRun(session, state, 'death') };
       completeFloor(state, log, 0.5);
     } else throw new Error('INVALID_ACTION');
   } else if (state.encounter.type === 'empty') {

@@ -145,15 +145,19 @@ function playBlackjackDuel(id, actorId, action, now = Date.now()) { return playT
 const expireTx = db.transaction((id, now) => {
   const duel = getBlackjackDuel(id);
   if (!duel || !['invited', 'playing'].includes(duel.status) || duel.expires_at > now) return null;
-  const refunded = duel.status === 'playing';
-  if (refunded) {
-    creditCoins({ guildId: duel.guild_id, userId: duel.challenger_id, amount: duel.stake, reason: `blackjack-duel:refund:${duel.id}`,
-      operationId: `refund:blackjack-duel:${duel.id}:${duel.challenger_id}` });
-    creditCoins({ guildId: duel.guild_id, userId: duel.opponent_id, amount: duel.stake, reason: `blackjack-duel:refund:${duel.id}`,
-      operationId: `refund:blackjack-duel:${duel.id}:${duel.opponent_id}` });
+  // Players who still owed an action when time ran out caused the expiry and forfeit; players who had finished are refunded.
+  const forfeited = [];
+  if (duel.status === 'playing') {
+    const players = duelState(duel)?.players || {};
+    for (const userId of [duel.challenger_id, duel.opponent_id]) {
+      if (players[userId]?.status === 'playing') { forfeited.push(userId); continue; }
+      creditCoins({ guildId: duel.guild_id, userId, amount: duel.stake, reason: `blackjack-duel:refund:${duel.id}`,
+        operationId: `refund:blackjack-duel:${duel.id}:${userId}` });
+    }
   }
+  const refunded = duel.status === 'playing' && forfeited.length < 2;
   db.prepare("UPDATE blackjack_duels SET status = 'expired', updated_at = ? WHERE id = ?").run(now, id);
-  return { ...duel, status: 'expired', refunded };
+  return { ...duel, status: 'expired', refunded, forfeited };
 });
 
 function cardsText(cards) { return cards.map(card => `\`${card}\``).join(' '); }
@@ -186,7 +190,7 @@ function blackjackDuelEmbed(duel) {
     if (exp.length) embed.addFields({ name: ':test_tube: EXP NHẬN ĐƯỢC', value: exp.join('\n') });
   }
   if (duel.status === 'declined') embed.addFields({ name: '❌ Đã từ chối', value: 'Đối thủ không nhận lời thách đấu.' });
-  if (duel.status === 'expired') embed.addFields({ name: '⌛ Đã hết hạn', value: duel.refunded ? 'Ván chưa hoàn thành, tiền cược đã được hoàn cho cả hai.' : 'Lời thách đấu không được chấp nhận kịp thời.' });
+  if (duel.status === 'expired') embed.addFields({ name: '⌛ Đã hết hạn', value: duel.forfeited?.length ? `${duel.forfeited.map(id => `<@${id}>`).join(', ')} chưa hoàn tất lượt kịp nên **mất tiền cược**${duel.refunded ? '; người còn lại được hoàn tiền' : ''}.` : duel.refunded ? 'Ván chưa hoàn thành, tiền cược đã được hoàn cho cả hai.' : 'Lời thách đấu không được chấp nhận kịp thời.' });
   return embed.setFooter({ text: `Mã trận ${duel.id} · Mục tiêu: gần 21 nhất, Xì dách ưu tiên cao nhất` });
 }
 
