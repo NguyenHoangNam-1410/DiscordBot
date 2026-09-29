@@ -45,12 +45,13 @@ function claimRoleRewards(guildId, userId, member) {
   }
 }
 
+const { getCatalogItem } = require("../services/itemCatalogService");
 function rewardText(item) {
   return [
     item.coins ? `${formatCoins(item.coins)} xu` : null,
     item.experience ? `${item.experience} EXP` : null,
     item.diamonds ? `${item.diamonds} :gem:` : null,
-    item.item ? `×${item.quantity || 1} vật phẩm` : null,
+    item.item ? `${getCatalogItem(item.item)?.name || item.item} ×${item.quantity || 1}` : null,
   ]
     .filter(Boolean)
     .join(" + ");

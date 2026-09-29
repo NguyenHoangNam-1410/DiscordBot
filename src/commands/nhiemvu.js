@@ -8,12 +8,13 @@ const {
   NEWBIE_DIAMONDS,
 } = require("../services/onboardingService");
 
+const { getCatalogItem } = require("../services/itemCatalogService");
 function rewardText(item) {
   return [
     item.coins ? `${formatCoins(item.coins)} xu` : null,
     item.experience ? `${item.experience} EXP` : null,
     item.diamonds ? `${item.diamonds} :gem:` : null,
-    item.item ? `×${item.quantity || 1} vật phẩm` : null,
+    item.item ? `${getCatalogItem(item.item)?.name || item.item} ×${item.quantity || 1}` : null,
   ]
     .filter(Boolean)
     .join(" + ");
@@ -87,6 +88,7 @@ function claimReply(interaction, type) {
 }
 
 module.exports = {
+  rewardText,
   data: new SlashCommandBuilder()
     .setName("nhiemvu")
     .setDescription("Nhiệm vụ, điểm danh và phần thưởng hoạt động")
