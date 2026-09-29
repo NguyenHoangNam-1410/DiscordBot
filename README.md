@@ -70,6 +70,8 @@ Trong ván với nhà cái, thắng thường nhận 1,9× tổng cược, Xì d
 
 `/choi domin` có một ô đặc biệt không trùng vị trí mìn. Mở một ô cùng hàng hoặc cùng cột với ô đặc biệt sẽ phát cảnh báo trong mục tín hiệu riêng, còn ô trên bàn vẫn hiển thị 💎 như mọi ô an toàn khác. Tìm đúng ô 🌟 sẽ nhân thêm x1.50 vào multiplier hiện tại cho đến khi rút thưởng. Hệ số cơ sở đã tính xác suất nhận bonus và giảm dần theo số ô mở để tránh chiến thuật rút thưởng tạo xu vô hạn. Bỏ ván ngay không tính EXP hay tiến độ nhiệm vụ.
 
+Dò mìn dùng 2–7 mìn trên bàn 20 ô. Giáp Chống Nổ chỉ vô hiệu hóa **một** quả mìn đầu tiên bạn chạm trên mỗi bản đồ; quả mìn thứ hai vẫn phát nổ như bình thường.
+
 ### Đua ngựa trực tiếp
 
 Sau 30 giây nhận cược, bot khóa cược và hiển thị cuộc đua trực tiếp trong 18 giây qua 9 chặng. Hệ thống có 20 ngựa thường và 1 Thiên Mã đặc biệt; mỗi ván chọn đúng 6 con. Thiên Mã có 7% cơ hội xuất hiện và chiếm một trong sáu vị trí. Mỗi ngựa có kỹ năng và nhịp chạy riêng: xuất phát nhanh, ôm cua, giữ sức, núp gió, chống sự cố hoặc lội ngược dòng. Hệ số được tạo riêng cho từng ván theo RNG, ngày, khung giờ và phong độ hiện tại rồi được khóa trong suốt ván. Trong cuộc đua có thể xuất hiện các biến cố gây giảm tốc như đau bụng, vấp chân, dừng gặm cỏ, chạy nhầm làn hoặc mải tạo dáng. Khi cán đích, bot công bố bục vinh quang, khoảnh khắc quyết định, thông số nhà vô địch và thanh toán cược.

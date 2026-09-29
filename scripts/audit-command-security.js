@@ -54,7 +54,7 @@ async function run() {
 
   economy.creditCoins({ guildId, userId: 'farmer', amount: 1000 });
   for (let i = 0; i < 20; i += 1) {
-    const round = mines.startMines({ guildId, userId: 'farmer', channelId: 'c', stake: 10, mineCount: 1 });
+    const round = mines.startMines({ guildId, userId: 'farmer', channelId: 'c', stake: 10, mineCount: 2 });
     mines.playMines({ sessionId: round.session.id, userId: 'farmer', action: 'forfeit' });
   }
   results.forfeitFarm = { rounds: 20, cost: 200, balanceBefore: 1000, balanceAfter: economy.getAccount(guildId, 'farmer').balance,
@@ -64,7 +64,7 @@ async function run() {
   assert.equal(db.prepare("SELECT COUNT(*) AS count FROM game_history WHERE guild_id=? AND user_id=?").get(guildId, 'farmer').count, 0);
 
   economy.creditCoins({ guildId, userId: 'stats', amount: 20000 });
-  const round = mines.startMines({ guildId, userId: 'stats', channelId: 'c', stake: 10000, mineCount: 1, forcedMines: [19], forcedSpecial: 18 });
+  const round = mines.startMines({ guildId, userId: 'stats', channelId: 'c', stake: 10000, mineCount: 2, forcedMines: [19, 17], forcedSpecial: 18 });
   mines.playMines({ sessionId: round.session.id, userId: 'stats', action: 'open', cell: 0 });
   const settled = mines.playMines({ sessionId: round.session.id, userId: 'stats', action: 'cashout' });
   const history = db.prepare('SELECT stake,payout FROM game_history WHERE guild_id=? AND user_id=?').get(guildId, 'stats');
@@ -75,7 +75,7 @@ async function run() {
   assert.throws(() => mines.playMines({ sessionId: round.session.id, userId: 'stats', action: 'cashout' }), /INVALID_SESSION/);
   results.duplicateMinesCashoutBlocked = true;
 
-  results.minesRtp = [1, 3, 7].flatMap(mineCount => [1, 5, 10].filter(opened => opened <= 20 - mineCount).map(opened => {
+  results.minesRtp = [2, 3, 7].flatMap(mineCount => [1, 5, 10].filter(opened => opened <= 20 - mineCount).map(opened => {
     const survival = mines.combination(20 - opened, mineCount) / mines.combination(20, mineCount);
     const specialChance = opened / (20 - mineCount);
     const state = { stake: 1000, mineCount, opened: Array(opened).fill(0), specialFound: false };

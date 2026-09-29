@@ -254,22 +254,29 @@ function bet(guildId, roundId, userId, choice, amount) {
   assert.equal(funGame.getVuaSession(vuaReset), null, 'phiên Vua tiếng Việt trong bộ nhớ phải bị xóa');
   assert.equal(db.prepare("SELECT COUNT(*) AS count FROM game_sessions WHERE guild_id=? AND game='vuatiengviet'").get(vuaReset).count, 0);
 
-  // Dò mìn: mở hết 20 ô nhờ Giáp Chống Nổ không được tặng mức trả tối đa
+  // Dò mìn: tối thiểu 2 mìn, Giáp Chống Nổ chỉ chặn một mìn trên mỗi bản đồ
   const minesSvc = require('../src/services/minesService');
-  const minesAbuse = 'mines-all-cells';
   const effectState = require('../src/services/effectStateService');
+  const minesAbuse = 'mines-shield-rules';
+  assert.equal(minesSvc.MIN_MINES, 2);
   for (let index = 0; index < 2; index += 1) economy.creditCoins({ guildId: minesAbuse, userId: 'alice', amount: 100_000, reason: 'test-mines' });
+  assert.throws(() => minesSvc.startMines({ guildId: minesAbuse, channelId: 'c', userId: 'alice', stake: 10, mineCount: 1 }), /INVALID_MINES/);
+  assert.equal(minesSvc.getMinesByUser(minesAbuse, 'alice'), null, 'ván 1 mìn bị từ chối không được tạo session');
+  assert.equal(balance(minesAbuse, 'alice'), START + 200_000, 'ván 1 mìn bị từ chối không được trừ cược');
+  assert.equal(require('../src/commands/mines').data.toJSON().options.find(option => option.name === 'min').min_value, 2);
   effectState.addEffectCharge(minesAbuse, 'alice', 'mines_blast_shield');
-  const shieldedMines = minesSvc.startMines({ guildId: minesAbuse, channelId: 'c', userId: 'alice', stake: 100_000, mineCount: 1, forcedMines: [0], forcedSpecial: 19 });
-  let minesStep = minesSvc.playMines({ sessionId: shieldedMines.session.id, userId: 'alice', action: 'open', cell: 0 });
-  assert.equal(minesStep.state.shieldUsed, true);
-  for (let cell = 1; cell < minesSvc.CELL_COUNT && !minesStep.settled; cell += 1) minesStep = minesSvc.playMines({ sessionId: shieldedMines.session.id, userId: 'alice', action: 'open', cell });
-  assert.equal(minesStep.settled, true); assert.equal(minesStep.result.reason, 'cleared');
-  assert.equal(minesStep.state.opened.length, minesSvc.CELL_COUNT, 'phải mở đủ 20 ô');
-  assert.equal(minesSvc.multiplierFor(20, 1, 100_000), minesSvc.multiplierFor(19, 1, 100_000), 'ô mở thêm nhờ khiên không được tăng hệ số');
-  assert(minesStep.result.payout < 2_000_000, `mở đủ 20 ô không được trả ${minesStep.result.payout} xu`);
-  assert.equal(minesStep.result.payout, Math.floor(100_000 * minesSvc.currentMultiplier(minesStep.state)));
-  for (const mineCount of [1, 2, 3, 5, 7]) {
+  const shieldedMines = minesSvc.startMines({ guildId: minesAbuse, channelId: 'c', userId: 'alice', stake: 100_000, mineCount: 2, forcedMines: [0, 1], forcedSpecial: 19 });
+  const firstHit = minesSvc.playMines({ sessionId: shieldedMines.session.id, userId: 'alice', action: 'open', cell: 0 });
+  assert.equal(firstHit.settled, false); assert.equal(firstHit.state.shieldUsed, true, 'khiên chặn mìn đầu tiên');
+  const secondHit = minesSvc.playMines({ sessionId: shieldedMines.session.id, userId: 'alice', action: 'open', cell: 1 });
+  assert.equal(secondHit.settled, true, 'khiên chỉ dùng một lần: mìn thứ hai phải nổ'); assert.equal(secondHit.exploded, 1);
+  assert.equal(secondHit.result.payout, 0);
+  assert.equal(effectState.getActiveEffect(minesAbuse, 'alice', 'mines_blast_shield'), null, 'khiên đã tiêu hao, không dùng lại được ở ván sau');
+  const noShield = minesSvc.startMines({ guildId: minesAbuse, channelId: 'c', userId: 'alice', stake: 10, mineCount: 2, forcedMines: [0, 1], forcedSpecial: 19 });
+  assert(!noShield.state.blastShield, 'ván sau không còn khiên');
+  assert.equal(minesSvc.playMines({ sessionId: noShield.session.id, userId: 'alice', action: 'open', cell: 0 }).settled, true);
+  // Mở nhiều ô hơn số ô an toàn nhờ khiên không được tăng hệ số hay chạm mức trả tối đa
+  for (const mineCount of [2, 3, 5, 7]) {
     const safe = minesSvc.CELL_COUNT - mineCount;
     for (let opened = 1; opened <= minesSvc.CELL_COUNT; opened += 1) {
       const multiplier = minesSvc.multiplierFor(opened, mineCount, 10);

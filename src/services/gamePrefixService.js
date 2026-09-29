@@ -71,7 +71,7 @@ function help(prefix, command) {
   if (command === 'blackjack') return `Cách dùng: \`${prefix}xidach <số xu>\` hoặc \`${prefix}xidach solo @người_chơi <số xu>\``;
   if (command === 'poker') return `Cách dùng: \`${prefix}poker <texas|sixplus|pineapple|omaha> [bot|banbe]\``;
   if (command === 'chinchiro') return `Cách dùng: \`${prefix}chinchiro <số xu>\``;
-  if (command === 'mines') return `Cách dùng: \`${prefix}domin <số xu> <số mìn 1–7>\``;
+  if (command === 'mines') return `Cách dùng: \`${prefix}domin <số xu> <số mìn 2–7>\``;
   if (command === 'hardcore') return `Cách dùng: \`${prefix}sinhton <số xu> <barbarian|assassin|sorceress>\` hoặc \`${prefix}sinhton <hoso|xephang|tyle>\``;
   if (command === 'vuatiengviet') return `Cách dùng: \`${prefix}vtv <batdau|boqua|ketthuc>\``;
   return `Cách dùng: \`${prefix}${command}\``;
