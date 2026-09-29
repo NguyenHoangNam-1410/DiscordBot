@@ -2,6 +2,7 @@ const {
   ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags,
   SlashCommandBuilder, StringSelectMenuBuilder, StringSelectMenuOptionBuilder,
 } = require('discord.js');
+const { itemIcon } = require('../utils/rarity');
 const { listCatalog } = require('../services/itemCatalogService');
 const { getInventory } = require('../services/shopService');
 const { GAME_FILTERS, itemMatchesGame, gameLabels } = require('../services/itemGameService');
@@ -21,7 +22,7 @@ function catalogPanel(guildId, userId, selectedGame = 'all', requestedPage = 0) 
     const rarity = RARITY_LABELS[item.rarity] || item.rarity || 'Vật phẩm';
     const games = gameLabels(item);
     const scope = games?.length ? `Dùng trong: ${games.join(', ')}` : games ? 'Vật phẩm hồ sơ · không gắn với game' : 'Dùng chung · hiện ở mọi bộ lọc';
-    const icon = item.emoji || (item.type === 'color' ? '🎨' : '🎁');
+    const icon = itemIcon(item);
     return `${icon} **${item.name}** [${rarity}] · Sở hữu: **×${inventory.get(item.id) || 0}**\n_${scope}_\n${item.description}`;
   });
 

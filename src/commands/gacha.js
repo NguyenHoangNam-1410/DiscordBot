@@ -1,10 +1,11 @@
 const { SlashCommandBuilder, EmbedBuilder, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { RARITY_ICON } = require('../utils/rarity');
 const { pullGacha, getGachaHistory, TICKETS } = require('../services/gachaService');
 const { getPlayerProgression } = require('../services/playerLevelService');
 const { listGachaPool } = require('../services/gachaPoolService');
 const { gachaLuckMultiplier } = require('../services/gameBuffService');
 
-const ICON = { XU: '🪙', R: '🔵', SR: '🟣', SSR: '🟠', UR: '🔴' };
+const ICON = RARITY_ICON;
 function groupedLines(results) {
   const grouped = new Map();
   for (const result of results) {
