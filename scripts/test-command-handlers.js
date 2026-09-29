@@ -237,6 +237,25 @@ async function run() {
   assert.equal(staleRaiseUpdates[0].components[0].components[0].data.disabled, true);
   poker.playerAction(pokerRound.session.id, 'alice', 'fold');
 
+  const quantri = require('../src/commands/quantri');
+  const resetOptions = user => ({ getSubcommand: () => 'xoadulieu', getString: () => 'server', getUser: () => user });
+  const resetPreview = interaction({ options: resetOptions(null) });
+  await quantri.execute(resetPreview);
+  assert.match(resetPreview.replies[0].content, /RESET SERVER/);
+  assert.match(resetPreview.replies[0].content, /giữ nguyên/i);
+  assert.equal(resetPreview.replies[0].components[0].components[0].data.custom_id, 'admin-clear-all:server:alice:confirm');
+  const resetWithUser = interaction({ options: resetOptions({ id: 'bob' }) });
+  await quantri.execute(resetWithUser);
+  assert.match(resetWithUser.replies[0].content, /bỏ trống/);
+  const resetUpdates = [];
+  await quantri.handleClearAllButton({ customId: 'admin-clear-all:server:alice:confirm', guildId: 'command-guild', user: { id: 'alice' }, memberPermissions: { has: () => true },
+    update: async payload => { resetUpdates.push(payload); return payload; }, reply: async payload => payload });
+  assert.match(resetUpdates[0].content, /Đã reset server/);
+  const strangerReplies = [];
+  await quantri.handleClearAllButton({ customId: 'admin-clear-all:server:alice:confirm', guildId: 'command-guild', user: { id: 'mallory' }, memberPermissions: { has: () => false },
+    update: async () => { throw new Error('người lạ không được reset server'); }, reply: async payload => { strangerReplies.push(payload); return payload; } });
+  assert.equal(strangerReplies.length, 1);
+
   const { db } = require('../src/db'); db.close();
   for (const suffix of ['', '-wal', '-shm']) fs.rmSync(`${testDb}${suffix}`, { force: true });
   console.log(JSON.stringify({ ok: true, commandHandlers: 14 }));

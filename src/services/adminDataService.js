@@ -36,10 +36,33 @@ const clearPlayerDataTx = db.transaction(({ guildId, userId, scope, adminId, now
   return { scope, ...cleared };
 });
 
+const RESET_PLAYER_TABLES = Object.freeze([
+  'achievement_claims', 'achievement_notifications', 'blackjack_duels', 'blackjack_sessions', 'blackjack_table_locks', 'blackjack_tables',
+  'chinchiro_sessions', 'coin_requests', 'diamond_transactions', 'economy_accounts', 'economy_transactions', 'gacha_history', 'gacha_pity',
+  'game_history', 'game_player_stats', 'hardcore_records', 'hardcore_sessions', 'mines_sessions', 'newbie_bonus_claims', 'onboarding_claims',
+  'player_currencies', 'player_progress', 'poker_sessions', 'profile_cosmetics', 'profile_loadouts', 'rps_bot_rounds', 'rps_duels',
+  'season_claims', 'season_scores', 'server_event_contributions', 'server_events', 'shop_purchases', 'user_inventory', 'user_item_effects',
+  'vua_daily_skips', 'weekly_claims', 'weekly_role_reward_grants', 'weekly_scores',
+]);
+
+const resetServerPlayerDataTx = db.transaction(({ guildId, now = Date.now() }) => {
+  const guild = String(guildId);
+  const players = countPlayersForClear(guild, 'all');
+  db.prepare('DELETE FROM multiplayer_bets WHERE round_id IN (SELECT id FROM multiplayer_rounds WHERE guild_id=?)').run(guild);
+  db.prepare('DELETE FROM multiplayer_rounds WHERE guild_id=?').run(guild);
+  let rows = 0;
+  for (const table of RESET_PLAYER_TABLES) rows += db.prepare(`DELETE FROM ${table} WHERE guild_id=?`).run(guild).changes;
+  db.prepare('UPDATE shop_items SET sold_count=0,updated_at=? WHERE guild_id=?').run(now, guild);
+  return { players, rows };
+});
+
+function resetServerPlayerData(args) { return resetServerPlayerDataTx(args); }
+
 function clearPlayerData(args) { return clearPlayerDataTx(args); }
 
 function countPlayersForClear(guildId, scope) {
-  if (!['coins', 'diamonds', 'xp', 'all'].includes(scope)) throw new Error('INVALID_CLEAR_SCOPE');
+  if (!['coins', 'diamonds', 'xp', 'all', 'server'].includes(scope)) throw new Error('INVALID_CLEAR_SCOPE');
+  if (scope === 'server') scope = 'all';
   const guild = String(guildId);
   let query;
   if (scope === 'coins') query = 'SELECT COUNT(*) AS count FROM economy_accounts WHERE guild_id=?';
@@ -73,4 +96,4 @@ const clearAllPlayerDataTx = db.transaction(({ guildId, scope, adminId, now = Da
 
 function clearAllPlayerData(args) { return clearAllPlayerDataTx(args); }
 
-module.exports = { clearPlayerData, countPlayersForClear, clearAllPlayerData };
+module.exports = { RESET_PLAYER_TABLES, clearPlayerData, countPlayersForClear, clearAllPlayerData, resetServerPlayerData };

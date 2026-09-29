@@ -75,7 +75,7 @@ const PAGES = Object.freeze({
       ['🎁 Drop sau ván', '`xemcauhinh` — chỉnh tỷ lệ và khoảng min–max của xu, kim cương, lượt quay bằng menu.'],
       ['🎊 Buff sự kiện', '`datbuff` — bật/tắt nhân lượng drop hoặc tăng may mắn Gacha; chọn hành động `Xem buff đang chạy` để xem thời gian còn lại.'],
       ['🎁 Thưởng vai trò', '`datthuongvaitro` · `xoathuongvaitro` · `xemthuongvaitro`'],
-      ['🧹 Dữ liệu người chơi', '`xoadulieu` — chọn người chơi để xóa riêng; bỏ trống người chơi để xem trước và xác nhận xóa toàn server.'],
+      ['🧹 Dữ liệu người chơi', '`xoadulieu` — chọn người chơi để xóa riêng; bỏ trống người chơi để xem trước và xác nhận xóa toàn server. Chọn `RESET SERVER` để xóa mọi dữ liệu người chơi nhưng giữ cấu hình hệ thống.'],
       ['🛒 Cửa hàng', '`themvatpham` · `suavatpham` · `xoavatpham` · `xoaycuahang` · `tonkho` · `giamgia`'],
       ['⌨️ Lệnh prefix', '`!addgem` — cộng kim cương cho người chơi (nếu server bật lệnh prefix).'],
     ],

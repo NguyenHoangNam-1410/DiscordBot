@@ -1,6 +1,6 @@
 const { ActionRowBuilder, ApplicationCommandOptionType, ButtonBuilder, ButtonStyle, EmbedBuilder, MessageFlags, PermissionFlagsBits } = require('discord.js');
 const { remapOptions, renamedOption, commandData } = require('../utils/commandAlias');
-const { clearPlayerData, countPlayersForClear, clearAllPlayerData } = require('../services/adminDataService');
+const { clearPlayerData, countPlayersForClear, clearAllPlayerData, resetServerPlayerData } = require('../services/adminDataService');
 const game = require('./game');
 const shop = require('./shop');
 const { forceEndBlackjackSession, forceEndBlackjackTable, blackjackTableEmbed } = require('../services/blackjackService');
@@ -29,6 +29,7 @@ const CLEAR_SCOPES = [
   { name: 'Kim cương', value: 'diamonds' },
   { name: 'EXP và cấp', value: 'xp' },
   { name: 'Toàn bộ (xu, kim cương, EXP/cấp)', value: 'all' },
+  { name: 'RESET SERVER (mọi dữ liệu người chơi, giữ cấu hình)', value: 'server' },
 ];
 const CLEAR_SCOPE_LABELS = Object.fromEntries(CLEAR_SCOPES.map(item => [item.value, item.name]));
 
@@ -99,12 +100,14 @@ module.exports = {
       if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được xóa dữ liệu người chơi.', flags: MessageFlags.Ephemeral });
       const scope = interaction.options.getString('dulieu', true);
       const target = interaction.options.getUser('nguoi');
+      if (scope === 'server' && target) return interaction.reply({ content: 'Reset server áp dụng cho toàn bộ người chơi; hãy bỏ trống `nguoi`.', flags: MessageFlags.Ephemeral });
       if (!target) {
         const count = countPlayersForClear(interaction.guildId, scope);
         const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId(`admin-clear-all:${scope}:${interaction.user.id}:confirm`).setLabel('Xác nhận xóa').setEmoji('🧹').setStyle(ButtonStyle.Danger),
+          new ButtonBuilder().setCustomId(`admin-clear-all:${scope}:${interaction.user.id}:confirm`).setLabel(scope === 'server' ? 'XÁC NHẬN RESET SERVER' : 'Xác nhận xóa').setEmoji(scope === 'server' ? '🚨' : '🧹').setStyle(ButtonStyle.Danger),
           new ButtonBuilder().setCustomId(`admin-clear-all:${scope}:${interaction.user.id}:cancel`).setLabel('Hủy').setStyle(ButtonStyle.Secondary),
         );
+        if (scope === 'server') return interaction.reply({ content: `🚨 Bạn sắp **RESET SERVER**: xóa toàn bộ dữ liệu của **${count.toLocaleString('vi-VN')} người chơi** (xu, kim cương, cấp/EXP, túi đồ, hiệu ứng, Gacha, nhiệm vụ, thành tựu, thống kê, lịch sử, xếp hạng, ván đang chơi).\n\n**Được giữ nguyên:** channel game, phần thưởng, giới hạn cược, cấu hình cân bằng, cửa hàng, pool Gacha, buff sự kiện, thưởng theo role.\n\nKhông thể hoàn tác. Nhấn **XÁC NHẬN RESET SERVER** để tiếp tục.`, components: [row], flags: MessageFlags.Ephemeral });
         return interaction.reply({ content: `⚠️ Bạn sắp xóa **${CLEAR_SCOPE_LABELS[scope]}** của **${count.toLocaleString('vi-VN')} người chơi** trong server này.\n\nLịch sử giao dịch và các dữ liệu khác sẽ được giữ nguyên. Nhấn **Xác nhận xóa** để tiếp tục.`, components: [row], flags: MessageFlags.Ephemeral });
       }
       const result = clearPlayerData({ guildId: interaction.guildId, userId: target.id, scope, adminId: interaction.user.id });
@@ -121,6 +124,10 @@ module.exports = {
     if (interaction.user.id !== ownerId || !isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin đã tạo yêu cầu này mới được xác nhận.', flags: MessageFlags.Ephemeral });
     if (action === 'cancel') return interaction.update({ content: 'Đã hủy thao tác xóa dữ liệu toàn server.', components: [] });
     if (action !== 'confirm' || !CLEAR_SCOPES.some(item => item.value === scope)) return interaction.reply({ content: 'Yêu cầu xóa dữ liệu không hợp lệ.', flags: MessageFlags.Ephemeral });
+    if (scope === 'server') {
+      const reset = resetServerPlayerData({ guildId: interaction.guildId });
+      return interaction.update({ content: `🚨 Đã reset server: xóa dữ liệu của **${reset.players.toLocaleString('vi-VN')} người chơi** (${reset.rows.toLocaleString('vi-VN')} bản ghi). Cấu hình hệ thống được giữ nguyên.`, components: [] });
+    }
     const result = clearAllPlayerData({ guildId: interaction.guildId, scope, adminId: interaction.user.id });
     return interaction.update({ content: `🧹 Đã xóa **${CLEAR_SCOPE_LABELS[scope]}** cho **${result.players.toLocaleString('vi-VN')} người chơi** trong server. Lịch sử giao dịch và dữ liệu khác được giữ nguyên.`, components: [] });
   },
