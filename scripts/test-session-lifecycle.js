@@ -380,7 +380,10 @@ function bet(guildId, roundId, userId, choice, amount) {
   const soloMessage = { ...prefixMessage('!xidach 100'), author: { id: 'solo-player', bot: false, username: 'solo' } };
   assert.equal(await gamePrefix.handleGamePrefix(soloMessage), true);
   const soloSession = db.prepare('SELECT * FROM blackjack_sessions WHERE guild_id=? AND user_id=?').get(prefixGuild, 'solo-player');
-  assert(soloSession, '!xidach 100 mặc định chơi với nhà cái bot'); assert.equal(balance(prefixGuild, 'solo-player'), START - 100);
+  // Chia ngay Blackjack tự nhiên thì ván kết thúc tức thì và không còn session đang mở.
+  const soloReply = prefixReplies.at(-1);
+  assert(soloSession || soloReply.embeds, '!xidach 100 mặc định chơi với nhà cái bot');
+  if (soloSession) assert.equal(balance(prefixGuild, 'solo-player'), START - 100);
   assert.equal(await gamePrefix.handleGamePrefix({ ...prefixMessage('!xidach 100 linhtinh'), author: { id: 'typo', bot: false, username: 'typo' } }), true);
   assert.match(prefixReplies.at(-1).content, /Cách dùng/);
   assert.equal(db.prepare('SELECT COUNT(*) AS count FROM blackjack_sessions WHERE guild_id=? AND user_id=?').get(prefixGuild, 'typo').count, 0);
