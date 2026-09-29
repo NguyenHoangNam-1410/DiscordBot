@@ -7,7 +7,7 @@ const RULES = {
   blackjack: ['Xì dách', 'Một người mở bàn làm nhà cái; tối đa 3 người chơi có 30 giây để vào. Nhà cái chọn ante, không quá 25% số dư của mình. Người chơi lần lượt rút hoặc dừng; nhà cái rút đến ít nhất 17. Ngũ linh (đủ 5 lá, không quắc) mạnh hơn Xì dách; nếu cả hai cùng Ngũ linh thì tay có tổng điểm nhỏ hơn thắng. Người quắc thua kể cả khi nhà cái cũng quắc. Thắng nhận lại 2× ante, hòa nhận lại ante. Người tham gia bị khóa khỏi cược game khác đến khi ván kết thúc.'],
   poker: ['Poker', 'Chọn đấu với hai bot hoặc mời một người chơi. Theo, tố hoặc bỏ; xem bài tẩy bằng nút riêng tư. Main Pot và Side Pot được chia tự động.'],
   duangua: ['Đua ngựa', 'Chọn một trong sáu ngựa. Hệ số khóa khi mở bàn; debuff chỉ lộ sau khi khóa cược.'],
-  mines: ['Mines', 'Mở ô an toàn để tăng hệ số rồi rút. Trúng mìn mất cược; ô sao tăng thêm x1,5.'],
+  mines: ['Mines', 'Chọn 2–7 mìn trên bàn 20 ô, mở ô an toàn để tăng hệ số rồi rút. Trúng mìn mất cược; ô sao tăng thêm x1,5. Giáp Chống Nổ chỉ vô hiệu hóa một quả mìn duy nhất trên mỗi bản đồ.'],
   hardcore: ['Sinh tồn', 'Vượt tầng và quyết định lúc rút. Chết mất payout tạm giữ; tầng 100 là mốc hoàn thành.'],
   vuatiengviet: ['Vua tiếng Việt', 'Sắp xếp chữ thành từ đúng và trả lời trực tiếp trong kênh game.'],
 };

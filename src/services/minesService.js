@@ -9,7 +9,7 @@ const { createFairness, fairShuffle, fairInt } = require('./fairnessService');
 const { addExperienceField } = require('../utils/progressionView');
 
 const CELL_COUNT = 20;
-const MIN_MINES = 1;
+const MIN_MINES = 2;
 const MAX_MINES = 7;
 const MIN_BET = 10;
 const MAX_BET = 100_000;
