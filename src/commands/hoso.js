@@ -14,7 +14,7 @@ function expBar(current, target, size = 12) {
 }
 function rewardSummary(level) {
   const reward = levelReward(level);
-  return [reward.coins ? `${number(reward.coins)} xu` : null, reward.diamonds ? `${number(reward.diamonds)} 💎` : null,
+  return [reward.coins ? `${number(reward.coins)} xu` : null, reward.diamonds ? `${number(reward.diamonds)} :gem:` : null,
     reward.freePulls ? `${reward.freePulls} lượt Gacha` : null, reward.cosmetic ? 'màu hồ sơ độc quyền' : null].filter(Boolean).join(' · ');
 }
 function overviewField(summary) {
@@ -24,8 +24,8 @@ function overviewField(summary) {
 function levelField(progress = { level: 1, experience: 0, diamonds: 0, free_gacha_pulls: 0 }, guildId = null) {
   const target = xpForNextLevel(progress.level, guildId); const nextLevel = progress.level + 1;
   const percent = Math.max(0, Math.min(100, Math.floor(progress.experience / target * 100)));
-  return { name: '⭐ Cấp độ & EXP', inline: false,
-    value: `Cấp **${progress.level}** · EXP **${number(progress.experience)}/${number(target)}**\n${expBar(progress.experience, target)} **${percent}%**\n🎁 Lên cấp **${nextLevel}**: ${rewardSummary(nextLevel)}\n💎 **${number(progress.diamonds)}** kim cương · 🎰 **${number(progress.free_gacha_pulls)}** lượt quay miễn phí` };
+  return { name: ':test_tube: Cấp độ & EXP', inline: false,
+    value: `Cấp **${progress.level}** · EXP **${number(progress.experience)}/${number(target)}**\n${expBar(progress.experience, target)} **${percent}%**\n🎁 Lên cấp **${nextLevel}**: ${rewardSummary(nextLevel)}\n:gem: **${number(progress.diamonds)}** kim cương · 🎰 **${number(progress.free_gacha_pulls)}** lượt quay miễn phí` };
 }
 function profileSelectRow(ownerId, targetId, stats, selected = 'overview') {
   const menu = new StringSelectMenuBuilder().setCustomId(`hoso:${ownerId}:${targetId}`).setPlaceholder('Chọn game muốn xem chi tiết…');
@@ -54,7 +54,7 @@ function gameDetailEmbed(user, account, rank, appearance, item, serverName = 'Se
       .setAuthor({ name: `${user.globalName || user.username} · Hạng #${rank}`, iconURL: user.displayAvatarURL({ extension: 'png', size: 128 }) })
       .setDescription('Vua Tiếng Việt dùng câu hỏi có sẵn của bot nên hồ sơ không tính tỷ lệ thắng/thua.')
       .addFields(
-        { name: '💰 Tổng xu đã kiếm được', value: `## ${number(item.coinsEarned)} xu` },
+        { name: ':coin: Tổng xu đã kiếm được', value: `## ${number(item.coinsEarned)} xu` },
         { name: '🏦 Tài khoản hiện tại', value: `Số dư **${number(account.balance)} xu** · Xếp hạng server **#${rank}**` },
       ).setFooter({ text: 'Số xu được cộng dồn trọn đời trong server này' });
   }
@@ -65,7 +65,7 @@ function gameDetailEmbed(user, account, rank, appearance, item, serverName = 'Se
     .addFields(
       { name: '🎮 Kết quả', value: `✅ Thắng: **${number(item.wins)}**\n❌ Thua: **${number(item.losses)}**\n➖ Hòa: **${number(item.draws)}**`, inline: true },
       { name: '📈 Hiệu suất', value: `Tỷ lệ thắng: **${performance}**\nVán có kết quả: **${number(item.wins + item.losses)}**\nTổng số ván: **${number(item.played)}**`, inline: true },
-      { name: '💰 Dòng xu', value: `Đã cược: **${number(item.wagered)} xu**\nĐã nhận: **${number(item.payout)} xu**\nRòng: **${signed(item.net)} xu**`, inline: true },
+      { name: ':coin: Dòng xu', value: `Đã cược: **${number(item.wagered)} xu**\nĐã nhận: **${number(item.payout)} xu**\nRòng: **${signed(item.net)} xu**`, inline: true },
       { name: '🏦 Tài khoản hiện tại', value: `Số dư **${number(account.balance)} xu** · Xếp hạng server **#${rank}**` },
     ).setFooter({ text: item.recordedGames < item.played ? `Dòng xu có ${number(item.recordedGames)}/${number(item.played)} ván còn lưu lịch sử` : 'Số liệu riêng của server này' });
 }

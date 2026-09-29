@@ -168,7 +168,7 @@ function blackjackDuelEmbed(duel) {
   const state = duelState(duel); const done = duel.status === 'completed';
   const color = done ? (duel.winner_id ? 0xF1C40F : 0x95A5A6) : duel.status === 'playing' ? 0x5865F2 : duel.status === 'invited' ? 0xE67E22 : 0x7F8C8D;
   const embed = new EmbedBuilder().setColor(color).setTitle('🃏 XÌ DÁCH · ĐẤU TAY ĐÔI')
-    .setDescription(`### <@${duel.challenger_id}>  ⚡  <@${duel.opponent_id}>\n💰 **${formatCoins(duel.stake)} xu/người** · Tổng thưởng **${formatCoins(duel.stake * 2)} xu**`);
+    .setDescription(`### <@${duel.challenger_id}>  ⚡  <@${duel.opponent_id}>\n:coin: **${formatCoins(duel.stake)} xu/người** · Tổng thưởng **${formatCoins(duel.stake * 2)} xu**`);
   if (duel.status === 'invited') embed.addFields({ name: '📨 Lời thách đấu', value: `Đang chờ đối thủ phản hồi · <t:${Math.floor(duel.expires_at / 1000)}:R>` });
   if (duel.status === 'playing') {
     const statusText = id => state.players[id].status === 'playing' ? '🎴 Đang chọn' : '✅ Đã dừng';
@@ -183,7 +183,7 @@ function blackjackDuelEmbed(duel) {
     embed.addFields(handField(duel.challenger_id, '🔵'), handField(duel.opponent_id, '🔴'),
       { name: duel.winner_id ? '🏆 CHIẾN THẮNG' : '🤝 HÒA', value: duel.winner_id ? `<@${duel.winner_id}> nhận **${formatCoins(duel.stake * 2)} xu**` : 'Hai người được hoàn lại toàn bộ tiền cược.' });
     const exp = experienceLines(duel.progression || []);
-    if (exp.length) embed.addFields({ name: '⭐ EXP NHẬN ĐƯỢC', value: exp.join('\n') });
+    if (exp.length) embed.addFields({ name: ':test_tube: EXP NHẬN ĐƯỢC', value: exp.join('\n') });
   }
   if (duel.status === 'declined') embed.addFields({ name: '❌ Đã từ chối', value: 'Đối thủ không nhận lời thách đấu.' });
   if (duel.status === 'expired') embed.addFields({ name: '⌛ Đã hết hạn', value: duel.refunded ? 'Ván chưa hoàn thành, tiền cược đã được hoàn cho cả hai.' : 'Lời thách đấu không được chấp nhận kịp thời.' });

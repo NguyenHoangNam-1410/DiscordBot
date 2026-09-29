@@ -18,7 +18,7 @@ function questionEmbed(guildId, question) {
     .setDescription(`Sắp xếp các chữ cái thành từ hoặc cụm từ có nghĩa:\n\n${vuaQuestionText(question)}`)
     .addFields(
       { name: 'Thưởng cho người trả lời đúng', value: `${formatCoins(reward)} xu`, inline: true },
-      ...(question.hard ? [{ name: 'Thưởng câu khó', value: '10 💎', inline: true }] : []),
+      ...(question.hard ? [{ name: 'Thưởng câu khó', value: '10 :gem:', inline: true }] : []),
       { name: 'Thời gian', value: question.hard ? `${question.durationSeconds} giây` : 'Không giới hạn', inline: true },
     )
     .setFooter({ text: 'Nhập đáp án trực tiếp trong channel • Dùng nút bên dưới để quản lý câu hỏi' });

@@ -132,7 +132,7 @@ function duelEmbed(duel, settlement = null) {
   const color = duel.status === 'completed' ? 0x2ECC71 : duel.status === 'playing' ? 0x3498DB
     : duel.status === 'invited' ? 0xF1C40F : 0x7F8C8D;
   const embed = new EmbedBuilder().setColor(color).setTitle('⚔️ OẲN TÙ TÌ · SOLO')
-    .setDescription(`### <@${duel.challenger_id}>  ⚡  <@${duel.opponent_id}>\n💰 **${formatCoins(duel.stake)} xu/người** · Tổng thưởng **${formatCoins(duel.stake * 2)} xu**`);
+    .setDescription(`### <@${duel.challenger_id}>  ⚡  <@${duel.opponent_id}>\n:coin: **${formatCoins(duel.stake)} xu/người** · Tổng thưởng **${formatCoins(duel.stake * 2)} xu**`);
   if (duel.status === 'invited') embed.addFields({ name: '📨 Lời thách đấu', value: `Đang chờ đối thủ phản hồi · <t:${Math.floor(duel.expires_at / 1000)}:R>` });
   if (duel.status === 'playing') embed.addFields(
     { name: '🔵 NGƯỜI THÁCH ĐẤU', value: `<@${duel.challenger_id}>\n${duel.challenger_choice ? '✅ Đã khóa lựa chọn' : '🎮 Đang lựa chọn'}`, inline: true },
@@ -150,7 +150,7 @@ function duelEmbed(duel, settlement = null) {
       { userId: duel.challenger_id, experienceGained: settlement.challengerAccount?.experienceGained, levelUps: settlement.challengerAccount?.levelUps, bonusDrops: settlement.challengerAccount?.bonusDrops },
       { userId: duel.opponent_id, experienceGained: settlement.opponentAccount?.experienceGained, levelUps: settlement.opponentAccount?.levelUps, bonusDrops: settlement.opponentAccount?.bonusDrops },
     ]) : [];
-    if (exp.length) embed.addFields({ name: '⭐ EXP NHẬN ĐƯỢC', value: exp.join('\n') });
+    if (exp.length) embed.addFields({ name: ':test_tube: EXP NHẬN ĐƯỢC', value: exp.join('\n') });
   }
   if (duel.status === 'declined') embed.addFields({ name: 'Kết quả', value: '❌ Đối thủ đã từ chối lời thách đấu.' });
   if (duel.status === 'expired') embed.addFields({ name: 'Kết quả', value: '⌛ Ván đã hết hạn.' + (duel.refunded ? ' Tiền cược đã được hoàn.' : '') });

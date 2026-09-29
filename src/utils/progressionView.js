@@ -8,7 +8,7 @@ function experienceField(result) {
   const lines = [`**+${formatExperience(gained)} EXP**`];
   const levels = Array.isArray(result.levelUps) ? result.levelUps : [];
   if (levels.length) lines.push(`🎉 Lên **cấp ${levels.at(-1).level}**!`);
-  return { name: '⭐ KINH NGHIỆM', value: lines.join('\n'), inline: true };
+  return { name: ':test_tube: KINH NGHIỆM', value: lines.join('\n'), inline: true };
 }
 
 function addExperienceField(embed, result) {
@@ -21,7 +21,7 @@ function addExperienceField(embed, result) {
 
 function bonusDropText(drops) {
   if (!Array.isArray(drops) || !drops.length) return '';
-  const labels = { coins: 'xu', diamonds: '💎', free_pull: 'lượt Gacha miễn phí' };
+  const labels = { coins: ':coin: xu', diamonds: ':gem: kim cương', free_pull: ':slot_machine: lượt Gacha miễn phí' };
   return drops.map(drop => `**+${Number(drop.amount).toLocaleString('vi-VN')} ${labels[drop.type] || drop.type}**`).join('\n');
 }
 

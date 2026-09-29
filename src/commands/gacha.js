@@ -21,12 +21,12 @@ function gachaRows(ownerId, progression) {
   )];
 }
 function resultPayload(result, ownerId) {
-  const payment = result.usedFreePull ? '1 lượt miễn phí' : `${result.diamondCost.toLocaleString('vi-VN')} 💎`;
+  const payment = result.usedFreePull ? '1 lượt miễn phí' : `${result.diamondCost.toLocaleString('vi-VN')} :gem:`;
   const embed = new EmbedBuilder().setColor(result.results.some(x => x.tier === 'UR') ? 0xED4245 : 0x9B59B6)
     .setTitle(`🎰 GACHA · ${result.pulls} LƯỢT`).setDescription(groupedLines(result.results))
     .addFields(
       { name: 'Thanh toán', value: payment, inline: true },
-      { name: 'Còn lại', value: `${result.progression.diamonds.toLocaleString('vi-VN')} 💎 · ${result.progression.free_gacha_pulls} lượt miễn phí`, inline: true },
+      { name: 'Còn lại', value: `${result.progression.diamonds.toLocaleString('vi-VN')} :gem: · ${result.progression.free_gacha_pulls} lượt miễn phí`, inline: true },
     );
   const pool = listGachaPool(result.guildId, { luckMultiplier: gachaLuckMultiplier(result.guildId) });
   const rates = ['XU', 'R', 'SR', 'SSR', 'UR'].map(tier => {
@@ -46,7 +46,7 @@ async function handleButton(interaction) {
   } catch (error) {
     if (error.message === 'INSUFFICIENT_DIAMONDS') {
       const current = getPlayerProgression(interaction.guildId, interaction.user.id);
-      return interaction.reply({ content: `Bạn không đủ kim cương. Hiện có **${current.diamonds.toLocaleString('vi-VN')} 💎**.`, flags: MessageFlags.Ephemeral });
+      return interaction.reply({ content: `Bạn không đủ kim cương. Hiện có **${current.diamonds.toLocaleString('vi-VN')} :gem:**.`, flags: MessageFlags.Ephemeral });
     }
     throw error;
   }
@@ -65,7 +65,7 @@ module.exports = {
     } catch (error) {
       if (error.message === 'INSUFFICIENT_DIAMONDS') {
         const current = getPlayerProgression(interaction.guildId, interaction.user.id);
-        return interaction.reply({ content: `Bạn không đủ kim cương. Hiện có **${current.diamonds.toLocaleString('vi-VN')} 💎**.`, flags: MessageFlags.Ephemeral });
+        return interaction.reply({ content: `Bạn không đủ kim cương. Hiện có **${current.diamonds.toLocaleString('vi-VN')} :gem:**.`, flags: MessageFlags.Ephemeral });
       }
       throw error;
     }
