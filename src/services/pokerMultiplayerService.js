@@ -375,7 +375,11 @@ async function handlePokerModal(interaction) {
     const state = await expirePokerTable(session, null, false);
     await editPublicTable(interaction.client, session, state);
     await interaction.update({ content: privateHandText(state, interaction.user.id), components: [], allowedMentions: { parse: [] } });
-    return interaction.followUp({ content: 'Bàn đã hết thời gian. Tiền cược được hoàn lại.', flags: MessageFlags.Ephemeral });
+    const stallers = (state.result?.stallers || []).map(String); const you = String(interaction.user.id);
+    const content = stallers.includes(you) ? 'Bàn đã hết thời gian vì bạn không thao tác kịp: bạn **mất số tiền đã cược**; người chơi khác được hoàn lại.'
+      : stallers.length ? `Bàn đã hết thời gian vì ${stallers.map(id => `<@${id}>`).join(', ')} không thao tác kịp. Tiền cược của bạn được hoàn lại.`
+        : 'Bàn đã hết thời gian. Tiền cược được hoàn lại.';
+    return interaction.followUp({ content, allowedMentions: { parse: [] }, flags: MessageFlags.Ephemeral });
   }
   async function reject(content) {
     const latest = getSession(id);
@@ -400,8 +404,9 @@ async function handlePokerModal(interaction) {
 async function expirePokerTable(session, client, updateMessage = true) {
   const state = parseState(session);
   const results = [];
-  // Only in a hand that is under way: whoever still owed an action (bet turn or Pineapple discard) caused the expiry and forfeits.
-  const stallers = new Set(state.street && state.street !== 'lobby' ? [state.turnUserId, ...(state.discardPending || [])].filter(Boolean).map(String) : []);
+  // Only in a hand that is under way: the player whose turn it was (a bet or a Pineapple discard, both strictly one at a time) caused the
+  // expiry and forfeits. Players still waiting for their own discard turn did nothing wrong.
+  const stallers = new Set(state.street && state.street !== 'lobby' ? [state.turnUserId].filter(Boolean).map(String) : []);
   for (const player of state.players) {
     if (stallers.has(String(player.id))) { results.push({ userId: player.id, outcome: 'loss', payout: 0, forfeited: player.committed, balance: getAccount(session.guild_id, player.id).balance }); continue; }
     const refund = player.committed + (player.lobbyAnte || 0);
