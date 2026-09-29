@@ -1,6 +1,6 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const { formatCoins } = require('../utils/economy');
-const { addExperienceField } = require('../utils/progressionView');
+const { addExperienceField, experienceLines } = require('../utils/progressionView');
 
 function raceButtons(round, market, horses, disabled = false) {
   const buttons = market.selected.map(key => new ButtonBuilder().setCustomId(`horserace:${round.id}:${key}`)
@@ -35,12 +35,17 @@ function resultEmbed(settled, horses) {
       return `<@${item.userId}> đoán **${guessed}** · nhận **${formatCoins(item.payout)} xu**`;
     }).join('\n')
     : 'Không có người chơi đoán trúng.';
-  return new EmbedBuilder().setColor(winner.special ? 0xFF69B4 : 0xFFD700).setTitle(winner.special ? '🌟 ĐUA NGỰA · CHUNG CUỘC' : '🏆 ĐUA NGỰA · CHUNG CUỘC')
+  const embed = new EmbedBuilder().setColor(winner.special ? 0xFF69B4 : 0xFFD700).setTitle(winner.special ? '🌟 ĐUA NGỰA · CHUNG CUỘC' : '🏆 ĐUA NGỰA · CHUNG CUỘC')
     .setDescription(podium).addFields(
       { name: '🎯 Người đoán trúng', value: winnerSummary },
       { name: 'Tổng kết', value: `👥 **${settled.settlements.length}** người chơi · 💰 Pot **${formatCoins(totalPot)} xu**` },
     )
     .setFooter({ text: `Mã ván: ${settled.round.id} • Dùng các nút bên dưới để xem chi tiết` }).setTimestamp();
+  const exp = experienceLines(settled.settlements).slice(0, 15).join('\n');
+  if (exp) embed.addFields({ name: ':test_tube: EXP NHẬN ĐƯỢC', value: exp.length > 1024 ? `${exp.slice(0, 1021)}...` : exp });
+  const unlocked = settled.settlements.flatMap(item => (item.achievements || []).map(achievement => `<@${item.userId}> mở khóa **${achievement.name}**`));
+  if (unlocked.length) embed.addFields({ name: '🏅 Thành tựu mới', value: unlocked.slice(0, 10).join('\n').slice(0, 1024) });
+  return embed;
 }
 function resultRows(roundId) { return [new ActionRowBuilder().addComponents(
   new ButtonBuilder().setCustomId('replay:duangua').setLabel('Mở cuộc đua mới').setEmoji('🔁').setStyle(ButtonStyle.Success),

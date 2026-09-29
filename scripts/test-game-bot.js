@@ -121,6 +121,15 @@ const compactRaceResult = horse.resultEmbed({ round: { id: 'race-test' }, market
 assert(!JSON.stringify(compactRaceResult).includes('THÀNH TỰU'));
 assert(!JSON.stringify(compactRaceResult).includes('Server seed'));
 assert.equal(horse.resultRows('race-test')[0].components.length, 4);
+assert(!compactRaceResult.fields.some(field => /EXP/.test(field.name)), 'không có ai nhận EXP thì không hiện mục EXP');
+const expRace = horse.resultEmbed({ round: { id: 'race-exp' }, market: raceMarket, debuff: raceDebuff, winner: raceWinner, order: raceOrder, plan: racePlan, settlements: [
+  { userId: 'win-user', stake: 100, payout: 300, bets: [{ choice: raceWinner, amount: 100, payout: 300 }], experienceGained: 25, levelUps: [{ level: 4 }], achievements: [{ name: 'Tay Đua' }] },
+  { userId: 'lose-user', stake: 100, payout: 0, bets: [{ choice: raceOrder[1], amount: 100, payout: 0 }], experienceGained: 10 },
+] }).toJSON();
+const expField = expRace.fields.find(field => /EXP NHẬN ĐƯỢC/.test(field.name));
+assert(expField, 'Đua ngựa phải công bố EXP ngay trong kết quả chung cuộc');
+assert.match(expField.value, /<@win-user> \*\*\+25 EXP\*\* · Cấp 4/); assert.match(expField.value, /<@lose-user> \*\*\+10 EXP\*\*/);
+assert(expRace.fields.some(field => /Thành tựu mới/.test(field.name) && /<@win-user> mở khóa \*\*Tay Đua\*\*/.test(field.value)));
 assert(Math.abs(Object.values(raceMarket.horses).reduce((sum, quote) => sum + quote.chance, 0) - 1) < 0.000001);
 assert(Object.values(raceMarket.horses).every(quote => quote.multiplier >= 1.5 && quote.multiplier <= 30));
 const hardcore = require('../src/services/hardcoreService');
