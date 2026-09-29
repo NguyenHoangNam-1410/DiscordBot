@@ -42,7 +42,7 @@ Bot cần bật **Message Content Intent** trong Discord Developer Portal nếu 
 - Admin dùng `!addgem @người_chơi <số lượng>` để cộng kim cương. Mọi thay đổi kim cương và lượt gacha đều có operation ID chống xử lý trùng.
 - Admin dùng `/quantri themgacha`, `/quantri dattylegacha` và `/quantri xemgacha` để thêm vật phẩm catalog, chỉnh tỷ lệ mục tiêu và xem tỷ lệ Gacha thực tế theo server.
 - Mỗi ván hợp lệ đều roll độc lập khả năng rơi thêm xu, gem và lượt Gacha miễn phí. Admin chỉnh tỷ lệ cùng khoảng thưởng tối thiểu–tối đa bằng `/quantri datcauhinh`; kết quả rơi thêm được hiển thị ngay sau ván.
-- `/quantri datbuff` bật hệ số nhân có thời hạn cho lượng xu, gem hoặc lượt Gacha đã roll trúng; buff không thay đổi tỷ lệ rơi. Lệnh này cũng hỗ trợ tăng trọng số vật phẩm trong pool Gacha. Dùng `/quantri xembuff` để xem thời gian còn lại.
+- `/quantri datbuff` bật hệ số nhân có thời hạn cho lượng xu, gem hoặc lượt Gacha đã roll trúng; buff không thay đổi tỷ lệ rơi. Lệnh này cũng hỗ trợ tăng trọng số vật phẩm trong pool Gacha. Dùng `/quantri datbuff` với hành động `Xem buff đang chạy` để xem thời gian còn lại.
 - Admin dùng `/quantri datthuongvaitro` để gắn mức xu riêng, `/quantri xemthuongvaitro` để xem và `/quantri xoathuongvaitro` để xóa. Người chơi phải dùng `/nhiemvu thuongvaitro` trong tuần để nhận; quên nhận sẽ mất phần tuần đó.
 
 ## Kiểm chứng công bằng

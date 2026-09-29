@@ -74,7 +74,7 @@ const PAGES = Object.freeze({
       ['🛠️ Cấu hình game', '`xemcauhinh` — xem và chỉnh bằng menu · `khoiphuc` — đặt lại về mặc định'],
       ['🎰 Gacha', '`themgacha` · `dattylegacha` · `xemgacha`'],
       ['🎁 Drop sau ván', '`xemcauhinh` — chỉnh tỷ lệ và khoảng min–max của xu, kim cương, lượt quay bằng menu.'],
-      ['🎊 Buff sự kiện', '`datbuff` — nhân lượng drop hoặc tăng may mắn Gacha; `xembuff` — xem thời gian còn lại.'],
+      ['🎊 Buff sự kiện', '`datbuff` — bật/tắt nhân lượng drop hoặc tăng may mắn Gacha; chọn hành động `Xem buff đang chạy` để xem thời gian còn lại.'],
       ['🎁 Thưởng vai trò', '`datthuongvaitro` · `xoathuongvaitro` · `xemthuongvaitro`'],
       ['🧹 Dữ liệu người chơi', '`xoadulieu` — chọn người chơi để xóa riêng; bỏ trống người chơi để xem trước và xác nhận xóa toàn server.'],
       ['🛒 Cửa hàng', '`themvatpham` · `suavatpham` · `xoavatpham` · `xoaycuahang` · `tonkho` · `giamgia`'],
