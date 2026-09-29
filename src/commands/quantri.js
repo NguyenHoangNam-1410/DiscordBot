@@ -15,7 +15,7 @@ const GAME_NAMES = {
   maxbet: 'datgioihan', maxbets: 'xemgioihan', economy: 'kinhte', health: 'trangthai',
   configs: 'xemcauhinh', configreset: 'khoiphuc',
   roleweeklyset: 'datthuongvaitro', roleweeklyremove: 'xoathuongvaitro', roleweeklylist: 'xemthuongvaitro',
-  gachaadd: 'themgacha', gacharate: 'dattylegacha', gachapool: 'xemgacha', buffset: 'datbuff', buffs: 'xembuff',
+  gachaadd: 'themgacha', gacharate: 'dattylegacha', gachapool: 'xemgacha', buffset: 'datbuff',
 };
 const SHOP_NAMES = { add: 'themvatpham', edit: 'suavatpham', remove: 'xoavatpham', rotate: 'xoaycuahang', stock: 'tonkho', discount: 'giamgia' };
 const OPTION_NAMES = {

@@ -204,13 +204,16 @@ async function run() {
   betLimits.setGameBetLimit('command-guild', 'poker', 100);
   const pokerRound = poker.startPoker({ guildId: 'command-guild', channelId: 'channel', userId: 'alice', variant: 'texas' });
   const invalidRaiseReplies = [];
+  const invalidRaiseUpdates = [];
   await poker.handlePokerModal({
     customId: `poker-modal:${pokerRound.session.id}:raise`, user: { id: 'alice' },
     fields: { getTextInputValue: () => '51' },
-    update: async () => { throw new Error('Invalid raise must not update poker game'); },
-    reply: async payload => { invalidRaiseReplies.push(payload); return payload; },
+    update: async payload => { invalidRaiseUpdates.push(payload); return payload; },
+    followUp: async payload => { invalidRaiseReplies.push(payload); return payload; },
   });
   assert.match(invalidRaiseReplies[0].content, /tối đa.*50 xu/i);
+  assert.equal(invalidRaiseUpdates.length, 1);
+  assert.equal(poker.getSession(pokerRound.session.id).user_id, 'alice');
   betLimits.setGameBetLimit('command-guild', 'poker', 55);
   const staleRaiseReplies = [];
   const staleRaiseUpdates = [];

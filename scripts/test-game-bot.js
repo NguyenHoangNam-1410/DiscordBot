@@ -9,6 +9,11 @@ const expectedCommandFiles = ['batdau', 'trogiup', 'huongdan', 'choi', 'luat', '
 const expectedCommands = expectedCommandFiles.map(file => file);
 assert.deepEqual([...require('../src/commandRegistry').COMMAND_FILES], expectedCommandFiles);
 
+const countLimit = (options = [], where) => { assert(options.length <= 25, `${where} vượt giới hạn 25 lựa chọn của Discord`); options.forEach(option => countLimit(option.options, `${where} ${option.name}`)); };
+for (const file of expectedCommandFiles) {
+  const registered = file === 'vtv' ? require('../src/commands/vuatiengviet').playerCommand : require(`../src/commands/${file}`);
+  countLimit(registered.data.toJSON().options, file);
+}
 for (const [index, file] of expectedCommandFiles.entries()) {
   const command = file === 'vtv' ? require('../src/commands/vuatiengviet').playerCommand : require(`../src/commands/${file}`);
   assert.equal(command.data.toJSON().name, expectedCommands[index], `Sai schema command ${file}`);
@@ -32,9 +37,9 @@ assert.deepEqual(require('../src/commands/choi').data.toJSON().options.map(optio
   ['baucua', 'taixiu', 'chinchiro', 'oantuti', 'xidach', 'poker', 'duangua', 'domin', 'sinhton', 'vtv']);
 assert.deepEqual(require('../src/commands/vatpham').data.toJSON().options.map(option => option.name),
   ['cuahang', 'mua', 'tui', 'sudung', 'tang', 'quay', 'chitiet']);
-assert.equal(require('../src/commands/quantri').data.toJSON().options.length, 26);
+assert.equal(require('../src/commands/quantri').data.toJSON().options.length, 25);
 const adminOptionNames = require('../src/commands/quantri').data.toJSON().options.map(option => option.name);
-assert(['themgacha', 'dattylegacha', 'xemgacha', 'datbuff', 'xembuff'].every(name => adminOptionNames.includes(name)));
+assert(['themgacha', 'dattylegacha', 'xemgacha', 'datbuff'].every(name => adminOptionNames.includes(name)));
 assert(!require('../src/commands/xu').data.toJSON().options.some(option => option.name === 'top'));
 assert(require('../src/commands/nhiemvu').data.toJSON().options.some(option => option.name === 'thuongvaitro'));
 assert(require('../src/commands/game').data.toJSON().options.some(option => option.name === 'economy'));

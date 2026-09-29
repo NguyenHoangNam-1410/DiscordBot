@@ -102,13 +102,12 @@ module.exports = {
       .addStringOption(option => option.setName('reward').setDescription('Phần thưởng trong pool').setRequired(true).setAutocomplete(true))
       .addNumberOption(option => option.setName('percent').setDescription('Tỷ lệ mục tiêu, 0% để tắt').setRequired(true).setMinValue(0).setMaxValue(99.99)))
     .addSubcommand(command => command.setName('gachapool').setDescription('Xem pool và tỷ lệ Gacha hiện tại'))
-    .addSubcommand(command => command.setName('buffset').setDescription('Bật hoặc tắt buff sự kiện có thời hạn')
+    .addSubcommand(command => command.setName('buffset').setDescription('Bật, tắt hoặc xem buff sự kiện có thời hạn')
       .addStringOption(option => option.setName('action').setDescription('Thao tác').setRequired(true)
-        .addChoices({ name: 'Bật/cập nhật', value: 'set' }, { name: 'Tắt', value: 'remove' }))
-      .addStringOption(option => option.setName('type').setDescription('Loại buff').setRequired(true).addChoices(...buffChoices))
+        .addChoices({ name: 'Bật/cập nhật', value: 'set' }, { name: 'Tắt', value: 'remove' }, { name: 'Xem buff đang chạy', value: 'list' }))
+      .addStringOption(option => option.setName('type').setDescription('Loại buff (bắt buộc khi bật hoặc tắt)').addChoices(...buffChoices))
       .addNumberOption(option => option.setName('percent').setDescription('Hệ số 100–1000%; ví dụ 200% là nhân đôi').setMinValue(100).setMaxValue(1000))
-      .addNumberOption(option => option.setName('hours').setDescription('Thời lượng buff, tối đa 720 giờ').setMinValue(0.1).setMaxValue(720)))
-    .addSubcommand(command => command.setName('buffs').setDescription('Xem các buff sự kiện đang hoạt động')),
+      .addNumberOption(option => option.setName('hours').setDescription('Thời lượng buff, tối đa 720 giờ').setMinValue(0.1).setMaxValue(720))),
   async execute(interaction) {
     if (!interaction.guildId) return interaction.reply({ content: 'Lệnh này chỉ dùng được trong server.', flags: MessageFlags.Ephemeral });
     const subcommand = interaction.options.getSubcommand();
@@ -259,8 +258,17 @@ module.exports = {
     }
     if (subcommand === 'buffset') {
       if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được điều chỉnh buff sự kiện.', flags: MessageFlags.Ephemeral });
-      const type = interaction.options.getString('type', true);
-      if (interaction.options.getString('action', true) === 'remove') {
+      const action = interaction.options.getString('action', true);
+      if (action === 'list') {
+        const buffs = listBuffs(interaction.guildId);
+        const description = buffs.length ? buffs.map(buff =>
+          `**${buffLabels[buff.buff_type]}:** ×${(buff.chance_bps / 10_000).toFixed(2).replace(/\.00$/, '')} · hết hạn <t:${Math.floor(buff.ends_at / 1000)}:R>`).join('\n')
+          : 'Không có buff sự kiện nào đang hoạt động.';
+        return interaction.reply({ embeds: [new EmbedBuilder().setColor(0xF1C40F).setTitle('🎊 BUFF SỰ KIỆN').setDescription(description)], flags: MessageFlags.Ephemeral });
+      }
+      const type = interaction.options.getString('type');
+      if (!type) return interaction.reply({ content: 'Cần chọn `loai` buff khi bật hoặc tắt.', flags: MessageFlags.Ephemeral });
+      if (action === 'remove') {
         const removed = removeBuff(interaction.guildId, type);
         return interaction.reply({ content: removed ? `✅ Đã tắt **${buffLabels[type]}**.` : 'Buff này hiện không hoạt động.', flags: MessageFlags.Ephemeral });
       }
@@ -269,14 +277,6 @@ module.exports = {
       const buff = setBuff({ guildId: interaction.guildId, type, percent, hours, updatedBy: interaction.user.id });
       const detail = type === 'gacha_luck' ? `nhân trọng số vật phẩm lên **${percent}%**` : `nhân lượng drop lên **${percent}%**`;
       return interaction.reply({ content: `✅ Đã bật **${buffLabels[type]}**: ${detail}, kết thúc <t:${Math.floor(buff.ends_at / 1000)}:R>.`, flags: MessageFlags.Ephemeral });
-    }
-    if (subcommand === 'buffs') {
-      if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được xem buff sự kiện.', flags: MessageFlags.Ephemeral });
-      const buffs = listBuffs(interaction.guildId);
-      const description = buffs.length ? buffs.map(buff =>
-        `**${buffLabels[buff.buff_type]}:** ×${(buff.chance_bps / 10_000).toFixed(2).replace(/\.00$/, '')} · hết hạn <t:${Math.floor(buff.ends_at / 1000)}:R>`).join('\n')
-        : 'Không có buff sự kiện nào đang hoạt động.';
-      return interaction.reply({ embeds: [new EmbedBuilder().setColor(0xF1C40F).setTitle('🎊 BUFF SỰ KIỆN').setDescription(description)], flags: MessageFlags.Ephemeral });
     }
     const settings = new Map(listGameChannels(interaction.guildId).map(row => [row.game, row.channel_id]));
     const description = GAMES.map(game => `**${LABELS[game]}:** ${settings.has(game) ? `<#${settings.get(game)}>` : 'Chưa thiết lập'}`).join('\n');
