@@ -7,10 +7,12 @@ const { createFairness, fairInt, commitment } = require('./fairnessService');
 const { getActiveEffect, consumeActiveEffect } = require('./effectStateService');
 const { formatCoins } = require('../utils/economy');
 const { addExperienceField, bonusDropText } = require('../utils/progressionView');
+const { appEmoji } = require('../utils/appEmoji');
 
 const MIN_BET = 10;
 const MAX_BET = 100_000;
-const DICE = [':one:', ':two:', ':three:', ':four:', ':five:', ':six:'];
+const DICE_FALLBACK = [':one:', ':two:', ':three:', ':four:', ':five:', ':six:'];
+const diceEmoji = value => appEmoji(`dieWhite${value}`, DICE_FALLBACK[value - 1]);
 const EFFECT_PRIORITY = ['chinchiro_karma', 'chinchiro_otsuki_dice', 'chinchiro_weighted_dice', 'chinchiro_soundproof_bowl'];
 
 function evaluateDice(dice) {
@@ -176,7 +178,7 @@ function rollLines(turn) {
   if (!turn) return '_Chưa lắc_';
   if (!turn.attempts.length) return `💦 **${turn.hand.label}**`;
   return turn.attempts.map((attempt, index) => {
-    const dice = attempt.dice.map(value => DICE[value - 1]).join(' ');
+    const dice = attempt.dice.map(diceEmoji).join(' ');
     return `Lắc ${index + 1}: ${dice}  ${attempt.hand ? `→ **${attempt.hand.label}**` : '→ Vô tướng'}`;
   }).join('\n');
 }
