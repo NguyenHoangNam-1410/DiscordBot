@@ -31,7 +31,7 @@ async function run() {
   for (const [name, overrides] of [
     ['trochoi', {}], ['trogiup', {}],
     ['luat', { options: { getString: () => 'baucua' } }],
-    ['batdau', {}], ['inventory', {}], ['nhiemvu', {}],
+    ['batdau', {}], ['inventory', {}], ['nhiemvu', { options: { getSubcommand: () => 'kiemtra' } }],
     ['xu', { options: { getSubcommand: () => 'sodu' } }],
     ['shop', { options: { getSubcommand: () => 'xem' } }],
     ['game', { options: { getSubcommand: () => 'configs' } }],
@@ -88,10 +88,20 @@ async function run() {
   assert.equal(gachaFollowUps.length, 1);
   assert.equal(gachaFollowUps[0].components[0].components.length, 2);
 
+  assert.deepEqual(require('../src/commands/nhiemvu').data.toJSON().options.map(option => option.name), ['kiemtra', 'nhan', 'diemdanh', 'tanthu']);
+  const claimAll = interaction({ options: { getSubcommand: () => 'nhan', getString: () => null } });
+  await require('../src/commands/nhiemvu').execute(claimAll);
+  assert.match(claimAll.replies[0].content, /chưa có phần thưởng/i);
+  const claimRole = interaction({ member: { roles: ['member'] }, options: { getSubcommand: () => 'nhan', getString: name => (name === 'loai' ? 'vaitro' : null) } });
+  await require('../src/commands/nhiemvu').execute(claimRole);
+  assert.match(claimRole.replies[0].content, /vai trò/i);
+  const dailyCheckin = interaction({ options: { getSubcommand: () => 'diemdanh' } });
+  await require('../src/commands/nhiemvu').execute(dailyCheckin);
+  assert.match(dailyCheckin.replies[0].content, /điểm danh/i);
   const nhiemvuKiemtra = interaction({ options: { getSubcommand: () => 'kiemtra' } });
   await require('../src/commands/nhiemvu').execute(nhiemvuKiemtra);
   assert.match(nhiemvuKiemtra.replies[0].embeds[0].toJSON().title, /KIỂM TRA/);
-  assert.equal(nhiemvuKiemtra.replies[0].components[0].components[0].options.length, 8);
+  assert.equal(nhiemvuKiemtra.replies[0].components[0].components[0].options.length, 9);
   const kiemtraUpdates = [];
   const kiemtraSelect = values => ({
     customId: 'kiemtra:alice', values, guildId: 'command-guild', user: { id: 'alice' },

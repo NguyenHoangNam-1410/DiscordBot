@@ -49,10 +49,9 @@ const PAGES = Object.freeze({
     title: '📜 TRỢ GIÚP · NHIỆM VỤ',
     description: 'Theo dõi và nhận thưởng hoạt động bằng `/nhiemvu`.',
     fields: [
-      ['📅 Hằng ngày và hằng tuần', '`/nhiemvu diemdanh` — điểm danh; `/nhiemvu xem` — xem tiến độ; `/nhiemvu nhan` — nhận thưởng hoàn thành.'],
-      ['🔎 Kiểm tra nhanh', '`/nhiemvu kiemtra` — menu xem/nhận nhiệm vụ, thành tựu, điểm danh; `/nhiemvu tanthu` — thưởng tân thủ (1 vé Gacha ×10 + 3000 :gem:).'],
-      ['🏅 Thành tựu', '`/nhiemvu thanhtuu` — xem; `/nhiemvu nhanthanhtuu` — nhận thưởng.'],
-      ['🎁 Vai trò', '`/nhiemvu thuongvaitro` — tự nhận xu theo vai trò mỗi tuần nếu server đã thiết lập.'],
+      ['🔎 Kiểm tra nhanh', '`/nhiemvu kiemtra` — menu xem và nhận nhiệm vụ ngày/tuần, thành tựu, điểm danh, thưởng vai trò và thưởng tân thủ.'],
+      ['🎁 Nhận thưởng', '`/nhiemvu nhan` — nhận tất cả hoặc chọn loại (Nhiệm vụ, Thành tựu, Thưởng vai trò); `/nhiemvu diemdanh` — điểm danh; `/nhiemvu tanthu` — 1 vé Gacha ×10 + 3000 :gem: (một lần).'],
+      ['🎖️ Vai trò', 'Thưởng vai trò tuần nhận bằng `/nhiemvu nhan` loại Thưởng vai trò nếu server đã thiết lập.'],
     ],
   },
   taikhoan: {

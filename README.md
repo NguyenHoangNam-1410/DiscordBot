@@ -33,7 +33,7 @@ Bot cần bật **Message Content Intent** trong Discord Developer Portal nếu 
 - `/choi`: một lệnh chung để chọn đủ 9 game.
 - `/vatpham`: cửa hàng, mua, túi đồ, sử dụng, tặng và quay Gacha.
 - Vật phẩm bậc R–SSR mới: Chữ Cái Khai Màn, Máy Đếm Tiếng, Đồng Hồ Gia Hạn (Vua tiếng Việt); Máy Quét Hàng/Cột (Mines); Kính Lúp Nứt, Bảo Hiểm Trắng Tay (Bầu cua); Ống Ngắm Tổng Điểm, Bảo Hiểm Sát Nút (Tài xỉu); Vé Khán Đài (Đua ngựa); Bùa Giảm Đau (Oẳn tù tì); Miếng Đệm Quắc (Xì dách); Phiếu Bỏ Bài (Poker); Nước Thanh Tẩy (hủy hiệu ứng đang chờ). Vật phẩm bảo hiểm chỉ tiêu hao khi thực sự được hoàn. Vé Gacha ×10 bảo đảm ít nhất một SSR, nhân đôi trọng số UR và không thể trao đổi.
-- `/nhiemvu`: nhiệm vụ, điểm danh, thành tựu và thưởng vai trò hàng tuần; `kiemtra` mở menu xem/nhận nhanh mọi thưởng chưa nhận, `tanthu` nhận thưởng tân thủ (1 vé Gacha ×10 + 3000 kim cương, một lần).
+- `/nhiemvu`: nhiệm vụ, điểm danh, thành tựu và thưởng vai trò hàng tuần; `kiemtra` mở menu xem/nhận nhanh mọi thưởng chưa nhận, `nhan` nhận tất cả hoặc theo loại (nhiệm vụ, thành tựu, thưởng vai trò), `tanthu` nhận thưởng tân thủ (1 vé Gacha ×10 + 3000 kim cương, một lần).
 - `/xephang`: bảng xếp hạng chung có dropdown để chuyển giữa tài sản và từng game.
 - `/xu vanchoi`: xem kết quả, tiền cược và payout của 10 ván gần nhất.
 - `/hoso [nguoidung]`: thẻ hồ sơ, huy hiệu và bảng thống kê đủ 9 game gồm số ván, thắng/thua/hòa, tỷ lệ thắng, tổng cược, tổng nhận và dòng xu ròng.
@@ -43,7 +43,7 @@ Bot cần bật **Message Content Intent** trong Discord Developer Portal nếu 
 - Admin dùng `/quantri themgacha`, `/quantri dattylegacha` và `/quantri xemgacha` để thêm vật phẩm catalog, chỉnh tỷ lệ mục tiêu và xem tỷ lệ Gacha thực tế theo server.
 - Mỗi ván hợp lệ đều roll độc lập khả năng rơi thêm xu, gem và lượt Gacha miễn phí. Admin chỉnh tỷ lệ cùng khoảng thưởng tối thiểu–tối đa bằng `/quantri datcauhinh`; kết quả rơi thêm được hiển thị ngay sau ván.
 - `/quantri datbuff` bật hệ số nhân có thời hạn cho lượng xu, gem hoặc lượt Gacha đã roll trúng; buff không thay đổi tỷ lệ rơi. Lệnh này cũng hỗ trợ tăng trọng số vật phẩm trong pool Gacha. Dùng `/quantri datbuff` với hành động `Xem buff đang chạy` để xem thời gian còn lại.
-- Admin dùng `/quantri datthuongvaitro` để gắn mức xu riêng, `/quantri xemthuongvaitro` để xem và `/quantri xoathuongvaitro` để xóa. Người chơi phải dùng `/nhiemvu thuongvaitro` trong tuần để nhận; quên nhận sẽ mất phần tuần đó.
+- Admin dùng `/quantri datthuongvaitro` để gắn mức xu riêng, `/quantri xemthuongvaitro` để xem và `/quantri xoathuongvaitro` để xóa. Người chơi phải dùng `/nhiemvu nhan` (loại Thưởng vai trò) trong tuần để nhận; quên nhận sẽ mất phần tuần đó.
 
 ## Kiểm chứng công bằng
 

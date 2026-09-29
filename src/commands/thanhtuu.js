@@ -19,7 +19,7 @@ module.exports = {
     }
     const achievements = getAchievements(interaction.guildId, interaction.user.id);
     const embed = new EmbedBuilder().setColor(0xF1C40F).setTitle('🏅 THÀNH TỰU').setDescription(achievements.map(line).join('\n\n'))
-      .setFooter({ text: '🎁 nghĩa là đã đủ điều kiện · dùng /nhiemvu nhanthanhtuu' });
+      .setFooter({ text: '🎁 nghĩa là đã đủ điều kiện · dùng /nhiemvu nhan loai:Thành tựu' });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   },
 };

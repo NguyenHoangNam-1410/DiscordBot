@@ -41,7 +41,7 @@ assert.equal(require('../src/commands/quantri').data.toJSON().options.length, 25
 const adminOptionNames = require('../src/commands/quantri').data.toJSON().options.map(option => option.name);
 assert(['themgacha', 'dattylegacha', 'xemgacha', 'datbuff'].every(name => adminOptionNames.includes(name)));
 assert(!require('../src/commands/xu').data.toJSON().options.some(option => option.name === 'top'));
-assert(require('../src/commands/nhiemvu').data.toJSON().options.some(option => option.name === 'thuongvaitro'));
+assert(require('../src/commands/nhiemvu').data.toJSON().options.some(option => option.name === 'nhan' && option.options.some(choice => choice.name === 'loai')));
 assert(require('../src/commands/game').data.toJSON().options.some(option => option.name === 'economy'));
 assert(require('../src/commands/game').data.toJSON().options.some(option => option.name === 'health'));
 assert(require('../src/commands/game').data.toJSON().options.some(option => option.name === 'configs'));
