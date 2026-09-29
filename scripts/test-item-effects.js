@@ -22,7 +22,7 @@ const { itemIcon, RARITY_ICON } = require('../src/utils/rarity');
 const { createFairness } = require('../src/services/fairnessService');
 
 const NEW_ITEMS = {
-  vietnamese_first_letter: 'R', vietnamese_word_count: 'R', vietnamese_extra_time: 'SSR',
+  vietnamese_word_count: 'R', vietnamese_extra_time: 'SSR',
   mines_row_scanner: 'R', mines_column_scanner: 'R', baucua_small_lens: 'R', taixiu_total_scope: 'R',
   taixiu_edge_insurance: 'SR', baucua_blank_insurance: 'SSR', horse_consolation: 'R', rps_loss_shield: 'R',
   blackjack_bust_guard: 'R', poker_fold_coupon: 'R', effect_cleanser: 'SSR',
@@ -37,6 +37,8 @@ const giveAndUse = (guildId, userId, channelId, itemId) => {
 
 // Catalog, pool and game filters
 const poolEntries = pool.listGachaPool('catalog-guild');
+assert.equal(catalog.getCatalogItem('vietnamese_first_letter'), null);
+assert(!poolEntries.some(row => row.itemId === 'vietnamese_first_letter'));
 for (const [id, rarity] of Object.entries(NEW_ITEMS)) {
   const item = catalog.getCatalogItem(id);
   assert(item, `thiếu item ${id}`);
@@ -74,8 +76,6 @@ channels.setGameChannel(vuaGuild, 'vuatiengviet', vuaChannel);
 const fun = require('../src/services/funGameService');
 const vua = fun.startVuaSession(vuaGuild, { forceHard: true });
 const syllables = vua.question.answer.trim().split(/\s+/u);
-const letter = giveAndUse(vuaGuild, 'alice', vuaChannel, 'vietnamese_first_letter');
-assert(letter.ephemeral && letter.message.includes(Array.from(syllables[0])[0].toLocaleUpperCase('vi-VN')));
 assert(giveAndUse(vuaGuild, 'alice', vuaChannel, 'vietnamese_word_count').message.includes(`**${syllables.length} tiếng**`));
 const expiryBefore = fun.getVuaSession(vuaGuild).question.expiresAt;
 const extra = giveAndUse(vuaGuild, 'alice', vuaChannel, 'vietnamese_extra_time');

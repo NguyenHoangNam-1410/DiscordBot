@@ -27,7 +27,6 @@ const DEFAULT_ENTRIES = Object.freeze([
   { rewardKey: 'vietnamese_syllable_lengths', kind: 'item', itemId: 'vietnamese_syllable_lengths', name: 'Đếm Âm Tiết', tier: 'SR', amount: 1, weight: 400 },
   { rewardKey: 'vietnamese_first_word', kind: 'item', itemId: 'vietnamese_first_word', name: 'Mở Đầu Từ Điển', tier: 'SSR', amount: 1, weight: 250 },
   { rewardKey: 'chinchiro_karma_charm', kind: 'item', itemId: 'chinchiro_karma_charm', name: 'Bùa Trả Đũa', tier: 'UR', amount: 1, weight: 100 },
-  { rewardKey: 'vietnamese_first_letter', kind: 'item', itemId: 'vietnamese_first_letter', name: 'Chữ Cái Khai Màn', tier: 'R', amount: 1, weight: 250 },
   { rewardKey: 'vietnamese_word_count', kind: 'item', itemId: 'vietnamese_word_count', name: 'Máy Đếm Tiếng', tier: 'R', amount: 1, weight: 250 },
   { rewardKey: 'mines_row_scanner', kind: 'item', itemId: 'mines_row_scanner', name: 'Máy Quét Hàng', tier: 'R', amount: 1, weight: 250 },
   { rewardKey: 'mines_column_scanner', kind: 'item', itemId: 'mines_column_scanner', name: 'Máy Quét Cột', tier: 'R', amount: 1, weight: 250 },

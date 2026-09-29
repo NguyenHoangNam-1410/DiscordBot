@@ -155,7 +155,6 @@ function useVietnameseHint(guildId, channelId, effect) {
   if (!session) throw new Error('NO_ACTIVE_GAME');
   if (games.isExpiredChallenge(session.question)) throw new Error('QUESTION_EXPIRED');
   const syllables = String(session.question.answer).trim().split(/\s+/u);
-  if (effect === 'quiz_first_letter') return `🔤 Gợi ý riêng cho bạn: đáp án bắt đầu bằng chữ **${Array.from(syllables[0])[0].toLocaleUpperCase('vi-VN')}**.`;
   if (effect === 'quiz_word_count') return `🔢 Gợi ý riêng cho bạn: đáp án có **${syllables.length} tiếng**.`;
   if (effect === 'quiz_first_word') return `🔎 Gợi ý riêng cho bạn: tiếng đầu tiên trong đáp án là **${syllables[0]}**.`;
   const lengths = syllables.map(word => Array.from(word).length);
@@ -200,7 +199,7 @@ function useItem({ guildId, userId, channelId, itemId }) {
   if (item.effect === 'dice_divine_eye') return { item, message: useDivineEye(guildId, userId, channelId, item.id), ephemeral: true };
   if (item.effect === 'mines_radar') { const message = useMinesRadar(guildId, userId, channelId); consumeInventory(guildId, userId, item.id); return { item, message, ephemeral: true }; }
   if (item.effect === 'quiz_living_dictionary') { const message = useLivingDictionary(guildId, channelId, userId); consumeInventory(guildId, userId, item.id); return { item, message }; }
-  if (['quiz_first_word', 'quiz_syllable_lengths', 'quiz_first_letter', 'quiz_word_count'].includes(item.effect)) {
+  if (['quiz_first_word', 'quiz_syllable_lengths', 'quiz_word_count'].includes(item.effect)) {
     const message = useVietnameseHint(guildId, channelId, item.effect);
     consumeInventory(guildId, userId, item.id);
     return { item, message, ephemeral: true };
