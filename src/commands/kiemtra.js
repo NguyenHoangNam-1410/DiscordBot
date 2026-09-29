@@ -6,6 +6,17 @@ const { getPlayerProgression } = require('../services/playerLevelService');
 const { claimNewbieBonus, hasClaimedNewbieBonus, NEWBIE_DIAMONDS } = require('../services/onboardingService');
 const { formatCoins } = require('../utils/economy');
 const { getTicketBalances } = require('../services/gachaService');
+const { claimWeeklyRoleRewards } = require('../services/weeklyRoleRewardService');
+const { memberRoleIds } = require('./thuongrole');
+
+function claimRoleRewards(guildId, userId, member) {
+  try { return { ...claimWeeklyRoleRewards({ guildId, userId, roleIds: memberRoleIds(member) }), status: 'claimed' }; }
+  catch (error) {
+    if (error.message === 'ALREADY_CLAIMED') return { status: 'already' };
+    if (error.message === 'NO_ELIGIBLE_ROLE') return { status: 'none' };
+    throw error;
+  }
+}
 
 function rewardText(item) {
   return [item.coins ? `${formatCoins(item.coins)} xu` : null, item.experience ? `${item.experience} EXP` : null,
@@ -30,6 +41,7 @@ function menuRow(userId) {
       new StringSelectMenuOptionBuilder().setLabel('Nhận thưởng nhiệm vụ').setValue('nhannhiemvu').setEmoji('🎁').setDescription('Nhận mọi nhiệm vụ đã hoàn thành'),
       new StringSelectMenuOptionBuilder().setLabel('Thành tựu').setValue('thanhtuu').setEmoji('🏅').setDescription('Xem tiến độ thành tựu'),
       new StringSelectMenuOptionBuilder().setLabel('Nhận thưởng thành tựu').setValue('nhanthanhtuu').setEmoji('🏆').setDescription('Nhận mọi thành tựu đã hoàn thành'),
+      new StringSelectMenuOptionBuilder().setLabel('Nhận thưởng vai trò tuần này').setValue('nhanvaitro').setEmoji('🎁').setDescription('Nhận xu hàng tuần từ các vai trò của bạn'),
       new StringSelectMenuOptionBuilder().setLabel('Điểm danh hôm nay').setValue('diemdanh').setEmoji('📅').setDescription('Điểm danh và nhận thưởng chuỗi'),
       new StringSelectMenuOptionBuilder().setLabel('Thưởng tân thủ').setValue('tanthu').setEmoji('🎉').setDescription(`Nhận 1 vé Gacha ×10 và ${NEWBIE_DIAMONDS.toLocaleString('vi-VN')} kim cương`),
     ));
@@ -46,12 +58,12 @@ function overview(guildId, userId) {
     { name: '📅 Nhiệm vụ tuần', value: `${progress.weekly.filter(m => m.complete).length}/${progress.weekly.length} hoàn thành · **${weekly}** chưa nhận`, inline: true },
     { name: '🏅 Thành tựu', value: `**${badges}** thành tựu chưa nhận`, inline: true },
     { name: '📅 Điểm danh', value: `Chuỗi hiện tại **${progress.streak}/7**`, inline: true },
-    { name: '🎁 Thưởng vai trò', value: 'Dùng `/nhiemvu thuongvaitro` mỗi tuần', inline: true },
+    { name: '🎁 Thưởng vai trò', value: 'Nhận mỗi tuần bằng menu này hoặc `/nhiemvu nhan`', inline: true },
     { name: '🎉 Thưởng tân thủ', value: newbie ? '✅ Đã nhận' : `🎁 Chưa nhận: 1 vé Gacha ×10 + ${NEWBIE_DIAMONDS.toLocaleString('vi-VN')} :gem:`, inline: true },
   ).setFooter({ text: 'Menu chỉ dành cho người mở lệnh' });
 }
 
-function build(guildId, user, key) {
+function build(guildId, user, key, member = null) {
   const userId = user.id;
   if (key === 'ngay' || key === 'tuan') {
     const progress = getProgress(guildId, userId);
@@ -70,6 +82,11 @@ function build(guildId, user, key) {
     const rewards = claimAchievements(guildId, userId);
     return base('🏆 NHẬN THÀNH TỰU').setDescription(rewards.length
       ? `Đã nhận **${rewards.length}** thành tựu, tổng cộng **${formatCoins(rewards.reduce((sum, item) => sum + item.reward, 0))} xu**.` : 'Chưa có thành tựu mới để nhận.');
+  }
+  if (key === 'nhanvaitro') {
+    const result = claimRoleRewards(guildId, userId, member);
+    if (result.status === 'claimed') return base('🎁 ĐÃ NHẬN THƯỞNG VAI TRÒ').setDescription(`${result.claimed.map(config => `<@&${config.role_id}> — **${formatCoins(config.amount)} xu**`).join('\n')}\n\nTổng cộng: **${formatCoins(result.total)} xu**`).setFooter({ text: `Tuần ${result.week} • Mỗi vai trò chỉ nhận một lần` });
+    return base('🎁 THƯỞNG VAI TRÒ').setDescription(result.status === 'already' ? 'Bạn đã nhận toàn bộ thưởng vai trò của tuần này.' : 'Bạn không có vai trò nào được thiết lập thưởng trong tuần này.');
   }
   if (key === 'diemdanh') {
     const result = checkIn(guildId, userId);
@@ -91,12 +108,13 @@ function build(guildId, user, key) {
 }
 
 module.exports = {
+  claimRoleRewards,
   async show(interaction) {
     return interaction.reply({ embeds: [overview(interaction.guildId, interaction.user.id)], components: [menuRow(interaction.user.id)], flags: MessageFlags.Ephemeral });
   },
   async handleSelect(interaction) {
     const [, ownerId] = interaction.customId.split(':');
     if (interaction.user.id !== ownerId) return interaction.reply({ content: 'Chỉ người mở lệnh này mới dùng được menu.', flags: MessageFlags.Ephemeral });
-    return interaction.update({ embeds: [build(interaction.guildId, interaction.user, interaction.values[0])], components: [menuRow(ownerId)], allowedMentions: { parse: [] } });
+    return interaction.update({ embeds: [build(interaction.guildId, interaction.user, interaction.values[0], interaction.member)], components: [menuRow(ownerId)], allowedMentions: { parse: [] } });
   },
 };

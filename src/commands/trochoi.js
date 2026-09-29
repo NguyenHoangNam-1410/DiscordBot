@@ -6,7 +6,7 @@ function helpEmbed(prefix = process.env.COMMAND_PREFIX || '!') {
     .addFields(
       { name: '🎲 /choi', value: '`baucua` · `taixiu` · `chinchiro` · `ott` · `xidach` · `poker` · `duangua` · `domin`\nNhóm `sinhton` và `vtv` có thêm các thao tác riêng.' },
       { name: '🎒 /vatpham', value: '`cuahang` · `mua` · `tui` · `sudung` · `tang` · `quay`' },
-      { name: '📜 /nhiemvu', value: '`xem` · `nhan` · `diemdanh` · `thanhtuu` · `nhanthanhtuu` · `thuongvaitro`' },
+      { name: '📜 /nhiemvu', value: '`kiemtra` · `nhan` · `diemdanh` · `tanthu`' },
       { name: '💰 Tài khoản', value: '`/hoso` · `/xu sodu|chuyen|lichsu|vanchoi` · `/xephang` · `/anxin`' },
       { name: '📖 Trợ giúp', value: '`/batdau` · `/luat` · `/trogiup` · `/huongdan`' },
       { name: '⌨️ Prefix tùy chọn', value: `Nếu server bật lệnh tin nhắn, các lệnh cũ như \`${prefix}baucua\` vẫn dùng được để tương thích.` },

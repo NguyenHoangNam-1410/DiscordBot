@@ -222,7 +222,7 @@ module.exports = {
       const configs = listWeeklyRoleRewards(interaction.guildId);
       const description = configs.length ? configs.map(item => `<@&${item.role_id}> — **${formatCoins(item.amount)} xu/người/tuần**\nÁp dụng từ tuần: **${item.starts_week_key}**`).join('\n\n') : 'Chưa cấu hình role nhận thưởng hàng tuần.';
       return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x2ECC71).setTitle('🎁 THƯỞNG ROLE HÀNG TUẦN').setDescription(description)
-        .setFooter({ text: 'Người chơi dùng /nhiemvu thuongvaitro · Không truy lĩnh tuần đã quên' })], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+        .setFooter({ text: 'Người chơi dùng /nhiemvu nhan (loại Thưởng vai trò) · Không truy lĩnh tuần đã quên' })], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
     }
     if (subcommand === 'gachaadd') {
       if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được thay đổi pool Gacha.', flags: MessageFlags.Ephemeral });

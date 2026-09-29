@@ -13,9 +13,9 @@ module.exports = {
     const embed = new EmbedBuilder().setColor(0x38BDF8).setTitle('👋 CHÀO MỪNG ĐẾN GAME HUB')
       .setDescription(`Bắt đầu nhanh trong ba bước:${reward}`)
       .addFields(
-        { name: '1 · Nhận thưởng hoạt động', value: 'Dùng `/nhiemvu diemdanh` mỗi ngày và `/nhiemvu thuongvaitro` mỗi tuần nếu có vai trò thưởng.' },
+        { name: '1 · Nhận thưởng hoạt động', value: 'Dùng `/nhiemvu diemdanh` mỗi ngày, `/nhiemvu nhan` để gom mọi thưởng (kể cả thưởng vai trò hằng tuần) và `/nhiemvu tanthu` để nhận quà tân thủ.' },
         { name: '2 · Chọn trò chơi', value: 'Dùng `/choi` để chọn game. Người mới nên thử Vua tiếng Việt hoặc Oẳn tù tì.' },
-        { name: '3 · Theo dõi tiến độ', value: 'Dùng `/nhiemvu xem`, `/nhiemvu thanhtuu`, `/xephang` và `/hoso`.' },
+        { name: '3 · Theo dõi tiến độ', value: 'Dùng `/nhiemvu kiemtra`, `/xephang` và `/hoso`.' },
         { name: 'Chơi có trách nhiệm', value: 'Đặt cược nhỏ khi làm quen. Xem 10 ván gần nhất bằng `/xu vanchoi`.' },
       ).setFooter({ text: 'Gói chào mừng chỉ nhận một lần trong mỗi server' });
     return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
