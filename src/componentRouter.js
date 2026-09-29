@@ -33,6 +33,7 @@ const ROUTES = Object.freeze([
   { kind: 'select', prefix: 'game-config-select', handle: interaction => gameCommand.handleConfigSelect(interaction) },
   { kind: 'select', prefix: 'xephang:', handle: interaction => leaderboardCommand.handleSelect(interaction) },
   { kind: 'select', prefix: 'trogiup:', handle: interaction => helpCommand.handleSelect(interaction) },
+  { kind: 'button', prefix: 'gacha-history:', handle: interaction => gachaCommand.handleHistoryButton(interaction) },
   { kind: 'button', prefix: 'gacha:', handle: interaction => gachaCommand.handleButton(interaction) },
   { kind: 'button', prefix: 'rpsbot:', handle: handleRpsBotButton },
   { kind: 'button', prefix: 'chinchiro:', handle: handleChinchiroButton },

@@ -65,15 +65,15 @@ function addFreePulls(guildId, userId, amount = 1, now = Date.now()) {
   const value = Math.trunc(Number(amount));
   if (!Number.isSafeInteger(value) || value < 1) throw new Error('INVALID_PULLS');
   getPlayerProgression(guildId, userId, now);
-  withBusyRetry(() => db.prepare('UPDATE player_currencies SET free_gacha_pulls=free_gacha_pulls+?,updated_at=? WHERE guild_id=? AND user_id=?')
-    .run(value, now, String(guildId), String(userId)));
+  withBusyRetry(() => require('./shopService').addInventory(guildId, userId, 'gacha_ticket_1', value, now));
   return getPlayerProgression(guildId, userId, now);
 }
 
 function consumeFreePull(guildId, userId, now = Date.now()) {
-  getPlayerProgression(guildId, userId, now);
-  return withBusyRetry(() => db.prepare(`UPDATE player_currencies SET free_gacha_pulls=free_gacha_pulls-1,updated_at=?
-    WHERE guild_id=? AND user_id=? AND free_gacha_pulls>0`).run(now, String(guildId), String(userId)).changes > 0);
+  const shop = require('./shopService');
+  if (shop.getInventoryQuantity(guildId, userId, 'gacha_ticket_1') < 1) return false;
+  shop.consumeInventory(guildId, userId, 'gacha_ticket_1');
+  return true;
 }
 
 function levelReward(level) {

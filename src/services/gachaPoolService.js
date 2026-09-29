@@ -13,12 +13,14 @@ const DEFAULT_ENTRIES = Object.freeze([
   { rewardKey: 'mines_radar', kind: 'item', itemId: 'mines_radar', name: 'Radar Nhỏ', tier: 'SR', amount: 1, weight: 400 },
   { rewardKey: 'chinchiro_weighted_dice', kind: 'item', itemId: 'chinchiro_weighted_dice', name: 'Xúc Xắc Chì', tier: 'SR', amount: 1, weight: 400 },
   { rewardKey: 'blackjack_swap', kind: 'item', itemId: 'blackjack_swap', name: 'Lệnh Bài Đổi Trắng', tier: 'SSR', amount: 1, weight: 250 },
+  { rewardKey: 'gacha_ticket_1', kind: 'item', itemId: 'gacha_ticket_1', name: 'Vé Gacha ×1 · SSR', tier: 'SSR', amount: 1, weight: 250 },
   { rewardKey: 'horse_second_insurance', kind: 'item', itemId: 'horse_second_insurance', name: 'Bảo Hiểm Về Nhì', tier: 'SSR', amount: 1, weight: 250 },
   { rewardKey: 'rps_coward_privilege', kind: 'item', itemId: 'rps_coward_privilege', name: 'Đặc Quyền Kẻ Hèn', tier: 'SSR', amount: 1, weight: 250 },
   { rewardKey: 'mines_blast_shield', kind: 'item', itemId: 'mines_blast_shield', name: 'Giáp Chống Nổ', tier: 'SSR', amount: 1, weight: 250 },
   { rewardKey: 'poker_insurance', kind: 'item', itemId: 'poker_insurance', name: 'Bảo Hiểm Cược Poker', tier: 'SSR', amount: 1, weight: 250 },
   { rewardKey: 'chinchiro_otsuki_dice', kind: 'item', itemId: 'chinchiro_otsuki_dice', name: 'Xúc Xắc Của Quản Đốc', tier: 'SSR', amount: 1, weight: 250 },
   { rewardKey: 'divine_eye', kind: 'item', itemId: 'divine_eye', name: 'Mắt Thần', tier: 'UR', amount: 1, weight: 100 },
+  { rewardKey: 'gacha_ticket_10', kind: 'item', itemId: 'gacha_ticket_10', name: 'Vé Gacha ×10 · UR', tier: 'UR', amount: 1, weight: 100 },
   { rewardKey: 'blackjack_ace', kind: 'item', itemId: 'blackjack_ace', name: 'Át Chủ Bài', tier: 'UR', amount: 1, weight: 100 },
   { rewardKey: 'horse_jackpot', kind: 'item', itemId: 'horse_jackpot', name: 'Trúng Đậm', tier: 'UR', amount: 1, weight: 100 },
   { rewardKey: 'living_dictionary', kind: 'item', itemId: 'living_dictionary', name: 'Từ Điển Sống', tier: 'UR', amount: 1, weight: 100 },
@@ -83,6 +85,10 @@ function setGachaRate(guildId, rewardKey, percent, updatedBy) {
   if (Number(percent) === 0 && !pool.some(item => item.rewardKey !== rewardKey && item.weight > 0)) throw new Error('EMPTY_GACHA_POOL');
   if (Number(percent) === 0 && ['SR', 'SSR', 'UR'].includes(entry.tier)
     && !pool.some(item => item.rewardKey !== rewardKey && ['SR', 'SSR', 'UR'].includes(item.tier) && item.weight > 0)) {
+    throw new Error('GACHA_REQUIRES_HIGH_TIER');
+  }
+  if (Number(percent) === 0 && entry.tier === 'UR'
+    && !pool.some(item => item.rewardKey !== rewardKey && item.tier === 'UR' && item.kind === 'item' && item.weight > 0)) {
     throw new Error('GACHA_REQUIRES_HIGH_TIER');
   }
   entry.weight = desiredWeight(guildId, rewardKey, percent);

@@ -2,7 +2,7 @@ const { EmbedBuilder, MessageFlags, SlashCommandBuilder } = require('discord.js'
 const { getInventory } = require('../services/shopService');
 const { listActiveEffects } = require('../services/effectStateService');
 const { listCatalog } = require('../services/itemCatalogService');
-const TYPE_NAMES = { consumable: 'VẬT PHẨM DÙNG', chest: 'HỘP QUÀ', color: 'MÀU HỒ SƠ' };
+const TYPE_NAMES = { consumable: 'VẬT PHẨM DÙNG', chest: 'HỘP QUÀ', color: 'MÀU HỒ SƠ', gacha: 'VÉ GACHA' };
 module.exports = {
   data: new SlashCommandBuilder().setName('inventory').setDescription('Xem kho vật phẩm').addUserOption(o => o.setName('user').setDescription('Người chơi cần xem')),
   async execute(interaction) {

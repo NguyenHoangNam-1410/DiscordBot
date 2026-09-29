@@ -42,7 +42,7 @@ const PAGES = Object.freeze({
       ['🛒 Mua sắm', '`/vatpham cuahang` — xem các tab cửa hàng; `/vatpham mua` — mua vật phẩm.'],
       ['🎒 Túi đồ', '`/vatpham tui` — xem vật phẩm; `/vatpham sudung` — chọn vật phẩm để dùng.'],
       ['📚 Catalog vật phẩm', '`/vatpham chitiet` — lọc item theo game, xem mô tả và số lượng sở hữu; không hiện giá.'],
-      ['🎁 Tặng và quay', '`/vatpham tang` — tặng vật phẩm; `/vatpham quay` — quay Gacha bằng kim cương.'],
+      ['🎁 Tặng và quay', '`/vatpham tang` — tặng vật phẩm; `/gacha quay` hoặc `/vatpham quay` — ưu tiên vé trước kim cương; `/gacha lichsu` — lịch sử quay.'],
     ],
   },
   nhiemvu: {
@@ -61,7 +61,7 @@ const PAGES = Object.freeze({
       ['👤 Hồ sơ và xếp hạng', '`/hoso` — xem hồ sơ và thống kê từng game; `/xephang` — chọn tài sản hoặc game bằng menu.'],
       ['💰 Xu', '`/hoso` — xem số dư; `/xu lichsu` — giao dịch; `/xu vanchoi` — 10 ván gần nhất; `/xu chuyen` — chuyển xu.'],
       ['🪙 Hỗ trợ', '`/anxin` — xin xu khi đủ điều kiện; tối đa 5 lần mỗi ngày.'],
-      ['🎁 Drop sau ván', 'Mỗi ván có thể rơi xu, gem và lượt quay Gacha theo cấu hình của server.'],
+      ['🎁 Drop sau ván', 'Mỗi ván có thể rơi xu, gem và vé Gacha ×1 theo cấu hình của server.'],
     ],
   },
   quantri: {

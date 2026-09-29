@@ -29,7 +29,7 @@ const options = [
   subcommand('tui', commands.tui, 'Xem túi vật phẩm'),
   subcommand('sudung', commands.sudung, 'Chọn vật phẩm để sử dụng'),
   subcommand('tang', commands.tang, 'Tặng vật phẩm cho người chơi khác'),
-  subcommand('quay', commands.quay, 'Quay Gacha bằng kim cương'),
+  subcommand('quay', commands.quay, 'Quay Gacha bằng vé hoặc kim cương', 'quay'),
   subcommand('chitiet', commands.chitiet, 'Xem item theo game và số lượng đang sở hữu'),
 ];
 
@@ -37,7 +37,7 @@ function route(interaction) {
   const visible = interaction.options.getSubcommand();
   return {
     command: commands[visible],
-    subcommand: visible === 'cuahang' ? 'xem' : null,
+    subcommand: visible === 'cuahang' ? 'xem' : visible === 'quay' ? 'quay' : null,
     optionNames: OPTION_NAMES[visible],
   };
 }

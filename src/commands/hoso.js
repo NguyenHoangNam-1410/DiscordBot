@@ -5,6 +5,7 @@ const { renderProfileCard } = require('../services/profileCardService');
 const { getAchievements } = require('../services/achievementService');
 const { getAllGameStats, summarizeGameStats } = require('../services/playerGameStatsService');
 const { getPlayerProgression, xpForNextLevel, levelReward } = require('../services/playerLevelService');
+const { getTicketBalances } = require('../services/gachaService');
 
 function number(value) { return Number(value).toLocaleString('vi-VN'); }
 function signed(value) { return `${value > 0 ? '+' : ''}${number(value)}`; }
@@ -15,7 +16,7 @@ function expBar(current, target, size = 12) {
 function rewardSummary(level) {
   const reward = levelReward(level);
   return [reward.coins ? `${number(reward.coins)} xu` : null, reward.diamonds ? `${number(reward.diamonds)} 💎` : null,
-    reward.freePulls ? `${reward.freePulls} lượt Gacha` : null, reward.cosmetic ? 'màu hồ sơ độc quyền' : null].filter(Boolean).join(' · ');
+    reward.freePulls ? `${reward.freePulls} vé Gacha ×1 SSR` : null, reward.cosmetic ? 'màu hồ sơ độc quyền' : null].filter(Boolean).join(' · ');
 }
 function overviewField(summary) {
   return { name: '📊 Tổng quan toàn bộ game', inline: false,
@@ -24,8 +25,9 @@ function overviewField(summary) {
 function levelField(progress = { level: 1, experience: 0, diamonds: 0, free_gacha_pulls: 0 }, guildId = null) {
   const target = xpForNextLevel(progress.level, guildId); const nextLevel = progress.level + 1;
   const percent = Math.max(0, Math.min(100, Math.floor(progress.experience / target * 100)));
+  const tickets = guildId && progress.user_id ? getTicketBalances(guildId, progress.user_id) : { single: 0, ten: 0 };
   return { name: '⭐ Cấp độ & EXP', inline: false,
-    value: `Cấp **${progress.level}** · EXP **${number(progress.experience)}/${number(target)}**\n${expBar(progress.experience, target)} **${percent}%**\n🎁 Lên cấp **${nextLevel}**: ${rewardSummary(nextLevel)}\n💎 **${number(progress.diamonds)}** kim cương · 🎰 **${number(progress.free_gacha_pulls)}** lượt quay miễn phí` };
+    value: `Cấp **${progress.level}** · EXP **${number(progress.experience)}/${number(target)}**\n${expBar(progress.experience, target)} **${percent}%**\n🎁 Lên cấp **${nextLevel}**: ${rewardSummary(nextLevel)}\n💎 **${number(progress.diamonds)}** kim cương · 🎟️ Vé ×1 **${tickets.single}** · Vé ×10 **${tickets.ten}**` };
 }
 function profileSelectRow(ownerId, targetId, stats, selected = 'overview') {
   const menu = new StringSelectMenuBuilder().setCustomId(`hoso:${ownerId}:${targetId}`).setPlaceholder('Chọn game muốn xem chi tiết…');

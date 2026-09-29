@@ -778,4 +778,32 @@ runMigration(21, 'multiplayer human dealer blackjack', () => {
   CREATE INDEX IF NOT EXISTS idx_blackjack_table_locks_table ON blackjack_table_locks(table_id)`);
 });
 
+runMigration(22, 'gacha tickets and player pity', () => {
+  db.exec(`CREATE TABLE IF NOT EXISTS gacha_pity (
+    guild_id TEXT NOT NULL,user_id TEXT NOT NULL,
+    since_sr INTEGER NOT NULL DEFAULT 0,since_ssr INTEGER NOT NULL DEFAULT 0,since_ur INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY(guild_id,user_id)
+  );
+  ALTER TABLE gacha_history ADD COLUMN payment_type TEXT NOT NULL DEFAULT 'diamonds';`);
+  const now = Date.now();
+  db.prepare(`INSERT INTO user_inventory(guild_id,user_id,item_id,quantity,acquired_at,updated_at)
+    SELECT guild_id,user_id,'gacha_ticket_1',free_gacha_pulls,?,? FROM player_currencies WHERE free_gacha_pulls>0
+    ON CONFLICT(guild_id,user_id,item_id) DO UPDATE SET quantity=user_inventory.quantity+excluded.quantity,updated_at=excluded.updated_at`).run(now, now);
+  db.exec('UPDATE player_currencies SET free_gacha_pulls=0 WHERE free_gacha_pulls>0');
+  const streaks = new Map();
+  for (const row of db.prepare('SELECT guild_id,user_id,results_json FROM gacha_history ORDER BY id ASC').iterate()) {
+    const key = `${row.guild_id}:${row.user_id}`;
+    const pity = streaks.get(key) || { guildId: row.guild_id, userId: row.user_id, sr: 0, ssr: 0, ur: 0 };
+    for (const result of JSON.parse(row.results_json)) {
+      if (result.kind !== 'item') continue;
+      pity.sr = ['SR', 'SSR', 'UR'].includes(result.tier) ? 0 : pity.sr + 1;
+      pity.ssr = ['SSR', 'UR'].includes(result.tier) ? 0 : pity.ssr + 1;
+      pity.ur = result.tier === 'UR' ? 0 : pity.ur + 1;
+    }
+    streaks.set(key, pity);
+  }
+  const savePity = db.prepare('INSERT INTO gacha_pity(guild_id,user_id,since_sr,since_ssr,since_ur) VALUES(?,?,?,?,?)');
+  for (const pity of streaks.values()) savePity.run(pity.guildId, pity.userId, pity.sr, pity.ssr, pity.ur);
+});
+
 module.exports = { db, dbPath, runMigration };

@@ -17,7 +17,8 @@ function useFilterRow(userId, selected = 'all') {
 
 function usePanel(guildId, userId, status = null, selectedGame = 'all') {
   const allInventory = getInventory(guildId, userId);
-  const inventory = allInventory.filter(entry => itemMatchesGame(entry.item, selectedGame)).slice(0, 25);
+  const usableInventory = allInventory.filter(entry => entry.item.type !== 'gacha');
+  const inventory = usableInventory.filter(entry => itemMatchesGame(entry.item, selectedGame)).slice(0, 25);
   const embed = new EmbedBuilder().setColor(0x5865F2).setTitle('🎒 SỬ DỤNG VẬT PHẨM')
     .setDescription(inventory.length
       ? `${status ? `${status}\n\n` : ''}Chọn game để lọc, sau đó chọn vật phẩm muốn dùng hoặc trang bị.\n\n${inventory.map(entry => {
@@ -26,9 +27,9 @@ function usePanel(guildId, userId, status = null, selectedGame = 'all') {
         const icon = entry.item.emoji || RARITY_EMOJI[entry.item.rarity] || '▫️';
         return `${icon} **${entry.item.name}${['R', 'SR', 'SSR', 'UR'].includes(entry.item.rarity) ? ` [${entry.item.rarity}]` : ''}** ×${entry.quantity}\n_${scope}_\n_${entry.item.description}_`;
       }).join('\n')}`
-      : `${status ? `${status}\n\n` : ''}${allInventory.length ? 'Không có vật phẩm áp dụng cho game này.' : 'Kho đồ chưa có vật phẩm có thể sử dụng.'}`)
+      : `${status ? `${status}\n\n` : ''}${usableInventory.length ? 'Không có vật phẩm áp dụng cho game này.' : 'Kho đồ chưa có vật phẩm có thể sử dụng.'}`)
     .setFooter({ text: 'Menu chỉ người mở mới sử dụng được • Hiển thị tối đa 25 vật phẩm' });
-  if (!allInventory.length) return { embeds: [embed], components: [] };
+  if (!usableInventory.length) return { embeds: [embed], components: [] };
   if (!inventory.length) return { embeds: [embed], components: [useFilterRow(userId, selectedGame)] };
   const select = new StringSelectMenuBuilder().setCustomId(`use:${userId}:${selectedGame}`).setPlaceholder('Chọn vật phẩm muốn sử dụng…')
     .addOptions(inventory.map(entry => new StringSelectMenuOptionBuilder()

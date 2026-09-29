@@ -1,6 +1,6 @@
 const COMMAND_FILES = Object.freeze([
   'batdau', 'trogiup', 'huongdan', 'choi', 'luat', 'hoso', 'xu', 'vatpham', 'nhiemvu',
-  'xephang', 'anxin', 'quantri', 'vtv',
+  'xephang', 'anxin', 'quantri', 'gacha', 'vtv',
 ]);
 
 function loadCommands(base = './commands') {
