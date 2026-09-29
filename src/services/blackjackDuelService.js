@@ -7,7 +7,6 @@ const { createShoe, handScore, isBlackjack, getSessionByUser } = require('./blac
 const { formatCoins } = require('../utils/economy');
 const { createFairness } = require('./fairnessService');
 const { experienceLines } = require('../utils/progressionView');
-const { cardsLine } = require('../utils/cardEmoji');
 
 const INVITE_TTL_MS = 60_000;
 const PLAY_TTL_MS = 180_000;
@@ -161,7 +160,7 @@ const expireTx = db.transaction((id, now) => {
   return { ...duel, status: 'expired', refunded, forfeited };
 });
 
-function cardsText(cards) { return cardsLine(cards, 'code'); }
+function cardsText(cards) { return cards.map(card => `\`${card}\``).join(' '); }
 function privateHandText(duel, userId) {
   const player = duelState(duel)?.players?.[String(userId)];
   if (!player) return 'Không tìm thấy tay bài.';
