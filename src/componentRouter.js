@@ -22,6 +22,7 @@ const gameCommand = require('./commands/game');
 const vuaTiengVietCommand = require('./commands/vuatiengviet');
 const itemCatalogViewCommand = require('./commands/itemCatalogView');
 const adminCommand = require('./commands/quantri');
+const checklistCommand = require('./commands/checklist');
 
 const ROUTES = Object.freeze([
   { kind: 'button', prefix: 'replay:', handle: (interaction, logger) => handleReplayButton(interaction, logger) },
@@ -33,6 +34,7 @@ const ROUTES = Object.freeze([
   { kind: 'select', prefix: 'game-config-select', handle: interaction => gameCommand.handleConfigSelect(interaction) },
   { kind: 'select', prefix: 'xephang:', handle: interaction => leaderboardCommand.handleSelect(interaction) },
   { kind: 'select', prefix: 'trogiup:', handle: interaction => helpCommand.handleSelect(interaction) },
+  { kind: 'select', prefix: 'checklist:', handle: interaction => checklistCommand.handleSelect(interaction) },
   { kind: 'button', prefix: 'gacha-history:', handle: interaction => gachaCommand.handleHistoryButton(interaction) },
   { kind: 'button', prefix: 'gacha:', handle: interaction => gachaCommand.handleButton(interaction) },
   { kind: 'button', prefix: 'rpsbot:', handle: handleRpsBotButton },

@@ -21,12 +21,12 @@ function gachaRows(ownerId, progression, tickets = { single: 0, ten: 0 }) {
   )];
 }
 function resultPayload(result, ownerId) {
-  const payment = result.paymentType === TICKETS[1] ? '🎟️ Vé Gacha ×1 · SSR' : result.paymentType === TICKETS[10] ? '🎟️ Vé Gacha ×10 · UR' : `${result.diamondCost.toLocaleString('vi-VN')} 💎`;
+  const payment = result.paymentType === TICKETS[1] ? '🎟️ Vé Gacha ×1 · SSR' : result.paymentType === TICKETS[10] ? '🎟️ Vé Gacha ×10 · UR' : `${result.diamondCost.toLocaleString('vi-VN')} :gem:`;
   const embed = new EmbedBuilder().setColor(result.results.some(x => x.tier === 'UR') ? 0xED4245 : 0x9B59B6)
     .setTitle(`🎰 GACHA · ${result.pulls} LƯỢT`).setDescription(groupedLines(result.results))
     .addFields(
       { name: 'Thanh toán', value: payment, inline: true },
-      { name: 'Còn lại', value: `${result.progression.diamonds.toLocaleString('vi-VN')} 💎 · 🎟️ ×1: ${result.tickets.single} · 🎟️ ×10: ${result.tickets.ten}`, inline: true },
+      { name: 'Còn lại', value: `${result.progression.diamonds.toLocaleString('vi-VN')} :gem: · 🎟️ ×1: ${result.tickets.single} · 🎟️ ×10: ${result.tickets.ten}`, inline: true },
       { name: 'Bảo hiểm', value: `SR: ${result.pity.since_sr}/10 · SSR: ${result.pity.since_ssr}/25 · UR: ${result.pity.since_ur}/50`, inline: false },
     );
   const pool = listGachaPool(result.guildId, { luckMultiplier: gachaLuckMultiplier(result.guildId) });
@@ -69,7 +69,7 @@ async function handleButton(interaction) {
   } catch (error) {
     if (error.message === 'INSUFFICIENT_DIAMONDS') {
       const current = getPlayerProgression(interaction.guildId, interaction.user.id);
-      return interaction.reply({ content: `Bạn không đủ kim cương hoặc vé phù hợp. Hiện có **${current.diamonds.toLocaleString('vi-VN')} 💎**.`, flags: MessageFlags.Ephemeral });
+      return interaction.reply({ content: `Bạn không đủ kim cương hoặc vé phù hợp. Hiện có **${current.diamonds.toLocaleString('vi-VN')} :gem:**.`, flags: MessageFlags.Ephemeral });
     }
     throw error;
   }
@@ -91,7 +91,7 @@ module.exports = {
     } catch (error) {
       if (error.message === 'INSUFFICIENT_DIAMONDS') {
         const current = getPlayerProgression(interaction.guildId, interaction.user.id);
-        return interaction.reply({ content: `Bạn không đủ kim cương hoặc vé phù hợp. Hiện có **${current.diamonds.toLocaleString('vi-VN')} 💎**.`, flags: MessageFlags.Ephemeral });
+        return interaction.reply({ content: `Bạn không đủ kim cương hoặc vé phù hợp. Hiện có **${current.diamonds.toLocaleString('vi-VN')} :gem:**.`, flags: MessageFlags.Ephemeral });
       }
       throw error;
     }

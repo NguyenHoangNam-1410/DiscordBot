@@ -434,6 +434,13 @@ CREATE TABLE IF NOT EXISTS onboarding_claims (
   PRIMARY KEY (guild_id,user_id)
 );
 
+CREATE TABLE IF NOT EXISTS vip_rewards (
+  guild_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  claimed_at INTEGER NOT NULL,
+  PRIMARY KEY (guild_id,user_id)
+);
+
 CREATE TABLE IF NOT EXISTS season_claims (
   guild_id TEXT NOT NULL,
   season_key TEXT NOT NULL,

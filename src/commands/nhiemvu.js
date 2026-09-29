@@ -8,12 +8,12 @@ const { remapOptions } = require('../utils/commandAlias');
 function missionLine(mission) {
   const mark = mission.claimed ? '✅' : mission.complete ? '🎁' : '▫️';
   const reward = [mission.coins ? `${formatCoins(mission.coins)} xu` : null, mission.experience ? `${mission.experience} EXP` : null,
-    mission.diamonds ? `${mission.diamonds} 💎` : null, mission.item ? `×${mission.quantity || 1} vật phẩm` : null].filter(Boolean).join(' + ');
+    mission.diamonds ? `${mission.diamonds} :gem:` : null, mission.item ? `×${mission.quantity || 1} vật phẩm` : null].filter(Boolean).join(' + ');
   return `${mark} **${mission.label}** — ${mission.progress}/${mission.target}\n↳ ${reward}${mission.complete && !mission.claimed ? ' · có thể nhận' : ''}`;
 }
 function rewardText(item) {
   return [item.coins ? `${formatCoins(item.coins)} xu` : null, item.experience ? `${item.experience} EXP` : null,
-    item.diamonds ? `${item.diamonds} 💎` : null, item.item ? `×${item.quantity || 1} vật phẩm` : null].filter(Boolean).join(' + ');
+    item.diamonds ? `${item.diamonds} :gem:` : null, item.item ? `×${item.quantity || 1} vật phẩm` : null].filter(Boolean).join(' + ');
 }
 module.exports = {
   data: new SlashCommandBuilder().setName('nhiemvu').setDescription('Nhiệm vụ, điểm danh và phần thưởng hoạt động')
@@ -33,7 +33,7 @@ module.exports = {
     if (sub === 'diemdanh') {
       const result = checkIn(interaction.guildId, interaction.user.id);
       if (!result.ok) return interaction.reply({ content: `Bạn đã điểm danh hôm nay. Chuỗi điểm danh: **${result.streak}/7**.`, flags: MessageFlags.Ephemeral });
-      const reward = [`${formatCoins(result.coins)} xu`, result.diamonds ? `${result.diamonds} 💎` : null].filter(Boolean).join(' + ');
+      const reward = [`${formatCoins(result.coins)} xu`, result.diamonds ? `${result.diamonds} :gem:` : null].filter(Boolean).join(' + ');
       return interaction.reply({ content: `📅 <@${interaction.user.id}> điểm danh ngày **${result.date}**, chuỗi điểm danh **${result.streak}/7**, nhận được: **${reward}**.${result.reset ? '\n🎉 Hoàn thành chuỗi 7 ngày! Chuỗi đã đặt lại; ngày mai bắt đầu lại từ 1/7.' : ''}`, allowedMentions: { users: [interaction.user.id] } });
     }
     if (sub === 'nhan') {
@@ -43,7 +43,7 @@ module.exports = {
     }
     const progress = getProgress(interaction.guildId, interaction.user.id);
     const embed = new EmbedBuilder().setColor(0xE67E22).setTitle('📜 NHIỆM VỤ')
-      .setDescription(`Chuỗi điểm danh: **${progress.streak}/7 ngày**\nMỗi ngày chọn ngẫu nhiên 3 nhiệm vụ. Hoàn thành cả 3 nhận **20 💎 + 1 Hộp Quà**.`)
+      .setDescription(`Chuỗi điểm danh: **${progress.streak}/7 ngày**\nMỗi ngày chọn ngẫu nhiên 3 nhiệm vụ. Hoàn thành cả 3 nhận **20 :gem: + 1 Hộp Quà**.`)
       .addFields(
         { name: `Hằng ngày · ${progress.dailyKey}`, value: progress.daily.map(missionLine).join('\n') },
         { name: `Hằng tuần · từ ${progress.weeklyKey}`, value: progress.weekly.map(missionLine).join('\n') },

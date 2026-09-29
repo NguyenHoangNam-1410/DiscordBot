@@ -10,7 +10,7 @@ const { addExperienceField, bonusDropText } = require('../utils/progressionView'
 
 const MIN_BET = 10;
 const MAX_BET = 100_000;
-const DICE = ['[1]', '[2]', '[3]', '[4]', '[5]', '[6]'];
+const DICE = [':one:', ':two:', ':three:', ':four:', ':five:', ':six:'];
 const EFFECT_PRIORITY = ['chinchiro_karma', 'chinchiro_otsuki_dice', 'chinchiro_weighted_dice', 'chinchiro_soundproof_bowl'];
 
 function evaluateDice(dice) {

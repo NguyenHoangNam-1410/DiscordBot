@@ -215,11 +215,11 @@ function resultEmbed(settled) {
   const summary = betLines.length > 0 ? betLines.slice(0, 15).join('\n') : 'Không có cửa cược thắng.';
   const embed = new EmbedBuilder().setColor(0x2ECC71).setTitle(`🎲 ${gameLabel(round.game)} · KẾT QUẢ`)
     .setDescription(`## ${resultText}`)
-    .addFields({ name: '💰 THANH TOÁN', value: summary })
+    .addFields({ name: ':coin: THANH TOÁN', value: summary })
     .setFooter({ text: `Mã ván: ${round.id} • ${settlements.length} người tham gia` })
     .setTimestamp();
   const exp = experienceLines(settlements).slice(0, 15);
-  if (exp.length) embed.addFields({ name: '⭐ EXP NHẬN ĐƯỢC', value: exp.join('\n') });
+  if (exp.length) embed.addFields({ name: ':test_tube: EXP NHẬN ĐƯỢC', value: exp.join('\n') });
   const unlocked = settlements.flatMap(item => (item.achievements || []).map(achievement => `<@${item.userId}> mở khóa **${achievement.name}**`));
   if (unlocked.length) embed.addFields({ name: '🏅 Thành tựu mới', value: unlocked.slice(0, 10).join('\n') });
   return embed;
