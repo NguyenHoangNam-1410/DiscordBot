@@ -473,24 +473,31 @@ async function handleHorseButton(interaction) {
 
 async function handleHorseModal(interaction) {
   const [, roundId, horse] = interaction.customId.split(':');
+  async function reject(content) {
+    const round = getRound(roundId);
+    const open = round && round.guild_id === interaction.guildId && round.channel_id === interaction.channelId
+      && round.status === 'open' && round.closes_at > Date.now();
+    await interaction.update({ components: open ? raceButtons(round) : [] });
+    return interaction.followUp({ content, flags: MessageFlags.Ephemeral });
+  }
   const amountText = interaction.fields.getTextInputValue('amount').trim();
   const amount = Number(amountText);
-  if (!/^\d+$/.test(amountText) || !Number.isSafeInteger(amount)) return interaction.reply({ content: 'Số xu cược không hợp lệ.', flags: MessageFlags.Ephemeral });
-  try {
-    const placed = placeHorseBetTx({ roundId, userId: interaction.user.id, horse, amount });
-    const market = marketForRound(placed.round);
-    await interaction.reply({ content: `## ✅ ĐẶT CƯỢC THÀNH CÔNG\n🐎 **Ngựa:** ${horseLabel(horse, market)}\n💰 **Lần này:** ${formatCoins(amount)} xu\n🎟️ **Tổng cược trong ván:** ${formatCoins(placed.totalAmount)} xu`, flags: MessageFlags.Ephemeral });
-    await refreshRace(placed.round, interaction.client);
-    const publicMessage = `<@${interaction.user.id}> đặt cược **${formatCoins(amount)} xu** vào **${horseLabel(horse, market)}** 🐎`;
-    await interaction.channel?.send({ content: publicMessage }).catch(() => {});
-  } catch (error) {
+  if (!/^\d+$/.test(amountText) || !Number.isSafeInteger(amount)) return reject('Số xu cược không hợp lệ.');
+  let placed;
+  try { placed = placeHorseBetTx({ roundId, userId: interaction.user.id, horse, amount }); }
+  catch (error) {
     const content = error.code === 'INSUFFICIENT_FUNDS' ? 'Bạn không đủ xu để đặt cược.'
       : error.message === 'ROUND_CLOSED' ? 'Ván đua đã khóa cược.'
         : error.message === 'INVALID_HORSE' ? 'Ngựa này không tham gia ván hiện tại.'
         : error.message === 'BET_LIMIT' ? `Tổng cược tối đa của bạn trong ván này là ${formatCoins(error.maxBet)} xu.`
           : `Mức cược phải từ ${formatCoins(MIN_BET)} đến ${formatCoins(MAX_BET_PER_HORSE)} xu.`;
-    return interaction.reply({ content, flags: MessageFlags.Ephemeral });
+    return reject(content);
   }
+  const market = marketForRound(placed.round);
+  await interaction.reply({ content: `## ✅ ĐẶT CƯỢC THÀNH CÔNG\n🐎 **Ngựa:** ${horseLabel(horse, market)}\n💰 **Lần này:** ${formatCoins(amount)} xu\n🎟️ **Tổng cược trong ván:** ${formatCoins(placed.totalAmount)} xu`, flags: MessageFlags.Ephemeral });
+  await refreshRace(placed.round, interaction.client);
+  const publicMessage = `<@${interaction.user.id}> đặt cược **${formatCoins(amount)} xu** vào **${horseLabel(horse, market)}** 🐎`;
+  await interaction.channel?.send({ content: publicMessage }).catch(() => {});
   return null;
 }
 

@@ -20,7 +20,21 @@ const VARIANTS = Object.freeze({
   pineapple: { name: 'Crazy Pineapple', holes: 3, description: '3 lá tẩy · bỏ 1 lá sau vòng cược Flop' },
   omaha: { name: 'Omaha 5 lá', holes: 5, description: 'Bắt buộc dùng đúng 2 lá tẩy + 3 lá chung' },
 });
-const BOT_NAMES = { bot_luna: 'Luna 🤖', bot_sol: 'Sol 🤖' };
+const BOT_NAMES = Object.freeze([
+  'Nguyễn Minh Anh', 'Trần Quốc Bảo', 'Lê Quang Huy', 'Phạm Ngọc Hà',
+  'Hoàng Đức Minh', 'Huỳnh Gia Hân', 'Phan Thanh Tùng', 'Vũ Thảo Linh',
+  'Võ Nhật Nam', 'Đặng Thu Trang', 'Bùi Hải Đăng', 'Đỗ Khánh Vy',
+  'Hồ Tuấn Kiệt', 'Ngô Phương Anh', 'Dương Việt Hoàng', 'Lý Bảo Ngọc',
+  'Nguyễn Thành Đạt', 'Trần Minh Châu', 'Lê Anh Khoa', 'Phạm Mai Phương',
+  'Hoàng Nhật Huy', 'Huỳnh Thùy Dương', 'Phan Đức Long', 'Vũ Ngọc Mai',
+  'Võ Gia Bảo', 'Đặng Minh Thư', 'Bùi Quốc Khánh', 'Đỗ Thanh Hằng',
+  'Hồ Minh Quân', 'Ngô Diệu Linh', 'Dương Hoài Nam', 'Lý Khánh An',
+]);
+function pickBotNames() {
+  const first = crypto.randomInt(BOT_NAMES.length);
+  const second = crypto.randomInt(BOT_NAMES.length - 1);
+  return [BOT_NAMES[first], BOT_NAMES[second >= first ? second + 1 : second]];
+}
 
 function getSession(id) { return db.prepare('SELECT * FROM poker_sessions WHERE id = ?').get(String(id)) || null; }
 function getActiveSession(id, guildId) { return db.prepare('SELECT * FROM poker_sessions WHERE id=? AND guild_id=?').get(String(id), String(guildId)) || null; }
@@ -62,10 +76,11 @@ function startPoker({ guildId, channelId, userId, variant, forcedDeck = null }) 
     spendCoins({ guildId, userId, amount: ante, reason: `poker:${variant}:ante` });
     const fair = createFairness();
     const deck = forcedDeck ? [...forcedDeck] : createDeck(variant === 'sixplus', fair.serverSeed);
+    const [firstBotName, secondBotName] = pickBotNames();
     const players = [
       { id: String(userId), name: 'Bạn', stack: tableStack, committed: 0, streetBet: 0, folded: false, allIn: false, hole: [] },
-      { id: 'bot_luna', name: BOT_NAMES.bot_luna, stack: Math.max(ante, Math.round(tableStack * 0.75)), committed: 0, streetBet: 0, folded: false, allIn: false, hole: [] },
-      { id: 'bot_sol', name: BOT_NAMES.bot_sol, stack: Math.max(ante, Math.round(tableStack * 1.25)), committed: 0, streetBet: 0, folded: false, allIn: false, hole: [] },
+      { id: 'bot_luna', name: firstBotName, stack: Math.max(ante, Math.round(tableStack * 0.75)), committed: 0, streetBet: 0, folded: false, allIn: false, hole: [] },
+      { id: 'bot_sol', name: secondBotName, stack: Math.max(ante, Math.round(tableStack * 1.25)), committed: 0, streetBet: 0, folded: false, allIn: false, hole: [] },
     ];
     for (let card = 0; card < VARIANTS[variant].holes; card += 1) for (const player of players) player.hole.push(deck.pop());
     for (const bot of players.slice(1)) bot.revealedCard = bot.hole[0];
@@ -286,9 +301,21 @@ async function handlePokerModal(interaction) {
   const [, sessionId] = interaction.customId.split(':'); const existingSession = getSession(sessionId);
   if (existingSession && JSON.parse(existingSession.state_json).mode === 'multiplayer') return pokerMultiplayerService.handlePokerModal(interaction);
   const [, id] = interaction.customId.split(':'); const text = interaction.fields.getTextInputValue('amount').trim(); const amount = Number(text);
-  if (!/^\d+$/.test(text)) return interaction.reply({ content: 'Số xu tố không hợp lệ.', flags: MessageFlags.Ephemeral });
-  try { const state = playerAction(id, interaction.user.id, 'raise', amount); return interaction.update({ embeds: [pokerEmbed(state, interaction.user.id, id)], components: pokerRows(id, state), allowedMentions: { parse: [] } }); }
-  catch (error) { return interaction.reply({ content: error.message === 'BET_LIMIT' ? `Bạn chỉ có thể tố thêm tối đa **${formatCoins(error.maxRaise)} xu** trong giới hạn **${formatCoins(error.maxBet)} xu/ván**.` : error.message === 'INVALID_RAISE' ? 'Mức tố tối thiểu là 10 xu.' : 'Không thể tố lúc này.', flags: MessageFlags.Ephemeral }); }
+  async function reject(content) {
+    const session = getSession(id);
+    if (!session) {
+      await interaction.update({ components: [] });
+      return interaction.followUp({ content, flags: MessageFlags.Ephemeral });
+    }
+    const state = parseState(session);
+    await interaction.update({ embeds: [pokerEmbed(state, interaction.user.id, id)], components: pokerRows(id, state), allowedMentions: { parse: [] } });
+    return interaction.followUp({ content, flags: MessageFlags.Ephemeral });
+  }
+  if (!/^\d+$/.test(text)) return reject('Số xu tố không hợp lệ.');
+  let state;
+  try { state = playerAction(id, interaction.user.id, 'raise', amount); }
+  catch (error) { return reject(error.message === 'BET_LIMIT' ? `Bạn chỉ có thể tố thêm tối đa **${formatCoins(error.maxRaise)} xu** trong giới hạn **${formatCoins(error.maxBet)} xu/ván**.` : error.message === 'INVALID_RAISE' ? 'Mức tố tối thiểu là 10 xu.' : 'Không thể tố lúc này.'); }
+  return interaction.update({ embeds: [pokerEmbed(state, interaction.user.id, id)], components: pokerRows(id, state), allowedMentions: { parse: [] } });
 }
 async function handlePokerPrivateButton(interaction) {
   return pokerMultiplayerService.handlePokerPrivateButton(interaction);

@@ -352,17 +352,35 @@ async function handlePokerPrivateButton(interaction) {
 
 async function handlePokerModal(interaction) {
   const [, id] = interaction.customId.split(':'); const text = interaction.fields.getTextInputValue('amount').trim();
-  if (!/^\d+$/.test(text)) return interaction.reply({ content: 'Số xu tố không hợp lệ.', flags: MessageFlags.Ephemeral });
   const session = getSession(id);
-  if (!session || session.guild_id !== interaction.guildId || session.channel_id !== interaction.channelId) return interaction.reply({ content: 'Bàn Poker này không còn tồn tại.', flags: MessageFlags.Ephemeral });
-  if (session.expires_at <= Date.now()) { const state = await expirePokerTable(session, null, false); await editPublicTable(interaction.client, session, state); return interaction.reply({ content: 'Bàn đã hết thời gian. Tiền cược được hoàn lại.', flags: MessageFlags.Ephemeral }); }
-  try {
-    const state = playerAction(id, interaction.user.id, 'raise', Number(text));
-    await editPublicTable(interaction.client, session, state);
-    return interaction.update({ content: privateHandText(state, interaction.user.id), components: pokerPrivateRows(session, state, interaction.user.id), allowedMentions: { parse: [] } });
-  } catch (error) {
-    return interaction.reply({ content: error.message === 'NOT_YOUR_TURN' ? 'Hết lượt của bạn.' : error.message === 'BET_LIMIT' ? `Bạn chỉ có thể tố thêm tối đa ${formatCoins(error.maxRaise)} xu trong giới hạn ${formatCoins(error.maxBet)} xu/ván.` : error.message === 'INVALID_RAISE' ? 'Mức tố tối thiểu là 10 xu.' : 'Không thể tố lúc này.', flags: MessageFlags.Ephemeral });
+  if (!session || session.guild_id !== interaction.guildId || session.channel_id !== interaction.channelId) {
+    await interaction.update({ components: [] });
+    return interaction.followUp({ content: 'Bàn Poker này không còn tồn tại.', flags: MessageFlags.Ephemeral });
   }
+  if (session.expires_at <= Date.now()) {
+    const state = await expirePokerTable(session, null, false);
+    await editPublicTable(interaction.client, session, state);
+    await interaction.update({ content: privateHandText(state, interaction.user.id), components: [], allowedMentions: { parse: [] } });
+    return interaction.followUp({ content: 'Bàn đã hết thời gian. Tiền cược được hoàn lại.', flags: MessageFlags.Ephemeral });
+  }
+  async function reject(content) {
+    const latest = getSession(id);
+    const state = latest ? parseState(latest) : null;
+    await interaction.update({
+      content: state ? privateHandText(state, interaction.user.id) : 'Bàn Poker này không còn tồn tại.',
+      components: state ? pokerPrivateRows(latest, state, interaction.user.id) : [],
+      allowedMentions: { parse: [] },
+    });
+    return interaction.followUp({ content, flags: MessageFlags.Ephemeral });
+  }
+  if (!/^\d+$/.test(text)) return reject('Số xu tố không hợp lệ.');
+  let state;
+  try { state = playerAction(id, interaction.user.id, 'raise', Number(text)); }
+  catch (error) {
+    return reject(error.message === 'NOT_YOUR_TURN' ? 'Hết lượt của bạn.' : error.message === 'BET_LIMIT' ? `Bạn chỉ có thể tố thêm tối đa ${formatCoins(error.maxRaise)} xu trong giới hạn ${formatCoins(error.maxBet)} xu/ván.` : error.message === 'INVALID_RAISE' ? 'Mức tố tối thiểu là 10 xu.' : 'Không thể tố lúc này.');
+  }
+  await editPublicTable(interaction.client, session, state);
+  return interaction.update({ content: privateHandText(state, interaction.user.id), components: pokerPrivateRows(session, state, interaction.user.id), allowedMentions: { parse: [] } });
 }
 
 async function expirePokerTable(session, client, updateMessage = true) {
