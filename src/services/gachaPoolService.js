@@ -40,7 +40,6 @@ const DEFAULT_ENTRIES = Object.freeze([
   { rewardKey: 'taixiu_edge_insurance', kind: 'item', itemId: 'taixiu_edge_insurance', name: 'Bảo Hiểm Sát Nút', tier: 'SR', amount: 1, weight: 300 },
   { rewardKey: 'baucua_blank_insurance', kind: 'item', itemId: 'baucua_blank_insurance', name: 'Bảo Hiểm Trắng Tay', tier: 'SSR', amount: 1, weight: 200 },
   { rewardKey: 'vietnamese_extra_time', kind: 'item', itemId: 'vietnamese_extra_time', name: 'Đồng Hồ Gia Hạn', tier: 'SSR', amount: 1, weight: 200 },
-  { rewardKey: 'effect_cleanser', kind: 'item', itemId: 'effect_cleanser', name: 'Nước Thanh Tẩy', tier: 'SSR', amount: 1, weight: 200 },
 ]);
 
 function configuredRows(guildId) {
@@ -85,7 +84,7 @@ function upsertEntry(guildId, entry, updatedBy) {
 
 function addGachaItem(guildId, itemId, tier, percent, updatedBy) {
   const item = getCatalogItem(itemId);
-  if (!item) throw new Error('INVALID_GACHA_ITEM');
+  if (!item || item.gachaEligible === false) throw new Error('INVALID_GACHA_ITEM');
   if (!['R', 'SR', 'SSR', 'UR'].includes(tier) || tier !== item.rarity) throw new Error('INVALID_GACHA_TIER');
   const weight = desiredWeight(guildId, item.id, percent);
   upsertEntry(guildId, { rewardKey: item.id, kind: 'item', itemId: item.id, name: item.name, tier, amount: 1, weight }, updatedBy);
@@ -111,7 +110,7 @@ function setGachaRate(guildId, rewardKey, percent, updatedBy) {
 }
 
 function gachaItemChoices() {
-  return listCatalog().filter(item => item.type !== 'color').map(item => ({ name: item.name, value: item.id }));
+  return listCatalog().filter(item => item.type !== 'color' && item.gachaEligible !== false).map(item => ({ name: item.name, value: item.id }));
 }
 
 module.exports = { DEFAULT_ENTRIES, listGachaPool, addGachaItem, setGachaRate, gachaItemChoices };

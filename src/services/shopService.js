@@ -44,6 +44,17 @@ function seedShop(guildId) {
   const now = Date.now();
   const hiddenLegacy = db.prepare(`UPDATE shop_items SET listed=0,active=0,updated_at=?
     WHERE guild_id=? AND created_by='system' AND (listed<>0 OR active<>0)`).run(Date.now(), String(guildId)).changes;
+  const cleanser = getCatalogItem('effect_cleanser');
+  const seedCleanser = db.prepare(`INSERT INTO shop_items
+    (guild_id,item_id,cosmetic_id,display_name,price,stock,min_games,min_wins,min_balance,listed,active,created_by,created_at,updated_at)
+    VALUES(?,?,?,?,?,NULL,0,0,0,1,0,'catalog',?,?)
+    ON CONFLICT(guild_id,item_id) DO UPDATE SET cosmetic_id=excluded.cosmetic_id,display_name=excluded.display_name,
+      price=excluded.price,listed=CASE WHEN shop_items.created_by='system' THEN 1 ELSE shop_items.listed END,
+      created_by='catalog',updated_at=excluded.updated_at
+    WHERE shop_items.created_by IN ('catalog','system') AND
+      (shop_items.cosmetic_id<>excluded.cosmetic_id OR shop_items.display_name<>excluded.display_name OR
+       shop_items.price<>excluded.price OR shop_items.created_by<>'catalog')`);
+  const cleanserChanges = cleanser ? seedCleanser.run(String(guildId), cleanser.id, cleanser.id, cleanser.name, cleanser.price, now, now).changes : 0;
   const colors = listCatalog({ shopEligible: true }).filter(item => item.type === 'color');
   if (colors.length) {
     const placeholders = colors.map(() => '?').join(',');
@@ -62,7 +73,7 @@ function seedShop(guildId) {
     insertColor.run(String(guildId), item.id, item.id, item.name, item.price, now, now);
     updateColor.run(item.name, item.price, now, String(guildId), item.id);
   }
-  return hiddenLegacy;
+  return hiddenLegacy + cleanserChanges;
 }
 function randomPick(pool, count) {
   const values = [...pool];
@@ -83,9 +94,11 @@ function rotateShop(guildId, size = 8, now = Date.now()) {
     return [];
   }
   const chosen = new Map();
+  const cleanser = entries.find(entry => entry.row.item_id === 'effect_cleanser');
+  if (cleanser) chosen.set(cleanser.row.item_id, cleanser);
   for (const entry of [
     ...randomPick(entries.filter(x => x.item.type === 'chest'), 1),
-    ...randomPick(entries.filter(x => x.item.type === 'consumable'), 4),
+    ...randomPick(entries.filter(x => x.item.type === 'consumable' && x.row.item_id !== 'effect_cleanser'), cleanser ? 3 : 4),
     ...randomPick(entries.filter(x => x.item.type === 'color'), 1),
   ]) chosen.set(entry.row.item_id, entry);
   const gameEntries = entries.filter(x => ['chest', 'consumable'].includes(x.item.type) && !chosen.has(x.row.item_id));
@@ -103,7 +116,8 @@ function rotateShop(guildId, size = 8, now = Date.now()) {
   return listShopItems(guildId, { activeOnly: true, skipRotation: true });
 }
 function ensureRotation(guildId, now = Date.now()) {
-  seedShop(guildId);
+  const seeded = seedShop(guildId);
+  if (seeded) return rotateShop(guildId, undefined, now);
   const listed = db.prepare('SELECT cosmetic_id FROM shop_items WHERE guild_id=? AND listed=1').all(String(guildId))
     .map(row => getCatalogItem(row.cosmetic_id)).filter(Boolean);
   if (!listed.length) {
