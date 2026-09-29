@@ -7,7 +7,7 @@ const {
 const { formatCoins } = require('../utils/economy');
 const { GAME_FILTERS, itemMatchesGame, gameLabels } = require('../services/itemGameService');
 
-const RARITY_ICON = { common: '⚪', rare: '🔵', epic: '🟣', legendary: '🟠', mythic: '🔴', R: '⚪', SR: '🔵', SSR: '🟠', UR: '🔴' };
+const { itemIcon } = require('../utils/rarity');
 const SHOP_TABS = Object.freeze([
   { id: 'all', label: 'Tất cả', emoji: '🏪', description: 'Toàn bộ vật phẩm đang bán' },
   { id: 'profile', label: 'Hồ sơ', emoji: '🎨', description: 'Màu tùy chỉnh thẻ hồ sơ' },
@@ -42,7 +42,7 @@ function shopEmbed(guildId, selected = 'all') {
     const rarity = ['R', 'SR', 'SSR', 'UR'].includes(item?.rarity) ? ` [${item.rarity}]` : '';
     const games = gameLabels(item);
     const scope = games?.length ? `Áp dụng: ${games.join(', ')}` : games ? 'Vật phẩm hồ sơ · không gắn với game' : 'Dùng chung · hiện ở mọi bộ lọc';
-    const icon = item?.emoji || RARITY_ICON[item?.rarity] || '⚪';
+    const icon = itemIcon(item);
     return `${icon} **${row.display_name}${rarity}** · \`${row.item_id}\`\n_${scope}_\n${item?.description || ''}\n💰 ${price} · Kho: **${stock}**${conditions ? ` · Yêu cầu: ${conditions}` : ''}`;
   }).join('\n\n') : 'Không có vật phẩm thuộc mục này trong vòng xoay hôm nay.';
   return new EmbedBuilder().setColor(0xC0392B).setTitle(`${tab.emoji} CỬA HÀNG · ${tab.label.toUpperCase()}`).setDescription(description.slice(0, 4096))

@@ -18,6 +18,7 @@ const itemEffects = require('../src/services/itemEffectService');
 const { itemGames } = require('../src/services/itemGameService');
 const channels = require('../src/services/gameChannelService');
 const multiplayer = require('../src/services/multiplayerGameService');
+const { itemIcon, RARITY_ICON } = require('../src/utils/rarity');
 const { createFairness } = require('../src/services/fairnessService');
 
 const NEW_ITEMS = {
@@ -40,13 +41,17 @@ for (const [id, rarity] of Object.entries(NEW_ITEMS)) {
   const item = catalog.getCatalogItem(id);
   assert(item, `thiếu item ${id}`);
   assert.equal(item.rarity, rarity, `sai bậc ${id}`);
-  assert(item.emoji, `thiếu emoji ${id}`);
+  assert.equal(itemIcon(item), RARITY_ICON[rarity], `icon phải theo độ hiếm ${id}`);
   assert(itemGames(item) || item.effect === 'remove_active_game_effect', `thiếu game ${id}`);
   const entry = poolEntries.find(row => row.itemId === id);
   assert(entry, `thiếu pool ${id}`);
   assert.equal(entry.tier, rarity, `sai bậc pool ${id}`);
 }
 assert(poolEntries.filter(row => row.kind === 'item').every(row => catalog.getCatalogItem(row.itemId)));
+assert.equal(itemIcon(catalog.getCatalogItem('mines_radar')), RARITY_ICON.SR);
+assert.equal(itemIcon(catalog.getCatalogItem(gacha.TICKETS[10])), RARITY_ICON.UR);
+assert.equal(itemIcon(catalog.getCatalogItem('color_red')), catalog.getCatalogItem('color_red').emoji || '🎨');
+assert(catalog.CATALOG.filter(item => item.type !== 'color').every(item => !item.emoji));
 assert.equal(catalog.getCatalogItem(gacha.TICKETS[1]).tradeable, false);
 assert.equal(catalog.getCatalogItem(gacha.TICKETS[10]).tradeable, false);
 assert.equal(catalog.getCatalogItem(gacha.TICKETS[10]).shopEligible, false);
