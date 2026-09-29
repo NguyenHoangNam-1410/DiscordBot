@@ -32,8 +32,9 @@ module.exports = {
     if (sub === 'thuongvaitro') return weeklyRoleCommand.execute(interaction);
     if (sub === 'diemdanh') {
       const result = checkIn(interaction.guildId, interaction.user.id);
-      if (!result.ok) return interaction.reply({ content: `Bạn đã điểm danh hôm nay. Chuỗi hiện tại: **${result.streak} ngày**.`, flags: MessageFlags.Ephemeral });
-      return interaction.reply({ content: `📅 Điểm danh ngày **${result.streak}/7**: nhận **${formatCoins(result.coins)} xu**${result.item ? ' và **1 Bùa Gợi Ý**' : ''}.${result.guarded ? '\n🛡️ Thẻ Giữ Chuỗi đã tự động cứu chuỗi điểm danh.' : ''}` });
+      if (!result.ok) return interaction.reply({ content: `Bạn đã điểm danh hôm nay. Chuỗi điểm danh: **${result.streak}/7**.`, flags: MessageFlags.Ephemeral });
+      const reward = [`${formatCoins(result.coins)} xu`, result.diamonds ? `${result.diamonds} 💎` : null].filter(Boolean).join(' + ');
+      return interaction.reply({ content: `📅 <@${interaction.user.id}> điểm danh ngày **${result.date}**, chuỗi điểm danh **${result.streak}/7**, nhận được: **${reward}**.${result.reset ? '\n🎉 Hoàn thành chuỗi 7 ngày! Chuỗi đã đặt lại; ngày mai bắt đầu lại từ 1/7.' : ''}`, allowedMentions: { users: [interaction.user.id] } });
     }
     if (sub === 'nhan') {
       const rewards = claimMissions(interaction.guildId, interaction.user.id);

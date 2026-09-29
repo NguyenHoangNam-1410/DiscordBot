@@ -10,6 +10,7 @@ const { GAME_FILTERS, itemMatchesGame, gameLabels } = require('../services/itemG
 const RARITY_ICON = { common: '⚪', rare: '🔵', epic: '🟣', legendary: '🟠', mythic: '🔴', R: '⚪', SR: '🔵', SSR: '🟠', UR: '🔴' };
 const SHOP_TABS = Object.freeze([
   { id: 'all', label: 'Tất cả', emoji: '🏪', description: 'Toàn bộ vật phẩm đang bán' },
+  { id: 'profile', label: 'Hồ sơ', emoji: '🎨', description: 'Màu tùy chỉnh thẻ hồ sơ' },
   ...GAME_FILTERS.map(game => ({ ...game, description: `Vật phẩm áp dụng cho ${game.label}` })),
 ]);
 function isAdmin(interaction) {
@@ -31,7 +32,8 @@ function shopSelectRow(ownerId, selected = 'all') {
 }
 function shopEmbed(guildId, selected = 'all') {
   const tab = SHOP_TABS.find(item => item.id === selected) || SHOP_TABS[0];
-  const items = listShopItems(guildId).filter(row => itemMatchesGame(row.catalog, tab.id));
+  const items = listShopItems(guildId).filter(row => tab.id === 'profile'
+    ? row.catalog?.type === 'color' : itemMatchesGame(row.catalog, tab.id));
   const description = items.length ? items.map(row => {
     const item = row.catalog;
     const price = row.final_price < row.price ? `~~${formatCoins(row.price)}~~ **${formatCoins(row.final_price)} xu**` : `**${formatCoins(row.price)} xu**`;

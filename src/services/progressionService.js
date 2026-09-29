@@ -155,17 +155,22 @@ function claimMissions(guildId, userId, scope = 'all', now = Date.now()) {
 function checkIn(guildId, userId, now = Date.now()) {
   return db.transaction(() => {
     const row = ensureProgress(guildId, userId, now); const today = dayKey(now);
-    if (row.last_checkin_key === today) return { ok: false, streak: row.streak };
+    const dateParts = localParts(now);
+    const date = `${dateParts.day}/${dateParts.month}`;
+    if (row.last_checkin_key === today) return { ok: false, streak: row.streak === 0 ? 7 : row.streak, date };
     const yesterday = dayKey(now - DAY_MS);
     const continued = row.last_checkin_key === yesterday;
     const streak = continued ? (row.streak >= 7 ? 1 : row.streak + 1) : 1;
-    const coins = 20_000 + (streak - 1) * 5_000;
+    const coins = streak * 5_000;
     require('./economyService').creditCoins({ guildId, userId, amount: coins, reason: `checkin:${today}` });
-    let item = null;
-    if (streak === 7) { item = 'mines_radar'; require('./shopService').addInventory(guildId, userId, item, 1); }
+    const diamonds = streak === 7
+      ? require('./playerLevelService').addDiamonds(guildId, userId, 100, {
+        reason: `checkin:${today}`, operationId: `checkin-diamonds:${guildId}:${userId}:${today}`, now,
+      }).amount
+      : 0;
     db.prepare('UPDATE player_progress SET streak=?,last_checkin_key=?,updated_at=? WHERE guild_id=? AND user_id=?')
-      .run(streak, today, now, String(guildId), String(userId));
-    return { ok: true, streak, coins, item, guarded: false };
+      .run(streak === 7 ? 0 : streak, today, now, String(guildId), String(userId));
+    return { ok: true, streak, coins, diamonds, date, reset: streak === 7, guarded: false };
   })();
 }
 
