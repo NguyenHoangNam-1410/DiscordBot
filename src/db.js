@@ -813,4 +813,8 @@ runMigration(22, 'gacha tickets and player pity', () => {
   for (const pity of streaks.values()) savePity.run(pity.guildId, pity.userId, pity.sr, pity.ssr, pity.ur);
 });
 
+runMigration(23, 'remove effect cleanser from gacha pool', () => {
+  db.prepare("DELETE FROM gacha_pool_entries WHERE reward_key='effect_cleanser' OR item_id='effect_cleanser'").run();
+});
+
 module.exports = { db, dbPath, runMigration };

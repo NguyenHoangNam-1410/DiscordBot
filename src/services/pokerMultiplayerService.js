@@ -4,7 +4,7 @@ const { db } = require('../db');
 const { getAccount, spendCoins, settleReservedGame, creditCoins } = require('./economyService');
 const { getGameBetLimit } = require('./gameBetLimitService');
 const { formatCoins } = require('../utils/economy');
-const { createDeck, bestHand, describeHand, awardPots } = require('./pokerEngine');
+const { createDeck, bestHand, compareHands, describeHand, awardPots } = require('./pokerEngine');
 const { createFairness, fairInt } = require('./fairnessService');
 const { getGameConfig } = require('./gameConfigService');
 const { consumeActiveEffect } = require('./effectStateService');
@@ -116,9 +116,22 @@ function runout(session, state) {
   while (state.board.length < 5 && activePlayers(state).length > 1) state.board.push(draw(state));
   return settle(session, state);
 }
+function autoDiscardForShowdown(state) {
+  for (const player of activePlayers(state)) {
+    if (player.hole.length !== 3) continue;
+    let bestIndex = 0; let bestScore = null;
+    for (let index = 0; index < 3; index += 1) {
+      const score = bestHand(player.hole.filter((_, cardIndex) => cardIndex !== index), state.board, state.variant);
+      if (!bestScore || compareHands(score, bestScore) > 0) { bestIndex = index; bestScore = score; }
+    }
+    player.hole.splice(bestIndex, 1);
+  }
+  state.log.push('🍍 Bài bỏ được chọn tự động trước Showdown.');
+}
 function advance(session, state) {
   if (activePlayers(state).length === 1) return settle(session, state, 'everyone-folded');
   if (state.variant === 'pineapple' && state.street === 'flop' && state.players.some(player => !player.folded && player.hole.length === 3)) {
+    if (actionablePlayers(state).length <= 1) { autoDiscardForShowdown(state); return runout(session, state); }
     state.phase = 'discard'; state.discardPending = state.players.filter(player => !player.folded && player.hole.length === 3).map(player => player.id);
     state.turnUserId = state.discardPending[0]; state.log.push('🍍 Mỗi người còn bài chọn một lá tẩy để bỏ trước Turn.'); saveState(session, state); return state;
   }
@@ -191,6 +204,7 @@ function advanceAction(session, state, actor, action, amount = 0) {
     } else throw new Error('INVALID_ACTION');
   }
   if (activePlayers(state).length === 1) return settle(session, state, 'everyone-folded');
+  state.pending = state.pending.filter(id => actionablePlayers(state).some(player => player.id === id));
   if (!state.pending.length) return advance(session, state);
   nextPending(state, actor); saveState(session, state); return state;
 }
