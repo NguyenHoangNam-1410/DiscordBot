@@ -1,6 +1,6 @@
 const { db } = require('../db');
 
-const GAMES = Object.freeze(['baucua', 'oantuti', 'taixiu', 'chinchiro', 'blackjack', 'poker', 'duangua', 'mines', 'hardcore', 'vuatiengviet']);
+const GAMES = Object.freeze(['baucua', 'oantuti', 'taixiu', 'chinchiro', 'blackjack', 'poker', 'duangua', 'mines', 'coquay', 'hardcore', 'vuatiengviet']);
 
 function setGameChannel(guildId, game, channelId) {
   if (!GAMES.includes(game)) throw new Error('INVALID_GAME');

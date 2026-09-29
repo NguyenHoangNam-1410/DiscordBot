@@ -5,7 +5,7 @@ Phiên bản bot độc lập chỉ dành cho trò chơi và hệ thống xu. Kh
 ## Trò chơi
 
 - Bầu cua, Tài xỉu, Chinchiro, Oẳn tù tì
-- Xì dách, Đua ngựa nhiều người, Dò mìn
+- Xì dách, Đua ngựa nhiều người, Dò mìn, Cò quay Nga
 - Vua tiếng Việt
 - Sinh tồn
 
@@ -71,6 +71,8 @@ Trong ván với nhà cái, thắng thường nhận 1,9× tổng cược, Xì d
 
 `/choi domin` có một ô đặc biệt không trùng vị trí mìn. Mở một ô cùng hàng hoặc cùng cột với ô đặc biệt sẽ phát cảnh báo trong mục tín hiệu riêng, còn ô trên bàn vẫn hiển thị 💎 như mọi ô an toàn khác. Tìm đúng ô 🌟 sẽ nhân thêm x1.50 vào multiplier hiện tại cho đến khi rút thưởng. Hệ số cơ sở đã tính xác suất nhận bonus và giảm dần theo số ô mở để tránh chiến thuật rút thưởng tạo xu vô hạn. Bỏ ván ngay không tính EXP hay tiến độ nhiệm vụ.
 
+`/choi coquay cuoc:<xu>` (hoặc `!coquay <xu>`) là Cò quay Nga kiểu Buckshot Roulette: bạn và Bot mỗi bên 3 máu, cược một lần từ đầu, thắng nhận x1,7. Tự bắn đạn lép thì giữ lượt; tự bắn đạn thật mất 1 máu và mất lượt; bắn đối phương thì luôn chuyển lượt. Mỗi đợt nạp công khai số đạn thật/lép (đợt 1: 2–3 viên, đợt 2: 4–5, từ đợt 3: 6–8; luôn có ít nhất 1 thật và 1 lép). Bot chỉ dùng thông tin công khai và chọn nước tối ưu. Vật phẩm Gacha dùng bằng nút trong ván, mỗi loại 1 lần/ván: Kính Lúp Soi Nòng (SR), Bia Đỡ Đạn (SR), Cưa Cầm Tay (SSR), Còng Số 8 (UR).
+
 Dò mìn dùng 2–7 mìn trên bàn 20 ô. Giáp Chống Nổ chỉ vô hiệu hóa **một** quả mìn đầu tiên bạn chạm trên mỗi bản đồ; quả mìn thứ hai vẫn phát nổ như bình thường.
 
 ### Đua ngựa trực tiếp
@@ -105,7 +107,7 @@ Admin dùng `/quantri xoadulieu` để xóa xu, kim cương, EXP/cấp của m�
 - `/luat` mở luật ngắn theo từng game. Kết quả có nút chơi lại; thành tựu mới hiện ngay và huy hiệu xuất hiện trên `/hoso`.
 
 SQLite được tạo tự động tại `data/game-bot.sqlite`. Bot sao lưu nhất quán khi khởi động và sau mỗi 24 giờ vào `data/backups`, mặc định giữ 14 bản gần nhất. Có thể đổi lịch và số bản giữ lại bằng `DB_BACKUP_INTERVAL_HOURS`, `DB_BACKUP_RETENTION` và `DB_BACKUP_DIR`.
-`/quantri ketthucvan mavan:<mã>` buộc kết thúc và hoàn cược mọi loại ván có mã (Xì dách với bot và bàn nhiều người, Xì dách và Oẳn tù tì đấu người, Poker, Dò mìn, Chinchiro, Sinh tồn, Bầu cua, Tài xỉu, Đua ngựa). Ván Xì dách với bot, Dò mìn, Chinchiro và Sinh tồn không hoạt động quá `SOLO_SESSION_TTL_MINUTES` phút (mặc định 10; 2 phút nếu tin nhắn ván chưa gửi được) sẽ tự đóng và **người chơi mất tiền cược** (để không thể bỏ ván đang thua rồi đòi hoàn); riêng ván chưa có tin nhắn vì lỗi gửi thì hoàn cược. Với Oẳn tù tì và Xì dách đấu người, bàn Xì dách và bàn Poker hết hạn giữa chừng, người còn nợ một hành động mất cược, người đã hoàn tất lượt được hoàn; hết hạn ở lời mời hoặc sảnh chờ thì hoàn cho tất cả. Admin kết thúc ván bằng `ketthucvan` vẫn hoàn cược cho mọi người.
+`/quantri ketthucvan mavan:<mã>` buộc kết thúc và hoàn cược mọi loại ván có mã (Xì dách với bot và bàn nhiều người, Xì dách và Oẳn tù tì đấu người, Poker, Dò mìn, Cò quay Nga, Chinchiro, Sinh tồn, Bầu cua, Tài xỉu, Đua ngựa). Ván Xì dách với bot, Dò mìn, Cò quay Nga, Chinchiro và Sinh tồn không hoạt động quá `SOLO_SESSION_TTL_MINUTES` phút (mặc định 10; 2 phút nếu tin nhắn ván chưa gửi được) sẽ tự đóng và **người chơi mất tiền cược** (để không thể bỏ ván đang thua rồi đòi hoàn); riêng ván chưa có tin nhắn vì lỗi gửi thì hoàn cược. Với Oẳn tù tì và Xì dách đấu người, bàn Xì dách và bàn Poker hết hạn giữa chừng, người còn nợ một hành động mất cược, người đã hoàn tất lượt được hoàn; hết hạn ở lời mời hoặc sảnh chờ thì hoàn cho tất cả. Admin kết thúc ván bằng `ketthucvan` vẫn hoàn cược cho mọi người.
 
 Duel Oẳn tù tì, duel và bàn Xì dách đã kết thúc được giữ `GAME_RECORD_RETENTION_DAYS` ngày (mặc định 7) rồi tự xóa cùng dữ liệu bộ bài/tay bài. Lịch sử kim cương và gacha mặc định được giữ 180 ngày; điều chỉnh bằng `DIAMOND_LOG_RETENTION_DAYS` và `GACHA_HISTORY_RETENTION_DAYS`.
 

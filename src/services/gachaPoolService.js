@@ -38,6 +38,10 @@ const DEFAULT_ENTRIES = Object.freeze([
   { rewardKey: 'poker_fold_coupon', kind: 'item', itemId: 'poker_fold_coupon', name: 'Phiếu Bỏ Bài', tier: 'R', amount: 1, weight: 250 },
   { rewardKey: 'taixiu_edge_insurance', kind: 'item', itemId: 'taixiu_edge_insurance', name: 'Bảo Hiểm Sát Nút', tier: 'SR', amount: 1, weight: 300 },
   { rewardKey: 'baucua_blank_insurance', kind: 'item', itemId: 'baucua_blank_insurance', name: 'Bảo Hiểm Trắng Tay', tier: 'SSR', amount: 1, weight: 200 },
+  { rewardKey: 'coquay_magnifier', kind: 'item', itemId: 'coquay_magnifier', name: 'Kính Lúp Soi Nòng', tier: 'SR', amount: 1, weight: 300 },
+  { rewardKey: 'coquay_decoy', kind: 'item', itemId: 'coquay_decoy', name: 'Bia Đỡ Đạn', tier: 'SR', amount: 1, weight: 300 },
+  { rewardKey: 'coquay_saw', kind: 'item', itemId: 'coquay_saw', name: 'Cưa Cầm Tay', tier: 'SSR', amount: 1, weight: 200 },
+  { rewardKey: 'coquay_cuffs', kind: 'item', itemId: 'coquay_cuffs', name: 'Còng Số 8', tier: 'UR', amount: 1, weight: 80 },
   { rewardKey: 'vietnamese_extra_time', kind: 'item', itemId: 'vietnamese_extra_time', name: 'Đồng Hồ Gia Hạn', tier: 'SSR', amount: 1, weight: 200 },
 ]);
 

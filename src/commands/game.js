@@ -10,7 +10,7 @@ const { MAX_WEEKLY_ROLE_REWARD, listWeeklyRoleRewards, setWeeklyRoleReward, remo
 const { listGachaPool, addGachaItem, setGachaRate, gachaItemChoices } = require('../services/gachaPoolService');
 const { listBuffs, setBuff, removeBuff } = require('../services/gameBuffService');
 
-const LABELS = { baucua: 'Bầu cua', oantuti: 'Oẳn tù tì', taixiu: 'Tài xỉu', chinchiro: 'Chinchiro', blackjack: 'Xì dách', poker: 'Poker', duangua: 'Đua ngựa', mines: 'Dò mìn', hardcore: 'Sinh tồn', vuatiengviet: 'Vua tiếng Việt' };
+const LABELS = { baucua: 'Bầu cua', oantuti: 'Oẳn tù tì', taixiu: 'Tài xỉu', chinchiro: 'Chinchiro', blackjack: 'Xì dách', poker: 'Poker', duangua: 'Đua ngựa', mines: 'Dò mìn', coquay: 'Cò quay Nga', hardcore: 'Sinh tồn', vuatiengviet: 'Vua tiếng Việt' };
 const choices = GAMES.map(game => ({ name: LABELS[game], value: game }));
 const rewardChoices = REWARD_GAMES.map(game => ({ name: LABELS[game], value: game }));
 const betChoices = BET_GAMES.map(game => ({ name: LABELS[game], value: game }));

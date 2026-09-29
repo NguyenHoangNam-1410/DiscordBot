@@ -11,7 +11,7 @@ const GAMES = Object.freeze([
   ['baucua', 'Bầu cua', '🎲'], ['taixiu', 'Tài xỉu', '🎯'],
   ['chinchiro', 'Chinchiro', '🎲'],
   ['oantuti', 'Oẳn tù tì', '✊'], ['blackjack', 'Xì dách', '🃏'],
-  ['poker', 'Poker', '♠️'], ['duangua', 'Đua ngựa', '🏇'], ['mines', 'Mines', '💣'],
+  ['poker', 'Poker', '♠️'], ['duangua', 'Đua ngựa', '🏇'], ['mines', 'Mines', '💣'], ['coquay', 'Cò quay Nga', '🔫'],
   ['hardcore', 'Sinh tồn', '⚔️'],
 ]);
 const GAME_INFO = Object.fromEntries(GAMES.map(([id, label, emoji]) => [id, { label, emoji }]));

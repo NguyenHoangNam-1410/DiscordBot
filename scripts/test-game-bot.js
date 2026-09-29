@@ -34,7 +34,7 @@ assert.deepEqual(prefixAdmin.parseRemoveGold('!truxu 123456789 50 gian-lan'), { 
 assert.deepEqual(require('../src/commands/poker').data.toJSON().options.map(option => option.name), ['chedo', 'chedochoi']);
 assert.equal(require('../src/commands/use').data.toJSON().options.length, 0);
 assert.deepEqual(require('../src/commands/choi').data.toJSON().options.map(option => option.name),
-  ['baucua', 'taixiu', 'chinchiro', 'oantuti', 'xidach', 'poker', 'duangua', 'domin', 'sinhton', 'vtv']);
+  ['baucua', 'taixiu', 'chinchiro', 'oantuti', 'xidach', 'poker', 'duangua', 'domin', 'coquay', 'sinhton', 'vtv']);
 assert.deepEqual(require('../src/commands/vatpham').data.toJSON().options.map(option => option.name),
   ['cuahang', 'mua', 'tui', 'sudung', 'tang', 'quay', 'chitiet']);
 assert.equal(require('../src/commands/quantri').data.toJSON().options.length, 25);
@@ -49,14 +49,14 @@ assert(require('../src/commands/game').data.toJSON().options.some(option => opti
 assert(require('../src/commands/game').data.toJSON().options.some(option => option.name === 'configreset'));
 const channelSettings = require('../src/services/gameChannelService');
 const { GAMES } = channelSettings;
-assert.deepEqual([...GAMES], ['baucua', 'oantuti', 'taixiu', 'chinchiro', 'blackjack', 'poker', 'duangua', 'mines', 'hardcore', 'vuatiengviet']);
+assert.deepEqual([...GAMES], ['baucua', 'oantuti', 'taixiu', 'chinchiro', 'blackjack', 'poker', 'duangua', 'mines', 'coquay', 'hardcore', 'vuatiengviet']);
 channelSettings.setGameChannel('shared-channel-guild', 'baucua', 'casino');
 channelSettings.setGameChannel('shared-channel-guild', 'taixiu', 'casino');
 assert.deepEqual(channelSettings.getGamesByChannel('shared-channel-guild', 'casino').map(row => row.game), ['baucua', 'taixiu']);
 assert.equal(channelSettings.channelHasGame('shared-channel-guild', 'casino', 'taixiu'), true);
 const { listCatalog } = require('../src/services/itemCatalogService');
 const catalog = listCatalog();
-assert.equal(catalog.filter(item => item.type === 'consumable').length, 33);
+assert.equal(catalog.filter(item => item.type === 'consumable').length, 37);
 assert.deepEqual([...new Set(catalog.filter(item => item.type === 'consumable').map(item => item.rarity))].sort(), ['R', 'SR', 'SSR', 'UR']);
 assert(catalog.some(item => item.effect === 'mines_blast_shield'));
 assert(catalog.some(item => item.effect === 'quiz_living_dictionary'));
@@ -222,7 +222,7 @@ assert.equal(missionRewards.length, 4);
 assert(missionRewards.some(reward => reward.id === '__daily_bonus__' && reward.diamonds === 20 && !reward.item));
 assert.equal(progressionPreview.claimMissions('mission-guild', 'alice', 'daily', missionNow).length, 0);
 const shopCommand = require('../src/commands/shop');
-assert.equal(shopCommand.shopSelectRow('alice').toJSON().components[0].options.length, 11);
+assert.equal(shopCommand.shopSelectRow('alice').toJSON().components[0].options.length, 12);
 const effects = require('../src/services/effectStateService');
 effects.addEffectCharge('stack-guild', 'alice', 'blackjack_redraw', { charges: 1 });
 effects.addEffectCharge('stack-guild', 'alice', 'blackjack_redraw', { charges: 1 });
@@ -320,11 +320,11 @@ assert.deepEqual(potExample.pots.map(pot => ({ amount: pot.amount, eligible: pot
 assert.equal(potExample.refunds.C, 2000);
 const profileGames = require('../src/services/playerGameStatsService');
 const emptyProfileStats = profileGames.getAllGameStats('profile-test', 'new-player');
-assert.equal(emptyProfileStats.length, 10);
+assert.equal(emptyProfileStats.length, 11);
 assert(emptyProfileStats.every(item => item.played === 0 && item.wagered === 0 && item.net === 0));
 assert.equal(profileGames.summarizeGameStats(emptyProfileStats).activeGames, 0);
 const profileMenu = profileCommand.profileSelectRow('owner', 'target', emptyProfileStats).toJSON();
-assert.equal(profileMenu.components[0].options.length, 11);
+assert.equal(profileMenu.components[0].options.length, 12);
 assert.equal(profileMenu.components[0].options.filter(option => option.default).length, 1);
 assert(!profileMenu.components[0].options.find(option => option.value === 'vuatiengviet').description.includes('%'));
 const rps = require('../src/services/rpsDuelService');

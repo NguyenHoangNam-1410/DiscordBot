@@ -41,7 +41,7 @@ const clearPlayerDataTx = db.transaction(({ guildId, userId, scope, adminId, now
 const RESET_PLAYER_TABLES = Object.freeze([
   'achievement_claims', 'achievement_notifications', 'blackjack_duels', 'blackjack_sessions', 'blackjack_table_locks', 'blackjack_tables',
   'chinchiro_sessions', 'coin_requests', 'diamond_transactions', 'economy_accounts', 'economy_transactions', 'gacha_history', 'gacha_pity',
-  'game_history', 'game_player_stats', 'hardcore_records', 'hardcore_sessions', 'mines_sessions', 'newbie_bonus_claims', 'onboarding_claims',
+  'game_history', 'game_player_stats', 'hardcore_records', 'hardcore_sessions', 'mines_sessions', 'coquay_sessions', 'newbie_bonus_claims', 'onboarding_claims',
   'player_currencies', 'player_progress', 'poker_sessions', 'profile_cosmetics', 'profile_loadouts', 'rps_bot_rounds', 'rps_duels',
   'season_claims', 'season_scores', 'server_event_contributions', 'server_events', 'shop_purchases', 'user_inventory', 'user_item_effects',
   'vua_daily_skips', 'weekly_claims', 'weekly_role_reward_grants', 'weekly_scores', 'game_sessions',

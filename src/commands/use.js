@@ -58,6 +58,7 @@ function errorText(error) {
     NO_EFFECT_TO_REMOVE: 'Bạn không có hiệu ứng vật phẩm nào đang chờ để hủy; Nước Thanh Tẩy không bị trừ.',
     ALREADY_EXTENDED: 'Câu hỏi này đã được gia hạn; vật phẩm không bị trừ.',
     ITEM_NOT_USABLE: 'Vật phẩm này không thể sử dụng trực tiếp.',
+    COQUAY_IN_GAME_ITEM: 'Vật phẩm Cò quay Nga được dùng bằng nút ngay trong ván `/choi coquay`; vật phẩm không bị trừ.',
   };
   return map[error.message] || 'Không thể sử dụng vật phẩm lúc này.';
 }

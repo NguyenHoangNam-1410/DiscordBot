@@ -9,6 +9,7 @@ const GAME_LABELS = Object.freeze({
   poker: '♠️ Poker',
   duangua: '🏇 Đua ngựa',
   mines: '💣 Mines',
+  coquay: '🔫 Cò quay Nga',
   hardcore: '⚔️ Sinh tồn',
   vuatiengviet: '🇻🇳 Vua tiếng Việt',
 });

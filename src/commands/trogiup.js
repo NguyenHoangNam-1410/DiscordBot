@@ -83,7 +83,7 @@ const PAGES = Object.freeze({
         "🎲 Game cược",
         "`/choi baucua` · `/choi taixiu` · `/choi chinchiro` · `/choi oantuti` · `/choi xidach` · `/choi poker` — mở bàn hoặc chơi theo lựa chọn của từng game",
       ],
-      ["🏇 Thử thách khác", "`/choi duangua` · `/choi domin`"],
+      ["🏇 Thử thách khác", "`/choi duangua` · `/choi domin` · `/choi coquay`"],
       [
         "⚔️ Sinh tồn",
         "`/choi sinhton batdau` — chọn cược và nhân vật; dùng các nút để đánh, dùng vật phẩm, xử lý sự kiện hoặc rút thưởng. `/luat trochoi: Sinh tồn` giải thích cơ chế và từng hành động; `hoso` — thành tích; `xephang` — top tầng; `tyle` — tỷ lệ sự kiện.",
@@ -192,7 +192,7 @@ const PAGES = Object.freeze({
       ],
       [
         "🛑 Kết thúc ván",
-        "`ketthucvan` — nhập mã ván để buộc kết thúc và hoàn cược mọi loại ván có mã: Xì dách, Poker, Dò mìn, Chinchiro, Sinh tồn, Oẳn tù tì đấu người, Bầu cua, Tài xỉu, Đua ngựa.",
+        "`ketthucvan` — nhập mã ván để buộc kết thúc và hoàn cược mọi loại ván có mã: Xì dách, Poker, Dò mìn, Cò quay Nga, Chinchiro, Sinh tồn, Oẳn tù tì đấu người, Bầu cua, Tài xỉu, Đua ngựa.",
       ],
       [
         "🧹 Dữ liệu người chơi",

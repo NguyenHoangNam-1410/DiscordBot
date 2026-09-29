@@ -10,6 +10,7 @@ const { forceEndBlackjackDuel } = require('../services/blackjackDuelService');
 const { forceEndSharedRound } = require('../services/roundAdminService');
 const { pokerTableEmbed } = require('../services/pokerMultiplayerService');
 const { forceEndMinesSession } = require('../services/minesService');
+const { forceEndCoquaySession } = require('../services/coquayService');
 const { forceEndChinchiroSession } = require('../services/chinchiroService');
 const { forceEndHardcoreSession } = require('../services/hardcoreService');
 
@@ -79,7 +80,7 @@ module.exports = {
       if (!interaction.guildId) return interaction.reply({ content: 'Lệnh này chỉ dùng trong server.', flags: MessageFlags.Ephemeral });
       if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được kết thúc ván đang diễn ra.', flags: MessageFlags.Ephemeral });
       const id = interaction.options.getString('mavan', true).trim();
-      const handlers = [forceEndBlackjackTable, forceEndBlackjackSession, forceEndPokerSession, forceEndMinesSession, forceEndChinchiroSession, forceEndHardcoreSession, forceEndRpsDuel, forceEndBlackjackDuel, forceEndSharedRound];
+      const handlers = [forceEndBlackjackTable, forceEndBlackjackSession, forceEndPokerSession, forceEndMinesSession, forceEndCoquaySession, forceEndChinchiroSession, forceEndHardcoreSession, forceEndRpsDuel, forceEndBlackjackDuel, forceEndSharedRound];
       let result = null;
       for (const handler of handlers) {
         result = handler(id, interaction.guildId, interaction.user.id);

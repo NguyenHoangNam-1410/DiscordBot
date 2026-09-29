@@ -10,6 +10,7 @@ const games = {
   poker: require('./poker'),
   duangua: require('./duangua'),
   domin: require('./mines'),
+  coquay: require('./coquay'),
   sinhton: require('./hardcore'),
   vuatiengviet: require('./vuatiengviet'),
 };
@@ -40,6 +41,7 @@ const options = [
   simpleGame('poker', games.poker, 'Chơi Poker với bot hoặc mời một người chơi'),
   simpleGame('duangua', games.duangua, 'Mở cuộc Đua ngựa nhiều người'),
   simpleGame('domin', games.domin, 'Dò mìn và săn hệ số thưởng', { min: 'somin' }),
+  simpleGame('coquay', games.coquay, 'Cò quay Nga: đấu súng 3 máu với Bot'),
   gameGroup('sinhton', games.sinhton, 'Chơi Sinh tồn vượt tầng', { top: 'xephang', rates: 'tyle' }, { class: 'nhanvat', user: 'nguoidung' }),
   simpleGame('vtv', games.vuatiengviet, 'Admin: bắt đầu phiên Vua tiếng Việt'),
 ];
