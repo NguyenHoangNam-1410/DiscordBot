@@ -256,6 +256,23 @@ async function run() {
     update: async () => { throw new Error('người lạ không được reset server'); }, reply: async payload => { strangerReplies.push(payload); return payload; } });
   assert.equal(strangerReplies.length, 1);
 
+  const announcement = require('../src/announcements/launch').launchEmbeds().map(embed => embed.toJSON());
+  assert(announcement.length <= 10);
+  assert(announcement.reduce((sum, embed) => sum + JSON.stringify(embed).length, 0) < 6000, 'Tổng embed vượt giới hạn 6000 ký tự của một tin nhắn');
+  const embedChars = embed => (embed.title || '').length + (embed.description || '').length + (embed.footer?.text || '').length
+    + (embed.fields || []).reduce((sum, field) => sum + field.name.length + field.value.length, 0);
+  assert(announcement.reduce((sum, embed) => sum + embedChars(embed), 0) <= 6000);
+  for (const embed of announcement) assert((embed.fields || []).every(field => field.name.length <= 256 && field.value.length <= 1024));
+  const announcedCommands = new Set(announcement.flatMap(embed => JSON.stringify(embed).match(/`\/[a-z]+(?: [a-z]+)?/g) || []).map(text => text.slice(2)));
+  const registered = new Map(require('../src/commandRegistry').loadCommands().map(command => [command.data.toJSON().name, command.data.toJSON()]));
+  for (const text of announcedCommands) {
+    const [name, sub] = text.split(' ');
+    assert(registered.has(name), `Thông báo nhắc tới lệnh không tồn tại: /${name}`);
+    if (sub && registered.get(name).options?.some(option => option.type === 1 || option.type === 2)) {
+      assert(registered.get(name).options.some(option => option.name === sub), `Thông báo nhắc tới subcommand không tồn tại: /${name} ${sub}`);
+    }
+  }
+
   const { db } = require('../src/db'); db.close();
   for (const suffix of ['', '-wal', '-shm']) fs.rmSync(`${testDb}${suffix}`, { force: true });
   console.log(JSON.stringify({ ok: true, commandHandlers: 14 }));
