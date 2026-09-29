@@ -297,26 +297,33 @@ async function handleBetButton(interaction) {
 
 async function handleBetModal(interaction) {
   const [, game, roundId, rawChoice] = interaction.customId.split(':');
+  async function reject(content) {
+    const round = getRound(roundId);
+    const open = round && round.guild_id === interaction.guildId && round.channel_id === interaction.channelId
+      && round.status === 'open' && round.closes_at > Date.now();
+    await interaction.update({ components: open ? rowsForRound(round) : [] });
+    return interaction.followUp({ content, flags: MessageFlags.Ephemeral });
+  }
   let choice = rawChoice;
   if (rawChoice === 'tong') {
     const target = Number(interaction.fields.getTextInputValue('target').trim());
-    if (!TOTAL_RATIOS[target]) return interaction.reply({ content: 'Tổng điểm phải là số nguyên từ 4 đến 17.', flags: MessageFlags.Ephemeral });
+    if (!TOTAL_RATIOS[target]) return reject('Tổng điểm phải là số nguyên từ 4 đến 17.');
     choice = `tong:${target}`;
   }
   const amountText = interaction.fields.getTextInputValue('amount').trim();
   const amount = Number(amountText);
-  if (!/^\d+$/.test(amountText) || !Number.isSafeInteger(amount)) return interaction.reply({ content: 'Số xu cược không hợp lệ.', flags: MessageFlags.Ephemeral });
-  try {
-    const placed = placeBetTx({ roundId, userId: interaction.user.id, choice, amount });
-    await interaction.reply({ content: `✅ Đã cược **${formatCoins(amount)} xu** vào **${choiceLabel(game, choice)}**. Tổng cược ván này: **${formatCoins(placed.totalAmount)} xu**.`, flags: MessageFlags.Ephemeral });
-    await refreshRoundMessage(placed.round, interaction.client);
-  } catch (error) {
+  if (!/^\d+$/.test(amountText) || !Number.isSafeInteger(amount)) return reject('Số xu cược không hợp lệ.');
+  let placed;
+  try { placed = placeBetTx({ roundId, userId: interaction.user.id, choice, amount }); }
+  catch (error) {
     const content = error.code === 'INSUFFICIENT_FUNDS' ? 'Bạn không đủ xu để đặt cược.'
       : error.message === 'ROUND_CLOSED' ? 'Ván đã khóa cược.'
         : error.message === 'BET_LIMIT' ? `Tổng cược tối đa của bạn trong ván này là ${formatCoins(error.maxBet)} xu.`
           : 'Mức cược phải là số nguyên từ 10 đến 100.000 xu.';
-    return interaction.reply({ content, flags: MessageFlags.Ephemeral });
+    return reject(content);
   }
+  await interaction.reply({ content: `✅ Đã cược **${formatCoins(amount)} xu** vào **${choiceLabel(game, choice)}**. Tổng cược ván này: **${formatCoins(placed.totalAmount)} xu**.`, flags: MessageFlags.Ephemeral });
+  await refreshRoundMessage(placed.round, interaction.client);
   const publicMessage = `<@${interaction.user.id}> đặt cược **${formatCoins(amount)} xu** vào **${choiceLabel(game, choice)}** 🎲`;
   await interaction.channel?.send({ content: publicMessage }).catch(() => {});
   return null;
