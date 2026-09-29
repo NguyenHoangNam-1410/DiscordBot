@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
 const { RARITY_ICON } = require('../utils/rarity');
-const { pullGacha, getGachaHistory, TICKETS } = require('../services/gachaService');
+const { pullGacha, getGachaHistory, getTicketBalances, TICKETS, COSTS } = require('../services/gachaService');
 const { getPlayerProgression } = require('../services/playerLevelService');
 const { listGachaPool } = require('../services/gachaPoolService');
 const { gachaLuckMultiplier } = require('../services/gameBuffService');
@@ -54,6 +54,15 @@ function historyPayload(guildId, userId, page = 1) {
   );
   return { embeds: [embed], components: history.total > 0 ? [row] : [] };
 }
+function insufficientMessage(guildId, userId, pulls) {
+  const current = getPlayerProgression(guildId, userId);
+  const tickets = getTicketBalances(guildId, userId);
+  const need = pulls === 10
+    ? `${COSTS[10].toLocaleString('vi-VN')} :gem: hoặc 🎟️ Vé ×10 (vé ×1 không đổi được sang ×10)`
+    : `${COSTS[1].toLocaleString('vi-VN')} :gem: hoặc 🎟️ Vé ×1`;
+  const missing = pulls === 10 ? ` Còn thiếu **${Math.max(0, COSTS[10] - current.diamonds).toLocaleString('vi-VN')} :gem:**.` : '';
+  return `Quay ×${pulls} cần ${need}.\nBạn có **${current.diamonds.toLocaleString('vi-VN')} :gem:** · 🎟️ Vé ×1: ${tickets.single} · Vé ×10: ${tickets.ten}.${missing}`;
+}
 async function handleHistoryButton(interaction) {
   const [, ownerId, rawPage] = interaction.customId.split(':');
   if (interaction.user.id !== ownerId) return interaction.reply({ content: 'Chỉ người xem lịch sử này mới chuyển trang được.', flags: MessageFlags.Ephemeral });
@@ -69,8 +78,7 @@ async function handleButton(interaction) {
     return interaction.followUp(resultPayload(result, interaction.user.id));
   } catch (error) {
     if (error.message === 'INSUFFICIENT_DIAMONDS') {
-      const current = getPlayerProgression(interaction.guildId, interaction.user.id);
-      return interaction.reply({ content: `Bạn không đủ kim cương hoặc vé phù hợp. Hiện có **${current.diamonds.toLocaleString('vi-VN')} :gem:**.`, flags: MessageFlags.Ephemeral });
+      return interaction.reply({ content: insufficientMessage(interaction.guildId, interaction.user.id, Number(rawPulls)), flags: MessageFlags.Ephemeral });
     }
     throw error;
   }
@@ -91,8 +99,7 @@ module.exports = {
       return interaction.reply(resultPayload(result, interaction.user.id));
     } catch (error) {
       if (error.message === 'INSUFFICIENT_DIAMONDS') {
-        const current = getPlayerProgression(interaction.guildId, interaction.user.id);
-        return interaction.reply({ content: `Bạn không đủ kim cương hoặc vé phù hợp. Hiện có **${current.diamonds.toLocaleString('vi-VN')} :gem:**.`, flags: MessageFlags.Ephemeral });
+        return interaction.reply({ content: insufficientMessage(interaction.guildId, interaction.user.id, interaction.options.getInteger('luot', true)), flags: MessageFlags.Ephemeral });
       }
       throw error;
     }
