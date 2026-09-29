@@ -32,7 +32,7 @@ Bot cần bật **Message Content Intent** trong Discord Developer Portal nếu 
 - `/trogiup`: chọn tab để xem lệnh theo từng nhóm; `/huongdan` vẫn là bản tóm tắt ngắn.
 - `/choi`: một lệnh chung để chọn đủ 9 game.
 - `/vatpham`: cửa hàng, mua, túi đồ, sử dụng, tặng và quay Gacha.
-- `/nhiemvu`: nhiệm vụ, điểm danh, thành tựu và thưởng vai trò hàng tuần.
+- `/nhiemvu`: nhiệm vụ, điểm danh, thành tựu và thưởng vai trò hàng tuần; `kiemtra` mở menu xem/nhận nhanh mọi thưởng chưa nhận, `tanthu` nhận thưởng tân thủ (1 vé Gacha ×10 + 3000 kim cương, một lần).
 - `/xephang`: bảng xếp hạng chung có dropdown để chuyển giữa tài sản và từng game.
 - `/xu vanchoi`: xem kết quả, tiền cược và payout của 10 ván gần nhất.
 - `/hoso [nguoidung]`: thẻ hồ sơ, huy hiệu và bảng thống kê đủ 9 game gồm số ván, thắng/thua/hòa, tỷ lệ thắng, tổng cược, tổng nhận và dòng xu ròng.

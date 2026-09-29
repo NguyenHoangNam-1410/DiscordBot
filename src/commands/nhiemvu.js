@@ -3,6 +3,8 @@ const { getProgress, claimMissions, checkIn } = require('../services/progression
 const { formatCoins } = require('../utils/economy');
 const achievementCommand = require('./thanhtuu');
 const weeklyRoleCommand = require('./thuongrole');
+const kiemtraCommand = require('./kiemtra');
+const { claimNewbieBonus, NEWBIE_DIAMONDS } = require('../services/onboardingService');
 const { remapOptions } = require('../utils/commandAlias');
 
 function missionLine(mission) {
@@ -17,6 +19,8 @@ function rewardText(item) {
 }
 module.exports = {
   data: new SlashCommandBuilder().setName('nhiemvu').setDescription('Nhiệm vụ, điểm danh và phần thưởng hoạt động')
+    .addSubcommand(command => command.setName('kiemtra').setDescription('Kiểm tra nhanh nhiệm vụ, thành tựu và thưởng chưa nhận'))
+    .addSubcommand(command => command.setName('tanthu').setDescription('Nhận thưởng tân thủ: 1 vé Gacha ×10 và 3000 kim cương (một lần)'))
     .addSubcommand(command => command.setName('xem').setDescription('Xem nhiệm vụ ngày và tuần'))
     .addSubcommand(command => command.setName('nhan').setDescription('Nhận tất cả phần thưởng đã hoàn thành'))
     .addSubcommand(command => command.setName('diemdanh').setDescription('Điểm danh hằng ngày'))
@@ -28,6 +32,12 @@ module.exports = {
     const sub = interaction.options.getSubcommand();
     if (sub === 'thanhtuu' || sub === 'nhanthanhtuu') {
       return achievementCommand.execute(remapOptions(interaction, { subcommand: sub === 'thanhtuu' ? 'xem' : 'nhan' }));
+    }
+    if (sub === 'kiemtra') return kiemtraCommand.show(interaction);
+    if (sub === 'tanthu') {
+      const result = claimNewbieBonus(interaction.guildId, interaction.user.id);
+      if (!result.claimed) return interaction.reply({ content: 'Bạn đã nhận thưởng tân thủ trước đây.', flags: MessageFlags.Ephemeral });
+      return interaction.reply({ content: `🎉 <@${interaction.user.id}> nhận thưởng tân thủ: **1 vé Gacha ×10** + **${NEWBIE_DIAMONDS.toLocaleString('vi-VN')} :gem:**. Dùng \`/gacha quay\` để quay.`, allowedMentions: { users: [interaction.user.id] } });
     }
     if (sub === 'thuongvaitro') return weeklyRoleCommand.execute(interaction);
     if (sub === 'diemdanh') {
