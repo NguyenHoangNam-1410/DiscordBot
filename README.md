@@ -112,3 +112,7 @@ SQLite được tạo tự động tại `data/game-bot.sqlite`. Bot sao lưu nh
 Duel Oẳn tù tì, duel và bàn Xì dách đã kết thúc được giữ `GAME_RECORD_RETENTION_DAYS` ngày (mặc định 7) rồi tự xóa cùng dữ liệu bộ bài/tay bài. Lịch sử kim cương và gacha mặc định được giữ 180 ngày; điều chỉnh bằng `DIAMOND_LOG_RETENTION_DAYS` và `GACHA_HISTORY_RETENTION_DAYS`.
 
 Khi nhận `SIGINT` hoặc `SIGTERM`, bot dừng các tác vụ nền, chờ bản sao lưu đang chạy hoàn tất, đóng kết nối Discord và SQLite trước khi thoát.
+
+## Emoji của ứng dụng (Developer Portal → Bot → Emojis)
+
+Emoji tải lên ở Developer Portal dùng được ở mọi server mà bot có mặt. Khi khởi động bot tự tải danh sách và tra id theo **tên**, nên chỉ cần đặt đúng tên. Xúc xắc Chinchiro dùng `dieWhite1`–`dieWhite6`; thiếu emoji nào thì tự dùng emoji chuẩn (`:one:`…). Trong code dùng `appEmoji('tên', 'dự phòng')` (chuỗi `<:tên:id>`) hoặc `appEmojiObject('tên')` cho nút/menu (`src/utils/appEmoji.js`).

@@ -270,6 +270,18 @@ assert.equal(secondMine.exploded, 2);
 assert.equal(secondMine.result.outcome, 'loss');
 const chinchiro = require('../src/services/chinchiroService');
 assert.equal(chinchiro.evaluateDice([1, 2, 3]).kind, 'hifumi');
+{
+  const appEmoji = require('../src/utils/appEmoji');
+  const chinchiroState = { stake: 100, dealer: null, player: { attempts: [{ dice: [1, 5, 6], hand: { label: 'Điểm' } }], hand: { label: 'Điểm' } }, result: null };
+  const diceText = () => chinchiro.chinchiroEmbed(chinchiroState, 'u').toJSON().fields.find(field => field.name.includes('NGƯỜI CHƠI')).value;
+  appEmoji.setApplicationEmojisForTest([]);
+  assert.match(diceText(), /:one: :five: :six:/, 'chưa tải emoji ứng dụng thì dùng emoji dự phòng');
+  appEmoji.setApplicationEmojisForTest([['dieWhite1', '111'], ['dieWhite5', '555'], ['dieWhite6', '666']]);
+  assert.match(diceText(), /<:dieWhite1:111> <:dieWhite5:555> <:dieWhite6:666>/, 'dùng emoji của ứng dụng theo tên');
+  assert.equal(appEmoji.appEmoji('missing', 'x'), 'x'); assert.deepEqual(appEmoji.appEmojiObject('dieWhite5'), { id: '555', name: 'dieWhite5', animated: false });
+  appEmoji.setApplicationEmojisForTest([['spin', '9', true]]); assert.equal(appEmoji.appEmoji('spin'), '<a:spin:9>');
+  appEmoji.setApplicationEmojisForTest([]);
+}
 assert.equal(chinchiro.evaluateDice([6, 4, 5]).kind, 'shigoro');
 assert.equal(chinchiro.evaluateDice([1, 1, 1]).kind, 'pin_zoro');
 assert.equal(chinchiro.evaluateDice([4, 4, 4]).kind, 'zoro');

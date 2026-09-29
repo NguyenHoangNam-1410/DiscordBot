@@ -24,6 +24,7 @@ const { startStaleSessionMaintenance } = require('./services/staleSessionService
 const { startDatabaseBackups } = require('./services/databaseBackupService');
 const { createRateLimiter } = require('./services/rateLimitService');
 const { routeComponentInteraction } = require('./componentRouter');
+const { loadApplicationEmojis } = require('./utils/appEmoji');
 
 if (!process.env.DISCORD_TOKEN) throw new Error('Missing DISCORD_TOKEN in .env');
 const logDir = path.resolve(process.env.LOG_DIR || './logs');
@@ -61,6 +62,7 @@ process.on('uncaughtException', error => {
   shutdown('uncaughtException', 1).catch(() => { process.exitCode = 1; });
 });
 client.once(Events.ClientReady, () => {
+  loadApplicationEmojis(client, logger).catch(() => {});
   const resumedRounds = resumeOpenRounds(client, logger);
   const resumedHorseRaces = resumeHorseRaces(client, logger);
   const expiredHardcoreRuns = cleanupStaleHardcoreSessions();
