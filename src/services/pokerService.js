@@ -90,7 +90,7 @@ function startPoker({ guildId, channelId, userId, variant, forcedDeck = null }) 
     for (const player of players) player.streetBet = 0;
     const now = Date.now(); const session = { id: crypto.randomBytes(6).toString('hex'), guild_id: String(guildId), channel_id: String(channelId), message_id: null, user_id: String(userId), variant, state_json: JSON.stringify(state), expires_at: now + SESSION_TTL_MS, created_at: now, updated_at: now };
     db.prepare('INSERT INTO poker_sessions(id,guild_id,channel_id,message_id,user_id,variant,state_json,expires_at,created_at,updated_at) VALUES(@id,@guild_id,@channel_id,@message_id,@user_id,@variant,@state_json,@expires_at,@created_at,@updated_at)').run(session);
-    return { session, state };
+    return { session, state: noFurtherBetting(state) ? showdownWithoutBetting(session, state) : state };
   })();
 }
 
@@ -163,6 +163,17 @@ function actBots(state) {
   return raised;
 }
 function allMatched(state) { return activePlayers(state).every(player => player.allIn || player.streetBet === state.currentBet); }
+function noFurtherBetting(state) { return state.players[0].allIn || activePlayers(state).filter(player => !player.allIn).length <= 1; }
+function showdownWithoutBetting(session, state) {
+  if (state.variant === 'pineapple' && state.street === 'flop') {
+    for (const player of activePlayers(state)) {
+      if (player.hole.length === 3) player.hole.splice(choosePineappleDiscard(state, player), 1);
+    }
+    state.log.push('🍍 Bài bỏ được chọn tự động trước Showdown.');
+  }
+  state.log.push('🔥 Không còn lượt cược — mở bài và Showdown.');
+  return settle(session, state);
+}
 
 function settle(session, state, reason = 'showdown') {
   while (state.board.length < 5 && activePlayers(state).length > 1) state.board.push(draw(state));
@@ -203,10 +214,10 @@ function forceEndPokerSession(id, guildId, adminId) {
 }
 function advance(session, state) {
   if (activePlayers(state).length === 1) return settle(session, state, 'everyone-folded');
+  if (noFurtherBetting(state)) return showdownWithoutBetting(session, state);
   if (state.variant === 'pineapple' && state.street === 'flop' && state.players[0].hole.length === 3) { state.phase = 'discard'; state.log.push('🍍 Chọn 1 trong 3 lá tẩy để bỏ trước Turn.'); saveState(session, state); return state; }
   if (state.street === 'river') return settle(session, state);
   state.street = state.street === 'flop' ? 'turn' : 'river'; state.board.push(draw(state)); resetStreet(state); state.log.push(`🃏 Mở ${state.street === 'turn' ? 'Turn' : 'River'} — vòng cược mới.`);
-  if (activePlayers(state).every(player => player.allIn)) return settle(session, state);
   saveState(session, state); return state;
 }
 function playerAction(sessionId, userId, action, amount = 0) {
@@ -225,7 +236,7 @@ function playerAction(sessionId, userId, action, amount = 0) {
       if (human.committed >= getGameBetLimit(session.guild_id, 'poker')) human.allIn = true;
     } else throw new Error('INVALID_ACTION');
     const botRaised = actBots(state);
-    if (allMatched(state) && (!botRaised || human.allIn)) return advance(session, state);
+    if (allMatched(state) && (!botRaised || noFurtherBetting(state))) return advance(session, state);
     saveState(session, state); return state;
   })();
 }
@@ -235,6 +246,7 @@ function discardCard(sessionId, userId, index) {
     if (state.phase !== 'discard' || ![0, 1, 2].includes(index)) throw new Error('INVALID_PHASE');
     const removed = state.players[0].hole.splice(index, 1)[0];
     for (const bot of state.players.slice(1)) if (!bot.folded && bot.hole.length === 3) bot.hole.splice(choosePineappleDiscard(state, bot), 1);
+    if (noFurtherBetting(state)) { state.log.push(`🍍 Bạn bỏ ${removed}.`); return showdownWithoutBetting(session, state); }
     state.phase = 'betting'; state.street = 'turn'; state.board.push(draw(state)); resetStreet(state); state.log.push(`🍍 Bạn bỏ ${removed}.`, '🃏 Mở Turn — vòng cược mới.'); saveState(session, state); return state;
   })();
 }
@@ -321,6 +333,25 @@ async function handlePokerPrivateButton(interaction) {
   return pokerMultiplayerService.handlePokerPrivateButton(interaction);
 }
 async function expirePokerSessions(client, logger = console, now = Date.now()) {
+  const stalled = db.prepare('SELECT id FROM poker_sessions').all();
+  for (const { id } of stalled) {
+    try {
+      const resolved = db.transaction(() => {
+        const session = getSession(id);
+        if (!session) return null;
+        const state = parseState(session);
+        if (state.mode === 'multiplayer' || !['betting', 'discard'].includes(state.phase) || !noFurtherBetting(state)) return null;
+        if (state.phase === 'betting' && !allMatched(state)) actBots(state);
+        if (state.phase === 'betting' && !allMatched(state)) return null;
+        return { session, state: showdownWithoutBetting(session, state) };
+      })();
+      if (resolved?.session.message_id) {
+        const channel = await client.channels.fetch(resolved.session.channel_id).catch(() => null);
+        const message = await channel?.messages?.fetch(resolved.session.message_id).catch(() => null);
+        if (message) await message.edit({ embeds: [pokerEmbed(resolved.state, resolved.session.user_id, resolved.session.id)], components: pokerRows(resolved.session.id, resolved.state) });
+      }
+    } catch (error) { logger.error?.({ err: error, pokerSessionId: id }, 'poker all-in recovery failed'); }
+  }
   const sessions = db.prepare('SELECT * FROM poker_sessions WHERE expires_at <= ?').all(now); let expired = 0;
   for (const session of sessions) {
     try {
