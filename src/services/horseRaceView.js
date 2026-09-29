@@ -58,7 +58,7 @@ function personalEmbeds(round, own, bets, horses) {
   const picks = bets.map(bet => `${horses[bet.choice]?.emoji || '🐎'} ${horses[bet.choice]?.name || bet.choice}: **${formatCoins(bet.amount)} xu**`).join('\n') || 'Không có dữ liệu cược.';
   const resultLabel = own.outcome === 'win' ? 'THẮNG' : own.outcome === 'draw' ? 'HÒA' : 'THUA'; const color = own.outcome === 'win' ? 0x2ECC71 : own.outcome === 'draw' ? 0xF1C40F : 0xE74C3C;
   const personal = new EmbedBuilder().setColor(color).setTitle(`👤 KẾT QUẢ CỦA BẠN · ${resultLabel}`).addFields(
-    { name: 'Vé cược', value: picks }, { name: 'Thanh toán', value: `Cược **${formatCoins(own.stake)} xu** · Nhận **${formatCoins(own.payout)} xu**\nRòng **${own.payout - own.stake >= 0 ? '+' : ''}${formatCoins(own.payout - own.stake)} xu**${own.insurance ? ` · Bảo hiểm về nhì ${formatCoins(own.insurance)} xu` : ''}${own.jackpot ? ` · Trúng Đậm +${formatCoins(own.jackpot)} xu` : ''}` },
+    { name: 'Vé cược', value: picks }, { name: 'Thanh toán', value: `Cược **${formatCoins(own.stake)} xu** · Nhận **${formatCoins(own.payout)} xu**\nRòng **${own.payout - own.stake >= 0 ? '+' : ''}${formatCoins(own.payout - own.stake)} xu**${own.insurance ? ` · Bảo hiểm về nhì ${formatCoins(own.insurance)} xu` : ''}${own.consolation ? ` · Vé Khán Đài ${formatCoins(own.consolation)} xu` : ''}${own.jackpot ? ` · Trúng Đậm +${formatCoins(own.jackpot)} xu` : ''}` },
   ).setFooter({ text: `Mã ván: ${round.id} • Chỉ bạn thấy thông báo này` });
   addExperienceField(personal, own);
   const embeds = [personal];

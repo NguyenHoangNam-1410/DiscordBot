@@ -216,6 +216,19 @@ function expireVuaChallenge(guildId, now = Date.now()) {
   return { expired, nextQuestion: session.question };
 }
 
+const EXTRA_TIME_MS = 15_000;
+function extendVuaChallenge(guildId, now = Date.now()) {
+  const session = getVuaSession(guildId);
+  if (!session) return { error: 'NO_SESSION' };
+  const question = session.question;
+  if (!question.hard) return { error: 'HARD_QUESTION_REQUIRED' };
+  if (isExpiredChallenge(question, now)) return { error: 'EXPIRED' };
+  if (question.extended) return { error: 'ALREADY_EXTENDED' };
+  question.expiresAt += EXTRA_TIME_MS; question.extended = true;
+  saveSession(guildId, 'vuatiengviet', session);
+  return { ok: true, question, seconds: EXTRA_TIME_MS / 1000 };
+}
+
 function vuaQuestionText(question) {
   const hard = question.hard ? `🔥 **CÂU KHÓ x10** • Hết hạn <t:${Math.floor(question.expiresAt / 1000)}:R>\n` : '';
   return `${hard}## ${question.mixed}\n💡 Gợi ý: ${question.hint}`;
@@ -245,6 +258,7 @@ module.exports = {
   skipVuaSession,
   skipVuaSessionForPlayer,
   expireVuaChallenge,
+  extendVuaChallenge,
   endVuaSession,
   vuaQuestionText,
 };

@@ -4,7 +4,7 @@ const { db } = require('../db');
 const { getAccount, spendCoins, settleReservedGame, creditCoins } = require('./economyService');
 const { formatCoins } = require('../utils/economy');
 const { getGameBetLimit } = require('./gameBetLimitService');
-const { consumeHighestEffect } = require('./effectStateService');
+const { consumeHighestEffect, consumeActiveEffect } = require('./effectStateService');
 const { createFairness, fairShuffle } = require('./fairnessService');
 const { addExperienceField } = require('../utils/progressionView');
 
@@ -136,7 +136,12 @@ function settleState(session, state, reason = null) {
     const playerType = handType(hand.cards); const dealerType = handType(state.dealer);
     let handPayout = 0;
     let label;
-    if (playerType === 'bust') label = 'Quắc · Thua';
+    if (playerType === 'bust') {
+      label = 'Quắc · Thua';
+      if (score === 22 && !state.bustGuardUsed && consumeActiveEffect(session.guild_id, session.user_id, 'blackjack_bust_guard')) {
+        state.bustGuardUsed = true; handPayout = Math.floor(hand.bet * 0.25); label = 'Quắc 22 · Hoàn 25% cược';
+      }
+    }
     else if (playerType === 'ngulinh' && dealerType !== 'ngulinh') { label = 'Ngũ linh · Thắng'; handPayout = Math.floor(hand.bet * REGULAR_WIN_MULTIPLIER); }
     else if (dealerType === 'ngulinh' && playerType !== 'ngulinh') label = 'Thua · Nhà cái Ngũ linh';
     else if (playerType === 'ngulinh' && dealerType === 'ngulinh') {

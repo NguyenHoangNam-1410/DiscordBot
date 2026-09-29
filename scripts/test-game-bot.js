@@ -51,7 +51,7 @@ assert.deepEqual(channelSettings.getGamesByChannel('shared-channel-guild', 'casi
 assert.equal(channelSettings.channelHasGame('shared-channel-guild', 'casino', 'taixiu'), true);
 const { listCatalog } = require('../src/services/itemCatalogService');
 const catalog = listCatalog();
-assert.equal(catalog.filter(item => item.type === 'consumable').length, 20);
+assert.equal(catalog.filter(item => item.type === 'consumable').length, 34);
 assert.deepEqual([...new Set(catalog.filter(item => item.type === 'consumable').map(item => item.rarity))].sort(), ['R', 'SR', 'SSR', 'UR']);
 assert(catalog.some(item => item.effect === 'mines_blast_shield'));
 assert(catalog.some(item => item.effect === 'quiz_living_dictionary'));

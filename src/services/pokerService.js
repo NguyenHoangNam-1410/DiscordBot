@@ -8,7 +8,7 @@ const { createDeck, cardRank, bestHand, describeHand, awardPots } = require('./p
 const { createFairness, fairInt } = require('./fairnessService');
 const { getGameConfig } = require('./gameConfigService');
 const { addExperienceField } = require('../utils/progressionView');
-const { consumeActiveEffect } = require('./effectStateService');
+const { consumeActiveEffect, getActiveEffect } = require('./effectStateService');
 const pokerMultiplayerService = require('./pokerMultiplayerService');
 
 const configuredAnte = Number(process.env.POKER_ANTE);
@@ -71,7 +71,7 @@ function startPoker({ guildId, channelId, userId, variant, forcedDeck = null }) 
     for (const bot of players.slice(1)) bot.revealedCard = bot.hole[0];
     for (const player of players) pay(player, ante);
     const state = { variant, ante, startingStack: tableStack, deck, board: [deck.pop(), deck.pop(), deck.pop()], players, street: 'flop', phase: 'betting', currentBet: 0, raises: 0, log: [`💰 Ante ${formatCoins(ante)} xu/người`, '🃏 Flop đã mở — vòng cược đầu tiên bắt đầu.'], result: null, fair, fairCounter: 0,
-      pokerInsurance: consumeActiveEffect(guildId, userId, 'poker_insurance') };
+      pokerInsurance: consumeActiveEffect(guildId, userId, 'poker_insurance'), foldCoupon: Boolean(getActiveEffect(guildId, userId, 'poker_fold_coupon')) };
     for (const player of players) player.streetBet = 0;
     const now = Date.now(); const session = { id: crypto.randomBytes(6).toString('hex'), guild_id: String(guildId), channel_id: String(channelId), message_id: null, user_id: String(userId), variant, state_json: JSON.stringify(state), expires_at: now + SESSION_TTL_MS, created_at: now, updated_at: now };
     db.prepare('INSERT INTO poker_sessions(id,guild_id,channel_id,message_id,user_id,variant,state_json,expires_at,created_at,updated_at) VALUES(@id,@guild_id,@channel_id,@message_id,@user_id,@variant,@state_json,@expires_at,@created_at,@updated_at)').run(session);
@@ -159,10 +159,15 @@ function settle(session, state, reason = 'showdown') {
     insurancePercent = state.fair?.serverSeed ? fairInt(state.fair.serverSeed, 'poker-insurance', 0, 26) + 25 : crypto.randomInt(25, 51);
     insurance = Math.max(1, Math.floor(human.committed * insurancePercent / 100)); payout += insurance;
   }
+  let foldRefund = 0;
+  if (reason === 'fold' && state.foldCoupon && state.street === 'flop' && human.committed === state.ante && payout === 0
+    && consumeActiveEffect(session.guild_id, session.user_id, 'poker_fold_coupon')) {
+    foldRefund = Math.floor(state.ante * 0.5); payout += foldRefund;
+  }
   const outcome = payout > human.committed ? 'win' : payout === human.committed ? 'draw' : 'loss';
   const account = settleReservedGame({ guildId: session.guild_id, userId: session.user_id, payout, stake: human.committed, game: 'poker', outcome,
     operationId: `settle:poker:${session.id}` });
-  state.phase = 'complete'; state.result = { reason, scores, pots: awarded.pots, refunds: awarded.refunds, payout, outcome, insurance, insurancePercent, balance: account.balance, achievements: account.unlockedAchievements, experienceGained: account.experienceGained, levelUps: account.levelUps, bonusDrops: account.bonusDrops };
+  state.phase = 'complete'; state.result = { reason, scores, pots: awarded.pots, refunds: awarded.refunds, payout, outcome, insurance, insurancePercent, foldRefund, balance: account.balance, achievements: account.unlockedAchievements, experienceGained: account.experienceGained, levelUps: account.levelUps, bonusDrops: account.bonusDrops };
   db.prepare('DELETE FROM poker_sessions WHERE id=?').run(session.id); return state;
 }
 function forceEndPokerSession(id, guildId, adminId) {
@@ -240,7 +245,7 @@ function pokerEmbed(state, userId, sessionId = null) {
   else {
     const reveals = state.players.map(player => { const score = state.result.scores[player.id]; return `${player.folded ? '🏳️' : '🃏'} **${player.name}:** ${cardText(player.hole)}${score ? ` — **${score.name}**` : ' — Đã bỏ bài'}`; }).join('\n');
     const pots = state.result.pots.map((potItem, index) => `**${index === 0 ? 'Main Pot' : `Side Pot ${index}`} ${formatCoins(potItem.amount)}:** ${potItem.winners.map(id => state.players.find(player => player.id === id)?.name).join(', ')}`).join('\n') || 'Không có pot tranh chấp.';
-    embed.addFields({ name: 'Showdown', value: reveals }, { name: 'Chia Pot', value: pots }, { name: state.result.outcome === 'win' ? '🏆 Bạn thắng!' : state.result.outcome === 'draw' ? '🤝 Hòa vốn' : '💥 Bạn thua', value: `Nhận lại **${formatCoins(state.result.payout)} xu**${state.result.insurance ? `\n🛡️ Bảo hiểm Poker hoàn **${state.result.insurancePercent}% = ${formatCoins(state.result.insurance)} xu**` : ''}` });
+    embed.addFields({ name: 'Showdown', value: reveals }, { name: 'Chia Pot', value: pots }, { name: state.result.outcome === 'win' ? '🏆 Bạn thắng!' : state.result.outcome === 'draw' ? '🤝 Hòa vốn' : '💥 Bạn thua', value: `Nhận lại **${formatCoins(state.result.payout)} xu**${state.result.insurance ? `\n🛡️ Bảo hiểm Poker hoàn **${state.result.insurancePercent}% = ${formatCoins(state.result.insurance)} xu**` : ''}${state.result.foldRefund ? `\n🏳️ Phiếu Bỏ Bài hoàn **50% Ante = ${formatCoins(state.result.foldRefund)} xu**` : ''}` });
     addExperienceField(embed, state.result);
     if (state.result.achievements?.length) embed.addFields({ name: '🏅 Thành tựu mới', value: state.result.achievements.map(item => `**${item.name}**`).join('\n') });
   }

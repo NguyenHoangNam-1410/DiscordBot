@@ -164,6 +164,18 @@ function rollResult(game, forcedDice = null, serverSeed = null, modifiers = {}) 
   return { dice, total: dice.reduce((sum, value) => sum + value, 0), triple: dice.every(value => value === dice[0]) };
 }
 
+function roundInsurance(round, userId, summary, bets, result) {
+  const none = { amount: 0, rate: 0 };
+  if (round.game === 'baucua') {
+    if (summary.payout > 0 || !consumeActiveEffect(round.guild_id, userId, 'baucua_blank_insurance')) return none;
+    return { amount: Math.floor(summary.stake * 0.35), rate: 35 };
+  }
+  const edgeStake = bets.filter(bet => bet.payout === 0 && ((result.total === 10 && bet.choice === 'tai') || (result.total === 11 && bet.choice === 'xiu')))
+    .reduce((sum, bet) => sum + bet.amount, 0);
+  if (!edgeStake || !consumeActiveEffect(round.guild_id, userId, 'taixiu_edge_insurance')) return none;
+  return { amount: Math.floor(edgeStake * 0.5), rate: 50 };
+}
+
 const settleTx = db.transaction((roundId, forcedDice = null) => {
   const round = getRound(roundId);
   if (!round || round.status !== 'open') return null;
@@ -185,10 +197,12 @@ const settleTx = db.transaction((roundId, forcedDice = null) => {
   for (const [userId, summary] of users) {
     const eye = getActiveEffect(round.guild_id, userId, 'dice_divine_eye');
     if (effectMetadata(eye).roundId === round.id) consumeActiveEffect(round.guild_id, userId, 'dice_divine_eye');
+    const insurance = roundInsurance(round, userId, summary, individualBets.get(userId) || [], result);
+    summary.payout += insurance.amount;
     const outcome = summary.payout > summary.stake ? 'win' : summary.payout === summary.stake ? 'draw' : 'loss';
     const account = settleReservedGame({ guildId: round.guild_id, userId, payout: summary.payout, stake: summary.stake, game: round.game, outcome,
       operationId: `settle:${round.game}:${round.id}:${userId}` });
-    settlements.push({ userId, ...summary, outcome, balance: account.balance, achievements: account.unlockedAchievements, experienceGained: account.experienceGained, levelUps: account.levelUps, bonusDrops: account.bonusDrops, bets: individualBets.get(userId) || [] });
+    settlements.push({ userId, ...summary, insurance: insurance.amount, insuranceRate: insurance.rate, outcome, balance: account.balance, achievements: account.unlockedAchievements, experienceGained: account.experienceGained, levelUps: account.levelUps, bonusDrops: account.bonusDrops, bets: individualBets.get(userId) || [] });
   }
   db.prepare("UPDATE multiplayer_rounds SET status = 'closed', result_json = ? WHERE id = ?").run(JSON.stringify({ result, settlements, fair: stored.fair }), roundId);
   return { round: { ...round, status: 'closed' }, result, settlements, bets, fair: stored.fair };
@@ -212,6 +226,7 @@ function resultEmbed(settled) {
       betLines.push(`<@${item.userId}> → **${betLabel}**: ${formatCoins(bet.amount)} xu → ${formatCoins(bet.payout)} xu`);
     }
   }
+  for (const item of settlements) if (item.insurance > 0) betLines.push(`<@${item.userId}> 🛡️ Bảo hiểm hoàn **${item.insuranceRate}%** → ${formatCoins(item.insurance)} xu`);
   const summary = betLines.length > 0 ? betLines.slice(0, 15).join('\n') : 'Không có cửa cược thắng.';
   const embed = new EmbedBuilder().setColor(0x2ECC71).setTitle(`🎲 ${gameLabel(round.game)} · KẾT QUẢ`)
     .setDescription(`## ${resultText}`)
@@ -325,5 +340,5 @@ function resumeOpenRounds(client, logger = console) {
 module.exports = {
   ROUND_MS, ROUND_RETENTION_DAYS, TOTAL_RATIOS, BAUCUA, TAIXIU,
   calculatePayout, rollResult, effectiveBetLimit, getRound, getOpenRound, createRound,
-  handleBetButton, handleBetModal, settleRound, resumeOpenRounds,
+  handleBetButton, handleBetModal, settleRound, resumeOpenRounds, resultEmbed,
 };

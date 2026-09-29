@@ -41,10 +41,15 @@ function consumeHighestEffect(guildId, userId, effectIds, now = Date.now()) {
   })();
 }
 
+function removeActiveEffect(guildId, userId, effectId) {
+  return db.prepare('UPDATE user_item_effects SET charges=0,updated_at=? WHERE guild_id=? AND user_id=? AND effect_id=? AND charges>0')
+    .run(Date.now(), String(guildId), String(userId), String(effectId)).changes > 0;
+}
+
 function listActiveEffects(guildId, userId, now = Date.now()) {
   return db.prepare(`SELECT * FROM user_item_effects WHERE guild_id=? AND user_id=? AND charges>0
     AND (expires_at IS NULL OR expires_at>?) ORDER BY updated_at DESC`)
     .all(String(guildId), String(userId), now);
 }
 
-module.exports = { getActiveEffect, addEffectCharge, consumeActiveEffect, consumeHighestEffect, effectMetadata, listActiveEffects };
+module.exports = { getActiveEffect, addEffectCharge, consumeActiveEffect, consumeHighestEffect, removeActiveEffect, effectMetadata, listActiveEffects };
