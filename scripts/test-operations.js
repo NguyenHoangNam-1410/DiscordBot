@@ -48,7 +48,7 @@ async function main() {
   assert(db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='gacha_pool_entries'").get());
   assert(db.prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name='game_reward_buffs'").get());
   assert(db.prepare('PRAGMA table_info(gacha_history)').all().some(column => column.name === 'operation_id'));
-  assert.deepEqual(db.prepare('SELECT version FROM schema_migrations ORDER BY version').all().map(row => row.version), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]);
+  assert.deepEqual(db.prepare('SELECT version FROM schema_migrations ORDER BY version').all().map(row => row.version), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24]);
   db.prepare('INSERT INTO game_channels(guild_id,game,channel_id,updated_at) VALUES(?,?,?,?)')
     .run('legacy-guild', 'taixiu', 'shared-casino', 2);
   assert.deepEqual(db.prepare("SELECT game FROM game_channels WHERE guild_id='legacy-guild' ORDER BY game").all().map(row => row.game), ['baucua', 'taixiu']);
