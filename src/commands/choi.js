@@ -1,4 +1,4 @@
-const { ApplicationCommandOptionType } = require('discord.js');
+const { ApplicationCommandOptionType, MessageFlags } = require('discord.js');
 const { remapOptions, renamedOption, commandData } = require('../utils/commandAlias');
 
 const games = {
@@ -42,7 +42,7 @@ const options = [
   simpleGame('duangua', games.duangua, 'Mở cuộc Đua ngựa nhiều người'),
   simpleGame('domin', games.domin, 'Dò mìn và săn hệ số thưởng', { min: 'somin' }),
   gameGroup('sinhton', games.sinhton, 'Chơi Sinh tồn vượt tầng', { top: 'xephang', rates: 'tyle' }, { class: 'nhanvat', user: 'nguoidung' }),
-  simpleGame('vtv', games.vuatiengviet, 'Bắt đầu phiên; bỏ qua câu bằng nút trên bàn'),
+  simpleGame('vtv', games.vuatiengviet, 'Admin: bắt đầu phiên Vua tiếng Việt'),
 ];
 
 function selected(interaction) {
@@ -63,6 +63,9 @@ module.exports = {
   data: commandData('choi', 'Chọn và chơi tất cả game của bot', options),
   async execute(interaction) {
     const route = delegated(interaction);
+    if (selected(interaction) === 'vtv' && !require('./vuatiengviet').isAdmin(interaction)) {
+      return interaction.reply({ content: 'Chỉ admin mới được bắt đầu phiên Vua tiếng Việt.', flags: MessageFlags.Ephemeral });
+    }
     return route.command.execute(remapOptions(interaction, route));
   },
 };

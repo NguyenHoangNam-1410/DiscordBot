@@ -755,4 +755,12 @@ runMigration(19, 'remove default shop listings', () => {
   db.prepare(`UPDATE shop_items SET listed=0,active=0,updated_at=? WHERE created_by='system'`).run(Date.now());
 });
 
+runMigration(20, 'daily VTV skips', () => {
+  db.exec(`CREATE TABLE IF NOT EXISTS vua_daily_skips (
+    guild_id TEXT NOT NULL, user_id TEXT NOT NULL, day_key TEXT NOT NULL,
+    skips_used INTEGER NOT NULL DEFAULT 0 CHECK(skips_used >= 0),
+    PRIMARY KEY (guild_id, user_id, day_key)
+  )`);
+});
+
 module.exports = { db, dbPath, runMigration };

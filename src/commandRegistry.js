@@ -1,10 +1,12 @@
 const COMMAND_FILES = Object.freeze([
   'batdau', 'trogiup', 'huongdan', 'choi', 'luat', 'hoso', 'xu', 'vatpham', 'nhiemvu',
-  'xephang', 'anxin', 'quantri',
+  'xephang', 'anxin', 'quantri', 'vtv',
 ]);
 
 function loadCommands(base = './commands') {
-  return COMMAND_FILES.map(name => require(`${base}/${name}`));
+  return COMMAND_FILES.map(name => name === 'vtv'
+    ? require(`${base}/vuatiengviet`).playerCommand
+    : require(`${base}/${name}`));
 }
 
 module.exports = { COMMAND_FILES, loadCommands };

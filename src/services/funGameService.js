@@ -186,6 +186,27 @@ function skipVuaSession(guildId, options = {}) {
   return { skipped, nextQuestion: session.question };
 }
 
+function vietnameseDayKey(now = Date.now()) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+}
+
+const skipVuaSessionForPlayerTx = db.transaction((guildId, userId, now = Date.now()) => {
+  const session = getVuaSession(guildId);
+  if (!session) return { error: 'NO_SESSION' };
+  const limit = getGameConfig(guildId, 'VTV_DAILY_SKIP_LIMIT');
+  const dayKey = vietnameseDayKey(now);
+  const usage = db.prepare('SELECT skips_used FROM vua_daily_skips WHERE guild_id=? AND user_id=? AND day_key=?').get(String(guildId), String(userId), dayKey);
+  const used = usage?.skips_used || 0;
+  if (used >= limit) return { error: 'LIMIT_REACHED', used, limit };
+  db.prepare(`INSERT INTO vua_daily_skips(guild_id,user_id,day_key,skips_used) VALUES(?,?,?,1)
+    ON CONFLICT(guild_id,user_id,day_key) DO UPDATE SET skips_used=skips_used+1`).run(String(guildId), String(userId), dayKey);
+  return { ...skipVuaSession(guildId), used: used + 1, limit };
+});
+
+function skipVuaSessionForPlayer(guildId, userId, now = Date.now()) {
+  return skipVuaSessionForPlayerTx(String(guildId), String(userId), now);
+}
+
 function expireVuaChallenge(guildId, now = Date.now()) {
   const session = getVuaSession(guildId);
   if (!isExpiredChallenge(session?.question, now)) return null;
@@ -223,6 +244,7 @@ module.exports = {
   getVuaSession,
   answerVuaSession,
   skipVuaSession,
+  skipVuaSessionForPlayer,
   expireVuaChallenge,
   endVuaSession,
   vuaQuestionText,

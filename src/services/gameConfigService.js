@@ -17,6 +17,10 @@ const GAME_CONFIG_SPECS = Object.freeze({
     label: 'Thời gian câu hỏi khó', type: 'integer', min: 5, max: 3_600, fallback: 30,
     note: 'Số giây trả lời cho mỗi câu khó mới.', clampEnv: true,
   }),
+  VTV_DAILY_SKIP_LIMIT: Object.freeze({
+    label: 'Lượt bỏ qua Vua tiếng Việt mỗi ngày', type: 'integer', min: 0, max: 100, fallback: 5,
+    note: 'Số câu mỗi người chơi được bỏ qua mỗi ngày (giờ Việt Nam).',
+  }),
   POKER_ANTE: Object.freeze({
     label: 'Ante Poker', type: 'integer', min: 10, max: 100_000, fallback: 50,
     note: 'Áp dụng cho bàn Poker mở mới.',

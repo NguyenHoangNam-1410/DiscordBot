@@ -4,6 +4,7 @@ const { formatCoins } = require('../utils/economy');
 const { requireGameChannel } = require('../utils/gameChannel');
 const { channelHasGame } = require('../services/gameChannelService');
 const { getGameReward } = require('../services/gameRewardService');
+const { skipVuaSessionForPlayer } = require('../services/funGameService');
 
 function isAdmin(interaction) {
   const ids = String(process.env.ADMIN_USER_ID || '').split(/[,;\n]/).map(id => id.trim()).filter(Boolean);
@@ -30,7 +31,7 @@ function controlRows() {
   )];
 }
 
-module.exports = {
+const command = {
   data: new SlashCommandBuilder().setName('vuatiengviet').setDescription('Bắt đầu Vua tiếng Việt; quản lý câu hỏi bằng các nút'),
   async execute(interaction) {
     if (!interaction.guildId) return interaction.reply({ content: 'Game chỉ chơi được trong server.', flags: MessageFlags.Ephemeral });
@@ -53,8 +54,25 @@ module.exports = {
       return interaction.update({ embeds: [ended], components: [], allowedMentions: { parse: [] } });
     }
     if (action !== 'skip') return interaction.reply({ content: 'Thao tác không hợp lệ.', flags: MessageFlags.Ephemeral });
+    if (!isAdmin(interaction)) return interaction.reply({ content: 'Dùng `/vtv boqua` để bỏ qua câu bằng lượt cá nhân.', flags: MessageFlags.Ephemeral });
     const result = skipVuaSession(interaction.guildId);
     return interaction.update({ content: `⏭️ Đã bỏ qua **${result.skipped.answer}**.`, embeds: [questionEmbed(interaction.guildId, result.nextQuestion)], components: controlRows(), allowedMentions: { parse: [] } });
   },
-  questionEmbed, controlRows,
+  questionEmbed, controlRows, isAdmin,
 };
+
+const playerCommand = {
+  data: new SlashCommandBuilder().setName('vtv').setDescription('Lệnh người chơi cho Vua tiếng Việt')
+    .addSubcommand(option => option.setName('boqua').setDescription('Bỏ qua câu hiện tại bằng một lượt cá nhân')),
+  async execute(interaction) {
+    if (!interaction.guildId) return interaction.reply({ content: 'Lệnh này chỉ dùng trong server.', flags: MessageFlags.Ephemeral });
+    if (!await requireGameChannel(interaction, 'vuatiengviet')) return;
+    if (!getVuaSession(interaction.guildId)) return interaction.reply({ content: 'Hiện chưa có phiên Vua tiếng Việt. Hãy nhờ admin bắt đầu bằng `/choi vtv`.', flags: MessageFlags.Ephemeral });
+    const result = skipVuaSessionForPlayer(interaction.guildId, interaction.user.id);
+    if (result.error === 'LIMIT_REACHED') return interaction.reply({ content: `Bạn đã dùng hết **${result.limit} lượt bỏ qua** hôm nay. Lượt sẽ làm mới theo ngày Việt Nam.`, flags: MessageFlags.Ephemeral });
+    if (result.error === 'NO_SESSION') return interaction.reply({ content: 'Hiện chưa có phiên Vua tiếng Việt.', flags: MessageFlags.Ephemeral });
+    return interaction.reply({ content: `⏭️ <@${interaction.user.id}> đã bỏ qua **${result.skipped.answer}** · còn **${result.limit - result.used}/${result.limit} lượt** hôm nay.`, embeds: [questionEmbed(interaction.guildId, result.nextQuestion)], components: controlRows(), allowedMentions: { parse: [] } });
+  },
+};
+
+module.exports = { ...command, playerCommand };
