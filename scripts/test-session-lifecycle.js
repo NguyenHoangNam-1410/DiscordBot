@@ -208,6 +208,52 @@ function bet(guildId, roundId, userId, choice, amount) {
   await pokerTable.expirePokerTable(db.prepare('SELECT * FROM poker_sessions WHERE id=?').get(lobbyId), null, false);
   assert.equal(balance(afk, 'olga'), START, 'bàn Poker hết hạn ở sảnh chờ không ai mất cược'); assert.equal(balance(afk, 'pete'), START);
 
+  // Shrine giả gây chết trong Sinh tồn phải kết thúc run thay vì lỗi
+  const shrineGuild = 'shrine-guild';
+  const hardcoreForShrine = require('../src/services/hardcoreService');
+  const shrineRun = hardcoreForShrine.startHardcore({ guildId: shrineGuild, channelId: 'c', userId: 'alice', stake: 100, classKey: 'barbarian', forcedEncounter: { type: 'shrine', kind: 'fake' } });
+  const shrineState = JSON.parse(db.prepare('SELECT state_json FROM hardcore_sessions WHERE id=?').get(shrineRun.session.id).state_json);
+  shrineState.hp = 1;
+  db.prepare('UPDATE hardcore_sessions SET state_json=? WHERE id=?').run(JSON.stringify(shrineState), shrineRun.session.id);
+  const shrineResult = hardcoreForShrine.playHardcore({ sessionId: shrineRun.session.id, userId: 'alice', expectedTurn: shrineState.turn, action: 'touch' });
+  assert.equal(shrineResult.settled, true, 'chạm Shrine giả khi gần chết phải kết thúc run');
+  assert.equal(shrineResult.result.outcome, 'loss');
+  assert.equal(db.prepare('SELECT COUNT(*) AS count FROM hardcore_sessions WHERE id=?').get(shrineRun.session.id).count, 0);
+
+  // Bàn Poker hết hạn trả về state; bấm nút vào bàn đã hết hạn không gây lỗi
+  const expiredPokerId = crypto.randomBytes(4).toString('hex');
+  const expiredPokerPlayers = ['quinn', 'ruth'].map(id => ({ id, name: id, stack: 500, committed: 50, streetBet: 0, lobbyAnte: 0, folded: false, allIn: false, hole: [] }));
+  for (const player of expiredPokerPlayers) economy.spendCoins({ guildId: afk, userId: player.id, amount: 50, reason: 'test-poker-button' });
+  db.prepare('INSERT INTO poker_sessions(id,guild_id,channel_id,message_id,user_id,variant,state_json,expires_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)')
+    .run(expiredPokerId, afk, 'c', null, 'quinn', 'texas', JSON.stringify({ mode: 'multiplayer', variant: 'texas', phase: 'betting', street: 'flop', turnUserId: 'ruth', discardPending: [], pending: ['ruth'], board: [], log: [], players: expiredPokerPlayers }), Date.now() - 1, Date.now(), Date.now());
+  const pokerButtonUpdates = [];
+  await require('../src/services/pokerService').handlePokerButton({ customId: `poker:${expiredPokerId}:call`, guildId: afk, channelId: 'c', user: { id: 'quinn' },
+    update: async payload => { pokerButtonUpdates.push(payload); return payload; }, reply: async payload => { pokerButtonUpdates.push({ reply: payload }); return payload; } });
+  assert.equal(pokerButtonUpdates.length, 1);
+  assert(pokerButtonUpdates[0].embeds, 'bấm nút bàn Poker đã hết hạn phải cập nhật embed đóng bàn');
+  assert.equal(balance(afk, 'quinn'), START); assert.equal(balance(afk, 'ruth'), START - 50);
+
+  // Nút xác nhận Oẳn tù tì với bot sau khi hết hạn
+  const rpsBot = require('../src/services/rpsBotService');
+  const botRound = rpsBot.createRpsBotRound({ guildId: 'rps-bot-expiry', channelId: 'c', userId: 'alice', stake: 100, choice: 'bua' });
+  db.prepare('UPDATE rps_bot_rounds SET expires_at=? WHERE id=?').run(Date.now() - 1, botRound.id);
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const botUpdates = [];
+    await rpsBot.handleRpsBotButton({ customId: `rpsbot:${botRound.id}:confirm`, user: { id: 'alice' },
+      update: async payload => { botUpdates.push(payload); return payload; }, reply: async payload => { botUpdates.push({ reply: payload }); return payload; } });
+    assert.equal(botUpdates.length, 1); assert(botUpdates[0].embeds && botUpdates[0].components.length === 0, `lần bấm ${attempt + 1}: phải đóng nút xác nhận đã hết hạn`);
+  }
+  assert.equal(balance('rps-bot-expiry', 'alice'), START, 'ván xác nhận hết hạn không được trừ cược');
+
+  // RESET SERVER xóa cả phiên Vua tiếng Việt (DB và bộ nhớ)
+  const vuaReset = 'vua-reset-guild';
+  const funGame = require('../src/services/funGameService');
+  funGame.startVuaSession(vuaReset);
+  assert(funGame.getVuaSession(vuaReset));
+  require('../src/services/adminDataService').resetServerPlayerData({ guildId: vuaReset });
+  assert.equal(funGame.getVuaSession(vuaReset), null, 'phiên Vua tiếng Việt trong bộ nhớ phải bị xóa');
+  assert.equal(db.prepare("SELECT COUNT(*) AS count FROM game_sessions WHERE guild_id=? AND game='vuatiengviet'").get(vuaReset).count, 0);
+
   // Poker với bot: hoàn đúng số xu đã trừ, không tạo thêm xu từ stack bàn
   const poker = require('../src/services/pokerService');
   const pokerGuild = 'force-poker';

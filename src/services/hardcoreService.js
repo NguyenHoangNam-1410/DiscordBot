@@ -391,11 +391,8 @@ const actionTx = db.transaction(({ sessionId, userId, expectedTurn, action }) =>
   } else if (state.encounter.type === 'shrine') {
     if (action === 'ignore') completeFloor(state, '🚶 Bạn bỏ qua Shrine.', 0);
     else if (action === 'touch') {
-      let log = applyShrine(state, state.encounter.kind);
-      if (state.hp <= 0) {
-        if (!reviveIfAvailable(session, state)) return { settled: true, state, result: finishRun(session, state, 'death') };
-        log += `\n❤️ Bùa Hồi Sinh kích hoạt: trở lại với ${state.hp} HP.`;
-      }
+      const log = applyShrine(state, state.encounter.kind);
+      if (state.hp <= 0) return { settled: true, state, result: finishRun(session, state, 'death') };
       completeFloor(state, log, 0.5);
     } else throw new Error('INVALID_ACTION');
   } else if (state.encounter.type === 'empty') {

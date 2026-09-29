@@ -417,6 +417,7 @@ async function expirePokerTable(session, client, updateMessage = true) {
     const channel = await client.channels.fetch(session.channel_id).catch(() => null); const message = await channel?.messages?.fetch(session.message_id).catch(() => null);
     if (message) await message.edit({ embeds: [pokerTableEmbed(state, session.id)], components: [], allowedMentions: { parse: [] } });
   }
+  return state;
 }
 
 module.exports = { VARIANTS, createPokerLobby, hasActiveTable, setPokerMessage, pokerTableEmbed, pokerTableRows, handlePokerButton, handlePokerPrivateButton, handlePokerModal, expirePokerTable, forceEndPokerTable };

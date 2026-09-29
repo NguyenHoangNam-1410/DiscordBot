@@ -42,7 +42,7 @@ const RESET_PLAYER_TABLES = Object.freeze([
   'game_history', 'game_player_stats', 'hardcore_records', 'hardcore_sessions', 'mines_sessions', 'newbie_bonus_claims', 'onboarding_claims',
   'player_currencies', 'player_progress', 'poker_sessions', 'profile_cosmetics', 'profile_loadouts', 'rps_bot_rounds', 'rps_duels',
   'season_claims', 'season_scores', 'server_event_contributions', 'server_events', 'shop_purchases', 'user_inventory', 'user_item_effects',
-  'vua_daily_skips', 'weekly_claims', 'weekly_role_reward_grants', 'weekly_scores',
+  'vua_daily_skips', 'weekly_claims', 'weekly_role_reward_grants', 'weekly_scores', 'game_sessions',
 ]);
 
 const resetServerPlayerDataTx = db.transaction(({ guildId, now = Date.now() }) => {
@@ -56,7 +56,11 @@ const resetServerPlayerDataTx = db.transaction(({ guildId, now = Date.now() }) =
   return { players, rows };
 });
 
-function resetServerPlayerData(args) { return resetServerPlayerDataTx(args); }
+function resetServerPlayerData(args) {
+  const result = resetServerPlayerDataTx(args);
+  require('./funGameService').endVuaSession(args.guildId); // also drops the in-memory Vua tiếng Việt session cache
+  return result;
+}
 
 function clearPlayerData(args) { return clearPlayerDataTx(args); }
 
