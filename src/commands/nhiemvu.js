@@ -28,7 +28,7 @@ function claimReply(interaction, type) {
   }
   if (type === 'tatca' || type === 'thanhtuu') {
     const rewards = claimAchievements(guildId, userId);
-    if (rewards.length) lines.push(`🏅 **Thành tựu** (${rewards.length}): tổng cộng **${formatCoins(rewards.reduce((sum, item) => sum + item.reward, 0))} xu**`);
+    if (rewards.length) lines.push(`🏅 **Thành tựu** (${rewards.length}): **${formatCoins(rewards.reduce((sum, item) => sum + item.reward, 0))} xu** + **${rewards.reduce((sum, item) => sum + (item.diamonds || 0), 0)} :gem:**`);
     else empty.push('Chưa có thành tựu mới để nhận.');
   }
   if (type === 'tatca' || type === 'vaitro') {

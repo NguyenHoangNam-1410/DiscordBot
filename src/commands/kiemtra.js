@@ -28,7 +28,8 @@ function missionLine(mission) {
 }
 function achievementLine(item) {
   const mark = item.claimed ? '✅' : item.complete ? '🎁' : '▫️';
-  return `${mark} **${item.name}** — ${item.progress}/${item.target}\n↳ ${formatCoins(item.reward)} xu`;
+  const rewards = [item.reward ? `${formatCoins(item.reward)} xu` : null, item.diamonds ? `${item.diamonds} :gem:` : null].filter(Boolean).join(' + ');
+  return `${mark} **${item.name}** — ${item.progress}/${item.target}\n↳ ${rewards}`;
 }
 const pending = list => list.filter(item => item.complete && !item.claimed).length;
 
@@ -81,7 +82,7 @@ function build(guildId, user, key, member = null) {
   if (key === 'nhanthanhtuu') {
     const rewards = claimAchievements(guildId, userId);
     return base('🏆 NHẬN THÀNH TỰU').setDescription(rewards.length
-      ? `Đã nhận **${rewards.length}** thành tựu, tổng cộng **${formatCoins(rewards.reduce((sum, item) => sum + item.reward, 0))} xu**.` : 'Chưa có thành tựu mới để nhận.');
+      ? `Đã nhận **${rewards.length}** thành tựu: **${formatCoins(rewards.reduce((sum, item) => sum + item.reward, 0))} xu** + **${rewards.reduce((sum, item) => sum + (item.diamonds || 0), 0)} :gem:**.` : 'Chưa có thành tựu mới để nhận.');
   }
   if (key === 'nhanvaitro') {
     const result = claimRoleRewards(guildId, userId, member);
