@@ -261,12 +261,12 @@ function finishRun(session, state, reason) {
   hardcoreRepository.deleteSession(session.id);
   return { reason, payout, outcome, balance: account.balance, achievements: account.unlockedAchievements, experienceGained: account.experienceGained, levelUps: account.levelUps, bonusDrops: account.bonusDrops };
 }
-function forceEndHardcoreSession(id, guildId, adminId) {
+function forceEndHardcoreSession(id, guildId, adminId, { label = 'admin-refund' } = {}) {
   return db.transaction(() => {
     const session = hardcoreRepository.getActiveSession(id, guildId); if (!session) return null;
     const state = parseState(session);
     creditCoins({ guildId: session.guild_id, userId: session.user_id, amount: state.stake,
-      reason: `hardcore:admin-refund:${adminId}:${session.id}`, operationId: `refund:hardcore-admin:${session.id}:${session.user_id}` });
+      reason: `hardcore:${label}:${adminId}:${session.id}`, operationId: `refund:hardcore-admin:${session.id}:${session.user_id}` });
     hardcoreRepository.deleteSession(session.id);
     return { session, state, participants: [session.user_id] };
   })();

@@ -128,6 +128,20 @@ const expireTx = db.transaction((id, now) => {
 
 function expireDuel(id, now = Date.now()) { return expireTx(String(id), now); }
 
+function forceEndRpsDuel(id, guildId, adminId, now = Date.now()) {
+  return db.transaction(() => {
+    const duel = getDuel(id);
+    if (!duel || duel.guild_id !== String(guildId) || !['invited', 'playing'].includes(duel.status)) return null;
+    const refunded = duel.status === 'playing';
+    if (refunded) for (const userId of [duel.challenger_id, duel.opponent_id]) {
+      creditCoins({ guildId: duel.guild_id, userId, amount: duel.stake, reason: `oantuti-solo:admin-refund:${adminId}:${duel.id}`,
+        operationId: `refund:oantuti-duel:${duel.id}:${userId}` });
+    }
+    db.prepare("UPDATE rps_duels SET status = 'expired', updated_at = ? WHERE id = ?").run(now, duel.id);
+    return { session: duel, participants: [duel.challenger_id, duel.opponent_id], refunded, gameName: 'OẲN TÙ TÌ' };
+  })();
+}
+
 function duelEmbed(duel, settlement = null) {
   const color = duel.status === 'completed' ? 0x2ECC71 : duel.status === 'playing' ? 0x3498DB
     : duel.status === 'invited' ? 0xF1C40F : 0x7F8C8D;
@@ -235,6 +249,6 @@ function startRpsDuelMaintenance(client, logger = console) {
 
 module.exports = {
   INVITE_TTL_MS, PLAY_TTL_MS, HANDS, getDuel, createDuel, setDuelMessage, acceptDuel, declineDuel,
-  chooseHand, outcomeFor, expireDuel, duelEmbed, inviteButtons, handButtons, replayButtons, handleRpsDuelButton,
+  chooseHand, outcomeFor, expireDuel, forceEndRpsDuel, duelEmbed, inviteButtons, handButtons, replayButtons, handleRpsDuelButton,
   expireDueDuels, startRpsDuelMaintenance,
 };

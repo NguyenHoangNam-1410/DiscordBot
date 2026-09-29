@@ -1,6 +1,5 @@
 const crypto = require('node:crypto');
 const { calculatePayout, BAUCUA, TOTAL_RATIOS } = require('../src/services/multiplayerGameService');
-const { handScore, isBlackjack } = require('../src/services/blackjackService');
 const { payoutFor, combination, CELL_COUNT } = require('../src/services/minesService');
 const iterations = Math.max(10_000, Math.min(5_000_000, Number(process.argv[2]) || 1_000_000));
 function random(max) { return crypto.randomInt(max); }
@@ -9,8 +8,15 @@ function riskFor(rtp) { return rtp > MAX_ACCEPTABLE_RTP ? 'HIGH' : rtp > 99.5 ? 
 function summary(game, returned, wins, notes = '', count = iterations) { const rtp = returned / count * 100; return { game, iterations: count, rtp: +rtp.toFixed(3), houseEdge: +(100 - rtp).toFixed(3), winRate: +(wins / count * 100).toFixed(3), coinsReturnedPerMillionWagered: Math.round(rtp * 10_000), netCoinsBurnedPerMillion: Math.round((100 - rtp) * 10_000), inflationRisk: riskFor(rtp), notes }; }
 function baucua() { const keys = Object.keys(BAUCUA); let returned = 0; let wins = 0; for (let i = 0; i < iterations; i += 1) { const result = { symbols: [keys[random(6)], keys[random(6)], keys[random(6)]] }; const payout = calculatePayout('baucua', 'bau', 1, result); returned += payout; if (payout) wins += 1; } return summary('baucua', returned, wins); }
 function taixiu(choice) { let returned = 0; let wins = 0; let outcomes = 0; for (let a = 1; a <= 6; a += 1) for (let b = 1; b <= 6; b += 1) for (let c = 1; c <= 6; c += 1) { const dice = [a, b, c]; const result = { dice, total: a + b + c, triple: a === b && b === c }; const payout = calculatePayout('taixiu', choice, 1, result); returned += payout; if (payout) wins += 1; outcomes += 1; } return summary(`taixiu:${choice}`, returned, wins, `${choice.startsWith('tong:') ? `ratio ${TOTAL_RATIOS[Number(choice.slice(5))]}:1 · ` : ''}exact enumeration`, outcomes); }
-const ranks = ['A','2','3','4','5','6','7','8','9','10','J','Q','K']; function card() { return `${ranks[random(13)]}♠`; }
-function blackjack() { let returned = 0; let wins = 0; for (let i = 0; i < iterations; i += 1) { const player = [card(), card()]; const dealer = [card(), card()]; if (isBlackjack(player) || isBlackjack(dealer)) { if (isBlackjack(player) && isBlackjack(dealer)) returned += 1; else if (isBlackjack(player)) { returned += 2.5; wins += 1; } continue; } while (handScore(player).total < 17) player.push(card()); while (handScore(dealer).total < 17) dealer.push(card()); const p = handScore(player).total; const d = handScore(dealer).total; if (p > 21 && d > 21) returned += 1; else if (p <= 21 && (d > 21 || p > d)) { returned += 1.9; wins += 1; } else if (p <= 21 && p === d) returned += 1; } return summary('blackjack:stand17', returned, wins, 'Fixed policy: hit below 17, no split/double; both bust is a draw; regular wins return 1.9x'); }
+const { simulate: simulateBlackjack, STRATEGIES: BLACKJACK_STRATEGIES } = require('../src/services/blackjackSim');
+function blackjack() {
+  const rounds = Math.min(iterations, 300_000);
+  return Object.keys(BLACKJACK_STRATEGIES).map(name => {
+    const result = simulateBlackjack(name, rounds);
+    return { game: `blackjack:${name}`, iterations: rounds, rtp: +result.rtp.toFixed(3), houseEdge: +(100 - result.rtp).toFixed(3), naturalRate: +(result.naturalRate * 100).toFixed(2),
+      notes: 'Real rules: 6-deck shoe without replacement, player bust always loses, five-card Ngũ linh, 1.9x wins, 2.5x natural, single split, double; no items' };
+  });
+}
 function analytic(game, rtp, winRate, notes) { return { game, iterations: 'analytic', rtp, houseEdge: +(100 - rtp).toFixed(3), winRate, coinsReturnedPerMillionWagered: Math.round(rtp * 10_000), netCoinsBurnedPerMillion: Math.round((100 - rtp) * 10_000), inflationRisk: riskFor(rtp), notes }; }
 function minesAt(mineCount, opened, stake = 1000) {
   const survival = combination(CELL_COUNT - opened, mineCount) / combination(CELL_COUNT, mineCount);
@@ -44,7 +50,7 @@ function mines(mineCount) {
   return { ...analytic(`mines:${mineCount}:adaptive-star-cashout`, adaptiveRtp, null, `Exact optimal cash-out after each safe reveal, with star status known; stakes 10, 100, 1000, 100000`),
     oneCellRtp: +rtpByOpened[0].rtp.toFixed(3), worstFixedRtp: +worst.rtp.toFixed(3), worstOpened: worst.opened, worstStake: highest.stake };
 }
-const report = [baucua(), taixiu('tai'), taixiu('bo_ba'), taixiu('tong:10'), blackjack(), ...[1, 2, 3, 4, 5, 6, 7].map(mines), analytic('oantuti', 100, 33.333, 'Uniform fair bot; draw refunds stake'), { game: 'poker', iterations: 'policy-dependent', rtp: null, inflationRisk: 'AUDIT', notes: 'RTP depends on player actions, bot folds, side pots and stack size; use settled-history audit rather than a misleading fixed RTP.' }, { game: 'hardcore', iterations: 'policy-dependent', rtp: null, inflationRisk: 'AUDIT', notes: 'RTP depends on cash-out floor and combat decisions; payout remains capped at 10,000,000.' }, { game: 'duangua', iterations: 'market-dependent', rtp: 82, houseEdge: 18, winRate: null, coinsReturnedPerMillionWagered: 820000, netCoinsBurnedPerMillion: 180000, inflationRisk: 'SINK', notes: 'Market multipliers are generated as floor(0.82 / win probability), so target RTP is at most 82% before rounding.' }];
+const report = [baucua(), taixiu('tai'), taixiu('bo_ba'), taixiu('tong:10'), ...blackjack(), ...[1, 2, 3, 4, 5, 6, 7].map(mines), analytic('oantuti', 100, 33.333, 'Uniform fair bot; draw refunds stake'), { game: 'poker', iterations: 'policy-dependent', rtp: null, inflationRisk: 'AUDIT', notes: 'RTP depends on player actions, bot folds, side pots and stack size; use settled-history audit rather than a misleading fixed RTP.' }, { game: 'hardcore', iterations: 'policy-dependent', rtp: null, inflationRisk: 'AUDIT', notes: 'RTP depends on cash-out floor and combat decisions; payout remains capped at 10,000,000.' }, { game: 'duangua', iterations: 'market-dependent', rtp: 82, houseEdge: 18, winRate: null, coinsReturnedPerMillionWagered: 820000, netCoinsBurnedPerMillion: 180000, inflationRisk: 'SINK', notes: 'Market multipliers are generated as floor(0.82 / win probability), so target RTP is at most 82% before rounding.' }];
 console.log(JSON.stringify({ generatedAt: new Date().toISOString(), iterations, report }, null, 2));
 if (report.some(item => Number.isFinite(item.rtp) && item.rtp > MAX_ACCEPTABLE_RTP)) {
   console.error(`RTP vượt ngưỡng ${MAX_ACCEPTABLE_RTP}%`);

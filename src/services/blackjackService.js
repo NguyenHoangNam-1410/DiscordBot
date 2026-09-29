@@ -123,6 +123,27 @@ const startTx = db.transaction(({ guildId, userId, channelId, stake, forcedDeck 
 
 function startBlackjack(args) { return startTx(args); }
 
+function evaluateHand(cards, bet, dealerCards) {
+  const score = handScore(cards).total; const dealer = handScore(dealerCards).total;
+  const playerType = handType(cards); const dealerType = handType(dealerCards);
+  const win = () => ({ label: 'Thắng', payout: Math.floor(bet * REGULAR_WIN_MULTIPLIER) });
+  let result;
+  if (playerType === 'bust') result = { label: 'Quắc · Thua', payout: 0 };
+  else if (playerType === 'ngulinh' && dealerType !== 'ngulinh') result = { label: 'Ngũ linh · Thắng', payout: Math.floor(bet * REGULAR_WIN_MULTIPLIER) };
+  else if (dealerType === 'ngulinh' && playerType !== 'ngulinh') result = { label: 'Thua · Nhà cái Ngũ linh', payout: 0 };
+  else if (playerType === 'ngulinh' && dealerType === 'ngulinh') {
+    if (score < dealer) result = { label: 'Ngũ linh · Thắng', payout: Math.floor(bet * REGULAR_WIN_MULTIPLIER) };
+    else if (score === dealer) result = { label: 'Ngũ linh · Hòa', payout: bet };
+    else result = { label: 'Thua · Nhà cái Ngũ linh', payout: 0 };
+  }
+  else if (dealerType === 'blackjack' && playerType !== 'blackjack') result = { label: 'Thua · Nhà cái Xì dách', payout: 0 };
+  else if (playerType === 'blackjack' && dealerType === 'blackjack') result = { label: 'Hòa · Cùng Xì dách', payout: bet };
+  else if (dealer > 21 || score > dealer) result = win();
+  else if (score === dealer) result = { label: 'Hòa', payout: bet };
+  else result = { label: 'Thua', payout: 0 };
+  return { ...result, score, type: playerType };
+}
+
 function dealerPlay(state) {
   while (handScore(state.dealer).total < 17 && handType(state.dealer) !== 'ngulinh') state.dealer.push(draw(state));
 }
@@ -132,30 +153,13 @@ function settleState(session, state, reason = null) {
   const dealer = handScore(state.dealer).total;
   let payout = 0;
   const results = state.hands.map(hand => {
-    const score = handScore(hand.cards).total;
-    const playerType = handType(hand.cards); const dealerType = handType(state.dealer);
-    let handPayout = 0;
-    let label;
-    if (playerType === 'bust') {
-      label = 'Quắc · Thua';
-      if (score === 22 && !state.bustGuardUsed && consumeActiveEffect(session.guild_id, session.user_id, 'blackjack_bust_guard')) {
-        state.bustGuardUsed = true; handPayout = Math.floor(hand.bet * 0.25); label = 'Quắc 22 · Hoàn 25% cược';
-      }
+    const evaluated = evaluateHand(hand.cards, hand.bet, state.dealer);
+    let { label, payout: handPayout } = evaluated;
+    if (evaluated.type === 'bust' && evaluated.score === 22 && !state.bustGuardUsed && consumeActiveEffect(session.guild_id, session.user_id, 'blackjack_bust_guard')) {
+      state.bustGuardUsed = true; handPayout = Math.floor(hand.bet * 0.25); label = 'Quắc 22 · Hoàn 25% cược';
     }
-    else if (playerType === 'ngulinh' && dealerType !== 'ngulinh') { label = 'Ngũ linh · Thắng'; handPayout = Math.floor(hand.bet * REGULAR_WIN_MULTIPLIER); }
-    else if (dealerType === 'ngulinh' && playerType !== 'ngulinh') label = 'Thua · Nhà cái Ngũ linh';
-    else if (playerType === 'ngulinh' && dealerType === 'ngulinh') {
-      if (score < dealer) { label = 'Ngũ linh · Thắng'; handPayout = Math.floor(hand.bet * REGULAR_WIN_MULTIPLIER); }
-      else if (score === dealer) { label = 'Ngũ linh · Hòa'; handPayout = hand.bet; }
-      else label = 'Thua · Nhà cái Ngũ linh';
-    }
-    else if (dealerType === 'blackjack' && playerType !== 'blackjack') label = 'Thua · Nhà cái Xì dách';
-    else if (playerType === 'blackjack' && dealerType === 'blackjack') { label = 'Hòa · Cùng Xì dách'; handPayout = hand.bet; }
-    else if (dealer > 21 || score > dealer) { label = 'Thắng'; handPayout = Math.floor(hand.bet * REGULAR_WIN_MULTIPLIER); }
-    else if (score === dealer) { label = 'Hòa'; handPayout = hand.bet; }
-    else label = 'Thua';
     payout += handPayout;
-    return { score, payout: handPayout, label };
+    return { score: evaluated.score, payout: handPayout, label };
   });
   const stake = totalBet(state);
   if (reason === 'forfeit') payout = 0;
@@ -441,12 +445,12 @@ function blackjackTableEmbed(table, state = tableState(table)) {
   }
   return embed.setFooter({ text: `Mã ván: ${table.id}` });
 }
-function forceEndBlackjackSession(id, guildId, adminId) {
+function forceEndBlackjackSession(id, guildId, adminId, { label = 'admin-refund' } = {}) {
   return db.transaction(() => {
     const session = getActiveSession(id, guildId); if (!session) return null;
     const state = parseState(session); const refund = totalBet(state);
     creditCoins({ guildId: session.guild_id, userId: session.user_id, amount: refund,
-      reason: `blackjack:admin-refund:${adminId}:${session.id}`, operationId: `refund:blackjack-admin:${session.id}:${session.user_id}` });
+      reason: `blackjack:${label}:${adminId}:${session.id}`, operationId: `refund:blackjack-admin:${session.id}:${session.user_id}` });
     db.prepare('DELETE FROM blackjack_sessions WHERE id=?').run(session.id);
     return { session, state, participants: [session.user_id], refund };
   })();
@@ -521,7 +525,7 @@ async function maintainBlackjackTables(client) {
 function startBlackjackTableMaintenance(client) { const run = () => maintainBlackjackTables(client).catch(() => {}); run(); const timer = setInterval(run, 5_000); timer.unref?.(); return timer; }
 
 module.exports = {
-  MIN_BET, MAX_BET, REGULAR_WIN_MULTIPLIER, handScore, isBlackjack, handType, createShoe, putAceOnTop, startBlackjack, playAction, forceEndBlackjackSession,
+  MIN_BET, MAX_BET, REGULAR_WIN_MULTIPLIER, handScore, isBlackjack, handType, evaluateHand, initialResult, createShoe, putAceOnTop, startBlackjack, playAction, forceEndBlackjackSession,
   getSessionByUser, setMessageId, blackjackEmbed, actionRows, handleBlackjackButton,
   createBlackjackTable, setBlackjackTableMessage, blackjackTableEmbed, blackjackTableRows, handleBlackjackTableButton, startBlackjackTableMaintenance, forceEndBlackjackTable,
   getBlackjackTableLock,

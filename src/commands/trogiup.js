@@ -191,6 +191,10 @@ const PAGES = Object.freeze({
         "`datthuongvaitro` · `xoathuongvaitro` · `xemthuongvaitro`",
       ],
       [
+        "🛑 Kết thúc ván",
+        "`ketthucvan` — nhập mã ván để buộc kết thúc và hoàn cược mọi loại ván có mã: Xì dách, Poker, Dò mìn, Chinchiro, Sinh tồn, Oẳn tù tì đấu người, Bầu cua, Tài xỉu, Đua ngựa.",
+      ],
+      [
         "🧹 Dữ liệu người chơi",
         "`xoadulieu` — chọn người chơi để xóa riêng; bỏ trống người chơi để xem trước và xác nhận xóa toàn server. Chọn `RESET SERVER` để xóa mọi dữ liệu người chơi nhưng giữ cấu hình hệ thống.",
       ],
