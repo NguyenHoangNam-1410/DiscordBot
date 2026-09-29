@@ -10,6 +10,7 @@ const { getGameConfig } = require('./gameConfigService');
 const { addExperienceField } = require('../utils/progressionView');
 const { consumeActiveEffect, getActiveEffect } = require('./effectStateService');
 const pokerMultiplayerService = require('./pokerMultiplayerService');
+const pokerBotBrain = require('./pokerBotBrain');
 
 const configuredAnte = Number(process.env.POKER_ANTE);
 const POKER_ANTE = Number.isSafeInteger(configuredAnte) && configuredAnte >= 10 && configuredAnte <= 100_000 ? configuredAnte : 50;
@@ -95,8 +96,8 @@ function startPoker({ guildId, channelId, userId, variant, forcedDeck = null }) 
 }
 
 const BOT_PROFILES = Object.freeze({
-  bot_luna: { aggression: 0.18, courage: 0.92 },
-  bot_sol: { aggression: 0.30, courage: 1.08 },
+  bot_luna: { aggression: 0.18, courage: 0.92, bluff: 0.07 },
+  bot_sol: { aggression: 0.30, courage: 1.08, bluff: 0.12 },
 });
 const RANK_VALUE = Object.freeze({ 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7, 8: 8, 9: 9, 10: 10, J: 11, Q: 12, K: 13, A: 14 });
 function drawPotential(state, player) {
@@ -131,29 +132,25 @@ function choosePineappleDiscard(state, player) {
 }
 function actBots(state) {
   let raised = false;
+  const read = pokerBotBrain.readOpponent(state);
+  const human = state.players[0];
   for (const bot of state.players.filter(player => player.id.startsWith('bot_') && !player.folded && !player.allIn)) {
     const toCall = Math.max(0, state.currentBet - bot.streetBet);
     const pot = state.players.reduce((sum, player) => sum + player.committed, 0);
-    const potOdds = toCall / Math.max(1, pot + toCall);
-    const pressure = toCall / Math.max(1, bot.stack + toCall);
-    const profile = BOT_PROFILES[bot.id];
     const evaluation = botEvaluation(state, bot);
-    const roll = state.fair?.serverSeed ? fairInt(state.fair.serverSeed, 'poker-bot', state.fairCounter++, 10_000) / 10_000 : crypto.randomInt(10_000) / 10_000;
-    const continueScore = (evaluation.power + evaluation.draw * 0.16 + roll * 0.12) * profile.courage;
-    const pricedOut = potOdds > continueScore * 0.72;
-    const stackThreatened = pressure > 0.55 && evaluation.power < 0.55;
-    const activeBots = activePlayers(state).filter(player => player.id.startsWith('bot_')).length;
-    const defendsOpeningRaise = state.raises === 1 && pressure <= 0.25;
-    const defendsTable = activeBots === 1 && pressure <= 0.50;
-    if (toCall > 0 && (pricedOut || stackThreatened) && !defendsOpeningRaise && !defendsTable && roll > 0.10) {
-      bot.folded = true; state.log.push(`🏳️ ${bot.name} bỏ bài trước mức cược ${formatCoins(toCall)} xu.`); continue;
-    }
+    const nextRoll = label => state.fair?.serverSeed ? fairInt(state.fair.serverSeed, label, state.fairCounter++, 10_000) / 10_000 : crypto.randomInt(10_000) / 10_000;
+    const roll = nextRoll('poker-bot');
+    const bluffRoll = nextRoll('poker-bot-bluff'); const sizeRoll = nextRoll('poker-bot-size');
+    const humanRoom = human.allIn || human.folded ? Infinity : Math.max(0, human.stack - Math.max(0, state.currentBet - human.streetBet));
+    const decision = pokerBotBrain.decide({
+      power: evaluation.power, draw: evaluation.draw, toCall, pot, stack: bot.stack, humanRoom, profile: BOT_PROFILES[bot.id], read, raises: state.raises,
+      ante: state.ante, pressure: toCall / Math.max(1, bot.stack + toCall), activeBots: activePlayers(state).filter(player => player.id.startsWith('bot_')).length,
+      roll, bluffRoll, sizeRoll,
+    });
+    if (decision.action === 'fold') { bot.folded = true; state.log.push(`🏳️ ${bot.name} bỏ bài trước mức cược ${formatCoins(toCall)} xu.`); continue; }
     const called = pay(bot, toCall);
-    const raiseChance = profile.aggression + Math.max(0, evaluation.power - 0.48) * 0.8 + evaluation.draw * 0.08;
-    const mayBluff = evaluation.power < 0.42 && roll < profile.aggression * 0.18;
-    if (!raised && state.raises < 2 && bot.stack > 0 && (roll < raiseChance || mayBluff)) {
-      const target = Math.max(state.ante, Math.floor(Math.max(pot, state.ante * 2) * (0.35 + profile.aggression)));
-      const raise = Math.min(bot.stack, target); pay(bot, raise); state.currentBet = bot.streetBet; state.raises += 1; raised = true;
+    if (!raised && decision.action === 'raise') {
+      pay(bot, decision.amount); state.currentBet = bot.streetBet; state.raises += 1; raised = true;
       state.log.push(`⬆️ ${bot.name} ${bot.allIn ? 'All-in' : `tố lên ${formatCoins(state.currentBet)} xu`}.`);
     } else state.log.push(`${bot.allIn ? '🔥' : '✅'} ${bot.name} ${bot.allIn ? 'All-in' : called ? `theo ${formatCoins(called)} xu` : 'check'}.`);
   }
@@ -227,6 +224,7 @@ function playerAction(sessionId, userId, action, amount = 0) {
     const state = parseState(session); if (state.phase !== 'betting') throw new Error('INVALID_PHASE'); const human = state.players[0];
     if (action === 'fold') { human.folded = true; state.log.push('🏳️ Bạn bỏ bài.'); return settle(session, state, 'fold'); }
     const toCall = Math.max(0, state.currentBet - human.streetBet);
+    const potBefore = state.players.reduce((sum, player) => sum + player.committed, 0); const committedBefore = human.committed;
     if (action === 'call') { const paid = pay(human, Math.min(toCall, availableBet(state, session.guild_id))); if (paid < toCall || human.committed >= getGameBetLimit(session.guild_id, 'poker')) human.allIn = true; if (paid) spendCoins({ guildId: session.guild_id, userId, amount: paid, reason: `poker:${state.variant}:call` }); state.log.push(`${human.allIn && toCall ? '🔥 Bạn All-in để theo.' : toCall ? `✅ Bạn theo ${formatCoins(paid)} xu.` : '✅ Bạn check.'}`); }
     else if (action === 'raise') {
       const raise = Number(amount); if (!Number.isSafeInteger(raise) || raise < 10) throw new Error('INVALID_RAISE');
@@ -236,6 +234,7 @@ function playerAction(sessionId, userId, action, amount = 0) {
       spendCoins({ guildId: session.guild_id, userId, amount: paid, reason: `poker:${state.variant}:raise` }); state.currentBet = Math.max(state.currentBet, human.streetBet); state.raises += 1; state.log.push(`⬆️ Bạn tố lên ${formatCoins(state.currentBet)} xu.`);
       if (human.committed >= getGameBetLimit(session.guild_id, 'poker')) human.allIn = true;
     } else throw new Error('INVALID_ACTION');
+    pokerBotBrain.observeHuman(state, { action, toCall, paid: human.committed - committedBefore, raise: action === 'raise' ? Number(amount) : 0, potBefore });
     const botRaised = actBots(state);
     if (allMatched(state) && (!botRaised || noFurtherBetting(state))) return advance(session, state);
     saveState(session, state); return state;

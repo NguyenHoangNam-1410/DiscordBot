@@ -507,6 +507,8 @@ assert.equal(economy.getAccount('poker-guild', 'alice').balance, 950);
 const raisedPoker = poker.startPoker({ guildId: 'poker-raise-guild', channelId: 'poker-channel', userId: 'alice', variant: 'texas' });
 const afterRaise = poker.playerAction(raisedPoker.session.id, 'alice', 'raise', 10);
 assert(afterRaise.players.some(player => player.id.startsWith('bot_') && !player.folded), 'Bot không được đồng loạt bỏ bài chỉ vì người chơi raise');
+assert.equal(afterRaise.opp?.streets?.flop?.action, 'raise', 'Bot ghi lại hành vi tố của người chơi để đọc bài');
+assert(afterRaise.opp.streets.flop.frac > 0);
 if (afterRaise.phase !== 'complete') poker.playerAction(raisedPoker.session.id, 'alice', 'fold');
 const betLimits = require('../src/services/gameBetLimitService');
 betLimits.setGameBetLimit('poker-limit-guild', 'poker', 100);
