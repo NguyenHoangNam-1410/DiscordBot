@@ -8,7 +8,7 @@ const { createDeck, bestHand, compareHands, describeHand, awardPots } = require(
 const { createFairness, fairInt } = require('./fairnessService');
 const { getGameConfig } = require('./gameConfigService');
 const { consumeActiveEffect } = require('./effectStateService');
-const { cardsLine, hiddenCards } = require('../utils/cardEmoji');
+const { cardsLine, hiddenCards, cardHeading } = require('../utils/cardEmoji');
 
 const MAX_PLAYERS = 2;
 const TURN_TTL_MS = 3 * 60_000;
@@ -240,13 +240,13 @@ function cardsText(cards) { return cardsLine(cards, 'code'); }
 function privateHandText(state, userId) {
   const player = playerById(state, userId); if (!player) return 'Bạn chưa ngồi vào bàn Poker này.';
   const hand = state.board.length >= 3 ? bestHand(player.hole, state.board, state.variant) : null;
-  return `## 🃏 BÀI TẨY CỦA BẠN\n### ${cardsText(player.hole)}\n${player.folded ? 'Bạn đã bỏ bài.' : hand ? `**Bài mạnh nhất hiện tại:** ${hand.name} · ${describeHand(hand)}` : 'Bài chung chưa đủ để đánh giá.'}${state.phase === 'complete' ? `\n**Kết quả:** ${state.result.players.find(row => row.userId === player.id)?.outcome || '—'}` : ''}`;
+  return `## 🃏 BÀI TẨY CỦA BẠN\n${cardHeading(cardsText(player.hole))}\n${player.folded ? 'Bạn đã bỏ bài.' : hand ? `**Bài mạnh nhất hiện tại:** ${hand.name} · ${describeHand(hand)}` : 'Bài chung chưa đủ để đánh giá.'}${state.phase === 'complete' ? `\n**Kết quả:** ${state.result.players.find(row => row.userId === player.id)?.outcome || '—'}` : ''}`;
 }
 function pokerTableEmbed(state, sessionId = null) {
   const complete = state.phase === 'complete'; const pot = state.players.reduce((sum, player) => sum + player.committed, 0);
   const board = state.board.length ? cardsLine(state.board) : 'Đang chờ bắt đầu ván';
   const embed = new EmbedBuilder().setColor(complete ? 0x2ECC71 : 0x8E44AD).setTitle(`♠️ POKER · ${VARIANTS[state.variant].name.toUpperCase()} · ĐẤU ĐÔI`)
-    .setDescription(`## 🃏 BÀI CHUNG\n### ${board}${state.phase === 'betting' || state.phase === 'discard' ? `　${hiddenCards(5 - state.board.length)}` : ''}\n\n## 💰 POT: ${formatCoins(pot)} XU`)
+    .setDescription(`## 🃏 BÀI CHUNG\n${cardHeading(`${board}${state.phase === 'betting' || state.phase === 'discard' ? `　${hiddenCards(5 - state.board.length)}` : ''}`)}\n\n## 💰 POT: ${formatCoins(pot)} XU`)
     .addFields({ name: state.phase === 'lobby' ? '🪑 NGƯỜI CHƠI' : '🎴 STACK VÀ CƯỢC', value: state.players.map(player => `${player.folded ? '🏳️' : player.allIn ? '🔥' : '🎴'} <@${player.id}>\nCòn **${formatCoins(player.stack)} xu** · Đã cược **${formatCoins(player.committed)} xu**`).join('\n\n') });
   if (state.phase === 'lobby') embed.addFields({ name: '📨 BÀN ĐANG CHỜ', value: `Cược vào bàn **${formatCoins(state.ante)} xu/người**. Cần ${MAX_PLAYERS - state.players.length} người nữa. Chủ bàn bấm **Bắt đầu ván** khi đủ người. Hết hạn sau <t:${Math.floor((Date.now() + TURN_TTL_MS) / 1000)}:R>.` });
   else if (state.phase === 'betting' || state.phase === 'discard') embed.addFields(
