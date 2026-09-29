@@ -56,7 +56,7 @@ assert.deepEqual(channelSettings.getGamesByChannel('shared-channel-guild', 'casi
 assert.equal(channelSettings.channelHasGame('shared-channel-guild', 'casino', 'taixiu'), true);
 const { listCatalog } = require('../src/services/itemCatalogService');
 const catalog = listCatalog();
-assert.equal(catalog.filter(item => item.type === 'consumable').length, 34);
+assert.equal(catalog.filter(item => item.type === 'consumable').length, 33);
 assert.deepEqual([...new Set(catalog.filter(item => item.type === 'consumable').map(item => item.rarity))].sort(), ['R', 'SR', 'SSR', 'UR']);
 assert(catalog.some(item => item.effect === 'mines_blast_shield'));
 assert(catalog.some(item => item.effect === 'quiz_living_dictionary'));
@@ -358,7 +358,7 @@ assert.equal(economyDashboard.activeUsers, 2);
 assert(economyDashboard.categories.some(item => item.category === 'transfer'));
 const operationalHealth = require('../src/services/operationalHealthService').getOperationalHealth();
 assert.equal(operationalHealth.database.check, 'ok');
-assert.equal(operationalHealth.database.migration, 23);
+assert.equal(operationalHealth.database.migration, 24);
 assert(Number.isSafeInteger(operationalHealth.active.total));
 const starter = require('../src/services/onboardingService');
 const starterFirst = starter.claimStarterPack('starter-guild', 'alice', 1000);

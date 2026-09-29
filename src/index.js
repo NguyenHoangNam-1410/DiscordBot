@@ -20,6 +20,7 @@ const { cleanupStaleHardcoreSessions } = require('./services/hardcoreService');
 const { startTimedChallengeMaintenance } = require('./services/timedChallengeService');
 const { startCommerceMaintenance } = require('./services/commerceMaintenanceService');
 const { startRpsDuelMaintenance } = require('./services/rpsDuelService');
+const { startStaleSessionMaintenance } = require('./services/staleSessionService');
 const { startDatabaseBackups } = require('./services/databaseBackupService');
 const { createRateLimiter } = require('./services/rateLimitService');
 const { routeComponentInteraction } = require('./componentRouter');
@@ -69,6 +70,7 @@ client.once(Events.ClientReady, () => {
   maintenanceTimers.push(startBlackjackDuelMaintenance(client, logger));
   maintenanceTimers.push(startBlackjackTableMaintenance(client));
   maintenanceTimers.push(startPokerMaintenance(client, logger));
+  maintenanceTimers.push(startStaleSessionMaintenance(client, logger));
   backupManager = startDatabaseBackups(logger);
   logger.info({ user: client.user.tag, resumedRounds, resumedHorseRaces, expiredHardcoreRuns }, 'game bot ready');
 });

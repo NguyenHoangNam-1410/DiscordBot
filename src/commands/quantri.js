@@ -5,6 +5,9 @@ const game = require('./game');
 const shop = require('./shop');
 const { forceEndBlackjackSession, forceEndBlackjackTable, blackjackTableEmbed } = require('../services/blackjackService');
 const { forceEndPokerSession } = require('../services/pokerService');
+const { forceEndRpsDuel } = require('../services/rpsDuelService');
+const { forceEndBlackjackDuel } = require('../services/blackjackDuelService');
+const { forceEndSharedRound } = require('../services/roundAdminService');
 const { pokerTableEmbed } = require('../services/pokerMultiplayerService');
 const { forceEndMinesSession } = require('../services/minesService');
 const { forceEndChinchiroSession } = require('../services/chinchiroService');
@@ -76,7 +79,7 @@ module.exports = {
       if (!interaction.guildId) return interaction.reply({ content: 'Lệnh này chỉ dùng trong server.', flags: MessageFlags.Ephemeral });
       if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được kết thúc ván đang diễn ra.', flags: MessageFlags.Ephemeral });
       const id = interaction.options.getString('mavan', true).trim();
-      const handlers = [forceEndBlackjackTable, forceEndBlackjackSession, forceEndPokerSession, forceEndMinesSession, forceEndChinchiroSession, forceEndHardcoreSession];
+      const handlers = [forceEndBlackjackTable, forceEndBlackjackSession, forceEndPokerSession, forceEndMinesSession, forceEndChinchiroSession, forceEndHardcoreSession, forceEndRpsDuel, forceEndBlackjackDuel, forceEndSharedRound];
       let result = null;
       for (const handler of handlers) {
         result = handler(id, interaction.guildId, interaction.user.id);
@@ -89,7 +92,7 @@ module.exports = {
         if (!message) return;
         if (result.table) return message.edit({ embeds: [blackjackTableEmbed(result.table, result.state)], components: [] });
         if (session.variant === 'poker' && JSON.parse(session.state_json).mode === 'multiplayer') return message.edit({ embeds: [pokerTableEmbed(result.state, session.id)], components: [], allowedMentions: { parse: [] } });
-        const gameName = session.variant === 'blackjack' ? 'XÌ DÁCH' : session.variant === 'poker' ? 'POKER' : 'GAME';
+        const gameName = result.gameName || (session.variant === 'blackjack' ? 'XÌ DÁCH' : session.variant === 'poker' ? 'POKER' : 'GAME');
         const endedEmbed = new EmbedBuilder().setColor(0xE74C3C).setTitle(`🛑 ${gameName} ĐÃ ĐƯỢC KẾT THÚC`).setDescription(`Mã ván: \`${session.id}\`\nQuản trị viên đã đóng ván này. Tiền cược đã khóa được hoàn lại.`);
         return message.edit({ embeds: [endedEmbed], components: [] });
       }).catch(() => {});

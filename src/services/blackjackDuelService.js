@@ -227,6 +227,20 @@ async function handleBlackjackDuelButton(interaction) {
   }
 }
 
+function forceEndBlackjackDuel(id, guildId, adminId, now = Date.now()) {
+  return db.transaction(() => {
+    const duel = getBlackjackDuel(id);
+    if (!duel || duel.guild_id !== String(guildId) || !['invited', 'playing'].includes(duel.status)) return null;
+    const refunded = duel.status === 'playing';
+    if (refunded) for (const userId of [duel.challenger_id, duel.opponent_id]) {
+      creditCoins({ guildId: duel.guild_id, userId, amount: duel.stake, reason: `blackjack-duel:admin-refund:${adminId}:${duel.id}`,
+        operationId: `refund:blackjack-duel:${duel.id}:${userId}` });
+    }
+    db.prepare("UPDATE blackjack_duels SET status = 'expired', updated_at = ? WHERE id = ?").run(now, duel.id);
+    return { session: duel, participants: [duel.challenger_id, duel.opponent_id], refunded, gameName: 'XÌ DÁCH ĐẤU NGƯỜI' };
+  })();
+}
+
 async function expireDueBlackjackDuels(client, logger = console, now = Date.now()) {
   const due = db.prepare("SELECT id FROM blackjack_duels WHERE status IN ('invited','playing') AND expires_at <= ?").all(now); let expired = 0;
   for (const row of due) {
@@ -242,4 +256,4 @@ function startBlackjackDuelMaintenance(client, logger = console) {
   run(); const timer = setInterval(run, 15_000); timer.unref?.(); return timer;
 }
 
-module.exports = { INVITE_TTL_MS, PLAY_TTL_MS, getBlackjackDuel, duelState, createBlackjackDuel, setBlackjackDuelMessage, acceptBlackjackDuel, declineBlackjackDuel, playBlackjackDuel, expireBlackjackDuel, playerResult, privateHandText, blackjackDuelEmbed, inviteButtons, playButtons, replayButtons, handleBlackjackDuelButton, expireDueBlackjackDuels, startBlackjackDuelMaintenance };
+module.exports = { INVITE_TTL_MS, PLAY_TTL_MS, forceEndBlackjackDuel, getBlackjackDuel, duelState, createBlackjackDuel, setBlackjackDuelMessage, acceptBlackjackDuel, declineBlackjackDuel, playBlackjackDuel, expireBlackjackDuel, playerResult, privateHandText, blackjackDuelEmbed, inviteButtons, playButtons, replayButtons, handleBlackjackDuelButton, expireDueBlackjackDuels, startBlackjackDuelMaintenance };
