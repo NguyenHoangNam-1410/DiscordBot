@@ -166,8 +166,7 @@ function answerVuaSession(guildId, answer, now = Date.now()) {
   const session = getVuaSession(guildId);
   if (!session) return { ok: false, error: 'NO_SESSION' };
   if (isExpiredChallenge(session.question, now)) return { ok: false, error: 'EXPIRED', expiration: expireVuaChallenge(guildId, now) };
-  const compact = value => normalizeVietnamese(value).replace(/\s+/g, '');
-  if (compact(answer) !== compact(session.question.answer)) return { ok: true, correct: false, question: session.question };
+  if (normalizeVietnamese(answer) !== normalizeVietnamese(session.question.answer)) return { ok: true, correct: false, question: session.question };
   const question = session.question;
   session.question = nextVuaQuestion(session.recent, configuredQuestionOptions(guildId, { now }));
   session.recent = [...session.recent.filter(item => item !== normalizeVietnamese(session.question.answer)), normalizeVietnamese(session.question.answer)].slice(-RECENT_WORD_LIMIT);
