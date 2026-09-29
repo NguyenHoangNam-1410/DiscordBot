@@ -14,7 +14,7 @@ const TABLE_GUESTS = 3;
 
 const MIN_BET = 10;
 const MAX_BET = 100_000;
-const REGULAR_WIN_MULTIPLIER = 1.9;
+const REGULAR_WIN_MULTIPLIER = 2;
 const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 const SUITS = ['♠', '♥', '♦', '♣'];
 

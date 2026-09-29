@@ -157,7 +157,11 @@ function useVietnameseHint(guildId, channelId, effect) {
   if (!session) throw new Error('NO_ACTIVE_GAME');
   if (games.isExpiredChallenge(session.question)) throw new Error('QUESTION_EXPIRED');
   const syllables = String(session.question.answer).trim().split(/\s+/u);
-  if (effect === 'quiz_word_count') return `🔢 Gợi ý riêng cho bạn: đáp án có **${syllables.length} tiếng**.`;
+  if (effect === 'quiz_word_count') {
+    const plain = String(session.question.answer).normalize('NFD').replace(/\p{M}/gu, '').replace(/[đĐ]/g, 'd').toLocaleLowerCase('vi-VN');
+    const vowelCount = Array.from(plain).filter(letter => /[aeiouy]/u.test(letter)).length;
+    return `🔢 Gợi ý riêng cho bạn: đáp án có **${syllables.length} tiếng** và **${vowelCount} nguyên âm**.`;
+  }
   if (effect === 'quiz_first_word') return `🔎 Gợi ý riêng cho bạn: tiếng đầu tiên trong đáp án là **${syllables[0]}**.`;
   const lengths = syllables.map(word => Array.from(word).length);
   return `🔢 Gợi ý riêng cho bạn: số chữ cái mỗi tiếng là **[${lengths.join('] [')}]**.`;
