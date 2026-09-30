@@ -63,5 +63,7 @@ void sawFiveCard; void sawBust;
 
 const { simulate } = require('../src/services/blackjackSim');
 const rtp = simulate('basic', 150_000).rtp;
-assert(rtp > 85 && rtp < 100.5, `RTP Xì dách bất thường: ${rtp}`);
+// Chủ server chọn thắng thường x2: với luật 16/15 và cùng quắc = hòa, người chơi chiến thuật cơ bản có RTP ~107% (>100%).
+// Chặn trên chỉ để bắt lỗi luật; nếu muốn nhà cái có lợi thế, hạ REGULAR_WIN_MULTIPLIER (1,8 ≈ 99%).
+assert(rtp > 100 && rtp < 115, `RTP Xì dách bất thường: ${rtp}`);
 console.log(JSON.stringify({ ok: true, blackjackSim: compared, basicRtp: +rtp.toFixed(1) }));

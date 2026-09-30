@@ -90,6 +90,8 @@ async function run() {
 
   assert.match(require('../src/commands/nhiemvu').rewardText({ coins: 30000, diamonds: 100, item: 'rps_counter_charm', quantity: 1 }), /Bùa Khắc Chế ×1/);
   assert.deepEqual(require('../src/commands/nhiemvu').data.toJSON().options.map(option => option.name), ['kiemtra', 'nhan', 'diemdanh', 'tanthu']);
+  // Gacha phía trên có thể ngẫu nhiên mở thành tựu; nhận trước để lần nhận kế tiếp chắc chắn trống
+  await require('../src/commands/nhiemvu').execute(interaction({ options: { getSubcommand: () => 'nhan', getString: () => null } }));
   const claimAll = interaction({ options: { getSubcommand: () => 'nhan', getString: () => null } });
   await require('../src/commands/nhiemvu').execute(claimAll);
   assert.match(claimAll.replies[0].content, /chưa có phần thưởng/i);
