@@ -6,7 +6,7 @@ const { resultBlock, coins } = require('../utils/rewardText');
 function rankLabel(rank) { return { normal: 'Thường', elite: 'Elite', boss: 'BOSS', mimic: 'Mimic', ancient_mimic: 'Ancient Mimic' }[rank] || rank; }
 function encounterText(state) {
   const encounter = state.encounter;
-  if (state.phase === 'upgrade') return `🎁 **NÂNG CẤP SAU MỐC TẦNG ${encounter.milestone}**\nChọn đúng một nút để nhận nâng cấp trong phần còn lại của run. +HP tăng giới hạn tối đa và hồi tối đa 20 HP; Rút thưởng chốt payout.`;
+  if (state.phase === 'upgrade') return `🎁 **NÂNG CẤP SAU MỐC TẦNG ${encounter.milestone}**\nChọn đúng một nút để nhận nâng cấp trong phần còn lại của run. +HP tăng giới hạn tối đa và hồi 30 HP; Rút thưởng chốt payout.`;
   if (state.phase === 'summit') return '🏆 **ĐÃ CHINH PHỤC TẦNG 999**\nĐây là giới hạn Sinh tồn. Bấm **Rút thưởng** để nhận payout hiện tại.';
   if (encounter.type === 'combat') {
     const skillHint = state.classKey === 'assassin' ? 'Shadow Step gây thêm sát thương và né phản công.'
@@ -60,7 +60,7 @@ function hardcoreRows(sessionId, state, disabled, classes) {
   if (disabled) return [new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId(`replay:hardcore:${state.stake}:${state.classKey}`).setLabel('Chơi lại').setEmoji('🔁').setStyle(ButtonStyle.Success))];
   const turn = state.turn; const retreat = button(sessionId, turn, 'retreat', state.cleared ? 'Rút thưởng' : 'Bỏ run', state.cleared ? '💰' : '🏳️', ButtonStyle.Danger);
   if (state.phase === 'summit') return [new ActionRowBuilder().addComponents(retreat)];
-  if (state.phase === 'upgrade') return [new ActionRowBuilder().addComponents(button(sessionId, turn, 'upgrade_attack', '+3 Damage', '⚔️', ButtonStyle.Primary), button(sessionId, turn, 'upgrade_hp', '+20 HP', '❤️', ButtonStyle.Success), button(sessionId, turn, 'upgrade_defense', '+4 Defense', '🛡️', ButtonStyle.Secondary), button(sessionId, turn, 'upgrade_luck', '+2 Luck', '🍀', ButtonStyle.Secondary), retreat)];
+  if (state.phase === 'upgrade') return [new ActionRowBuilder().addComponents(button(sessionId, turn, 'upgrade_attack', '+5 Damage', '⚔️', ButtonStyle.Primary), button(sessionId, turn, 'upgrade_hp', '+30 HP', '❤️', ButtonStyle.Success), button(sessionId, turn, 'upgrade_defense', '+6 Defense', '🛡️', ButtonStyle.Secondary), button(sessionId, turn, 'upgrade_luck', '+2 Luck', '🍀', ButtonStyle.Secondary), retreat)];
   const type = state.encounter.type;
   if (type === 'combat') return [new ActionRowBuilder().addComponents(button(sessionId, turn, 'attack', 'Tấn công', '⚔️', ButtonStyle.Primary), button(sessionId, turn, 'defend', 'Phòng thủ', '🛡️', ButtonStyle.Secondary), button(sessionId, turn, 'skill', classes[state.classKey].skill, '✨', ButtonStyle.Success, state.energy < 2), button(sessionId, turn, 'potion', `Bình máu (${state.potions})`, '🧪', ButtonStyle.Secondary, state.potions <= 0), retreat)];
   if (type === 'chest') return [new ActionRowBuilder().addComponents(button(sessionId, turn, 'open', 'Mở hòm', '🔓', ButtonStyle.Primary), button(sessionId, turn, 'inspect', 'Kiểm tra', '👁️', ButtonStyle.Secondary, state.encounter.inspected), button(sessionId, turn, 'sell', 'Bán hòm', '💵', ButtonStyle.Success), button(sessionId, turn, 'leave', 'Tránh Mimic', '🚪', ButtonStyle.Secondary, !state.encounter.revealed), retreat)];

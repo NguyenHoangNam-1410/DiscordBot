@@ -20,7 +20,7 @@ const STALE_MS = 7 * 24 * 60 * 60 * 1000;
 const CLASSES = Object.freeze({
   barbarian: { name: 'Barbarian', emoji: '🪓', hp: 120, damageMin: 15, damageMax: 21, defense: 8, accuracy: 80, evasion: 8, critChance: 0.1, resistance: 5, energy: 3, skill: 'Iron Will' },
   assassin: { name: 'Assassin', emoji: '🗡️', hp: 95, damageMin: 14, damageMax: 20, defense: 5, accuracy: 90, evasion: 18, critChance: 0.18, resistance: 5, energy: 3, skill: 'Shadow Step' },
-  sorceress: { name: 'Sorceress', emoji: '🔮', hp: 85, damageMin: 18, damageMax: 25, defense: 3, accuracy: 85, evasion: 10, critChance: 0.12, resistance: 15, energy: 4, skill: 'Arcane Burst' },
+  sorceress: { name: 'Sorceress', emoji: '🔮', hp: 100, damageMin: 18, damageMax: 25, defense: 5, accuracy: 85, evasion: 12, critChance: 0.12, resistance: 15, energy: 4, skill: 'Arcane Burst' },
 });
 
 const ENEMY_NAMES = ['Cave Rat', 'Wild Boar', 'Moon Panther', 'Steel Drone', 'Dark Cultist', 'Lost Soul', 'Storm Shaman', 'Stone Golem', 'Void Spawn', 'Annihilator'];
@@ -79,7 +79,7 @@ function resolvePhysicalAttack(attacker, defender, level, options = {}) {
 function makeEnemy(floor, rank = 'normal', forcedName = null) {
   const rankStats = {
     normal: [1, 1, 1], champion: [1.4, 1.15, 1.4], elite: [2, 1.35, 2],
-    boss: [floor <= 10 ? 2.7 : 4, floor <= 10 ? 1.3 : 1.6, 4], mimic: [1.7, 1.25, 1.8], ancient_mimic: [2.8, 1.5, 3],
+    boss: [floor <= 10 ? 2.7 : 3.2, floor <= 10 ? 1.3 : 1.35, 4], mimic: [1.7, 1.25, 1.8], ancient_mimic: [2.8, 1.5, 3],
   }[rank];
   const scale = enemyScale(floor);
   const maxHp = Math.min(1_000_000_000_000, Math.max(10, Math.floor(28 * scale.hp * rankStats[0])));
@@ -88,7 +88,7 @@ function makeEnemy(floor, rank = 'normal', forcedName = null) {
   const name = forcedName || (rank === 'boss' ? pick(BOSS_NAMES) : rank.includes('mimic') ? (rank === 'ancient_mimic' ? 'Ancient Mimic' : 'Mimic') : pick(ENEMY_NAMES));
   return {
     type: 'combat', rank, name, hp: maxHp, maxHp, damageMin, damageMax,
-    defense: Math.floor(4 + floor * (floor <= 10 ? 2.5 : 5) * (rank === 'boss' ? 1.25 : 1)),
+    defense: Math.floor(4 + floor * 1.8 * (rank === 'boss' ? 1.25 : 1)),
     accuracy: 70 + floor * 3, evasion: 4 + Math.floor(floor / 4), critChance: rank === 'boss' ? 0.1 : 0.05,
     critDamage: 1.5, critResistance: rank === 'boss' ? 0.08 : 0, resistance: Math.min(60, Math.floor(floor * 0.8)),
     magicChance: rank === 'boss' ? 0.35 : rank === 'elite' || rank === 'ancient_mimic' ? 0.2 : 0.05,
@@ -192,10 +192,12 @@ function completeFloor(state, log, rewardMultiplier = 1) {
   state.energy = Math.min(state.maxEnergy, state.energy + 1);
   if (clearedFloor % 5 === 0) {
     state.bosses += 1;
-    if (clearedFloor <= 10) {
-      state.hp = Math.min(state.maxHp, state.hp + Math.max(20, Math.floor(state.maxHp * 0.3)));
-      state.potions = Math.min(5, state.potions + 1);
-    }
+    state.maxHp += 6;
+    state.damageMin += 1;
+    state.damageMax += 1;
+    state.hp = state.maxHp;
+    state.potions = Math.min(5, state.potions + 2);
+    log += '\n🏆 Thắng boss: +6 HP tối đa, +1 sát thương, hồi đầy máu và nhận 2 bình máu.';
   }
   if (clearedFloor >= COMPLETION_FLOOR) state.completed = true;
   if (clearedFloor >= MAX_FLOOR) { state.floor = MAX_FLOOR; state.phase = 'summit'; state.encounter = { type: 'summit' }; state.lastLog = log; return; }
@@ -344,9 +346,9 @@ const actionTx = db.transaction(({ sessionId, userId, expectedTurn, action }) =>
   if (state.phase === 'summit') return { settled: true, state, result: finishRun(session, state, 'summit') };
 
   if (state.phase === 'upgrade') {
-    if (action === 'upgrade_attack') { state.damageMin += 3; state.damageMax += 3; state.lastLog = '⚔️ +3 sát thương.'; }
-    else if (action === 'upgrade_hp') { state.maxHp += 20; state.hp = Math.min(state.maxHp, state.hp + 20); state.lastLog = '❤️ +20 HP tối đa và hiện tại.'; }
-    else if (action === 'upgrade_defense') { state.defense += 4; state.lastLog = '🛡️ +4 Defense.'; }
+    if (action === 'upgrade_attack') { state.damageMin += 5; state.damageMax += 5; state.lastLog = '⚔️ +5 sát thương.'; }
+    else if (action === 'upgrade_hp') { state.maxHp += 30; state.hp = Math.min(state.maxHp, state.hp + 30); state.lastLog = '❤️ +30 HP tối đa và hiện tại.'; }
+    else if (action === 'upgrade_defense') { state.defense += 6; state.lastLog = '🛡️ +6 Defense.'; }
     else if (action === 'upgrade_luck') { state.luck += 2; state.lastLog = '🍀 +2 Luck.'; }
     else throw new Error('INVALID_ACTION');
     setNextEncounter(state, `${state.lastLog}\nBạn tiến vào tầng ${state.floor}.`);

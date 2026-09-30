@@ -18,8 +18,6 @@ const configChoices = GAME_CONFIG_KEYS.map(key => ({ name: `${GAME_CONFIG_SPECS[
 const tierChoices = ['R', 'SR', 'SSR', 'UR'].map(value => ({ name: value, value }));
 const buffChoices = [
   { name: 'Nhân số xu drop', value: 'coins' },
-  { name: 'Nhân số gem drop', value: 'diamonds' },
-  { name: 'Nhân tỷ lệ rơi vật phẩm game', value: 'free_pull' },
   { name: 'Tăng tỷ lệ ra vật phẩm Gacha', value: 'gacha_luck' },
 ];
 const buffLabels = Object.fromEntries(buffChoices.map(item => [item.value, item.name]));

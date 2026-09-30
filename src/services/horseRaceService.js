@@ -4,7 +4,6 @@ const { db } = require('../db');
 const { spendCoins, settleReservedGame } = require('./economyService');
 const { formatCoins } = require('../utils/economy');
 const { getGameBetLimit } = require('./gameBetLimitService');
-const { consumeHighestEffect, consumeActiveEffect } = require('./effectStateService');
 const { createFairness, fairInt, fairShuffle } = require('./fairnessService');
 const horseRaceRepository = require('./horseRaceRepository');
 const horseRaceView = require('./horseRaceView');
@@ -364,22 +363,11 @@ const settleHorseTx = db.transaction((roundId, forcedWinner = null) => {
   }
   const settlements = [];
   for (const [userId, summary] of users) {
-    const effect = consumeHighestEffect(round.guild_id, userId, ['horse_jackpot', 'horse_second_insurance']);
-    let insurance = 0; let jackpot = 0;
-    if (effect?.effect_id === 'horse_jackpot') {
-      jackpot = summary.bets.reduce((sum, bet) => sum + bet.payout, 0); summary.payout += jackpot;
-    } else if (effect?.effect_id === 'horse_second_insurance') {
-      insurance = summary.bets.filter(bet => bet.choice === order[1]).reduce((sum, bet) => sum + bet.amount, 0); summary.payout += insurance;
-    }
-    let consolation = 0;
-    if (!effect && order[2]) {
-      const thirdStake = summary.bets.filter(bet => bet.choice === order[2]).reduce((sum, bet) => sum + bet.amount, 0);
-      if (thirdStake && consumeActiveEffect(round.guild_id, userId, 'horse_consolation')) { consolation = Math.floor(thirdStake * 0.2); summary.payout += consolation; }
-    }
+    const insurance = 0; const jackpot = 0; const consolation = 0;
     const outcome = summary.payout > summary.stake ? 'win' : summary.payout === summary.stake ? 'draw' : 'loss';
     const account = settleReservedGame({ guildId: round.guild_id, userId, payout: summary.payout, stake: summary.stake, game: 'duangua', outcome,
       operationId: `settle:duangua:${round.id}:${userId}` });
-    settlements.push({ userId, ...summary, insurance, consolation, jackpot, itemEffect: effect?.effect_id || null, outcome, balance: account.balance, achievements: account.unlockedAchievements, experienceGained: account.experienceGained, levelUps: account.levelUps, bonusDrops: account.bonusDrops });
+    settlements.push({ userId, ...summary, insurance, consolation, jackpot, itemEffect: null, outcome, balance: account.balance, achievements: account.unlockedAchievements, experienceGained: account.experienceGained, levelUps: account.levelUps, bonusDrops: account.bonusDrops });
   }
   horseRaceRepository.saveSettlement(roundId, { market, fair: planned.fair, debuff, winner, order, plan, settlements });
   return { round: { ...round, status: 'closed' }, market, fair: planned.fair, debuff, winner, order, plan, settlements };

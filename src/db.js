@@ -40,6 +40,13 @@ CREATE TABLE IF NOT EXISTS economy_transactions (
 CREATE INDEX IF NOT EXISTS idx_economy_transactions_created ON economy_transactions(created_at);
 CREATE INDEX IF NOT EXISTS idx_economy_transactions_user ON economy_transactions(guild_id, user_id, created_at DESC);
 
+CREATE TABLE IF NOT EXISTS chinchiro_cooldowns (
+  guild_id TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  next_at INTEGER NOT NULL,
+  PRIMARY KEY (guild_id, user_id)
+);
+
 CREATE TABLE IF NOT EXISTS profile_cosmetics (
   guild_id TEXT NOT NULL,
   user_id TEXT NOT NULL,

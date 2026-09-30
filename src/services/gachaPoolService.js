@@ -72,11 +72,12 @@ function listGachaPool(guildId, { luckMultiplier = 1, tierMultipliers = {} } = {
   });
   const custom = [...overrides.values()].map(row => ({ rewardKey: row.reward_key, kind: row.kind, itemId: row.item_id,
     name: row.display_name, tier: row.tier, amount: row.amount, weight: row.weight, customized: true }));
+  const available = [...defaults, ...custom].filter(entry => entry.kind !== 'item' || getCatalogItem(entry.itemId)?.gachaEligible !== false);
   const luck = Number.isFinite(Number(luckMultiplier)) ? Math.max(1, Number(luckMultiplier)) : 1;
   const rates = guildId === '__default__' ? { ...DEFAULT_TIER_RATES } : tierRates(guildId);
-  const enabled = tier => [...defaults, ...custom].filter(entry => entry.tier === tier && entry.weight > 0).length;
+  const enabled = tier => available.filter(entry => entry.tier === tier && entry.weight > 0).length;
   const order = tier => TIERS.indexOf(tier);
-  const entries = [...defaults, ...custom].map((entry, index) => ({ entry, index }))
+  const entries = available.map((entry, index) => ({ entry, index }))
     .sort((a, b) => order(a.entry.tier) - order(b.entry.tier) || a.index - b.index).map(({ entry }) => {
       const count = enabled(entry.tier);
       const tierWeight = rates[entry.tier] * (entry.tier === 'XU' ? 1 : luck) * (Number(tierMultipliers[entry.tier]) || 1);

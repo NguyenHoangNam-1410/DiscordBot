@@ -36,7 +36,7 @@ const UTILITY_ITEMS = [
   { id: 'coquay_cuffs', type: 'consumable', name: 'Còng Số 8', effect: 'coquay_cuffs', rarity: 'UR', price: 0, shopEligible: false, stackable: true, tradeable: true, description: 'Dùng bằng nút trong ván Cò quay Nga: lần tới súng chuyển sang Bot, Bot mất lượt và súng quay lại tay bạn. Mỗi ván dùng tối đa 1 lần.' },
   { id: 'mines_radar', type: 'consumable', name: 'Radar Nhỏ', effect: 'mines_radar', rarity: 'SR', price: shopPrice(1200), stackable: true, tradeable: true, description: 'Quét một khu vực 3x3 và báo chính xác số mìn trong đó.' },
   { id: 'mines_blast_shield', type: 'consumable', name: 'Giáp Chống Nổ', effect: 'mines_blast_shield', rarity: 'SSR', price: shopPrice(3000), stackable: true, tradeable: true, description: 'Vô hiệu hóa quả mìn đầu tiên đạp trúng trong ván Mines kế tiếp.' },
-  { id: 'poker_insurance', type: 'consumable', name: 'Bảo Hiểm Cược Poker', effect: 'poker_insurance', rarity: 'SSR', price: shopPrice(3200), stackable: true, tradeable: true, description: 'Hoàn ngẫu nhiên 25%–50% tiền cược khi thua trắng ở Showdown kế tiếp.' },
+  { id: 'poker_insurance', type: 'consumable', name: 'Bảo Hiểm Cược Poker', effect: 'poker_insurance', rarity: 'SSR', price: shopPrice(3200), stackable: true, tradeable: true, description: 'Chỉ dùng với Poker bot: hoàn ngẫu nhiên 25%–50% tiền cược khi thua trắng ở Showdown kế tiếp.' },
   { id: 'living_dictionary', type: 'consumable', name: 'Từ Điển Sống', effect: 'quiz_living_dictionary', rarity: 'UR', price: shopPrice(5500), stackable: true, tradeable: true, description: 'Giải ngay câu hỏi khó Vua tiếng Việt trước khi hết giờ và nhận đủ thưởng câu khó: xu ×10 và 10 kim cương.' },
   { id: 'vietnamese_first_word', type: 'consumable', name: 'Mở Đầu Từ Điển', effect: 'quiz_first_word', rarity: 'SSR', price: shopPrice(3000), stackable: true, tradeable: true, description: 'Tiết lộ tiếng đầu tiên trong đáp án của câu Vua tiếng Việt hiện hành; chỉ bạn nhìn thấy.' },
   { id: 'vietnamese_syllable_lengths', type: 'consumable', name: 'Đếm Âm Tiết', effect: 'quiz_syllable_lengths', rarity: 'SR', price: shopPrice(1600), stackable: true, tradeable: true, description: 'Tiết lộ số chữ cái của từng tiếng trong đáp án câu Vua tiếng Việt hiện hành; chỉ bạn nhìn thấy.' },
@@ -51,7 +51,14 @@ const COSMETICS = PROFILE_COSMETICS.map(item => ({
   shopEligible: item.shopEligible === false ? false : !DEFAULT_PROFILE_ITEMS.has(item.id), stackable: false, tradeable: false,
   effect: 'profile_color', description: 'Đổi màu chủ đạo của thẻ /hoso.',
 }));
-const CATALOG = Object.freeze([...COSMETICS, ...UTILITY_ITEMS]);
+const RETIRED_SHARED_EFFECTS = new Set([
+  'baucua_magnifier', 'baucua_small_lens', 'baucua_blank_insurance',
+  'taixiu_total_scope', 'taixiu_no_triple', 'taixiu_edge_insurance', 'dice_divine_eye',
+  'horse_second_insurance', 'horse_jackpot', 'horse_consolation',
+]);
+const CATALOG = Object.freeze([...COSMETICS, ...UTILITY_ITEMS].map(item => RETIRED_SHARED_EFFECTS.has(item.effect)
+  ? { ...item, shopEligible: false, gachaEligible: false, retired: true, description: 'Ngừng hỗ trợ: vật phẩm không còn tác dụng trong ván nhiều người. Vật phẩm đã sở hữu vẫn được giữ trong kho.' }
+  : item));
 const BY_ID = new Map(CATALOG.map(item => [item.id, item]));
 function getCatalogItem(id) { return BY_ID.get(String(id)) || null; }
 function listCatalog({ shopEligible = false } = {}) {

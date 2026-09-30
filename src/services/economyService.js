@@ -171,9 +171,10 @@ function settleReservedGame({ guildId, userId, payout, stake, game, outcome, ope
   const value = Number(payout);
   if (!Number.isSafeInteger(value) || value < 0 || value > 10_000_000) throw new Error('INVALID_PAYOUT');
   if (!Number.isSafeInteger(stake) || stake < 0) throw new Error('INVALID_BET');
+  const rewardEligible = countGame && stake >= 1_000;
   return settleWithProgress(
-    { guildId, userId, amount: value, reason: `${game}:${outcome}`, outcome: countGame ? outcome : null, operationId },
-    { guildId, userId, game, outcome, amount: value, stake }, countGame,
+    { guildId, userId, amount: value, reason: `${game}:${outcome}`, outcome: rewardEligible ? outcome : null, operationId },
+    { guildId, userId, game, outcome, amount: value, stake }, rewardEligible,
   );
 }
 

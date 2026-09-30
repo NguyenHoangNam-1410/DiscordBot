@@ -31,7 +31,7 @@ const GAME_CONFIG_SPECS = Object.freeze({
   }),
   GAME_EXP_BASE: Object.freeze({
     label: 'EXP cơ bản mỗi ván', type: 'integer', min: 0, max: 10_000, fallback: 10,
-    note: 'EXP tối thiểu nhận được sau mỗi ván có kết quả.',
+    note: 'Áp dụng đủ khi cược từ 100.000 xu; cược nhỏ hơn nhận EXP theo tỷ lệ. Dưới 1.000 xu không cộng tiến độ.',
   }),
   GAME_EXP_WIN_COIN_DIVISOR: Object.freeze({
     label: 'Mốc xu đổi EXP thắng', type: 'integer', min: 1, max: 1_000_000, fallback: 2_000,
@@ -55,19 +55,19 @@ const GAME_CONFIG_SPECS = Object.freeze({
   }),
   GAME_DIAMOND_DROP_CHANCE: Object.freeze({
     label: 'Tỷ lệ drop gem sau ván', type: 'number', min: 0, max: 1, fallback: 0.05,
-    note: 'Nhập từ 0 đến 1; ví dụ 0.05 tương ứng 5%.', clampEnv: true,
+    note: 'Đã ngừng: sau ván chỉ còn drop xu.', clampEnv: true, retired: true,
   }),
   GAME_DIAMOND_DROP_MIN: Object.freeze({
     label: 'Gem drop tối thiểu', type: 'integer', min: 1, max: 1_000_000, fallback: 1,
-    note: 'Số gem thấp nhất khi roll trúng drop.',
+    note: 'Đã ngừng: sau ván chỉ còn drop xu.', retired: true,
   }),
   GAME_DIAMOND_DROP_MAX: Object.freeze({
     label: 'Gem drop tối đa', type: 'integer', min: 1, max: 1_000_000, fallback: 3,
-    note: 'Số gem cao nhất khi roll trúng drop.',
+    note: 'Đã ngừng: sau ván chỉ còn drop xu.', retired: true,
   }),
   GAME_ITEM_DROP_MULTIPLIER: Object.freeze({
     label: 'Hệ số tỷ lệ rơi vật phẩm game', type: 'number', min: 0, max: 10, fallback: 1,
-    note: 'Nhân tỷ lệ rơi vật phẩm riêng của từng game sau mỗi ván (0 để tắt). Buff sự kiện được nhân thêm.', clampEnv: true,
+    note: 'Đã ngừng: sau ván chỉ còn drop xu.', clampEnv: true, retired: true,
   }),
   GACHA_RATE_XU: Object.freeze({
     label: 'Tỷ lệ Gacha · bậc XU (xu)', type: 'number', min: 0, max: 100, fallback: 50,
@@ -91,11 +91,11 @@ const GAME_CONFIG_SPECS = Object.freeze({
   }),
   DIVINE_EYE_MAX_BET: Object.freeze({
     label: 'Giới hạn cược khi dùng Mắt Thần', type: 'integer', min: 10, max: 100_000, fallback: 10_000,
-    note: 'Tổng cược tối đa của người chơi trong ván đã dùng Mắt Thần.',
+    note: 'Đã ngừng: vật phẩm không áp dụng cho ván nhiều người.', retired: true,
   }),
 });
 
-const GAME_CONFIG_KEYS = Object.freeze(Object.keys(GAME_CONFIG_SPECS));
+const GAME_CONFIG_KEYS = Object.freeze(Object.keys(GAME_CONFIG_SPECS).filter(key => !GAME_CONFIG_SPECS[key].retired));
 
 function getSpec(key) {
   const spec = GAME_CONFIG_SPECS[String(key)];

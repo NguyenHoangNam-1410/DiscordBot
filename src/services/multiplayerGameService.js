@@ -13,8 +13,6 @@ const { db } = require('../db');
 const { spendCoins, settleReservedGame } = require('./economyService');
 const { formatCoins } = require('../utils/economy');
 const { getGameBetLimit } = require('./gameBetLimitService');
-const { getActiveEffect, consumeActiveEffect, effectMetadata } = require('./effectStateService');
-const { getGameConfig } = require('./gameConfigService');
 const { createFairness, fairInt } = require('./fairnessService');
 const { resultLine, resultBlock, bonusLine, coins } = require('../utils/rewardText');
 
@@ -68,8 +66,8 @@ function roundEmbed(round) {
   const maxBet = getGameBetLimit(round.guild_id, round.game);
   const closeUnix = Math.floor(round.closes_at / 1000);
   const description = round.game === 'baucua'
-    ? 'Chọn một hoặc nhiều linh vật. Linh vật xuất hiện 1/2/3 lần trả lãi 1×/2×/3× tiền cược.'
-    : 'Tài/Xỉu và Chẵn/Lẻ trả 1:1, nhưng thua khi ra bộ ba. Bộ ba bất kỳ trả 34:1. Tổng cụ thể trả theo độ hiếm.';
+    ? 'Chọn một hoặc nhiều linh vật. Linh vật xuất hiện 1/2/3 lần trả lãi 1×/2×/3× tiền cược. Vật phẩm không áp dụng.'
+    : 'Mỗi người chỉ chọn một cửa trong ván và có thể cược thêm vào cửa đó. Tài/Xỉu và Chẵn/Lẻ trả 1:1, nhưng thua khi ra bộ ba. Bộ ba bất kỳ trả 34:1. Tổng cụ thể trả theo độ hiếm. Vật phẩm không áp dụng.';
   const embed = new EmbedBuilder().setColor(round.game === 'baucua' ? 0xE67E22 : 0x8E44AD)
     .setTitle(`🎲 ${gameLabel(round.game)} · ĐANG NHẬN CƯỢC`)
     .setDescription(`## 🎯 CÁCH CHƠI\n${description}\n\n## ⏳ KHÓA CƯỢC <t:${closeUnix}:R>\nBấm nút bên dưới để đặt cược · Khóa lúc <t:${closeUnix}:T>`)
@@ -83,12 +81,7 @@ function roundEmbed(round) {
 }
 
 function effectiveBetLimit(round, userId) {
-  const maxBet = getGameBetLimit(round.guild_id, round.game);
-  const divineEye = getActiveEffect(round.guild_id, userId, 'dice_divine_eye');
-  const metadata = effectMetadata(divineEye);
-  return metadata.roundId === round.id
-    ? Math.min(maxBet, getGameConfig(round.guild_id, 'DIVINE_EYE_MAX_BET'))
-    : maxBet;
+  return getGameBetLimit(round.guild_id, round.game);
 }
 
 function getRound(roundId) {
@@ -123,6 +116,10 @@ const placeBetTx = db.transaction(({ roundId, userId, choice, amount }) => {
   if (!round || round.status !== 'open' || round.closes_at <= Date.now()) throw new Error('ROUND_CLOSED');
   if (!validChoice(round.game, choice)) throw new Error('INVALID_CHOICE');
   if (!Number.isSafeInteger(amount) || amount < MIN_BET || amount > MAX_BET_PER_CHOICE) throw new Error('INVALID_BET');
+  if (round.game === 'taixiu') {
+    const existing = db.prepare('SELECT choice FROM multiplayer_bets WHERE round_id=? AND user_id=? LIMIT 1').get(roundId, String(userId));
+    if (existing && existing.choice !== choice) throw new Error('ONE_CHOICE_PER_ROUND');
+  }
   const effectiveMaxBet = effectiveBetLimit(round, userId);
   const current = db.prepare('SELECT amount FROM multiplayer_bets WHERE round_id = ? AND user_id = ? AND choice = ?').get(roundId, String(userId), choice)?.amount || 0;
   const total = db.prepare('SELECT COALESCE(SUM(amount), 0) AS amount FROM multiplayer_bets WHERE round_id = ? AND user_id = ?').get(roundId, String(userId)).amount;
@@ -153,34 +150,21 @@ function calculatePayout(game, choice, amount, result) {
   return 0;
 }
 
-function rollResult(game, forcedDice = null, serverSeed = null, modifiers = {}) {
+function rollResult(game, forcedDice = null, serverSeed = null) {
   if (game === 'baucua') {
     const keys = Object.keys(BAUCUA);
     const symbols = forcedDice || [0, 1, 2].map(index => keys[serverSeed ? fairInt(serverSeed, game, index, keys.length) : crypto.randomInt(keys.length)]);
     return { symbols };
   }
   const dice = [...(forcedDice || [0, 1, 2].map(index => serverSeed ? fairInt(serverSeed, game, index, 6) + 1 : crypto.randomInt(1, 7)))];
-  if (modifiers?.noTriple && dice.every(value => value === dice[0])) dice[2] = dice[2] % 6 + 1;
   return { dice, total: dice.reduce((sum, value) => sum + value, 0), triple: dice.every(value => value === dice[0]) };
-}
-
-function roundInsurance(round, userId, summary, bets, result) {
-  const none = { amount: 0, rate: 0 };
-  if (round.game === 'baucua') {
-    if (summary.payout > 0 || !consumeActiveEffect(round.guild_id, userId, 'baucua_blank_insurance')) return none;
-    return { amount: Math.floor(summary.stake * 0.35), rate: 35 };
-  }
-  const edgeStake = bets.filter(bet => bet.payout === 0 && ((result.total === 10 && bet.choice === 'tai') || (result.total === 11 && bet.choice === 'xiu')))
-    .reduce((sum, bet) => sum + bet.amount, 0);
-  if (!edgeStake || !consumeActiveEffect(round.guild_id, userId, 'taixiu_edge_insurance')) return none;
-  return { amount: Math.floor(edgeStake * 0.5), rate: 50 };
 }
 
 const settleTx = db.transaction((roundId, forcedDice = null) => {
   const round = getRound(roundId);
   if (!round || round.status !== 'open') return null;
   let stored = {}; try { stored = JSON.parse(round.result_json || '{}'); } catch {}
-  const result = rollResult(round.game, forcedDice, forcedDice ? null : stored.fair?.serverSeed, stored.modifiers);
+  const result = rollResult(round.game, forcedDice, forcedDice ? null : stored.fair?.serverSeed);
   const bets = db.prepare('SELECT * FROM multiplayer_bets WHERE round_id = ?').all(roundId);
   const users = new Map();
   const individualBets = new Map();
@@ -195,14 +179,10 @@ const settleTx = db.transaction((roundId, forcedDice = null) => {
   }
   const settlements = [];
   for (const [userId, summary] of users) {
-    const eye = getActiveEffect(round.guild_id, userId, 'dice_divine_eye');
-    if (effectMetadata(eye).roundId === round.id) consumeActiveEffect(round.guild_id, userId, 'dice_divine_eye');
-    const insurance = roundInsurance(round, userId, summary, individualBets.get(userId) || [], result);
-    summary.payout += insurance.amount;
     const outcome = summary.payout > summary.stake ? 'win' : summary.payout === summary.stake ? 'draw' : 'loss';
     const account = settleReservedGame({ guildId: round.guild_id, userId, payout: summary.payout, stake: summary.stake, game: round.game, outcome,
       operationId: `settle:${round.game}:${round.id}:${userId}` });
-    settlements.push({ userId, ...summary, insurance: insurance.amount, insuranceRate: insurance.rate, outcome, balance: account.balance, achievements: account.unlockedAchievements, experienceGained: account.experienceGained, levelUps: account.levelUps, bonusDrops: account.bonusDrops, bets: individualBets.get(userId) || [] });
+    settlements.push({ userId, ...summary, insurance: 0, insuranceRate: 0, outcome, balance: account.balance, achievements: account.unlockedAchievements, experienceGained: account.experienceGained, levelUps: account.levelUps, bonusDrops: account.bonusDrops, bets: individualBets.get(userId) || [] });
   }
   db.prepare("UPDATE multiplayer_rounds SET status = 'closed', result_json = ? WHERE id = ?").run(JSON.stringify({ result, settlements, fair: stored.fair }), roundId);
   return { round: { ...round, status: 'closed' }, result, settlements, bets, fair: stored.fair };
@@ -318,6 +298,7 @@ async function handleBetModal(interaction) {
   catch (error) {
     const content = error.code === 'INSUFFICIENT_FUNDS' ? 'Bạn không đủ xu để đặt cược.'
       : error.message === 'ROUND_CLOSED' ? 'Ván đã khóa cược.'
+        : error.message === 'ONE_CHOICE_PER_ROUND' ? 'Mỗi người chỉ được chọn một cửa Tài Xỉu trong một ván. Bạn có thể cược thêm vào cửa đã chọn.'
         : error.message === 'BET_LIMIT' ? `Tổng cược tối đa của bạn trong ván này là ${formatCoins(error.maxBet)} :coin:.`
           : 'Mức cược phải là số nguyên từ 10 đến 100.000 xu.';
     return reject(content);

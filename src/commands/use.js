@@ -50,6 +50,7 @@ function errorText(error) {
     NO_HIDDEN_SAFE_CELL: 'Không còn ô an toàn ẩn nào để tìm.',
     NO_ACTIVE_SHARED_ROUND: 'Channel này chưa có ván Bầu cua/Tài xỉu đang nhận cược.',
     ROUND_EFFECT_ACTIVE: 'Ván này đã có hiệu ứng cùng loại; vật phẩm không bị trừ.',
+    MULTIPLAYER_ITEMS_DISABLED: 'Vật phẩm không còn áp dụng cho các ván nhiều người; vật phẩm không bị trừ.',
     NO_RADAR_AREA: 'Không còn khu vực phù hợp để Radar quét.',
     HARD_QUESTION_REQUIRED: 'Từ Điển Sống chỉ dùng được khi câu hỏi hiện tại là câu khó.',
     QUESTION_EXPIRED: 'Câu hỏi khó đã hết thời gian; vật phẩm không bị trừ.',

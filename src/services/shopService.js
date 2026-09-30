@@ -42,6 +42,9 @@ function upsertShopItem({ guildId, catalogId, displayName, price, stock = null, 
 
 function seedShop(guildId) {
   const now = Date.now();
+  const retired = listCatalog().filter(item => item.retired).map(item => item.id);
+  if (retired.length) db.prepare(`UPDATE shop_items SET listed=0,active=0,updated_at=? WHERE guild_id=? AND cosmetic_id IN (${retired.map(() => '?').join(',')})`)
+    .run(now, String(guildId), ...retired);
   const hiddenLegacy = db.prepare(`UPDATE shop_items SET listed=0,active=0,updated_at=?
     WHERE guild_id=? AND created_by='system' AND (listed<>0 OR active<>0)`).run(Date.now(), String(guildId)).changes;
   const cleanser = getCatalogItem('effect_cleanser');
@@ -198,7 +201,7 @@ function requirementFailure(item, account) {
 }
 const purchaseTx = db.transaction(({ guildId, userId, itemId, quantity = 1 }) => {
   const amount = integer(quantity, 1, 100); const listing = getShopItem(guildId, itemId);
-  if (!listing || !listing.active || !listing.catalog) throw new Error('SHOP_ITEM_NOT_FOUND');
+  if (!listing || !listing.active || !listing.catalog || listing.catalog.retired) throw new Error('SHOP_ITEM_NOT_FOUND');
   getProfileAppearance(guildId, userId);
   if (!listing.catalog.stackable && amount !== 1) throw new Error('NON_STACKABLE_QUANTITY');
   if (!listing.catalog.stackable && getInventoryQuantity(guildId, userId, listing.cosmetic_id)) throw new Error('ALREADY_OWNED');

@@ -121,9 +121,10 @@ function gameExperience(outcome, payout = 0, stake = 0, guildId = null) {
   const base = guildId === null ? 10 : getGameConfig(guildId, 'GAME_EXP_BASE');
   const divisor = guildId === null ? 2_000 : getGameConfig(guildId, 'GAME_EXP_WIN_COIN_DIVISOR');
   const maximum = guildId === null ? 500 : getGameConfig(guildId, 'GAME_EXP_MAX');
-  if (outcome !== 'win') return Math.min(maximum, base);
+  const stakeFactor = Math.min(1, Math.max(0, Number(stake) || 0) / 100_000);
+  if (outcome !== 'win') return Math.floor(Math.min(maximum, base) * stakeFactor);
   const wonCoins = Math.max(0, Math.floor(Number(payout) || 0) - Math.max(0, Math.floor(Number(stake) || 0)));
-  return Math.min(maximum, base + Math.floor(wonCoins / divisor));
+  return Math.floor(Math.min(maximum, base + Math.floor(wonCoins / divisor)) * stakeFactor);
 }
 
 module.exports = { getPlayerProgression, xpForNextLevel, changeDiamonds, addDiamonds, spendDiamonds, addFreePulls,

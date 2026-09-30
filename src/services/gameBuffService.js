@@ -1,7 +1,7 @@
 const crypto = require('node:crypto');
 const { db } = require('../db');
 
-const BUFF_TYPES = Object.freeze(['coins', 'diamonds', 'free_pull', 'gacha_luck']);
+const BUFF_TYPES = Object.freeze(['coins', 'gacha_luck']);
 
 function cleanExpired(guildId, now = Date.now()) {
   return db.prepare('DELETE FROM game_reward_buffs WHERE guild_id=? AND ends_at<=?').run(String(guildId), now).changes;
@@ -9,7 +9,7 @@ function cleanExpired(guildId, now = Date.now()) {
 
 function listBuffs(guildId, now = Date.now()) {
   cleanExpired(guildId, now);
-  return db.prepare('SELECT * FROM game_reward_buffs WHERE guild_id=? ORDER BY ends_at,buff_type').all(String(guildId));
+  return db.prepare("SELECT * FROM game_reward_buffs WHERE guild_id=? AND buff_type IN ('coins','gacha_luck') ORDER BY ends_at,buff_type").all(String(guildId));
 }
 
 function getBuff(guildId, type, now = Date.now()) {
@@ -44,40 +44,20 @@ function gachaLuckMultiplier(guildId, now = Date.now()) {
   return buff ? buff.chance_bps / 10_000 : 1;
 }
 
-function rollGameDrops({ guildId, userId, game, now = Date.now(), randomInt = crypto.randomInt }) {
-  const drops = [];
+function rollGameDrops({ guildId, userId, game, stake = 0, now = Date.now(), randomInt = crypto.randomInt }) {
+  const cap = Math.floor(Math.max(0, Number(stake) || 0) * 0.01);
+  if (cap < 1) return [];
   const config = require('./gameConfigService');
-  const specs = [
-    { type: 'coins', prefix: 'GAME_COIN_DROP' },
-    { type: 'diamonds', prefix: 'GAME_DIAMOND_DROP' },
-  ];
-  for (const spec of specs) {
-    const chance = config.getGameConfig(guildId, `${spec.prefix}_CHANCE`);
-    if (chance <= 0 || randomInt(10_000) >= Math.round(chance * 10_000)) continue;
-    const minimum = config.getGameConfig(guildId, `${spec.prefix}_MIN`);
-    const maximum = config.getGameConfig(guildId, `${spec.prefix}_MAX`);
-    const baseAmount = minimum === maximum ? minimum : randomInt(minimum, maximum + 1);
-    const buff = getBuff(guildId, spec.type, now);
-    const multiplier = buff ? buff.chance_bps / 10_000 : 1;
-    const amount = Math.max(1, Math.floor(baseAmount * multiplier));
-    if (spec.type === 'coins') {
-      require('./economyService').creditCoins({ guildId, userId, amount, reason: `drop:${game}:coins` });
-    } else require('./playerLevelService').addDiamonds(guildId, userId, amount, { reason: `drop:${game}:diamonds`, now });
-    drops.push({ type: spec.type, amount, baseAmount, multiplier });
-  }
-  // Vật phẩm riêng của game: tỷ lệ theo game × hệ số cấu hình × buff sự kiện (loại buff `free_pull` nay nhân tỷ lệ rơi vật phẩm).
-  const itemDrops = require('./gameItemDropService');
-  const itemBuff = getBuff(guildId, 'free_pull', now);
-  const multiplier = config.getGameConfig(guildId, 'GAME_ITEM_DROP_MULTIPLIER') * (itemBuff ? itemBuff.chance_bps / 10_000 : 1);
-  const chance = itemDrops.dropChance(game, multiplier);
-  if (chance > 0 && randomInt(10_000) < Math.round(chance * 10_000)) {
-    const item = itemDrops.pickDropItem(game, randomInt);
-    if (item) {
-      require('./shopService').addInventory(guildId, userId, item.id, 1, now);
-      drops.push({ type: 'item', itemId: item.id, name: item.name, rarity: item.rarity, game, amount: 1 });
-    }
-  }
-  return drops;
+  const chance = config.getGameConfig(guildId, 'GAME_COIN_DROP_CHANCE');
+  if (chance <= 0 || randomInt(10_000) >= Math.round(chance * 10_000)) return [];
+  const minimum = config.getGameConfig(guildId, 'GAME_COIN_DROP_MIN');
+  const maximum = config.getGameConfig(guildId, 'GAME_COIN_DROP_MAX');
+  const baseAmount = minimum === maximum ? minimum : randomInt(minimum, maximum + 1);
+  const buff = getBuff(guildId, 'coins', now);
+  const multiplier = buff ? buff.chance_bps / 10_000 : 1;
+  const amount = Math.min(cap, Math.max(1, Math.floor(baseAmount * multiplier)));
+  require('./economyService').creditCoins({ guildId, userId, amount, reason: `drop:${game}:coins` });
+  return [{ type: 'coins', amount, baseAmount, multiplier }];
 }
 
 module.exports = { BUFF_TYPES, listBuffs, getBuff, setBuff, removeBuff, gachaLuckMultiplier, rollGameDrops };

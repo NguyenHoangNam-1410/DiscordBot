@@ -5,9 +5,8 @@ const { getAccount, spendCoins, settleReservedGame, creditCoins } = require('./e
 const { getGameBetLimit } = require('./gameBetLimitService');
 const { formatCoins } = require('../utils/economy');
 const { createDeck, bestHand, compareHands, describeHand, awardPots } = require('./pokerEngine');
-const { createFairness, fairInt } = require('./fairnessService');
+const { createFairness } = require('./fairnessService');
 const { getGameConfig } = require('./gameConfigService');
-const { consumeActiveEffect } = require('./effectStateService');
 const { resultLine, resultBlock, bonusLine, coins } = require('../utils/rewardText');
 
 const MAX_PLAYERS = 2;
@@ -151,7 +150,6 @@ function startPokerHand(sessionId, actorId, forcedDeck = null) {
     if (state.mode !== 'multiplayer' || state.phase !== 'lobby') throw new Error('TABLE_CLOSED');
     if (state.players.length !== MAX_PLAYERS) throw new Error('NEED_OPPONENT');
     const deck = forcedDeck ? [...forcedDeck] : createDeck(state.variant === 'sixplus', state.fair.serverSeed);
-    for (const player of state.players) player.pokerInsurance = consumeActiveEffect(session.guild_id, player.id, 'poker_insurance');
     for (let card = 0; card < VARIANTS[state.variant].holes; card += 1) for (const player of state.players) player.hole.push(deck.pop());
     state.deck = deck; state.board = [deck.pop(), deck.pop(), deck.pop()]; state.phase = 'betting'; state.street = 'flop'; state.currentBet = 0; state.raises = 0;
     for (const player of state.players) { player.committed = player.lobbyAnte; player.lobbyAnte = 0; player.allIn = player.stack === 0; }
@@ -166,11 +164,7 @@ function settle(session, state, reason = 'showdown') {
   const scores = {}; for (const player of activePlayers(state)) scores[player.id] = bestHand(player.hole, state.board, state.variant);
   const awarded = awardPots(state.players, scores); const results = [];
   for (const player of state.players) {
-    let payout = awarded.awards[player.id] || 0; let insurance = 0; let insurancePercent = 0;
-    if (player.pokerInsurance && !player.folded && reason === 'showdown' && payout === 0) {
-      insurancePercent = state.fair?.serverSeed ? fairInt(state.fair.serverSeed, `poker-insurance:${player.id}`, state.fairCounter++, 26) + 25 : crypto.randomInt(25, 51);
-      insurance = Math.max(1, Math.floor(player.committed * insurancePercent / 100)); payout += insurance;
-    }
+    const payout = awarded.awards[player.id] || 0; const insurance = 0; const insurancePercent = 0;
     player.stack += awarded.awards[player.id] || 0;
     const outcome = payout > player.committed ? 'win' : payout === player.committed ? 'draw' : 'loss';
     const account = settleReservedGame({ guildId: session.guild_id, userId: player.id, payout, stake: player.committed, game: 'poker', outcome,

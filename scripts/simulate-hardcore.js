@@ -6,6 +6,7 @@ process.env.DB_PATH = path.join(temporary, 'simulation.sqlite');
 const { db } = require('../src/db');
 const hardcore = require('../src/services/hardcoreService');
 const runs = Math.max(10, Math.min(1000, Number(process.argv[2]) || 100));
+const targetFloor = Math.max(11, Math.min(100, Number(process.argv[3]) || 50));
 
 function actionFor(state) {
   if (state.phase === 'upgrade') return state.hp < state.maxHp * 0.6 ? 'upgrade_hp' : 'upgrade_attack';
@@ -29,7 +30,7 @@ for (const classKey of Object.keys(hardcore.CLASSES)) {
     const userId = `${classKey}-${i}`;
     const started = hardcore.startHardcore({ guildId: 'simulation', userId, channelId: 'c', stake: 10, classKey });
     let state = started.state;
-    for (let turn = 0; turn < 350 && state.cleared < 11; turn += 1) {
+    for (let turn = 0; turn < 2_000 && state.cleared < targetFloor; turn += 1) {
       const played = hardcore.playHardcore({ sessionId: started.session.id, userId, expectedTurn: state.turn, action: actionFor(state) });
       state = played.state;
       if (played.settled) break;
@@ -37,8 +38,10 @@ for (const classKey of Object.keys(hardcore.CLASSES)) {
     floors.push(state.cleared);
     if (hardcore.getHardcoreByUser('simulation', userId)) hardcore.playHardcore({ sessionId: started.session.id, userId, expectedTurn: state.turn, action: 'retreat' });
   }
-  report[classKey] = { runs, passedFloor5: floors.filter(floor => floor >= 5).length,
-    passedFloor10: floors.filter(floor => floor >= 10).length, passedFloor11: floors.filter(floor => floor >= 11).length,
+  const sorted = [...floors].sort((a, b) => a - b);
+  report[classKey] = { runs, passedFloor10: floors.filter(floor => floor >= 10).length,
+    passedFloor15: floors.filter(floor => floor >= 15).length, passedFloor25: floors.filter(floor => floor >= 25).length,
+    passedFloor50: floors.filter(floor => floor >= 50).length, maxFloor: sorted.at(-1), medianFloor: sorted[Math.floor(runs / 2)],
     meanFloor: +(floors.reduce((sum, floor) => sum + floor, 0) / runs).toFixed(2) };
 }
 console.log(JSON.stringify(report, null, 2));
