@@ -75,7 +75,7 @@ const noDrops = guildId => { for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_D
   const optimalValue = engine.solve().value(3, 3, 0, 0, 'player', 1);
   const rtp = optimalValue * coquay.PAYOUT_MULTIPLIER;
   assert(optimalValue > 0.5 && optimalValue < 0.6, `người chơi tối ưu thắng ${optimalValue}`);
-  assert(rtp > 0.9 && rtp < 0.97, `RTP khi đánh tối ưu ${rtp}`);
+  assert(coquay.PAYOUT_MULTIPLIER === 2 && rtp > 1.09 && rtp < 1.13, `RTP khi đánh tối ưu (người chơi đi trước) ${rtp}`);
   function play(botPolicy, n = 20000) {
     let wins = 0;
     for (let i = 0; i < n; i += 1) {
@@ -102,8 +102,8 @@ const noDrops = guildId => { for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_D
   assert.throws(() => coquay.startCoquay({ guildId: guild, userId: 'winner', channelId: 'c', stake: 100 }), /ACTIVE_SESSION/);
   setState(win.session.id, { chamber: [T, F], hp: { player: 3, bot: 1 } });
   const won = coquay.playCoquay({ sessionId: win.session.id, userId: 'winner', action: 'shoot', arg: 'bot' });
-  assert.equal(won.result.outcome, 'win'); assert.equal(won.result.payout, 85_000);
-  assert.equal(balance(guild, 'winner'), START + 100_000 - 50_000 + 85_000);
+  assert.equal(won.result.outcome, 'win'); assert.equal(won.result.payout, 100_000);
+  assert.equal(balance(guild, 'winner'), START + 100_000 - 50_000 + 100_000);
   assert.equal(coquay.getCoquayByUser(guild, 'winner'), null);
 
   const lose = coquay.startCoquay({ guildId: guild, userId: 'loser', channelId: 'c', stake: 500 });
