@@ -39,7 +39,7 @@ assert.deepEqual(require('../src/commands/vatpham').data.toJSON().options.map(op
   ['cuahang', 'mua', 'tui', 'sudung', 'tang', 'quay', 'chitiet']);
 assert.equal(require('../src/commands/quantri').data.toJSON().options.length, 25);
 const adminOptionNames = require('../src/commands/quantri').data.toJSON().options.map(option => option.name);
-assert(['themgacha', 'dattylegacha', 'xemgacha', 'datbuff'].every(name => adminOptionNames.includes(name)));
+assert(['themgacha', 'batgacha', 'xemgacha', 'datbuff'].every(name => adminOptionNames.includes(name)));
 assert(!require('../src/commands/xu').data.toJSON().options.some(option => option.name === 'top'));
 assert(require('../src/commands/nhiemvu').data.toJSON().options.some(option => option.name === 'nhan' && option.options.some(choice => choice.name === 'loai')));
 assert(require('../src/commands/game').data.toJSON().options.some(option => option.name === 'economy'));
@@ -154,7 +154,8 @@ assert.equal(levels.gameExperience('loss', 999999, 1), 10);
 assert.equal(levels.gameExperience('win', 1_000_000, 0), 500);
 levels.addDiamonds('gacha-guild', 'alice', 1_000);
 const gacha = require('../src/services/gachaService');
-assert.deepEqual([0, 2500, 4500, 5500, 8000, 9500, 9900].map(roll => gacha.rollGacha(roll).tier), ['XU', 'XU', 'XU', 'R', 'SSR', 'SSR', 'UR']);
+// vị trí 0–9999 theo thứ tự bậc với tỷ lệ cố định XU 30% · R 30% · SR 20% · SSR 15% · UR 5%
+assert.deepEqual([0, 2999, 3000, 5999, 6000, 7999, 8000, 9499, 9500, 9999].map(roll => gacha.rollGacha(roll).tier), ['XU', 'XU', 'R', 'R', 'SR', 'SR', 'SSR', 'SSR', 'UR', 'UR']);
 const singlePull = gacha.pullGacha({ guildId: 'gacha-guild', userId: 'alice', pulls: 1, rolls: [0], now: 1000 });
 assert.equal(singlePull.results[0].coins, 10_000);
 const tenPull = gacha.pullGacha({ guildId: 'gacha-guild', userId: 'alice', pulls: 10, rolls: Array(10).fill(0), now: 2000 });
@@ -162,7 +163,7 @@ assert(tenPull.results.some(result => result.kind === 'item' && ['SR', 'SSR', 'U
 assert.equal(tenPull.progression.diamonds, 0);
 require('../src/services/shopService').addInventory('gacha-guild', 'alice', gacha.TICKETS[1], 1, 3000);
 const ticketsBefore = gacha.getTicketBalances('gacha-guild', 'alice').single;
-const ticketPull = gacha.pullGacha({ guildId: 'gacha-guild', userId: 'alice', pulls: 1, rolls: [5500], now: 3001 });
+const ticketPull = gacha.pullGacha({ guildId: 'gacha-guild', userId: 'alice', pulls: 1, rolls: [8000], now: 3001 });
 assert.equal(ticketPull.usedFreePull, true);
 assert.equal(ticketPull.paymentType, gacha.TICKETS[1]);
 assert(['SSR', 'UR'].includes(ticketPull.results[0].tier));
@@ -181,41 +182,102 @@ assert.equal(gachaDuplicate.duplicate, true);
 assert.deepEqual(gachaDuplicate.results, gachaFirst.results);
 const gachaPool = require('../src/services/gachaPoolService');
 assert.equal(Math.round(gachaPool.listGachaPool('custom-gacha').reduce((sum, entry) => sum + entry.rate, 0)), 100);
-assert.throws(() => gachaPool.addGachaItem('custom-gacha', 'living_dictionary', 'SSR', 10, 'admin'), /INVALID_GACHA_TIER/);
-const addedPoolItem = gachaPool.addGachaItem('custom-gacha', 'living_dictionary', 'UR', 10, 'admin');
-assert(Math.abs(addedPoolItem.rate - 10) < 0.02);
-const disabledPoolItem = gachaPool.setGachaRate('custom-gacha', 'living_dictionary', 0, 'admin');
+// Tỷ lệ theo độ hiếm cố định và không phụ thuộc số vật phẩm trong bậc; R phải cao hơn SR
+const tierRatesOf = guild => Object.fromEntries(gachaPool.tierSummary(guild).map(row => [row.tier, row.rate]));
+const baseRates = tierRatesOf('custom-gacha');
+assert.deepEqual(Object.fromEntries(Object.entries(baseRates).map(([tier, rate]) => [tier, Math.round(rate * 100) / 100])), { XU: 30, R: 30, SR: 20, SSR: 15, UR: 5 });
+assert(baseRates.R > baseRates.SR && baseRates.SR > baseRates.SSR && baseRates.SSR > baseRates.UR);
+assert.throws(() => gachaPool.addGachaItem('custom-gacha', 'living_dictionary', 'SSR', 'admin'), /INVALID_GACHA_TIER/);
+const urBefore = gachaPool.listGachaPool('custom-gacha').filter(entry => entry.tier === 'UR' && entry.weight > 0);
+const addedPoolItem = gachaPool.addGachaItem('custom-gacha', 'living_dictionary', 'UR', 'admin');
+assert.equal(addedPoolItem.weight, 1);
+const urAfter = gachaPool.listGachaPool('custom-gacha').filter(entry => entry.tier === 'UR' && entry.weight > 0);
+assert.equal(urAfter.length, urBefore.length, 'living_dictionary đã có sẵn trong pool nên không thêm bản sao');
+assert(Math.abs(tierRatesOf('custom-gacha').UR - 5) < 1e-9, 'thêm vật phẩm không đổi tỷ lệ bậc');
+const disabledPoolItem = gachaPool.setGachaEnabled('custom-gacha', 'living_dictionary', false, 'admin');
 assert.equal(disabledPoolItem.rate, 0);
+assert(Math.abs(tierRatesOf('custom-gacha').UR - 5) < 1e-9, 'tắt một vật phẩm không đổi tỷ lệ bậc');
+const remainingUr = gachaPool.listGachaPool('custom-gacha').filter(entry => entry.tier === 'UR' && entry.weight > 0);
+assert(remainingUr.every(entry => Math.abs(entry.rate - 5 / remainingUr.length) < 1e-9), 'các vật phẩm còn lại trong bậc chia đều');
+assert.equal(gachaPool.setGachaEnabled('custom-gacha', 'living_dictionary', true, 'admin').weight, 1);
+// Đổi tỷ lệ bậc bằng cấu hình; bậc SR/SSR/UR không được về 0
+const rateConfig = require('../src/services/gameConfigService');
+rateConfig.setGameConfig('custom-gacha', 'GACHA_RATE_R', 60, 'admin');
+assert(Math.abs(tierRatesOf('custom-gacha').R - 60 / 130 * 100) < 1e-9, 'tỷ lệ bậc được chuẩn hóa về 100%');
+assert.throws(() => rateConfig.setGameConfig('custom-gacha', 'GACHA_RATE_UR', 0, 'admin'), /INVALID_GAME_CONFIG_VALUE/);
+rateConfig.resetGameConfig('custom-gacha', 'GACHA_RATE_R');
+// Mô phỏng: 200.000 lượt random thật phải bám tỷ lệ bậc dù mỗi bậc có số vật phẩm rất khác nhau
+{
+  const counts = { XU: 0, R: 0, SR: 0, SSR: 0, UR: 0 }; const perItem = new Map(); const N = 200_000;
+  for (let i = 0; i < N; i += 1) { const result = gacha.rollGacha(null, 'custom-gacha'); counts[result.tier] += 1; if (result.tier === 'UR') perItem.set(result.itemId, (perItem.get(result.itemId) || 0) + 1); }
+  for (const [tier, expected] of Object.entries({ XU: 0.30, R: 0.30, SR: 0.20, SSR: 0.15, UR: 0.05 })) assert(Math.abs(counts[tier] / N - expected) < 0.006, `bậc ${tier} ra ${(counts[tier] / N * 100).toFixed(2)}%`);
+  assert(counts.R > counts.SR, 'R phải nhiều hơn SR');
+  const urShare = [...perItem.values()].map(count => count / counts.UR);
+  assert(urShare.length === urAfter.length && urShare.every(share => Math.abs(share - 1 / urAfter.length) < 0.05), 'vật phẩm UR ra đều nhau');
+}
 const buffs = require('../src/services/gameBuffService');
 const buffNow = Date.now();
 const dropConfig = require('../src/services/gameConfigService');
-for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_GACHA_DROP_CHANCE']) dropConfig.setGameConfig('buff-guild', key, 1, 'admin');
+for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_ITEM_DROP_MULTIPLIER']) dropConfig.setGameConfig('buff-guild', key, 1, 'admin');
 dropConfig.setGameConfig('buff-guild', 'GAME_COIN_DROP_MIN', 250, 'admin');
 dropConfig.setGameConfig('buff-guild', 'GAME_COIN_DROP_MAX', 250, 'admin');
 dropConfig.setGameConfig('buff-guild', 'GAME_DIAMOND_DROP_MAX', 7, 'admin');
 dropConfig.setGameConfig('buff-guild', 'GAME_DIAMOND_DROP_MIN', 7, 'admin');
 buffs.setBuff({ guildId: 'buff-guild', type: 'coins', percent: 200, hours: 2, updatedBy: 'admin', now: buffNow });
 buffs.setBuff({ guildId: 'buff-guild', type: 'diamonds', percent: 200, hours: 2, updatedBy: 'admin', now: buffNow });
-buffs.setBuff({ guildId: 'buff-guild', type: 'free_pull', percent: 100, hours: 2, updatedBy: 'admin', now: buffNow });
+dropConfig.setGameConfig('buff-guild', 'GAME_ITEM_DROP_MULTIPLIER', 10, 'admin');
+buffs.setBuff({ guildId: 'buff-guild', type: 'free_pull', percent: 1000, hours: 2, updatedBy: 'admin', now: buffNow });
 buffs.setBuff({ guildId: 'buff-guild', type: 'gacha_luck', percent: 200, hours: 2, updatedBy: 'admin', now: buffNow });
 const buffSettlement = require('../src/services/economyService').recordGameResult({ guildId: 'buff-guild', userId: 'alice', game: 'mines', outcome: 'win' });
-assert.deepEqual(buffSettlement.bonusDrops.map(drop => drop.type), ['coins', 'diamonds', 'free_pull']);
+assert.deepEqual(buffSettlement.bonusDrops.map(drop => drop.type), ['coins', 'diamonds', 'item']);
+const buffItemDrop = buffSettlement.bonusDrops.find(drop => drop.type === 'item');
+assert(require('../src/services/gameItemDropService').dropPool('mines').some(item => item.id === buffItemDrop.itemId), 'chỉ rơi vật phẩm của chính game Mines');
+assert.equal(require('../src/services/shopService').getInventoryQuantity('buff-guild', 'alice', buffItemDrop.itemId), 1);
 assert.equal(buffSettlement.balance, 1_500);
 assert.equal(levels.getPlayerProgression('buff-guild', 'alice').diamonds, 14);
-assert.equal(gacha.getTicketBalances('buff-guild', 'alice').single, 1);
+assert.equal(gacha.getTicketBalances('buff-guild', 'alice').single, 0, 'không còn rơi vé Gacha dùng chung');
 assert.equal(buffs.gachaLuckMultiplier('buff-guild', buffNow), 2);
 assert.equal(buffs.listBuffs('buff-guild', buffNow + 3 * 3_600_000).length, 0);
-for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_GACHA_DROP_CHANCE']) dropConfig.setGameConfig('drop-rate-guild', key, 0, 'admin');
+for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_ITEM_DROP_MULTIPLIER']) dropConfig.setGameConfig('drop-rate-guild', key, 0, 'admin');
 assert.deepEqual(buffs.rollGameDrops({ guildId: 'drop-rate-guild', userId: 'alice', game: 'mines', randomInt: () => 0 }), []);
 dropConfig.setGameConfig('drop-rate-guild', 'GAME_DIAMOND_DROP_MAX', 4, 'admin');
 dropConfig.setGameConfig('drop-rate-guild', 'GAME_DIAMOND_DROP_MIN', 2, 'admin');
-dropConfig.setGameConfig('drop-rate-guild', 'GAME_GACHA_DROP_MAX', 3, 'admin');
-dropConfig.setGameConfig('drop-rate-guild', 'GAME_GACHA_DROP_MIN', 2, 'admin');
 dropConfig.setGameConfig('drop-rate-guild', 'GAME_DIAMOND_DROP_CHANCE', 1, 'admin');
-dropConfig.setGameConfig('drop-rate-guild', 'GAME_GACHA_DROP_CHANCE', 1, 'admin');
 const rangedDrops = buffs.rollGameDrops({ guildId: 'drop-rate-guild', userId: 'alice', game: 'mines',
   randomInt: (minimum, maximum) => maximum === undefined ? 0 : maximum - 1 });
-assert.deepEqual(rangedDrops.map(drop => [drop.type, drop.amount]), [['diamonds', 4], ['free_pull', 3]]);
+assert.deepEqual(rangedDrops.map(drop => [drop.type, drop.amount]), [['diamonds', 4]]);
+// Thưởng vật phẩm theo game: mỗi game một tỷ lệ riêng, chỉ rơi vật phẩm của chính game đó, độ hiếm cố định
+const itemDrop = require('../src/services/gameItemDropService');
+const dropGames = ['baucua', 'taixiu', 'duangua', 'oantuti', 'blackjack', 'poker', 'mines', 'chinchiro', 'coquay', 'vuatiengviet'];
+assert(new Set(dropGames.map(game => itemDrop.GAME_ITEM_DROP_CHANCE[game])).size > 1, 'mỗi game có tỷ lệ riêng');
+assert.equal(itemDrop.dropChance('hardcore', 1), 0, 'Sinh tồn chưa có vật phẩm riêng nên không rơi');
+assert.equal(itemDrop.dropChance('mines', 100), 1, 'tỷ lệ tối đa 100%');
+const { itemGames } = require('../src/services/itemGameService');
+for (const game of dropGames) {
+  const items = itemDrop.dropPool(game);
+  assert(items.length > 0, `${game} phải có vật phẩm riêng`);
+  assert(items.every(item => itemGames(item).includes(game) && !['gacha_ticket_1', 'gacha_ticket_10', 'effect_cleanser'].includes(item.id)), `${game} không được rơi vật phẩm chung`);
+  for (let i = 0; i < 300; i += 1) { const picked = itemDrop.pickDropItem(game); assert(items.some(item => item.id === picked.id)); }
+}
+{
+  // độ hiếm cố định, không phụ thuộc số vật phẩm: Mines có 2 vật phẩm R nhưng R vẫn chỉ chiếm đúng tỷ lệ bậc R
+  const N = 100_000; const counts = {}; const rItems = {};
+  for (let i = 0; i < N; i += 1) { const item = itemDrop.pickDropItem('mines'); counts[item.rarity] = (counts[item.rarity] || 0) + 1; if (item.rarity === 'R') rItems[item.id] = (rItems[item.id] || 0) + 1; }
+  const active = ['R', 'SR', 'SSR'].reduce((sum, rarity) => sum + itemDrop.DROP_RARITY_RATES[rarity], 0);
+  for (const rarity of ['R', 'SR', 'SSR']) assert(Math.abs(counts[rarity] / N - itemDrop.DROP_RARITY_RATES[rarity] / active) < 0.01, `Mines ${rarity}`);
+  assert(!counts.UR, 'Mines không có vật phẩm UR');
+  assert(Object.values(rItems).every(count => Math.abs(count / counts.R - 0.5) < 0.02), 'hai vật phẩm R ra đều nhau');
+  // game khác nhau có tỷ lệ khác nhau
+  const rateOf = (game, n = 60_000) => { let hits = 0; const dropCfg = 'rate-guild'; for (let i = 0; i < n; i += 1) if (require('crypto').randomInt(10_000) < Math.round(itemDrop.dropChance(game, 1) * 10_000)) hits += 1; return hits / n; };
+  assert(Math.abs(rateOf('poker') - 0.06) < 0.01 && Math.abs(rateOf('oantuti') - 0.03) < 0.01);
+}
+dropConfig.setGameConfig('drop-rate-guild', 'GAME_ITEM_DROP_MULTIPLIER', 1, 'admin');
+const forcedDrops = buffs.rollGameDrops({ guildId: 'drop-rate-guild', userId: 'dropper', game: 'poker', randomInt: (minimum, maximum) => maximum === undefined ? 0 : minimum });
+const forcedItem = forcedDrops.find(drop => drop.type === 'item');
+assert(forcedItem && itemGames(require('../src/services/itemCatalogService').getCatalogItem(forcedItem.itemId)).includes('poker'), 'rơi vật phẩm Poker sau ván Poker');
+assert.match(require('../src/utils/progressionView').bonusDropText([forcedItem]), /\*\*.+\*\* ×1 \((R|SR|SSR|UR)\)/);
+dropConfig.setGameConfig('drop-rate-guild', 'GAME_ITEM_DROP_MULTIPLIER', 0, 'admin');
+assert.deepEqual(buffs.rollGameDrops({ guildId: 'drop-rate-guild', userId: 'dropper', game: 'poker', randomInt: () => 0 }).filter(drop => drop.type === 'item'), [], 'hệ số 0 tắt rơi vật phẩm');
 const xpResult = levels.addExperience('level-guild', 'alice', 200, { now: 4000 });
 assert.equal(xpResult.level, 2);
 assert.equal(xpResult.levelUps[0].coins, 10_000);
@@ -298,7 +360,7 @@ for (let seed = 0; seed < 20_000 && hifumiSeed === undefined; seed += 1) {
   if (chinchiro.dealerDecision(dealer.hand) === null && player.hand.kind === 'hifumi') hifumiSeed = String(seed);
 }
 assert.notEqual(hifumiSeed, undefined);
-for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_GACHA_DROP_CHANCE']) dropConfig.setGameConfig('chinchiro-karma-guild', key, 0, 'test');
+for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_ITEM_DROP_MULTIPLIER']) dropConfig.setGameConfig('chinchiro-karma-guild', key, 0, 'test');
 effects.addEffectCharge('chinchiro-karma-guild', 'alice', 'chinchiro_karma');
 effects.addEffectCharge('chinchiro-karma-guild', 'alice', 'chinchiro_otsuki_dice');
 effects.addEffectCharge('chinchiro-karma-guild', 'alice', 'chinchiro_weighted_dice');
@@ -313,7 +375,7 @@ assert.equal(karmaResult.result.payout, 300);
 assert.equal(karmaResult.result.balance, 1200);
 assert.equal(effects.getActiveEffect('chinchiro-karma-guild', 'alice', 'chinchiro_karma'), null);
 assert.equal(effects.getActiveEffect('chinchiro-karma-guild', 'alice', 'chinchiro_otsuki_dice').charges, 1);
-for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_GACHA_DROP_CHANCE']) dropConfig.setGameConfig('chinchiro-hifumi-guild', key, 0, 'test');
+for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_ITEM_DROP_MULTIPLIER']) dropConfig.setGameConfig('chinchiro-hifumi-guild', key, 0, 'test');
 const hifumiGame = chinchiro.startChinchiro({ guildId: 'chinchiro-hifumi-guild', channelId: 'channel', userId: 'alice', stake: 100, forcedSeed: hifumiSeed });
 const hifumiResult = chinchiro.shakeChinchiro(hifumiGame.session.id, 'alice');
 assert.equal(hifumiResult.result.outcome, 'loss');
@@ -354,7 +416,7 @@ const gameConfig = require('../src/services/gameConfigService');
 assert.equal(gameConfig.getGameConfig('config-guild', 'ECONOMY_STARTING_COINS'), economy.STARTING_COINS);
 gameConfig.setGameConfig('config-guild', 'ECONOMY_STARTING_COINS', 4321, 'admin');
 assert.equal(economy.getAccount('config-guild', 'new-player').balance, 4321);
-assert.equal(gameConfig.listGameConfigs('config-guild').length, 20);
+assert.equal(gameConfig.listGameConfigs('config-guild').length, 23);
 assert.throws(() => gameConfig.setGameConfig('config-guild', 'HARD_QUESTION_CHANCE', 2, 'admin'), /INVALID_GAME_CONFIG_VALUE/);
 assert.equal(gameConfig.resetGameConfig('config-guild', 'ECONOMY_STARTING_COINS').customized, false);
 gameConfig.setGameConfig('hard-config-guild', 'HARD_QUESTION_CHANCE', 1, 'admin');
@@ -442,7 +504,7 @@ assert.throws(() => roleRewards.claimWeeklyRoleRewards({ guildId: 'role-reward-g
 assert.equal(economy.getAccount('role-reward-guild', 'alice').balance, 26_000);
 assert.equal(roleRewards.removeWeeklyRoleReward('role-reward-guild', 'vip'), true);
 for (const guildId of ['duel-guild', 'card-guild', 'both-bust-guild', 'poker-guild', 'poker-config-guild']) {
-  for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_GACHA_DROP_CHANCE']) {
+  for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_ITEM_DROP_MULTIPLIER']) {
     gameConfig.setGameConfig(guildId, key, 0, 'test');
   }
 }

@@ -16,7 +16,7 @@ const results = {};
 async function run() {
   const guildId = 'audit';
   setGameConfig(guildId, 'ECONOMY_STARTING_COINS', 0, 'audit');
-  for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_GACHA_DROP_CHANCE']) {
+  for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_ITEM_DROP_MULTIPLIER']) {
     setGameConfig(guildId, key, 0, 'audit');
   }
   const rps = require('../src/services/rpsBotService');

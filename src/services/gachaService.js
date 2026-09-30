@@ -11,13 +11,20 @@ function itemResult(tier, itemId, label = null) {
   const item = getCatalogItem(itemId);
   return { kind: 'item', tier, itemId, name: label || item?.name || itemId, quantity: 1 };
 }
+// `value` là vị trí 0–9999 (điểm cơ bản trên tổng 100%) theo thứ tự bậc XU → R → SR → SSR → UR; bỏ trống thì random thật.
+function pickEntry(entries, value = null) {
+  const total = entries.reduce((sum, entry) => sum + entry.effectiveWeight, 0);
+  if (!total) return null;
+  const unit = value === null || value === undefined ? crypto.randomInt(2 ** 32) / 2 ** 32 : Math.max(0, Math.min(9999, Math.trunc(value))) / 10_000;
+  // +1e-9 để vị trí đúng ranh giới (ví dụ 3000 trên 10000) không bị lùi về bậc trước vì làm tròn số thực.
+  let roll = Math.min(unit * total + 1e-9, total - 1e-9);
+  return entries.find(entry => ((roll -= entry.effectiveWeight) < 0)) || entries.at(-1);
+}
 function rollGacha(value = null, guildId = null, now = Date.now(), tierMultipliers = {}) {
   const luckMultiplier = guildId ? gachaLuckMultiplier(guildId, now) : 1;
   const pool = listGachaPool(guildId || '__default__', { luckMultiplier, tierMultipliers }).filter(entry => entry.effectiveWeight > 0);
-  const total = pool.reduce((sum, entry) => sum + entry.effectiveWeight, 0);
-  if (!total) throw new Error('EMPTY_GACHA_POOL');
-  let roll = value === null || value === undefined ? crypto.randomInt(total) : Math.max(0, Math.min(total - 1, Math.trunc(value)));
-  const selected = pool.find(entry => ((roll -= entry.effectiveWeight) < 0)) || pool.at(-1);
+  const selected = pickEntry(pool, value);
+  if (!selected) throw new Error('EMPTY_GACHA_POOL');
   return selected.kind === 'coins'
     ? { kind: 'coins', tier: selected.tier, coins: selected.amount, name: selected.name }
     : itemResult(selected.tier, selected.itemId, selected.name);
@@ -25,10 +32,8 @@ function rollGacha(value = null, guildId = null, now = Date.now(), tierMultiplie
 function rollGuaranteedHigh(guildId = null, now = Date.now(), minimumTier = 'SR', tierMultipliers = {}) {
   const pool = listGachaPool(guildId || '__default__', { luckMultiplier: guildId ? gachaLuckMultiplier(guildId, now) : 1, tierMultipliers })
     .filter(entry => TIER_ORDER[entry.tier] >= TIER_ORDER[minimumTier] && entry.kind === 'item' && entry.effectiveWeight > 0);
-  if (!pool.length) throw new Error('EMPTY_HIGH_GACHA_POOL');
-  const total = pool.reduce((sum, entry) => sum + entry.effectiveWeight, 0);
-  let roll = crypto.randomInt(total);
-  const selected = pool.find(entry => ((roll -= entry.effectiveWeight) < 0)) || pool.at(-1);
+  const selected = pickEntry(pool);
+  if (!selected) throw new Error('EMPTY_HIGH_GACHA_POOL');
   return itemResult(selected.tier, selected.itemId, selected.name);
 }
 function getTicketBalances(guildId, userId) {

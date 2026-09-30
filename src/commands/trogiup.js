@@ -177,7 +177,7 @@ const PAGES = Object.freeze({
         "🛠️ Cấu hình game",
         "`xemcauhinh` — xem và chỉnh bằng menu · `khoiphuc` — đặt lại về mặc định",
       ],
-      ["🎰 Gacha", "`themgacha` · `dattylegacha` · `xemgacha`"],
+      ["🎰 Gacha", "`themgacha` · `batgacha` · `xemgacha`"],
       [
         "🎁 Drop sau ván",
         "`xemcauhinh` — chỉnh tỷ lệ và khoảng min–max của xu, kim cương, lượt quay bằng menu.",
