@@ -1,9 +1,12 @@
 const crypto = require('node:crypto');
-const { handScore, handType, evaluateHand, initialResult, createShoe } = require('./blackjackService');
+const { handScore, handType, evaluateHand, initialResult, createShoe, PLAYER_MIN_STAND, DEALER_MIN_STAND } = require('./blackjackService');
 
 const UNIT_BET = 1000; // engine floors payouts to whole coins, so simulate a realistic stake instead of 1
 const rankOf = card => card.slice(0, -1);
 const cardValue = card => Math.min(10, handScore([card]).total);
+
+// Luật engine: chỉ được dừng khi có ít nhất PLAYER_MIN_STAND điểm; chiến thuật đòi dừng sớm phải rút thêm.
+function legalAction(cards, action) { return action === 'stand' && handScore(cards).total < PLAYER_MIN_STAND ? 'hit' : action; }
 
 // Mirrors blackjackService.actionTx/settleState for a hand without items: hit, stand, double, one split.
 function playRound(deck, strategy) {
@@ -16,8 +19,8 @@ function playRound(deck, strategy) {
   for (let index = 0; index < hands.length; index += 1) {
     const hand = hands[index];
     while (hand.status === 'playing') {
-      const action = strategy({ cards: hand.cards, dealerUp: dealer[0], canDouble: hand.cards.length === 2,
-        canSplit: !split && hands.length === 1 && hand.cards.length === 2 && rankOf(hand.cards[0]) === rankOf(hand.cards[1]) });
+      const action = legalAction(hand.cards, strategy({ cards: hand.cards, dealerUp: dealer[0], canDouble: hand.cards.length === 2,
+        canSplit: !split && hands.length === 1 && hand.cards.length === 2 && rankOf(hand.cards[0]) === rankOf(hand.cards[1]) }));
       if (action === 'hit') {
         hand.cards.push(draw());
         const score = handScore(hand.cards).total;
@@ -35,14 +38,14 @@ function playRound(deck, strategy) {
       if (hand.status === 'playing' && handType(hand.cards) === 'ngulinh') hand.status = 'stand';
     }
   }
-  while (handScore(dealer).total < 17 && handType(dealer) !== 'ngulinh') dealer.push(draw());
+  while (handScore(dealer).total < DEALER_MIN_STAND && handType(dealer) !== 'ngulinh') dealer.push(draw());
   const stake = hands.reduce((sum, hand) => sum + hand.bet, 0);
   const payout = hands.reduce((sum, hand) => sum + evaluateHand(hand.cards, hand.bet, dealer).payout, 0);
   return { stake, payout, hands: hands.length, natural: false };
 }
 
 const STRATEGIES = Object.freeze({
-  'mimic-dealer': ({ cards }) => (handScore(cards).total < 17 ? 'hit' : 'stand'),
+  'mimic-dealer': ({ cards }) => (handScore(cards).total < PLAYER_MIN_STAND ? 'hit' : 'stand'),
   'basic': ({ cards, dealerUp, canDouble, canSplit }) => {
     const { total, soft } = handScore(cards); const up = cardValue(dealerUp);
     if (canSplit && ['A', '8'].includes(rankOf(cards[0]))) return 'split';
@@ -77,4 +80,4 @@ function simulate(strategyName, rounds, random = max => crypto.randomInt(max)) {
   return { strategy: strategyName, rounds, rtp: payout / stake * 100, naturalRate: naturals / rounds };
 }
 
-module.exports = { playRound, STRATEGIES, simulate };
+module.exports = { playRound, legalAction, STRATEGIES, simulate };

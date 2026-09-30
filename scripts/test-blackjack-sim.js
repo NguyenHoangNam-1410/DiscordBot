@@ -8,7 +8,7 @@ process.env.DB_PATH = testDb;
 
 const economy = require('../src/services/economyService');
 const blackjack = require('../src/services/blackjackService');
-const { playRound, STRATEGIES } = require('../src/services/blackjackSim');
+const { playRound, legalAction, STRATEGIES } = require('../src/services/blackjackSim');
 
 const guildId = 'sim-guild'; const userId = 'sim-player'; const STAKE = 100;
 for (let index = 0; index < 5; index += 1) economy.creditCoins({ guildId, userId, amount: 1_000_000, reason: `sim-fund-${index}` });
@@ -19,8 +19,8 @@ function playWithEngine(deckDrawOrder, strategy) {
   let state = started.state; let result = null;
   for (let guard = 0; guard < 50 && !result; guard += 1) {
     const hand = state.hands[state.active];
-    const action = strategy({ cards: hand.cards, dealerUp: state.dealer[0], canDouble: hand.cards.length === 2,
-      canSplit: !state.split && state.hands.length === 1 && hand.cards.length === 2 && hand.cards[0].slice(0, -1) === hand.cards[1].slice(0, -1) });
+    const action = legalAction(hand.cards, strategy({ cards: hand.cards, dealerUp: state.dealer[0], canDouble: hand.cards.length === 2,
+      canSplit: !state.split && state.hands.length === 1 && hand.cards.length === 2 && hand.cards[0].slice(0, -1) === hand.cards[1].slice(0, -1) }));
     const step = blackjack.playAction({ sessionId: started.session.id, userId, action });
     state = step.state; if (step.settled) result = step.result;
   }
@@ -43,12 +43,25 @@ for (const [name, strategy] of Object.entries(STRATEGIES)) {
   }
 }
 // Rule checks the old simulation got wrong
-const bothBust = playRound(['10♠', '4♦', '2♠', '6♥', 'K♦', '5♣', '10♣'], () => 'hit');
-assert.equal(bothBust.payout, 0, 'người chơi quắc phải thua ngay cả khi nhà cái cũng quắc');
+// người chơi 10+K rút 5 quắc 25; nhà cái 6+8=14 phải rút (dưới 15) và quắc → hòa, hoàn cược
+const bothBust = playRound(['K♠', '5♠', '8♥', 'K♦', '6♣', '10♣'], () => 'hit');
+assert.equal(bothBust.payout, bothBust.stake, 'cả hai cùng quắc phải hòa và hoàn cược');
+// người chơi 10+9 rút 5 quắc 24; nhà cái 10+6=16 đã đủ 15 nên không rút → người chơi thua
+const bustDealerOk = playRound(['5♠', '6♥', '9♦', '10♦', '10♣'], () => 'hit');
+assert.equal(bustDealerOk.payout, 0, 'người chơi quắc, nhà cái không quắc → thua');
+// nhà cái đứng ở 15: nếu rút nhầm thêm 4♠ sẽ có 19 và thắng người chơi 18
+const dealerStands15 = playRound(['4♠', '6♥', '8♦', '9♣', '10♣'], () => 'stand');
+assert.equal(dealerStands15.payout, Math.floor(1000 * blackjack.REGULAR_WIN_MULTIPLIER), 'nhà cái 15 điểm phải dừng; người chơi 18 thắng');
+// nhà cái 14 phải rút thêm: 4♠ → 18, hòa người chơi 18
+const dealerDraws14 = playRound(['4♠', '5♥', '8♦', '9♣', '10♣'], () => 'stand');
+assert.equal(dealerDraws14.payout, dealerDraws14.stake, 'nhà cái 14 điểm phải rút; 18-18 hòa');
+// chiến thuật đòi dừng dưới 16 điểm bị chuyển thành rút
+const { legalAction: legal } = require('../src/services/blackjackSim');
+assert.equal(legal(['5♣', '6♣'], 'stand'), 'hit'); assert.equal(legal(['9♣', '7♣'], 'stand'), 'stand'); assert.equal(legal(['9♣', '7♣'], 'hit'), 'hit');
 assert(sawSplit && sawDouble, 'mô phỏng không bao phủ split/double');
 void sawFiveCard; void sawBust;
 
 const { simulate } = require('../src/services/blackjackSim');
-const rtp = simulate('basic', 20_000).rtp;
+const rtp = simulate('basic', 150_000).rtp;
 assert(rtp > 85 && rtp < 100.5, `RTP Xì dách bất thường: ${rtp}`);
 console.log(JSON.stringify({ ok: true, blackjackSim: compared, basicRtp: +rtp.toFixed(1) }));
