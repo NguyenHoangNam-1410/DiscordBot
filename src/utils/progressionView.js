@@ -1,3 +1,4 @@
+const { RARITY_ICON } = require('./rarity');
 function formatExperience(value) {
   return Number(value || 0).toLocaleString('vi-VN');
 }
@@ -21,8 +22,11 @@ function addExperienceField(embed, result) {
 
 function bonusDropText(drops) {
   if (!Array.isArray(drops) || !drops.length) return '';
-  const labels = { coins: ':coin: xu', diamonds: ':gem: kim cương', free_pull: ':slot_machine: lượt Gacha miễn phí' };
-  return drops.map(drop => `**+${Number(drop.amount).toLocaleString('vi-VN')} ${labels[drop.type] || drop.type}**`).join('\n');
+  const labels = { coins: ':coin: xu', diamonds: ':gem: kim cương' };
+  return drops.map(drop => {
+    if (drop.type === 'item') return `${RARITY_ICON[drop.rarity] || '🎁'} **${drop.name}** ×${Number(drop.amount || 1)} (${drop.rarity || 'vật phẩm'})`;
+    return `**+${Number(drop.amount).toLocaleString('vi-VN')} ${labels[drop.type] || drop.type}**`;
+  }).join('\n');
 }
 
 function experienceLines(entries) {

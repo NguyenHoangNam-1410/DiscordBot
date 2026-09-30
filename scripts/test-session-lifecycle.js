@@ -460,7 +460,7 @@ function bet(guildId, roundId, userId, choice, amount) {
   // Từ Điển Sống trao cả 10 kim cương của câu khó
   const dictGuild = 'dictionary-guild'; const dictChannel = 'dictionary-channel';
   require('../src/services/gameChannelService').setGameChannel(dictGuild, 'vuatiengviet', dictChannel);
-  for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_GACHA_DROP_CHANCE']) require('../src/services/gameConfigService').setGameConfig(dictGuild, key, 0, 'test');
+  for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_ITEM_DROP_MULTIPLIER']) require('../src/services/gameConfigService').setGameConfig(dictGuild, key, 0, 'test');
   const funForDictionary = require('../src/services/funGameService');
   funForDictionary.startVuaSession(dictGuild, { forceHard: true });
   const levelsForDictionary = require('../src/services/playerLevelService');

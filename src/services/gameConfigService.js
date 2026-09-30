@@ -65,17 +65,29 @@ const GAME_CONFIG_SPECS = Object.freeze({
     label: 'Gem drop tối đa', type: 'integer', min: 1, max: 1_000_000, fallback: 3,
     note: 'Số gem cao nhất khi roll trúng drop.',
   }),
-  GAME_GACHA_DROP_CHANCE: Object.freeze({
-    label: 'Tỷ lệ drop vé Gacha ×1', type: 'number', min: 0, max: 1, fallback: 0.01,
-    note: 'Nhập từ 0 đến 1; ví dụ 0.01 tương ứng 1%.', clampEnv: true,
+  GAME_ITEM_DROP_MULTIPLIER: Object.freeze({
+    label: 'Hệ số tỷ lệ rơi vật phẩm game', type: 'number', min: 0, max: 10, fallback: 1,
+    note: 'Nhân tỷ lệ rơi vật phẩm riêng của từng game sau mỗi ván (0 để tắt). Buff sự kiện được nhân thêm.', clampEnv: true,
   }),
-  GAME_GACHA_DROP_MIN: Object.freeze({
-    label: 'Lượt Gacha drop tối thiểu', type: 'integer', min: 1, max: 1000, fallback: 1,
-    note: 'Số lượt miễn phí thấp nhất khi roll trúng drop.',
+  GACHA_RATE_XU: Object.freeze({
+    label: 'Tỷ lệ Gacha · bậc XU (xu)', type: 'number', min: 0, max: 100, fallback: 50,
+    note: 'Trọng số bậc, tự chuẩn hóa về 100% cùng các bậc khác. Vật phẩm trong bậc được chọn ngẫu nhiên đều.',
   }),
-  GAME_GACHA_DROP_MAX: Object.freeze({
-    label: 'Lượt Gacha drop tối đa', type: 'integer', min: 1, max: 1000, fallback: 1,
-    note: 'Số lượt miễn phí cao nhất khi roll trúng drop.',
+  GACHA_RATE_R: Object.freeze({
+    label: 'Tỷ lệ Gacha · bậc R', type: 'number', min: 0, max: 100, fallback: 22,
+    note: 'Trọng số bậc, tự chuẩn hóa về 100% cùng các bậc khác. Số vật phẩm trong bậc không ảnh hưởng tỷ lệ bậc.',
+  }),
+  GACHA_RATE_SR: Object.freeze({
+    label: 'Tỷ lệ Gacha · bậc SR', type: 'number', min: 0.1, max: 100, fallback: 14,
+    note: 'Trọng số bậc, tự chuẩn hóa về 100%. Tối thiểu 0.1 để bảo hiểm SR luôn hoạt động.',
+  }),
+  GACHA_RATE_SSR: Object.freeze({
+    label: 'Tỷ lệ Gacha · bậc SSR', type: 'number', min: 0.1, max: 100, fallback: 10,
+    note: 'Trọng số bậc, tự chuẩn hóa về 100%. Tối thiểu 0.1 để bảo hiểm SSR luôn hoạt động.',
+  }),
+  GACHA_RATE_UR: Object.freeze({
+    label: 'Tỷ lệ Gacha · bậc UR', type: 'number', min: 0.1, max: 100, fallback: 4,
+    note: 'Trọng số bậc, tự chuẩn hóa về 100%. Tối thiểu 0.1 để bảo hiểm UR luôn hoạt động.',
   }),
   DIVINE_EYE_MAX_BET: Object.freeze({
     label: 'Giới hạn cược khi dùng Mắt Thần', type: 'integer', min: 10, max: 100_000, fallback: 10_000,
@@ -151,7 +163,7 @@ function listGameConfigs(guildId) {
 function setGameConfig(guildId, key, input, updatedBy = 'unknown') {
   const spec = getSpec(key);
   const value = normalizeValue(key, input);
-  const rangeMatch = String(key).match(/^(GAME_(?:COIN|DIAMOND|GACHA)_DROP)_(MIN|MAX)$/);
+  const rangeMatch = String(key).match(/^(GAME_(?:COIN|DIAMOND)_DROP)_(MIN|MAX)$/);
   if (rangeMatch) {
     const otherKey = `${rangeMatch[1]}_${rangeMatch[2] === 'MIN' ? 'MAX' : 'MIN'}`;
     const otherValue = getGameConfig(guildId, otherKey);

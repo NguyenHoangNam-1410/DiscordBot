@@ -28,7 +28,7 @@ const NEW_ITEMS = {
   blackjack_bust_guard: 'R', poker_fold_coupon: 'R', effect_cleanser: 'SSR',
 };
 const gameConfig = require('../src/services/gameConfigService');
-const noDrops = guildId => { for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_GACHA_DROP_CHANCE']) gameConfig.setGameConfig(guildId, key, 0, 'test'); };
+const noDrops = guildId => { for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_ITEM_DROP_MULTIPLIER']) gameConfig.setGameConfig(guildId, key, 0, 'test'); };
 const fund = (guildId, userId, amount = 100_000) => economy.creditCoins({ guildId, userId, amount, reason: 'test-fund' });
 const giveAndUse = (guildId, userId, channelId, itemId) => {
   shop.addInventory(guildId, userId, itemId, 1);
@@ -316,7 +316,7 @@ db.prepare("UPDATE multiplayer_rounds SET status='closed' WHERE id=?").run(taixi
     channels.setGameChannel(guildId, 'baucua', 'casino');
     gameConfig.setGameConfig(guildId, 'ECONOMY_STARTING_COINS', 777, 'admin');
     require('../src/services/gameBetLimitService').setGameBetLimit(guildId, 'poker', 1234);
-    pool.addGachaItem(guildId, 'living_dictionary', 'UR', 10, 'admin');
+    pool.addGachaItem(guildId, 'living_dictionary', 'UR', 'admin');
     shop.upsertShopItem({ guildId, catalogId: 'mines_row_scanner', price: 5000, stock: 5, createdBy: 'admin' });
     require('../src/services/weeklyRoleRewardService').setWeeklyRoleReward({ guildId, roleId: 'role-1', amount: 500, createdBy: 'admin' });
     require('../src/services/gameBuffService').setBuff({ guildId, type: 'coins', percent: 200, hours: 2, updatedBy: 'admin' });

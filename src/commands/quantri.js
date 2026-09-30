@@ -19,13 +19,13 @@ const GAME_NAMES = {
   maxbet: 'datgioihan', maxbets: 'xemgioihan', economy: 'kinhte', health: 'trangthai',
   configs: 'xemcauhinh', configreset: 'khoiphuc',
   roleweeklyset: 'datthuongvaitro', roleweeklyremove: 'xoathuongvaitro', roleweeklylist: 'xemthuongvaitro',
-  gachaadd: 'themgacha', gacharate: 'dattylegacha', gachapool: 'xemgacha', buffset: 'datbuff',
+  gachaadd: 'themgacha', gachatoggle: 'batgacha', gachapool: 'xemgacha', buffset: 'datbuff',
 };
 const SHOP_NAMES = { add: 'themvatpham', edit: 'suavatpham', remove: 'xoavatpham', rotate: 'xoaycuahang', stock: 'tonkho', discount: 'giamgia' };
 const OPTION_NAMES = {
   channel: 'kenh', role: 'vaitro', item: 'vatpham', effect: 'hieuung', price: 'gia', name: 'ten', stock: 'tonkho',
   quantity: 'soluong', percent: 'phantram', hours: 'sogio', size: 'somon', min_games: 'sovan', min_wins: 'sotranthang', min_balance: 'sodu',
-  tier: 'bac', reward: 'phanthuong', type: 'loai', action: 'hanhdong', amount: 'soluong',
+  tier: 'bac', reward: 'phanthuong', state: 'trangthai', type: 'loai', action: 'hanhdong', amount: 'soluong',
 };
 const reverse = Object.fromEntries([...Object.entries(GAME_NAMES), ...Object.entries(SHOP_NAMES)].map(([oldName, newName]) => [newName, oldName]));
 const CLEAR_SCOPES = [

@@ -50,7 +50,6 @@ function rollGameDrops({ guildId, userId, game, now = Date.now(), randomInt = cr
   const specs = [
     { type: 'coins', prefix: 'GAME_COIN_DROP' },
     { type: 'diamonds', prefix: 'GAME_DIAMOND_DROP' },
-    { type: 'free_pull', prefix: 'GAME_GACHA_DROP' },
   ];
   for (const spec of specs) {
     const chance = config.getGameConfig(guildId, `${spec.prefix}_CHANCE`);
@@ -63,10 +62,20 @@ function rollGameDrops({ guildId, userId, game, now = Date.now(), randomInt = cr
     const amount = Math.max(1, Math.floor(baseAmount * multiplier));
     if (spec.type === 'coins') {
       require('./economyService').creditCoins({ guildId, userId, amount, reason: `drop:${game}:coins` });
-    } else if (spec.type === 'diamonds') {
-      require('./playerLevelService').addDiamonds(guildId, userId, amount, { reason: `drop:${game}:diamonds`, now });
-    } else require('./playerLevelService').addFreePulls(guildId, userId, amount, now);
+    } else require('./playerLevelService').addDiamonds(guildId, userId, amount, { reason: `drop:${game}:diamonds`, now });
     drops.push({ type: spec.type, amount, baseAmount, multiplier });
+  }
+  // Vật phẩm riêng của game: tỷ lệ theo game × hệ số cấu hình × buff sự kiện (loại buff `free_pull` nay nhân tỷ lệ rơi vật phẩm).
+  const itemDrops = require('./gameItemDropService');
+  const itemBuff = getBuff(guildId, 'free_pull', now);
+  const multiplier = config.getGameConfig(guildId, 'GAME_ITEM_DROP_MULTIPLIER') * (itemBuff ? itemBuff.chance_bps / 10_000 : 1);
+  const chance = itemDrops.dropChance(game, multiplier);
+  if (chance > 0 && randomInt(10_000) < Math.round(chance * 10_000)) {
+    const item = itemDrops.pickDropItem(game, randomInt);
+    if (item) {
+      require('./shopService').addInventory(guildId, userId, item.id, 1, now);
+      drops.push({ type: 'item', itemId: item.id, name: item.name, rarity: item.rarity, game, amount: 1 });
+    }
   }
   return drops;
 }
