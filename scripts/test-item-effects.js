@@ -87,6 +87,8 @@ setPity('alice', 9, 3, 3);
 const srPity = gacha.pullGacha({ guildId: pityGuild, userId: 'alice', pulls: 1, rolls: [0] });
 assert(['SR', 'SSR', 'UR'].includes(srPity.results[0].tier) && srPity.results[0].kind === 'item', 'chạm bảo hiểm SR');
 setPity('alice', 0, 0, 0);
+// các lượt bảo hiểm phía trên có thể ra vé Gacha; có vé thì lượt kế tiếp dùng vé (đảm bảo SSR) thay vì roll ra xu
+db.prepare('DELETE FROM user_inventory WHERE guild_id=? AND user_id=? AND item_id IN (?,?)').run(pityGuild, 'alice', gacha.TICKETS[1], gacha.TICKETS[10]);
 const coinCounts = gacha.pullGacha({ guildId: pityGuild, userId: 'alice', pulls: 1, rolls: [0] });
 assert.equal(coinCounts.results[0].kind, 'coins');
 assert.deepEqual([coinCounts.pity.since_sr, coinCounts.pity.since_ssr, coinCounts.pity.since_ur], [1, 1, 1], 'lượt ra xu phải được tính vào bộ đếm');

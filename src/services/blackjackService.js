@@ -14,7 +14,10 @@ const TABLE_GUESTS = 3;
 
 const MIN_BET = 10;
 const MAX_BET = 100_000;
-const REGULAR_WIN_MULTIPLIER = 2;
+const REGULAR_WIN_MULTIPLIER = 1.8;
+// Người chơi phải đạt ít nhất 16 điểm mới được dừng; nhà cái rút cho đến khi đạt ít nhất 15.
+const PLAYER_MIN_STAND = 16;
+const DEALER_MIN_STAND = 15;
 const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
 const SUITS = ['♠', '♥', '♦', '♣'];
 
@@ -32,6 +35,7 @@ function handScore(cards) {
   return { total, soft: aces > 0 };
 }
 
+function canStand(cards) { return handScore(cards).total >= PLAYER_MIN_STAND; }
 function isBlackjack(cards) { return cards.length === 2 && handScore(cards).total === 21; }
 function handType(cards) {
   const score = handScore(cards).total;
@@ -128,7 +132,7 @@ function evaluateHand(cards, bet, dealerCards) {
   const playerType = handType(cards); const dealerType = handType(dealerCards);
   const win = () => ({ label: 'Thắng', payout: Math.floor(bet * REGULAR_WIN_MULTIPLIER) });
   let result;
-  if (playerType === 'bust') result = { label: 'Quắc · Thua', payout: 0 };
+  if (playerType === 'bust') result = dealer > 21 ? { label: 'Quắc · Hòa (cả hai quắc)', payout: bet } : { label: 'Quắc · Thua', payout: 0 };
   else if (playerType === 'ngulinh' && dealerType !== 'ngulinh') result = { label: 'Ngũ linh · Thắng', payout: Math.floor(bet * REGULAR_WIN_MULTIPLIER) };
   else if (dealerType === 'ngulinh' && playerType !== 'ngulinh') result = { label: 'Thua · Nhà cái Ngũ linh', payout: 0 };
   else if (playerType === 'ngulinh' && dealerType === 'ngulinh') {
@@ -145,7 +149,7 @@ function evaluateHand(cards, bet, dealerCards) {
 }
 
 function dealerPlay(state) {
-  while (handScore(state.dealer).total < 17 && handType(state.dealer) !== 'ngulinh') state.dealer.push(draw(state));
+  while (handScore(state.dealer).total < DEALER_MIN_STAND && handType(state.dealer) !== 'ngulinh') state.dealer.push(draw(state));
 }
 
 function settleState(session, state, reason = null) {
@@ -155,7 +159,7 @@ function settleState(session, state, reason = null) {
   const results = state.hands.map(hand => {
     const evaluated = evaluateHand(hand.cards, hand.bet, state.dealer);
     let { label, payout: handPayout } = evaluated;
-    if (evaluated.type === 'bust' && evaluated.score === 22 && !state.bustGuardUsed && consumeActiveEffect(session.guild_id, session.user_id, 'blackjack_bust_guard')) {
+    if (evaluated.type === 'bust' && evaluated.score === 22 && evaluated.payout === 0 && !state.bustGuardUsed && consumeActiveEffect(session.guild_id, session.user_id, 'blackjack_bust_guard')) {
       state.bustGuardUsed = true; handPayout = Math.floor(hand.bet * 0.25); label = 'Quắc 22 · Hoàn 25% cược';
     }
     payout += handPayout;
@@ -199,8 +203,10 @@ const actionTx = db.transaction(({ sessionId, userId, action, cardIndex = null }
     const score = handScore(hand.cards).total;
     if (score > 21 && state.itemEffect === 'blackjack_redraw' && !state.itemEffectUsed) hand.status = 'redraw';
     else if (score >= 21) hand.status = score > 21 ? 'bust' : 'stand';
-  } else if (action === 'stand') hand.status = 'stand';
-  else if (action === 'double') {
+  } else if (action === 'stand') {
+    if (!canStand(hand.cards)) throw new Error('MUST_HIT');
+    hand.status = 'stand';
+  } else if (action === 'double') {
     if (hand.cards.length !== 2) throw new Error('CANNOT_DOUBLE');
     if (totalBet(state) + hand.bet > (state.maxBet || MAX_BET)) { const error = new Error('BET_LIMIT'); error.maxBet = state.maxBet || MAX_BET; throw error; }
     spendCoins({ guildId: session.guild_id, userId, amount: hand.bet, reason: `blackjack:double:${session.id}` });
@@ -247,7 +253,7 @@ function blackjackEmbed(state, userId, result = null, sessionId = null) {
     embed.addFields({ name: '🏆 KẾT QUẢ', value: `${resultBlock({ userId, outcome: result.outcome, stake: result.stake, payout: result.payout, result, reason: result.reason === 'forfeit' ? 'bỏ ván' : '' })}` });
     if (result.achievements?.length) embed.addFields({ name: '🏅 Thành tựu mới', value: result.achievements.map(item => `**${item.name}**`).join('\n') });
   }
-  if (sessionId && !result) embed.setFooter({ text: `Mã ván: ${sessionId} • Nhà cái dừng ở soft 17 • Xì dách tự nhiên trả 3:2 • Không thu phí mở ván` });
+  if (sessionId && !result) embed.setFooter({ text: `Mã ván: ${sessionId} • Dừng từ 16 điểm • Nhà cái rút đến 15 • Cùng quắc = hòa • Xì dách tự nhiên trả 3:2 • Không thu phí mở ván` });
   return embed;
 }
 
@@ -255,15 +261,17 @@ function actionRows(sessionId, state, disabled = false) {
   if (disabled) return [new ActionRowBuilder().addComponents(new ButtonBuilder().setCustomId(`replay:blackjack:${totalBet(state)}`).setLabel('Chơi lại').setEmoji('🔁').setStyle(ButtonStyle.Success))];
   const hand = state.hands[state.active];
   const playing = hand?.status === 'playing';
+  const mayStand = playing && canStand(hand.cards);
+  const busted = hand?.status === 'redraw';
   const withinLimit = hand ? totalBet(state) + hand.bet <= (state.maxBet || MAX_BET) : false;
   const canDouble = !disabled && hand?.status === 'playing' && hand.cards.length === 2 && withinLimit;
   const canSplit = canDouble && !state.split && state.hands.length === 1 && rank(hand.cards[0]) === rank(hand.cards[1]);
   const rows = [new ActionRowBuilder().addComponents(
     new ButtonBuilder().setCustomId(`blackjack:${sessionId}:hit`).setLabel('Rút bài').setEmoji('➕').setStyle(ButtonStyle.Primary).setDisabled(disabled || !playing),
-    new ButtonBuilder().setCustomId(`blackjack:${sessionId}:stand`).setLabel('Dừng').setEmoji('✋').setStyle(ButtonStyle.Success).setDisabled(disabled || !playing),
+    new ButtonBuilder().setCustomId(`blackjack:${sessionId}:stand`).setLabel(playing && !mayStand ? `Dừng (cần ≥${PLAYER_MIN_STAND})` : 'Dừng').setEmoji('✋').setStyle(ButtonStyle.Success).setDisabled(disabled || !mayStand),
     new ButtonBuilder().setCustomId(`blackjack:${sessionId}:double`).setLabel('Gấp đôi').setEmoji('⏫').setStyle(ButtonStyle.Secondary).setDisabled(!canDouble),
     new ButtonBuilder().setCustomId(`blackjack:${sessionId}:split`).setLabel('Tách bài').setEmoji('✂️').setStyle(ButtonStyle.Secondary).setDisabled(!canSplit),
-    new ButtonBuilder().setCustomId(`blackjack:${sessionId}:forfeit`).setLabel('Bỏ ván').setStyle(ButtonStyle.Danger).setDisabled(disabled),
+    new ButtonBuilder().setCustomId(`blackjack:${sessionId}:forfeit`).setLabel('Bỏ ván').setStyle(ButtonStyle.Danger).setDisabled(disabled || busted),
   )];
   if (!disabled && hand?.status === 'redraw') rows.push(new ActionRowBuilder().addComponents(
     new ButtonBuilder().setCustomId(`blackjack:${sessionId}:redraw`).setLabel('Bỏ lá vừa rút và rút lại').setEmoji('🔄').setStyle(ButtonStyle.Success)));
@@ -285,6 +293,7 @@ async function handleBlackjackButton(interaction) {
   } catch (error) {
     const content = error.code === 'INSUFFICIENT_FUNDS' ? 'Bạn không đủ xu để thực hiện thao tác này.'
       : error.message === 'BET_LIMIT' ? `Thao tác này vượt giới hạn cược **${formatCoins(error.maxBet)} :coin:/người/ván**.`
+      : error.message === 'MUST_HIT' ? `Bạn cần ít nhất **${PLAYER_MIN_STAND} điểm** mới được dừng; hãy rút thêm bài.`
       : error.message === 'CANNOT_DOUBLE' ? 'Chỉ được gấp đôi khi tay bài có đúng hai lá.'
         : error.message === 'CANNOT_SPLIT' ? 'Chỉ được tách một lần khi hai lá đầu cùng hạng.'
           : error.message === 'ITEM_EFFECT_UNAVAILABLE' ? 'Hiệu ứng vật phẩm không còn khả dụng trong ván này.' : 'Không thể thực hiện thao tác này.';
@@ -306,7 +315,7 @@ function tableStatusResult(player, dealer, dealerNatural) {
   const playerType = handType(player.cards); const dealerType = handType(dealer);
   let outcome = 'loss';
   const dealerScore = handScore(dealer).total;
-  if (playerType === 'bust') outcome = 'loss';
+  if (playerType === 'bust') outcome = dealerScore > 21 ? 'draw' : 'loss';
   else if (playerType === 'ngulinh' && dealerType !== 'ngulinh') outcome = 'win';
   else if (dealerType === 'ngulinh' && playerType !== 'ngulinh') outcome = 'loss';
   else if (playerType === 'ngulinh' && dealerType === 'ngulinh') outcome = score < dealerScore ? 'win' : score === dealerScore ? 'draw' : 'loss';
@@ -315,7 +324,7 @@ function tableStatusResult(player, dealer, dealerNatural) {
   else if (score === dealerScore) outcome = 'draw';
   const label = playerType === 'ngulinh' ? `Ngũ linh ${outcome === 'win' ? 'thắng' : outcome === 'draw' ? 'hòa' : 'thua'}`
     : natural ? `Xì dách ${outcome === 'win' ? 'thắng' : outcome === 'draw' ? 'hòa' : 'thua'}`
-      : playerType === 'bust' ? 'Quắc · thua' : outcome === 'win' ? 'Thắng' : outcome === 'draw' ? 'Hòa' : 'Thua';
+      : playerType === 'bust' ? (outcome === 'draw' ? 'Quắc · hòa (cả hai quắc)' : 'Quắc · thua') : outcome === 'win' ? 'Thắng' : outcome === 'draw' ? 'Hòa' : 'Thua';
   return { userId: player.id, score, natural, handType: playerType, outcome, label,
     payout: outcome === 'win' ? player.stake * 2 : outcome === 'draw' ? player.stake : 0 };
 }
@@ -337,7 +346,7 @@ function hasOtherWagerSession(guildId, userId) {
 }
 function settleTableTx(table, state, now = Date.now()) {
   const dealerNatural = isBlackjack(state.dealer);
-  if (!dealerNatural) while (handScore(state.dealer).total < 17 && handType(state.dealer) !== 'ngulinh') state.dealer.push(tableDraw(state));
+  if (!dealerNatural) while (handScore(state.dealer).total < DEALER_MIN_STAND && handType(state.dealer) !== 'ngulinh') state.dealer.push(tableDraw(state));
   const results = state.players.map(player => tableStatusResult(player, state.dealer, dealerNatural));
   let dealerNet = 0;
   for (const result of results) {
@@ -420,7 +429,7 @@ function playBlackjackTable(id, userId, action, now = Date.now()) {
     const state = tableState(table); const player = state.players[state.turn];
     if (!player || player.id !== String(userId) || player.status !== 'playing') throw new Error('NOT_YOUR_TURN');
     if (action === 'hit') { player.cards.push(tableDraw(state)); const score = handScore(player.cards).total; if (score >= 21 || handType(player.cards) === 'ngulinh') player.status = score > 21 ? 'bust' : 'stand'; }
-    else if (action === 'stand') player.status = 'stand'; else throw new Error('INVALID_ACTION');
+    else if (action === 'stand') { if (!canStand(player.cards)) throw new Error('MUST_HIT'); player.status = 'stand'; } else throw new Error('INVALID_ACTION');
     const next = state.players.findIndex((candidate, index) => index > state.turn && candidate.status === 'playing');
     state.turn = next;
     if (next < 0) return { state: settleTableTx(table, state, now), settled: true };
@@ -479,11 +488,14 @@ function tablePrivateText(table, state, userId) {
   return `${hand}\n\n✅ Bạn đã xong lượt${player.status === 'bust' ? ' (quắc)' : ''}. Chờ những người còn lại.`;
 }
 function tablePrivateRows(table, state, userId) {
+  const seat = state.players.find(player => player.id === String(userId));
   const turn = table.status === 'playing' && state.players[state.turn]?.id === String(userId) && state.players[state.turn].status === 'playing';
+  const busted = seat?.status === 'bust'; // quắc thì khóa toàn bộ nút
+  const mayStand = turn && canStand(seat.cards);
   return [new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(`blackjack-table-private:${table.id}:view`).setLabel('Làm mới').setEmoji('👁️').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId(`blackjack-table-private:${table.id}:hit`).setLabel('Rút bài').setEmoji('➕').setStyle(ButtonStyle.Primary).setDisabled(!turn),
-    new ButtonBuilder().setCustomId(`blackjack-table-private:${table.id}:stand`).setLabel('Dừng').setEmoji('✋').setStyle(ButtonStyle.Success).setDisabled(!turn))];
+    new ButtonBuilder().setCustomId(`blackjack-table-private:${table.id}:view`).setLabel('Làm mới').setEmoji('👁️').setStyle(ButtonStyle.Secondary).setDisabled(busted),
+    new ButtonBuilder().setCustomId(`blackjack-table-private:${table.id}:hit`).setLabel('Rút bài').setEmoji('➕').setStyle(ButtonStyle.Primary).setDisabled(!turn || busted),
+    new ButtonBuilder().setCustomId(`blackjack-table-private:${table.id}:stand`).setLabel(turn && !mayStand ? `Dừng (cần ≥${PLAYER_MIN_STAND})` : 'Dừng').setEmoji('✋').setStyle(ButtonStyle.Success).setDisabled(!mayStand || busted))];
 }
 async function editPublicTable(client, table, state) {
   if (!table.message_id || !client?.channels?.fetch) return;
@@ -515,7 +527,7 @@ async function handleBlackjackTablePrivateButton(interaction) {
     }
     return interaction.update({ content: tablePrivateText(table, state, interaction.user.id), components: tablePrivateRows(table, state, interaction.user.id) });
   } catch (error) {
-    const content = error.message === 'NOT_YOUR_TURN' ? 'Chưa đến lượt của bạn.' : error.message === 'TABLE_CLOSED' ? 'Bàn Xì dách đã đóng hoặc hết hạn.' : 'Không thể thực hiện thao tác này.';
+    const content = error.message === 'NOT_YOUR_TURN' ? 'Chưa đến lượt của bạn.' : error.message === 'MUST_HIT' ? `Bạn cần ít nhất **${PLAYER_MIN_STAND} điểm** mới được dừng; hãy rút thêm bài.` : error.message === 'TABLE_CLOSED' ? 'Bàn Xì dách đã đóng hoặc hết hạn.' : 'Không thể thực hiện thao tác này.';
     return interaction.reply({ content, flags: MessageFlags.Ephemeral });
   }
 }
@@ -589,7 +601,7 @@ async function maintainBlackjackTables(client) {
 function startBlackjackTableMaintenance(client) { const run = () => maintainBlackjackTables(client).catch(() => {}); run(); const timer = setInterval(run, 5_000); timer.unref?.(); return timer; }
 
 module.exports = {
-  MIN_BET, MAX_BET, REGULAR_WIN_MULTIPLIER, expireBlackjackTableTx, getBlackjackTable, handScore, isBlackjack, handType, evaluateHand, initialResult, createShoe, putAceOnTop, startBlackjack, playAction, forceEndBlackjackSession,
+  MIN_BET, MAX_BET, REGULAR_WIN_MULTIPLIER, PLAYER_MIN_STAND, DEALER_MIN_STAND, canStand, expireBlackjackTableTx, getBlackjackTable, handScore, isBlackjack, handType, evaluateHand, initialResult, createShoe, putAceOnTop, startBlackjack, playAction, forceEndBlackjackSession,
   getSessionByUser, setMessageId, blackjackEmbed, actionRows, handleBlackjackButton,
   createBlackjackTable, setBlackjackTableMessage, blackjackTableEmbed, blackjackTableRows, handleBlackjackTableButton, handleBlackjackTablePrivateButton, tablePrivateText, tablePrivateRows, joinBlackjackTable, playBlackjackTable, beginBlackjackTableTx, startBlackjackTableMaintenance, forceEndBlackjackTable,
   getBlackjackTableLock,

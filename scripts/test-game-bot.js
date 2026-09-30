@@ -504,7 +504,7 @@ assert.throws(() => roleRewards.claimWeeklyRoleRewards({ guildId: 'role-reward-g
 assert.throws(() => roleRewards.claimWeeklyRoleRewards({ guildId: 'role-reward-guild', userId: 'bob', roleIds: ['member'], now: roleRewardNow }), /NO_ELIGIBLE_ROLE/);
 assert.equal(economy.getAccount('role-reward-guild', 'alice').balance, 26_000);
 assert.equal(roleRewards.removeWeeklyRoleReward('role-reward-guild', 'vip'), true);
-for (const guildId of ['duel-guild', 'card-guild', 'both-bust-guild', 'poker-guild', 'poker-config-guild']) {
+for (const guildId of ['duel-guild', 'card-guild', 'both-bust-guild', 'bust-loss-guild', 'stand-rule-guild', 'stand-duel-guild', 'poker-guild', 'poker-config-guild']) {
   for (const key of ['GAME_COIN_DROP_CHANCE', 'GAME_DIAMOND_DROP_CHANCE', 'GAME_ITEM_DROP_MULTIPLIER']) {
     gameConfig.setGameConfig(guildId, key, 0, 'test');
   }
@@ -531,8 +531,14 @@ assert.equal(economy.getAccount('timeout-guild', 'alice').balance, 750);
 assert.equal(economy.getAccount('timeout-guild', 'bob').balance, 750);
 const blackjackDuel = require('../src/services/blackjackDuelService');
 const cardDuel = blackjackDuel.createBlackjackDuel({ guildId: 'card-guild', channelId: 'card-channel', challengerId: 'alice', opponentId: 'bob', stake: 100, now: 1000 });
-const acceptedCardDuel = blackjackDuel.acceptBlackjackDuel(cardDuel.id, 'bob', 2000, ['9♣', '8♣', 'K♠', '7♦', 'A♥']);
+const acceptedCardDuel = blackjackDuel.acceptBlackjackDuel(cardDuel.id, 'bob', 2000, ['9♣', '8♣', 'K♠', '8♦', 'A♥']);
 assert.equal(acceptedCardDuel.status, 'playing');
+{
+  const standDuel = blackjackDuel.createBlackjackDuel({ guildId: 'stand-duel-guild', channelId: 'c', challengerId: 'carol', opponentId: 'dan', stake: 100, now: 1000 });
+  blackjackDuel.acceptBlackjackDuel(standDuel.id, 'dan', 2000, ['9♣', '8♣', 'K♠', '7♦', 'A♥']);
+  assert.throws(() => blackjackDuel.playBlackjackDuel(standDuel.id, 'dan', 'stand', 3000), /MUST_HIT/, 'đấu người cũng phải đủ 16 điểm mới được dừng (8+7=15)');
+  blackjackDuel.playBlackjackDuel(standDuel.id, 'dan', 'hit', 3001);
+}
 const cardResult = blackjackDuel.playBlackjackDuel(cardDuel.id, 'bob', 'stand', 3000);
 assert.equal(cardResult.settled, true);
 assert.equal(cardResult.duel.progression.length, 2);
@@ -550,17 +556,40 @@ assert.deepEqual(expiredCardDuel.forfeited.sort(), ['alice', 'bob']);
 assert.equal(economy.getAccount('card-timeout', 'alice').balance, 800);
 assert.equal(economy.getAccount('card-timeout', 'bob').balance, 800);
 const blackjack = require('../src/services/blackjackService');
-// Người chơi quắc luôn thua dù nhà cái cũng quắc
-const bothBustStarted = blackjack.startBlackjack({ guildId: 'both-bust-guild', channelId: 'blackjack-channel', userId: 'alice', stake: 100,
+{
+  // Chỉ được dừng khi có ít nhất 16 điểm; nhà cái rút đến khi có ít nhất 15
+  assert.equal(blackjack.PLAYER_MIN_STAND, 16); assert.equal(blackjack.DEALER_MIN_STAND, 15);
+  const started = blackjack.startBlackjack({ guildId: 'stand-rule-guild', channelId: 'c', userId: 'alice', stake: 100, forcedDeck: ['5♠', '9♣', '6♦', '9♥', '5♦'] });
+  const buttons = state => blackjack.actionRows(started.session.id, state)[0].toJSON().components;
+  const named = (state, name) => buttons(state).find(item => item.custom_id.endsWith(`:${name}`));
+  assert.equal(named(started.state, 'stand').disabled, true, 'dưới 16 điểm nút Dừng bị khóa'); assert.match(named(started.state, 'stand').label, /cần ≥16/);
+  assert.equal(named(started.state, 'hit').disabled, false);
+  assert.throws(() => blackjack.playAction({ sessionId: started.session.id, userId: 'alice', action: 'stand' }), /MUST_HIT/);
+  const hitTo16 = blackjack.playAction({ sessionId: started.session.id, userId: 'alice', action: 'hit' });
+  assert.equal(hitTo16.settled, false); assert.equal(named(hitTo16.state, 'stand').disabled, false, 'đủ 16 điểm được dừng'); assert.equal(named(hitTo16.state, 'stand').label, 'Dừng');
+  const stood = blackjack.playAction({ sessionId: started.session.id, userId: 'alice', action: 'stand' });
+  assert.equal(stood.settled, true); assert.equal(stood.state.dealer.length, 2, 'nhà cái 18 điểm không rút thêm');
+}
+// Người chơi quắc mà nhà cái không quắc thì thua (nhà cái 10+6=16 đã đủ 15 nên không rút)
+const bustLossStarted = blackjack.startBlackjack({ guildId: 'bust-loss-guild', channelId: 'blackjack-channel', userId: 'alice', stake: 100,
   forcedDeck: ['10♣', '5♣', '6♥', '9♠', '10♥', '10♠'] });
+const bustLoss = blackjack.playAction({ sessionId: bustLossStarted.session.id, userId: 'alice', action: 'hit' });
+assert.equal(bustLoss.settled, true); assert.equal(bustLoss.result.outcome, 'loss'); assert.equal(bustLoss.result.results[0].label, 'Quắc · Thua');
+assert.equal(bustLoss.state.dealer.length, 2, 'nhà cái đủ 16 điểm nên không rút thêm');
+assert.equal(economy.getAccount('bust-loss-guild', 'alice').balance, 900);
+// Cả hai cùng quắc → hòa, hoàn cược (nhà cái 10+4=14 phải rút và quắc)
+const bothBustStarted = blackjack.startBlackjack({ guildId: 'both-bust-guild', channelId: 'blackjack-channel', userId: 'alice', stake: 100,
+  forcedDeck: ['10♣', '5♣', '4♥', '9♠', '10♥', '10♠'] });
 const bothBustResult = blackjack.playAction({ sessionId: bothBustStarted.session.id, userId: 'alice', action: 'hit' });
 assert.equal(bothBustResult.settled, true);
-assert.equal(bothBustResult.result.outcome, 'loss');
+assert.equal(bothBustResult.result.outcome, 'draw');
+assert.equal(bothBustResult.result.payout, 100);
 assert.equal(bothBustResult.result.experienceGained, 10);
 assert.match(JSON.stringify(blackjack.blackjackEmbed(bothBustResult.state, 'alice', bothBustResult.result).toJSON()), /\+10 :test_tube:/);
 assert.match(blackjack.blackjackEmbed(bothBustResult.state, 'alice', bothBustResult.result).toJSON().description, /10♠/);
-assert.equal(bothBustResult.result.results[0].label, 'Quắc · Thua');
-assert.equal(economy.getAccount('both-bust-guild', 'alice').balance, 900);
+assert.equal(bothBustResult.result.results[0].label, 'Quắc · Hòa (cả hai quắc)');
+assert.equal(economy.getAccount('both-bust-guild', 'alice').balance, 1000, 'cả hai quắc thì hoàn cược');
+assert.match(JSON.stringify(blackjack.actionRows('x', bothBustResult.state, true).map(row => row.toJSON())), /replay:blackjack/); assert(!/blackjack:x:(hit|stand|double|split)/.test(JSON.stringify(blackjack.actionRows('x', bothBustResult.state, true).map(row => row.toJSON()))), 'quắc/kết thúc thì khóa hết nút thao tác');
 const poker = require('../src/services/pokerService');
 assert.equal(poker.POKER_ANTE, 50);
 assert.equal(db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='word_suggestions'").get(), undefined);

@@ -63,7 +63,7 @@ Các game cược tiếp tục dùng seed và HMAC-SHA256 nội bộ để tạo
 - Ở bàn nhiều người, bài mỗi người được giữ kín: bấm **Xem bài của tôi** để xem bài và Rút bài/Dừng trong bảng riêng (chỉ bạn thấy); bot nhắc người đến lượt trong kênh và bài chỉ lộ khi ván kết thúc.
 - Với prefix: `!xidach <số xu> [bot|nguoichoi]` (mặc định bot).
 
-Trong ván với nhà cái, thắng thường nhận 1,9× tổng cược, Xì dách tự nhiên nhận 2,5× và người chơi quắc trên 21 luôn thua ngay, kể cả khi nhà cái cũng quắc sau đó. Ngũ linh (đủ 5 lá không quắc) thắng nhà cái không có Ngũ linh. Trong ván 1v1, mỗi người xem tay bài bằng nút riêng, sau đó chọn Rút bài hoặc Dừng. Người có tay gần 21 nhất thắng toàn bộ tiền cược; Xì dách tự nhiên được ưu tiên cao nhất. Nếu ván hết hạn, cược được hoàn cho cả hai.
+Trong ván với nhà cái bot, thắng thường nhận 1,8× tổng cược, Xì dách tự nhiên nhận 2,5×. Người chơi chỉ được Dừng khi có ít nhất 16 điểm (Gấp đôi chốt tay sau 1 lá nên không bị ràng buộc), nhà cái rút đến khi có ít nhất 15 điểm. Người chơi quắc trên 21 thua, nhưng nếu nhà cái cũng quắc thì **hòa** và hoàn cược; khi quắc mọi nút thao tác bị khóa. Luật 16/15 và cùng quắc = hòa áp dụng cho cả bàn nhiều người và đấu người (đấu người vốn đã hòa khi cả hai quắc). Hệ số 1,8× được chọn để RTP mô phỏng ở khoảng 99% sau khi đổi luật (giữ 2× sẽ cho RTP khoảng 107%). Ngũ linh (đủ 5 lá không quắc) thắng nhà cái không có Ngũ linh. Trong ván 1v1, mỗi người xem tay bài bằng nút riêng, sau đó chọn Rút bài hoặc Dừng. Người có tay gần 21 nhất thắng toàn bộ tiền cược; Xì dách tự nhiên được ưu tiên cao nhất. Nếu ván hết hạn, cược được hoàn cho cả hai.
 
 ### Poker
 
