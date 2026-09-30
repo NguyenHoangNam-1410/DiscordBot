@@ -454,30 +454,58 @@ function playHardcore(args) { return actionTx(args); }
 function hardcoreEmbed(state, userId, result = null, sessionId = null) { return hardcoreView.hardcoreEmbed(state, userId, result, CLASSES, sessionId, ITEMS); }
 function hardcoreRows(sessionId, state, disabled = false) { return hardcoreView.hardcoreRows(sessionId, state, disabled, CLASSES); }
 
-async function handleHardcoreButton(interaction) {
-  const [, sessionId, rawTurn, action] = interaction.customId.split(':');
-  const session = getSession(sessionId);
-  if (!session || session.guild_id !== interaction.guildId || session.channel_id !== interaction.channelId) return interaction.reply({ content: 'Lượt Sinh tồn đã kết thúc hoặc nút không còn hợp lệ.', flags: MessageFlags.Ephemeral });
-  if (session.user_id !== interaction.user.id) return interaction.reply({ content: 'Đây là lượt Sinh tồn của người chơi khác.', flags: MessageFlags.Ephemeral });
+async function showHardcoreTurn(interaction, sessionId, state, result = null, settled = false, logger = null) {
   try {
+    return await interaction.editReply({ embeds: [hardcoreEmbed(state, interaction.user.id, result, sessionId)],
+      components: hardcoreRows(sessionId, state, settled), allowedMentions: { parse: [] } });
+  } catch (error) {
+    logger?.warn({ err: error, sessionId }, 'could not update hardcore panel');
+    const fallback = {
+      content: `⚠️ Bảng chi tiết chưa hiển thị được. **Sinh tồn · tầng ${state.floor} · lượt ${state.turn}**\n` +
+        `❤️ ${state.hp}/${state.maxHp} HP\n${String(state.lastLog || '').slice(0, 700)}` +
+        (result ? `\nKết quả: **${result.outcome === 'win' ? 'Thắng' : result.outcome === 'draw' ? 'Hòa' : 'Thua'}** · Nhận ${formatCoins(result.payout)} xu.` : ''),
+      embeds: [], components: hardcoreRows(sessionId, state, settled), allowedMentions: { parse: [] },
+    };
+    try {
+      return await interaction.editReply(fallback);
+    } catch (fallbackError) {
+      logger?.warn({ err: fallbackError, sessionId }, 'could not restore hardcore panel');
+      const replacement = await interaction.followUp({ ...fallback, withResponse: true });
+      const messageId = replacement?.resource?.message?.id || replacement?.id;
+      if (messageId && !settled) setMessageId(sessionId, messageId);
+      return replacement;
+    }
+  }
+}
+
+async function handleHardcoreButton(interaction, logger) {
+  const [, sessionId, rawTurn, action] = interaction.customId.split(':');
+  await interaction.deferUpdate();
+  try {
+    const session = getSession(sessionId);
+    if (!session || session.guild_id !== interaction.guildId || session.channel_id !== interaction.channelId) {
+      return interaction.followUp({ content: 'Lượt Sinh tồn đã kết thúc hoặc nút không còn hợp lệ.', flags: MessageFlags.Ephemeral });
+    }
+    if (session.user_id !== interaction.user.id) {
+      return interaction.followUp({ content: 'Đây là lượt Sinh tồn của người chơi khác.', flags: MessageFlags.Ephemeral });
+    }
     const played = playHardcore({ sessionId, userId: interaction.user.id, expectedTurn: Number(rawTurn), action });
-    return interaction.update({ embeds: [hardcoreEmbed(played.state, interaction.user.id, played.result, sessionId)], components: hardcoreRows(sessionId, played.state, played.settled), allowedMentions: { parse: [] } });
+    return showHardcoreTurn(interaction, sessionId, played.state, played.result, played.settled, logger);
   } catch (error) {
     if (error.message === 'STALE_ACTION') {
       const currentSession = getSession(sessionId);
       if (currentSession && (!currentSession.message_id || currentSession.message_id === interaction.message?.id)) {
         const currentState = parseState(currentSession);
-        return interaction.update({ embeds: [hardcoreEmbed(currentState, interaction.user.id, null, sessionId)],
-          components: hardcoreRows(sessionId, currentState), allowedMentions: { parse: [] } });
+        return showHardcoreTurn(interaction, sessionId, currentState, null, false, logger);
       }
-      return interaction.reply({ content: 'Nút này thuộc bảng Sinh tồn cũ. Hãy mở bảng đang chơi để tiếp tục.', flags: MessageFlags.Ephemeral });
+      return interaction.followUp({ content: 'Nút này thuộc bảng Sinh tồn cũ. Hãy mở bảng đang chơi để tiếp tục.', flags: MessageFlags.Ephemeral });
     }
     const content = error.message === 'NO_ENERGY' ? 'Không đủ năng lượng dùng kỹ năng.'
         : error.message === 'NO_POTION' ? 'Bạn đã hết bình máu.'
           : error.message === 'FULL_HP' ? 'HP đang đầy.'
             : error.message === 'ALREADY_INSPECTED' ? 'Bạn đã kiểm tra hòm này.'
               : error.message === 'NO_TOKEN' ? 'Bạn không có Vé Thoát Hiểm.' : 'Không thể thực hiện lựa chọn này.';
-    return interaction.reply({ content, flags: MessageFlags.Ephemeral });
+    return interaction.followUp({ content, flags: MessageFlags.Ephemeral });
   }
 }
 
