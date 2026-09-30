@@ -450,8 +450,16 @@ async function handleHardcoreButton(interaction) {
     const played = playHardcore({ sessionId, userId: interaction.user.id, expectedTurn: Number(rawTurn), action });
     return interaction.update({ embeds: [hardcoreEmbed(played.state, interaction.user.id, played.result, sessionId)], components: hardcoreRows(sessionId, played.state, played.settled), allowedMentions: { parse: [] } });
   } catch (error) {
-    const content = error.message === 'STALE_ACTION' ? 'Nút này thuộc lượt cũ. Hãy dùng các nút mới nhất.'
-      : error.message === 'NO_ENERGY' ? 'Không đủ năng lượng dùng kỹ năng.'
+    if (error.message === 'STALE_ACTION') {
+      const currentSession = getSession(sessionId);
+      if (currentSession && (!currentSession.message_id || currentSession.message_id === interaction.message?.id)) {
+        const currentState = parseState(currentSession);
+        return interaction.update({ embeds: [hardcoreEmbed(currentState, interaction.user.id, null, sessionId)],
+          components: hardcoreRows(sessionId, currentState), allowedMentions: { parse: [] } });
+      }
+      return interaction.reply({ content: 'Nút này thuộc bảng Sinh tồn cũ. Hãy mở bảng đang chơi để tiếp tục.', flags: MessageFlags.Ephemeral });
+    }
+    const content = error.message === 'NO_ENERGY' ? 'Không đủ năng lượng dùng kỹ năng.'
         : error.message === 'NO_POTION' ? 'Bạn đã hết bình máu.'
           : error.message === 'FULL_HP' ? 'HP đang đầy.'
             : error.message === 'ALREADY_INSPECTED' ? 'Bạn đã kiểm tra hòm này.'
