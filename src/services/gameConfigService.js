@@ -70,23 +70,23 @@ const GAME_CONFIG_SPECS = Object.freeze({
     note: 'Nhân tỷ lệ rơi vật phẩm riêng của từng game sau mỗi ván (0 để tắt). Buff sự kiện được nhân thêm.', clampEnv: true,
   }),
   GACHA_RATE_XU: Object.freeze({
-    label: 'Tỷ lệ Gacha · bậc XU (xu)', type: 'number', min: 0, max: 100, fallback: 30,
+    label: 'Tỷ lệ Gacha · bậc XU (xu)', type: 'number', min: 0, max: 100, fallback: 50,
     note: 'Trọng số bậc, tự chuẩn hóa về 100% cùng các bậc khác. Vật phẩm trong bậc được chọn ngẫu nhiên đều.',
   }),
   GACHA_RATE_R: Object.freeze({
-    label: 'Tỷ lệ Gacha · bậc R', type: 'number', min: 0, max: 100, fallback: 30,
+    label: 'Tỷ lệ Gacha · bậc R', type: 'number', min: 0, max: 100, fallback: 22,
     note: 'Trọng số bậc, tự chuẩn hóa về 100% cùng các bậc khác. Số vật phẩm trong bậc không ảnh hưởng tỷ lệ bậc.',
   }),
   GACHA_RATE_SR: Object.freeze({
-    label: 'Tỷ lệ Gacha · bậc SR', type: 'number', min: 0.1, max: 100, fallback: 20,
+    label: 'Tỷ lệ Gacha · bậc SR', type: 'number', min: 0.1, max: 100, fallback: 14,
     note: 'Trọng số bậc, tự chuẩn hóa về 100%. Tối thiểu 0.1 để bảo hiểm SR luôn hoạt động.',
   }),
   GACHA_RATE_SSR: Object.freeze({
-    label: 'Tỷ lệ Gacha · bậc SSR', type: 'number', min: 0.1, max: 100, fallback: 15,
+    label: 'Tỷ lệ Gacha · bậc SSR', type: 'number', min: 0.1, max: 100, fallback: 10,
     note: 'Trọng số bậc, tự chuẩn hóa về 100%. Tối thiểu 0.1 để bảo hiểm SSR luôn hoạt động.',
   }),
   GACHA_RATE_UR: Object.freeze({
-    label: 'Tỷ lệ Gacha · bậc UR', type: 'number', min: 0.1, max: 100, fallback: 5,
+    label: 'Tỷ lệ Gacha · bậc UR', type: 'number', min: 0.1, max: 100, fallback: 4,
     note: 'Trọng số bậc, tự chuẩn hóa về 100%. Tối thiểu 0.1 để bảo hiểm UR luôn hoạt động.',
   }),
   DIVINE_EYE_MAX_BET: Object.freeze({

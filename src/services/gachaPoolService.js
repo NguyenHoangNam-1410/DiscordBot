@@ -52,7 +52,7 @@ function configuredRows(guildId) {
 // Tỷ lệ theo độ hiếm là cố định (đơn vị: trọng số, tự chuẩn hóa về 100%). Số vật phẩm trong mỗi bậc không ảnh hưởng tỷ lệ bậc:
 // bậc được chọn trước, rồi vật phẩm được chọn ngẫu nhiên đều trong bậc đó. `weight` của từng phần thưởng chỉ còn ý nghĩa bật (>0) / tắt (0).
 const TIERS = Object.freeze(['XU', 'R', 'SR', 'SSR', 'UR']);
-const DEFAULT_TIER_RATES = Object.freeze({ XU: 30, R: 30, SR: 20, SSR: 15, UR: 5 });
+const DEFAULT_TIER_RATES = Object.freeze({ XU: 50, R: 22, SR: 14, SSR: 10, UR: 4 });
 const tierRateKey = tier => `GACHA_RATE_${tier}`;
 function tierRates(guildId) {
   const config = require('./gameConfigService');

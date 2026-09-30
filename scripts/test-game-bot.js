@@ -154,8 +154,8 @@ assert.equal(levels.gameExperience('loss', 999999, 1), 10);
 assert.equal(levels.gameExperience('win', 1_000_000, 0), 500);
 levels.addDiamonds('gacha-guild', 'alice', 1_000);
 const gacha = require('../src/services/gachaService');
-// vị trí 0–9999 theo thứ tự bậc với tỷ lệ cố định XU 30% · R 30% · SR 20% · SSR 15% · UR 5%
-assert.deepEqual([0, 2999, 3000, 5999, 6000, 7999, 8000, 9499, 9500, 9999].map(roll => gacha.rollGacha(roll).tier), ['XU', 'XU', 'R', 'R', 'SR', 'SR', 'SSR', 'SSR', 'UR', 'UR']);
+// vị trí 0–9999 theo thứ tự bậc với tỷ lệ cố định XU 50% · R 22% · SR 14% · SSR 10% · UR 4%
+assert.deepEqual([0, 4999, 5000, 7199, 7200, 8599, 8600, 9599, 9600, 9999].map(roll => gacha.rollGacha(roll).tier), ['XU', 'XU', 'R', 'R', 'SR', 'SR', 'SSR', 'SSR', 'UR', 'UR']);
 const singlePull = gacha.pullGacha({ guildId: 'gacha-guild', userId: 'alice', pulls: 1, rolls: [0], now: 1000 });
 assert.equal(singlePull.results[0].coins, 10_000);
 const tenPull = gacha.pullGacha({ guildId: 'gacha-guild', userId: 'alice', pulls: 10, rolls: Array(10).fill(0), now: 2000 });
@@ -163,7 +163,7 @@ assert(tenPull.results.some(result => result.kind === 'item' && ['SR', 'SSR', 'U
 assert.equal(tenPull.progression.diamonds, 0);
 require('../src/services/shopService').addInventory('gacha-guild', 'alice', gacha.TICKETS[1], 1, 3000);
 const ticketsBefore = gacha.getTicketBalances('gacha-guild', 'alice').single;
-const ticketPull = gacha.pullGacha({ guildId: 'gacha-guild', userId: 'alice', pulls: 1, rolls: [8000], now: 3001 });
+const ticketPull = gacha.pullGacha({ guildId: 'gacha-guild', userId: 'alice', pulls: 1, rolls: [9000], now: 3001 });
 assert.equal(ticketPull.usedFreePull, true);
 assert.equal(ticketPull.paymentType, gacha.TICKETS[1]);
 assert(['SSR', 'UR'].includes(ticketPull.results[0].tier));
@@ -185,7 +185,7 @@ assert.equal(Math.round(gachaPool.listGachaPool('custom-gacha').reduce((sum, ent
 // Tỷ lệ theo độ hiếm cố định và không phụ thuộc số vật phẩm trong bậc; R phải cao hơn SR
 const tierRatesOf = guild => Object.fromEntries(gachaPool.tierSummary(guild).map(row => [row.tier, row.rate]));
 const baseRates = tierRatesOf('custom-gacha');
-assert.deepEqual(Object.fromEntries(Object.entries(baseRates).map(([tier, rate]) => [tier, Math.round(rate * 100) / 100])), { XU: 30, R: 30, SR: 20, SSR: 15, UR: 5 });
+assert.deepEqual(Object.fromEntries(Object.entries(baseRates).map(([tier, rate]) => [tier, Math.round(rate * 100) / 100])), { XU: 50, R: 22, SR: 14, SSR: 10, UR: 4 });
 assert(baseRates.R > baseRates.SR && baseRates.SR > baseRates.SSR && baseRates.SSR > baseRates.UR);
 assert.throws(() => gachaPool.addGachaItem('custom-gacha', 'living_dictionary', 'SSR', 'admin'), /INVALID_GACHA_TIER/);
 const urBefore = gachaPool.listGachaPool('custom-gacha').filter(entry => entry.tier === 'UR' && entry.weight > 0);
@@ -193,24 +193,24 @@ const addedPoolItem = gachaPool.addGachaItem('custom-gacha', 'living_dictionary'
 assert.equal(addedPoolItem.weight, 1);
 const urAfter = gachaPool.listGachaPool('custom-gacha').filter(entry => entry.tier === 'UR' && entry.weight > 0);
 assert.equal(urAfter.length, urBefore.length, 'living_dictionary đã có sẵn trong pool nên không thêm bản sao');
-assert(Math.abs(tierRatesOf('custom-gacha').UR - 5) < 1e-9, 'thêm vật phẩm không đổi tỷ lệ bậc');
+assert(Math.abs(tierRatesOf('custom-gacha').UR - 4) < 1e-9, 'thêm vật phẩm không đổi tỷ lệ bậc');
 const disabledPoolItem = gachaPool.setGachaEnabled('custom-gacha', 'living_dictionary', false, 'admin');
 assert.equal(disabledPoolItem.rate, 0);
-assert(Math.abs(tierRatesOf('custom-gacha').UR - 5) < 1e-9, 'tắt một vật phẩm không đổi tỷ lệ bậc');
+assert(Math.abs(tierRatesOf('custom-gacha').UR - 4) < 1e-9, 'tắt một vật phẩm không đổi tỷ lệ bậc');
 const remainingUr = gachaPool.listGachaPool('custom-gacha').filter(entry => entry.tier === 'UR' && entry.weight > 0);
-assert(remainingUr.every(entry => Math.abs(entry.rate - 5 / remainingUr.length) < 1e-9), 'các vật phẩm còn lại trong bậc chia đều');
+assert(remainingUr.every(entry => Math.abs(entry.rate - 4 / remainingUr.length) < 1e-9), 'các vật phẩm còn lại trong bậc chia đều');
 assert.equal(gachaPool.setGachaEnabled('custom-gacha', 'living_dictionary', true, 'admin').weight, 1);
 // Đổi tỷ lệ bậc bằng cấu hình; bậc SR/SSR/UR không được về 0
 const rateConfig = require('../src/services/gameConfigService');
 rateConfig.setGameConfig('custom-gacha', 'GACHA_RATE_R', 60, 'admin');
-assert(Math.abs(tierRatesOf('custom-gacha').R - 60 / 130 * 100) < 1e-9, 'tỷ lệ bậc được chuẩn hóa về 100%');
+assert(Math.abs(tierRatesOf('custom-gacha').R - 60 / 138 * 100) < 1e-9, 'tỷ lệ bậc được chuẩn hóa về 100%');
 assert.throws(() => rateConfig.setGameConfig('custom-gacha', 'GACHA_RATE_UR', 0, 'admin'), /INVALID_GAME_CONFIG_VALUE/);
 rateConfig.resetGameConfig('custom-gacha', 'GACHA_RATE_R');
 // Mô phỏng: 200.000 lượt random thật phải bám tỷ lệ bậc dù mỗi bậc có số vật phẩm rất khác nhau
 {
   const counts = { XU: 0, R: 0, SR: 0, SSR: 0, UR: 0 }; const perItem = new Map(); const N = 200_000;
   for (let i = 0; i < N; i += 1) { const result = gacha.rollGacha(null, 'custom-gacha'); counts[result.tier] += 1; if (result.tier === 'UR') perItem.set(result.itemId, (perItem.get(result.itemId) || 0) + 1); }
-  for (const [tier, expected] of Object.entries({ XU: 0.30, R: 0.30, SR: 0.20, SSR: 0.15, UR: 0.05 })) assert(Math.abs(counts[tier] / N - expected) < 0.006, `bậc ${tier} ra ${(counts[tier] / N * 100).toFixed(2)}%`);
+  for (const [tier, expected] of Object.entries({ XU: 0.50, R: 0.22, SR: 0.14, SSR: 0.10, UR: 0.04 })) assert(Math.abs(counts[tier] / N - expected) < 0.006, `bậc ${tier} ra ${(counts[tier] / N * 100).toFixed(2)}%`);
   assert(counts.R > counts.SR, 'R phải nhiều hơn SR');
   const urShare = [...perItem.values()].map(count => count / counts.UR);
   assert(urShare.length === urAfter.length && urShare.every(share => Math.abs(share - 1 / urAfter.length) < 0.05), 'vật phẩm UR ra đều nhau');
