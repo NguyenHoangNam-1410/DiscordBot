@@ -169,7 +169,7 @@ function applyItem(state, item, rarity = 'common') {
   if (item.escapeTokens) state.escapeTokens += item.escapeTokens;
   if (item.maxHp) { state.maxHp = Math.max(20, state.maxHp + item.maxHp); state.hp = Math.min(state.maxHp, Math.max(1, state.hp + (item.heal || Math.max(0, item.maxHp)))); }
   if (item.bonusPenalty) state.payoutFactor *= 1 - item.bonusPenalty;
-  state.items.push({ name: item.name, rarity });
+  state.items.push({ name: item.name, rarity, text: item.text });
   state.items = state.items.slice(-8);
 }
 
@@ -335,12 +335,20 @@ function applyShrine(state, kind) {
   const damage = Math.max(10, Math.floor(state.maxHp * 0.3)); state.hp = Math.max(0, state.hp - damage); return `🤡 Shrine giả gây ${damage} damage.`;
 }
 
+const DISPLAY_STATS = ['hp', 'maxHp', 'damageMin', 'damageMax', 'defense', 'energy', 'potions', 'luck', 'critChance', 'evasion', 'resistance', 'escapeTokens'];
+function statSnapshot(state) { return Object.fromEntries(DISPLAY_STATS.map(key => [key, Number(state[key]) || 0])); }
+function statChanges(state, before) {
+  return Object.fromEntries(DISPLAY_STATS.map(key => [key, +(Number((Number(state[key]) || 0) - before[key]).toFixed(4))]).filter(([, change]) => change));
+}
+
 const actionTx = db.transaction(({ sessionId, userId, expectedTurn, action }) => {
   const session = getSession(sessionId);
   if (!session || session.user_id !== String(userId)) throw new Error('INVALID_SESSION');
   const state = parseState(session);
   return fairStateContext.run(state, () => {
   if (state.turn !== expectedTurn) throw new Error('STALE_ACTION');
+  const before = statSnapshot(state);
+  state.lastStatChanges = null;
   state.turn += 1;
   if (action === 'retreat') return { settled: true, state, result: finishRun(session, state, state.cleared > 0 ? 'cashout' : 'forfeit') };
   if (state.phase === 'summit') return { settled: true, state, result: finishRun(session, state, 'summit') };
@@ -431,6 +439,7 @@ const actionTx = db.transaction(({ sessionId, userId, expectedTurn, action }) =>
     } else throw new Error('INVALID_ACTION');
   } else throw new Error('INVALID_ACTION');
 
+  state.lastStatChanges = statChanges(state, before);
   saveState(session, state);
   return { settled: false, state, result: null };
   });
@@ -438,7 +447,7 @@ const actionTx = db.transaction(({ sessionId, userId, expectedTurn, action }) =>
 
 function playHardcore(args) { return actionTx(args); }
 
-function hardcoreEmbed(state, userId, result = null, sessionId = null) { return hardcoreView.hardcoreEmbed(state, userId, result, CLASSES, sessionId); }
+function hardcoreEmbed(state, userId, result = null, sessionId = null) { return hardcoreView.hardcoreEmbed(state, userId, result, CLASSES, sessionId, ITEMS); }
 function hardcoreRows(sessionId, state, disabled = false) { return hardcoreView.hardcoreRows(sessionId, state, disabled, CLASSES); }
 
 async function handleHardcoreButton(interaction) {
