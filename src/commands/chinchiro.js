@@ -15,7 +15,7 @@ module.exports = {
         userId: interaction.user.id, stake: interaction.options.getInteger('xu', true) });
     } catch (error) {
       if (error.message === 'ACTIVE_SESSION') return interaction.reply({ content: 'Bạn đang có một ván Chinchiro chưa kết thúc.', flags: MessageFlags.Ephemeral });
-      if (error.message === 'BET_LIMIT') return interaction.reply({ content: `Giới hạn cược Chinchiro của server là **${formatCoins(error.maxBet)} xu**.`, flags: MessageFlags.Ephemeral });
+      if (error.message === 'BET_LIMIT') return interaction.reply({ content: `Giới hạn cược Chinchiro của server là **${formatCoins(error.maxBet)} :coin:**.`, flags: MessageFlags.Ephemeral });
       return economyError(interaction, error);
     }
     const response = await interaction.reply({ embeds: [chinchiroEmbed(started.state, interaction.user.id, started.session?.id)],

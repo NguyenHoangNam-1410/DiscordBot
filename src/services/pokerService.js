@@ -7,10 +7,10 @@ const { formatCoins } = require('../utils/economy');
 const { createDeck, cardRank, bestHand, describeHand, awardPots } = require('./pokerEngine');
 const { createFairness, fairInt } = require('./fairnessService');
 const { getGameConfig } = require('./gameConfigService');
-const { addExperienceField } = require('../utils/progressionView');
 const { consumeActiveEffect, getActiveEffect } = require('./effectStateService');
 const pokerMultiplayerService = require('./pokerMultiplayerService');
 const pokerBotBrain = require('./pokerBotBrain');
+const { resultBlock, coins } = require('../utils/rewardText');
 
 const configuredAnte = Number(process.env.POKER_ANTE);
 const POKER_ANTE = Number.isSafeInteger(configuredAnte) && configuredAnte >= 10 && configuredAnte <= 100_000 ? configuredAnte : 50;
@@ -86,7 +86,7 @@ function startPoker({ guildId, channelId, userId, variant, forcedDeck = null }) 
     for (let card = 0; card < VARIANTS[variant].holes; card += 1) for (const player of players) player.hole.push(deck.pop());
     for (const bot of players.slice(1)) bot.revealedCard = bot.hole[0];
     for (const player of players) pay(player, ante);
-    const state = { variant, ante, startingStack: tableStack, deck, board: [deck.pop(), deck.pop(), deck.pop()], players, street: 'flop', phase: 'betting', currentBet: 0, raises: 0, log: [`💰 Ante ${formatCoins(ante)} xu/người`, '🃏 Flop đã mở — vòng cược đầu tiên bắt đầu.'], result: null, fair, fairCounter: 0,
+    const state = { variant, ante, startingStack: tableStack, deck, board: [deck.pop(), deck.pop(), deck.pop()], players, street: 'flop', phase: 'betting', currentBet: 0, raises: 0, log: [`💰 Ante ${formatCoins(ante)} :coin:/người`, '🃏 Flop đã mở — vòng cược đầu tiên bắt đầu.'], result: null, fair, fairCounter: 0,
       pokerInsurance: consumeActiveEffect(guildId, userId, 'poker_insurance'), foldCoupon: Boolean(getActiveEffect(guildId, userId, 'poker_fold_coupon')) };
     for (const player of players) player.streetBet = 0;
     const now = Date.now(); const session = { id: crypto.randomBytes(6).toString('hex'), guild_id: String(guildId), channel_id: String(channelId), message_id: null, user_id: String(userId), variant, state_json: JSON.stringify(state), expires_at: now + SESSION_TTL_MS, created_at: now, updated_at: now };
@@ -147,15 +147,15 @@ function actBots(state) {
       ante: state.ante, pressure: toCall / Math.max(1, bot.stack + toCall), activeBots: activePlayers(state).filter(player => player.id.startsWith('bot_')).length,
       roll, bluffRoll, sizeRoll,
     });
-    if (decision.action === 'fold') { bot.folded = true; state.log.push(`🏳️ ${bot.name} bỏ bài trước mức cược ${formatCoins(toCall)} xu.`); continue; }
+    if (decision.action === 'fold') { bot.folded = true; state.log.push(`🏳️ ${bot.name} bỏ bài trước mức cược ${formatCoins(toCall)} :coin:.`); continue; }
     const called = pay(bot, toCall);
     if (!raised && decision.action === 'raise') {
       pay(bot, decision.amount); state.currentBet = bot.streetBet; state.raises += 1; raised = true;
-      state.log.push(`⬆️ ${bot.name} ${bot.allIn ? 'All-in' : `tố lên ${formatCoins(state.currentBet)} xu`}.`);
-    } else state.log.push(`${bot.allIn ? '🔥' : '✅'} ${bot.name} ${bot.allIn ? 'All-in' : called ? `theo ${formatCoins(called)} xu` : 'check'}.`);
+      state.log.push(`⬆️ ${bot.name} ${bot.allIn ? 'All-in' : `tố lên ${formatCoins(state.currentBet)} :coin:`}.`);
+    } else state.log.push(`${bot.allIn ? '🔥' : '✅'} ${bot.name} ${bot.allIn ? 'All-in' : called ? `theo ${formatCoins(called)} :coin:` : 'check'}.`);
   }
   if (raised) for (const bot of state.players.filter(player => player.id.startsWith('bot_') && !player.folded && !player.allIn && player.streetBet < state.currentBet)) {
-    const matched = pay(bot, state.currentBet - bot.streetBet); state.log.push(`✅ ${bot.name} theo thêm ${formatCoins(matched)} xu.`);
+    const matched = pay(bot, state.currentBet - bot.streetBet); state.log.push(`✅ ${bot.name} theo thêm ${formatCoins(matched)} :coin:.`);
   }
   return raised;
 }
@@ -225,13 +225,13 @@ function playerAction(sessionId, userId, action, amount = 0) {
     if (action === 'fold') { human.folded = true; state.log.push('🏳️ Bạn bỏ bài.'); return settle(session, state, 'fold'); }
     const toCall = Math.max(0, state.currentBet - human.streetBet);
     const potBefore = state.players.reduce((sum, player) => sum + player.committed, 0); const committedBefore = human.committed;
-    if (action === 'call') { const paid = pay(human, Math.min(toCall, availableBet(state, session.guild_id))); if (paid < toCall || human.committed >= getGameBetLimit(session.guild_id, 'poker')) human.allIn = true; if (paid) spendCoins({ guildId: session.guild_id, userId, amount: paid, reason: `poker:${state.variant}:call` }); state.log.push(`${human.allIn && toCall ? '🔥 Bạn All-in để theo.' : toCall ? `✅ Bạn theo ${formatCoins(paid)} xu.` : '✅ Bạn check.'}`); }
+    if (action === 'call') { const paid = pay(human, Math.min(toCall, availableBet(state, session.guild_id))); if (paid < toCall || human.committed >= getGameBetLimit(session.guild_id, 'poker')) human.allIn = true; if (paid) spendCoins({ guildId: session.guild_id, userId, amount: paid, reason: `poker:${state.variant}:call` }); state.log.push(`${human.allIn && toCall ? '🔥 Bạn All-in để theo.' : toCall ? `✅ Bạn theo ${formatCoins(paid)} :coin:.` : '✅ Bạn check.'}`); }
     else if (action === 'raise') {
       const raise = Number(amount); if (!Number.isSafeInteger(raise) || raise < 10) throw new Error('INVALID_RAISE');
       const maxRaise = maxRaiseAmount(state, session.guild_id);
       if (raise > maxRaise) { const error = new Error('BET_LIMIT'); error.maxRaise = maxRaise; error.maxBet = getGameBetLimit(session.guild_id, 'poker'); throw error; }
       const paid = pay(human, toCall + raise);
-      spendCoins({ guildId: session.guild_id, userId, amount: paid, reason: `poker:${state.variant}:raise` }); state.currentBet = Math.max(state.currentBet, human.streetBet); state.raises += 1; state.log.push(`⬆️ Bạn tố lên ${formatCoins(state.currentBet)} xu.`);
+      spendCoins({ guildId: session.guild_id, userId, amount: paid, reason: `poker:${state.variant}:raise` }); state.currentBet = Math.max(state.currentBet, human.streetBet); state.raises += 1; state.log.push(`⬆️ Bạn tố lên ${formatCoins(state.currentBet)} :coin:.`);
       if (human.committed >= getGameBetLimit(session.guild_id, 'poker')) human.allIn = true;
     } else throw new Error('INVALID_ACTION');
     pokerBotBrain.observeHuman(state, { action, toCall, paid: human.committed - committedBefore, raise: action === 'raise' ? Number(amount) : 0, potBefore });
@@ -266,14 +266,14 @@ function pokerEmbed(state, userId, sessionId = null) {
   }).join('\n');
   const embed = new EmbedBuilder().setColor(complete ? (state.result.outcome === 'win' ? 0x2ECC71 : state.result.outcome === 'draw' ? 0xF1C40F : 0xE74C3C) : 0x8E44AD)
     .setTitle(`♠️ POKER · ${VARIANTS[state.variant].name.toUpperCase()}`)
-    .setDescription(`## 🃏 BÀI CHUNG\n### ${largeCardText(state.board)}${state.board.length < 5 ? `　${'**??**　'.repeat(5 - state.board.length)}` : ''}\n\n## 👤 BÀI CỦA <@${userId}>\n### ${largeCardText(human.hole)}\n**Set mạnh nhất hiện tại:** ${playerEval(state)}\n\n## 🤖 BÀI CỦA BOT\n${exposedBots}\n\n## 💰 POT: ${formatCoins(pot)} XU`)
-    .addFields({ name: '🎴 STACK VÀ TIỀN ĐÃ CƯỢC', value: state.players.map(player => `${player.folded ? '🏳️' : player.allIn ? '🔥' : '🎴'} **${player.name}**\nCòn **${formatCoins(player.stack)}** · Đã cược **${formatCoins(player.committed)} xu**`).join('\n\n') });
-  if (!complete) embed.addFields({ name: `🎯 LƯỢT ${state.street.toUpperCase()} · CẦN THEO ${formatCoins(Math.max(0, state.currentBet - human.streetBet))} XU`, value: state.log.slice(-4).map(line => `• ${line}`).join('\n') });
+    .setDescription(`## 🃏 BÀI CHUNG\n### ${largeCardText(state.board)}${state.board.length < 5 ? `　${'**??**　'.repeat(5 - state.board.length)}` : ''}\n\n## 👤 BÀI CỦA <@${userId}>\n### ${largeCardText(human.hole)}\n**Set mạnh nhất hiện tại:** ${playerEval(state)}\n\n## 🤖 BÀI CỦA BOT\n${exposedBots}\n\n## 💰 POT: ${formatCoins(pot)} :coin:`)
+    .addFields({ name: '🎴 STACK VÀ TIỀN ĐÃ CƯỢC', value: state.players.map(player => `${player.folded ? '🏳️' : player.allIn ? '🔥' : '🎴'} **${player.name}**\nCòn **${formatCoins(player.stack)}** · Đã cược **${formatCoins(player.committed)} :coin:**`).join('\n\n') });
+  if (!complete) embed.addFields({ name: `🎯 LƯỢT ${state.street.toUpperCase()} · CẦN THEO ${formatCoins(Math.max(0, state.currentBet - human.streetBet))} :coin:`, value: state.log.slice(-4).map(line => `• ${line}`).join('\n') });
   else {
     const reveals = state.players.map(player => { const score = state.result.scores[player.id]; return `${player.folded ? '🏳️' : '🃏'} **${player.name}:** ${cardText(player.hole)}${score ? ` — **${score.name}**` : ' — Đã bỏ bài'}`; }).join('\n');
     const pots = state.result.pots.map((potItem, index) => `**${index === 0 ? 'Main Pot' : `Side Pot ${index}`} ${formatCoins(potItem.amount)}:** ${potItem.winners.map(id => state.players.find(player => player.id === id)?.name).join(', ')}`).join('\n') || 'Không có pot tranh chấp.';
-    embed.addFields({ name: 'Showdown', value: reveals }, { name: 'Chia Pot', value: pots }, { name: state.result.outcome === 'win' ? '🏆 Bạn thắng!' : state.result.outcome === 'draw' ? '🤝 Hòa vốn' : '💥 Bạn thua', value: `Nhận lại **${formatCoins(state.result.payout)} xu**${state.result.insurance ? `\n🛡️ Bảo hiểm Poker hoàn **${state.result.insurancePercent}% = ${formatCoins(state.result.insurance)} xu**` : ''}${state.result.foldRefund ? `\n🏳️ Phiếu Bỏ Bài hoàn **50% Ante = ${formatCoins(state.result.foldRefund)} xu**` : ''}` });
-    addExperienceField(embed, state.result);
+    embed.addFields({ name: 'Showdown', value: reveals }, { name: 'Chia Pot', value: pots }, { name: state.result.outcome === 'win' ? '🏆 Bạn thắng!' : state.result.outcome === 'draw' ? '🤝 Hòa vốn' : '💥 Bạn thua', value: resultBlock({ userId, outcome: state.result.outcome, stake: human.committed, payout: state.result.payout, result: state.result,
+      extra: [state.result.insurance ? `🛡️ Bảo hiểm Poker hoàn **${state.result.insurancePercent}%** = +${coins(state.result.insurance)}` : '', state.result.foldRefund ? `🏳️ Phiếu Bỏ Bài hoàn **50% Ante** = +${coins(state.result.foldRefund)}` : ''] }) });
     if (state.result.achievements?.length) embed.addFields({ name: '🏅 Thành tựu mới', value: state.result.achievements.map(item => `**${item.name}**`).join('\n') });
   }
   return embed.setFooter({ text: `${sessionId && !complete ? `Mã ván: ${sessionId} • ` : ''}${VARIANTS[state.variant].description} • Main Pot và Side Pot tự động` });
@@ -326,7 +326,7 @@ async function handlePokerModal(interaction) {
   if (!/^\d+$/.test(text)) return reject('Số xu tố không hợp lệ.');
   let state;
   try { state = playerAction(id, interaction.user.id, 'raise', amount); }
-  catch (error) { return reject(error.message === 'BET_LIMIT' ? `Bạn chỉ có thể tố thêm tối đa **${formatCoins(error.maxRaise)} xu** trong giới hạn **${formatCoins(error.maxBet)} xu/ván**.` : error.message === 'INVALID_RAISE' ? 'Mức tố tối thiểu là 10 xu.' : 'Không thể tố lúc này.'); }
+  catch (error) { return reject(error.message === 'BET_LIMIT' ? `Bạn chỉ có thể tố thêm tối đa **${formatCoins(error.maxRaise)} :coin:** trong giới hạn **${formatCoins(error.maxBet)} :coin:/ván**.` : error.message === 'INVALID_RAISE' ? 'Mức tố tối thiểu là 10 xu.' : 'Không thể tố lúc này.'); }
   return interaction.update({ embeds: [pokerEmbed(state, interaction.user.id, id)], components: pokerRows(id, state), allowedMentions: { parse: [] } });
 }
 async function handlePokerPrivateButton(interaction) {

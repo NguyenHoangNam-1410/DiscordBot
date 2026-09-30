@@ -47,7 +47,7 @@ async function handleReplayButton(interaction, logger = console) {
     const response = await interaction.reply({ ...payload, withResponse: true }); const id = response?.resource?.message?.id || response?.id; if (id) setMessage(id); return started;
   } catch (error) {
     logger.warn?.({ err: error, game, userId: interaction.user.id }, 'replay failed');
-    const content = error.message === 'ACTIVE_SESSION' ? 'Bạn đang có một ván chưa kết thúc.' : error.message === 'BET_LIMIT' ? `Mức cược cũ vượt giới hạn hiện tại **${formatCoins(error.maxBet)} xu**. Hãy tạo ván mới với mức cược thấp hơn.` : error.code === 'INSUFFICIENT_FUNDS' ? 'Bạn không đủ xu để chơi lại.' : 'Không thể chơi lại với cấu hình cũ.';
+    const content = error.message === 'ACTIVE_SESSION' ? 'Bạn đang có một ván chưa kết thúc.' : error.message === 'BET_LIMIT' ? `Mức cược cũ vượt giới hạn hiện tại **${formatCoins(error.maxBet)} :coin:**. Hãy tạo ván mới với mức cược thấp hơn.` : error.code === 'INSUFFICIENT_FUNDS' ? 'Bạn không đủ xu để chơi lại.' : 'Không thể chơi lại với cấu hình cũ.';
     return interaction.reply({ content, flags: MessageFlags.Ephemeral });
   }
 }

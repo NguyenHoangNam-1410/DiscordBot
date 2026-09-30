@@ -28,7 +28,7 @@ function leaderboardRow(ownerId, selected = 'assets') {
 function assetsEmbed(guildId, serverName = 'Server hiện tại') {
   const rows = getLeaderboard(guildId, 10);
   const description = rows.length
-    ? rows.map((row, index) => `${index + 1}. <@${row.user_id}> · **${formatCoins(row.balance)} xu**`).join('\n')
+    ? rows.map((row, index) => `${index + 1}. <@${row.user_id}> · **${formatCoins(row.balance)} :coin:**`).join('\n')
     : 'Server chưa có dữ liệu tài sản.';
   return new EmbedBuilder().setColor(0xF1C40F).setTitle(`🏠 ${serverName.toUpperCase()}\n💰 XẾP HẠNG TÀI SẢN`).setDescription(description)
     .setFooter({ text: 'Xếp theo số dư xu hiện tại' }).setTimestamp();

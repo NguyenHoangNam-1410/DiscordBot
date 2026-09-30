@@ -6,7 +6,7 @@ const { formatCoins } = require('../utils/economy');
 const { getGameBetLimit } = require('./gameBetLimitService');
 const { consumeHighestEffect, consumeActiveEffect } = require('./effectStateService');
 const { createFairness, fairShuffle } = require('./fairnessService');
-const { addExperienceField } = require('../utils/progressionView');
+const { resultBlock, coins } = require('../utils/rewardText');
 
 const TABLE_LOBBY_MS = 30_000;
 const TABLE_PLAY_MS = 3 * 60_000;
@@ -233,7 +233,7 @@ function handText(hand, index, active, result = null) {
   const score = handScore(hand.cards).total;
   const marker = active === index && !result ? '👉 ' : '';
   const outcome = result ? ` • **${result.label}**` : hand.status === 'bust' ? ' • **BUST**' : '';
-  return `${marker}**Tay ${index + 1}:** ${cardText(hand.cards)} — **${score} điểm** • Cược ${formatCoins(hand.bet)} xu${outcome}`;
+  return `${marker}**Tay ${index + 1}:** ${cardText(hand.cards)} — **${score} điểm** • Cược ${formatCoins(hand.bet)} :coin:${outcome}`;
 }
 
 function blackjackEmbed(state, userId, result = null, sessionId = null) {
@@ -244,12 +244,7 @@ function blackjackEmbed(state, userId, result = null, sessionId = null) {
     .setTitle('🃏 XÌ DÁCH · NHÀ CÁI')
     .setDescription(`## 🏦 BÀI NHÀ CÁI\n### ${dealerCards}${dealerScore}\n\n## 👤 BÀI CỦA <@${userId}>\n### ${hands}`);
   if (result) {
-    const summary = result.reason === 'forfeit' ? 'Bạn đã bỏ ván và mất toàn bộ tiền cược.'
-      : result.outcome === 'win' ? `🎉 Thắng! Nhận lại **${formatCoins(result.payout)} xu**.`
-        : result.outcome === 'draw' ? `🤝 Hòa! Nhận lại **${formatCoins(result.payout)} xu**.`
-          : '💥 Nhà cái thắng.';
-    embed.addFields({ name: '🏆 KẾT QUẢ', value: `### ${summary}\n**Tổng cược:** ${formatCoins(result.stake)} xu` });
-    addExperienceField(embed, result);
+    embed.addFields({ name: '🏆 KẾT QUẢ', value: `${resultBlock({ userId, outcome: result.outcome, stake: result.stake, payout: result.payout, result, reason: result.reason === 'forfeit' ? 'bỏ ván' : '' })}` });
     if (result.achievements?.length) embed.addFields({ name: '🏅 Thành tựu mới', value: result.achievements.map(item => `**${item.name}**`).join('\n') });
   }
   if (sessionId && !result) embed.setFooter({ text: `Mã ván: ${sessionId} • Nhà cái dừng ở soft 17 • Xì dách tự nhiên trả 3:2 • Không thu phí mở ván` });
@@ -289,7 +284,7 @@ async function handleBlackjackButton(interaction) {
     return interaction.update({ embeds: [blackjackEmbed(played.state, interaction.user.id, played.result, played.settled ? null : sessionId)], components: actionRows(sessionId, played.state, played.settled), allowedMentions: { parse: [] } });
   } catch (error) {
     const content = error.code === 'INSUFFICIENT_FUNDS' ? 'Bạn không đủ xu để thực hiện thao tác này.'
-      : error.message === 'BET_LIMIT' ? `Thao tác này vượt giới hạn cược **${formatCoins(error.maxBet)} xu/người/ván**.`
+      : error.message === 'BET_LIMIT' ? `Thao tác này vượt giới hạn cược **${formatCoins(error.maxBet)} :coin:/người/ván**.`
       : error.message === 'CANNOT_DOUBLE' ? 'Chỉ được gấp đôi khi tay bài có đúng hai lá.'
         : error.message === 'CANNOT_SPLIT' ? 'Chỉ được tách một lần khi hai lá đầu cùng hạng.'
           : error.message === 'ITEM_EFFECT_UNAVAILABLE' ? 'Hiệu ứng vật phẩm không còn khả dụng trong ván này.' : 'Không thể thực hiện thao tác này.';
@@ -349,15 +344,18 @@ function settleTableTx(table, state, now = Date.now()) {
     const player = state.players.find(item => item.id === result.userId);
     dealerNet += player.stake - result.payout;
     const outcome = result.outcome;
-    settleReservedGame({ guildId: table.guild_id, userId: result.userId, payout: result.payout,
+    const account = settleReservedGame({ guildId: table.guild_id, userId: result.userId, payout: result.payout,
       stake: player.stake, game: 'blackjack', outcome,
       operationId: `settle:blackjack-table:${table.id}:${result.userId}` });
+    Object.assign(result, { experienceGained: account.experienceGained, levelUps: account.levelUps, bonusDrops: account.bonusDrops });
   }
   const dealerReserve = table.ante * TABLE_GUESTS;
   const dealerPayout = dealerReserve + dealerNet;
   const dealerOutcome = dealerPayout > dealerReserve ? 'win' : dealerPayout < dealerReserve ? 'loss' : 'draw';
-  settleReservedGame({ guildId: table.guild_id, userId: table.dealer_id, payout: dealerPayout,
+  const dealerAccount = settleReservedGame({ guildId: table.guild_id, userId: table.dealer_id, payout: dealerPayout,
     stake: dealerReserve, game: 'blackjack', outcome: dealerOutcome, operationId: `settle:blackjack-table:${table.id}:dealer` });
+  state.dealerResult = { userId: table.dealer_id, outcome: dealerOutcome, payout: dealerPayout, stake: dealerReserve,
+    experienceGained: dealerAccount.experienceGained, levelUps: dealerAccount.levelUps, bonusDrops: dealerAccount.bonusDrops };
   state.results = results; state.phase = 'complete';
   saveTable(table, state, 'completed', now, now);
   db.prepare('DELETE FROM blackjack_table_locks WHERE table_id=?').run(table.id);
@@ -432,7 +430,7 @@ function playBlackjackTable(id, userId, action, now = Date.now()) {
 function blackjackTableEmbed(table, state = tableState(table)) {
   const lobby = table.status === 'lobby'; const complete = table.status === 'completed';
   const embed = new EmbedBuilder().setColor(complete ? 0x2ECC71 : 0x34495E).setTitle('🃏 XÌ DÁCH · NHÀ CÁI NGƯỜI CHƠI')
-    .setDescription(`🏦 Nhà cái: <@${table.dealer_id}> · Ante: **${formatCoins(table.ante)} xu**\n${lobby ? `⏳ Đang nhận người chơi đến <t:${Math.floor(table.expires_at / 1000)}:R> · Tối đa ${TABLE_GUESTS} người.` : ''}`);
+    .setDescription(`🏦 Nhà cái: <@${table.dealer_id}> · Ante: **${formatCoins(table.ante)} :coin:**\n${lobby ? `⏳ Đang nhận người chơi đến <t:${Math.floor(table.expires_at / 1000)}:R> · Tối đa ${TABLE_GUESTS} người.` : ''}`);
   if (lobby) embed.addFields({ name: '🪑 Ghế', value: state.players.length ? state.players.map((player, index) => `${index + 1}. <@${player.id}>`).join('\n') : 'Chưa có người chơi. Bấm **Vào bàn** trong 30 giây.' });
   else {
     const dealerCards = complete ? state.dealer.map(card => `**${card}**`).join('　') : `**${state.dealer[0]}**　**??**`;
@@ -444,9 +442,10 @@ function blackjackTableEmbed(table, state = tableState(table)) {
           return `<@${player.id}> · ${status} · 🂠 ×${player.cards.length}`;
         }
         const score = handScore(player.cards).total; const result = state.results?.find(item => item.userId === player.id);
-        return `<@${player.id}>${state.players[state.turn]?.id === player.id && !complete ? ' · 👉 Đến lượt' : ''}\n${player.cards.map(card => `**${card}**`).join('　')} · ${score} điểm${handType(player.cards) === 'ngulinh' ? ' · **NGŨ LINH**' : ''}${result ? ` · **${result.label}** · nhận ${formatCoins(result.payout)} xu` : ''}`;
+        const cardsLineText = `${player.cards.map(card => `**${card}**`).join('　')} · ${score} điểm${handType(player.cards) === 'ngulinh' ? ' · **NGŨ LINH**' : ''}${result ? ` · **${result.label}**` : ''}`;
+        return `<@${player.id}>${state.players[state.turn]?.id === player.id && !complete ? ' · 👉 Đến lượt' : ''}\n${cardsLineText}${result ? `\n${resultBlock({ userId: player.id, outcome: result.outcome, stake: player.stake, payout: result.payout, result })}` : ''}`;
       }).join('\n\n') });
-    if (complete) embed.addFields({ name: 'Kết quả', value: `Ván đã kết thúc. Ante **${formatCoins(table.ante)} xu/người**.` });
+    if (complete) embed.addFields({ name: 'Kết quả', value: `Ván đã kết thúc. Ante **${coins(table.ante)}/người**.${state.dealerResult ? `\n🏦 Nhà cái: ${resultBlock({ userId: state.dealerResult.userId, outcome: state.dealerResult.outcome, stake: state.dealerResult.stake, payout: state.dealerResult.payout, result: state.dealerResult })}` : ''}` });
     else if (table.status === 'expired') embed.addFields({ name: '⌛ Bàn đã hết hạn', value: state.staller ? `<@${state.staller}> không thao tác kịp nên **mất tiền cược**; nhà cái và người chơi còn lại được hoàn tiền.` : 'Bàn hết hạn; tiền cược đã được hoàn lại.' });
   }
   return embed.setFooter({ text: `Mã ván: ${table.id}` });
@@ -473,7 +472,7 @@ function tablePrivateText(table, state, userId) {
   const score = handScore(player.cards).total;
   const hand = `🃏 **Bài của bạn:** ${largeCards(player.cards)} — **${score} điểm**${handType(player.cards) === 'ngulinh' ? ' · **NGŨ LINH**' : ''}\n🏦 Nhà cái đang lộ: **${state.dealer[0]}**　**??**`;
   const result = state.results?.find(item => item.userId === player.id);
-  if (result) return `${hand}\n\n🏆 **${result.label}** · nhận **${formatCoins(result.payout)} xu**`;
+  if (result) return `${hand}\n\n🏆 **${result.label}**\n${resultBlock({ userId: player.id, outcome: result.outcome, stake: player.stake, payout: result.payout, result })}`;
   if (table.status === 'expired') return `${hand}\n\n⌛ Bàn đã hết hạn.`;
   if (state.players[state.turn]?.id === player.id && player.status === 'playing') return `${hand}\n\n👉 Đến lượt bạn: chọn **Rút bài** hoặc **Dừng**.`;
   if (player.status === 'playing') return `${hand}\n\n⏳ Chưa đến lượt bạn; hãy chờ người trước hoàn tất.`;

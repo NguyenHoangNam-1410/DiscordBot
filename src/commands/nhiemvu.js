@@ -9,15 +9,10 @@ const {
 } = require("../services/onboardingService");
 
 const { getCatalogItem } = require("../services/itemCatalogService");
+const { rewardSummary } = require("../utils/rewardText");
 function rewardText(item) {
-  return [
-    item.coins ? `${formatCoins(item.coins)} xu` : null,
-    item.experience ? `${item.experience} EXP` : null,
-    item.diamonds ? `${item.diamonds} :gem:` : null,
-    item.item ? `${getCatalogItem(item.item)?.name || item.item} ×${item.quantity || 1}` : null,
-  ]
-    .filter(Boolean)
-    .join(" + ");
+  const info = item.item ? getCatalogItem(item.item) : null;
+  return rewardSummary({ coins: item.coins, diamonds: item.diamonds, experience: item.experience, item: item.item, quantity: item.quantity || 1, itemName: info?.name, itemRarity: info?.rarity });
 }
 const CLAIM_TYPES = Object.freeze([
   { name: "Tất cả", value: "tatca" },
@@ -29,7 +24,7 @@ const number = (value) => Number(value).toLocaleString("vi-VN");
 
 function roleLines(result) {
   return result.claimed.map(
-    (config) => `<@&${config.role_id}> — **${formatCoins(config.amount)} xu**`,
+    (config) => `<@&${config.role_id}> — **${formatCoins(config.amount)} :coin:**`,
   );
 }
 function claimReply(interaction, type) {
@@ -50,7 +45,7 @@ function claimReply(interaction, type) {
     const rewards = claimAchievements(guildId, userId);
     if (rewards.length)
       lines.push(
-        `🏅 **Thành tựu** (${rewards.length}): **${formatCoins(rewards.reduce((sum, item) => sum + item.reward, 0))} xu** + **${rewards.reduce((sum, item) => sum + (item.diamonds || 0), 0)} :gem:**`,
+        `🏅 **Thành tựu** (${rewards.length}): **${formatCoins(rewards.reduce((sum, item) => sum + item.reward, 0))} :coin:** + **${rewards.reduce((sum, item) => sum + (item.diamonds || 0), 0)} :gem:**`,
       );
     else empty.push("Chưa có thành tựu mới để nhận.");
   }
@@ -64,7 +59,7 @@ function claimReply(interaction, type) {
       lines.push(
         `🎖️ **Thưởng vai trò** (tuần ${result.week}):`,
         ...roleLines(result),
-        `Tổng cộng: **${formatCoins(result.total)} xu**`,
+        `Tổng cộng: **${formatCoins(result.total)} :coin:**`,
       );
     else
       empty.push(
@@ -152,7 +147,7 @@ module.exports = {
         flags: MessageFlags.Ephemeral,
       });
     const reward = [
-      `${formatCoins(result.coins)} xu`,
+      `${formatCoins(result.coins)} :coin:`,
       result.diamonds ? `${result.diamonds} :gem:` : null,
     ]
       .filter(Boolean)

@@ -8,7 +8,7 @@ module.exports = {
     if (!interaction.guildId) return interaction.reply({ content: 'Lệnh này chỉ dùng trong server.', flags: MessageFlags.Ephemeral });
     const starter = claimStarterPack(interaction.guildId, interaction.user.id);
     const reward = starter.claimed
-      ? `\n\n🎁 **Gói chào mừng:** ${formatCoins(starter.coins)} xu và màu hồ sơ **${starter.cosmetic}**.`
+      ? `\n\n🎁 **Gói chào mừng:** ${formatCoins(starter.coins)} :coin: và màu hồ sơ **${starter.cosmetic}**.`
       : '\n\n✅ Bạn đã nhận gói chào mừng trước đây; hướng dẫn vẫn luôn dùng được.';
     const embed = new EmbedBuilder().setColor(0x38BDF8).setTitle('👋 CHÀO MỪNG ĐẾN GAME HUB')
       .setDescription(`Bắt đầu nhanh trong ba bước:${reward}`)

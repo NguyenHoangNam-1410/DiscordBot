@@ -4,7 +4,7 @@ const { db } = require('../db');
 const { getAccount, spendCoins, settleReservedGame, creditCoins } = require('./economyService');
 const { getGameBetLimit } = require('./gameBetLimitService');
 const { formatCoins } = require('../utils/economy');
-const { experienceLines } = require('../utils/progressionView');
+const { resultLine, resultBlock, bonusLine, coins } = require('../utils/rewardText');
 
 const INVITE_TTL_MS = 60_000;
 const PLAY_TTL_MS = 120_000;
@@ -150,7 +150,7 @@ function duelEmbed(duel, settlement = null) {
   const color = duel.status === 'completed' ? 0x2ECC71 : duel.status === 'playing' ? 0x3498DB
     : duel.status === 'invited' ? 0xF1C40F : 0x7F8C8D;
   const embed = new EmbedBuilder().setColor(color).setTitle('⚔️ OẲN TÙ TÌ · SOLO')
-    .setDescription(`### <@${duel.challenger_id}>  ⚡  <@${duel.opponent_id}>\n:coin: **${formatCoins(duel.stake)} xu/người** · Tổng thưởng **${formatCoins(duel.stake * 2)} xu**`);
+    .setDescription(`### <@${duel.challenger_id}>  ⚡  <@${duel.opponent_id}>\n**${formatCoins(duel.stake)} :coin:/người** · Tổng thưởng **${formatCoins(duel.stake * 2)} :coin:**`);
   if (duel.status === 'invited') embed.addFields({ name: '📨 Lời thách đấu', value: `Đang chờ đối thủ phản hồi · <t:${Math.floor(duel.expires_at / 1000)}:R>` });
   if (duel.status === 'playing') embed.addFields(
     { name: '🔵 NGƯỜI THÁCH ĐẤU', value: `<@${duel.challenger_id}>\n${duel.challenger_choice ? '✅ Đã khóa lựa chọn' : '🎮 Đang lựa chọn'}`, inline: true },
@@ -162,13 +162,11 @@ function duelEmbed(duel, settlement = null) {
     embed.addFields(
       { name: '🔵 NGƯỜI THÁCH ĐẤU', value: `### <@${duel.challenger_id}>\n# ${HANDS[duel.challenger_choice].emoji} ${HANDS[duel.challenger_choice].label}`, inline: true },
       { name: '🔴 ĐỐI THỦ', value: `### <@${duel.opponent_id}>\n# ${HANDS[duel.opponent_choice].emoji} ${HANDS[duel.opponent_choice].label}`, inline: true },
-      { name: draw ? '🤝 HÒA' : '🏆 CHIẾN THẮNG', value: draw ? 'Hai người được hoàn lại toàn bộ tiền cược.' : `<@${duel.winner_id}> nhận **${formatCoins(duel.stake * 2)} xu**` },
+      { name: draw ? '🤝 KẾT QUẢ' : '🏆 KẾT QUẢ', value: [[duel.challenger_id, settlement?.challengerAccount], [duel.opponent_id, settlement?.opponentAccount]].map(([id, account]) => {
+        const outcome = draw ? 'draw' : String(duel.winner_id) === String(id) ? 'win' : 'loss';
+        return resultBlock({ userId: id, outcome, stake: duel.stake, payout: outcome === 'win' ? duel.stake * 2 : outcome === 'draw' ? duel.stake : 0, result: account || {} });
+      }).join('\n') },
     );
-    const exp = settlement ? experienceLines([
-      { userId: duel.challenger_id, experienceGained: settlement.challengerAccount?.experienceGained, levelUps: settlement.challengerAccount?.levelUps, bonusDrops: settlement.challengerAccount?.bonusDrops },
-      { userId: duel.opponent_id, experienceGained: settlement.opponentAccount?.experienceGained, levelUps: settlement.opponentAccount?.levelUps, bonusDrops: settlement.opponentAccount?.bonusDrops },
-    ]) : [];
-    if (exp.length) embed.addFields({ name: ':test_tube: EXP NHẬN ĐƯỢC', value: exp.join('\n') });
   }
   if (duel.status === 'declined') embed.addFields({ name: 'Kết quả', value: '❌ Đối thủ đã từ chối lời thách đấu.' });
   if (duel.status === 'expired') embed.addFields({ name: 'Kết quả', value: '⌛ Ván đã hết hạn.' + (duel.forfeited?.length ? ` ${duel.forfeited.map(id => `<@${id}>`).join(', ')} không chọn kịp nên **mất tiền cược**${duel.refunded ? '; người còn lại được hoàn tiền' : ''}.` : duel.refunded ? ' Tiền cược đã được hoàn.' : '') });
@@ -214,7 +212,7 @@ async function handleRpsDuelButton(interaction) {
       return interaction.update({ embeds: [duelEmbed(result.duel, result)], components: result.completed ? replayButtons(result.duel) : handButtons(id), allowedMentions: { parse: [] } });
     }
   } catch (error) {
-    if (error.message === 'BET_LIMIT') return interaction.reply({ content: `Giới hạn cược Oẳn tù tì hiện tại là **${formatCoins(error.maxBet)} xu**.`, flags: MessageFlags.Ephemeral });
+    if (error.message === 'BET_LIMIT') return interaction.reply({ content: `Giới hạn cược Oẳn tù tì hiện tại là **${formatCoins(error.maxBet)} :coin:**.`, flags: MessageFlags.Ephemeral });
     if (error.code === 'INSUFFICIENT_FUNDS') return interaction.reply({ content: 'Một người chơi không đủ xu để tham gia ván này.', flags: MessageFlags.Ephemeral });
     const messages = {
       NOT_OPPONENT: 'Chỉ người được thách đấu mới có thể quyết định.', DUEL_CLOSED: 'Lời thách đấu này đã được xử lý.',

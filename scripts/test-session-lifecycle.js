@@ -455,7 +455,7 @@ function bet(guildId, roundId, userId, choice, amount) {
   assert.equal(bjService.getBlackjackTable(privateTableId).status, 'completed');
   const finalPublic = publicEdits.at(-1).embeds[0].toJSON();
   assert.match(JSON.stringify(finalPublic), /♣|♦|♠|♥/, 'kết thúc ván thì bài được lộ công khai');
-  assert.match(standTwo.calls.updates[0].content, /nhận/, 'bảng riêng hiện kết quả cuối');
+  assert.match(standTwo.calls.updates[0].content, /:coin:.*:test_tube:/s, 'bảng riêng hiện kết quả cuối');
 
   // Từ Điển Sống trao cả 10 kim cương của câu khó
   const dictGuild = 'dictionary-guild'; const dictChannel = 'dictionary-channel';
@@ -468,7 +468,7 @@ function bet(guildId, roundId, userId, choice, amount) {
   require('../src/services/shopService').addInventory(dictGuild, 'alice', 'living_dictionary', 1);
   const dictionaryUse = require('../src/services/itemEffectService').useItem({ guildId: dictGuild, userId: 'alice', channelId: dictChannel, itemId: 'living_dictionary' });
   assert.equal(levelsForDictionary.getPlayerProgression(dictGuild, 'alice').diamonds, diamondsBefore + 10, 'phải nhận 10 kim cương như trả lời câu khó thông thường');
-  assert.match(dictionaryUse.message, /10 kim cương/);
+  assert.match(dictionaryUse.message, /\+10 :gem:/);
   assert.match(require('../src/services/itemCatalogService').getCatalogItem('living_dictionary').description, /10 kim cương/);
 
   // Dọn duel và bàn Xì dách đã kết thúc

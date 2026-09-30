@@ -493,14 +493,14 @@ async function handleHorseModal(interaction) {
     const content = error.code === 'INSUFFICIENT_FUNDS' ? 'Bạn không đủ xu để đặt cược.'
       : error.message === 'ROUND_CLOSED' ? 'Ván đua đã khóa cược.'
         : error.message === 'INVALID_HORSE' ? 'Ngựa này không tham gia ván hiện tại.'
-        : error.message === 'BET_LIMIT' ? `Tổng cược tối đa của bạn trong ván này là ${formatCoins(error.maxBet)} xu.`
-          : `Mức cược phải từ ${formatCoins(MIN_BET)} đến ${formatCoins(MAX_BET_PER_HORSE)} xu.`;
+        : error.message === 'BET_LIMIT' ? `Tổng cược tối đa của bạn trong ván này là ${formatCoins(error.maxBet)} :coin:.`
+          : `Mức cược phải từ ${formatCoins(MIN_BET)} đến ${formatCoins(MAX_BET_PER_HORSE)} :coin:.`;
     return reject(content);
   }
   const market = marketForRound(placed.round);
-  await interaction.reply({ content: `## ✅ ĐẶT CƯỢC THÀNH CÔNG\n🐎 **Ngựa:** ${horseLabel(horse, market)}\n💰 **Lần này:** ${formatCoins(amount)} xu\n🎟️ **Tổng cược trong ván:** ${formatCoins(placed.totalAmount)} xu`, flags: MessageFlags.Ephemeral });
+  await interaction.reply({ content: `## ✅ ĐẶT CƯỢC THÀNH CÔNG\n🐎 **Ngựa:** ${horseLabel(horse, market)}\n💰 **Lần này:** ${formatCoins(amount)} :coin:\n🎟️ **Tổng cược trong ván:** ${formatCoins(placed.totalAmount)} :coin:`, flags: MessageFlags.Ephemeral });
   await refreshRace(placed.round, interaction.client);
-  const publicMessage = `<@${interaction.user.id}> đặt cược **${formatCoins(amount)} xu** vào **${horseLabel(horse, market)}** 🐎`;
+  const publicMessage = `<@${interaction.user.id}> đặt cược **${formatCoins(amount)} :coin:** vào **${horseLabel(horse, market)}** 🐎`;
   await interaction.channel?.send({ content: publicMessage }).catch(() => {});
   return null;
 }

@@ -1,7 +1,7 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } = require('discord.js');
 const { formatCoins } = require('../utils/economy');
 const { baseMultiplier, potentialPayout } = require('./hardcoreEngine');
-const { addExperienceField } = require('../utils/progressionView');
+const { resultBlock, coins } = require('../utils/rewardText');
 
 function rankLabel(rank) { return { normal: 'Thường', elite: 'Elite', boss: 'BOSS', mimic: 'Mimic', ancient_mimic: 'Ancient Mimic' }[rank] || rank; }
 function encounterText(state) {
@@ -42,17 +42,15 @@ function hardcoreEmbed(state, userId, result, classes, sessionId = null) {
     .addFields(
       { name: 'Nhân vật', value: `❤️ ${formatCoins(state.hp)}/${formatCoins(state.maxHp)}\n⚔️ ${formatCoins(state.damageMin)}–${formatCoins(state.damageMax)}\n🛡️ ${formatCoins(state.defense)} · ✨ ${state.energy}/${state.maxEnergy}`, inline: true },
       { name: 'Run', value: `Đã vượt: ${state.cleared}\nBoss: ${state.bosses}\n🍀 Luck: ${state.luck}\n🧪 Bình: ${state.potions}\n${chaosLabel(state)}`, inline: true },
-      { name: '💰 PAYOUT NẾU RÚT', value: state.cleared ? `## ${formatCoins(payout)} xu\nx${baseMultiplier(state).toFixed(2)}` : '**Chưa thể rút**', inline: true },
+      { name: '💰 PAYOUT NẾU RÚT', value: state.cleared ? `## ${formatCoins(payout)} :coin:\nx${baseMultiplier(state).toFixed(2)}` : '**Chưa thể rút**', inline: true },
       { name: 'Trang bị gần nhất', value: items, inline: false }, { name: '📜 DIỄN BIẾN', value: `### ${String(state.lastLog || '—').slice(0, 1000)}` },
     );
   if (result) {
-    const text = result.reason === 'cashout' || result.reason === 'summit' ? `💰 Kết thúc run và nhận **${formatCoins(result.payout)} xu**.`
-      : result.reason === 'forfeit' ? `🏳️ Bỏ run trước khi vượt tầng đầu, mất **${formatCoins(state.stake)} xu**.`
-        : `💀 Run kết thúc tại tầng ${state.floor}. Mất toàn bộ payout tạm giữ.`;
-    embed.addFields({ name: 'Kết quả', value: text });
-    addExperienceField(embed, result);
+    const won = result.reason === 'cashout' || result.reason === 'summit';
+    const reason = won ? `rút thưởng tầng ${state.floor}` : result.reason === 'forfeit' ? 'bỏ run' : `💀 tử trận tầng ${state.floor}`;
+    embed.addFields({ name: '🏁 KẾT QUẢ', value: resultBlock({ userId, outcome: result.outcome, stake: state.stake, payout: result.payout, result, reason }) });
     if (result.achievements?.length) embed.addFields({ name: '🏅 Thành tựu mới', value: result.achievements.map(item => `**${item.name}**`).join('\n') });
-  } else embed.setFooter({ text: `${sessionId ? `Mã ván: ${sessionId} • ` : ''}Lượt ${state.turn} • Cược ${formatCoins(state.stake)} xu • Tầng 100 hoàn thành • Tối đa 999` });
+  } else embed.setFooter({ text: `${sessionId ? `Mã ván: ${sessionId} • ` : ''}Lượt ${state.turn} • Cược ${formatCoins(state.stake)} :coin: • Tầng 100 hoàn thành • Tối đa 999` });
   return embed;
 }
 function button(sessionId, turn, action, label, emoji, style, disabled = false) {

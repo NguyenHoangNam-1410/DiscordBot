@@ -116,3 +116,14 @@ Khi nhận `SIGINT` hoặc `SIGTERM`, bot dừng các tác vụ nền, chờ b�
 ## Emoji của ứng dụng (Developer Portal → Bot → Emojis)
 
 Emoji tải lên ở Developer Portal dùng được ở mọi server mà bot có mặt. Khi khởi động bot tự tải danh sách và tra id theo **tên**, nên chỉ cần đặt đúng tên. Xúc xắc Chinchiro dùng `dieWhite1`–`dieWhite6`; thiếu emoji nào thì tự dùng emoji chuẩn (`:one:`…). Trong code dùng `appEmoji('tên', 'dự phòng')` (chuỗi `<:tên:id>`) hoặc `appEmojiObject('tên')` cho nút/menu (`src/utils/appEmoji.js`).
+
+## Định dạng tin nhắn kết quả và thưởng
+
+Mọi game dùng chung `src/utils/rewardText.js`: metric luôn đi kèm icon (xu `:coin:`, kim cương `:gem:`, EXP `:test_tube:`) và kết quả mỗi người gọn trên một dòng, ví dụ:
+
+```
+<người chơi> thắng: +102.000 :coin: +11 :test_tube:
+🎉 BUFF SỰ KIỆN: +3 :gem: · 🟠 [SSR] Bùa Khắc Chế
+```
+
+Số xu là **thay đổi ròng** (tiền nhận về − tiền cược): thắng `+`, thua `-` (mất cược), hòa `±0`. Vật phẩm rơi hiện icon độ hiếm: nếu đã tải emoji ứng dụng tên `r_icon`, `sr_icon`, `ssr_icon`, `ur_icon` thì bot dùng chúng, không thì dùng vòng tròn màu (🔵🟣🟠🔴).

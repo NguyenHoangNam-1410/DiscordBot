@@ -19,7 +19,7 @@ module.exports = {
     catch (error) {
       if (error.message === 'ACTIVE_SESSION') return interaction.reply({ content: 'Bạn đang có một ván Mines chưa kết thúc trong server này.', flags: MessageFlags.Ephemeral });
       if (error.message === 'INVALID_MINES') return interaction.reply({ content: `Số mìn phải từ ${MIN_MINES} đến ${MAX_MINES}.`, flags: MessageFlags.Ephemeral });
-      if (error.message === 'BET_LIMIT') return interaction.reply({ content: `Giới hạn cược Mines của server là **${formatCoins(error.maxBet)} xu**.`, flags: MessageFlags.Ephemeral });
+      if (error.message === 'BET_LIMIT') return interaction.reply({ content: `Giới hạn cược Mines của server là **${formatCoins(error.maxBet)} :coin:**.`, flags: MessageFlags.Ephemeral });
       return economyError(interaction, error);
     }
     const response = await interaction.reply({ embeds: [minesEmbed(started.state, interaction.user.id, null, started.session.id)], components: minesRows(started.session.id, started.state), withResponse: true });

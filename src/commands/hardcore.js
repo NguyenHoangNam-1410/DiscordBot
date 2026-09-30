@@ -65,7 +65,7 @@ module.exports = {
     catch (error) {
       if (error.message === 'ACTIVE_SESSION') return interaction.reply({ content: 'Bạn đang có một lượt Sinh tồn chưa kết thúc trong server này.', flags: MessageFlags.Ephemeral });
       if (error.message === 'INVALID_CLASS') return interaction.reply({ content: 'Class không hợp lệ.', flags: MessageFlags.Ephemeral });
-      if (error.message === 'BET_LIMIT') return interaction.reply({ content: `Giới hạn cược Sinh tồn của server là **${formatCoins(error.maxBet)} xu**.`, flags: MessageFlags.Ephemeral });
+      if (error.message === 'BET_LIMIT') return interaction.reply({ content: `Giới hạn cược Sinh tồn của server là **${formatCoins(error.maxBet)} :coin:**.`, flags: MessageFlags.Ephemeral });
       return economyError(interaction, error);
     }
     const response = await interaction.reply({ embeds: [hardcoreEmbed(started.state, interaction.user.id, null, started.session.id)], components: hardcoreRows(started.session.id, started.state), withResponse: true });

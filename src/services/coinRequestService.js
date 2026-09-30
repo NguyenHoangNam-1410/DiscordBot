@@ -82,7 +82,7 @@ function requestEmbed(request, status = request.status) {
   const color = status === 'accepted' ? 0x2ECC71 : status === 'declined' ? 0xE74C3C : status === 'expired' ? 0x7F8C8D : 0xF1C40F;
   const state = { open: 'Đang chờ phản hồi', accepted: 'Đã chấp nhận', declined: 'Đã từ chối', expired: 'Đã hết hạn' }[status] || status;
   return new EmbedBuilder().setColor(color).setTitle('🪙 YÊU CẦU XIN XU')
-    .setDescription(`<@${request.requester_id}> đang xin <@${request.target_id}> **${formatCoins(request.amount)} xu**.`)
+    .setDescription(`<@${request.requester_id}> đang xin <@${request.target_id}> **${formatCoins(request.amount)} :coin:**.`)
     .addFields(
       { name: 'Trạng thái', value: state, inline: true },
       { name: 'Hết hạn', value: status === 'open' ? `<t:${Math.floor(request.expires_at / 1000)}:R>` : '—', inline: true },
@@ -111,7 +111,7 @@ async function handleCoinRequestButton(interaction) {
     }
     const result = acceptCoinRequest(id, interaction.user.id);
     return interaction.update({
-      content: `✅ <@${request.target_id}> đã cho <@${request.requester_id}> **${formatCoins(request.amount)} xu**.`,
+      content: `✅ <@${request.target_id}> đã cho <@${request.requester_id}> **${formatCoins(request.amount)} :coin:**.`,
       embeds: [requestEmbed(request, 'accepted')], components: [], allowedMentions: { users: [request.target_id, request.requester_id] },
     });
   } catch (error) {
