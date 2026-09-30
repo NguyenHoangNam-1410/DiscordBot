@@ -11,8 +11,8 @@ const engine = require('./coquayEngine');
 
 const MIN_BET = 10;
 const MAX_BET = 100_000;
-// Người chơi đi trước; đánh tối ưu không dùng vật phẩm thắng ~55,6% → RTP ~94%.
-const PAYOUT_MULTIPLIER = 1.7;
+// Người chơi đi trước; đánh tối ưu không dùng vật phẩm thắng ~55,5% → RTP ~111% (có lợi cho người chơi giỏi); ván thường thấp hơn.
+const PAYOUT_MULTIPLIER = 2;
 const ITEMS = Object.freeze({
   magnifier: { itemId: 'coquay_magnifier', name: 'Kính Lúp', emoji: '🔍' },
   shield: { itemId: 'coquay_decoy', name: 'Bia Đỡ Đạn', emoji: '🪖' },
