@@ -15,19 +15,19 @@ function expBar(current, target, size = 12) {
 }
 function rewardSummary(level) {
   const reward = levelReward(level);
-  return [reward.coins ? `${number(reward.coins)} xu` : null, reward.diamonds ? `${number(reward.diamonds)} :gem:` : null,
+  return [reward.coins ? `${number(reward.coins)} :coin:` : null, reward.diamonds ? `${number(reward.diamonds)} :gem:` : null,
     reward.freePulls ? `${reward.freePulls} vé Gacha ×1 SSR` : null, reward.cosmetic ? 'màu hồ sơ độc quyền' : null].filter(Boolean).join(' · ');
 }
 function overviewField(summary) {
   return { name: '📊 Tổng quan toàn bộ game', inline: false,
-    value: `Đã chơi **${summary.activeGames}/9 game**${summary.favorite ? ` · Chơi nhiều nhất: **${summary.favorite.label.replace(/^\S+\s/, '')}** (${number(summary.favorite.played)} ván)` : ''}\nTổng cược **${number(summary.wagered)} xu** · Tổng nhận **${number(summary.payout)} xu** · Dòng xu ròng **${signed(summary.net)} xu**` };
+    value: `Đã chơi **${summary.activeGames}/9 game**${summary.favorite ? ` · Chơi nhiều nhất: **${summary.favorite.label.replace(/^\S+\s/, '')}** (${number(summary.favorite.played)} ván)` : ''}\nTổng cược **${number(summary.wagered)} :coin:** · Tổng nhận **${number(summary.payout)} :coin:** · Dòng xu ròng **${signed(summary.net)} xu**` };
 }
 function levelField(progress = { level: 1, experience: 0, diamonds: 0, free_gacha_pulls: 0 }, guildId = null) {
   const target = xpForNextLevel(progress.level, guildId); const nextLevel = progress.level + 1;
   const percent = Math.max(0, Math.min(100, Math.floor(progress.experience / target * 100)));
   const tickets = guildId && progress.user_id ? getTicketBalances(guildId, progress.user_id) : { single: 0, ten: 0 };
   return { name: ':test_tube: Cấp độ & EXP', inline: false,
-    value: `Cấp **${progress.level}** · EXP **${number(progress.experience)}/${number(target)}**\n${expBar(progress.experience, target)} **${percent}%**\n🎁 Lên cấp **${nextLevel}**: ${rewardSummary(nextLevel)}\n:gem: **${number(progress.diamonds)}** kim cương · 🎟️ Vé ×1 **${tickets.single}** · Vé ×10 **${tickets.ten}**` };
+    value: `Cấp **${progress.level}** · :test_tube: **${number(progress.experience)}/${number(target)}**\n${expBar(progress.experience, target)} **${percent}%**\n🎁 Lên cấp **${nextLevel}**: ${rewardSummary(nextLevel)}\n:gem: **${number(progress.diamonds)}** kim cương · 🎟️ Vé ×1 **${tickets.single}** · Vé ×10 **${tickets.ten}**` };
 }
 function profileSelectRow(ownerId, targetId, stats, selected = 'overview') {
   const menu = new StringSelectMenuBuilder().setCustomId(`hoso:${ownerId}:${targetId}`).setPlaceholder('Chọn game muốn xem chi tiết…');
@@ -45,7 +45,7 @@ function overviewEmbed(user, account, rank, appearance, badges, stats, progress,
     .setThumbnail(user.displayAvatarURL({ extension: 'png', size: 256 }))
     .setDescription(badges.length ? `🏅 ${badges.map(item => `**${item.name}**`).join(' · ')}` : 'Chưa mở khóa huy hiệu thành tựu.')
     .addFields(
-      { name: 'Xếp hạng', value: `#${rank}`, inline: true }, { name: 'Số dư', value: `${number(account.balance)} xu`, inline: true },
+      { name: 'Xếp hạng', value: `#${rank}`, inline: true }, { name: 'Số dư', value: `${number(account.balance)} :coin:`, inline: true },
       { name: 'Tổng số ván', value: number(account.games_played), inline: true }, levelField(progress, guildId), overviewField(summarizeGameStats(stats)),
     ).setFooter({ text: 'Chọn một game trong menu để xem chi tiết' });
 }
@@ -56,8 +56,8 @@ function gameDetailEmbed(user, account, rank, appearance, item, serverName = 'Se
       .setAuthor({ name: `${user.globalName || user.username} · Hạng #${rank}`, iconURL: user.displayAvatarURL({ extension: 'png', size: 128 }) })
       .setDescription('Vua Tiếng Việt dùng câu hỏi có sẵn của bot nên hồ sơ không tính tỷ lệ thắng/thua.')
       .addFields(
-        { name: ':coin: Tổng xu đã kiếm được', value: `## ${number(item.coinsEarned)} xu` },
-        { name: '🏦 Tài khoản hiện tại', value: `Số dư **${number(account.balance)} xu** · Xếp hạng server **#${rank}**` },
+        { name: ':coin: Tổng xu đã kiếm được', value: `## ${number(item.coinsEarned)} :coin:` },
+        { name: '🏦 Tài khoản hiện tại', value: `Số dư **${number(account.balance)} :coin:** · Xếp hạng server **#${rank}**` },
       ).setFooter({ text: 'Số xu được cộng dồn trọn đời trong server này' });
   }
   const performance = item.played ? `${item.winRate.toFixed(1)}%` : 'Chưa có dữ liệu';
@@ -67,8 +67,8 @@ function gameDetailEmbed(user, account, rank, appearance, item, serverName = 'Se
     .addFields(
       { name: '🎮 Kết quả', value: `✅ Thắng: **${number(item.wins)}**\n❌ Thua: **${number(item.losses)}**\n➖ Hòa: **${number(item.draws)}**`, inline: true },
       { name: '📈 Hiệu suất', value: `Tỷ lệ thắng: **${performance}**\nVán có kết quả: **${number(item.wins + item.losses)}**\nTổng số ván: **${number(item.played)}**`, inline: true },
-      { name: ':coin: Dòng xu', value: `Đã cược: **${number(item.wagered)} xu**\nĐã nhận: **${number(item.payout)} xu**\nRòng: **${signed(item.net)} xu**`, inline: true },
-      { name: '🏦 Tài khoản hiện tại', value: `Số dư **${number(account.balance)} xu** · Xếp hạng server **#${rank}**` },
+      { name: ':coin: Dòng xu', value: `Đã cược: **${number(item.wagered)} :coin:**\nĐã nhận: **${number(item.payout)} :coin:**\nRòng: **${signed(item.net)} :coin:**`, inline: true },
+      { name: '🏦 Tài khoản hiện tại', value: `Số dư **${number(account.balance)} :coin:** · Xếp hạng server **#${rank}**` },
     ).setFooter({ text: item.recordedGames < item.played ? `Dòng xu có ${number(item.recordedGames)}/${number(item.played)} ván còn lưu lịch sử` : 'Số liệu riêng của server này' });
 }
 
@@ -80,7 +80,7 @@ function fallbackEmbed(user, account, rank, appearance, badges = [], stats = [],
       .setThumbnail(user.displayAvatarURL({ extension: 'png', size: 256 }))
       .setDescription(`Màu hồ sơ: ${colorEmoji}**${appearance.color.name}**`)
     .addFields(
-      { name: 'Số dư', value: `${Number(account.balance).toLocaleString('vi-VN')} xu`, inline: true },
+      { name: 'Số dư', value: `${Number(account.balance).toLocaleString('vi-VN')} :coin:`, inline: true },
       { name: 'Tổng số ván', value: String(account.games_played), inline: true },
       { name: 'Huy hiệu', value: badges.length ? badges.map(item => `🏅 ${item.name}`).join('\n') : 'Chưa có', inline: false },
     ).addFields(levelField(progress, guildId), overviewField(summarizeGameStats(stats)))

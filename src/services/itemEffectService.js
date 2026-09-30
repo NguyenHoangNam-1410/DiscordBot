@@ -7,7 +7,7 @@ const { getCatalogItem } = require('./itemCatalogService');
 const { consumeInventory, getInventoryQuantity, equipOwnedCosmetic } = require('./shopService');
 const { getActiveEffect, addEffectCharge, consumeActiveEffect, listActiveEffects, removeActiveEffect } = require('./effectStateService');
 const { formatCoins } = require('../utils/economy');
-const { bonusDropText } = require('../utils/progressionView');
+const { resultBlock } = require('../utils/rewardText');
 
 const EFFECT_TTL = 7 * 86_400_000;
 const HARD_QUESTION_DIAMONDS = 10;
@@ -147,8 +147,8 @@ function useLivingDictionary(guildId, channelId, userId) {
   const reward = require('./gameRewardService').getGameReward(guildId, 'vuatiengviet') * 10;
   const account = require('./economyService').rewardGame({ guildId, userId, amount: reward, game: 'vuatiengviet', outcome: 'win' });
   require('./playerLevelService').addDiamonds(guildId, userId, HARD_QUESTION_DIAMONDS, { reason: 'vuatiengviet:living-dictionary' });
-  const bonus = bonusDropText(account.bonusDrops);
-  return `📖 Từ Điển Sống điền đáp án **${answer}** và trao **${formatCoins(reward)} xu** cùng **${HARD_QUESTION_DIAMONDS} kim cương**.${bonus ? `\n🎊 Drop sau ván: ${bonus.replace(/\n/g, ' · ')}` : ''}\n\nCâu tiếp theo:\n${games.vuaQuestionText(result.nextQuestion)}`;
+  const line = resultBlock({ userId, outcome: 'win', stake: 0, payout: reward, gemsGained: HARD_QUESTION_DIAMONDS, result: { ...account, experienceGained: 0 }, reason: `📖 Từ Điển Sống điền **${answer}**` });
+  return `${line}\n\nCâu tiếp theo:\n${games.vuaQuestionText(result.nextQuestion)}`;
 }
 
 function useVietnameseHint(guildId, channelId, effect) {

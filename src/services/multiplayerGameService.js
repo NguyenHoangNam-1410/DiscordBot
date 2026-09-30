@@ -12,11 +12,11 @@ const {
 const { db } = require('../db');
 const { spendCoins, settleReservedGame } = require('./economyService');
 const { formatCoins } = require('../utils/economy');
-const { experienceLines } = require('../utils/progressionView');
 const { getGameBetLimit } = require('./gameBetLimitService');
 const { getActiveEffect, consumeActiveEffect, effectMetadata } = require('./effectStateService');
 const { getGameConfig } = require('./gameConfigService');
 const { createFairness, fairInt } = require('./fairnessService');
+const { resultLine, resultBlock, bonusLine, coins } = require('../utils/rewardText');
 
 const ROUND_MS = 30_000;
 const MIN_BET = 10;
@@ -75,8 +75,8 @@ function roundEmbed(round) {
     .setDescription(`## 🎯 CÁCH CHƠI\n${description}\n\n## ⏳ KHÓA CƯỢC <t:${closeUnix}:R>\nBấm nút bên dưới để đặt cược · Khóa lúc <t:${closeUnix}:T>`)
     .addFields(
       { name: 'Người đã cược', value: String(stats.players), inline: true },
-      { name: 'Tổng pot', value: `${formatCoins(stats.pool)} xu`, inline: true },
-      { name: 'Giới hạn mỗi người/ván', value: `${formatCoins(MIN_BET)}–${formatCoins(maxBet)} xu`, inline: true },
+      { name: 'Tổng pot', value: `${formatCoins(stats.pool)} :coin:`, inline: true },
+      { name: 'Giới hạn mỗi người/ván', value: `${formatCoins(MIN_BET)}–${formatCoins(maxBet)} :coin:`, inline: true },
     )
     .setFooter({ text: `Mã ván: ${round.id} • Không thu phí mở ván` });
   return embed;
@@ -218,23 +218,23 @@ function resultEmbed(settled) {
     if (item.bets?.length > 1) {
       for (const bet of item.bets) {
         const betLabel = choiceLabel(round.game, bet.choice);
-        betLines.push(`<@${item.userId}> → **${betLabel}**: ${formatCoins(bet.amount)} xu → ${formatCoins(bet.payout)} xu`);
+        betLines.push(`<@${item.userId}> → **${betLabel}**: ${coins(bet.amount)} → ${coins(bet.payout)}`);
       }
     } else if (item.bets?.length === 1) {
       const bet = item.bets[0];
       const betLabel = choiceLabel(round.game, bet.choice);
-      betLines.push(`<@${item.userId}> → **${betLabel}**: ${formatCoins(bet.amount)} xu → ${formatCoins(bet.payout)} xu`);
+      betLines.push(`<@${item.userId}> → **${betLabel}**: ${coins(bet.amount)} → ${coins(bet.payout)}`);
     }
   }
-  for (const item of settlements) if (item.insurance > 0) betLines.push(`<@${item.userId}> 🛡️ Bảo hiểm hoàn **${item.insuranceRate}%** → ${formatCoins(item.insurance)} xu`);
+  for (const item of settlements) if (item.insurance > 0) betLines.push(`<@${item.userId}> 🛡️ Bảo hiểm hoàn **${item.insuranceRate}%** → +${coins(item.insurance)}`);
   const summary = betLines.length > 0 ? betLines.slice(0, 15).join('\n') : 'Không có cửa cược thắng.';
   const embed = new EmbedBuilder().setColor(0x2ECC71).setTitle(`🎲 ${gameLabel(round.game)} · KẾT QUẢ`)
     .setDescription(`## ${resultText}`)
-    .addFields({ name: ':coin: THANH TOÁN', value: summary })
+    .addFields({ name: ':coin: CƯỢC → NHẬN', value: summary })
     .setFooter({ text: `Mã ván: ${round.id} • ${settlements.length} người tham gia` })
     .setTimestamp();
-  const exp = experienceLines(settlements).slice(0, 15);
-  if (exp.length) embed.addFields({ name: ':test_tube: EXP NHẬN ĐƯỢC', value: exp.join('\n') });
+  const outcomes = [...settlements].sort((a, b) => (b.payout - b.stake) - (a.payout - a.stake)).slice(0, 15).map(item => resultBlock({ userId: item.userId, outcome: item.outcome, stake: item.stake, payout: item.payout, result: item })).join('\n');
+  if (outcomes) embed.addFields({ name: '🏆 KẾT QUẢ', value: outcomes.length > 1024 ? `${outcomes.slice(0, 1021)}...` : outcomes });
   const unlocked = settlements.flatMap(item => (item.achievements || []).map(achievement => `<@${item.userId}> mở khóa **${achievement.name}**`));
   if (unlocked.length) embed.addFields({ name: '🏅 Thành tựu mới', value: unlocked.slice(0, 10).join('\n') });
   return embed;
@@ -318,13 +318,13 @@ async function handleBetModal(interaction) {
   catch (error) {
     const content = error.code === 'INSUFFICIENT_FUNDS' ? 'Bạn không đủ xu để đặt cược.'
       : error.message === 'ROUND_CLOSED' ? 'Ván đã khóa cược.'
-        : error.message === 'BET_LIMIT' ? `Tổng cược tối đa của bạn trong ván này là ${formatCoins(error.maxBet)} xu.`
+        : error.message === 'BET_LIMIT' ? `Tổng cược tối đa của bạn trong ván này là ${formatCoins(error.maxBet)} :coin:.`
           : 'Mức cược phải là số nguyên từ 10 đến 100.000 xu.';
     return reject(content);
   }
-  await interaction.reply({ content: `✅ Đã cược **${formatCoins(amount)} xu** vào **${choiceLabel(game, choice)}**. Tổng cược ván này: **${formatCoins(placed.totalAmount)} xu**.`, flags: MessageFlags.Ephemeral });
+  await interaction.reply({ content: `✅ Đã cược **${formatCoins(amount)} :coin:** vào **${choiceLabel(game, choice)}**. Tổng cược ván này: **${formatCoins(placed.totalAmount)} :coin:**.`, flags: MessageFlags.Ephemeral });
   await refreshRoundMessage(placed.round, interaction.client);
-  const publicMessage = `<@${interaction.user.id}> đặt cược **${formatCoins(amount)} xu** vào **${choiceLabel(game, choice)}** 🎲`;
+  const publicMessage = `<@${interaction.user.id}> đặt cược **${formatCoins(amount)} :coin:** vào **${choiceLabel(game, choice)}** 🎲`;
   await interaction.channel?.send({ content: publicMessage }).catch(() => {});
   return null;
 }

@@ -37,7 +37,7 @@ function configValueText(item) {
   if (item.key === 'HARD_QUESTION_CHANCE' || item.key.endsWith('_DROP_CHANCE')) return `${item.value} (${(item.value * 100).toFixed(2).replace(/\.00$/, '')}%)`;
   if (item.key === 'HARD_QUESTION_DURATION_SECONDS') return `${item.value} giây`;
   return item.key === 'ECONOMY_STARTING_COINS' || item.key === 'VUATIENGVIET_REWARD' || item.key === 'POKER_ANTE'
-    ? `${formatCoins(item.value)} xu` : String(item.value);
+    ? `${formatCoins(item.value)} :coin:` : String(item.value);
 }
 
 function configPanel(guildId, status = null) {
@@ -122,10 +122,10 @@ module.exports = {
       const game = interaction.options.getString('trochoi', true);
       const reward = interaction.options.getInteger('xu', true);
       setGameReward(interaction.guildId, game, reward);
-      return interaction.reply({ content: `✅ Phần thưởng **${LABELS[game]}** đã đặt thành **${formatCoins(reward)} xu** mỗi đáp án đúng.`, flags: MessageFlags.Ephemeral });
+      return interaction.reply({ content: `✅ Phần thưởng **${LABELS[game]}** đã đặt thành **${formatCoins(reward)} :coin:** mỗi đáp án đúng.`, flags: MessageFlags.Ephemeral });
     }
     if (subcommand === 'rewards') {
-      const description = listGameRewards(interaction.guildId).map(item => `**${LABELS[item.game]}:** ${formatCoins(item.reward)} xu`).join('\n');
+      const description = listGameRewards(interaction.guildId).map(item => `**${LABELS[item.game]}:** ${formatCoins(item.reward)} :coin:`).join('\n');
       return interaction.reply({ embeds: [new EmbedBuilder().setColor(0xF1C40F).setTitle('💰 PHẦN THƯỞNG GAME').setDescription(description)], flags: MessageFlags.Ephemeral });
     }
     if (subcommand === 'maxbet') {
@@ -133,10 +133,10 @@ module.exports = {
       const game = interaction.options.getString('trochoi', true);
       const maxBet = interaction.options.getInteger('xu', true);
       setGameBetLimit(interaction.guildId, game, maxBet);
-      return interaction.reply({ content: `✅ Giới hạn cược của **${LABELS[game]}** là **${formatCoins(maxBet)} xu/người/ván**.`, flags: MessageFlags.Ephemeral });
+      return interaction.reply({ content: `✅ Giới hạn cược của **${LABELS[game]}** là **${formatCoins(maxBet)} :coin:/người/ván**.`, flags: MessageFlags.Ephemeral });
     }
     if (subcommand === 'maxbets') {
-      const description = listGameBetLimits(interaction.guildId).map(item => `**${LABELS[item.game]}:** ${formatCoins(item.maxBet)} xu/người/ván`).join('\n');
+      const description = listGameBetLimits(interaction.guildId).map(item => `**${LABELS[item.game]}:** ${formatCoins(item.maxBet)} :coin:/người/ván`).join('\n');
       return interaction.reply({ embeds: [new EmbedBuilder().setColor(0xE67E22).setTitle('🎚️ GIỚI HẠN CƯỢC').setDescription(description)], flags: MessageFlags.Ephemeral });
     }
     if (subcommand === 'economy') {
@@ -148,12 +148,12 @@ module.exports = {
       const embed = new EmbedBuilder().setColor(stats.net > 0 ? 0x2ECC71 : stats.net < 0 ? 0xE74C3C : 0x95A5A6)
         .setTitle('📊 SỨC KHỎE ECONOMY · 24 GIỜ')
         .addFields(
-          { name: 'Tổng cung', value: `${formatCoins(stats.supply)} xu`, inline: true },
+          { name: 'Tổng cung', value: `${formatCoins(stats.supply)} :coin:`, inline: true },
           { name: 'Người chơi', value: `${stats.users} tổng · ${stats.activeUsers} hoạt động`, inline: true },
-          { name: 'Trung bình', value: `${formatCoins(stats.average)} xu/người`, inline: true },
-          { name: 'Dòng vào', value: `+${formatCoins(stats.minted)} xu`, inline: true },
-          { name: 'Dòng ra', value: `−${formatCoins(stats.spent)} xu`, inline: true },
-          { name: 'Biến động', value: `${direction} ${formatCoins(Math.abs(stats.net))} xu`, inline: true },
+          { name: 'Trung bình', value: `${formatCoins(stats.average)} :coin:/người`, inline: true },
+          { name: 'Dòng vào', value: `+${formatCoins(stats.minted)} :coin:`, inline: true },
+          { name: 'Dòng ra', value: `−${formatCoins(stats.spent)} :coin:`, inline: true },
+          { name: 'Biến động', value: `${direction} ${formatCoins(Math.abs(stats.net))} :coin:`, inline: true },
           { name: 'Nguồn giao dịch lớn nhất', value: categories },
         )
         .setFooter({ text: `${stats.transactions} giao dịch trong 24 giờ · Chỉ admin nhìn thấy` })
@@ -208,7 +208,7 @@ module.exports = {
       const role = interaction.options.getRole('role', true);
       const amount = interaction.options.getInteger('xu', true);
       const config = setWeeklyRoleReward({ guildId: interaction.guildId, roleId: role.id, amount, createdBy: interaction.user.id });
-      return interaction.reply({ content: `✅ <@&${role.id}> được nhận **${formatCoins(config.amount)} xu/người/tuần**, áp dụng từ tuần **${config.starts_week_key}**. Thành viên dùng \`/nhiemvu thuongvaitro\` để nhận.`, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+      return interaction.reply({ content: `✅ <@&${role.id}> được nhận **${formatCoins(config.amount)} :coin:/người/tuần**, áp dụng từ tuần **${config.starts_week_key}**. Thành viên dùng \`/nhiemvu thuongvaitro\` để nhận.`, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
     }
     if (subcommand === 'roleweeklyremove') {
       if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được xóa cấu hình thưởng role.', flags: MessageFlags.Ephemeral });
@@ -219,7 +219,7 @@ module.exports = {
     if (subcommand === 'roleweeklylist') {
       if (!isAdmin(interaction)) return interaction.reply({ content: 'Chỉ admin mới được xem cấu hình thưởng role.', flags: MessageFlags.Ephemeral });
       const configs = listWeeklyRoleRewards(interaction.guildId);
-      const description = configs.length ? configs.map(item => `<@&${item.role_id}> — **${formatCoins(item.amount)} xu/người/tuần**\nÁp dụng từ tuần: **${item.starts_week_key}**`).join('\n\n') : 'Chưa cấu hình role nhận thưởng hàng tuần.';
+      const description = configs.length ? configs.map(item => `<@&${item.role_id}> — **${formatCoins(item.amount)} :coin:/người/tuần**\nÁp dụng từ tuần: **${item.starts_week_key}**`).join('\n\n') : 'Chưa cấu hình role nhận thưởng hàng tuần.';
       return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x2ECC71).setTitle('🎁 THƯỞNG ROLE HÀNG TUẦN').setDescription(description)
         .setFooter({ text: 'Người chơi dùng /nhiemvu nhan (loại Thưởng vai trò) · Không truy lĩnh tuần đã quên' })], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
     }

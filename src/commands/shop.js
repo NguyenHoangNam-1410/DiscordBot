@@ -36,7 +36,7 @@ function shopEmbed(guildId, selected = 'all') {
     ? row.catalog?.type === 'color' : itemMatchesGame(row.catalog, tab.id));
   const description = items.length ? items.map(row => {
     const item = row.catalog;
-    const price = row.final_price < row.price ? `~~${formatCoins(row.price)}~~ **${formatCoins(row.final_price)} xu**` : `**${formatCoins(row.price)} xu**`;
+    const price = row.final_price < row.price ? `~~${formatCoins(row.price)}~~ **${formatCoins(row.final_price)} :coin:**` : `**${formatCoins(row.price)} :coin:**`;
     const stock = row.stock === null ? '∞' : Math.max(0, row.stock - row.sold_count);
     const conditions = [row.min_games ? `${row.min_games} ván` : null, row.min_wins ? `${row.min_wins} thắng` : null, row.min_balance ? `số dư ${formatCoins(row.min_balance)}` : null].filter(Boolean).join(' · ');
     const rarity = ['R', 'SR', 'SSR', 'UR'].includes(item?.rarity) ? ` [${item.rarity}]` : '';
@@ -100,7 +100,7 @@ module.exports = {
       return interaction.reply({ content: `🔄 Đã xoay cửa hàng với **${rows.length} vật phẩm**.`, embeds: [shopEmbed(interaction.guildId)], components: [shopSelectRow(interaction.user.id)], flags: MessageFlags.Ephemeral });
     } else if (sub === 'stock') item = setShopStock(interaction.guildId, interaction.options.getString('item', true), interaction.options.getInteger('quantity', true));
     else if (sub === 'discount') item = setShopDiscount(interaction.guildId, interaction.options.getString('item', true), interaction.options.getInteger('percent', true), interaction.options.getInteger('hours') || 0);
-    return interaction.reply({ content: `✅ Đã cập nhật **${item.display_name}** · giá hiện tại **${formatCoins(item.final_price)} xu**.`, flags: MessageFlags.Ephemeral });
+    return interaction.reply({ content: `✅ Đã cập nhật **${item.display_name}** · giá hiện tại **${formatCoins(item.final_price)} :coin:**.`, flags: MessageFlags.Ephemeral });
   },
   async handleSelect(interaction) {
     const [, ownerId] = interaction.customId.split(':');

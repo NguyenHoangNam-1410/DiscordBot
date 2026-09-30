@@ -6,7 +6,7 @@ const { formatCoins } = require('../utils/economy');
 const { getGameBetLimit } = require('./gameBetLimitService');
 const { consumeActiveEffect } = require('./effectStateService');
 const { createFairness, fairShuffle, fairInt } = require('./fairnessService');
-const { addExperienceField } = require('../utils/progressionView');
+const { resultBlock, coins } = require('../utils/rewardText');
 
 const CELL_COUNT = 20;
 const MIN_MINES = 2;
@@ -194,9 +194,9 @@ function minesEmbed(state, userId, result = null, sessionId = null) {
   const potential = payoutFor(state);
   const embed = new EmbedBuilder().setColor(result ? (result.outcome === 'win' ? 0x2ECC71 : 0xE74C3C) : 0x3498DB)
     .setTitle('💣 MINES')
-    .setDescription(`## 👤 <@${userId}>\n### Chọn ô an toàn, tăng multiplier và rút trước khi trúng mìn.\n\n## 💰 x${multiplier.toFixed(2)} · CÓ THỂ NHẬN ${state.opened.length ? `${formatCoins(potential)} XU` : 'SAU Ô ĐẦU TIÊN'}`)
+    .setDescription(`## 👤 <@${userId}>\n### Chọn ô an toàn, tăng multiplier và rút trước khi trúng mìn.\n\n## 💰 x${multiplier.toFixed(2)} · CÓ THỂ NHẬN ${state.opened.length ? `${formatCoins(potential)} :coin:` : 'SAU Ô ĐẦU TIÊN'}`)
     .addFields(
-      { name: '💵 TIỀN CƯỢC', value: `**${formatCoins(state.stake)} xu**`, inline: true },
+      { name: '💵 TIỀN CƯỢC', value: `**${formatCoins(state.stake)} :coin:**`, inline: true },
       { name: '💣 SỐ MÌN', value: `**${state.mineCount}**`, inline: true },
       { name: '💎 Ô AN TOÀN', value: `**${state.opened.length}/${CELL_COUNT - state.mineCount}**`, inline: true },
       { name: '🌟 Ô ĐẶC BIỆT', value: state.specialFound ? `**Đã tìm thấy · bonus x${SPECIAL_MULTIPLIER_BONUS.toFixed(2)}**` : '**Đang ẩn trong bàn**' },
@@ -204,11 +204,8 @@ function minesEmbed(state, userId, result = null, sessionId = null) {
     );
   if (!result && state.lastSignal) embed.addFields({ name: '📡 TÍN HIỆU RIÊNG', value: `### ${state.lastSignal}\nCác ô an toàn trên bàn vẫn được giữ nguyên là 💎.` });
   if (result) {
-    const text = result.reason === 'mine' ? `💥 Trúng mìn, mất **${formatCoins(state.stake)} xu**.`
-      : result.reason === 'forfeit' ? `🏳️ Đã bỏ ván và mất **${formatCoins(state.stake)} xu**.`
-        : `💰 Đã rút **${formatCoins(result.payout)} xu** ở x${multiplier.toFixed(2)}.${state.specialFound ? '\n🌟 Phần thưởng đã bao gồm bonus ô đặc biệt.' : ''}`;
-    embed.addFields({ name: '🏆 KẾT QUẢ', value: `### ${text}` });
-    addExperienceField(embed, result);
+    const reason = result.reason === 'mine' ? '💣 trúng mìn' : result.reason === 'forfeit' ? 'bỏ ván' : `rút x${multiplier.toFixed(2)}`;
+    embed.addFields({ name: '🏆 KẾT QUẢ', value: resultBlock({ userId, outcome: result.outcome, stake: state.stake, payout: result.payout, result, reason, extra: [state.specialFound && result.reason !== 'mine' && result.reason !== 'forfeit' ? '🌟 Đã gồm bonus ô đặc biệt.' : ''] }) });
     if (result.achievements?.length) embed.addFields({ name: '🏅 Thành tựu mới', value: result.achievements.map(item => `**${item.name}**`).join('\n') });
   } else if (sessionId) embed.setFooter({ text: `Mã ván: ${sessionId} • Tín hiệu hàng/cột chỉ hiện trong thông báo riêng • 🌟 = bonus multiplier • 💣 = thua ván` });
   return embed;

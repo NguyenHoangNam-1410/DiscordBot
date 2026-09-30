@@ -11,7 +11,7 @@ async function playAgainstBot(interaction, stake) {
   try { started = startBlackjack({ guildId: interaction.guildId, userId: interaction.user.id, channelId: interaction.channelId, stake }); }
   catch (error) {
     if (error.message === 'ACTIVE_SESSION') return interaction.reply({ content: 'Bạn đang có một ván cược khác chưa kết thúc trong server này.', flags: MessageFlags.Ephemeral });
-    if (error.message === 'BET_LIMIT') return interaction.reply({ content: `Giới hạn cược Xì dách của server là **${formatCoins(error.maxBet)} xu**.`, flags: MessageFlags.Ephemeral });
+    if (error.message === 'BET_LIMIT') return interaction.reply({ content: `Giới hạn cược Xì dách của server là **${formatCoins(error.maxBet)} :coin:**.`, flags: MessageFlags.Ephemeral });
     return economyError(interaction, error);
   }
   const result = started.immediate ? started.result : null;
@@ -27,8 +27,8 @@ async function openTable(interaction, ante) {
   try { opened = createBlackjackTable({ guildId: interaction.guildId, dealerId: interaction.user.id, channelId: interaction.channelId, ante }); }
   catch (error) {
     if (error.message === 'ACTIVE_SESSION') return interaction.reply({ content: 'Bạn đang có một ván cược khác chưa kết thúc.', flags: MessageFlags.Ephemeral });
-    if (error.message === 'BET_LIMIT') return interaction.reply({ content: `Giới hạn cược Xì dách của server là **${formatCoins(error.maxBet)} xu**.`, flags: MessageFlags.Ephemeral });
-    if (error.message === 'DEALER_ANTE_LIMIT') return interaction.reply({ content: `Ante không được vượt quá 25% số dư của bạn (tối đa **${formatCoins(error.cap)} xu**) hoặc giới hạn cược server.`, flags: MessageFlags.Ephemeral });
+    if (error.message === 'BET_LIMIT') return interaction.reply({ content: `Giới hạn cược Xì dách của server là **${formatCoins(error.maxBet)} :coin:**.`, flags: MessageFlags.Ephemeral });
+    if (error.message === 'DEALER_ANTE_LIMIT') return interaction.reply({ content: `Ante không được vượt quá 25% số dư của bạn (tối đa **${formatCoins(error.cap)} :coin:**) hoặc giới hạn cược server.`, flags: MessageFlags.Ephemeral });
     if (error.code === 'ACTIVE_BLACKJACK_TABLE') return interaction.reply({ content: 'Bạn đang ở một bàn Xì dách khác; hãy chờ ván đó kết thúc.', flags: MessageFlags.Ephemeral });
     return economyError(interaction, error);
   }

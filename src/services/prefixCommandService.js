@@ -45,9 +45,9 @@ async function handlePrefixMessage(message, logger = console) {
     const stats = getEconomyStats(message.guildId);
     await message.reply({ content: [
       '📊 **KINH TẾ SERVER**',
-      `Người chơi: **${stats.users}**`, `Tổng cung: **${formatCoins(stats.supply)} xu**`, `Trung bình: **${formatCoins(stats.average)} xu**`,
-      `Tài khoản cao nhất: **${formatCoins(stats.richest)} xu**`, `24 giờ tạo ra: **${formatCoins(stats.minted)} xu**`,
-      `24 giờ đã tiêu/hủy: **${formatCoins(stats.spent)} xu**`, `Giao dịch 24 giờ: **${stats.transactions}**`,
+      `Người chơi: **${stats.users}**`, `Tổng cung: **${formatCoins(stats.supply)} :coin:**`, `Trung bình: **${formatCoins(stats.average)} :coin:**`,
+      `Tài khoản cao nhất: **${formatCoins(stats.richest)} :coin:**`, `24 giờ tạo ra: **${formatCoins(stats.minted)} :coin:**`,
+      `24 giờ đã tiêu/hủy: **${formatCoins(stats.spent)} :coin:**`, `Giao dịch 24 giờ: **${stats.transactions}**`,
     ].join('\n'), allowedMentions: { repliedUser: false } });
     return true;
   }
@@ -85,7 +85,7 @@ async function handlePrefixMessage(message, logger = console) {
   try {
     if (isRemove) {
       const account = removeCoinsByAdmin({ guildId: message.guildId, userId: parsed.userId, amount: parsed.amount, adminId: message.author.id, reason: parsed.reason });
-      await message.reply({ content: `⚠️ Đã trừ **${formatCoins(account.deducted)} xu** của <@${parsed.userId}>. Lý do: **${parsed.reason}**.`, allowedMentions: { users: [parsed.userId], repliedUser: false } });
+      await message.reply({ content: `⚠️ Đã trừ **${formatCoins(account.deducted)} :coin:** của <@${parsed.userId}>. Lý do: **${parsed.reason}**.`, allowedMentions: { users: [parsed.userId], repliedUser: false } });
       logger.info?.({ adminId: message.author.id, userId: parsed.userId, guildId: message.guildId, requested: parsed.amount, deducted: account.deducted, reason: parsed.reason }, 'admin removed gold');
     } else {
       addCoinsByAdmin({ guildId: message.guildId, userId: parsed.userId, amount: parsed.amount, adminId: message.author.id, reason: parsed.reason });

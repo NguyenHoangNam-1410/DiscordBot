@@ -100,11 +100,11 @@ async function handleGamePrefix(message) {
       return true;
     }
     setGameReward(message.guildId, game, reward);
-    await message.reply({ content: `✅ Phần thưởng **${REWARD_LABELS[game]}** đã đặt thành **${formatCoins(reward)} xu**.`, allowedMentions: { repliedUser: false } });
+    await message.reply({ content: `✅ Phần thưởng **${REWARD_LABELS[game]}** đã đặt thành **${formatCoins(reward)} :coin:**.`, allowedMentions: { repliedUser: false } });
     return true;
   }
   if (name === 'rewards') {
-    const content = listGameRewards(message.guildId).map(item => `**${REWARD_LABELS[item.game]}:** ${formatCoins(item.reward)} xu`).join('\n');
+    const content = listGameRewards(message.guildId).map(item => `**${REWARD_LABELS[item.game]}:** ${formatCoins(item.reward)} :coin:`).join('\n');
     await message.reply({ content, allowedMentions: { repliedUser: false } });
     return true;
   }
@@ -121,11 +121,11 @@ async function handleGamePrefix(message) {
       return true;
     }
     setGameBetLimit(message.guildId, game, maxBet);
-    await message.reply({ content: `✅ Giới hạn cược **${BET_LABELS[game]}** là **${formatCoins(maxBet)} xu/người/ván**.`, allowedMentions: { repliedUser: false } });
+    await message.reply({ content: `✅ Giới hạn cược **${BET_LABELS[game]}** là **${formatCoins(maxBet)} :coin:/người/ván**.`, allowedMentions: { repliedUser: false } });
     return true;
   }
   if (name === 'maxbets') {
-    const content = listGameBetLimits(message.guildId).map(item => `**${BET_LABELS[item.game]}:** ${formatCoins(item.maxBet)} xu/người/ván`).join('\n');
+    const content = listGameBetLimits(message.guildId).map(item => `**${BET_LABELS[item.game]}:** ${formatCoins(item.maxBet)} :coin:/người/ván`).join('\n');
     await message.reply({ content, allowedMentions: { repliedUser: false } });
     return true;
   }

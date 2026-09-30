@@ -223,7 +223,7 @@ async function run() {
     update: async payload => { invalidRaiseUpdates.push(payload); return payload; },
     followUp: async payload => { invalidRaiseReplies.push(payload); return payload; },
   });
-  assert.match(invalidRaiseReplies[0].content, /tối đa.*50 xu/i);
+  assert.match(invalidRaiseReplies[0].content, /tối đa.*50 :coin:/i);
   assert.equal(invalidRaiseUpdates.length, 1);
   assert.equal(poker.getSession(pokerRound.session.id).user_id, 'alice');
   betLimits.setGameBetLimit('command-guild', 'poker', 55);

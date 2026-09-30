@@ -6,8 +6,8 @@ const { getGameBetLimit } = require('./gameBetLimitService');
 const { createFairness, fairInt, commitment } = require('./fairnessService');
 const { getActiveEffect, consumeActiveEffect } = require('./effectStateService');
 const { formatCoins } = require('../utils/economy');
-const { addExperienceField, bonusDropText } = require('../utils/progressionView');
 const { appEmoji } = require('../utils/appEmoji');
+const { resultBlock, coins } = require('../utils/rewardText');
 
 const MIN_BET = 10;
 const MAX_BET = 100_000;
@@ -183,25 +183,22 @@ function rollLines(turn) {
   }).join('\n');
 }
 
-function resultText(state) {
+function resultText(state, userId = null) {
   const result = state.result;
   if (!result) return `🎲 Đã lắc **${state.player?.attempts?.length || 0}/${state.effect === 'chinchiro_soundproof_bowl' ? 4 : 3}** lượt. Bấm nút để lắc tiếp.`;
-  if (result.karmaTriggered) return `🪬 **Bùa Trả Đũa kích hoạt!** Hifumi bị đẩy sang Nhà cái. Bạn lãi **+${formatCoins(result.profit)} xu**.`;
-  if (result.outcome === 'win') return `🏆 **NGƯỜI CHƠI THẮNG!** Lãi **+${formatCoins(result.profit)} xu**.`;
-  if (result.outcome === 'draw') return '🤝 **HÒA!** Hoàn lại toàn bộ tiền cược.';
-  return result.extraPenalty
-    ? `💥 **HIFUMI!** Mất tiền cược và bị phạt thêm **${formatCoins(result.extraPenalty)} xu**.`
-    : `💥 **NGƯỜI CHƠI THUA!** Mất **${formatCoins(state.stake)} xu**.`;
+  const outcome = result.outcome === 'win' ? 'win' : result.outcome === 'draw' ? 'draw' : 'loss';
+  return resultBlock({ userId, outcome, stake: state.stake, payout: result.payout, result, reason: result.extraPenalty ? 'Hifumi' : result.karmaTriggered ? 'Bùa Trả Đũa' : '',
+    extra: [result.karmaTriggered ? '🪬 **Bùa Trả Đũa kích hoạt!** Hifumi bị đẩy sang Nhà cái.' : '', result.extraPenalty ? `⚠️ Phạt thêm **-${coins(result.extraPenalty)}**` : ''] });
 }
 
 function chinchiroEmbed(state, userId, sessionId = null) {
   const embed = new EmbedBuilder().setColor(state.result?.outcome === 'win' ? 0x2ECC71 : state.result?.outcome === 'loss' ? 0xE74C3C : 0xD4A017)
     .setTitle('🎲 BÀN CƯỢC CHINCHIRO · XÚC XẮC NGẦM')
-    .setDescription(`**Người chơi:** <@${userId}> · **Tiền cược:** ${formatCoins(state.stake)} xu`)
+    .setDescription(`**Người chơi:** <@${userId}> · **Tiền cược:** ${formatCoins(state.stake)} :coin:`)
     .addFields(
       { name: '💼 QUẢN ĐỐC (CÁI)', value: rollLines(state.dealer) },
       { name: '👤 NGƯỜI CHƠI', value: rollLines(state.player) },
-      { name: '🏁 KẾT QUẢ', value: resultText(state) },
+      { name: '🏁 KẾT QUẢ', value: resultText(state, userId) },
     );
   if (sessionId && !state.result) embed.setFooter({ text: `Mã ván: ${sessionId}` });
   if (state.effect) embed.addFields({ name: '✨ Vật phẩm', value: ({
@@ -209,8 +206,6 @@ function chinchiroEmbed(state, userId, sessionId = null) {
     chinchiro_otsuki_dice: 'Xúc Xắc Của Quản Đốc · chỉ có mặt 4–5–6', chinchiro_karma: 'Bùa Trả Đũa · tự động chặn Hifumi',
   })[state.effect] });
   if (state.result) {
-    addExperienceField(embed, state.result);
-    const drops = bonusDropText(state.result.bonusDrops); if (drops) embed.addFields({ name: '🎊 Drop sau ván', value: drops });
   }
   return embed;
 }

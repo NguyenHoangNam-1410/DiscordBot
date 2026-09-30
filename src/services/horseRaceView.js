@@ -1,6 +1,7 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, ModalBuilder, TextInputBuilder, TextInputStyle } = require('discord.js');
 const { formatCoins } = require('../utils/economy');
-const { addExperienceField, experienceLines } = require('../utils/progressionView');
+const { resultLine, resultBlock, bonusLine, coins } = require('../utils/rewardText');
+
 
 function raceButtons(round, market, horses, disabled = false) {
   const buttons = market.selected.map(key => new ButtonBuilder().setCustomId(`horserace:${round.id}:${key}`)
@@ -14,7 +15,7 @@ function raceEmbed(round, { stats, market, maxBet, horses, minBet, horseCount })
   const odds = market.selected.map(key => { const horse = horses[key]; const quote = market.horses[key]; const chance = (quote.chance * 100).toFixed(1).replace('.0', ''); return `${horse.emoji} **${horse.name}** · x${quote.multiplier} · ${chance}% · ${quote.form}`; }).join('\n');
   return new EmbedBuilder().setColor(market.specialAppears ? 0xFFD700 : 0x2ECC71).setTitle(market.specialAppears ? '🌟 THIÊN MÃ XUẤT HIỆN · ĐANG NHẬN CƯỢC' : '🏇 ĐUA NGỰA · ĐANG NHẬN CƯỢC')
     .setDescription(`**${horseCount} ngựa** · ${market.periodLabel} · Khóa cược <t:${closes}:R>\n\n${odds}`)
-    .addFields({ name: 'Người đã cược', value: String(stats.players), inline: true }, { name: 'Tổng pot', value: `${formatCoins(stats.pool)} xu`, inline: true }, { name: 'Giới hạn mỗi người/ván', value: `${formatCoins(minBet)}–${formatCoins(maxBet)} xu`, inline: true })
+    .addFields({ name: 'Người đã cược', value: String(stats.players), inline: true }, { name: 'Tổng pot', value: `${formatCoins(stats.pool)} :coin:`, inline: true }, { name: 'Giới hạn mỗi người/ván', value: `${formatCoins(minBet)}–${formatCoins(maxBet)} :coin:`, inline: true })
     .setFooter({ text: `Mã ván: ${round.id} • Multiplier gồm tiền cược hoàn lại` });
 }
 function raceAnimationEmbed(round, plan, frameIndex, { horses, frameCount, animationMs, progressBar }) {
@@ -28,21 +29,19 @@ function raceAnimationEmbed(round, plan, frameIndex, { horses, frameCount, anima
 function resultEmbed(settled, horses) {
   const medals = ['🥇', '🥈', '🥉']; const podium = settled.order.slice(0, 3).map((key, index) => `${medals[index]} ${horses[key].emoji} **${horses[key].name}**`).join('\n');
   const winner = horses[settled.winner]; const totalPot = settled.settlements.reduce((sum, item) => sum + item.stake, 0);
-  const winners = settled.settlements.filter(item => item.bets.some(bet => bet.payout > 0)).sort((a, b) => b.payout - a.payout).slice(0, 15);
-  const winnerSummary = winners.length
-    ? winners.map(item => {
+  const ranked = [...settled.settlements].sort((a, b) => (b.payout - b.stake) - (a.payout - a.stake)).slice(0, 15);
+  const winnerSummary = ranked.length
+    ? ranked.map(item => {
       const guessed = item.bets.filter(bet => bet.payout > 0).map(bet => `${horses[bet.choice]?.emoji || '🐎'} ${horses[bet.choice]?.name || bet.choice}`).join(', ');
-      return `<@${item.userId}> đoán **${guessed}** · nhận **${formatCoins(item.payout)} xu**`;
+      return resultBlock({ userId: item.userId, outcome: item.outcome, stake: item.stake, payout: item.payout, result: item, reason: guessed ? `đoán ${guessed}` : '' });
     }).join('\n')
-    : 'Không có người chơi đoán trúng.';
+    : 'Không có người chơi tham gia.';
   const embed = new EmbedBuilder().setColor(winner.special ? 0xFF69B4 : 0xFFD700).setTitle(winner.special ? '🌟 ĐUA NGỰA · CHUNG CUỘC' : '🏆 ĐUA NGỰA · CHUNG CUỘC')
     .setDescription(podium).addFields(
-      { name: '🎯 Người đoán trúng', value: winnerSummary },
-      { name: 'Tổng kết', value: `👥 **${settled.settlements.length}** người chơi · 💰 Pot **${formatCoins(totalPot)} xu**` },
+      { name: '🏆 KẾT QUẢ', value: winnerSummary.length > 1024 ? `${winnerSummary.slice(0, 1021)}...` : winnerSummary },
+      { name: 'Tổng kết', value: `👥 **${settled.settlements.length}** người chơi · 🏦 Pot **${coins(totalPot)}**` },
     )
     .setFooter({ text: `Mã ván: ${settled.round.id} • Dùng các nút bên dưới để xem chi tiết` }).setTimestamp();
-  const exp = experienceLines(settled.settlements).slice(0, 15).join('\n');
-  if (exp) embed.addFields({ name: ':test_tube: EXP NHẬN ĐƯỢC', value: exp.length > 1024 ? `${exp.slice(0, 1021)}...` : exp });
   const unlocked = settled.settlements.flatMap(item => (item.achievements || []).map(achievement => `<@${item.userId}> mở khóa **${achievement.name}**`));
   if (unlocked.length) embed.addFields({ name: '🏅 Thành tựu mới', value: unlocked.slice(0, 10).join('\n').slice(0, 1024) });
   return embed;
@@ -60,12 +59,12 @@ function detailEmbed(kind, settled, horses, impactText) {
     .setDescription(settled.plan?.reason || 'Nhà vô địch có màn trình diễn tốt nhất ở thời điểm quyết định.').setFooter({ text: `Mã ván: ${settled.round.id}` });
 }
 function personalEmbeds(round, own, bets, horses) {
-  const picks = bets.map(bet => `${horses[bet.choice]?.emoji || '🐎'} ${horses[bet.choice]?.name || bet.choice}: **${formatCoins(bet.amount)} xu**`).join('\n') || 'Không có dữ liệu cược.';
+  const picks = bets.map(bet => `${horses[bet.choice]?.emoji || '🐎'} ${horses[bet.choice]?.name || bet.choice}: **${coins(bet.amount)}**`).join('\n') || 'Không có dữ liệu cược.';
   const resultLabel = own.outcome === 'win' ? 'THẮNG' : own.outcome === 'draw' ? 'HÒA' : 'THUA'; const color = own.outcome === 'win' ? 0x2ECC71 : own.outcome === 'draw' ? 0xF1C40F : 0xE74C3C;
   const personal = new EmbedBuilder().setColor(color).setTitle(`👤 KẾT QUẢ CỦA BẠN · ${resultLabel}`).addFields(
-    { name: 'Vé cược', value: picks }, { name: 'Thanh toán', value: `Cược **${formatCoins(own.stake)} xu** · Nhận **${formatCoins(own.payout)} xu**\nRòng **${own.payout - own.stake >= 0 ? '+' : ''}${formatCoins(own.payout - own.stake)} xu**${own.insurance ? ` · Bảo hiểm về nhì ${formatCoins(own.insurance)} xu` : ''}${own.consolation ? ` · Vé Khán Đài ${formatCoins(own.consolation)} xu` : ''}${own.jackpot ? ` · Trúng Đậm +${formatCoins(own.jackpot)} xu` : ''}` },
+    { name: 'Vé cược', value: picks }, { name: '🏆 KẾT QUẢ', value: resultBlock({ userId: null, outcome: own.outcome, stake: own.stake, payout: own.payout, result: own,
+      extra: [own.insurance ? `🛡️ Bảo hiểm về nhì +${coins(own.insurance)}` : '', own.consolation ? `🎫 Vé Khán Đài +${coins(own.consolation)}` : '', own.jackpot ? `🎰 Trúng Đậm +${coins(own.jackpot)}` : ''] }) },
   ).setFooter({ text: `Mã ván: ${round.id} • Chỉ bạn thấy thông báo này` });
-  addExperienceField(personal, own);
   const embeds = [personal];
   if (own.achievements?.length) embeds.push(new EmbedBuilder().setColor(0x9B59B6).setTitle('🏅 THÀNH TỰU MỚI').setDescription(own.achievements.map(item => `**${item.name}**\n${item.description || ''}`).join('\n\n')).setFooter({ text: 'Chỉ bạn thấy thành tựu này' }));
   return embeds;

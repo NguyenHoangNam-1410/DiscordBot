@@ -19,7 +19,7 @@ module.exports = {
     const stake = interaction.options.getInteger('xu', true);
     const opponent = interaction.options.getUser('doithu');
     const maxBet = getGameBetLimit(interaction.guildId, 'oantuti');
-    if (stake > maxBet) return interaction.reply({ content: `Giới hạn cược Oẳn tù tì của server là **${formatCoins(maxBet)} xu**.`, flags: MessageFlags.Ephemeral });
+    if (stake > maxBet) return interaction.reply({ content: `Giới hạn cược Oẳn tù tì của server là **${formatCoins(maxBet)} :coin:**.`, flags: MessageFlags.Ephemeral });
     const remaining = interaction.isReplay ? 0 : consumeCommandCooldown(interaction.guildId, interaction.user.id, 'oantuti');
     if (remaining) return interaction.reply({ content: `Hãy chờ ${Math.ceil(remaining / 1000)} giây trước khi chơi tiếp.`, flags: MessageFlags.Ephemeral });
     if (opponent) {

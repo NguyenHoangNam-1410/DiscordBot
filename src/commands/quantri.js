@@ -116,9 +116,9 @@ module.exports = {
       }
       const result = clearPlayerData({ guildId: interaction.guildId, userId: target.id, scope, adminId: interaction.user.id });
       const parts = [];
-      if (scope === 'coins' || scope === 'all') parts.push(`**${result.coins.toLocaleString('vi-VN')} xu**`);
-      if (scope === 'diamonds' || scope === 'all') parts.push(`**${result.diamonds.toLocaleString('vi-VN')} kim cương**`);
-      if (scope === 'xp' || scope === 'all') parts.push(`cấp **${result.level}** và **${result.experience.toLocaleString('vi-VN')} EXP**`);
+      if (scope === 'coins' || scope === 'all') parts.push(`**${result.coins.toLocaleString('vi-VN')} :coin:**`);
+      if (scope === 'diamonds' || scope === 'all') parts.push(`**${result.diamonds.toLocaleString('vi-VN')} :gem:**`);
+      if (scope === 'xp' || scope === 'all') parts.push(`cấp **${result.level}** và **${result.experience.toLocaleString('vi-VN')} :test_tube:**`);
       return interaction.reply({ content: `🧹 Đã xóa dữ liệu ${parts.join(', ')} của <@${target.id}>.${result.forfeitedGames ? ` Đã hủy **${result.forfeitedGames}** ván đang chơi và tịch thu **${result.forfeitedStake.toLocaleString('vi-VN')} xu** đang khóa trong ván.` : ''} Lịch sử giao dịch và dữ liệu khác được giữ nguyên.`, flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
     }
     const item = route(interaction); return item.command.execute(remapOptions(interaction, item));

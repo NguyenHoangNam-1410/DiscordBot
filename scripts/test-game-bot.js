@@ -123,12 +123,13 @@ assert(!JSON.stringify(compactRaceResult).includes('Server seed'));
 assert.equal(horse.resultRows('race-test')[0].components.length, 4);
 assert(!compactRaceResult.fields.some(field => /EXP/.test(field.name)), 'không có ai nhận EXP thì không hiện mục EXP');
 const expRace = horse.resultEmbed({ round: { id: 'race-exp' }, market: raceMarket, debuff: raceDebuff, winner: raceWinner, order: raceOrder, plan: racePlan, settlements: [
-  { userId: 'win-user', stake: 100, payout: 300, bets: [{ choice: raceWinner, amount: 100, payout: 300 }], experienceGained: 25, levelUps: [{ level: 4 }], achievements: [{ name: 'Tay Đua' }] },
-  { userId: 'lose-user', stake: 100, payout: 0, bets: [{ choice: raceOrder[1], amount: 100, payout: 0 }], experienceGained: 10 },
+  { userId: 'win-user', outcome: 'win', stake: 100, payout: 300, bets: [{ choice: raceWinner, amount: 100, payout: 300 }], experienceGained: 25, levelUps: [{ level: 4 }], achievements: [{ name: 'Tay Đua' }] },
+  { userId: 'lose-user', outcome: 'loss', stake: 100, payout: 0, bets: [{ choice: raceOrder[1], amount: 100, payout: 0 }], experienceGained: 10 },
 ] }).toJSON();
-const expField = expRace.fields.find(field => /EXP NHẬN ĐƯỢC/.test(field.name));
-assert(expField, 'Đua ngựa phải công bố EXP ngay trong kết quả chung cuộc');
-assert.match(expField.value, /<@win-user> \*\*\+25 EXP\*\* · Cấp 4/); assert.match(expField.value, /<@lose-user> \*\*\+10 EXP\*\*/);
+const expField = expRace.fields.find(field => /KẾT QUẢ/.test(field.name));
+assert(expField, 'Đua ngựa phải công bố kết quả và EXP ngay trong kết quả chung cuộc');
+assert.match(expField.value, /<@win-user>\*\* thắng \(đoán .+\): \*\*\+200 :coin: \+25 :test_tube:\*\* · 🎉 Lên cấp \*\*4\*\*/);
+assert.match(expField.value, /<@lose-user>\*\* thua: \*\*-100 :coin: \+10 :test_tube:\*\*/);
 assert(expRace.fields.some(field => /Thành tựu mới/.test(field.name) && /<@win-user> mở khóa \*\*Tay Đua\*\*/.test(field.value)));
 assert(Math.abs(Object.values(raceMarket.horses).reduce((sum, quote) => sum + quote.chance, 0) - 1) < 0.000001);
 assert(Object.values(raceMarket.horses).every(quote => quote.multiplier >= 1.5 && quote.multiplier <= 30));
@@ -275,7 +276,7 @@ dropConfig.setGameConfig('drop-rate-guild', 'GAME_ITEM_DROP_MULTIPLIER', 1, 'adm
 const forcedDrops = buffs.rollGameDrops({ guildId: 'drop-rate-guild', userId: 'dropper', game: 'poker', randomInt: (minimum, maximum) => maximum === undefined ? 0 : minimum });
 const forcedItem = forcedDrops.find(drop => drop.type === 'item');
 assert(forcedItem && itemGames(require('../src/services/itemCatalogService').getCatalogItem(forcedItem.itemId)).includes('poker'), 'rơi vật phẩm Poker sau ván Poker');
-assert.match(require('../src/utils/progressionView').bonusDropText([forcedItem]), /\*\*.+\*\* ×1 \((R|SR|SSR|UR)\)/);
+assert.match(require('../src/utils/rewardText').bonusLine([forcedItem]), /BUFF SỰ KIỆN.+\[(R|SR|SSR|UR)\]/);
 dropConfig.setGameConfig('drop-rate-guild', 'GAME_ITEM_DROP_MULTIPLIER', 0, 'admin');
 assert.deepEqual(buffs.rollGameDrops({ guildId: 'drop-rate-guild', userId: 'dropper', game: 'poker', randomInt: () => 0 }).filter(drop => drop.type === 'item'), [], 'hệ số 0 tắt rơi vật phẩm');
 const xpResult = levels.addExperience('level-guild', 'alice', 200, { now: 4000 });
@@ -476,7 +477,7 @@ const vuaProfileJson = profileCommand.gameDetailEmbed(
   { username: 'alice', displayAvatarURL: () => 'https://example.com/avatar.png' }, economy.getAccount('vua-profile-guild', 'alice'), 1,
   { color: { value: '#5865F2' } }, vuaStats, 'Server Hồ Sơ',
 ).toJSON();
-assert.match(vuaProfileJson.fields[0].value, /750 xu/);
+assert.match(vuaProfileJson.fields[0].value, /750 :coin:/);
 assert.match(vuaProfileJson.title, /SERVER HỒ SƠ/);
 assert(!JSON.stringify(vuaProfileJson).includes('Tỷ lệ thắng'));
 const progression = require('../src/services/progressionService');
@@ -517,7 +518,7 @@ assert.equal(rps.chooseHand(duel.id, 'alice', 'bua', 3000).completed, false);
 const duelResult = rps.chooseHand(duel.id, 'bob', 'keo', 4000);
 assert.equal(duelResult.completed, true);
 assert.equal(duelResult.challengerAccount.experienceGained, 10);
-assert.match(JSON.stringify(rps.duelEmbed(duelResult.duel, duelResult).toJSON()), /\+10 EXP/);
+assert.match(JSON.stringify(rps.duelEmbed(duelResult.duel, duelResult).toJSON()), /\+10 :test_tube:/);
 assert.equal(duelResult.duel.winner_id, 'alice');
 assert.equal(economy.getAccount('duel-guild', 'alice').balance, 1100);
 assert.equal(economy.getAccount('duel-guild', 'bob').balance, 900);
@@ -535,7 +536,7 @@ assert.equal(acceptedCardDuel.status, 'playing');
 const cardResult = blackjackDuel.playBlackjackDuel(cardDuel.id, 'bob', 'stand', 3000);
 assert.equal(cardResult.settled, true);
 assert.equal(cardResult.duel.progression.length, 2);
-assert.match(JSON.stringify(blackjackDuel.blackjackDuelEmbed(cardResult.duel).toJSON()), /\+10 EXP/);
+assert.match(JSON.stringify(blackjackDuel.blackjackDuelEmbed(cardResult.duel).toJSON()), /\+10 :test_tube:/);
 assert.equal(cardResult.duel.winner_id, 'alice');
 assert.equal(economy.getAccount('card-guild', 'alice').balance, 1100);
 assert.equal(economy.getAccount('card-guild', 'bob').balance, 900);
@@ -556,7 +557,7 @@ const bothBustResult = blackjack.playAction({ sessionId: bothBustStarted.session
 assert.equal(bothBustResult.settled, true);
 assert.equal(bothBustResult.result.outcome, 'loss');
 assert.equal(bothBustResult.result.experienceGained, 10);
-assert.match(JSON.stringify(blackjack.blackjackEmbed(bothBustResult.state, 'alice', bothBustResult.result).toJSON()), /\+10 EXP/);
+assert.match(JSON.stringify(blackjack.blackjackEmbed(bothBustResult.state, 'alice', bothBustResult.result).toJSON()), /\+10 :test_tube:/);
 assert.match(blackjack.blackjackEmbed(bothBustResult.state, 'alice', bothBustResult.result).toJSON().description, /10♠/);
 assert.equal(bothBustResult.result.results[0].label, 'Quắc · Thua');
 assert.equal(economy.getAccount('both-bust-guild', 'alice').balance, 900);
@@ -585,7 +586,7 @@ assert.match(poker.pokerEmbed(pokerStarted.state, 'alice').toJSON().description,
 const pokerFolded = poker.playerAction(pokerStarted.session.id, 'alice', 'fold');
 assert.equal(pokerFolded.phase, 'complete');
 assert.equal(pokerFolded.result.experienceGained, 10);
-assert.match(JSON.stringify(poker.pokerEmbed(pokerFolded, 'alice').toJSON()), /\+10 EXP/);
+assert.match(JSON.stringify(poker.pokerEmbed(pokerFolded, 'alice').toJSON()), /\+10 :test_tube:/);
 assert.equal(economy.getAccount('poker-guild', 'alice').balance, 950);
 const raisedPoker = poker.startPoker({ guildId: 'poker-raise-guild', channelId: 'poker-channel', userId: 'alice', variant: 'texas' });
 const afterRaise = poker.playerAction(raisedPoker.session.id, 'alice', 'raise', 10);
@@ -646,7 +647,7 @@ const mineCashout = mines.playMines({ sessionId: mineGame.session.id, userId: 'h
 assert.equal(mineCashout.settled, true);
 assert(mineCashout.result.payout > 100);
 assert(mineCashout.result.experienceGained >= 10);
-assert.match(JSON.stringify(mines.minesEmbed(mineCashout.state, 'hunter', mineCashout.result).toJSON()), /EXP/);
+assert.match(JSON.stringify(mines.minesEmbed(mineCashout.state, 'hunter', mineCashout.result).toJSON()), /:test_tube:/);
 const coinRequests = require('../src/services/coinRequestService');
 const requestBase = Date.parse('2026-09-25T03:00:00Z');
 for (let index = 0; index < coinRequests.DAILY_REQUEST_LIMIT; index += 1) {

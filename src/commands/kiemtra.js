@@ -46,15 +46,10 @@ function claimRoleRewards(guildId, userId, member) {
 }
 
 const { getCatalogItem } = require("../services/itemCatalogService");
+const { rewardSummary } = require("../utils/rewardText");
 function rewardText(item) {
-  return [
-    item.coins ? `${formatCoins(item.coins)} xu` : null,
-    item.experience ? `${item.experience} EXP` : null,
-    item.diamonds ? `${item.diamonds} :gem:` : null,
-    item.item ? `${getCatalogItem(item.item)?.name || item.item} ×${item.quantity || 1}` : null,
-  ]
-    .filter(Boolean)
-    .join(" + ");
+  const info = item.item ? getCatalogItem(item.item) : null;
+  return rewardSummary({ coins: item.coins, diamonds: item.diamonds, experience: item.experience, item: item.item, quantity: item.quantity || 1, itemName: info?.name, itemRarity: info?.rarity });
 }
 function missionLine(mission) {
   const mark = mission.claimed ? "✅" : mission.complete ? "🎁" : "▫️";
@@ -63,7 +58,7 @@ function missionLine(mission) {
 function achievementLine(item) {
   const mark = item.claimed ? "✅" : item.complete ? "🎁" : "▫️";
   const rewards = [
-    item.reward ? `${formatCoins(item.reward)} xu` : null,
+    item.reward ? `${formatCoins(item.reward)} :coin:` : null,
     item.diamonds ? `${item.diamonds} :gem:` : null,
   ]
     .filter(Boolean)
@@ -214,7 +209,7 @@ function build(guildId, user, key, member = null) {
     const rewards = claimAchievements(guildId, userId);
     return base("🏆 NHẬN THÀNH TỰU").setDescription(
       rewards.length
-        ? `Đã nhận **${rewards.length}** thành tựu: **${formatCoins(rewards.reduce((sum, item) => sum + item.reward, 0))} xu** + **${rewards.reduce((sum, item) => sum + (item.diamonds || 0), 0)} :gem:**.`
+        ? `Đã nhận **${rewards.length}** thành tựu: **${formatCoins(rewards.reduce((sum, item) => sum + item.reward, 0))} :coin:** + **${rewards.reduce((sum, item) => sum + (item.diamonds || 0), 0)} :gem:**.`
         : "Chưa có thành tựu mới để nhận.",
     );
   }
@@ -223,7 +218,7 @@ function build(guildId, user, key, member = null) {
     if (result.status === "claimed")
       return base("🎁 ĐÃ NHẬN THƯỞNG VAI TRÒ")
         .setDescription(
-          `${result.claimed.map((config) => `<@&${config.role_id}> — **${formatCoins(config.amount)} xu**`).join("\n")}\n\nTổng cộng: **${formatCoins(result.total)} xu**`,
+          `${result.claimed.map((config) => `<@&${config.role_id}> — **${formatCoins(config.amount)} :coin:**`).join("\n")}\n\nTổng cộng: **${formatCoins(result.total)} :coin:**`,
         )
         .setFooter({
           text: `Tuần ${result.week} • Mỗi vai trò chỉ nhận một lần`,
@@ -241,7 +236,7 @@ function build(guildId, user, key, member = null) {
         `Bạn đã điểm danh hôm nay. Chuỗi điểm danh: **${result.streak}/7**.`,
       );
     const reward = [
-      `${formatCoins(result.coins)} xu`,
+      `${formatCoins(result.coins)} :coin:`,
       result.diamonds ? `${result.diamonds} :gem:` : null,
     ]
       .filter(Boolean)
@@ -276,7 +271,7 @@ function build(guildId, user, key, member = null) {
         { name: "Hạng", value: `#${rank}`, inline: true },
         {
           name: "Số dư",
-          value: `${formatCoins(account.balance)} xu`,
+          value: `${formatCoins(account.balance)} :coin:`,
           inline: true,
         },
         { name: "Cấp", value: String(progression.level), inline: true },

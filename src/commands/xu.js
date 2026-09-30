@@ -42,7 +42,7 @@ module.exports = {
       const rows = getTransactionHistory(interaction.guildId, interaction.user.id, 10);
       const description = rows.length ? rows.map(row => {
         const amount = `${row.amount >= 0 ? '+' : ''}${formatCoins(row.amount)}`;
-        return `${row.amount >= 0 ? '🟢' : '🔴'} **${amount} xu** · ${transactionLabel(row.reason)}\n<t:${Math.floor(row.created_at / 1000)}:R>`;
+        return `${row.amount >= 0 ? '🟢' : '🔴'} **${amount} :coin:** · ${transactionLabel(row.reason)}\n<t:${Math.floor(row.created_at / 1000)}:R>`;
       }).join('\n\n') : 'Bạn chưa có giao dịch nào.';
       const embed = new EmbedBuilder().setColor(0x3498DB).setTitle('📜 LỊCH SỬ XU').setDescription(description).setFooter({ text: 'Hiển thị 10 giao dịch gần nhất' });
       return interaction.reply({ embeds: [embed], allowedMentions: { parse: [] }, flags: MessageFlags.Ephemeral });
@@ -50,7 +50,7 @@ module.exports = {
     if (subcommand === 'vanchoi') {
       const rows = getGameHistory(interaction.guildId, interaction.user.id, 10);
       const icons = { win: '🟢', loss: '🔴', draw: '🟡' };
-      const description = rows.length ? rows.map(row => `${icons[row.outcome]} **${GAME_LABELS[row.game] || row.game} · ${{ win: 'Thắng', loss: 'Thua', draw: 'Hòa' }[row.outcome]}**\nCược ${formatCoins(row.stake)} · nhận ${formatCoins(row.payout)} xu · <t:${Math.floor(row.created_at / 1000)}:R>`).join('\n\n') : 'Bạn chưa hoàn thành ván nào.';
+      const description = rows.length ? rows.map(row => `${icons[row.outcome]} **${GAME_LABELS[row.game] || row.game} · ${{ win: 'Thắng', loss: 'Thua', draw: 'Hòa' }[row.outcome]}**\nCược ${formatCoins(row.stake)} · nhận ${formatCoins(row.payout)} :coin: · <t:${Math.floor(row.created_at / 1000)}:R>`).join('\n\n') : 'Bạn chưa hoàn thành ván nào.';
       return interaction.reply({ embeds: [new EmbedBuilder().setColor(0x5865F2).setTitle('🎮 10 VÁN GẦN NHẤT').setDescription(description)], flags: MessageFlags.Ephemeral });
     }
     if (subcommand === 'chuyen') {
@@ -64,7 +64,7 @@ module.exports = {
         if (error.code === 'INSUFFICIENT_FUNDS') return interaction.reply({ content: 'Bạn không đủ xu để chuyển khoản này.', flags: MessageFlags.Ephemeral });
         throw error;
       }
-      return interaction.reply({ content: `💸 <@${interaction.user.id}> đã chuyển **${formatCoins(result.amount)} xu** cho <@${receiver.id}>.`, allowedMentions: { users: [receiver.id] } });
+      return interaction.reply({ content: `💸 <@${interaction.user.id}> đã chuyển **${formatCoins(result.amount)} :coin:** cho <@${receiver.id}>.`, allowedMentions: { users: [receiver.id] } });
     }
     return interaction.reply({ content: 'Tùy chọn không hợp lệ. Dùng `/xephang` để xem bảng xếp hạng.', flags: MessageFlags.Ephemeral });
   },

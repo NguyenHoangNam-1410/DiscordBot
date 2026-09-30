@@ -6,8 +6,8 @@ const { formatCoins } = require('../utils/economy');
 const { getGameBetLimit } = require('./gameBetLimitService');
 const { createFairness, fairInt } = require('./fairnessService');
 const { consumeInventory, getInventoryQuantity } = require('./shopService');
-const { addExperienceField } = require('../utils/progressionView');
 const engine = require('./coquayEngine');
+const { resultBlock, coins } = require('../utils/rewardText');
 
 const MIN_BET = 10;
 const MAX_BET = 100_000;
@@ -133,8 +133,8 @@ function coquayEmbed(state, userId, { lines = [], result = null, sessionId = nul
   const embed = new EmbedBuilder().setColor(result ? (result.outcome === 'win' ? 0x2ECC71 : 0xE74C3C) : 0x992D22).setTitle('🔫 CÒ QUAY NGA')
     .setDescription(`## 👤 <@${userId}> ${hearts(state.hp.player)}\n## 🤖 Bot ${hearts(state.hp.bot)}\n\n### Đợt nạp ${state.loads}: ${LIVE.repeat(state.lastLoad?.live || 0)}${BLANK.repeat(state.lastLoad?.blank || 0)}\n**Còn trong ổ:** ${LIVE} ×${left.live} · ${BLANK} ×${left.blank}`)
     .addFields(
-      { name: '💵 CƯỢC', value: `**${formatCoins(state.stake)} xu**`, inline: true },
-      { name: '🏆 THẮNG NHẬN', value: `**${formatCoins(payoutFor(state.stake))} xu** (x${PAYOUT_MULTIPLIER})`, inline: true },
+      { name: '💵 CƯỢC', value: `**${formatCoins(state.stake)} :coin:**`, inline: true },
+      { name: '🏆 THẮNG NHẬN', value: `**${formatCoins(payoutFor(state.stake))} :coin:** (x${PAYOUT_MULTIPLIER})`, inline: true },
       { name: '🎯 LƯỢT', value: result ? '—' : state.turn === 'player' ? '**Của bạn**' : '**Bot**', inline: true },
     );
   const status = [state.saw ? '🪚 Nòng đã cưa (viên kế tiếp x2 sát thương)' : null, state.shield.player ? '🪖 Bia Đỡ Đạn đang dựng' : null,
@@ -142,10 +142,7 @@ function coquayEmbed(state, userId, { lines = [], result = null, sessionId = nul
   if (status.length) embed.addFields({ name: '🧰 TRẠNG THÁI', value: status.join('\n') });
   if (lines.length) embed.addFields({ name: '📜 DIỄN BIẾN', value: lines.join('\n').slice(-1024) });
   if (result) {
-    const text = result.reason === 'won' ? `🎉 Bot gục ngã! Bạn nhận **${formatCoins(result.payout)} xu**.`
-      : result.reason === 'forfeit' ? `🏳️ Bạn bỏ cuộc và mất **${formatCoins(state.stake)} xu**.` : `💀 Bạn đã gục. Mất **${formatCoins(state.stake)} xu**.`;
-    embed.addFields({ name: '🏁 KẾT QUẢ', value: `### ${text}` });
-    addExperienceField(embed, result);
+    embed.addFields({ name: '🏁 KẾT QUẢ', value: resultBlock({ userId, outcome: result.outcome, stake: state.stake, payout: result.payout, result, reason: result.reason === 'won' ? 'Bot gục ngã' : result.reason === 'forfeit' ? 'bỏ cuộc' : 'gục ngã' }) });
     if (result.achievements?.length) embed.addFields({ name: '🏅 Thành tựu mới', value: result.achievements.map(item => `**${item.name}**`).join('\n') });
   } else if (sessionId) embed.setFooter({ text: `Mã ván: ${sessionId} • Tự bắn đạn lép thì giữ lượt • Xem luật: /luat trochoi:Cò quay Nga` });
   return embed;

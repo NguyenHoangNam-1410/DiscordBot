@@ -13,7 +13,7 @@ module.exports = {
     try { started = startCoquay({ guildId: interaction.guildId, userId: interaction.user.id, channelId: interaction.channelId, stake: interaction.options.getInteger('cuoc', true) }); }
     catch (error) {
       if (error.message === 'ACTIVE_SESSION') return interaction.reply({ content: 'Bạn đang có một ván Cò quay chưa kết thúc trong server này.', flags: MessageFlags.Ephemeral });
-      if (error.message === 'BET_LIMIT') return interaction.reply({ content: `Giới hạn cược Cò quay của server là **${formatCoins(error.maxBet)} xu**.`, flags: MessageFlags.Ephemeral });
+      if (error.message === 'BET_LIMIT') return interaction.reply({ content: `Giới hạn cược Cò quay của server là **${formatCoins(error.maxBet)} :coin:**.`, flags: MessageFlags.Ephemeral });
       return economyError(interaction, error);
     }
     const lines = [`🔄 Nạp đợt 1: ${'🔴'.repeat(started.state.lastLoad.live)}${'⚪'.repeat(started.state.lastLoad.blank)} · Bạn cầm súng trước.`];

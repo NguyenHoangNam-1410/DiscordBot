@@ -4,7 +4,7 @@ const { formatCoins } = require('../utils/economy');
 
 function line(item) {
   const mark = item.claimed ? '✅' : item.complete ? '🎁' : '▫️';
-  return `${mark} **${item.name}** — ${item.progress}/${item.target}\n↳ ${item.description} · ${formatCoins(item.reward)} xu`;
+  return `${mark} **${item.name}** — ${item.progress}/${item.target}\n↳ ${item.description} · ${formatCoins(item.reward)} :coin:`;
 }
 module.exports = {
   data: new SlashCommandBuilder().setName('thanhtuu').setDescription('Xem và nhận phần thưởng thành tựu')
@@ -15,7 +15,7 @@ module.exports = {
     if (interaction.options.getSubcommand() === 'nhan') {
       const rewards = claimAchievements(interaction.guildId, interaction.user.id);
       if (!rewards.length) return interaction.reply({ content: 'Chưa có thành tựu mới để nhận.', flags: MessageFlags.Ephemeral });
-      return interaction.reply({ content: `🏅 Đã nhận **${rewards.length} thành tựu**, tổng cộng **${formatCoins(rewards.reduce((sum, item) => sum + item.reward, 0))} xu**.` });
+      return interaction.reply({ content: `🏅 Đã nhận **${rewards.length} thành tựu**, tổng cộng **${formatCoins(rewards.reduce((sum, item) => sum + item.reward, 0))} :coin:**.` });
     }
     const achievements = getAchievements(interaction.guildId, interaction.user.id);
     const embed = new EmbedBuilder().setColor(0xF1C40F).setTitle('🏅 THÀNH TỰU').setDescription(achievements.map(line).join('\n\n'))

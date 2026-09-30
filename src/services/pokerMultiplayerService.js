@@ -8,6 +8,7 @@ const { createDeck, bestHand, compareHands, describeHand, awardPots } = require(
 const { createFairness, fairInt } = require('./fairnessService');
 const { getGameConfig } = require('./gameConfigService');
 const { consumeActiveEffect } = require('./effectStateService');
+const { resultLine, resultBlock, bonusLine, coins } = require('../utils/rewardText');
 
 const MAX_PLAYERS = 2;
 const TURN_TTL_MS = 3 * 60_000;
@@ -62,7 +63,7 @@ function createPokerLobby({ guildId, channelId, userId, username, variant }) {
     const id = crypto.randomBytes(6).toString('hex'); const fair = createFairness();
     const state = { mode: 'multiplayer', phase: 'lobby', variant, ante, players: [
       { id: String(userId), name: String(username || 'Người chơi').slice(0, 64), stack: player.stack, committed: 0, streetBet: 0, lobbyAnte: ante, folded: false, allIn: false, hole: [], pokerInsurance: false },
-    ], board: [], deck: [], street: 'lobby', currentBet: 0, raises: 0, pending: [], discardPending: [], turnUserId: null, log: [`💰 Tiền vào bàn: ${formatCoins(ante)} xu/người.`, '🪑 Đang chờ thêm một người chơi.'], result: null, fair, fairCounter: 0 };
+    ], board: [], deck: [], street: 'lobby', currentBet: 0, raises: 0, pending: [], discardPending: [], turnUserId: null, log: [`💰 Tiền vào bàn: ${formatCoins(ante)} :coin:/người.`, '🪑 Đang chờ thêm một người chơi.'], result: null, fair, fairCounter: 0 };
     const session = { id, guild_id: String(guildId), channel_id: String(channelId), message_id: null, user_id: String(userId), variant, state_json: JSON.stringify(state), expires_at: now + TURN_TTL_MS, created_at: now, updated_at: now };
     db.prepare('INSERT INTO poker_sessions(id,guild_id,channel_id,message_id,user_id,variant,state_json,expires_at,created_at,updated_at) VALUES(@id,@guild_id,@channel_id,@message_id,@user_id,@variant,@state_json,@expires_at,@created_at,@updated_at)').run(session);
     return { session, state };
@@ -191,7 +192,7 @@ function advanceAction(session, state, actor, action, amount = 0) {
       if (paid) spendCoins({ guildId: session.guild_id, userId: player.id, amount: paid, reason: `poker:${state.variant}:call` });
       if (paid < toCall || player.committed >= getGameBetLimit(session.guild_id, 'poker')) player.allIn = true;
       state.pending = state.pending.filter(id => id !== player.id);
-      state.log.push(player.allIn && toCall ? `🔥 <@${player.id}> All-in để theo.` : toCall ? `✅ <@${player.id}> theo ${formatCoins(paid)} xu.` : `✅ <@${player.id}> check.`);
+      state.log.push(player.allIn && toCall ? `🔥 <@${player.id}> All-in để theo.` : toCall ? `✅ <@${player.id}> theo ${formatCoins(paid)} :coin:.` : `✅ <@${player.id}> check.`);
     } else if (action === 'raise') {
       const raise = Number(amount); if (!Number.isSafeInteger(raise) || raise < 10) throw new Error('INVALID_RAISE');
       const max = maxRaiseAmount(state, player, session.guild_id);
@@ -200,7 +201,7 @@ function advanceAction(session, state, actor, action, amount = 0) {
       state.currentBet = Math.max(state.currentBet, player.streetBet); state.raises += 1;
       state.pending = actionablePlayers(state).filter(item => item.id !== player.id).map(item => item.id);
       if (player.committed >= getGameBetLimit(session.guild_id, 'poker')) player.allIn = true;
-      state.log.push(`⬆️ <@${player.id}> tố lên ${formatCoins(state.currentBet)} xu.`);
+      state.log.push(`⬆️ <@${player.id}> tố lên ${formatCoins(state.currentBet)} :coin:.`);
     } else throw new Error('INVALID_ACTION');
   }
   if (activePlayers(state).length === 1) return settle(session, state, 'everyone-folded');
@@ -245,22 +246,26 @@ function pokerTableEmbed(state, sessionId = null) {
   const complete = state.phase === 'complete'; const pot = state.players.reduce((sum, player) => sum + player.committed, 0);
   const board = state.board.length ? state.board.map(card => `**${card}**`).join('　') : 'Đang chờ bắt đầu ván';
   const embed = new EmbedBuilder().setColor(complete ? 0x2ECC71 : 0x8E44AD).setTitle(`♠️ POKER · ${VARIANTS[state.variant].name.toUpperCase()} · ĐẤU ĐÔI`)
-    .setDescription(`## 🃏 BÀI CHUNG\n### ${board}${state.phase === 'betting' || state.phase === 'discard' ? `　${'**??**　'.repeat(5 - state.board.length)}` : ''}\n\n## 💰 POT: ${formatCoins(pot)} XU`)
-    .addFields({ name: state.phase === 'lobby' ? '🪑 NGƯỜI CHƠI' : '🎴 STACK VÀ CƯỢC', value: state.players.map(player => `${player.folded ? '🏳️' : player.allIn ? '🔥' : '🎴'} <@${player.id}>\nCòn **${formatCoins(player.stack)} xu** · Đã cược **${formatCoins(player.committed)} xu**`).join('\n\n') });
-  if (state.phase === 'lobby') embed.addFields({ name: '📨 BÀN ĐANG CHỜ', value: `Cược vào bàn **${formatCoins(state.ante)} xu/người**. Cần ${MAX_PLAYERS - state.players.length} người nữa. Chủ bàn bấm **Bắt đầu ván** khi đủ người. Hết hạn sau <t:${Math.floor((Date.now() + TURN_TTL_MS) / 1000)}:R>.` });
+    .setDescription(`## 🃏 BÀI CHUNG\n### ${board}${state.phase === 'betting' || state.phase === 'discard' ? `　${'**??**　'.repeat(5 - state.board.length)}` : ''}\n\n## 💰 POT: ${formatCoins(pot)} :coin:`)
+    .addFields({ name: state.phase === 'lobby' ? '🪑 NGƯỜI CHƠI' : '🎴 STACK VÀ CƯỢC', value: state.players.map(player => `${player.folded ? '🏳️' : player.allIn ? '🔥' : '🎴'} <@${player.id}>\nCòn **${formatCoins(player.stack)} :coin:** · Đã cược **${formatCoins(player.committed)} :coin:**`).join('\n\n') });
+  if (state.phase === 'lobby') embed.addFields({ name: '📨 BÀN ĐANG CHỜ', value: `Cược vào bàn **${formatCoins(state.ante)} :coin:/người**. Cần ${MAX_PLAYERS - state.players.length} người nữa. Chủ bàn bấm **Bắt đầu ván** khi đủ người. Hết hạn sau <t:${Math.floor((Date.now() + TURN_TTL_MS) / 1000)}:R>.` });
   else if (state.phase === 'betting' || state.phase === 'discard') embed.addFields(
-    { name: state.phase === 'discard' ? '🍍 CHỌN LÁ BỎ' : `🎯 LƯỢT ${state.street.toUpperCase()} · ĐANG TỚI LƯỢT`, value: state.phase === 'discard' ? `Mỗi người chọn một lá bằng nút **Bỏ lá 1/2/3**. Bài tẩy được giữ riêng.` : `<@${state.turnUserId}> · Cần theo **${formatCoins(Math.max(0, state.currentBet - (playerById(state, state.turnUserId)?.streetBet || 0)))} xu**\nBấm **Xem bài tẩy** để mở bảng thao tác riêng.`, inline: false },
+    { name: state.phase === 'discard' ? '🍍 CHỌN LÁ BỎ' : `🎯 LƯỢT ${state.street.toUpperCase()} · ĐANG TỚI LƯỢT`, value: state.phase === 'discard' ? `Mỗi người chọn một lá bằng nút **Bỏ lá 1/2/3**. Bài tẩy được giữ riêng.` : `<@${state.turnUserId}> · Cần theo **${formatCoins(Math.max(0, state.currentBet - (playerById(state, state.turnUserId)?.streetBet || 0)))} :coin:**\nBấm **Xem bài tẩy** để mở bảng thao tác riêng.`, inline: false },
     { name: '📜 DIỄN BIẾN', value: state.log.slice(-5).map(line => `• ${line}`).join('\n') || '—' },
   );
   else if (complete) {
     const pots = state.result.pots.map((item, index) => `**${index ? `Side Pot ${index}` : 'Main Pot'} ${formatCoins(item.amount)}:** ${item.winners.map(id => `<@${id}>`).join(', ')}`).join('\n') || 'Không có pot tranh chấp.';
-    const outcomes = state.result.players.map(row => `<@${row.userId}> ${row.outcome === 'win' ? 'thắng' : row.outcome === 'draw' ? 'hòa' : 'thua'} · nhận **${formatCoins(row.payout)} xu**${row.insurance ? ` · bảo hiểm ${row.insurancePercent}%` : ''}`).join('\n');
+    const outcomes = state.result.players.map(row => {
+      const seat = state.players.find(player => player.id === row.userId);
+      return [resultLine({ userId: row.userId, outcome: row.outcome, stake: seat?.committed || 0, payout: row.payout, experienceGained: row.experienceGained, levelUps: row.levelUps }),
+        row.insurance ? `🛡️ Bảo hiểm hoàn **${row.insurancePercent}%** = +${coins(row.insurance)}` : '', bonusLine(row.bonusDrops)].filter(Boolean).join('\n');
+    }).join('\n');
     if (state.result.reason === 'showdown') {
       const reveals = state.players.map(player => { const score = state.result.scores[player.id]; return player.folded ? `🏳️ <@${player.id}>: Đã bỏ bài (bài tẩy được giữ kín)` : `🃏 <@${player.id}>: ${cardsText(player.hole)}${score ? ` — **${score.name}**` : ''}`; }).join('\n');
       embed.addFields({ name: 'LẬT BÀI', value: reveals });
     } else if (state.result.reason === 'expired' || state.result.reason === 'admin-ended') embed.addFields({ name: '⌛ BÀN ĐÃ ĐÓNG', value: state.result.stallers?.length ? `${state.result.stallers.map(id => `<@${id}>`).join(', ')} không thao tác kịp nên **mất tiền cược**; người chơi còn lại được hoàn tiền.` : 'Ván bị hủy và tiền cược được hoàn lại.' });
     else embed.addFields({ name: '🏳️ VÁN KẾT THÚC', value: 'Tất cả người chơi còn lại đã bỏ bài; bài tẩy được giữ kín.' });
-    embed.addFields({ name: 'CHIA POT', value: pots }, { name: 'KẾT QUẢ', value: outcomes });
+    embed.addFields({ name: 'CHIA POT', value: pots }, { name: '🏆 KẾT QUẢ', value: outcomes.slice(0, 1024) });
   }
   return embed.setFooter({ text: `${sessionId ? `Mã ván: ${sessionId} • ` : ''}${state.phase === 'lobby' ? 'Tiền cược được trừ khi ngồi vào bàn' : 'Bài tẩy chỉ bạn xem được bằng nút riêng'}${complete ? '' : ' · Hết hạn sau 3 phút không thao tác, tiền cược được hoàn'}` });
 }
@@ -395,7 +400,7 @@ async function handlePokerModal(interaction) {
   let state;
   try { state = playerAction(id, interaction.user.id, 'raise', Number(text)); }
   catch (error) {
-    return reject(error.message === 'NOT_YOUR_TURN' ? 'Hết lượt của bạn.' : error.message === 'BET_LIMIT' ? `Bạn chỉ có thể tố thêm tối đa ${formatCoins(error.maxRaise)} xu trong giới hạn ${formatCoins(error.maxBet)} xu/ván.` : error.message === 'INVALID_RAISE' ? 'Mức tố tối thiểu là 10 xu.' : 'Không thể tố lúc này.');
+    return reject(error.message === 'NOT_YOUR_TURN' ? 'Hết lượt của bạn.' : error.message === 'BET_LIMIT' ? `Bạn chỉ có thể tố thêm tối đa ${formatCoins(error.maxRaise)} :coin: trong giới hạn ${formatCoins(error.maxBet)} :coin:/ván.` : error.message === 'INVALID_RAISE' ? 'Mức tố tối thiểu là 10 xu.' : 'Không thể tố lúc này.');
   }
   await editPublicTable(interaction.client, session, state);
   return interaction.update({ content: privateHandText(state, interaction.user.id), components: pokerPrivateRows(session, state, interaction.user.id), allowedMentions: { parse: [] } });
