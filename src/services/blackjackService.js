@@ -14,7 +14,7 @@ const TABLE_GUESTS = 3;
 
 const MIN_BET = 10;
 const MAX_BET = 100_000;
-const REGULAR_WIN_MULTIPLIER = 1.8;
+const REGULAR_WIN_MULTIPLIER = 2;
 // Người chơi phải đạt ít nhất 16 điểm mới được dừng; nhà cái rút cho đến khi đạt ít nhất 15.
 const PLAYER_MIN_STAND = 16;
 const DEALER_MIN_STAND = 15;
