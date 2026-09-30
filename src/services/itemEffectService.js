@@ -89,16 +89,15 @@ function useLivingDictionary(guildId, channelId, userId) {
   return `${line}\n\nCâu tiếp theo:\n${games.vuaQuestionText(result.nextQuestion)}`;
 }
 
-function useVietnameseHint(guildId, channelId, effect) {
+function useVietnameseHint(guildId, channelId, effect, userId) {
   if (!channelHasGame(guildId, channelId, 'vuatiengviet')) throw new Error('WRONG_EFFECT_CHANNEL');
   const session = games.getVuaSession(guildId);
   if (!session) throw new Error('NO_ACTIVE_GAME');
   if (games.isExpiredChallenge(session.question)) throw new Error('QUESTION_EXPIRED');
   const syllables = String(session.question.answer).trim().split(/\s+/u);
-  if (effect === 'quiz_word_count') {
-    const plain = String(session.question.answer).normalize('NFD').replace(/\p{M}/gu, '').replace(/[đĐ]/g, 'd').toLocaleLowerCase('vi-VN');
-    const vowelCount = Array.from(plain).filter(letter => /[aeiouy]/u.test(letter)).length;
-    return `🔢 Gợi ý riêng cho bạn: đáp án có **${syllables.length} tiếng** và **${vowelCount} nguyên âm**.`;
+  if (effect === 'quiz_letter_position') {
+    const hint = games.revealVuaLetter(guildId, userId);
+    return `🔎 Gợi ý riêng cho bạn: **tiếng thứ ${hint.wordPosition}, chữ thứ ${hint.letterPosition}** là **${hint.letter}**.`;
   }
   if (effect === 'quiz_first_word') return `🔎 Gợi ý riêng cho bạn: tiếng đầu tiên trong đáp án là **${syllables[0]}**.`;
   const lengths = syllables.map(word => Array.from(word).length);
@@ -140,9 +139,11 @@ function useItem({ guildId, userId, channelId, itemId }) {
   if (item.effect === 'remove_active_game_effect') { const message = db.transaction(() => { const value = removePendingEffect(guildId, userId); consumeInventory(guildId, userId, item.id); return value; })(); return { item, message, ephemeral: true }; }
   if (item.effect === 'mines_radar') { const message = useMinesRadar(guildId, userId, channelId); consumeInventory(guildId, userId, item.id); return { item, message, ephemeral: true }; }
   if (item.effect === 'quiz_living_dictionary') { const message = useLivingDictionary(guildId, channelId, userId); consumeInventory(guildId, userId, item.id); return { item, message }; }
-  if (['quiz_first_word', 'quiz_syllable_lengths', 'quiz_word_count'].includes(item.effect)) {
-    const message = useVietnameseHint(guildId, channelId, item.effect);
-    consumeInventory(guildId, userId, item.id);
+  if (['quiz_first_word', 'quiz_syllable_lengths', 'quiz_letter_position'].includes(item.effect)) {
+    const message = db.transaction(() => {
+      consumeInventory(guildId, userId, item.id);
+      return useVietnameseHint(guildId, channelId, item.effect, userId);
+    })();
     return { item, message, ephemeral: true };
   }
   const message = armedMessage(item);

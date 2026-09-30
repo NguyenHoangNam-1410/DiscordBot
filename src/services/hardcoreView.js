@@ -3,6 +3,7 @@ const { formatCoins } = require('../utils/economy');
 const { baseMultiplier, potentialPayout } = require('./hardcoreEngine');
 const { resultBlock, coins } = require('../utils/rewardText');
 const emojiMap = require('../discordEmojiMap');
+const { rarityLabel, normalizeEquipment, effectText } = require('./hardcoreEquipment');
 
 const icon = (name, fallback = '•') => emojiMap[`:${name}:`] || fallback;
 
@@ -62,18 +63,21 @@ function statLine(state) {
     `${icon('four_leaf_clover')} ${state.luck}${change(state, 'luck')}`,
   ].join(' · ');
 }
-function itemLines(state, itemCatalog) {
-  const owned = Array.isArray(state.items) ? state.items : [];
-  if (!owned.length) return 'Chưa có trang bị.';
-  const descriptions = new Map(Object.values(itemCatalog).flat().map(item => [item.name, item.text]));
-  const lines = owned.map(item => `• **${item.name}** (${item.rarity}) — ${item.text || descriptions.get(item.name) || 'Không rõ tác dụng'}`);
-  let value = '';
+function itemFields(state, itemCatalog) {
+  const owned = normalizeEquipment(state.items);
+  const title = `${icon('school_satchel')} Trang bị và công dụng`;
+  if (!owned.length) return [{ name: title, value: 'Chưa có trang bị.', inline: false }];
+  const definitions = new Map(Object.values(itemCatalog).flat().map(item => [item.name, item]));
+  const lines = owned.map(item => {
+    const definition = definitions.get(item.name);
+    return `• **${item.name} Lv.${item.level}** [${rarityLabel(item.rarity)}] — ${definition ? effectText(definition, item.level) : item.text || 'Không rõ tác dụng'}`;
+  });
+  const chunks = [];
   for (const line of lines) {
-    if (`${value}${value ? '\n' : ''}${line}`.length > 960) break;
-    value += `${value ? '\n' : ''}${line}`;
+    if (!chunks.length || `${chunks.at(-1)}\n${line}`.length > 1000) chunks.push(line.slice(0, 1000));
+    else chunks[chunks.length - 1] += `\n${line}`;
   }
-  const shown = value ? value.split('\n').length : 0;
-  return shown < lines.length ? `${value}\n…và ${lines.length - shown} trang bị khác.` : value;
+  return chunks.map((value, index) => ({ name: index ? `${title} · tiếp` : title, value, inline: false }));
 }
 function hardcoreEmbed(state, userId, result, classes, sessionId = null, itemCatalog = {}) {
   const classInfo = classes[state.classKey]; const payout = potentialPayout(state);
@@ -85,7 +89,7 @@ function hardcoreEmbed(state, userId, result, classes, sessionId = null, itemCat
       { name: `${icon('bar_chart')} Chỉ số · thay đổi trong lượt vừa rồi`, value: statLine(state), inline: false },
       { name: `${icon('compass')} Tiến trình`, value: `Đã vượt ${state.cleared} · Boss ${state.bosses} · ${icon('test_tube')} ${state.potions}${change(state, 'potions')} · ${icon('mirror')} ${state.escapeTokens}${change(state, 'escapeTokens')} · ${chaosLabel(state)}`, inline: false },
       { name: `${icon('moneybag')} Rút thưởng`, value: state.cleared ? `**${formatCoins(payout)} :coin:** · x${baseMultiplier(state).toFixed(2)}` : 'Chưa thể rút', inline: false },
-      { name: `${icon('school_satchel')} Trang bị và công dụng`, value: itemLines(state, itemCatalog), inline: false },
+      ...itemFields(state, itemCatalog),
       { name: `${icon('scroll')} Diễn biến`, value: String(state.lastLog || '—').slice(0, 1024), inline: false },
     );
   if (result) {

@@ -27,7 +27,7 @@ const DEFAULT_ENTRIES = Object.freeze([
   { rewardKey: 'vietnamese_syllable_lengths', kind: 'item', itemId: 'vietnamese_syllable_lengths', name: 'Đếm Âm Tiết', tier: 'SR', amount: 1, weight: 1 },
   { rewardKey: 'vietnamese_first_word', kind: 'item', itemId: 'vietnamese_first_word', name: 'Mở Đầu Từ Điển', tier: 'SSR', amount: 1, weight: 1 },
   { rewardKey: 'chinchiro_karma_charm', kind: 'item', itemId: 'chinchiro_karma_charm', name: 'Bùa Trả Đũa', tier: 'UR', amount: 1, weight: 1 },
-  { rewardKey: 'vietnamese_word_count', kind: 'item', itemId: 'vietnamese_word_count', name: 'Máy Đếm Tiếng', tier: 'R', amount: 1, weight: 1 },
+  { rewardKey: 'vietnamese_word_count', kind: 'item', itemId: 'vietnamese_word_count', name: 'Kính Soi Chữ', tier: 'R', amount: 1, weight: 1 },
   { rewardKey: 'mines_row_scanner', kind: 'item', itemId: 'mines_row_scanner', name: 'Máy Quét Hàng', tier: 'R', amount: 1, weight: 1 },
   { rewardKey: 'mines_column_scanner', kind: 'item', itemId: 'mines_column_scanner', name: 'Máy Quét Cột', tier: 'R', amount: 1, weight: 1 },
   { rewardKey: 'baucua_small_lens', kind: 'item', itemId: 'baucua_small_lens', name: 'Kính Lúp Nứt', tier: 'R', amount: 1, weight: 1 },
@@ -72,7 +72,11 @@ function listGachaPool(guildId, { luckMultiplier = 1, tierMultipliers = {} } = {
   });
   const custom = [...overrides.values()].map(row => ({ rewardKey: row.reward_key, kind: row.kind, itemId: row.item_id,
     name: row.display_name, tier: row.tier, amount: row.amount, weight: row.weight, customized: true }));
-  const available = [...defaults, ...custom].filter(entry => entry.kind !== 'item' || getCatalogItem(entry.itemId)?.gachaEligible !== false);
+  const available = [...defaults, ...custom]
+    .filter(entry => entry.kind !== 'item' || getCatalogItem(entry.itemId)?.gachaEligible !== false)
+    .map(entry => entry.itemId === 'vietnamese_word_count'
+      ? { ...entry, name: getCatalogItem(entry.itemId).name }
+      : entry);
   const luck = Number.isFinite(Number(luckMultiplier)) ? Math.max(1, Number(luckMultiplier)) : 1;
   const rates = guildId === '__default__' ? { ...DEFAULT_TIER_RATES } : tierRates(guildId);
   const enabled = tier => available.filter(entry => entry.tier === tier && entry.weight > 0).length;

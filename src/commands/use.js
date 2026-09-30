@@ -54,6 +54,7 @@ function errorText(error) {
     NO_RADAR_AREA: 'Không còn khu vực phù hợp để Radar quét.',
     HARD_QUESTION_REQUIRED: 'Từ Điển Sống chỉ dùng được khi câu hỏi hiện tại là câu khó.',
     QUESTION_EXPIRED: 'Câu hỏi khó đã hết thời gian; vật phẩm không bị trừ.',
+    NO_UNREVEALED_LETTERS: 'Bạn đã mở hết chữ cái của câu hiện tại; vật phẩm không bị trừ.',
     HIGHER_EFFECT_ACTIVE: 'Ván này đã có hiệu ứng bậc cao hơn; chỉ hiệu ứng cao nhất được tính và vật phẩm không bị trừ.',
     EFFECT_ALREADY_ACTIVE: 'Hiệu ứng này đã sẵn sàng; không thể cộng dồn và vật phẩm không bị trừ.',
     NO_EFFECT_TO_REMOVE: 'Bạn không có hiệu ứng vật phẩm nào đang chờ để hủy; Nước Thanh Tẩy không bị trừ.',

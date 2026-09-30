@@ -169,6 +169,35 @@ function getVuaSession(guildId) {
   return vuaSessions.get(key) || null;
 }
 
+function revealVuaLetter(guildId, userId) {
+  const session = getVuaSession(guildId);
+  if (!session) throw new Error('NO_ACTIVE_GAME');
+  if (isExpiredChallenge(session.question)) throw new Error('QUESTION_EXPIRED');
+
+  const segmenter = new Intl.Segmenter('vi', { granularity: 'grapheme' });
+  const words = String(session.question.answer).normalize('NFC').trim().split(/\s+/u);
+  const positions = words.flatMap((word, wordIndex) => [...segmenter.segment(word)]
+    .filter(part => /\p{L}/u.test(part.segment))
+    .map((part, letterIndex) => ({ wordIndex, letterIndex, letter: part.segment })));
+  const revealedByUser = session.question.revealedLettersByUser || {};
+  const previous = Array.isArray(revealedByUser[String(userId)]) ? revealedByUser[String(userId)] : [];
+  const available = positions.map((position, index) => ({ ...position, index }))
+    .filter(position => !previous.includes(position.index));
+  if (!available.length) throw new Error('NO_UNREVEALED_LETTERS');
+
+  const chosen = randomItem(available);
+  const updated = {
+    ...session,
+    question: {
+      ...session.question,
+      revealedLettersByUser: { ...revealedByUser, [String(userId)]: [...previous, chosen.index] },
+    },
+  };
+  saveSession(guildId, 'vuatiengviet', updated);
+  vuaSessions.set(String(guildId), updated);
+  return { letter: chosen.letter, wordPosition: chosen.wordIndex + 1, letterPosition: chosen.letterIndex + 1 };
+}
+
 function answerVuaSession(guildId, answer, now = Date.now()) {
   const session = getVuaSession(guildId);
   if (!session) return { ok: false, error: 'NO_SESSION' };
@@ -261,6 +290,7 @@ module.exports = {
   consumeCommandCooldown,
   startVuaSession,
   getVuaSession,
+  revealVuaLetter,
   answerVuaSession,
   skipVuaSession,
   skipVuaSessionForPlayer,

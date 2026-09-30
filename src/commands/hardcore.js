@@ -24,10 +24,10 @@ function ratesEmbed() {
   return new EmbedBuilder().setColor(0xE67E22).setTitle('🎰 SINH TỒN · TỶ LỆ RNG')
     .setDescription('Tỷ lệ được roll và lưu khi encounter xuất hiện; restart bot không đổi kết quả.')
     .addFields(
-      { name: 'Hòm', value: 'Trước tiên: 12% Mimic · 3% Ancient Mimic.\nNếu không phải Mimic: 20% rỗng · 5% Legendary giả · 40% thường · 22% Rare · 10% Legendary · 3% Cursed.' },
+      { name: 'Hòm', value: 'Trước tiên: 12% Mimic · 3% Ancient Mimic.\nNếu không phải Mimic: 20% rỗng · 5% đồ giả · 40% R · 22% SR · 10% SSR · 3% UR (Nguyền). Nhặt lại cùng trang bị sẽ tăng cấp và cộng thêm hiệu ứng.' },
       { name: 'RNGesus · Chaos', value: 'Base theo tầng: 5–9 là 0,3% · 10–19 là 0,6% · 20+ là 1%. Mỗi tầng nhân ngẫu nhiên x0,25–x3, tích Chaos khi lâu không gặp và có 2,5% khả năng Chaos Spike; xác suất cuối bị chặn ở 12%.\nBỏ chạy: 65% · Cầu nguyện: 10% · Boss không thể bị đánh bại.' },
       { name: 'Sự kiện xấu', value: '6% encounter thường là Tax Collector, trộm bình máu hoặc Wrong Portal. Tax mất 15% payout; Wrong Portal giữ nguyên tầng và roll lại encounter.' },
-      { name: 'Pity', value: '5 hòm không có Rare sẽ đảm bảo tối thiểu Rare. Sau 10 hòm không có Legendary, mỗi hòm cộng thêm 2% tỷ lệ Legendary.' },
+      { name: 'Pity', value: '5 hòm không có SR trở lên sẽ đảm bảo tối thiểu SR. Sau 10 hòm không có SSR, mỗi hòm cộng thêm 2% tỷ lệ SSR.' },
       { name: 'Giới hạn', value: 'Tầng 100 hoàn thành chính thức · Overrun đến 999 · Payout ngừng tăng theo tầng sau 100 · Tối đa 10.000.000 xu.' },
     );
 }

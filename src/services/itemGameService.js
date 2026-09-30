@@ -28,7 +28,7 @@ const EFFECT_GAMES = Object.freeze({
   quiz_living_dictionary: ['vuatiengviet'],
   quiz_first_word: ['vuatiengviet'],
   quiz_syllable_lengths: ['vuatiengviet'],
-  quiz_word_count: ['vuatiengviet'],
+  quiz_letter_position: ['vuatiengviet'],
   quiz_extra_time: ['vuatiengviet'],
   mines_row_scanner: ['mines'],
   mines_column_scanner: ['mines'],

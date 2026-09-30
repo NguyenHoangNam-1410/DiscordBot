@@ -7,6 +7,7 @@ const { getGameBetLimit } = require('./gameBetLimitService');
 const { createFairness, fairInt } = require('./fairnessService');
 const hardcoreRepository = require('./hardcoreRepository');
 const hardcoreView = require('./hardcoreView');
+const { rarityLabel, normalizeEquipment } = require('./hardcoreEquipment');
 const { chaosLabel } = hardcoreView;
 const { clamp, hitChance, defenseReduction, physicalAfterDefense, magicAfterResistance, enemyScale, baseMultiplier, potentialPayout } = require('./hardcoreEngine');
 
@@ -158,7 +159,8 @@ function generateEncounter(state) {
 }
 
 function applyItem(state, item, rarity = 'common') {
-  if (!item) return;
+  if (!item) return null;
+  state.items = normalizeEquipment(state.items);
   if (item.attack) { state.damageMin += item.attack; state.damageMax += item.attack; }
   if (item.defense) state.defense += item.defense;
   if (item.defenseSet !== undefined) state.defense = item.defenseSet;
@@ -169,8 +171,10 @@ function applyItem(state, item, rarity = 'common') {
   if (item.escapeTokens) state.escapeTokens += item.escapeTokens;
   if (item.maxHp) { state.maxHp = Math.max(20, state.maxHp + item.maxHp); state.hp = Math.min(state.maxHp, Math.max(1, state.hp + (item.heal || Math.max(0, item.maxHp)))); }
   if (item.bonusPenalty) state.payoutFactor *= 1 - item.bonusPenalty;
-  state.items.push({ name: item.name, rarity, text: item.text });
-  state.items = state.items.slice(-8);
+  let equipment = state.items.find(entry => entry.name === item.name);
+  if (equipment) { equipment.level += 1; equipment.text = item.text; }
+  else { equipment = { name: item.name, rarity, text: item.text, level: 1 }; state.items.push(equipment); }
+  return equipment;
 }
 
 function updatePity(state, rarity) {
@@ -392,10 +396,10 @@ const actionTx = db.transaction(({ sessionId, userId, expectedTurn, action }) =>
       } else if (chest.kind === 'empty') {
         updatePity(state, 'empty'); completeFloor(state, '📦 Hòm hoàn toàn trống.', 0);
       } else if (chest.kind === 'fake_legendary') {
-        updatePity(state, 'empty'); completeFloor(state, '🟠 Ánh sáng Legendary bùng lên rồi tắt; đây là đồ giả không có chỉ số.', 0);
+        updatePity(state, 'empty'); completeFloor(state, '🟠 Ánh sáng SSR bùng lên rồi tắt; đây là đồ giả không có chỉ số.', 0);
       } else {
-        applyItem(state, chest.item, chest.rarity); updatePity(state, chest.rarity);
-        completeFloor(state, `🎁 Nhận **${chest.item.name}** (${chest.rarity}): ${chest.item.text}.`, chest.rarity === 'legendary' ? 2 : 1);
+        const equipment = applyItem(state, chest.item, chest.rarity); updatePity(state, chest.rarity);
+        completeFloor(state, `🎁 ${equipment.level > 1 ? 'Nâng cấp' : 'Nhận'} **${chest.item.name} Lv.${equipment.level}** (${rarityLabel(chest.rarity)}): ${chest.item.text}.`, chest.rarity === 'legendary' ? 2 : 1);
       }
     } else throw new Error('INVALID_ACTION');
   } else if (state.encounter.type === 'shrine') {
@@ -431,8 +435,8 @@ const actionTx = db.transaction(({ sessionId, userId, expectedTurn, action }) =>
       state.payoutFactor *= 0.6; completeFloor(state, '💸 RNGesus nhận 40% payout và cho bạn đi.', 0);
     } else if (action === 'pray') {
       if (!event.prayerSuccess) return { settled: true, state, result: finishRun(session, state, 'rngesus') };
-      const item = pick(ITEMS.legendary); applyItem(state, item, 'legendary'); updatePity(state, 'legendary');
-      completeFloor(state, `🙏 RNGesus cười và ném cho bạn **${item.name}**.`, 2);
+      const item = pick(ITEMS.legendary); const equipment = applyItem(state, item, 'legendary'); updatePity(state, 'legendary');
+      completeFloor(state, `🙏 RNGesus cười và trao **${item.name} Lv.${equipment.level}** (${rarityLabel('legendary')}).`, 2);
     } else if (action === 'escape_token') {
       if (state.escapeTokens <= 0) throw new Error('NO_TOKEN');
       state.escapeTokens -= 1; completeFloor(state, '🪞 Vé Thoát Hiểm vỡ vụn và đưa bạn tới tầng tiếp theo.', 0);
