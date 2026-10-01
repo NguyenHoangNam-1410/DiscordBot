@@ -84,9 +84,20 @@ function getRecord(guildId, userId) {
 function getTop(guildId, limit) {
   return db
     .prepare(
-      "SELECT * FROM hardcore_records WHERE guild_id=? ORDER BY best_floor DESC,completions DESC,updated_at ASC LIMIT ?",
+      `WITH progress AS (
+        SELECT guild_id,user_id,best_floor,runs,deaths,escapes,completions,updated_at FROM hardcore_records WHERE guild_id=?
+        UNION ALL
+        SELECT guild_id,user_id,
+          CASE WHEN json_extract(state_json,'$.cleared')>=999 AND NOT COALESCE(json_extract(state_json,'$.finalBossDefeated'),0)
+            THEN 998 ELSE COALESCE(json_extract(state_json,'$.cleared'),0) END,
+          1,0,0,CASE WHEN json_extract(state_json,'$.cleared')>=100 THEN 1 ELSE 0 END,updated_at
+        FROM hardcore_sessions WHERE guild_id=?
+      ) SELECT guild_id,user_id,MAX(best_floor) best_floor,SUM(runs) runs,SUM(deaths) deaths,
+        SUM(escapes) escapes,SUM(completions) completions,MAX(updated_at) updated_at
+      FROM progress GROUP BY guild_id,user_id
+      ORDER BY best_floor DESC,completions DESC,updated_at ASC LIMIT ?`,
     )
-    .all(String(guildId), limit);
+    .all(String(guildId), String(guildId), limit);
 }
 module.exports = {
   getSession,

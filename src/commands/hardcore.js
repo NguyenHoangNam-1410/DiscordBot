@@ -88,7 +88,7 @@ function ratesEmbed() {
       {
         name: "Pity",
         value:
-          "5 hòm không có SR trở lên sẽ đảm bảo tối thiểu SR. Sau 10 hòm không có SSR, mỗi hòm cộng thêm 2% tỷ lệ SSR.",
+          "Chỉ hòm đã mở tính pity (kể cả Mimic). 5 hòm không SR+ bảo đảm hòm kế tối thiểu SR, không Mimic. Sau 10 hòm không SSR+, mỗi hòm kế +2% cơ hội SSR. Cả hòm thường và kho báu áp dụng Luck/pity; SSR tối đa 35% / 60% tương ứng.",
       },
       {
         name: "Giới hạn",

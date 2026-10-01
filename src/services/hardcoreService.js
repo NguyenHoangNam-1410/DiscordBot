@@ -304,7 +304,7 @@ function makeEnemy(floor, rank = "normal", forcedName = null, modifiers = {}) {
     champion: [1.4, 1.15, 1.4],
     elite: [2, 1.35, 2],
     boss: [3.2, 1.35, 4],
-    final_boss: [5.8, 2.5, 8],
+    final_boss: [5.8, 2.15, 8],
     mimic: [1.7, 1.25, 1.8],
     ancient_mimic: [2.8, 1.5, 3],
   }[rank];
@@ -380,20 +380,23 @@ function makeEnemy(floor, rank = "normal", forcedName = null, modifiers = {}) {
   };
 }
 
-function chooseRarity(state) {
+function legendaryChance(state, treasure = false) {
   const unstable = state.modifiers?.unstable_rift || 0;
-  const legendaryChance = Math.min(
-    0.35,
-    0.1 +
+  return Math.min(
+    treasure ? 0.6 : 0.35,
+    (treasure ? 0.35 : 0.1) +
       Math.max(0, state.pityLegendary - 9) * 0.02 +
       state.luck * 0.002 +
       Math.min(0.08, unstable * 0.01),
   );
+}
+function chooseRarity(state) {
+  const chance = legendaryChance(state);
   const roll = randomFloat();
-  if (roll < legendaryChance) return "legendary";
-  if (roll < legendaryChance + 0.03) return "cursed";
-  if (state.pityRare >= 5 || roll < legendaryChance + 0.25) return "rare";
-  if (roll < legendaryChance + 0.65) return "common";
+  if (roll < chance) return "legendary";
+  if (roll < chance + 0.03) return "cursed";
+  if (state.pityRare >= 5 || roll < chance + 0.25) return "rare";
+  if (roll < chance + 0.65) return "common";
   if (roll < 0.95) return "empty";
   return "fake_legendary";
 }
@@ -407,7 +410,7 @@ function makeChest(state, treasure = false) {
       : state.pityRare < 5 && mimicRoll < 0.15 + Math.min(0.15, unstable * 0.01)
         ? "mimic"
         : treasure
-          ? randomFloat() < Math.min(0.6, 0.35 + unstable * 0.01)
+          ? randomFloat() < legendaryChance(state, true)
             ? "legendary"
             : "rare"
           : chooseRarity(state);
@@ -590,8 +593,9 @@ function completeFloor(state, log, rewardMultiplier = 1) {
     state.damageMin += growth.attack;
     state.damageMax += growth.attack;
     state.hp = state.maxHp;
+    const previousPotions = state.potions;
     state.potions = Math.min(5, state.potions + 2);
-    log += `\n🏕️ Checkpoint: +${growth.hp} HP tối đa, +${growth.attack} sát thương, hồi đầy HP và nhận 2 bình máu.`;
+    log += `\n🏕️ Checkpoint: +${growth.hp} HP tối đa, +${growth.attack} sát thương, hồi đầy HP; bình máu ${previousPotions} → ${state.potions} (tối đa 5).`;
   }
   if (
     clearedFloor % 10 === 0 &&
@@ -625,7 +629,7 @@ function completeFloor(state, log, rewardMultiplier = 1) {
 
 function recordRun(guildId, userId, state, reason) {
   const death = ["death", "rngesus"].includes(reason) ? 1 : 0;
-  const escape = reason === "cashout" ? 1 : 0;
+  const escape = ["cashout", "summit"].includes(reason) ? 1 : 0;
   const completion = state.completed ? 1 : 0;
   hardcoreRepository.upsertRecord(guildId, userId, {
     bestFloor: state.cleared,
@@ -637,17 +641,23 @@ function recordRun(guildId, userId, state, reason) {
 }
 
 function getHardcoreRecord(guildId, userId) {
-  return (
-    hardcoreRepository.getRecord(guildId, userId) || {
-      guild_id: String(guildId),
-      user_id: String(userId),
-      best_floor: 0,
-      runs: 0,
-      deaths: 0,
-      escapes: 0,
-      completions: 0,
-    }
-  );
+  const record = hardcoreRepository.getRecord(guildId, userId) || {
+    guild_id: String(guildId),
+    user_id: String(userId),
+    best_floor: 0,
+    runs: 0,
+    deaths: 0,
+    escapes: 0,
+    completions: 0,
+  };
+  const run = getHardcoreRun(guildId, userId);
+  if (!run) return record;
+  return {
+    ...record,
+    best_floor: Math.max(record.best_floor, run.state.cleared),
+    runs: record.runs + 1,
+    completions: record.completions + (run.state.completed ? 1 : 0),
+  };
 }
 function getHardcoreTop(guildId, limit = 10) {
   return hardcoreRepository.getTop(guildId, limit);
@@ -659,15 +669,39 @@ function parseState(session) {
   const state = hardcoreRepository.parseState(session);
   state.modifiers ||= {};
   state.payoutSpent ||= 0;
+  state.payoutServiceSpent ??= state.payoutSpent;
+  state.completed ||= state.cleared >= COMPLETION_FLOOR;
   state.items = normalizeEquipment(state.items);
   for (const item of state.items) {
-    item.definition ||= ITEMS[item.rarity]?.find(
-      (entry) => entry.name === item.name,
-    );
+    item.definition ||=
+      ITEMS[item.rarity]?.find((entry) => entry.name === item.name) ||
+      FALLBACK_ITEMS[item.rarity]?.find((entry) => entry.name === item.name);
     item.cleansedLevels = Math.min(
       item.level,
       Math.max(0, item.cleansedLevels || 0),
     );
+  }
+  if (
+    state.payoutPenaltyVersion !== 1 &&
+    state.items.every(
+      (item) => item.rarity !== "cursed" || item.definition?.bonusPenalty > 0,
+    )
+  ) {
+    const curseFactor = state.items
+      .filter((item) => item.rarity === "cursed")
+      .reduce(
+        (factor, item) =>
+          factor *
+          (1 - item.definition.bonusPenalty) **
+            (item.level - item.cleansedLevels),
+        1,
+      );
+    if (curseFactor > 0 && state.payoutFactor <= curseFactor + 1e-12) {
+      const previous = potentialPayout(state);
+      state.payoutFactor = curseFactor;
+      state.payoutSpent += Math.max(0, potentialPayout(state) - previous);
+      state.payoutPenaltyVersion = 1;
+    }
   }
   if (state.encounter.type === "combat") {
     state.encounter.mechanic ||= ["boss", "final_boss"].includes(
@@ -752,6 +786,8 @@ const startTx = db.transaction(
       bonus: 0,
       payoutFactor: 1,
       payoutSpent: 0,
+      payoutServiceSpent: 0,
+      payoutPenaltyVersion: 1,
       escapeTokens: 0,
       items: [],
       completed: false,
@@ -1377,6 +1413,14 @@ function payRunService(state, service) {
   const cost = serviceCost(state, service);
   if (potentialPayout(state) < cost) throw new Error("INSUFFICIENT_RUN_PAYOUT");
   state.payoutSpent = (state.payoutSpent || 0) + cost;
+  state.payoutServiceSpent = (state.payoutServiceSpent || 0) + cost;
+  return cost;
+}
+function chargeCurrentPayout(state, rate) {
+  const available = potentialPayout(state);
+  const remaining = Math.floor(available * (1 - rate));
+  const cost = available - remaining;
+  state.payoutSpent = (state.payoutSpent || 0) + cost;
   return cost;
 }
 
@@ -1400,15 +1444,14 @@ const actionTx = db.transaction(
           result: finishRun(
             session,
             state,
-            state.cleared > 0 ? "cashout" : "forfeit",
+            state.phase === "summit"
+              ? "summit"
+              : state.cleared > 0
+                ? "cashout"
+                : "forfeit",
           ),
         };
-      if (state.phase === "summit")
-        return {
-          settled: true,
-          state,
-          result: finishRun(session, state, "summit"),
-        };
+      if (state.phase === "summit") throw new Error("INVALID_ACTION");
 
       if (state.phase === "upgrade") {
         if (action === "upgrade_attack") {
@@ -1612,10 +1655,10 @@ const actionTx = db.transaction(
         if (action !== "continue") throw new Error("INVALID_ACTION");
         const kind = state.encounter.kind;
         if (kind === "tax_collector") {
-          state.payoutFactor *= 0.85;
+          const cost = chargeCurrentPayout(state, 0.15);
           completeFloor(
             state,
-            "🧾 Tax Collector giảm hệ số payout 15% vì lý do: “quy định là quy định”.",
+            `🧾 Tax Collector thu **${cost} xu** (15% payout hiện tại, làm tròn lên).`,
             0,
           );
         } else if (kind === "potion_thief") {
@@ -1667,10 +1710,10 @@ const actionTx = db.transaction(
               0,
             );
         } else if (action === "bribe") {
-          state.payoutFactor *= 0.6;
+          const cost = chargeCurrentPayout(state, 0.4);
           completeFloor(
             state,
-            "💸 RNGesus giảm hệ số payout 40% và cho bạn đi.",
+            `💸 Hối lộ RNGesus **${cost} xu** (40% payout hiện tại, làm tròn lên) để đi tiếp.`,
             0,
           );
         } else if (action === "pray") {
@@ -1682,7 +1725,6 @@ const actionTx = db.transaction(
             };
           const item = pick(ITEMS.legendary);
           const equipment = applyItem(state, item, "legendary");
-          updatePity(state, "legendary");
           completeFloor(
             state,
             `🙏 RNGesus cười và trao **${item.name} Lv.${equipment.level}** (${rarityLabel("legendary")}).`,
@@ -1853,19 +1895,11 @@ function cleanupStaleHardcoreSessions(now = Date.now()) {
   const rows = hardcoreRepository.listStale(now - STALE_MS);
   const cleanup = db.transaction(() => {
     for (const session of rows) {
-      const state = parseState(session);
-      settleReservedGame({
-        guildId: session.guild_id,
-        userId: session.user_id,
-        payout: 0,
-        stake: state.stake,
-        game: "hardcore",
-        outcome: "loss",
-        operationId: `settle:hardcore:${session.id}`,
-        countGame: false,
+      const forfeit = Boolean(session.message_id);
+      forceEndHardcoreSession(session.id, session.guild_id, "system", {
+        label: forfeit ? "timeout-forfeit" : "timeout-refund",
+        forfeit,
       });
-      recordRun(session.guild_id, session.user_id, state, "forfeit");
-      hardcoreRepository.deleteSession(session.id);
     }
   });
   cleanup();
@@ -1899,6 +1933,7 @@ module.exports = {
   checkpointGrowth,
   makeChest,
   chooseRarity,
+  legendaryChance,
   completeFloor,
   playerAttack,
   enemyTurn,

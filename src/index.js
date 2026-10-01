@@ -26,7 +26,6 @@ const {
 } = require("./services/blackjackService");
 const { startPokerMaintenance } = require("./services/pokerService");
 const { resumeHorseRaces } = require("./services/horseRaceService");
-const { cleanupStaleHardcoreSessions } = require("./services/hardcoreService");
 const {
   startTimedChallengeMaintenance,
 } = require("./services/timedChallengeService");
@@ -124,7 +123,6 @@ client.once(Events.ClientReady, () => {
   loadApplicationEmojis(client, logger).catch(() => {});
   const resumedRounds = resumeOpenRounds(client, logger);
   const resumedHorseRaces = resumeHorseRaces(client, logger);
-  const expiredHardcoreRuns = cleanupStaleHardcoreSessions();
   maintenanceTimers.push(startTimedChallengeMaintenance(client, logger));
   maintenanceTimers.push(startCommerceMaintenance(client, logger));
   maintenanceTimers.push(startRpsDuelMaintenance(client, logger));
@@ -138,7 +136,6 @@ client.once(Events.ClientReady, () => {
       user: client.user.tag,
       resumedRounds,
       resumedHorseRaces,
-      expiredHardcoreRuns,
     },
     "game bot ready",
   );

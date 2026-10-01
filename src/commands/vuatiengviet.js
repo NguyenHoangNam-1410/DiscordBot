@@ -42,7 +42,7 @@ function questionEmbed(guildId, question, notice = null) {
     .setColor(0x9b59b6)
     .setTitle("👑 VUA TIẾNG VIỆT")
     .setDescription(
-      `Sắp xếp các chữ cái thành từ hoặc cụm từ có nghĩa:\n\n${vuaQuestionText(question)}`,
+      `Sắp xếp các chữ cái thành từ hoặc cụm từ có nghĩa:\n${vuaQuestionText(question)}`,
     )
     .addFields(
       { name: "Thưởng", value: `${formatCoins(reward)} :coin:`, inline: true },

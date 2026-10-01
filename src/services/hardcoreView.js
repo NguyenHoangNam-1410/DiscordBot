@@ -251,7 +251,7 @@ function encounterText(state) {
   if (encounter.type === "shrine")
     return `${icon("moyai")} **SHRINE KHÔNG RÕ NGUỒN GỐC**\n**Chạm Shrine** để nhận hiệu ứng ngẫu nhiên (có cả hiệu ứng gây hại), hoặc **Bỏ qua** để đi tiếp.`;
   if (encounter.type === "rngesus")
-    return `${icon("skull")} **RNGesus · HP ∞ · KHÔNG THỂ BỊ ĐÁNH BẠI**\nChiến đấu là chết. Bỏ chạy: **75% thành công**; thất bại tự dùng **1 Vé Thoát Hiểm** nếu còn, hết vé thì chết. Chạy thành công giữ vé. Hối lộ: giảm hệ số payout 40%; Cầu nguyện: 10% nhận Legendary, nếu trượt sẽ chết.`;
+    return `${icon("skull")} **RNGesus · HP ∞ · KHÔNG THỂ BỊ ĐÁNH BẠI**\nChiến đấu là chết. Bỏ chạy: **75% thành công**; thất bại tự dùng **1 Vé Thoát Hiểm** nếu còn, hết vé thì chết. Chạy thành công giữ vé. Hối lộ: trả 40% payout hiện tại (làm tròn lên); Cầu nguyện: 10% nhận SSR, nếu trượt sẽ chết.`;
   if (encounter.type === "surprise")
     return "❓ **LỐI ĐI BÍ ẨN**\n**Khám phá**: mỗi kết quả 25% — người cứu trợ (hồi 35% HP, nhận 1 bình), Vé Thoát Hiểm, kho xu (+50% tiền cược vào bonus) hoặc Champion phục kích ra đòn trước. **Bỏ qua** để đi tiếp an toàn.";
   if (encounter.type === "blacksmith") {
@@ -406,7 +406,7 @@ function hardcoreEmbed(
       {
         name: `${icon("moneybag")} Rút thưởng`,
         value: state.cleared
-          ? `**${formatCoins(payout)} :coin:** · x${baseMultiplier(state).toFixed(2)}${state.payoutSpent ? `\nĐã chi dịch vụ trong run: **${formatCoins(state.payoutSpent)} xu** (đã trừ).` : ""}`
+          ? `**${formatCoins(payout)} :coin:** · x${baseMultiplier(state).toFixed(2)}${state.payoutSpent ? `\nĐã trừ **${formatCoins(state.payoutSpent)} xu**: dịch vụ ${formatCoins(state.payoutServiceSpent ?? state.payoutSpent)}, thuế/hối lộ ${formatCoins(state.payoutSpent - (state.payoutServiceSpent ?? state.payoutSpent))}.` : ""}`
           : "Chưa thể rút",
         inline: false,
       },
@@ -570,7 +570,7 @@ function hardcoreRows(sessionId, state, disabled, classes) {
           `Bình máu (${state.potions})`,
           "test_tube",
           ButtonStyle.Secondary,
-          state.potions <= 0,
+          state.potions <= 0 || state.hp >= state.maxHp,
         ),
         retreat,
       ),
