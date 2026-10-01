@@ -7,7 +7,7 @@ const { getCatalogItem } = require('./itemCatalogService');
 const { consumeInventory, getInventoryQuantity, equipOwnedCosmetic } = require('./shopService');
 const { getActiveEffect, addEffectCharge, consumeActiveEffect, listActiveEffects, removeActiveEffect } = require('./effectStateService');
 const { formatCoins } = require('../utils/economy');
-const { resultBlock } = require('../utils/rewardText');
+const { quizAnswerAnnouncement } = require('../utils/rewardText');
 
 const EFFECT_TTL = 7 * 86_400_000;
 const HARD_QUESTION_DIAMONDS = 10;
@@ -81,12 +81,12 @@ function useLivingDictionary(guildId, channelId, userId) {
   if (!session.question.hard) throw new Error('HARD_QUESTION_REQUIRED');
   if (games.isExpiredChallenge(session.question)) throw new Error('QUESTION_EXPIRED');
   const answer = session.question.answer;
-  const result = games.answerVuaSession(guildId, answer);
+  games.answerVuaSession(guildId, answer);
   const reward = require('./gameRewardService').getGameReward(guildId, 'vuatiengviet') * 10;
   const account = require('./economyService').rewardGame({ guildId, userId, amount: reward, game: 'vuatiengviet', outcome: 'win' });
   require('./playerLevelService').addDiamonds(guildId, userId, HARD_QUESTION_DIAMONDS, { reason: 'vuatiengviet:living-dictionary' });
-  const line = resultBlock({ userId, outcome: 'win', stake: 0, payout: reward, gemsGained: HARD_QUESTION_DIAMONDS, result: { ...account, experienceGained: 0 }, reason: `📖 Từ Điển Sống điền **${answer}**` });
-  return `${line}\n\nCâu tiếp theo:\n${games.vuaQuestionText(result.nextQuestion)}`;
+  // Coi như người dùng đã trả lời đúng: chỉ trả về thông báo công khai; câu kế tiếp do giao diện Vua tiếng Việt đăng như bình thường.
+  return quizAnswerAnnouncement({ userId, reward, gems: HARD_QUESTION_DIAMONDS, account, answer, via: '📖 Từ Điển Sống' });
 }
 
 function useVietnameseHint(guildId, channelId, effect, userId) {

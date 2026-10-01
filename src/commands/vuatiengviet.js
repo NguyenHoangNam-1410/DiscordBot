@@ -148,12 +148,13 @@ const command = {
       if (ownerId !== interaction.user.id) return interaction.reply({ content: 'Bảng vật phẩm này thuộc về người chơi khác.', flags: MessageFlags.Ephemeral });
       try {
         const result = useItem({ guildId: interaction.guildId, userId: interaction.user.id, channelId: interaction.channelId, itemId });
-        const publicEffect = ['quiz_living_dictionary', 'quiz_extra_time'].includes(result.item.effect);
-        if (publicEffect) {
-          const notice = result.message.split('\n\nCâu tiếp theo:')[0];
-          const update = result.item.effect === 'quiz_living_dictionary' ? postNextQuestionMessage : updateQuestionMessage;
-          await update(interaction.guildId, interaction.channel, notice).catch(() => null);
+        if (result.item.effect === 'quiz_living_dictionary') {
+          // Như một câu trả lời đúng bình thường: thông báo công khai rồi đăng câu hỏi mới; bảng riêng chỉ xác nhận ngắn, không lặp lại nội dung.
+          await interaction.channel.send({ content: result.message, allowedMentions: { users: [interaction.user.id] } }).catch(() => null);
+          await postNextQuestionMessage(interaction.guildId, interaction.channel).catch(() => null);
+          return interaction.update(privateItemPanel(interaction.guildId, interaction.user.id, `✅ Đã dùng **${result.item.name}**; kết quả đã được thông báo trong kênh.`));
         }
+        if (result.item.effect === 'quiz_extra_time') await updateQuestionMessage(interaction.guildId, interaction.channel, result.message).catch(() => null);
         return interaction.update(privateItemPanel(interaction.guildId, interaction.user.id,
           `✅ **${result.item.name}**: ${result.message}`));
       } catch (error) {

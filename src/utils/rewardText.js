@@ -40,6 +40,12 @@ function resultLine({ userId = null, outcome, stake = 0, payout = 0, experienceG
   const level = levelUps?.length ? ` · 🎉 Lên cấp **${levelUps.at(-1).level}**` : '';
   return `**${who}** ${word}: **${parts.join(' ')}**${level}`;
 }
+// Thông báo công khai khi trả lời đúng Vua tiếng Việt (dùng chung cho trả lời thường và Từ Điển Sống).
+function quizAnswerAnnouncement({ userId, reward, gems: gemsGained = 0, account = {}, answer, via = '' }) {
+  const line = resultLine({ userId, outcome: 'win', stake: 0, payout: reward, gemsGained, levelUps: account.levelUps, reason: `đúng **${answer}**${via ? ` nhờ ${via}` : ''}` });
+  return [`🎉 ${line}`, bonusLine(account.bonusDrops)].filter(Boolean).join('\n');
+}
+
 // Khối kết quả đầy đủ cho một người: dòng kết quả + dòng buff sự kiện.
 function resultBlock({ userId, outcome, stake, payout, result = {}, reason = '', extra = [], gemsGained = 0 }) {
   return [resultLine({ userId, outcome, stake, payout, experienceGained: result.experienceGained, levelUps: result.levelUps, reason, gemsGained }),
@@ -56,4 +62,4 @@ function rewardSummary({ coins: coinAmount = 0, diamonds = 0, experience = 0, it
   return parts.join(' ');
 }
 
-module.exports = { rewardSummary, ICON, coins, gems, exp, signedCoins, rarityIcon, dropText, bonusLine, resultLine, resultBlock };
+module.exports = { quizAnswerAnnouncement, rewardSummary, ICON, coins, gems, exp, signedCoins, rarityIcon, dropText, bonusLine, resultLine, resultBlock };
