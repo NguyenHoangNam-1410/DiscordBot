@@ -73,6 +73,11 @@ async function handleSelect(interaction) {
     await interaction.update(usePanel(interaction.guildId, interaction.user.id,
       `✅ Đã dùng **${result.item.name}**.\n✨ **Hiệu ứng:** ${result.item.description}`, selectedGame));
     if (result.ephemeral) return interaction.followUp({ content: result.message, flags: MessageFlags.Ephemeral });
+    if (result.item.effect === 'quiz_living_dictionary' && interaction.channel?.send) {
+      // Như trả lời đúng bình thường: thông báo công khai (có ping người dùng) rồi đăng câu hỏi mới.
+      await interaction.channel.send({ content: result.message, allowedMentions: { users: [interaction.user.id] } });
+      return require('./vuatiengviet').postNextQuestionMessage(interaction.guildId, interaction.channel).catch(() => null);
+    }
     if (interaction.channel?.send) return interaction.channel.send({ content: result.message, allowedMentions: { parse: [] } });
     return interaction.followUp({ content: result.message });
   } catch (error) {
