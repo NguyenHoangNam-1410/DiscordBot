@@ -68,7 +68,7 @@ function ratesEmbed() {
       {
         name: "RNGesus · Chaos",
         value:
-          "Base theo tầng: 5–9 là 0,3% · 10–19 là 0,6% · 20+ là 1%. Mỗi tầng nhân ngẫu nhiên x0,25–x3, tích Chaos khi lâu không gặp và có 2,5% khả năng Chaos Spike; xác suất cuối bị chặn ở 12%.\nBỏ chạy: 75%; thất bại tự dùng 1 Vé Thoát Hiểm nếu còn, hết vé thì chết. Chạy thành công giữ vé. Cầu nguyện: 10% · Boss không thể bị đánh bại.",
+          "Base theo tầng: 5–9 là 0,3% · 10–19 là 0,6% · 20+ là 1%. Mỗi tầng nhân ngẫu nhiên x0,25–x3, tích Chaos khi lâu không gặp và có 2,5% khả năng Chaos Spike; xác suất cuối bị chặn ở 12%.\nBỏ chạy: 75%; thất bại tự dùng 1 Vé Thoát Hiểm nếu còn, hết vé thì chết. Chạy thành công giữ vé. Cầu nguyện: 30% · Boss không thể bị đánh bại.",
       },
       {
         name: "Bất ngờ và dịch vụ",

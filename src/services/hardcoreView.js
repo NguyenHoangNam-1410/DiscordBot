@@ -241,7 +241,7 @@ function encounterText(state) {
   if (encounter.type === "shrine")
     return `${icon("moyai")} **SHRINE KHÔNG RÕ NGUỒN GỐC**\n**Chạm Shrine** để nhận hiệu ứng ngẫu nhiên (có cả hiệu ứng gây hại), hoặc **Bỏ qua** để đi tiếp.`;
   if (encounter.type === "rngesus")
-    return `${icon("skull")} **RNGesus · HP ∞ · KHÔNG THỂ BỊ ĐÁNH BẠI**\nChiến đấu là chết. Bỏ chạy: **75% thành công**; thất bại tự dùng **1 Vé Thoát Hiểm** nếu còn, hết vé thì chết. Chạy thành công giữ vé. Hối lộ: trả 40% payout hiện tại (làm tròn lên); Cầu nguyện: 10% nhận SSR, nếu trượt sẽ chết.`;
+    return `${icon("skull")} **RNGesus · HP ∞ · KHÔNG THỂ BỊ ĐÁNH BẠI**\nChiến đấu là chết. Bỏ chạy: **75% thành công**; thất bại tự dùng **1 Vé Thoát Hiểm** nếu còn, hết vé thì chết. Chạy thành công giữ vé. Hối lộ: trả 40% payout hiện tại (làm tròn lên); Cầu nguyện: 30% nhận SSR, nếu trượt sẽ chết.`;
   if (encounter.type === "surprise")
     return "❓ **LỐI ĐI BÍ ẨN**\n**Khám phá**: mỗi kết quả 25% — người cứu trợ (hồi 35% HP, nhận 1 bình), Vé Thoát Hiểm, kho xu (+50% tiền cược vào bonus) hoặc Champion phục kích ra đòn trước. **Bỏ qua** để đi tiếp an toàn.";
   if (encounter.type === "blacksmith") {
@@ -950,7 +950,7 @@ function hardcoreActionRows(sessionId, state, disabled, classes) {
           sessionId,
           turn,
           "pray",
-          "Cầu nguyện 10%",
+          "Cầu nguyện 30%",
           "pray",
           ButtonStyle.Success,
         ),

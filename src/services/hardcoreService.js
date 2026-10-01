@@ -500,7 +500,7 @@ function generateEncounter(state) {
       fleeRoll,
       fleeSuccess: fleeRoll < 0.75,
       fleeChance: 0.75,
-      prayerSuccess: randomFloat() < 0.1,
+      prayerSuccess: randomFloat() < 0.3,
       chaosChance: state.lastChaosChance,
       chaosSpike: state.lastChaosSpike,
     };
