@@ -3,7 +3,7 @@ const { requireGameChannel } = require('../utils/gameChannel');
 const { economyError, formatCoins } = require('../utils/economy');
 const {
   MIN_BET, MAX_BET, CLASSES, startHardcore, setMessageId, hardcoreEmbed, hardcoreRows,
-  getHardcoreRecord, getHardcoreTop,
+  getHardcoreRecord, getHardcoreTop, getHardcoreRun,
 } = require('../services/hardcoreService');
 
 function recordEmbed(user, record) {
@@ -41,7 +41,8 @@ module.exports = {
       )))
     .addSubcommand(command => command.setName('hoso').setDescription('Xem thành tích Sinh tồn').addUserOption(option => option.setName('user').setDescription('Người chơi cần xem')))
     .addSubcommand(command => command.setName('top').setDescription('Xem bảng xếp hạng tầng cao nhất'))
-    .addSubcommand(command => command.setName('rates').setDescription('Xem tỷ lệ gacha và sự kiện')),
+    .addSubcommand(command => command.setName('rates').setDescription('Xem tỷ lệ gacha và sự kiện'))
+    .addSubcommand(command => command.setName('tieptuc').setDescription('Đăng bảng mới cho lượt Sinh tồn đang chơi')),
   recordEmbed,
   ratesEmbed,
   async execute(interaction) {
@@ -58,6 +59,23 @@ module.exports = {
     }
     if (subcommand === 'rates') return interaction.reply({ embeds: [ratesEmbed()], flags: MessageFlags.Ephemeral });
     if (!await requireGameChannel(interaction, 'hardcore')) return null;
+    if (subcommand === 'tieptuc') {
+      const run = getHardcoreRun(interaction.guildId, interaction.user.id);
+      if (!run) return interaction.reply({ content: 'Bạn không có lượt Sinh tồn nào đang diễn ra.', flags: MessageFlags.Ephemeral });
+      if (run.session.channel_id !== interaction.channelId)
+        return interaction.reply({ content: 'Hãy tiếp tục lượt này trong kênh Sinh tồn nơi bạn đã bắt đầu.', flags: MessageFlags.Ephemeral });
+      const message = await interaction.channel.send({
+        embeds: [hardcoreEmbed(run.state, interaction.user.id, null, run.session.id)],
+        components: hardcoreRows(run.session.id, run.state),
+        allowedMentions: { parse: [] },
+      });
+      setMessageId(run.session.id, message.id);
+      if (run.session.message_id) {
+        const previous = await interaction.channel.messages.fetch(run.session.message_id).catch(() => null);
+        if (previous) await previous.edit({ components: [] }).catch(() => null);
+      }
+      return interaction.reply({ content: 'Đã mở bảng Sinh tồn mới. Bảng cũ đã được khóa.', flags: MessageFlags.Ephemeral });
+    }
     const stake = interaction.options.getInteger('xu', true);
     const classKey = interaction.options.getString('class', true);
     let started;

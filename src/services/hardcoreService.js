@@ -258,6 +258,11 @@ const startTx = db.transaction(({ guildId, userId, channelId, stake, classKey, f
 
 function startHardcore(args) { return startTx(args); }
 
+function getHardcoreRun(guildId, userId) {
+  const session = getHardcoreByUser(guildId, userId);
+  return session ? { session, state: parseState(session) } : null;
+}
+
 function finishRun(session, state, reason) {
   let payout = reason === 'cashout' || reason === 'summit' ? potentialPayout(state) : 0;
   const outcome = payout > state.stake ? 'win' : payout === state.stake ? 'draw' : 'loss';
@@ -489,6 +494,9 @@ async function handleHardcoreButton(interaction, logger) {
     if (session.user_id !== interaction.user.id) {
       return interaction.followUp({ content: 'Đây là lượt Sinh tồn của người chơi khác.', flags: MessageFlags.Ephemeral });
     }
+    if (session.message_id && session.message_id !== interaction.message?.id) {
+      return interaction.followUp({ content: 'Bảng Sinh tồn này đã cũ. Dùng `/choi sinhton tieptuc` để mở bảng hiện tại.', flags: MessageFlags.Ephemeral });
+    }
     const played = playHardcore({ sessionId, userId: interaction.user.id, expectedTurn: Number(rawTurn), action });
     return showHardcoreTurn(interaction, sessionId, played.state, played.result, played.settled, logger);
   } catch (error) {
@@ -528,7 +536,7 @@ module.exports = {
   MIN_BET, MAX_BET, MAX_PAYOUT, MAX_FLOOR, COMPLETION_FLOOR, CLASSES, ITEMS,
   hitChance, defenseReduction, physicalAfterDefense, magicAfterResistance, resolvePhysicalAttack,
   enemyScale, makeEnemy, rngesusChance, rollRngesus, chaosLabel, baseMultiplier, potentialPayout, generateEncounter,
-  startHardcore, playHardcore, getHardcoreByUser, setMessageId, hardcoreEmbed, hardcoreRows, forceEndHardcoreSession,
+  startHardcore, playHardcore, getHardcoreByUser, getHardcoreRun, setMessageId, hardcoreEmbed, hardcoreRows, forceEndHardcoreSession,
   handleHardcoreButton, getHardcoreRecord, getHardcoreTop, cleanupStaleHardcoreSessions,
 };
 
