@@ -70,13 +70,13 @@ async function updateQuestionMessage(guildId, channel, notice = null) {
   return message;
 }
 
-async function postNextQuestionMessage(guildId, channel, notice = null) {
+async function postNextQuestionMessage(guildId, channel) {
   const session = getVuaSession(guildId);
   if (!session || !channel?.isTextBased?.()) return null;
   const previousMessageId = session.uiMessageId;
   const message = await channel.send({
     content: null,
-    embeds: [questionEmbed(guildId, session.question, notice)],
+    embeds: [questionEmbed(guildId, session.question)],
     components: controlRows(),
     allowedMentions: { parse: [] },
   });
