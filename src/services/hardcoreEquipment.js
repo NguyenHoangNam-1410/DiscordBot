@@ -57,18 +57,23 @@ function effectText(item, level) {
   const effects = [];
   const sign = (value) => `${value > 0 ? "+" : "−"}${Math.abs(value)}`;
   if (item.attack)
-    effects.push(`${STAT_EMOJI.attack} ${sign(item.attack * level)}`);
+    effects.push(
+      `${STAT_EMOJI.attack} ${sign(item.attack * level)} sát thương`,
+    );
   if (item.defense)
-    effects.push(`${STAT_EMOJI.defense} ${sign(item.defense * level)}`);
+    effects.push(`${STAT_EMOJI.defense} ${sign(item.defense * level)} Defense`);
   if (item.maxHp)
-    effects.push(`${STAT_EMOJI.hp} ${sign(item.maxHp * level)} tối đa`);
+    effects.push(`${STAT_EMOJI.hp} ${sign(item.maxHp * level)} HP tối đa`);
   if (item.resistance)
-    effects.push(`${STAT_EMOJI.resistance} ${sign(item.resistance * level)}%`);
+    effects.push(
+      `${STAT_EMOJI.resistance} ${sign(item.resistance * level)}% Resist`,
+    );
   if (item.critChance)
     effects.push(
-      `${STAT_EMOJI.crit} ${sign(Math.round(item.critChance * level * 100))}%`,
+      `${STAT_EMOJI.crit} ${sign(Math.round(item.critChance * level * 100))}% chí mạng`,
     );
-  if (item.luck) effects.push(`${STAT_EMOJI.luck} ${sign(item.luck * level)}`);
+  if (item.luck)
+    effects.push(`${STAT_EMOJI.luck} ${sign(item.luck * level)} Luck`);
   if (item.heal)
     effects.push(`${STAT_EMOJI.hp} hồi tối đa ${item.heal} khi nhặt`);
   if (item.potions)

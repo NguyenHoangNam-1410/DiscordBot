@@ -482,6 +482,7 @@ function withAuditRun(userId, patch, work) {
 }
 
 function auditMechanics() {
+  auditRiftModifiers();
   assert.deepEqual(
     [4, 5, 10, 20].map(hardcore.rngesusChance),
     [0, 0.003, 0.006, 0.01],
@@ -922,6 +923,320 @@ function auditMechanics() {
   );
 }
 
+function auditRiftModifiers() {
+  const rankHp = {
+    normal: 1,
+    champion: 1.4,
+    elite: 2,
+    mimic: 1.7,
+    ancient_mimic: 2.8,
+    boss: 3.2,
+    final_boss: 5.8,
+  };
+  for (const [rank, hpFactor] of Object.entries(rankHp)) {
+    const floor = 200;
+    const boss = ["boss", "final_boss"].includes(rank);
+    const name = boss ? "Lucion" : "Audit Rift Enemy";
+    const baseline = hardcore.makeEnemy(floor, rank, name);
+    for (const count of [1, 3]) {
+      const enemy = hardcore.makeEnemy(floor, rank, name, {
+        fortified: count,
+        stone_skin: count,
+        elemental_dominion: count,
+        swift_horror: count,
+      });
+      const scale = hardcore.enemyScale(floor);
+      const damageFactor = {
+        normal: 1,
+        champion: 1.15,
+        elite: 1.35,
+        mimic: 1.25,
+        ancient_mimic: 1.5,
+        boss: 1.35,
+        final_boss: 2.15,
+      }[rank];
+      assert.equal(
+        enemy.maxHp,
+        Math.floor(28 * scale.hp * hpFactor * (1 + count * 0.1)),
+        `${rank}: Fortified`,
+      );
+      assert.equal(
+        enemy.defense,
+        Math.floor(
+          (4 + floor * 0.65) *
+            (rank === "final_boss" ? 2 : boss ? 1.25 : 1) *
+            (1 + count * 0.1),
+        ),
+        `${rank}: Stone Skin`,
+      );
+      assert.equal(
+        enemy.damageMin,
+        Math.floor(5 * scale.damage * damageFactor * (1 + count * 0.04)),
+        `${rank}: Elemental Dominion damage`,
+      );
+      assert.equal(
+        enemy.damageMax,
+        Math.max(
+          enemy.damageMin + 1,
+          Math.floor(9 * scale.damage * damageFactor * (1 + count * 0.04)),
+        ),
+      );
+      assert.equal(
+        enemy.accuracy,
+        baseline.accuracy + count * 3,
+        `${rank}: Swift accuracy`,
+      );
+      assert.equal(
+        enemy.evasion,
+        baseline.evasion + count * 2,
+        `${rank}: Swift evasion`,
+      );
+      assert(
+        Math.abs(
+          enemy.magicChance -
+            (boss ? 1 : Math.min(0.75, baseline.magicChance + count * 0.02)),
+        ) < 1e-9,
+      );
+    }
+  }
+  for (const [fraction, expected] of [
+    [0.5, 100],
+    [0.499, 124],
+  ]) {
+    const state = stateFor();
+    state.encounter.hp = state.encounter.maxHp * fraction;
+    state.encounter.damageType = "physical";
+    state.modifiers = { bloodlust: 3 };
+    fixedRoll(0, () => hardcore.enemyTurn(state));
+    assert.equal(
+      500 - state.hp,
+      expected,
+      "Bloodlust applies only strictly below half HP",
+    );
+  }
+  for (const type of ["physical", "magic"]) {
+    for (const count of [1, 3]) {
+      const hit = stateFor();
+      hit.encounter.damageType = type;
+      hit.modifiers = { soul_drain: count, cursed_ground: count };
+      const log = fixedRoll(0, () => hardcore.enemyTurn(hit));
+      assert.equal(hit.energy, 3 - Math.min(2, count));
+      assert.equal(hit.resistance, type === "magic" ? -count * 2 : 0);
+      assert.match(log, new RegExp(`−${Math.min(2, count)} Energy`));
+      if (type === "magic")
+        assert.match(log, new RegExp(`−${count * 2} Resist`));
+      const missed = stateFor();
+      missed.encounter.damageType = type;
+      missed.modifiers = { soul_drain: count, cursed_ground: count };
+      fixedRoll(0.999, () => hardcore.enemyTurn(missed));
+      assert.equal(missed.hp, 500);
+      assert.equal(missed.energy, 3);
+      assert.equal(missed.resistance, 0);
+      fixedRoll(0, () => hardcore.enemyTurn(missed, false, true));
+      assert.equal(missed.energy, 3, "Dodge suppresses Soul Drain");
+      assert.equal(missed.resistance, 0, "Dodge suppresses Cursed Ground");
+    }
+  }
+  const drained = stateFor();
+  drained.energy = 1;
+  drained.resistance = -49;
+  drained.encounter.damageType = "magic";
+  drained.modifiers = { soul_drain: 100, cursed_ground: 100 };
+  fixedRoll(0, () => hardcore.enemyTurn(drained));
+  assert.equal(drained.energy, 0);
+  assert.equal(drained.resistance, -50);
+  const unstable = stateFor();
+  unstable.modifiers = { unstable_rift: 1 };
+  assert(Math.abs(hardcore.legendaryChance(unstable) - 0.11) < 1e-9);
+  assert(Math.abs(hardcore.legendaryChance(unstable, true) - 0.36) < 1e-9);
+  assert.equal(
+    fixedRoll(0.032, () => hardcore.makeChest(stateFor())).kind,
+    "mimic",
+  );
+  assert.equal(
+    fixedRoll(0.032, () => hardcore.makeChest(unstable)).kind,
+    "ancient_mimic",
+  );
+  assert.notEqual(
+    fixedRoll(0.151, () => hardcore.makeChest(stateFor())).kind,
+    "mimic",
+  );
+  assert.equal(
+    fixedRoll(0.151, () => hardcore.makeChest(unstable)).kind,
+    "mimic",
+  );
+  unstable.modifiers.unstable_rift = 50;
+  assert(
+    Math.abs(hardcore.legendaryChance(unstable) - 0.18) < 1e-9,
+    "Unstable SSR bonus caps at eight percentage points",
+  );
+  const distribution = {};
+  for (let index = 0; index < 1000; index++) {
+    const encounter = fixedRoll((index + 0.5) / 1000, () =>
+      hardcore.generateEncounter(unstable),
+    );
+    const key = encounter.type === "combat" ? encounter.rank : encounter.type;
+    distribution[key] = (distribution[key] || 0) + 1;
+  }
+  assert.equal(distribution.normal, 350);
+  assert.equal(distribution.elite, 120);
+  assert.equal(
+    distribution.chest,
+    270,
+    "Unstable transfers at most 12 percentage points to normal chests",
+  );
+  for (const floor of [50, 999]) {
+    unstable.floor = floor;
+    const enemy = fixedRoll(0, () => hardcore.generateEncounter(unstable));
+    assert.equal(enemy.rank, floor === 999 ? "final_boss" : "boss");
+  }
+  withAuditRun(
+    "rift-checkpoint",
+    { floor: 10, cleared: 9, fair: null, encounter: { type: "empty" } },
+    (started, act) => {
+      const cleared = fixedRoll(0.5, () => act("continue")).state;
+      assert.equal(cleared.phase, "upgrade");
+      assert.equal(Object.keys(cleared.modifiers).length, 1);
+      assert.equal(Object.values(cleared.modifiers)[0], 1);
+      assert.equal(cleared.lastModifierFloor, 10);
+      assert.deepEqual(
+        hardcore.getHardcoreRun("audit-hardcore", "rift-checkpoint").state
+          .modifiers,
+        cleared.modifiers,
+      );
+      const next = fixedRoll(0.5, () => act("upgrade_attack")).state;
+      assert.equal(next.encounter.type, "combat");
+      {
+        const expected = hardcore.makeEnemy(
+          next.floor,
+          next.encounter.rank,
+          next.encounter.name,
+          next.modifiers,
+        );
+        for (const key of [
+          "maxHp",
+          "defense",
+          "damageMin",
+          "damageMax",
+          "accuracy",
+          "evasion",
+          "magicChance",
+        ])
+          assert.equal(next.encounter[key], expected[key]);
+      }
+      assert.equal(
+        Object.values(next.modifiers).reduce(
+          (total, count) => total + count,
+          0,
+        ),
+        1,
+      );
+    },
+  );
+  const view = require("../src/services/hardcoreView");
+  const state = {
+    ...stateFor(),
+    modifiers: {
+      fortified: 2,
+      cursed_ground: 3,
+      soul_drain: 3,
+      unstable_rift: 12,
+    },
+  };
+  const payload = view.hardcorePrivatePayload(
+    state,
+    hardcore.CLASSES,
+    hardcore.ITEMS,
+    "rift-ui",
+    "message",
+    "effects",
+  );
+  const detail = payload.embeds[0].toJSON();
+  assert.match(
+    detail.fields.find((field) => field.name === "🌀 Tổng hiệu ứng Rift").value,
+    /HP quái \+20%/,
+  );
+  assert.match(
+    detail.fields.find((field) => field.name === "🌀 Tổng hiệu ứng Rift").value,
+    /Energy −2/,
+  );
+  const main = hardcore
+    .hardcoreEmbed(state, "player", null, "rift-ui")
+    .toJSON();
+  assert.match(
+    main.fields.find((field) => field.name.includes("Tiến trình")).value,
+    /Modifier 20/,
+  );
+  assert.match(
+    main.fields.find((field) => field.name === "Barbarian").value,
+    /500\/500 HP/,
+  );
+  assert.match(
+    main.fields.find((field) => field.name === "Barbarian").value,
+    /Energy/,
+  );
+  assert(
+    !JSON.stringify(main).includes("🟩"),
+    "Health bars should use compact text segments",
+  );
+  assert(
+    !JSON.stringify(main).includes("Stone Skin"),
+    "Full modifier descriptions stay private",
+  );
+  const many = {
+    ...state,
+    items: Array.from({ length: 17 }, (_, index) => ({
+      name: `Rift item ${index}`,
+      rarity: "legendary",
+      level: 1,
+      definition: { attack: 3, defense: 2 },
+    })),
+  };
+  for (const tab of ["items", "effects", "stats", "encounter"]) {
+    const detail = view.hardcorePrivatePayload(
+      many,
+      hardcore.CLASSES,
+      hardcore.ITEMS,
+      "rift-ui",
+      "message",
+      tab,
+      9999,
+    );
+    const embed = detail.embeds[0].toJSON();
+    assert(embed.fields.every((field) => field.value.length <= 1024));
+    assert(
+      [
+        embed.title,
+        embed.description,
+        embed.footer?.text,
+        ...embed.fields.flatMap((field) => [field.name, field.value]),
+      ]
+        .filter(Boolean)
+        .join("").length <= 6000,
+    );
+    if (tab === "items") {
+      assert.match(embed.footer.text, /Trang 4\/4/);
+      assert(embed.fields.some((field) => field.name.includes("Rift item 16")));
+    }
+  }
+  for (const [hp, filled] of [
+    [0, 0],
+    [1, 1],
+    [250, 5],
+    [499, 9],
+    [500, 10],
+  ]) {
+    state.hp = hp;
+    const hpLine = hardcore
+      .hardcoreEmbed(state, "player")
+      .toJSON()
+      .fields.find((field) => field.name === "Barbarian")
+      .value.split("\n")[0];
+    assert.equal((hpLine.match(/█/g) || []).length, filled);
+    assert.equal((hpLine.match(/░/g) || []).length, 10 - filled);
+  }
+}
+
 async function auditSetup() {
   const guildId = "audit-setup";
   const userId = "setup-player";
@@ -988,9 +1303,11 @@ async function auditSetup() {
     );
     const payload = edits.at(-1);
     const embed = payload.embeds[0].toJSON();
-    assert.equal(
-      embed.fields.find((field) => field.name === "❤️ HP").value,
-      String(hardcore.CLASSES[classKey].hp),
+    assert.match(
+      embed.fields.find((field) => field.name === "📊 Chỉ số ban đầu").value,
+      new RegExp(
+        `${hardcore.CLASSES[classKey].hp}/${hardcore.CLASSES[classKey].hp} HP`,
+      ),
     );
     assert(
       embed.fields.some((field) =>
@@ -1178,6 +1495,37 @@ async function finishChecks() {
   );
   assert.equal(messages.length, 1);
   assert.deepEqual(edits[0].components, []);
+  const detailReplies = [];
+  await hardcore.handleHardcoreButton({
+    customId: `hardcore:${resume.session.id}:0:view_effects_0`,
+    guildId: "resume-hardcore",
+    channelId: "c",
+    user: { id: "player" },
+    message: { id: "new" },
+    deferUpdate: async () => {},
+    followUp: async (payload) => detailReplies.push(payload),
+  });
+  assert.equal(detailReplies[0].flags, 64, "Details are ephemeral");
+  assert.equal(
+    repository.getSession(resume.session.id).state_json,
+    previousState,
+    "Details must not alter turn, seed or encounter",
+  );
+  const privateEdits = [];
+  await hardcore.handleHardcoreButton({
+    customId: `hardcore:${resume.session.id}:0:view_items_0:new`,
+    guildId: "resume-hardcore",
+    channelId: "c",
+    user: { id: "player" },
+    message: { id: "private" },
+    deferUpdate: async () => {},
+    editReply: async (payload) => privateEdits.push(payload),
+  });
+  assert.equal(privateEdits.length, 1);
+  assert.equal(
+    repository.getSession(resume.session.id).state_json,
+    previousState,
+  );
   const oldReplies = [];
   await hardcore.handleHardcoreButton({
     customId: `hardcore:${resume.session.id}:0:continue`,

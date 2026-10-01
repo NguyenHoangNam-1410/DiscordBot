@@ -40,21 +40,7 @@ function healthBar(hp, maxHp) {
       : ratio > 0
         ? Math.max(1, Math.min(segments - 1, Math.round(ratio * segments)))
         : 0;
-  const color = ratio > 0.5 ? "🟩" : ratio > 0.25 ? "🟨" : "🟥";
-  return `${STAT_EMOJI.hp} ${color.repeat(filled)}${"⬛".repeat(segments - filled)} **${formatCoins(current)}/${formatCoins(maximum)}**`;
-}
-function emojiStats(text) {
-  return String(text)
-    .replace(/HP tối đa/g, `${STAT_EMOJI.hp} tối đa`)
-    .replace(/\bHP\b/g, STAT_EMOJI.hp)
-    .replace(/All Resistance|Resistance|kháng phép/g, STAT_EMOJI.resistance)
-    .replace(/Defense/g, STAT_EMOJI.defense)
-    .replace(/Accuracy/g, STAT_EMOJI.accuracy)
-    .replace(/Evasion/g, STAT_EMOJI.evasion)
-    .replace(/Energy|năng lượng/g, STAT_EMOJI.energy)
-    .replace(/\bLuck\b/g, STAT_EMOJI.luck)
-    .replace(/sát thương|damage/g, STAT_EMOJI.attack)
-    .replace(/chí mạng/g, STAT_EMOJI.crit);
+  return `${STAT_EMOJI.hp} \`${"█".repeat(filled)}${"░".repeat(segments - filled)}\` **${formatCoins(current)}/${formatCoins(maximum)} HP**`;
 }
 const CLASS_PROFILES = Object.freeze({
   amazon: {
@@ -129,15 +115,15 @@ function hardcoreSetupPayload(draft, classes, context) {
     embed.addFields(
       {
         name: `${character.emoji} ${character.name}`,
-        value: emojiStats(CLASS_PROFILES[draft.classKey].role),
+        value: CLASS_PROFILES[draft.classKey].role,
       },
       {
         name: "📊 Chỉ số ban đầu",
-        value: `${healthBar(character.hp, character.hp)}\n${STAT_EMOJI.attack} ${character.damageMin}–${character.damageMax} · ${STAT_EMOJI.defense} ${character.defense} · ${STAT_EMOJI.accuracy} ${character.accuracy}\n${STAT_EMOJI.evasion} ${character.evasion} · ${STAT_EMOJI.crit} ${Math.round(character.critChance * 100)}% ×1,75 · ${STAT_EMOJI.resistance} ${character.resistance}%\n${STAT_EMOJI.energy} ${character.energy}/${character.energy} · ${STAT_EMOJI.luck} 0 · ${STAT_EMOJI.potions} 3 · ${STAT_EMOJI.tickets} 0`,
+        value: `${healthBar(character.hp, character.hp)}\n${STAT_EMOJI.attack} ${character.damageMin}–${character.damageMax} · ${STAT_EMOJI.defense} ${character.defense} Defense · ${STAT_EMOJI.resistance} ${character.resistance}% Resist\n${STAT_EMOJI.energy} Energy ${character.energy}/${character.energy} · ${STAT_EMOJI.potions} 3 bình · ${STAT_EMOJI.tickets} 0 vé\nChính xác ${character.accuracy} · Né ${character.evasion} · Chí mạng ${Math.round(character.critChance * 100)}% · Luck 0`,
       },
       {
-        name: `✨ ${character.skill} · tốn 2 ✨`,
-        value: emojiStats(CLASS_PROFILES[draft.classKey].effect),
+        name: `✨ ${character.skill} · 2 Energy`,
+        value: CLASS_PROFILES[draft.classKey].effect,
       },
     );
   } else
@@ -146,7 +132,7 @@ function hardcoreSetupPayload(draft, classes, context) {
       value: Object.values(classes)
         .map(
           (entry) =>
-            `${entry.emoji} **${entry.name}** · ${STAT_EMOJI.hp} ${entry.hp} · ${STAT_EMOJI.attack} ${entry.damageMin}–${entry.damageMax} · ${STAT_EMOJI.defense} ${entry.defense}`,
+            `${entry.emoji} **${entry.name}** · ${entry.hp} HP · ${entry.damageMin}–${entry.damageMax} sát thương · ${entry.defense} Defense`,
         )
         .join("\n"),
     });
@@ -316,9 +302,13 @@ function statLine(state, showChanges = true) {
     showChanges ? change(state, key, percent) : "";
   return [
     `${healthBar(state.hp, state.maxHp)}${hpDelta}`,
-    `${STAT_EMOJI.attack} ${formatCoins(state.damageMin)}–${formatCoins(state.damageMax)}${damageDelta} · ${STAT_EMOJI.defense} ${formatCoins(state.defense)}${delta("defense")}`,
-    `${STAT_EMOJI.energy} ${state.energy}/${state.maxEnergy}${delta("energy")} · ${STAT_EMOJI.accuracy} ${state.accuracy} · ${STAT_EMOJI.evasion} ${state.evasion}${delta("evasion")}`,
-    `${STAT_EMOJI.crit} ${Math.round(state.critChance * 100)}%${delta("critChance", true)} · ${STAT_EMOJI.resistance} ${state.resistance}%${delta("resistance")} · ${STAT_EMOJI.luck} ${state.luck}${delta("luck")}`,
+    `${STAT_EMOJI.energy} Energy **${state.energy}/${state.maxEnergy}**${delta("energy")} · ${STAT_EMOJI.potions} ${state.potions} bình · ${STAT_EMOJI.tickets} ${state.escapeTokens} vé`,
+    `${STAT_EMOJI.attack} ${formatCoins(state.damageMin)}–${formatCoins(state.damageMax)}${damageDelta} · ${STAT_EMOJI.defense} ${formatCoins(state.defense)} Defense${delta("defense")} · ${STAT_EMOJI.resistance} ${state.resistance}% Resist${delta("resistance")}`,
+    ...(showChanges
+      ? [
+          `Chính xác ${state.accuracy} · Né ${state.evasion}${delta("evasion")}\nChí mạng ${Math.round(state.critChance * 100)}%${delta("critChance", true)} · Luck ${state.luck}${delta("luck")}`,
+        ]
+      : []),
   ].join("\n");
 }
 function ownedEquipment(state, itemCatalog) {
@@ -333,6 +323,7 @@ function ownedEquipment(state, itemCatalog) {
 }
 function equipmentSummary(state, itemCatalog) {
   const items = ownedEquipment(state, itemCatalog);
+  if (!items.length) return "Chưa có trang bị.";
   const totals = {};
   for (const item of items) {
     for (const key of [
@@ -347,50 +338,52 @@ function equipmentSummary(state, itemCatalog) {
         (totals[key] || 0) + (item.definition?.[key] || 0) * item.level;
   }
   const effects = [
-    ["attack", STAT_EMOJI.attack],
-    ["defense", STAT_EMOJI.defense],
-    ["maxHp", STAT_EMOJI.hp],
-    ["resistance", STAT_EMOJI.resistance],
-    ["critChance", STAT_EMOJI.crit],
-    ["luck", STAT_EMOJI.luck],
+    ["attack", "Sát thương"],
+    ["defense", "Defense"],
+    ["maxHp", "HP tối đa"],
+    ["resistance", "Resist"],
+    ["critChance", "Chí mạng"],
+    ["luck", "Luck"],
   ]
     .filter(([key]) => totals[key])
     .map(
-      ([key, emoji]) =>
-        `${emoji} ${signed(totals[key], key === "critChance")}${key === "resistance" ? "%" : ""}`,
+      ([key, label]) =>
+        `${label} ${signed(totals[key], key === "critChance")}${key === "resistance" ? "%" : ""}`,
     );
   if (items.some((item) => item.definition?.defenseSet !== undefined))
-    effects.push(`${STAT_EMOJI.defense} ↺ khi nhặt`);
+    effects.push("Defense đặt lại khi nhặt");
   if (items.some((item) => !item.definition))
     effects.push("có hiệu ứng chưa rõ");
-  return `${icon("school_satchel")} ${items.length} món${effects.length ? ` · ${effects.join(" · ")}` : ""}`;
+  return `${items.length} món${effects.length ? ` · ${effects.join(" · ")}` : ""}`;
 }
 function riftSummary(state) {
   const m = state.modifiers || {};
   const effects = [];
-  if (m.fortified) effects.push(`👹 ${STAT_EMOJI.hp} +${m.fortified * 10}%`);
-  if (m.stone_skin)
-    effects.push(`👹 ${STAT_EMOJI.defense} +${m.stone_skin * 10}%`);
+  if (m.fortified) effects.push(`HP quái +${m.fortified * 10}%`);
+  if (m.stone_skin) effects.push(`Defense quái +${m.stone_skin * 10}%`);
   if (m.elemental_dominion)
-    effects.push(`👹 ${STAT_EMOJI.attack} +${m.elemental_dominion * 4}%`);
-  if (m.bloodlust)
     effects.push(
-      `👹 ${STAT_EMOJI.attack} +${m.bloodlust * 8}% khi dưới ½ ${STAT_EMOJI.hp}`,
+      `Sát thương quái +${m.elemental_dominion * 4}% · Phép +${m.elemental_dominion * 2} điểm % (trừ boss, tỷ lệ tối đa 75%)`,
     );
+  if (m.bloodlust)
+    effects.push(`Sát thương quái +${m.bloodlust * 8}% khi dưới 50% HP`);
   if (m.swift_horror)
     effects.push(
-      `👹 ${STAT_EMOJI.accuracy} +${m.swift_horror * 3} / ${STAT_EMOJI.evasion} +${m.swift_horror * 2}`,
+      `Chính xác quái +${m.swift_horror * 3} · Né quái +${m.swift_horror * 2}`,
     );
   if (m.soul_drain)
-    effects.push(
-      `${STAT_EMOJI.energy} −${Math.min(2, m.soul_drain)}/đòn trúng`,
-    );
+    effects.push(`Energy −${Math.min(2, m.soul_drain)}/đòn trúng`);
   if (m.cursed_ground)
-    effects.push(`${STAT_EMOJI.resistance} −${m.cursed_ground * 2}%/đòn phép`);
-  if (m.unstable_rift) effects.push("📦 ↑ / Mimic ↑");
+    effects.push(
+      `Resist −${m.cursed_ground * 2} điểm %/đòn phép, thấp nhất −50%`,
+    );
+  if (m.unstable_rift)
+    effects.push(
+      `Hòm thường +${Math.min(12, m.unstable_rift)} điểm % · SSR +${Math.min(8, m.unstable_rift)} điểm % · Mimic tăng`,
+    );
   return effects.length
-    ? `🌀 ${effects.join(" · ")}`
-    : "🌀 Chưa có hiệu ứng Rift";
+    ? effects.join("\n")
+    : "Chưa có hiệu ứng Rift · Nhận lần đầu sau tầng 10.";
 }
 function encounterSummary(state) {
   const e = state.encounter;
@@ -399,7 +392,7 @@ function encounterSummary(state) {
   if (state.phase === "summit")
     return "🏆 **Đã chinh phục tầng 999** · Rút thưởng để hoàn tất.";
   if (e.type === "combat")
-    return `**${e.name}** · ${rankLabel(e.rank)} · ${enemyDamageType(e) === "magic" ? "🔮 Phép" : enemyDamageType(e) === "physical" ? "⚔️ Vật lý" : "⚔️ / 🔮"}\n${healthBar(e.hp, e.maxHp)}\n${STAT_EMOJI.attack} ${formatCoins(e.damageMin)}–${formatCoins(e.damageMax)} · ${STAT_EMOJI.defense} ${formatCoins(e.defense)} · ${STAT_EMOJI.resistance} ${e.resistance}%`;
+    return `👹 **${e.name}** · ${rankLabel(e.rank)}\n${healthBar(e.hp, e.maxHp)}\n${STAT_EMOJI.attack} ${formatCoins(e.damageMin)}–${formatCoins(e.damageMax)} · ${enemyDamageType(e) === "magic" ? "Phép" : enemyDamageType(e) === "physical" ? "Vật lý" : `Hỗn hợp (${Math.round((e.magicChance || 0) * 100)}% phép)`} · ${STAT_EMOJI.defense} ${formatCoins(e.defense)} Defense`;
   if (e.type === "chest")
     return `📦 **Hòm bí ẩn** · ${e.revealed ? "😈 Đã phát hiện Mimic" : e.inspected ? "Đã kiểm tra" : "Chưa kiểm tra"}`;
   if (e.type === "rngesus")
@@ -424,7 +417,7 @@ function encounterSummary(state) {
   return "🕳️ **Phòng trống** · Đi tiếp hoặc rút thưởng.";
 }
 function briefLog(state) {
-  const text = emojiStats(state.lastLog || "—")
+  const text = String(state.lastLog || "—")
     .split("\n")
     .slice(0, 3)
     .join("\n");
@@ -434,7 +427,7 @@ function briefLog(state) {
 const DETAIL_TABS = Object.freeze([
   ["stats", "Chỉ số", "bar_chart"],
   ["items", "Vật phẩm", "school_satchel"],
-  ["effects", "Hiệu ứng", "cyclone"],
+  ["effects", "Rift & hiệu ứng", "cyclone"],
   ["encounter", "Tình huống", "information_source"],
 ]);
 function detailButtons(
@@ -442,6 +435,7 @@ function detailButtons(
   turn,
   originMessageId = null,
   selected = null,
+  itemCount = 0,
 ) {
   return new ActionRowBuilder().addComponents(
     DETAIL_TABS.map(([tab, label, emoji]) =>
@@ -449,7 +443,7 @@ function detailButtons(
         sessionId,
         turn,
         `view_${tab}_0${originMessageId ? `:${originMessageId}` : ""}`,
-        label,
+        tab === "items" ? `${label} (${itemCount})` : label,
         emoji,
         tab === selected ? ButtonStyle.Primary : ButtonStyle.Secondary,
       ),
@@ -536,7 +530,7 @@ function hardcorePrivatePayload(
       },
       {
         name: `✨ ${classes[state.classKey].skill} · tốn 2 ✨`,
-        value: emojiStats(CLASS_PROFILES[state.classKey].effect),
+        value: CLASS_PROFILES[state.classKey].effect,
       },
       {
         name: "⚔️ Giao tranh",
@@ -553,12 +547,17 @@ function hardcorePrivatePayload(
       name: "🌀 Tổng hiệu ứng Rift",
       value: riftSummary(state),
     });
+    embed.addFields({
+      name: "ℹ️ Áp dụng",
+      value:
+        "Nhận một cộng dồn sau mỗi 10 tầng đã vượt; đủ tám loại trước khi lặp. HP/Defense/sát thương/chính xác/né được tính vào quái khi xuất hiện. Bloodlust, Soul Drain và Cursed Ground xử lý theo đòn đánh; Unstable Rift tác động lần roll hòm/encounter. Chỉ số làm tròn xuống và các giới hạn vẫn áp dụng; mở bảng này không roll lại.",
+    });
     for (const [key, stacks] of Object.entries(state.modifiers || {}).filter(
       ([, value]) => value > 0,
     ))
       embed.addFields({
         name: `🌀 ${RIFT_MODIFIERS[key]?.name || key} ×${stacks}`.slice(0, 256),
-        value: emojiStats(RIFT_MODIFIERS[key]?.text || "Không rõ tác dụng"),
+        value: RIFT_MODIFIERS[key]?.text || "Không rõ tác dụng",
       });
     if (!Object.values(state.modifiers || {}).some((stacks) => stacks > 0))
       embed.addFields({
@@ -585,14 +584,11 @@ function hardcorePrivatePayload(
     );
   } else {
     embed.setDescription(
-      `${embed.data.description}\n\n${emojiStats(encounterText(state))}`.slice(
-        0,
-        4096,
-      ),
+      `${embed.data.description}\n\n${encounterText(state)}`.slice(0, 4096),
     );
     embed.addFields({
       name: "📜 Diễn biến đầy đủ",
-      value: emojiStats(state.lastLog || "—").slice(0, 1024),
+      value: String(state.lastLog || "—").slice(0, 1024),
     });
     if (state.encounter.kind === "wrong_portal")
       embed.addFields({
@@ -602,7 +598,7 @@ function hardcorePrivatePayload(
       });
   }
   const components = [
-    detailButtons(sessionId, state.turn, originMessageId, tab),
+    detailButtons(sessionId, state.turn, originMessageId, tab, owned.length),
   ];
   if (pages > 1)
     components.push(
@@ -668,14 +664,14 @@ function hardcoreEmbed(
     )
     .addFields(
       {
-        name: `${icon("bar_chart")} Chỉ số`,
+        name: classInfo.name,
         value: statLine(state, false),
         inline: false,
       },
       {
-        name: `${icon("compass")} Run`,
-        value: `🧭 ${state.cleared}/${state.floor} · 👑 ${state.bosses}\n${STAT_EMOJI.potions} ${state.potions} · ${STAT_EMOJI.tickets} ${state.escapeTokens} · ${chaosLabel(state)}`,
-        inline: true,
+        name: `${icon("compass")} Tiến trình`,
+        value: `Đã vượt ${state.cleared} · Boss ${state.bosses} · Modifier ${Object.values(state.modifiers || {}).reduce((total, count) => total + count, 0)}\n${chaosLabel(state)}`,
+        inline: false,
       },
       {
         name: `${icon("moneybag")} Rút thưởng`,
@@ -685,12 +681,12 @@ function hardcoreEmbed(
         inline: true,
       },
       {
-        name: "📈 Hiệu ứng tổng hợp",
-        value: `${equipmentSummary(state, itemCatalog)}\n${riftSummary(state)}${state.payoutFactor < 1 ? `\n${STAT_EMOJI.payout} ×${Number(state.payoutFactor).toFixed(3)}` : ""}`,
+        name: "🎒 Trang bị",
+        value: `${equipmentSummary(state, itemCatalog)}${state.payoutFactor < 1 ? `\nPayout sau phạt ×${Number(state.payoutFactor).toFixed(3)}` : ""}`,
         inline: false,
       },
       {
-        name: `${icon("scroll")} Diễn biến`,
+        name: `${icon("scroll")} Lượt vừa rồi`,
         value: briefLog(state),
         inline: false,
       },
@@ -825,7 +821,7 @@ function hardcoreActionRows(sessionId, state, disabled, classes) {
           sessionId,
           turn,
           "skill",
-          `${classes[state.classKey].skill} · ${STAT_EMOJI.energy}2`,
+          classes[state.classKey].skill,
           "sparkles",
           ButtonStyle.Success,
           state.energy < 2,
@@ -1006,7 +1002,16 @@ function hardcoreActionRows(sessionId, state, disabled, classes) {
 }
 function hardcoreRows(sessionId, state, disabled, classes) {
   const rows = hardcoreActionRows(sessionId, state, disabled, classes);
-  if (!disabled) rows.push(detailButtons(sessionId, state.turn));
+  if (!disabled)
+    rows.push(
+      detailButtons(
+        sessionId,
+        state.turn,
+        null,
+        null,
+        normalizeEquipment(state.items).length,
+      ),
+    );
   return rows;
 }
 module.exports = {

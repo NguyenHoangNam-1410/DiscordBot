@@ -1271,6 +1271,8 @@ function forceEndHardcoreSession(
 
 function enemyTurn(state, defend = false, dodge = false) {
   const enemy = state.encounter;
+  const previousResistance = state.resistance;
+  const previousEnergy = state.energy;
   enemy.attacks = (enemy.attacks || 0) + 1;
   if (dodge) return "💨 Bạn né hoàn toàn đòn phản công.";
   const defender = {
@@ -1324,7 +1326,12 @@ function enemyTurn(state, defend = false, dodge = false) {
     enemy.hp += healed;
     recovery = ` Lucion hồi **${healed} HP**.`;
   }
-  return `${label} Bạn nhận **${damage} sát thương**.${defend ? ` 🛡️ Thủ thế chặn thêm **${blocked} sát thương** (giảm 50%).` : ""}${recovery}`;
+  const riftEffects = [];
+  if (previousEnergy > state.energy)
+    riftEffects.push(`−${previousEnergy - state.energy} Energy`);
+  if (previousResistance > state.resistance)
+    riftEffects.push(`−${previousResistance - state.resistance} Resist`);
+  return `${label} Bạn nhận **${damage} sát thương**.${defend ? ` 🛡️ Thủ thế chặn thêm **${blocked} sát thương** (giảm 50%).` : ""}${recovery}${riftEffects.length ? ` 🌀 Rift: ${riftEffects.join(", ")}.` : ""}`;
 }
 
 function playerAttack(state, action) {
