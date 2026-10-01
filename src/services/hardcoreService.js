@@ -550,6 +550,15 @@ function generateEncounter(state) {
   return { type: "empty" };
 }
 
+function grantEscapeTickets(state, amount) {
+  const held = clamp(Math.floor(Number(state.escapeTokens) || 0), 0, 1);
+  const received = Math.max(0, Math.floor(Number(amount) || 0));
+  state.escapeTokens = Math.min(1, held + received);
+  state.lastDiscardedEscapeTokens =
+    (state.lastDiscardedEscapeTokens || 0) +
+    Math.max(0, held + received - 1);
+}
+
 function applyItem(state, item, rarity = "common") {
   if (!item) return null;
   state.items = normalizeEquipment(state.items);
@@ -565,7 +574,7 @@ function applyItem(state, item, rarity = "common") {
     state.critChance = Math.min(0.75, state.critChance + item.critChance);
   if (item.luck) state.luck += item.luck;
   if (item.potions) state.potions += item.potions;
-  if (item.escapeTokens) state.escapeTokens += item.escapeTokens;
+  if (item.escapeTokens) grantEscapeTickets(state, item.escapeTokens);
   if (item.maxHp) {
     state.maxHp = Math.max(20, state.maxHp + item.maxHp);
     state.hp = Math.min(
@@ -700,6 +709,7 @@ const getSession = hardcoreRepository.getSession;
 const getHardcoreByUser = hardcoreRepository.getByUser;
 function parseState(session) {
   const state = hardcoreRepository.parseState(session);
+  state.escapeTokens = clamp(Math.floor(Number(state.escapeTokens) || 0), 0, 1);
   state.modifiers ||= {};
   state.payoutSpent ||= 0;
   state.payoutServiceSpent ??= state.payoutSpent;
@@ -1575,6 +1585,7 @@ const actionTx = db.transaction(
       if (action === "retreat" && state.encounter.type === "rngesus")
         throw new Error("CANNOT_RETREAT");
       const before = statSnapshot(state);
+      state.lastDiscardedEscapeTokens = 0;
       state.lastStatChanges = null;
       state.turn += 1;
       if (action === "retreat")
@@ -1768,7 +1779,7 @@ const actionTx = db.transaction(
               0,
             );
           } else if (event.kind === "escape_ticket") {
-            state.escapeTokens += 1;
+            grantEscapeTickets(state, 1);
             completeFloor(
               state,
               "🎫 Người lữ hành trao **1 Vé Thoát Hiểm**. Vé tự dùng nếu chạy khỏi RNGesus thất bại.",
@@ -1884,6 +1895,9 @@ const actionTx = db.transaction(
         } else throw new Error("INVALID_ACTION");
       } else throw new Error("INVALID_ACTION");
 
+      if (state.lastDiscardedEscapeTokens)
+        state.lastLog += `\n🎫 Chỉ giữ tối đa 1 Vé Thoát Hiểm; bỏ ${state.lastDiscardedEscapeTokens} vé nhận thêm.`;
+      delete state.lastDiscardedEscapeTokens;
       state.lastStatChanges = statChanges(state, before);
       saveState(session, state);
       return { settled: false, state, result: null };

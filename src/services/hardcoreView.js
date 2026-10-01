@@ -477,7 +477,7 @@ function hardcorePrivatePayload(
   if (tab === "items") {
     embed.addFields({
       name: "🎒 Vật tư còn lại",
-      value: `${STAT_EMOJI.potions} **Bình máu ×${state.potions || 0}** · Hồi 35% HP tối đa, tối thiểu 20 HP; quái còn sống sẽ phản công.\n${STAT_EMOJI.tickets} **Vé Thoát Hiểm ×${state.escapeTokens || 0}** · Tự dùng 1 vé khi chạy khỏi RNGesus thất bại; chạy thành công giữ vé.`,
+      value: `${STAT_EMOJI.potions} **Bình máu ×${state.potions || 0}** · Hồi 35% HP tối đa, tối thiểu 20 HP; quái còn sống sẽ phản công.\n${STAT_EMOJI.tickets} **Vé Thoát Hiểm ×${state.escapeTokens || 0}** · Tối đa 1 vé, nhận thêm bị bỏ. Tự dùng khi chạy khỏi RNGesus thất bại; chạy thành công giữ vé.`,
     });
     embed.addFields({
       name: "🎒 Tổng hiệu ứng trang bị",
