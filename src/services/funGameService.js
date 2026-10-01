@@ -241,6 +241,7 @@ function getVuaSkipStatus(guildId, userId, now = Date.now()) {
 const skipVuaSessionForPlayerTx = db.transaction((guildId, userId, now = Date.now()) => {
   const session = getVuaSession(guildId);
   if (!session) return { error: 'NO_SESSION' };
+  if (session.question.hard) return { error: 'HARD_QUESTION' };
   const { limit, used, cooldownUntil, remaining } = getVuaSkipStatus(guildId, userId, now);
   const dayKey = vietnameseDayKey(now);
   if (used >= limit) return { error: 'LIMIT_REACHED', used, limit };

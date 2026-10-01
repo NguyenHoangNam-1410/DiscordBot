@@ -21,19 +21,19 @@ function questionEmbed(guildId, question, notice = null) {
   return new EmbedBuilder().setColor(0x9B59B6).setTitle('👑 VUA TIẾNG VIỆT')
     .setDescription(`Sắp xếp các chữ cái thành từ hoặc cụm từ có nghĩa:\n\n${vuaQuestionText(question)}`)
     .addFields(
-      { name: 'Thưởng cho người trả lời đúng', value: `${formatCoins(reward)} :coin:`, inline: true },
+      { name: 'Thưởng', value: `${formatCoins(reward)} :coin:`, inline: true },
       ...(question.hard ? [{ name: 'Thưởng câu khó', value: '10 :gem:', inline: true }] : []),
       { name: 'Thời gian', value: question.hard ? `${question.durationSeconds} giây` : 'Không giới hạn', inline: true },
       ...(notice ? [{ name: 'Cập nhật', value: String(notice).slice(0, 1024), inline: false }] : []),
     )
-    .setFooter({ text: 'Nhập đáp án trong channel • Bỏ qua: giới hạn lượt/ngày, hồi chiêu 5 phút mỗi người' });
+    .setFooter({ text: question.hard ? 'Nhập đáp án trong channel • Câu khó không thể bỏ qua' : 'Nhập đáp án trong channel • Bỏ qua: giới hạn lượt/ngày, hồi chiêu 5 phút mỗi người' });
 }
 
-function controlRows() {
-  return [new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId('vuatiengviet:skip').setLabel('Bỏ qua câu').setEmoji('⏭️').setStyle(ButtonStyle.Secondary),
-    new ButtonBuilder().setCustomId('vuatiengviet:items').setLabel('Vật phẩm').setEmoji('🎒').setStyle(ButtonStyle.Primary),
-  )];
+function controlRows(question) {
+  const buttons = [];
+  if (!question?.hard) buttons.push(new ButtonBuilder().setCustomId('vuatiengviet:skip').setLabel('Bỏ qua câu').setEmoji('⏭️').setStyle(ButtonStyle.Secondary));
+  buttons.push(new ButtonBuilder().setCustomId('vuatiengviet:items').setLabel('Vật phẩm').setEmoji('🎒').setStyle(ButtonStyle.Primary));
+  return [new ActionRowBuilder().addComponents(buttons)];
 }
 
 const QUICK_LABELS = Object.freeze({
@@ -65,7 +65,7 @@ function privateItemPanel(guildId, userId, status = null) {
 async function updateQuestionMessage(guildId, channel, notice = null) {
   const session = getVuaSession(guildId);
   if (!session || !channel?.isTextBased?.()) return null;
-  const payload = { content: null, embeds: [questionEmbed(guildId, session.question, notice)], components: controlRows(), allowedMentions: { parse: [] } };
+  const payload = { content: null, embeds: [questionEmbed(guildId, session.question, notice)], components: controlRows(session.question), allowedMentions: { parse: [] } };
   let message = null;
   if (session.uiMessageId && channel.messages?.fetch) message = await channel.messages.fetch(session.uiMessageId).catch(() => null);
   if (message) return message.edit(payload);
@@ -81,7 +81,7 @@ async function postNextQuestionMessage(guildId, channel) {
   const message = await channel.send({
     content: null,
     embeds: [questionEmbed(guildId, session.question)],
-    components: controlRows(),
+    components: controlRows(session.question),
     allowedMentions: { parse: [] },
   });
   setVuaUiMessage(guildId, channel.id, message.id);
@@ -103,6 +103,7 @@ async function updateEndedMessage(channel, session, userId) {
 }
 
 function skipErrorText(result) {
+  if (result.error === 'HARD_QUESTION') return 'Câu khó không thể bỏ qua.';
   if (result.error === 'LIMIT_REACHED') return `Bạn đã dùng hết **${result.limit} lượt bỏ qua** hôm nay.`;
   if (result.error === 'COOLDOWN') return `Bạn đang hồi chiêu bỏ qua. Dùng lại <t:${Math.ceil(result.cooldownUntil / 1000)}:R>.`;
   return 'Hiện chưa có phiên Vua Tiếng Việt.';
@@ -129,7 +130,7 @@ const command = {
         return interaction.reply({ content: `Phiên Vua Tiếng Việt đang chạy: ${link}`, flags: MessageFlags.Ephemeral });
       }
     }
-    await interaction.reply({ embeds: [questionEmbed(guildId, session.question)], components: controlRows() });
+    await interaction.reply({ embeds: [questionEmbed(guildId, session.question)], components: controlRows(session.question) });
     const message = await interaction.fetchReply();
     setVuaUiMessage(guildId, interaction.channelId, message.id);
     return message;
@@ -166,7 +167,10 @@ const command = {
     if (action !== 'skip') return interaction.reply({ content: 'Thao tác không hợp lệ.', flags: MessageFlags.Ephemeral });
     const result = skipVuaSessionForPlayer(interaction.guildId, interaction.user.id);
     if (result.error) return interaction.reply({ content: skipErrorText(result), flags: MessageFlags.Ephemeral });
-    await interaction.update({ content: null, embeds: [questionEmbed(interaction.guildId, result.nextQuestion, `⏭️ <@${interaction.user.id}> đã bỏ qua câu.`)], components: controlRows(), allowedMentions: { parse: [] } });
+    await interaction.deferUpdate();
+    const oldMessage = await interaction.channel.messages.fetch(session.uiMessageId).catch(() => null);
+    if (oldMessage) await oldMessage.edit({ embeds: [questionEmbed(interaction.guildId, result.skipped, `⏭️ Đã bỏ qua · Đáp án: **${result.skipped.answer}**`)], components: [], allowedMentions: { parse: [] } }).catch(() => null);
+    await postNextQuestionMessage(interaction.guildId, interaction.channel);
     return interaction.followUp({ content: skipStatusText(result), flags: MessageFlags.Ephemeral });
   },
   questionEmbed, controlRows, isAdmin, updateQuestionMessage, postNextQuestionMessage, privateItemPanel,
@@ -190,7 +194,10 @@ const playerCommand = {
     if (!getVuaSession(interaction.guildId)) return interaction.reply({ content: 'Hiện chưa có phiên Vua Tiếng Việt. Hãy nhờ admin bắt đầu bằng `/choi vtv`.', flags: MessageFlags.Ephemeral });
     const result = skipVuaSessionForPlayer(interaction.guildId, interaction.user.id);
     if (result.error) return interaction.reply({ content: skipErrorText(result), flags: MessageFlags.Ephemeral });
-    await updateQuestionMessage(interaction.guildId, interaction.channel, `⏭️ <@${interaction.user.id}> đã bỏ qua câu.`);
+    const session = getVuaSession(interaction.guildId);
+    const oldMessage = session?.uiMessageId ? await interaction.channel.messages.fetch(session.uiMessageId).catch(() => null) : null;
+    if (oldMessage) await oldMessage.edit({ embeds: [questionEmbed(interaction.guildId, result.skipped, `⏭️ Đã bỏ qua · Đáp án: **${result.skipped.answer}**`)], components: [], allowedMentions: { parse: [] } }).catch(() => null);
+    await postNextQuestionMessage(interaction.guildId, interaction.channel);
     return interaction.reply({ content: skipStatusText(result), flags: MessageFlags.Ephemeral });
   },
 };
