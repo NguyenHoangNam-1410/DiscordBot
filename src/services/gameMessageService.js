@@ -20,7 +20,7 @@ async function handleVuaMessage(message, answer) {
     ? addDiamonds(message.guildId, message.author.id, 10, { reason: 'vuatiengviet:hard-answer' })
     : null;
   const line = resultBlock({ userId: message.author.id, outcome: 'win', stake: 0, payout: reward, gemsGained: diamonds ? 10 : 0, result: { ...account, experienceGained: 0 }, reason: `đúng **${result.question.answer}**` });
-  await require('../commands/vuatiengviet').updateQuestionMessage(message.guildId, message.channel, `🎉 ${line}`);
+  await require('../commands/vuatiengviet').postNextQuestionMessage(message.guildId, message.channel, `🎉 ${line}`);
   return true;
 }
 

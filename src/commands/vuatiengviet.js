@@ -70,6 +70,24 @@ async function updateQuestionMessage(guildId, channel, notice = null) {
   return message;
 }
 
+async function postNextQuestionMessage(guildId, channel, notice = null) {
+  const session = getVuaSession(guildId);
+  if (!session || !channel?.isTextBased?.()) return null;
+  const previousMessageId = session.uiMessageId;
+  const message = await channel.send({
+    content: null,
+    embeds: [questionEmbed(guildId, session.question, notice)],
+    components: controlRows(),
+    allowedMentions: { parse: [] },
+  });
+  setVuaUiMessage(guildId, channel.id, message.id);
+  if (previousMessageId && previousMessageId !== message.id && channel.messages?.fetch) {
+    const previousMessage = await channel.messages.fetch(previousMessageId).catch(() => null);
+    if (previousMessage) await previousMessage.edit({ components: [] }).catch(() => null);
+  }
+  return message;
+}
+
 async function updateEndedMessage(channel, session, userId) {
   if (!session?.uiMessageId || !channel?.messages?.fetch) return false;
   const message = await channel.messages.fetch(session.uiMessageId).catch(() => null);
@@ -118,6 +136,8 @@ const command = {
     const [, action, ownerId, itemId] = interaction.customId.split(':');
     const session = getVuaSession(interaction.guildId);
     if (!session) return interaction.reply({ content: 'Phiên Vua tiếng Việt đã kết thúc hoặc không còn hoạt động.', flags: MessageFlags.Ephemeral });
+    if (session.uiMessageId && interaction.message?.id !== session.uiMessageId)
+      return interaction.reply({ content: 'UI câu hỏi này đã cũ. Hãy dùng các nút trên tin câu hỏi mới nhất.', flags: MessageFlags.Ephemeral });
     if (action === 'items') return interaction.reply({ ...privateItemPanel(interaction.guildId, interaction.user.id), flags: MessageFlags.Ephemeral });
     if (action === 'item') {
       if (ownerId !== interaction.user.id) return interaction.reply({ content: 'Bảng vật phẩm này thuộc về người chơi khác.', flags: MessageFlags.Ephemeral });
@@ -126,7 +146,8 @@ const command = {
         const publicEffect = ['quiz_living_dictionary', 'quiz_extra_time'].includes(result.item.effect);
         if (publicEffect) {
           const notice = result.message.split('\n\nCâu tiếp theo:')[0];
-          await updateQuestionMessage(interaction.guildId, interaction.channel, notice).catch(() => null);
+          const update = result.item.effect === 'quiz_living_dictionary' ? postNextQuestionMessage : updateQuestionMessage;
+          await update(interaction.guildId, interaction.channel, notice).catch(() => null);
         }
         return interaction.update(privateItemPanel(interaction.guildId, interaction.user.id,
           `✅ **${result.item.name}**: ${result.message}`));
@@ -144,7 +165,7 @@ const command = {
     await interaction.update({ content: null, embeds: [questionEmbed(interaction.guildId, result.nextQuestion, `⏭️ <@${interaction.user.id}> đã bỏ qua câu.`)], components: controlRows(), allowedMentions: { parse: [] } });
     return interaction.followUp({ content: skipStatusText(result), flags: MessageFlags.Ephemeral });
   },
-  questionEmbed, controlRows, isAdmin, updateQuestionMessage, privateItemPanel,
+  questionEmbed, controlRows, isAdmin, updateQuestionMessage, postNextQuestionMessage, privateItemPanel,
 };
 
 const playerCommand = {
