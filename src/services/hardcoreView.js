@@ -735,9 +735,8 @@ function hardcoreEmbed(
         value: result.achievements.map((item) => `**${item.name}**`).join("\n"),
       });
   } else
-    // Embed footers are plain text; use Unicode instead of :coin: or custom emoji markup.
     embed.setFooter({
-      text: `${sessionId ? `Mã ván: ${sessionId} • ` : ""}Lượt ${state.turn} • Cược ${formatCoins(state.stake)} ${icon("coin", "🪙")} • /choi sinhton tieptuc`,
+      text: `${sessionId ? `Mã ván: ${sessionId} • ` : ""}Lượt ${state.turn} • Cược ${formatCoins(state.stake)} xu • /choi sinhton tieptuc`,
     });
   return embed;
 }
