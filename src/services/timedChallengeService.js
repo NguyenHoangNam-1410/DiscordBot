@@ -1,6 +1,6 @@
 const { db } = require('../db');
 const { getGameChannel } = require('./gameChannelService');
-const { expireVuaChallenge, vuaQuestionText } = require('./funGameService');
+const { expireVuaChallenge } = require('./funGameService');
 
 function expireChallenge(guildId, game, now) {
   if (game === 'vuatiengviet') return expireVuaChallenge(guildId, now);
@@ -8,7 +8,7 @@ function expireChallenge(guildId, game, now) {
 }
 
 function timeoutMessage(game, result) {
-  return `⌛ Câu khó đã hết thời gian và không còn hiệu lực.\n\nCâu thường mới:\n${vuaQuestionText(result.nextQuestion)}`;
+  return '⌛ Câu khó đã hết thời gian và không còn hiệu lực.';
 }
 
 async function processExpiredChallenges(client, logger = console, now = Date.now()) {
@@ -22,8 +22,10 @@ async function processExpiredChallenges(client, logger = console, now = Date.now
     if (!setting || !client?.channels?.fetch) continue;
     try {
       const channel = await client.channels.fetch(setting.channel_id);
-      if (channel?.isTextBased?.()) await require('../commands/vuatiengviet').updateQuestionMessage(row.guild_id, channel,
-        '⌛ Câu khó đã hết thời gian. Câu thường mới đã lên UI.');
+      if (channel?.isTextBased?.()) {
+        await channel.send({ content: timeoutMessage(row.game, result), allowedMentions: { parse: [] } });
+        await require('../commands/vuatiengviet').postNextQuestionMessage(row.guild_id, channel);
+      }
     } catch (error) {
       logger.warn?.({ err: error, guildId: row.guild_id, game: row.game }, 'failed to announce expired hard question');
     }

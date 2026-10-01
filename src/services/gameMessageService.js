@@ -9,8 +9,7 @@ async function handleVuaMessage(message, answer) {
   if (!getVuaSession(message.guildId)) return false;
   const result = answerVuaSession(message.guildId, answer);
   if (result.error === 'EXPIRED') {
-    await require('../commands/vuatiengviet').updateQuestionMessage(message.guildId, message.channel,
-      '⌛ Câu khó đã hết thời gian. Câu thường mới đã lên UI.');
+    await require('../commands/vuatiengviet').postNextQuestionMessage(message.guildId, message.channel);
     return true;
   }
   if (!result.correct) return true;

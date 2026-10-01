@@ -141,7 +141,7 @@ const command = {
     const [, action, ownerId, itemId] = interaction.customId.split(':');
     const session = getVuaSession(interaction.guildId);
     if (!session) return interaction.reply({ content: 'Phiên Vua tiếng Việt đã kết thúc hoặc không còn hoạt động.', flags: MessageFlags.Ephemeral });
-    if (session.uiMessageId && interaction.message?.id !== session.uiMessageId)
+    if (action !== 'item' && session.uiMessageId && interaction.message?.id !== session.uiMessageId)
       return interaction.reply({ content: 'UI câu hỏi này đã cũ. Hãy dùng các nút trên tin câu hỏi mới nhất.', flags: MessageFlags.Ephemeral });
     if (action === 'items') return interaction.reply({ ...privateItemPanel(interaction.guildId, interaction.user.id), flags: MessageFlags.Ephemeral });
     if (action === 'item') {
