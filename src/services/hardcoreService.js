@@ -888,6 +888,10 @@ async function openHardcoreSetup(interaction, initial = {}) {
       typeof interaction.editReply === "function"
         ? (payload) => interaction.editReply(payload)
         : (payload) => message.edit(payload);
+    if (setupDrafts.get(draft.id) !== draft) {
+      await draft.edit(closedSetup("Đã mở bảng chuẩn bị mới."));
+      return null;
+    }
     touchSetup(draft);
     return draft;
   } catch (error) {

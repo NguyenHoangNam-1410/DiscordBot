@@ -70,11 +70,10 @@ function stateFor(classKey = "barbarian") {
 }
 
 assert.equal(Object.keys(hardcore.CLASSES).length, 7);
-const choices = require("../src/commands/hardcore")
+const startCommand = require("../src/commands/hardcore")
   .data.toJSON()
-  .options.find((option) => option.name === "batdau")
-  .options.find((option) => option.name === "class").choices;
-assert.equal(choices.length, 7);
+  .options.find((option) => option.name === "batdau");
+assert.equal(startCommand.options?.length || 0, 0, "Start opens the setup UI without required slash options");
 assert.equal(hardcore.REGIONS.length, 8);
 for (const region of hardcore.REGIONS) {
   assert.equal(hardcore.regionForFloor(region.start).name, region.name);

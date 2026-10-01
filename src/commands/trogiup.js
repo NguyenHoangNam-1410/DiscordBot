@@ -86,7 +86,7 @@ const PAGES = Object.freeze({
       ["🏇 Thử thách khác", "`/choi duangua` · `/choi domin` · `/choi coquay`"],
       [
         "⚔️ Sinh tồn",
-        "`/choi sinhton batdau` — chọn cược và nhân vật; dùng các nút để đánh, dùng vật phẩm, xử lý sự kiện hoặc rút thưởng. `/luat trochoi: Sinh tồn` giải thích cơ chế và từng hành động; `hoso` — thành tích; `xephang` — top tầng; `tyle` — tỷ lệ sự kiện.",
+        "`/choi sinhton batdau` — mở UI chọn nhân vật, xem chỉ số/kỹ năng, nhập cược rồi bấm Bắt đầu. Trong run dùng nút để đánh, dùng vật phẩm, xử lý sự kiện hoặc rút thưởng. `/luat trochoi: Sinh tồn` giải thích từng hành động; `hoso` — thành tích; `xephang` — top tầng; `tyle` — tỷ lệ sự kiện.",
       ],
       [
         "🔤 Vua tiếng Việt",
