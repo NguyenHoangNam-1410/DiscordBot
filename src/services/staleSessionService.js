@@ -14,14 +14,14 @@ const SOLO_GAMES = Object.freeze([
   { table: 'mines_sessions', name: 'DÒ MÌN', forceEnd: forceEndMinesSession },
   { table: 'coquay_sessions', name: 'CÒ QUAY NGA', forceEnd: forceEndCoquaySession },
   { table: 'chinchiro_sessions', name: 'CHINCHIRO', forceEnd: forceEndChinchiroSession },
-  { table: 'hardcore_sessions', name: 'SINH TỒN', forceEnd: forceEndHardcoreSession },
+  { table: 'hardcore_sessions', name: 'SINH TỒN', forceEnd: forceEndHardcoreSession, ttl: 7 * 24 * 60 * 60_000 },
 ]);
 
 function expireStaleSoloSessionsSync(now = Date.now()) {
   const expired = [];
   for (const game of SOLO_GAMES) {
     const rows = db.prepare(`SELECT id,guild_id,user_id,channel_id,message_id FROM ${game.table}
-      WHERE updated_at < ? OR (message_id IS NULL AND updated_at < ?)`).all(now - SOLO_SESSION_TTL_MS, now - NO_MESSAGE_TTL_MS);
+      WHERE updated_at < ? OR (message_id IS NULL AND updated_at < ?)`).all(now - (game.ttl || SOLO_SESSION_TTL_MS), now - NO_MESSAGE_TTL_MS);
     for (const row of rows) {
       // The player let the game sit idle after the message was posted, so the stake is forfeited. If the message was never posted the
       // player had no way to play (Discord or bot failure), so that stake is refunded.

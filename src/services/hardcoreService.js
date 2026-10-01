@@ -1,15 +1,17 @@
 const crypto = require('node:crypto');
 const { AsyncLocalStorage } = require('node:async_hooks');
 const { MessageFlags } = require('discord.js');
+const { formatCoins } = require('../utils/economy');
 const { db } = require('../db');
 const { spendCoins, settleReservedGame, creditCoins } = require('./economyService');
 const { getGameBetLimit } = require('./gameBetLimitService');
 const { createFairness, fairInt } = require('./fairnessService');
 const hardcoreRepository = require('./hardcoreRepository');
 const hardcoreView = require('./hardcoreView');
-const { rarityLabel, normalizeEquipment } = require('./hardcoreEquipment');
+const { rarityLabel, normalizeEquipment, loadMedianEquipment, effectText } = require('./hardcoreEquipment');
 const { chaosLabel } = hardcoreView;
-const { clamp, hitChance, defenseReduction, physicalAfterDefense, magicAfterResistance, enemyScale, baseMultiplier, potentialPayout } = require('./hardcoreEngine');
+const { clamp, hitChance, defenseReduction, physicalAfterDefense, magicAfterResistance, enemyScale, baseMultiplier, potentialPayout,
+  REGIONS, RIFT_MODIFIERS, regionForFloor, checkpointGrowth, BOSS_MECHANICS, enemyDamageType, serviceCost, forgeTarget, curseTarget } = require('./hardcoreEngine');
 
 const MIN_BET = 10;
 const MAX_BET = 100_000;
@@ -19,14 +21,18 @@ const COMPLETION_FLOOR = 100;
 const STALE_MS = 7 * 24 * 60 * 60 * 1000;
 
 const CLASSES = Object.freeze({
+  amazon: { name: 'Amazon', emoji: '🏹', hp: 105, damageMin: 15, damageMax: 20, defense: 6, accuracy: 95, evasion: 12, critChance: 0.12, resistance: 8, energy: 3, skill: 'Barrage' },
   barbarian: { name: 'Barbarian', emoji: '🪓', hp: 120, damageMin: 15, damageMax: 21, defense: 8, accuracy: 80, evasion: 8, critChance: 0.1, resistance: 5, energy: 3, skill: 'Iron Will' },
   assassin: { name: 'Assassin', emoji: '🗡️', hp: 95, damageMin: 14, damageMax: 20, defense: 5, accuracy: 90, evasion: 18, critChance: 0.18, resistance: 5, energy: 3, skill: 'Shadow Step' },
   sorceress: { name: 'Sorceress', emoji: '🔮', hp: 100, damageMin: 18, damageMax: 25, defense: 5, accuracy: 85, evasion: 12, critChance: 0.12, resistance: 15, energy: 4, skill: 'Arcane Burst' },
+  druid: { name: 'Druid', emoji: '🌿', hp: 110, damageMin: 14, damageMax: 19, defense: 7, accuracy: 85, evasion: 12, critChance: 0.1, resistance: 12, energy: 3, skill: 'Wild Regeneration' },
+  necromancer: { name: 'Necromancer', emoji: '💀', hp: 95, damageMin: 16, damageMax: 22, defense: 5, accuracy: 85, evasion: 10, critChance: 0.1, resistance: 15, energy: 5, skill: 'Totem Ward' },
+  paladin: { name: 'Paladin', emoji: '🛡️', hp: 115, damageMin: 14, damageMax: 19, defense: 12, accuracy: 85, evasion: 8, critChance: 0.1, resistance: 20, energy: 3, skill: 'Divine Shield' },
 });
 
 const ENEMY_NAMES = ['Cave Rat', 'Wild Boar', 'Moon Panther', 'Steel Drone', 'Dark Cultist', 'Lost Soul', 'Storm Shaman', 'Stone Golem', 'Void Spawn', 'Annihilator'];
-const BOSS_NAMES = ['Iron Warden', 'Abyss Hydra', 'Fallen King', 'Storm Tyrant', 'Void Queen', 'Ash Colossus', 'Nightmare Weaver', 'Chaos Emperor'];
-const ITEMS = Object.freeze({
+const BOSS_NAMES = ['The Butcher', 'Ascendant Riftwalker', 'Assur', 'Lucion', 'Deimoss the Fleshweaver'];
+const FALLBACK_ITEMS = Object.freeze({
   common: [
     { name: 'Rusted Edge', attack: 2, text: '+2 sát thương' },
     { name: 'Dented Plate', defense: 2, text: '+2 Defense' },
@@ -46,11 +52,12 @@ const ITEMS = Object.freeze({
     { name: 'Eye of RNGesus', luck: 7, attack: 3, text: '+7 Luck, +3 sát thương' },
   ],
   cursed: [
-    { name: 'Glass Cannon', attack: 14, defenseSet: 0, text: '+14 sát thương, Defense về 0' },
-    { name: 'Schrödinger’s Armor', defense: 12, maxHp: -20, text: '+12 Defense, −20 HP tối đa' },
+    { name: 'Glass Cannon', attack: 14, defenseSet: 0, bonusPenalty: 0.15, text: '+14 sát thương, Defense về 0, payout −15%' },
+    { name: 'Schrödinger’s Armor', defense: 12, maxHp: -20, bonusPenalty: 0.15, text: '+12 Defense, −20 HP tối đa, payout −15%' },
     { name: 'Goblin’s Debt', luck: 10, bonusPenalty: 0.15, text: '+10 Luck, mất 15% payout hiện tại' },
   ],
 });
+const ITEMS = Object.freeze(loadMedianEquipment(FALLBACK_ITEMS));
 
 const fairStateContext = new AsyncLocalStorage();
 function nextFair(maximum, context) {
@@ -77,41 +84,54 @@ function resolvePhysicalAttack(attacker, defender, level, options = {}) {
 }
 
 
-function makeEnemy(floor, rank = 'normal', forcedName = null) {
+function makeEnemy(floor, rank = 'normal', forcedName = null, modifiers = {}) {
   const rankStats = {
     normal: [1, 1, 1], champion: [1.4, 1.15, 1.4], elite: [2, 1.35, 2],
-    boss: [floor <= 10 ? 2.7 : 3.2, floor <= 10 ? 1.3 : 1.35, 4], mimic: [1.7, 1.25, 1.8], ancient_mimic: [2.8, 1.5, 3],
+    boss: [3.2, 1.35, 4], final_boss: [5.8, 2.5, 8], mimic: [1.7, 1.25, 1.8], ancient_mimic: [2.8, 1.5, 3],
   }[rank];
   const scale = enemyScale(floor);
-  const maxHp = Math.min(1_000_000_000_000, Math.max(10, Math.floor(28 * scale.hp * rankStats[0])));
-  const damageMin = Math.min(1_000_000_000_000, Math.max(2, Math.floor(5 * scale.damage * rankStats[1])));
-  const damageMax = Math.min(1_000_000_000_000, Math.max(damageMin + 1, Math.floor(9 * scale.damage * rankStats[1])));
-  const name = forcedName || (rank === 'boss' ? pick(BOSS_NAMES) : rank.includes('mimic') ? (rank === 'ancient_mimic' ? 'Ancient Mimic' : 'Mimic') : pick(ENEMY_NAMES));
+  const boss = ['boss', 'final_boss'].includes(rank);
+  const name = forcedName || (rank === 'final_boss' ? BOSS_NAMES[4] : boss ? BOSS_NAMES[(Math.floor(floor / 50) - 1) % BOSS_NAMES.length]
+    : rank.includes('mimic') ? (rank === 'ancient_mimic' ? 'Ancient Mimic' : 'Mimic') : pick(ENEMY_NAMES));
+  const maxHp = Math.max(10, Math.floor(28 * scale.hp * rankStats[0] * (1 + (modifiers.fortified || 0) * 0.1)));
+  const damageFactor = 1 + (modifiers.elemental_dominion || 0) * 0.04;
+  const damageMin = Math.max(2, Math.floor(5 * scale.damage * rankStats[1] * damageFactor));
+  const damageMax = Math.max(damageMin + 1, Math.floor(9 * scale.damage * rankStats[1] * damageFactor));
+  const mechanic = boss ? BOSS_MECHANICS[name] : null;
+  const damageType = enemyDamageType({ name, rank, mechanic });
   return {
     type: 'combat', rank, name, hp: maxHp, maxHp, damageMin, damageMax,
-    defense: Math.floor(4 + floor * 1.8 * (rank === 'boss' ? 1.25 : 1)),
-    accuracy: 70 + floor * 3, evasion: 4 + Math.floor(floor / 4), critChance: rank === 'boss' ? 0.1 : 0.05,
-    critDamage: 1.5, critResistance: rank === 'boss' ? 0.08 : 0, resistance: Math.min(60, Math.floor(floor * 0.8)),
-    magicChance: rank === 'boss' ? 0.35 : rank === 'elite' || rank === 'ancient_mimic' ? 0.2 : 0.05,
-    rewardMultiplier: rankStats[2],
+    defense: Math.floor((4 + floor * 0.65) * (rank === 'final_boss' ? 2 : boss ? 1.25 : 1) * (1 + (modifiers.stone_skin || 0) * 0.1)),
+    accuracy: 70 + Math.min(20, floor * 0.1) + (modifiers.swift_horror || 0) * 3,
+    evasion: 4 + Math.min(25, Math.floor(floor / 25)) + (modifiers.swift_horror || 0) * 2 + (name === 'Assur' ? 20 : 0),
+    critChance: name === 'Assur' ? 0.3 : boss ? 0.1 : 0.05,
+    critDamage: 1.5, critResistance: boss ? 0.08 : 0, resistance: Math.min(60, Math.floor(floor * 0.08)),
+    damageType,
+    magicChance: damageType === 'magic' ? 1 : damageType === 'physical' ? 0
+      : Math.min(0.75, (rank === 'elite' || rank === 'ancient_mimic' ? 0.2 : 0.05) + (modifiers.elemental_dominion || 0) * 0.02),
+    rewardMultiplier: rankStats[2], attacks: 0, incomingAttacks: 0,
+    mechanic,
   };
 }
 
 function chooseRarity(state) {
-  if (state.pityRare >= 5) return 'rare';
-  const legendaryChance = Math.min(0.35, 0.1 + Math.max(0, state.pityLegendary - 9) * 0.02 + state.luck * 0.002);
+  const unstable = state.modifiers?.unstable_rift || 0;
+  const legendaryChance = Math.min(0.35, 0.1 + Math.max(0, state.pityLegendary - 9) * 0.02 + state.luck * 0.002 + Math.min(0.08, unstable * 0.01));
   const roll = randomFloat();
   if (roll < legendaryChance) return 'legendary';
   if (roll < legendaryChance + 0.03) return 'cursed';
-  if (roll < legendaryChance + 0.25) return 'rare';
+  if (state.pityRare >= 5 || roll < legendaryChance + 0.25) return 'rare';
   if (roll < legendaryChance + 0.65) return 'common';
   if (roll < 0.95) return 'empty';
   return 'fake_legendary';
 }
 
 function makeChest(state, treasure = false) {
+  const unstable = state.modifiers?.unstable_rift || 0;
   const mimicRoll = randomFloat();
-  const kind = mimicRoll < 0.03 ? 'ancient_mimic' : mimicRoll < 0.15 ? 'mimic' : treasure ? (randomFloat() < 0.35 ? 'legendary' : 'rare') : chooseRarity(state);
+  const kind = state.pityRare < 5 && mimicRoll < 0.03 + Math.min(0.05, unstable * 0.005) ? 'ancient_mimic'
+    : state.pityRare < 5 && mimicRoll < 0.15 + Math.min(0.15, unstable * 0.01) ? 'mimic'
+      : treasure ? (randomFloat() < Math.min(0.6, 0.35 + unstable * 0.01) ? 'legendary' : 'rare') : chooseRarity(state);
   const rarity = ITEMS[kind] ? kind : null;
   return {
     type: 'chest', kind, rarity, item: rarity ? pick(ITEMS[rarity]) : null,
@@ -146,15 +166,27 @@ function rollRngesus(state, rolls = {}) {
 }
 
 function generateEncounter(state) {
-  if (state.floor % 5 === 0) return makeEnemy(state.floor, 'boss');
-  if (rollRngesus(state)) return { type: 'rngesus', name: 'RNGesus', fleeSuccess: randomFloat() < 0.65, prayerSuccess: randomFloat() < 0.1, chaosChance: state.lastChaosChance, chaosSpike: state.lastChaosSpike };
+  if (state.floor === MAX_FLOOR) return makeEnemy(state.floor, 'final_boss', null, state.modifiers);
+  if (state.floor % 50 === 0) return makeEnemy(state.floor, 'boss', null, state.modifiers);
+  if (rollRngesus(state)) {
+    const fleeRoll = randomFloat();
+    return { type: 'rngesus', name: 'RNGesus', fleeRoll, fleeSuccess: fleeRoll < 0.75, fleeChance: 0.75,
+      prayerSuccess: randomFloat() < 0.1, chaosChance: state.lastChaosChance, chaosSpike: state.lastChaosSpike };
+  }
   const roll = randomFloat();
-  if (roll < 0.55) return makeEnemy(state.floor, 'normal');
-  if (roll < 0.67) return makeEnemy(state.floor, 'elite');
-  if (roll < 0.77) return makeChest(state);
-  if (roll < 0.85) return { type: 'shrine', kind: pick(['healing', 'armor', 'blood', 'experience', 'corrupted', 'fake']) };
-  if (roll < 0.9) return makeChest(state, true);
-  if (roll < 0.96) return { type: 'trap', kind: pick(['tax_collector', 'potion_thief', 'wrong_portal']) };
+  const extraChests = Math.min(0.12, (state.modifiers?.unstable_rift || 0) * 0.01);
+  if (roll < 0.47 - extraChests) return makeEnemy(state.floor, 'normal', null, state.modifiers);
+  if (roll < 0.59 - extraChests) return makeEnemy(state.floor, 'elite', null, state.modifiers);
+  if (roll < 0.69) return makeChest(state);
+  if (roll < 0.77) return { type: 'shrine', kind: pick(['healing', 'armor', 'blood', 'experience', 'corrupted', 'fake']) };
+  if (roll < 0.82) return makeChest(state, true);
+  if (roll < 0.88) return { type: 'trap', kind: pick(['tax_collector', 'potion_thief', 'wrong_portal']) };
+  if (roll < 0.94) {
+    const kind = pick(['healing', 'escape_ticket', 'cache', 'ambush']);
+    return { type: 'surprise', kind, enemy: kind === 'ambush' ? makeEnemy(state.floor, 'champion', null, state.modifiers) : null };
+  }
+  if (roll < 0.97) return { type: 'blacksmith' };
+  if (roll < 0.99) return { type: 'cleanse' };
   return { type: 'empty' };
 }
 
@@ -171,14 +203,15 @@ function applyItem(state, item, rarity = 'common') {
   if (item.escapeTokens) state.escapeTokens += item.escapeTokens;
   if (item.maxHp) { state.maxHp = Math.max(20, state.maxHp + item.maxHp); state.hp = Math.min(state.maxHp, Math.max(1, state.hp + (item.heal || Math.max(0, item.maxHp)))); }
   if (item.bonusPenalty) state.payoutFactor *= 1 - item.bonusPenalty;
-  let equipment = state.items.find(entry => entry.name === item.name);
+  let equipment = state.items.find(entry => entry.name === item.name && entry.rarity === rarity && (entry.definition?.base || '') === (item.base || ''));
   if (equipment) { equipment.level += 1; equipment.text = item.text; }
   else { equipment = { name: item.name, rarity, text: item.text, level: 1 }; state.items.push(equipment); }
+  equipment.definition = { ...item };
   return equipment;
 }
 
 function updatePity(state, rarity) {
-  if (rarity === 'legendary') state.pityLegendary = 0; else state.pityLegendary += 1;
+  if (['legendary', 'cursed'].includes(rarity)) state.pityLegendary = 0; else state.pityLegendary += 1;
   if (['rare', 'legendary', 'cursed'].includes(rarity)) state.pityRare = 0; else state.pityRare += 1;
 }
 
@@ -191,17 +224,30 @@ function setNextEncounter(state, log) {
 
 function completeFloor(state, log, rewardMultiplier = 1) {
   const clearedFloor = state.floor;
+  if (clearedFloor === MAX_FLOOR && !state.finalBossDefeated) throw new Error('FINAL_BOSS_REQUIRED');
   state.cleared = Math.max(state.cleared, clearedFloor);
   state.bonus += Math.floor(state.stake * 0.01 * rewardMultiplier);
   state.energy = Math.min(state.maxEnergy, state.energy + 1);
-  if (clearedFloor % 5 === 0) {
+  if (['boss', 'final_boss'].includes(state.encounter.rank)) {
     state.bosses += 1;
-    state.maxHp += 6;
-    state.damageMin += 1;
-    state.damageMax += 1;
+  }
+  if (clearedFloor % 5 === 0) {
+    const growth = checkpointGrowth(clearedFloor);
+    state.maxHp += growth.hp;
+    state.damageMin += growth.attack;
+    state.damageMax += growth.attack;
     state.hp = state.maxHp;
     state.potions = Math.min(5, state.potions + 2);
-    log += '\n🏆 Thắng boss: +6 HP tối đa, +1 sát thương, hồi đầy máu và nhận 2 bình máu.';
+    log += `\n🏕️ Checkpoint: +${growth.hp} HP tối đa, +${growth.attack} sát thương, hồi đầy HP và nhận 2 bình máu.`;
+  }
+  if (clearedFloor % 10 === 0 && clearedFloor > (state.lastModifierFloor || 0)) {
+    state.modifiers ||= {};
+    const all = Object.keys(RIFT_MODIFIERS);
+    const missing = all.filter(key => !state.modifiers[key]);
+    const key = pick(missing.length ? missing : all);
+    state.modifiers[key] = (state.modifiers[key] || 0) + 1;
+    state.lastModifierFloor = clearedFloor;
+    log += `\n🌀 Rift: **${RIFT_MODIFIERS[key].name} ×${state.modifiers[key]}**.`;
   }
   if (clearedFloor >= COMPLETION_FLOOR) state.completed = true;
   if (clearedFloor >= MAX_FLOOR) { state.floor = MAX_FLOOR; state.phase = 'summit'; state.encounter = { type: 'summit' }; state.lastLog = log; return; }
@@ -228,7 +274,33 @@ function getHardcoreTop(guildId, limit = 10) { return hardcoreRepository.getTop(
 
 const getSession = hardcoreRepository.getSession;
 const getHardcoreByUser = hardcoreRepository.getByUser;
-const parseState = hardcoreRepository.parseState;
+function parseState(session) {
+  const state = hardcoreRepository.parseState(session);
+  state.modifiers ||= {};
+  state.payoutSpent ||= 0;
+  state.items = normalizeEquipment(state.items);
+  for (const item of state.items) {
+    item.definition ||= ITEMS[item.rarity]?.find(entry => entry.name === item.name);
+    item.cleansedLevels = Math.min(item.level, Math.max(0, item.cleansedLevels || 0));
+  }
+  if (state.encounter.type === 'combat') {
+    state.encounter.mechanic ||= ['boss', 'final_boss'].includes(state.encounter.rank) ? BOSS_MECHANICS[state.encounter.name] : null;
+    state.encounter.damageType = enemyDamageType(state.encounter);
+  }
+  if (state.encounter.type === 'rngesus' && state.encounter.fleeChance !== 0.75 && state.fair?.serverSeed) {
+    // Deterministic upgrade for previously saved 65% encounters; reopening UI cannot reroll it.
+    state.encounter.fleeRoll = fairInt(state.fair.serverSeed, `hardcore:flee-upgrade:${state.floor}`, state.turn, 1_000_000) / 1_000_000;
+    state.encounter.fleeChance = 0.75;
+    state.encounter.fleeSuccess = state.encounter.fleeRoll < 0.75;
+  }
+  // Legacy runs may have cleared 999 through an ordinary room. Require the new final boss.
+  if (state.cleared >= MAX_FLOOR && !state.finalBossDefeated) {
+    state.floor = MAX_FLOOR; state.cleared = MAX_FLOOR - 1; state.phase = 'encounter';
+    state.encounter = makeEnemy(MAX_FLOOR, 'final_boss', null, state.modifiers);
+    state.lastLog = 'Boss cuối Deimoss chặn lối ra. Hạ boss để công nhận tầng 999.';
+  }
+  return state;
+}
 const saveState = hardcoreRepository.saveState;
 const setMessageId = hardcoreRepository.setMessageId;
 
@@ -245,8 +317,9 @@ const startTx = db.transaction(({ guildId, userId, channelId, stake, classKey, f
     damageMin: template.damageMin, damageMax: template.damageMax, defense: template.defense,
     accuracy: template.accuracy, evasion: template.evasion, critChance: template.critChance, critDamage: 1.75,
     resistance: template.resistance, energy: template.energy, maxEnergy: template.energy, potions: 3,
-    luck: 0, pityRare: 0, pityLegendary: 0, bosses: 0, bonus: 0, payoutFactor: 1,
-    escapeTokens: 0, items: [], completed: false, turn: 0, phase: 'encounter', lastLog: 'Run bắt đầu.',
+    luck: 0, pityRare: 0, pityLegendary: 0, bosses: 0, bonus: 0, payoutFactor: 1, payoutSpent: 0,
+    escapeTokens: 0, items: [], completed: false, finalBossDefeated: false, modifiers: {}, lastModifierFloor: 0,
+    runVersion: 3, turn: 0, phase: 'encounter', lastLog: 'Run bắt đầu.',
     rngesusDry: 0, lastChaosChance: 0, lastChaosSpike: false, fair: createFairness(), fairCounter: 0,
   };
   state.encounter = forcedEncounter || fairStateContext.run(state, () => generateEncounter(state));
@@ -286,22 +359,36 @@ function forceEndHardcoreSession(id, guildId, adminId, { label = 'admin-refund',
 
 function enemyTurn(state, defend = false, dodge = false) {
   const enemy = state.encounter;
+  enemy.attacks = (enemy.attacks || 0) + 1;
   if (dodge) return '💨 Bạn né hoàn toàn đòn phản công.';
-  const defender = { defense: defend ? Math.floor(state.defense * 1.5) : state.defense, evasion: state.evasion, critResistance: 0 };
-  if (randomFloat() < enemy.magicChance) {
+  const defender = { defense: defend ? state.defense * 2 : state.defense, evasion: state.evasion, critResistance: 0 };
+  const multiplier = (enemy.mechanic === 'butcher' ? 1 + Math.min(5, enemy.attacks) * 0.08 : 1)
+    * (enemy.hp < enemy.maxHp * 0.5 ? 1 + (state.modifiers?.bloodlust || 0) * 0.08 : 1);
+  let damage; let label;
+  const damageType = enemyDamageType(enemy);
+  if (damageType === 'magic' || (damageType === 'mixed' && randomFloat() < enemy.magicChance)) {
     if (randomFloat() >= hitChance(enemy.accuracy, state.evasion)) return '💨 Phép của quái đánh trượt.';
-    const raw = randomInt(enemy.damageMin, enemy.damageMax);
-    let damage = magicAfterResistance(raw, state.resistance);
-    if (defend) damage = Math.max(1, Math.floor(damage * 0.8));
-    state.hp = Math.max(0, state.hp - damage);
-    return `🔮 Bạn nhận **${damage} magic damage**.`;
+    const raw = Math.floor(randomInt(enemy.damageMin, enemy.damageMax) * multiplier);
+    damage = magicAfterResistance(raw, state.resistance);
+    state.resistance = clamp(state.resistance - (state.modifiers?.cursed_ground || 0) * 2, -50, 75);
+    label = '🔮';
+  } else {
+    const hit = resolvePhysicalAttack(enemy, defender, state.floor, { multiplier });
+    if (!hit.hit) return '💨 Quái đánh trượt.';
+    damage = hit.damage;
+    label = hit.crit ? '💢 Critical!' : '⚔️';
   }
-  const hit = resolvePhysicalAttack(enemy, defender, state.floor);
-  if (!hit.hit) return '💨 Quái đánh trượt.';
-  let damage = hit.damage;
-  if (defend && randomFloat() < 0.2) damage = Math.max(1, Math.floor(damage * 0.5));
+  const blocked = defend ? damage - Math.max(1, Math.floor(damage * 0.5)) : 0;
+  if (defend) damage -= blocked;
+  const dealt = Math.min(state.hp, damage);
   state.hp = Math.max(0, state.hp - damage);
-  return `${hit.crit ? '💢 Critical! ' : ''}Bạn nhận **${damage} damage**.`;
+  state.energy = Math.max(0, state.energy - Math.min(2, state.modifiers?.soul_drain || 0));
+  let recovery = '';
+  if (enemy.mechanic === 'lucion') {
+    const healed = Math.min(enemy.maxHp - enemy.hp, Math.floor(dealt * 0.35));
+    enemy.hp += healed; recovery = ` Lucion hồi **${healed} HP**.`;
+  }
+  return `${label} Bạn nhận **${damage} sát thương**.${defend ? ` 🛡️ Thủ thế chặn thêm **${blocked} sát thương** (giảm 50%).` : ''}${recovery}`;
 }
 
 function playerAttack(state, action) {
@@ -314,25 +401,37 @@ function playerAttack(state, action) {
     state.potions -= 1; state.hp += healed;
     return { log: `🧪 Hồi **${healed} HP**.`, defend: false };
   }
-  let attack;
-  let dodge = false;
+  let attacks; let dodge = false; let defend = false; let healing = 0;
   if (action === 'skill') {
     if (state.energy < 2) throw new Error('NO_ENERGY');
     state.energy -= 2;
-    if (state.classKey === 'sorceress') {
-      const raw = Math.floor(randomInt(state.damageMin, state.damageMax) * 2.1);
-      attack = { hit: true, crit: false, damage: magicAfterResistance(raw, enemy.resistance) };
-    } else if (state.classKey === 'assassin') {
-      attack = resolvePhysicalAttack(state, enemy, state.floor, { multiplier: 1.3 }); dodge = true;
-    } else attack = resolvePhysicalAttack(state, enemy, state.floor, { multiplier: 1.65 });
+    if (['sorceress', 'necromancer'].includes(state.classKey)) {
+      const raw = Math.floor(randomInt(state.damageMin, state.damageMax) * (state.classKey === 'sorceress' ? 2.1 : 1.55));
+      attacks = [{ hit: true, crit: false, damage: magicAfterResistance(raw, enemy.resistance) }];
+      dodge = state.classKey === 'necromancer';
+    } else if (state.classKey === 'amazon') {
+      attacks = [resolvePhysicalAttack(state, enemy, state.floor, { multiplier: 0.85 }), resolvePhysicalAttack(state, enemy, state.floor, { multiplier: 0.85 })];
+    } else {
+      const multiplier = { assassin: 1.3, barbarian: 1.65, druid: 1.35, paladin: 1.4 }[state.classKey];
+      attacks = [resolvePhysicalAttack(state, enemy, state.floor, { multiplier })];
+      dodge = state.classKey === 'assassin'; defend = state.classKey === 'paladin';
+      if (state.classKey === 'druid') {
+        healing = Math.min(state.maxHp - state.hp, Math.floor(state.maxHp * 0.12)); state.hp += healing;
+      }
+    }
   } else {
-    attack = resolvePhysicalAttack(state, enemy, state.floor);
+    attacks = [resolvePhysicalAttack(state, enemy, state.floor)];
     state.energy = Math.min(state.maxEnergy, state.energy + 1);
   }
-  if (!attack.hit) return { log: '💨 Đòn đánh của bạn trượt.', dodge };
-  enemy.hp = Math.max(0, enemy.hp - attack.damage);
+  const hit = attacks.some(attack => attack.hit);
+  enemy.incomingAttacks = (enemy.incomingAttacks || 0) + 1;
+  const immune = enemy.mechanic === 'riftwalker' && enemy.incomingAttacks % 3 === 1;
+  const damage = immune ? 0 : attacks.reduce((total, attack) => total + (attack.hit ? enemy.mechanic === 'deimoss' ? Math.max(1, Math.floor(attack.damage * 0.75)) : attack.damage : 0), 0);
+  enemy.hp = Math.max(0, enemy.hp - damage);
   const skill = action === 'skill' ? `✨ ${CLASSES[state.classKey].skill}: ` : '⚔️ ';
-  return { log: `${skill}${attack.crit ? 'Critical! ' : ''}Gây **${attack.damage} damage**.`, dodge };
+  const log = immune ? `${skill}Ascendant Riftwalker miễn nhiễm đòn này.` : !hit ? `${skill}Đòn đánh trượt.`
+    : `${skill}${attacks.some(attack => attack.crit) ? 'Critical! ' : ''}Gây **${damage} sát thương**${attacks.length > 1 ? ' qua hai phát' : ''}.`;
+  return { log: `${log}${healing ? ` Hồi **${healing} HP**.` : ''}`, dodge, defend };
 }
 
 function applyShrine(state, kind) {
@@ -349,6 +448,12 @@ function statSnapshot(state) { return Object.fromEntries(DISPLAY_STATS.map(key =
 function statChanges(state, before) {
   return Object.fromEntries(DISPLAY_STATS.map(key => [key, +(Number((Number(state[key]) || 0) - before[key]).toFixed(4))]).filter(([, change]) => change));
 }
+function payRunService(state, service) {
+  const cost = serviceCost(state, service);
+  if (potentialPayout(state) < cost) throw new Error('INSUFFICIENT_RUN_PAYOUT');
+  state.payoutSpent = (state.payoutSpent || 0) + cost;
+  return cost;
+}
 
 const actionTx = db.transaction(({ sessionId, userId, expectedTurn, action }) => {
   const session = getSession(sessionId);
@@ -356,6 +461,7 @@ const actionTx = db.transaction(({ sessionId, userId, expectedTurn, action }) =>
   const state = parseState(session);
   return fairStateContext.run(state, () => {
   if (state.turn !== expectedTurn) throw new Error('STALE_ACTION');
+  if (action === 'retreat' && state.encounter.type === 'rngesus') throw new Error('CANNOT_RETREAT');
   const before = statSnapshot(state);
   state.lastStatChanges = null;
   state.turn += 1;
@@ -375,6 +481,7 @@ const actionTx = db.transaction(({ sessionId, userId, expectedTurn, action }) =>
     let log = acted.log;
     if (state.encounter.hp <= 0) {
       const enemy = state.encounter;
+      if (state.floor === MAX_FLOOR && enemy.rank === 'final_boss' && enemy.mechanic === 'deimoss') state.finalBossDefeated = true;
       completeFloor(state, `${log}\n🏆 Đã hạ **${enemy.name}**.`, enemy.rewardMultiplier);
     } else {
       log += `\n${enemyTurn(state, acted.defend, acted.dodge)}`;
@@ -396,7 +503,8 @@ const actionTx = db.transaction(({ sessionId, userId, expectedTurn, action }) =>
       completeFloor(state, '💰 Bán hòm, cộng 15% tiền cược vào payout.', 0.5);
     } else if (action === 'open') {
       if (['mimic', 'ancient_mimic'].includes(chest.kind)) {
-        state.encounter = makeEnemy(state.floor, chest.kind);
+        updatePity(state, 'empty');
+        state.encounter = makeEnemy(state.floor, chest.kind, null, state.modifiers);
         state.lastLog = `😈 Chiếc hòm hóa thành **${state.encounter.name}**!`;
       } else if (chest.kind === 'empty') {
         updatePity(state, 'empty'); completeFloor(state, '📦 Hòm hoàn toàn trống.', 0);
@@ -414,6 +522,44 @@ const actionTx = db.transaction(({ sessionId, userId, expectedTurn, action }) =>
       if (state.hp <= 0) return { settled: true, state, result: finishRun(session, state, 'death') };
       completeFloor(state, log, 0.5);
     } else throw new Error('INVALID_ACTION');
+  } else if (['blacksmith', 'cleanse'].includes(state.encounter.type)) {
+    const service = state.encounter.type;
+    if (action === 'ignore') completeFloor(state, '🚶 Bạn bỏ qua dịch vụ và đi tiếp.', 0);
+    else if (service === 'blacksmith' && action === 'forge') {
+      const target = forgeTarget(state);
+      if (!target) throw new Error('NO_FORGE_ITEM');
+      const cost = payRunService(state, service);
+      const upgraded = applyItem(state, target.definition, target.rarity);
+      completeFloor(state, `🔨 Thợ rèn nâng **${upgraded.name} lên Lv.${upgraded.level}**: ${effectText(upgraded.definition, 1)}.\n💰 Đã dùng **${cost} xu** từ payout của run.`, 0);
+    } else if (service === 'cleanse' && action === 'cleanse') {
+      const target = curseTarget(state);
+      if (!target) throw new Error('NO_CURSE');
+      const cost = payRunService(state, service);
+      const penalty = target.definition.bonusPenalty;
+      target.cleansedLevels = (target.cleansedLevels || 0) + 1;
+      state.payoutFactor = Math.min(1, Number((state.payoutFactor / (1 - penalty)).toPrecision(15)));
+      completeFloor(state, `✨ Gỡ một cộng dồn phạt payout **${Math.round(penalty * 100)}%** của **${target.name}**; giữ chỉ số trang bị.\n💰 Đã dùng **${cost} xu** từ payout của run.`, 0);
+    } else throw new Error('INVALID_ACTION');
+  } else if (state.encounter.type === 'surprise') {
+    if (action === 'ignore') completeFloor(state, '🚶 Bạn tránh lối đi bí ẩn và đi tiếp an toàn.', 0);
+    else if (action === 'explore') {
+      const event = state.encounter;
+      if (event.kind === 'ambush') {
+        state.encounter = event.enemy;
+        state.lastLog = `⚠️ **${state.encounter.name}** phục kích và ra đòn trước!\n${enemyTurn(state)}`;
+        if (state.hp <= 0) return { settled: true, state, result: finishRun(session, state, 'death') };
+      } else if (event.kind === 'healing') {
+        const healed = Math.min(state.maxHp - state.hp, Math.max(20, Math.floor(state.maxHp * 0.35)));
+        state.hp += healed; state.potions += 1;
+        completeFloor(state, `💚 Gặp người cứu trợ: hồi **${healed} HP**, nhận **1 bình máu**.`, 0);
+      } else if (event.kind === 'escape_ticket') {
+        state.escapeTokens += 1;
+        completeFloor(state, '🎫 Người lữ hành trao **1 Vé Thoát Hiểm**. Vé tự dùng nếu chạy khỏi RNGesus thất bại.', 0);
+      } else if (event.kind === 'cache') {
+        const found = Math.floor(state.stake * 0.5); state.bonus += found;
+        completeFloor(state, `💰 Phát hiện kho xu: cộng **${found} xu** vào bonus của run (trước hệ số phạt payout).`, 0);
+      } else throw new Error('INVALID_ACTION');
+    } else throw new Error('INVALID_ACTION');
   } else if (state.encounter.type === 'empty') {
     if (action !== 'continue') throw new Error('INVALID_ACTION');
     completeFloor(state, '🕳️ Căn phòng không có gì. Đúng nghĩa không có gì.', 0);
@@ -422,7 +568,7 @@ const actionTx = db.transaction(({ sessionId, userId, expectedTurn, action }) =>
     const kind = state.encounter.kind;
     if (kind === 'tax_collector') {
       state.payoutFactor *= 0.85;
-      completeFloor(state, '🧾 Tax Collector thu 15% payout vì lý do: “quy định là quy định”.', 0);
+      completeFloor(state, '🧾 Tax Collector giảm hệ số payout 15% vì lý do: “quy định là quy định”.', 0);
     } else if (kind === 'potion_thief') {
       const stolen = state.potions > 0 ? 1 : 0;
       state.potions = Math.max(0, state.potions - stolen);
@@ -434,17 +580,18 @@ const actionTx = db.transaction(({ sessionId, userId, expectedTurn, action }) =>
     const event = state.encounter;
     if (action === 'fight') return { settled: true, state, result: finishRun(session, state, 'rngesus') };
     if (action === 'flee') {
-      if (!event.fleeSuccess) return { settled: true, state, result: finishRun(session, state, 'rngesus') };
-      completeFloor(state, '🏃 Bạn thoát khỏi RNGesus với đôi chân run rẩy.', 0);
+      const escaped = typeof event.fleeRoll === 'number' ? event.fleeRoll < 0.75 : event.fleeSuccess;
+      if (!escaped) {
+        if (state.escapeTokens <= 0) return { settled: true, state, result: finishRun(session, state, 'rngesus') };
+        state.escapeTokens -= 1;
+        completeFloor(state, '🎫 Chạy thất bại! Tự dùng **1 Vé Thoát Hiểm** để cứu bạn khỏi RNGesus và đi tiếp.', 0);
+      } else completeFloor(state, '🏃 Bạn thoát khỏi RNGesus với đôi chân run rẩy; giữ lại Vé Thoát Hiểm.', 0);
     } else if (action === 'bribe') {
-      state.payoutFactor *= 0.6; completeFloor(state, '💸 RNGesus nhận 40% payout và cho bạn đi.', 0);
+      state.payoutFactor *= 0.6; completeFloor(state, '💸 RNGesus giảm hệ số payout 40% và cho bạn đi.', 0);
     } else if (action === 'pray') {
       if (!event.prayerSuccess) return { settled: true, state, result: finishRun(session, state, 'rngesus') };
       const item = pick(ITEMS.legendary); const equipment = applyItem(state, item, 'legendary'); updatePity(state, 'legendary');
       completeFloor(state, `🙏 RNGesus cười và trao **${item.name} Lv.${equipment.level}** (${rarityLabel('legendary')}).`, 2);
-    } else if (action === 'escape_token') {
-      if (state.escapeTokens <= 0) throw new Error('NO_TOKEN');
-      state.escapeTokens -= 1; completeFloor(state, '🪞 Vé Thoát Hiểm vỡ vụn và đưa bạn tới tầng tiếp theo.', 0);
     } else throw new Error('INVALID_ACTION');
   } else throw new Error('INVALID_ACTION');
 
@@ -512,7 +659,11 @@ async function handleHardcoreButton(interaction, logger) {
         : error.message === 'NO_POTION' ? 'Bạn đã hết bình máu.'
           : error.message === 'FULL_HP' ? 'HP đang đầy.'
             : error.message === 'ALREADY_INSPECTED' ? 'Bạn đã kiểm tra hòm này.'
-              : error.message === 'NO_TOKEN' ? 'Bạn không có Vé Thoát Hiểm.' : 'Không thể thực hiện lựa chọn này.';
+              : error.message === 'CANNOT_RETREAT' ? 'Không thể rút thưởng khi gặp RNGesus.'
+              : error.message === 'INSUFFICIENT_RUN_PAYOUT' ? 'Payout tích lũy của run chưa đủ trả phí dịch vụ.'
+              : error.message === 'NO_FORGE_ITEM' ? 'Bạn chưa có trang bị phù hợp để rèn.'
+              : error.message === 'NO_CURSE' ? 'Không có cộng dồn phạt payout của đồ UR cần giải.'
+              : 'Không thể thực hiện lựa chọn này.';
     return interaction.followUp({ content, flags: MessageFlags.Ephemeral });
   }
 }
@@ -536,6 +687,8 @@ module.exports = {
   MIN_BET, MAX_BET, MAX_PAYOUT, MAX_FLOOR, COMPLETION_FLOOR, CLASSES, ITEMS,
   hitChance, defenseReduction, physicalAfterDefense, magicAfterResistance, resolvePhysicalAttack,
   enemyScale, makeEnemy, rngesusChance, rollRngesus, chaosLabel, baseMultiplier, potentialPayout, generateEncounter,
+  REGIONS, RIFT_MODIFIERS, regionForFloor, checkpointGrowth, makeChest, chooseRarity, completeFloor, playerAttack, enemyTurn, applyItem,
+  enemyDamageType, serviceCost, forgeTarget, curseTarget,
   startHardcore, playHardcore, getHardcoreByUser, getHardcoreRun, setMessageId, hardcoreEmbed, hardcoreRows, forceEndHardcoreSession,
   handleHardcoreButton, getHardcoreRecord, getHardcoreTop, cleanupStaleHardcoreSessions,
 };

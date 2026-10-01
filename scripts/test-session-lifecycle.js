@@ -557,14 +557,22 @@ function bet(guildId, roundId, userId, choice, amount) {
   const now = Date.now();
   assert.equal(stale.expireStaleSoloSessionsSync(now).length, 0, 'ván còn mới không được dọn');
   const expired = stale.expireStaleSoloSessionsSync(now + stale.SOLO_SESSION_TTL_MS + 1_000).filter(item => item.row.guild_id === g);
-  assert.equal(expired.length, 4);
+  assert.equal(expired.length, 3);
   assert(expired.every(item => item.forfeit), 'ván treo sau khi đã có tin nhắn phải bị xử thua');
   for (const [table, id] of Object.entries(ids)) {
+    if (table === 'hardcore_sessions') {
+      assert.equal(db.prepare('SELECT COUNT(*) AS count FROM hardcore_sessions WHERE id=?').get(id).count, 1, 'Sinh tồn giữ run trong 7 ngày');
+      continue;
+    }
     assert.equal(db.prepare(`SELECT COUNT(*) AS count FROM ${table} WHERE id=?`).get(id).count, 0, `${table} chưa được dọn`);
     assert.equal(balance(g, owners[table]), START - 100, `${table}: người để ván hết hạn không được hoàn cược`);
   }
   assert.equal(db.prepare("SELECT COUNT(*) AS count FROM economy_transactions WHERE guild_id=? AND reason LIKE '%timeout-%'").get(g).count, 0, 'xử thua không tạo giao dịch hoàn tiền');
   assert.equal(stale.expireStaleSoloSessionsSync(now + stale.SOLO_SESSION_TTL_MS + 2_000).filter(item => item.row.guild_id === g).length, 0, 'không hoàn tiền hai lần');
+  const expiredHardcore = stale.expireStaleSoloSessionsSync(now + 7 * 24 * 60 * 60_000 + 1_000).filter(item => item.row.guild_id === g);
+  assert.equal(expiredHardcore.length, 1);
+  assert.equal(expiredHardcore[0].row.id, hardcoreSession.session.id);
+  assert(expiredHardcore[0].forfeit);
 
   // Ván tạo xong nhưng tin nhắn không gửi được (message_id rỗng) được dọn sau 2 phút
   const orphan = mines.startMines({ guildId: g, channelId: 'c', userId: 'orphan', stake: 100, mineCount: 3, forcedMines: [0, 1, 2], forcedSpecial: 19 });
