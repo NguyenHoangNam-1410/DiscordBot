@@ -83,7 +83,17 @@ function ratesEmbed() {
       {
         name: "Sự kiện xấu",
         value:
-          "6% encounter thường là Tax Collector, trộm bình máu hoặc Wrong Portal. Tax mất 15% payout; Wrong Portal giữ nguyên tầng và roll lại encounter.",
+          "6% encounter thường là Tax Collector, trộm bình máu hoặc Wrong Portal (mỗi loại khoảng 2%). Tax mất 15% payout hiện tại. Wrong Portal: 25% lợi ích rồi qua tầng; 75% hiệu ứng xấu và Rift Ambusher Elite đánh phủ đầu. Kết quả lưu sẵn; Luck không tăng tỷ lệ portal tốt.",
+      },
+      {
+        name: "Wrong Portal",
+        value:
+          "25% tốt, chọn đều: Healing Sanctuary (+10 Max HP, đầy HP, +1 bình, tối đa 5); Treasure Vault (+50% cược vào bonus); Rift Blessing (+4 Defense, +5 Resistance, +1 Luck). Qua tầng, không cộng thưởng quái. 75% xấu, chọn đều trong pool: Blood Rift (tối đa 15% Max HP, giữ ít nhất 1 HP); Mana Void (Energy về 0, chỉ khi còn Energy); Shattered Supplies (mất tối đa 2 bình, chỉ khi còn bình); Payout Corruption (hệ số payout toàn run ×0,9); Dimensional Curse (mất tối đa 5 Defense/Resistance). Sau đó Elite đánh phủ đầu; hạ nó mới qua tầng.",
+      },
+      {
+        name: "Lucky Break",
+        value:
+          "Cơ hội tránh hậu quả = min(30%, Luck × 1,5%). Áp dụng cho Tax Collector, kẻ trộm bình và riêng đòn phủ đầu Wrong Portal; không xóa hiệu ứng xấu hoặc Elite của portal. Kết quả roll lưu cùng encounter, tạo lại UI không đổi kết quả.",
       },
       {
         name: "Pity",

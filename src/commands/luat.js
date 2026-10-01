@@ -124,7 +124,13 @@ function survivalRules() {
       {
         name: "🗿 Shrine và phòng sự kiện",
         value:
-          "**Chạm Shrine** — hiệu ứng ngẫu nhiên: hồi đầy máu, +3 phòng thủ, −15 HP đổi +4 sát thương, +25% tiền cược vào payout, +7 sát thương đổi −4 phòng thủ, hoặc Shrine giả gây sát thương.\n**Bỏ qua** — không nhận hiệu ứng Shrine, đi tiếp.\n**Đi tiếp / Chấp nhận số phận** — xử lý phòng trống hoặc bẫy: Thu thuế giảm payout 15%; kẻ trộm lấy 1 bình máu; Cổng sai giữ nguyên tầng và tạo sự kiện mới.",
+          "**Chạm Shrine** — hiệu ứng ngẫu nhiên: hồi đầy máu, +3 phòng thủ, −15 HP đổi +4 sát thương, +25% tiền cược vào payout, +7 sát thương đổi −4 phòng thủ, hoặc Shrine giả gây sát thương.\n**Bỏ qua** — không nhận hiệu ứng Shrine, đi tiếp.\n**Chấp nhận số phận** — Thu thuế lấy 15% payout hiện tại; kẻ trộm lấy 1 bình máu. **Wrong Portal**: 25% tốt (hồi phục/kho xu/chúc phúc), 75% xấu (mất HP/Energy/bình, phạt payout hoặc giảm Defense/Resistance) và Elite đánh phủ đầu. Portal tốt qua tầng; portal xấu phải hạ Elite mới qua. Đích đến lưu sẵn, có thể rút trước khi chấp nhận.",
+        inline: false,
+      },
+      {
+        name: "🍀 Lucky Break",
+        value:
+          "Luck × 1,5% cơ hội tránh hậu quả, tối đa 30%: thuế, trộm bình hoặc đòn phủ đầu Wrong Portal. Portal xấu vẫn áp dụng hiệu ứng và yêu cầu hạ Elite. Khi kích hoạt: **🍀 Lucky Break! Bạn tránh được hậu quả.**",
         inline: false,
       },
       {

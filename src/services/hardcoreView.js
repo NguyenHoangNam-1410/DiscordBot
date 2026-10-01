@@ -16,6 +16,7 @@ const {
   serviceCost,
   forgeTarget,
   curseTarget,
+  luckyBreakChance,
 } = require("./hardcoreEngine");
 const { regionForFloor, RIFT_MODIFIERS } = require("./hardcoreEngine");
 const { resultBlock, coins } = require("../utils/rewardText");
@@ -275,8 +276,8 @@ function encounterText(state) {
         ? "Đi tiếp sẽ giảm payout 15%."
         : encounter.kind === "potion_thief"
           ? "Đi tiếp có thể mất 1 bình máu."
-          : "Đi tiếp sẽ giữ nguyên tầng và roll sự kiện mới.";
-    return `**${names[encounter.kind]}**\nChọn **Chấp nhận số phận** để xử lý: ${detail}`;
+          : "25% Portal tốt: nhận lợi ích và qua tầng an toàn. 75% Portal xấu: chịu hiệu ứng rồi gặp Rift Ambusher cấp Elite đánh phủ đầu; hạ nó mới qua tầng. Đích đến đã được lưu, Luck không đổi tỷ lệ Portal tốt. Có thể rút thưởng trước khi chấp nhận.";
+    return `**${names[encounter.kind]}**\nChọn **Chấp nhận số phận** để xử lý: ${detail}\n🍀 Lucky Break: **${Math.round(luckyBreakChance(state) * 1000) / 10}%** tránh thuế, trộm bình hoặc riêng đòn phủ đầu của portal xấu.`;
   }
   return "🕳️ **PHÒNG TRỐNG**\nBấm **Đi tiếp** để vượt tầng. Có thể rút thưởng thay vì tiếp tục.";
 }

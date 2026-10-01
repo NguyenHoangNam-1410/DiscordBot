@@ -71,3 +71,15 @@ Run cũ được chuyển cách tính thuế/hối lộ khi đọc trạng thái
 Các tệp chỉnh trong lần này: `hardcoreService.js`, `hardcoreRepository.js`, `hardcoreView.js`, `commands/hardcore.js`, `commands/luat.js`, `src/index.js`, `scripts/test-hardcore.js` và bản đối chiếu này. Thay đổi có sẵn trong `src/commands/vuatiengviet.js` được giữ nguyên.
 
 Không sửa database tài khoản/catalog và không đổi schema slash command trong lần audit này. Cần khởi động lại bot để nạp code. Chưa đăng nhập Discord, đăng ký lệnh, triển khai hay commit các chỉnh sửa này. Chủ sở hữu các tệp bị tác động được kiểm tra là `S3P\namnguyen04248`.
+
+## Bổ sung sau audit: Wrong Portal và Lucky Break
+
+Yêu cầu mới dùng [wrongportal.md](C:/Users/NAMNGUYEN04248/Downloads/wrongportal.md) thay thế cơ chế Wrong Portal tạo lại encounter được ghi ở ma trận phía trên.
+
+- Wrong Portal giữ tỷ lệ khoảng 2% encounter thường; boss bắt buộc vẫn được ưu tiên. Khi xuất hiện, lưu sẵn nhánh 25% tốt / 75% xấu, hiệu ứng cụ thể và Elite nếu có. Đích đến được giấu trước khi chấp nhận; restart/tạo lại UI không roll lại. Portal cũ chưa có kết quả được nâng cấp bằng roll xác định từ seed và tầng/turn.
+- Portal tốt chọn đều Healing Sanctuary (+10 Max HP, đầy HP, thêm 1 bình với trần 5), Treasure Vault (+50% cược vào bonus), Rift Blessing (+4 Defense, +5 Resistance, +1 Luck). Qua tầng với rewardMultiplier 0; checkpoint/Rift/nâng cấp vẫn áp dụng.
+- Portal xấu chọn đều trong pool hợp lệ: Blood Rift (tối đa 15% Max HP, không tự giết), Mana Void (chỉ khi còn Energy), Shattered Supplies (chỉ khi còn bình, mất tối đa 2), Payout Corruption (payoutFactor ×0,9 cho toàn run) và Dimensional Curse (mất tối đa 5 Defense/Resistance). Giữ tầng, chuyển sang Rift Ambusher Elite có modifier hiện tại và đánh phủ đầu. Hạ Elite mới qua tầng; chết khi phủ đầu nhận payout 0. Vẫn được rút trước khi chấp nhận.
+- Lucky Break = min(30%, Luck ×1,5%), chặn thuế, trộm bình hoặc riêng đòn phủ đầu portal xấu. Không gỡ hiệu ứng portal hay Elite. Roll được lưu cùng encounter; thông báo **🍀 Lucky Break! Bạn tránh được hậu quả.**
+- Đã thêm công thức bắt Treasure Goblin = min(80%, 60% + Luck ×1%) trong engine. Encounter Treasure Goblin chưa tồn tại trong code; đang chờ người dùng cung cấp tỷ lệ xuất hiện, thưởng và mức payout bị trộm để nối vào luồng chơi và Lucky Break.
+
+Các kết quả test/mô phỏng phía trên thuộc lượt audit trước bổ sung này. Lượt bổ sung chưa chạy test/mô phỏng; đã đọc lại diff, định dạng code và kiểm tra chủ sở hữu tệp.

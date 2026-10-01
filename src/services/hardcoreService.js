@@ -40,6 +40,8 @@ const {
   serviceCost,
   forgeTarget,
   curseTarget,
+  luckyBreakChance,
+  goblinCatchChance,
 } = require("./hardcoreEngine");
 
 const MIN_BET = 10;
@@ -48,6 +50,7 @@ const MAX_PAYOUT = 10_000_000;
 const MAX_FLOOR = 999;
 const COMPLETION_FLOOR = 100;
 const STALE_MS = 7 * 24 * 60 * 60 * 1000;
+const LUCKY_BREAK_LOG = "🍀 Lucky Break! Bạn tránh được hậu quả.";
 
 const CLASSES = Object.freeze({
   amazon: {
@@ -455,6 +458,35 @@ function rollRngesus(state, rolls = {}) {
   return hit;
 }
 
+function makeWrongPortal(state, rolls = {}) {
+  const good = (rolls.goodRoll ?? randomFloat()) < 0.25;
+  const effects = good
+    ? ["healing_sanctuary", "treasure_vault", "rift_blessing"]
+    : [
+        "blood_rift",
+        ...(state.energy > 0 ? ["mana_void"] : []),
+        ...(state.potions > 0 ? ["shattered_supplies"] : []),
+        "payout_corruption",
+        "dimensional_curse",
+      ];
+  const effectRoll = rolls.effectRoll ?? randomFloat();
+  return {
+    type: "trap",
+    kind: "wrong_portal",
+    portal: {
+      good,
+      effect:
+        effects[
+          Math.min(effects.length - 1, Math.floor(effectRoll * effects.length))
+        ],
+    },
+    enemy: good
+      ? null
+      : makeEnemy(state.floor, "elite", "Rift Ambusher", state.modifiers),
+    luckyBreakRoll: good ? null : (rolls.luckyBreakRoll ?? randomFloat()),
+  };
+}
+
 function generateEncounter(state) {
   if (state.floor === MAX_FLOOR)
     return makeEnemy(state.floor, "final_boss", null, state.modifiers);
@@ -496,11 +528,12 @@ function generateEncounter(state) {
       ]),
     };
   if (roll < 0.82) return makeChest(state, true);
-  if (roll < 0.88)
-    return {
-      type: "trap",
-      kind: pick(["tax_collector", "potion_thief", "wrong_portal"]),
-    };
+  if (roll < 0.88) {
+    const kind = pick(["tax_collector", "potion_thief", "wrong_portal"]);
+    return kind === "wrong_portal"
+      ? makeWrongPortal(state)
+      : { type: "trap", kind, luckyBreakRoll: randomFloat() };
+  }
   if (roll < 0.94) {
     const kind = pick(["healing", "escape_ticket", "cache", "ambush"]);
     return {
@@ -694,7 +727,7 @@ function parseState(session) {
           factor *
           (1 - item.definition.bonusPenalty) **
             (item.level - item.cleansedLevels),
-        1,
+        state.portalPayoutFactor || 1,
       );
     if (curseFactor > 0 && state.payoutFactor <= curseFactor + 1e-12) {
       const previous = potentialPayout(state);
@@ -702,6 +735,45 @@ function parseState(session) {
       state.payoutSpent += Math.max(0, potentialPayout(state) - previous);
       state.payoutPenaltyVersion = 1;
     }
+  }
+  if (state.encounter.kind === "wrong_portal" && !state.encounter.portal) {
+    // Upgrade old portals deterministically, including runs without a fairness seed.
+    const seed = state.fair?.serverSeed || session.id;
+    state.encounter = makeWrongPortal(state, {
+      goodRoll:
+        fairInt(
+          seed,
+          `hardcore:portal-upgrade:${state.floor}:good`,
+          state.turn,
+          1_000_000,
+        ) / 1_000_000,
+      effectRoll:
+        fairInt(
+          seed,
+          `hardcore:portal-upgrade:${state.floor}:effect`,
+          state.turn,
+          1_000_000,
+        ) / 1_000_000,
+      luckyBreakRoll:
+        fairInt(
+          seed,
+          `hardcore:lucky-break-upgrade:${state.floor}`,
+          state.turn,
+          1_000_000,
+        ) / 1_000_000,
+    });
+  }
+  if (
+    state.encounter.type === "trap" &&
+    state.encounter.luckyBreakRoll === undefined
+  ) {
+    state.encounter.luckyBreakRoll =
+      fairInt(
+        state.fair?.serverSeed || session.id,
+        `hardcore:lucky-break-upgrade:${state.floor}`,
+        state.turn,
+        1_000_000,
+      ) / 1_000_000;
   }
   if (state.encounter.type === "combat") {
     state.encounter.mechanic ||= ["boss", "final_boss"].includes(
@@ -788,6 +860,7 @@ const startTx = db.transaction(
       payoutSpent: 0,
       payoutServiceSpent: 0,
       payoutPenaltyVersion: 1,
+      portalPayoutFactor: 1,
       escapeTokens: 0,
       items: [],
       completed: false,
@@ -1424,6 +1497,66 @@ function chargeCurrentPayout(state, rate) {
   return cost;
 }
 
+function luckyBreak(state, event) {
+  return (
+    typeof event.luckyBreakRoll === "number" &&
+    event.luckyBreakRoll < luckyBreakChance(state)
+  );
+}
+
+function resolveWrongPortal(state) {
+  const event = state.encounter;
+  let log;
+  if (event.portal.good) {
+    if (event.portal.effect === "healing_sanctuary") {
+      state.maxHp += 10;
+      state.hp = state.maxHp;
+      state.potions = Math.min(5, state.potions + 1);
+      log =
+        "💚 Healing Sanctuary: +10 HP tối đa, hồi đầy HP và thêm 1 bình máu (tối đa 5).";
+    } else if (event.portal.effect === "treasure_vault") {
+      const found = Math.floor(state.stake * 0.5);
+      state.bonus += found;
+      log = `💰 Treasure Vault: cộng **${found} xu** vào bonus payout (50% tiền cược).`;
+    } else if (event.portal.effect === "rift_blessing") {
+      state.defense += 4;
+      state.resistance = clamp(state.resistance + 5, -50, 75);
+      state.luck += 1;
+      log = "✨ Rift Blessing: +4 Defense, +5 Resistance và +1 Luck.";
+    } else throw new Error("INVALID_ACTION");
+    completeFloor(state, `🌀 Portal tốt! ${log}`, 0);
+    return;
+  }
+  if (event.portal.effect === "blood_rift") {
+    const damage = Math.min(
+      Math.max(0, state.hp - 1),
+      Math.floor(state.maxHp * 0.15),
+    );
+    state.hp -= damage;
+    log = `🩸 Blood Rift gây **${damage} sát thương** (tối đa 15% HP tối đa; giữ ít nhất 1 HP).`;
+  } else if (event.portal.effect === "mana_void") {
+    state.energy = 0;
+    log = "🕳️ Mana Void: Energy về 0.";
+  } else if (event.portal.effect === "shattered_supplies") {
+    const lost = Math.min(2, state.potions);
+    state.potions -= lost;
+    log = `📦 Shattered Supplies: mất **${lost} bình máu**.`;
+  } else if (event.portal.effect === "payout_corruption") {
+    state.payoutFactor *= 0.9;
+    state.portalPayoutFactor = (state.portalPayoutFactor || 1) * 0.9;
+    log =
+      "☣️ Payout Corruption: giảm 10% hệ số payout của toàn bộ run, gồm thưởng kiếm được về sau.";
+  } else if (event.portal.effect === "dimensional_curse") {
+    const previousDefense = state.defense;
+    const previousResistance = state.resistance;
+    state.defense = Math.max(0, state.defense - 5);
+    state.resistance = clamp(state.resistance - 5, -50, 75);
+    log = `💀 Dimensional Curse: −${previousDefense - state.defense} Defense, −${previousResistance - state.resistance}% Resistance.`;
+  } else throw new Error("INVALID_ACTION");
+  state.encounter = event.enemy;
+  state.lastLog = `🌀 Portal xấu! ${log}\n⚠️ **Rift Ambusher** cấp Elite đánh phủ đầu!\n${luckyBreak(state, event) ? LUCKY_BREAK_LOG : enemyTurn(state)}`;
+}
+
 const actionTx = db.transaction(
   ({ sessionId, userId, expectedTurn, action }) => {
     const session = getSession(sessionId);
@@ -1653,30 +1786,41 @@ const actionTx = db.transaction(
         );
       } else if (state.encounter.type === "trap") {
         if (action !== "continue") throw new Error("INVALID_ACTION");
-        const kind = state.encounter.kind;
+        const event = state.encounter;
+        const kind = event.kind;
         if (kind === "tax_collector") {
-          const cost = chargeCurrentPayout(state, 0.15);
-          completeFloor(
-            state,
-            `🧾 Tax Collector thu **${cost} xu** (15% payout hiện tại, làm tròn lên).`,
-            0,
-          );
+          if (luckyBreak(state, event))
+            completeFloor(state, LUCKY_BREAK_LOG, 0);
+          else {
+            const cost = chargeCurrentPayout(state, 0.15);
+            completeFloor(
+              state,
+              `🧾 Tax Collector thu **${cost} xu** (15% payout hiện tại, làm tròn lên).`,
+              0,
+            );
+          }
         } else if (kind === "potion_thief") {
-          const stolen = state.potions > 0 ? 1 : 0;
+          const avoided = state.potions > 0 && luckyBreak(state, event);
+          const stolen = state.potions > 0 && !avoided ? 1 : 0;
           state.potions = Math.max(0, state.potions - stolen);
           completeFloor(
             state,
-            stolen
-              ? "🦹 Kẻ trộm lấy mất 1 bình máu rồi biến mất."
-              : "🦹 Kẻ trộm kiểm tra túi đồ rỗng và tỏ vẻ thất vọng.",
+            avoided
+              ? LUCKY_BREAK_LOG
+              : stolen
+                ? "🦹 Kẻ trộm lấy mất 1 bình máu rồi biến mất."
+                : "🦹 Kẻ trộm kiểm tra túi đồ rỗng và tỏ vẻ thất vọng.",
             0,
           );
-        } else {
-          setNextEncounter(
-            state,
-            `🌀 Wrong Portal đưa bạn quay lại chính tầng ${state.floor}. Quái mới đã được roll lại.`,
-          );
-        }
+        } else if (kind === "wrong_portal") {
+          resolveWrongPortal(state);
+          if (state.hp <= 0)
+            return {
+              settled: true,
+              state,
+              result: finishRun(session, state, "death"),
+            };
+        } else throw new Error("INVALID_ACTION");
       } else if (state.encounter.type === "rngesus") {
         const event = state.encounter;
         if (action === "fight")
@@ -1942,6 +2086,8 @@ module.exports = {
   serviceCost,
   forgeTarget,
   curseTarget,
+  luckyBreakChance,
+  goblinCatchChance,
   startHardcore,
   openHardcoreSetup,
   handleHardcoreSetup,

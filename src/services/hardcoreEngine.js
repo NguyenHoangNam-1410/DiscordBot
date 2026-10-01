@@ -3,6 +3,12 @@ const COMPLETION_FLOOR = 100;
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
+function luckyBreakChance(state) {
+  return clamp((Number(state.luck) || 0) * 0.015, 0, 0.3);
+}
+function goblinCatchChance(state) {
+  return clamp(0.6 + (Number(state.luck) || 0) * 0.01, 0.6, 0.8);
+}
 function hitChance(accuracy, evasion) {
   return clamp(0.75 + (accuracy - evasion) * 0.005, 0.2, 0.95);
 }
@@ -216,6 +222,8 @@ function curseTarget(state) {
 }
 module.exports = {
   clamp,
+  luckyBreakChance,
+  goblinCatchChance,
   hitChance,
   defenseReduction,
   physicalAfterDefense,
