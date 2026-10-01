@@ -1948,7 +1948,8 @@ async function showHardcoreTurn(
 }
 
 async function handleHardcoreButton(interaction, logger) {
-  const [, sessionId, rawTurn, action] = interaction.customId.split(":");
+  const [, sessionId, rawTurn, action, originMessageId] =
+    interaction.customId.split(":");
   await interaction.deferUpdate();
   try {
     const session = getSession(sessionId);
@@ -1968,10 +1969,33 @@ async function handleHardcoreButton(interaction, logger) {
         flags: MessageFlags.Ephemeral,
       });
     }
-    if (session.message_id && session.message_id !== interaction.message?.id) {
+    const detailAction =
+      /^view_(stats|items|effects|encounter)_(\d{1,4})$/.exec(action);
+    const sourceMessageId = detailAction
+      ? originMessageId || interaction.message?.id
+      : interaction.message?.id;
+    if (session.message_id && session.message_id !== sourceMessageId) {
       return interaction.followUp({
         content:
           "Bảng Sinh tồn này đã cũ. Dùng `/choi sinhton tieptuc` để mở bảng hiện tại.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+    if (detailAction) {
+      const state = parseState(session);
+      const payload = hardcoreView.hardcorePrivatePayload(
+        state,
+        CLASSES,
+        ITEMS,
+        sessionId,
+        sourceMessageId,
+        detailAction[1],
+        Number(detailAction[2]),
+      );
+      hardcoreRepository.touchSession(sessionId);
+      if (originMessageId) return interaction.editReply(payload);
+      return interaction.followUp({
+        ...payload,
         flags: MessageFlags.Ephemeral,
       });
     }

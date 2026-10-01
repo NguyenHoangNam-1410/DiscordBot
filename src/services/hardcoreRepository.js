@@ -35,6 +35,12 @@ function setMessageId(id, messageId, now = Date.now()) {
     "UPDATE hardcore_sessions SET message_id = ?, updated_at = ? WHERE id = ?",
   ).run(String(messageId), now, String(id));
 }
+function touchSession(id, now = Date.now()) {
+  db.prepare("UPDATE hardcore_sessions SET updated_at=? WHERE id=?").run(
+    now,
+    String(id),
+  );
+}
 function insertSession(session, state) {
   db.prepare(
     "INSERT INTO hardcore_sessions (id,guild_id,user_id,channel_id,message_id,state_json,created_at,updated_at) VALUES (?,?,?,?,NULL,?,?,?)",
@@ -106,6 +112,7 @@ module.exports = {
   parseState,
   saveState,
   setMessageId,
+  touchSession,
   insertSession,
   deleteSession,
   listStale,
