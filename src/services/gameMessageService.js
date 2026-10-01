@@ -1,7 +1,7 @@
 const { channelHasGame } = require('./gameChannelService');
 const { getVuaSession, answerVuaSession } = require('./funGameService');
 const { rewardGame } = require('./economyService');
-const { resultBlock } = require('../utils/rewardText');
+const { resultLine } = require('../utils/rewardText');
 const { getGameReward } = require('./gameRewardService');
 const { addDiamonds } = require('./playerLevelService');
 
@@ -19,7 +19,7 @@ async function handleVuaMessage(message, answer) {
   const diamonds = result.question.hard
     ? addDiamonds(message.guildId, message.author.id, 10, { reason: 'vuatiengviet:hard-answer' })
     : null;
-  const announcement = `🎉 <@${message.author.id}> trả lời đúng **${result.question.answer}** và chiến thắng!\n${resultBlock({ userId: message.author.id, outcome: 'win', stake: 0, payout: reward, gemsGained: diamonds ? 10 : 0, result: { ...account, experienceGained: 0 }, reason: `đúng **${result.question.answer}**` })}`;
+  const announcement = `🎉 ${resultLine({ userId: message.author.id, outcome: 'win', stake: 0, payout: reward, gemsGained: diamonds ? 10 : 0, result: { ...account, experienceGained: 0 }, reason: `đúng **${result.question.answer}**` })}`;
   await message.channel.send({ content: announcement, allowedMentions: { users: [message.author.id] } });
   await require('../commands/vuatiengviet').postNextQuestionMessage(message.guildId, message.channel);
   return true;
