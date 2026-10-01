@@ -83,6 +83,8 @@ Ngựa được chia thành các hệ Cân bằng, Tốc độ, Bền bỉ, Kỹ
 
 Sinh tồn được giảm độ khó trong 10 tầng đầu: boss đầu có ít máu và sát thương hơn, Barbarian khởi đầu mạnh hơn, người chơi có 3 bình máu và nhận hồi phục cùng 1 bình sau khi thắng boss tầng 5 và 10. Bài mô phỏng chính sách chơi thận trọng nằm trong `scripts/simulate-hardcore.js`.
 
+Danh mục trang bị Sinh tồn được đóng gói trong `src/data/median-xl-items.json` (2.055 dòng vật phẩm từ dữ liệu Median XL), nên triển khai đầy đủ thư mục `src` rồi khởi động lại bot là đủ để nạp danh mục. Các Tier của cùng một món được gộp thành một loại để nhặt lại tăng Lv.; danh mục hiện có 218 R, 231 SR, 912 SSR và 420 biến thể UR Nguyền. Chỉ số nguồn được quy đổi sang chỉ số Sinh tồn; item chỉ tồn tại trong run và danh mục không được nhập vào database game. Có thể dùng `MEDIAN_XL_DB_PATH` để nạp một tệp SQLite khác khi cần.
+
 ## Thiết lập kênh
 
 Dùng `/quantri datkenh` để đặt kênh riêng cho từng game. Đua ngựa là bàn chung nhiều người và nhận cược trong 30 giây. Sinh tồn là game cá nhân có cược, trang bị hỗ trợ và bảng xếp hạng tầng.

@@ -106,7 +106,7 @@ function survivalRules() {
       {
         name: "📦 Khi gặp hòm",
         value:
-          "**Kiểm tra** — thử phát hiện Mimic một lần.\n**Mở hòm** — trang bị Median XL: R = TU, SR = RW, SSR = SU/Set, UR = SU Nguyền (payout −15%); chỉ tồn tại trong run. Stat quy đổi sang chỉ số Sinh tồn; trùng item tăng Lv. và cộng lại hiệu ứng. 5 hòm mở không có SR+ thì hòm sau bảo đảm SR+. Sau 10 hòm không SSR+, mỗi hòm thêm 2% cơ hội SSR.\n**Bán hòm** — cộng 15% tiền cược vào payout.\n**Tránh Mimic** — đi tiếp an toàn nếu đã phát hiện.",
+          "**Kiểm tra** — thử phát hiện Mimic một lần.\n**Mở hòm** — vật phẩm Median XL: R = TU, SR = RW, SSR = SU/Set/Relic/Mystic Orb/Cycle/Trophy/phần thưởng đặc biệt, UR = SU Nguyền (payout −15%); chỉ tồn tại trong run. Chỉ số nguồn được quy đổi sang Sinh tồn; các Tier cùng món gộp thành một loại, nhặt lại tăng Lv. và cộng hiệu ứng. 5 hòm mở không có SR+ thì hòm sau bảo đảm SR+. Sau 10 hòm không SSR+, mỗi hòm thêm 2% cơ hội SSR.\n**Bán hòm** — cộng 15% tiền cược vào payout.\n**Tránh Mimic** — đi tiếp an toàn nếu đã phát hiện.",
         inline: false,
       },
       {

@@ -211,49 +211,48 @@ function convertMedianItem(row, rarity) {
   return item;
 }
 
-// The Median catalog is optional and opened read-only; equipment stays inside the run.
+// Keep the bundled catalog portable; an explicit SQLite path can override it.
 function loadMedianEquipment(fallback, databasePath) {
   const path = require("node:path");
   const fs = require("node:fs");
   const filename = path.resolve(
     databasePath ||
       process.env.MEDIAN_XL_DB_PATH ||
-      path.join(__dirname, "../../data/median-xl.sqlite"),
+      path.join(__dirname, "../data/median-xl-items.json"),
   );
   if (!fs.existsSync(filename)) return fallback;
   let database;
   try {
-    database = new (require("better-sqlite3"))(filename, {
-      readonly: true,
-      fileMustExist: true,
-    });
-    const rows = database.prepare("SELECT * FROM items").all();
+    let rows;
+    if (path.extname(filename).toLowerCase() === ".json") {
+      rows = JSON.parse(fs.readFileSync(filename, "utf8"));
+    } else {
+      database = new (require("better-sqlite3"))(filename, {
+        readonly: true,
+        fileMustExist: true,
+      });
+      rows = database.prepare("SELECT * FROM items").all();
+    }
+    if (!Array.isArray(rows)) throw new Error("INVALID_MEDIAN_CATALOG");
     const result = { common: [], rare: [], legendary: [], cursed: [] };
     for (const row of rows) {
-      const source = [
-        row.type_code,
-        row.source_type,
-        row.source,
-        row.category,
-        row.item_type,
-        row.type,
-        row.quality,
-        row.section,
-        row.item_group,
-      ]
-        .filter(Boolean)
-        .join(" ");
-      const rarity = /\bRW\b|runeword/i.test(source)
-        ? "rare"
-        : /\bSU\b|sacred unique|\bset\b/i.test(source)
-          ? "legendary"
-          : /\bTU\b|tiered unique/i.test(source)
-            ? "common"
+      const source = String(
+        row.type_code || row.source_type || row.source || row.type || "",
+      ).toUpperCase();
+      const rarity = ["TU", "TIERED_UNIQUE"].includes(source)
+        ? "common"
+        : ["RW", "RUNEWORD"].includes(source)
+          ? "rare"
+          : [
+                "SU", "SACRED_UNIQUE", "SET", "SET_PIECE", "RELIC", "UMO",
+                "UNIQUE_MYSTIC_ORB", "CYCLE", "TROPHY", "SLEEP", "DUNGEON_REWARD",
+              ].includes(source)
+            ? "legendary"
             : null;
       if (!rarity) continue;
       const item = convertMedianItem(row, rarity);
       if (item) result[rarity].push(item);
-      if (rarity === "legendary" && !/\bset\b/i.test(source)) {
+      if (source === "SU" || source === "SACRED_UNIQUE") {
         const cursed = convertMedianItem(row, "cursed");
         if (cursed) result.cursed.push(cursed);
       }
@@ -262,7 +261,7 @@ function loadMedianEquipment(fallback, databasePath) {
       Object.entries(result).map(([key, items]) => {
         const unique = new Map();
         for (const item of items) {
-          const identity = `${item.name}:${item.base}`;
+          const identity = `${item.source}:${item.name}:${item.base}`;
           const previous = unique.get(identity);
           const tier = (entry) =>
             Number(

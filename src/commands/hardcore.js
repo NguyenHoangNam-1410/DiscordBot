@@ -58,7 +58,7 @@ function ratesEmbed() {
       {
         name: "Nguồn trang bị",
         value:
-          "R: Tiered Unique · SR: Runeword · SSR: Sacred Unique/Set · UR: SU Nguyền, giảm payout 15%. Hòm kho báu: 65% SR, 35% SSR. Item chỉ tồn tại trong run.",
+          "R: Tiered Unique · SR: Runeword · SSR: Sacred Unique/Set, Relic, Mystic Orb, Cycle, Trophy và phần thưởng đặc biệt · UR: SU Nguyền, giảm payout 15%. Các Tier của cùng món gộp thành một loại và nhặt lại sẽ tăng Lv. Hòm kho báu: 65% SR, 35% SSR. Item chỉ tồn tại trong run.",
       },
       {
         name: "Rift và Luck",
