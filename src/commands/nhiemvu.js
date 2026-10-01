@@ -12,7 +12,15 @@ const { getCatalogItem } = require("../services/itemCatalogService");
 const { rewardSummary } = require("../utils/rewardText");
 function rewardText(item) {
   const info = item.item ? getCatalogItem(item.item) : null;
-  return rewardSummary({ coins: item.coins, diamonds: item.diamonds, experience: item.experience, item: item.item, quantity: item.quantity || 1, itemName: info?.name, itemRarity: info?.rarity });
+  return rewardSummary({
+    coins: item.coins,
+    diamonds: item.diamonds,
+    experience: item.experience,
+    item: item.item,
+    quantity: item.quantity || 1,
+    itemName: info?.name,
+    itemRarity: info?.rarity,
+  });
 }
 const CLAIM_TYPES = Object.freeze([
   { name: "Tất cả", value: "tatca" },
@@ -24,7 +32,8 @@ const number = (value) => Number(value).toLocaleString("vi-VN");
 
 function roleLines(result) {
   return result.claimed.map(
-    (config) => `<@&${config.role_id}> — **${formatCoins(config.amount)} :coin:**`,
+    (config) =>
+      `<@&${config.role_id}> — **${formatCoins(config.amount)} :coin:**`,
   );
 }
 function claimReply(interaction, type) {

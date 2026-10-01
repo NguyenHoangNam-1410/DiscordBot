@@ -1,30 +1,51 @@
-const fs = require('node:fs');
-const path = require('node:path');
-const { db, dbPath } = require('../db');
+const fs = require("node:fs");
+const path = require("node:path");
+const { db, dbPath } = require("../db");
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 function integerEnv(name, fallback, min, max) {
   const value = Number(process.env[name]);
-  return Number.isSafeInteger(value) ? Math.max(min, Math.min(max, value)) : fallback;
+  return Number.isSafeInteger(value)
+    ? Math.max(min, Math.min(max, value))
+    : fallback;
 }
 
-const BACKUP_INTERVAL_HOURS = integerEnv('DB_BACKUP_INTERVAL_HOURS', 24, 1, 168);
-const BACKUP_RETENTION = integerEnv('DB_BACKUP_RETENTION', 14, 2, 90);
-const backupDir = path.resolve(process.env.DB_BACKUP_DIR || path.join(path.dirname(dbPath), 'backups'));
-const backupStatus = { running: false, lastStartedAt: null, lastSuccessAt: null, lastDestination: null, lastError: null };
+const BACKUP_INTERVAL_HOURS = integerEnv(
+  "DB_BACKUP_INTERVAL_HOURS",
+  24,
+  1,
+  168,
+);
+const BACKUP_RETENTION = integerEnv("DB_BACKUP_RETENTION", 14, 2, 90);
+const backupDir = path.resolve(
+  process.env.DB_BACKUP_DIR || path.join(path.dirname(dbPath), "backups"),
+);
+const backupStatus = {
+  running: false,
+  lastStartedAt: null,
+  lastSuccessAt: null,
+  lastDestination: null,
+  lastError: null,
+};
 
 function backupName(now = new Date()) {
-  return `game-bot-${now.toISOString().replace(/[:.]/g, '-')}.sqlite`;
+  return `game-bot-${now.toISOString().replace(/[:.]/g, "-")}.sqlite`;
 }
 
 async function cleanupBackups(retention = BACKUP_RETENTION) {
   const files = (await fs.promises.readdir(backupDir, { withFileTypes: true }))
-    .filter(entry => entry.isFile() && /^game-bot-.*\.sqlite$/.test(entry.name))
-    .map(entry => entry.name)
+    .filter(
+      (entry) => entry.isFile() && /^game-bot-.*\.sqlite$/.test(entry.name),
+    )
+    .map((entry) => entry.name)
     .sort()
     .reverse();
-  await Promise.all(files.slice(retention).map(name => fs.promises.unlink(path.join(backupDir, name))));
+  await Promise.all(
+    files
+      .slice(retention)
+      .map((name) => fs.promises.unlink(path.join(backupDir, name))),
+  );
   return Math.max(0, files.length - retention);
 }
 
@@ -52,17 +73,20 @@ function startDatabaseBackups(logger = console) {
     backupStatus.running = true;
     backupStatus.lastStartedAt = new Date().toISOString();
     pending = runDatabaseBackup()
-      .then(result => {
+      .then((result) => {
         backupStatus.lastSuccessAt = new Date().toISOString();
         backupStatus.lastDestination = result.destination;
         backupStatus.lastError = null;
-        logger.info?.(result, 'database backup completed');
+        logger.info?.(result, "database backup completed");
       })
-      .catch(error => {
+      .catch((error) => {
         backupStatus.lastError = error?.message || String(error);
-        logger.error?.({ err: error }, 'database backup failed');
+        logger.error?.({ err: error }, "database backup failed");
       })
-      .finally(() => { pending = null; backupStatus.running = false; });
+      .finally(() => {
+        pending = null;
+        backupStatus.running = false;
+      });
     return pending;
   };
   run();
@@ -77,6 +101,23 @@ function startDatabaseBackups(logger = console) {
   };
 }
 
-function getBackupStatus() { return { ...backupStatus, backupDir, retention: BACKUP_RETENTION, intervalHours: BACKUP_INTERVAL_HOURS }; }
+function getBackupStatus() {
+  return {
+    ...backupStatus,
+    backupDir,
+    retention: BACKUP_RETENTION,
+    intervalHours: BACKUP_INTERVAL_HOURS,
+  };
+}
 
-module.exports = { DAY_MS, BACKUP_INTERVAL_HOURS, BACKUP_RETENTION, backupDir, backupName, cleanupBackups, runDatabaseBackup, startDatabaseBackups, getBackupStatus };
+module.exports = {
+  DAY_MS,
+  BACKUP_INTERVAL_HOURS,
+  BACKUP_RETENTION,
+  backupDir,
+  backupName,
+  cleanupBackups,
+  runDatabaseBackup,
+  startDatabaseBackups,
+  getBackupStatus,
+};

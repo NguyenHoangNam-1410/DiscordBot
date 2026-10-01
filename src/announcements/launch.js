@@ -30,32 +30,30 @@ function launchEmbeds() {
       },
     );
 
-  const daily = new EmbedBuilder()
-    .setColor(0x3498db)
-    .addFields(
-      {
-        name: "📅 Mỗi ngày chỉ cần vài lệnh",
-        value: [
-          "• `/nhiemvu diemdanh` — điểm danh, giữ chuỗi 7 ngày để nhận thêm thưởng",
-          "• `/nhiemvu kiemtra` — menu xem **mình còn thưởng gì chưa nhận** (nhiệm vụ ngày/tuần, thành tựu, thưởng vai trò) và nhận ngay trong menu",
-          "• `/nhiemvu nhan` — nhận tất cả phần thưởng đã hoàn thành, hoặc chọn riêng nhiệm vụ, thành tựu, thưởng vai trò",
-        ].join("\n"),
-      },
-      {
-        name: "🎮 Trò chơi",
-        value:
-          "`/choi` có **10 game**: Bầu cua · Tài xỉu · Chinchiro · Oẳn tù tì · Xì dách · Poker · Đua ngựa · Dò mìn · Sinh tồn · Vua tiếng Việt\n\nMỗi ván bạn nhận **EXP** để lên cấp và có cơ hội rơi thêm **xu, kim cương hoặc lượt Gacha**. Lên cấp còn có quà.",
-      },
-      {
-        name: "🎰 Gacha và vật phẩm",
-        value: [
-          "• `/vatpham quay` — quay bằng vé hoặc kim cương (**100** cho 1 lượt, **900** cho 10 lượt), có bảo hiểm ra vật phẩm hiếm. Xem lại bằng `/gacha lichsu`.",
-          "• `/vatpham cuahang` — cửa hàng · `/vatpham tui` — túi đồ · `/vatpham sudung` — dùng vật phẩm · `/vatpham tang` — tặng vật phẩm",
-          "• Độ hiếm nhìn theo màu: 🔵 **R** · 🟣 **SR** · 🟠 **SSR** · 🔴 **UR**",
-          "• Mỗi game có vật phẩm hỗ trợ riêng: soi kết quả, bảo hiểm khi thua, hồi sinh, gợi ý đáp án…",
-        ].join("\n"),
-      },
-    );
+  const daily = new EmbedBuilder().setColor(0x3498db).addFields(
+    {
+      name: "📅 Mỗi ngày chỉ cần vài lệnh",
+      value: [
+        "• `/nhiemvu diemdanh` — điểm danh, giữ chuỗi 7 ngày để nhận thêm thưởng",
+        "• `/nhiemvu kiemtra` — menu xem **mình còn thưởng gì chưa nhận** (nhiệm vụ ngày/tuần, thành tựu, thưởng vai trò) và nhận ngay trong menu",
+        "• `/nhiemvu nhan` — nhận tất cả phần thưởng đã hoàn thành, hoặc chọn riêng nhiệm vụ, thành tựu, thưởng vai trò",
+      ].join("\n"),
+    },
+    {
+      name: "🎮 Trò chơi",
+      value:
+        "`/choi` có **10 game**: Bầu cua · Tài xỉu · Chinchiro · Oẳn tù tì · Xì dách · Poker · Đua ngựa · Dò mìn · Sinh tồn · Vua tiếng Việt\n\nMỗi ván bạn nhận **EXP** để lên cấp và có cơ hội rơi thêm **xu, kim cương hoặc lượt Gacha**. Lên cấp còn có quà.",
+    },
+    {
+      name: "🎰 Gacha và vật phẩm",
+      value: [
+        "• `/vatpham quay` — quay bằng vé hoặc kim cương (**100** cho 1 lượt, **900** cho 10 lượt), có bảo hiểm ra vật phẩm hiếm. Xem lại bằng `/gacha lichsu`.",
+        "• `/vatpham cuahang` — cửa hàng · `/vatpham tui` — túi đồ · `/vatpham sudung` — dùng vật phẩm · `/vatpham tang` — tặng vật phẩm",
+        "• Độ hiếm nhìn theo màu: 🔵 **R** · 🟣 **SR** · 🟠 **SSR** · 🔴 **UR**",
+        "• Mỗi game có vật phẩm hỗ trợ riêng: soi kết quả, bảo hiểm khi thua, hồi sinh, gợi ý đáp án…",
+      ].join("\n"),
+    },
+  );
 
   const footer = new EmbedBuilder()
     .setColor(0x95a5a6)

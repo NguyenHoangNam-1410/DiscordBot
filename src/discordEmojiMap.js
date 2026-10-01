@@ -2006,5 +2006,5 @@ module.exports = Object.freeze({
   ":zero:": "0️⃣",
   ":zipper_mouth_face:": "🤐",
   ":zombie:": "🧟",
-  ":zzz:": "💤"
+  ":zzz:": "💤",
 });

@@ -1,5 +1,5 @@
-const { MessageFlags } = require('discord.js');
-const { getGameChannel } = require('../services/gameChannelService');
+const { MessageFlags } = require("discord.js");
+const { getGameChannel } = require("../services/gameChannelService");
 
 async function requireGameChannel(interaction, game) {
   const setting = getGameChannel(interaction.guildId, game);

@@ -14,7 +14,9 @@
     "test:coverage": "c8 --check-coverage --lines 60 --functions 48 --branches 71 --statements 60 npm test",
     "test:stress": "node scripts/stress-economy.js",
     "simulate:rtp": "node scripts/simulate-rtp.js",
-    "simulate:hardcore": "node scripts/simulate-hardcore.js"
+    "simulate:hardcore": "node scripts/simulate-hardcore.js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "engines": {
     "node": ">=18.17.0"
@@ -27,6 +29,7 @@
     "pino": "^9.6.0"
   },
   "devDependencies": {
-    "c8": "^10.1.3"
+    "c8": "^10.1.3",
+    "prettier": "^3.9.9"
   }
 }

@@ -51,7 +51,15 @@ const { getCatalogItem } = require("../services/itemCatalogService");
 const { rewardSummary } = require("../utils/rewardText");
 function rewardText(item) {
   const info = item.item ? getCatalogItem(item.item) : null;
-  return rewardSummary({ coins: item.coins, diamonds: item.diamonds, experience: item.experience, item: item.item, quantity: item.quantity || 1, itemName: info?.name, itemRarity: info?.rarity });
+  return rewardSummary({
+    coins: item.coins,
+    diamonds: item.diamonds,
+    experience: item.experience,
+    item: item.item,
+    quantity: item.quantity || 1,
+    itemName: info?.name,
+    itemRarity: info?.rarity,
+  });
 }
 function missionLine(mission) {
   const mark = mission.claimed ? "✅" : mission.complete ? "🎁" : "▫️";
@@ -65,34 +73,42 @@ function achievementLine(item) {
   ]
     .filter(Boolean)
     .join(" + ");
-  const progress = item.metric === 'balance'
-    ? item.complete ? 'Đã đạt mốc' : 'Chưa đạt mốc'
-    : `${formatCoins(item.progress)}/${formatCoins(item.target)}`;
-  const description = String(item.description || 'Chưa có diễn giải');
-  return `${mark} **${item.name}**\n${description.length > 500 ? `${description.slice(0, 497)}…` : description}\nTiến độ: **${progress}** · Thưởng: ${rewards || 'Không có'}`;
+  const progress =
+    item.metric === "balance"
+      ? item.complete
+        ? "Đã đạt mốc"
+        : "Chưa đạt mốc"
+      : `${formatCoins(item.progress)}/${formatCoins(item.target)}`;
+  const description = String(item.description || "Chưa có diễn giải");
+  return `${mark} **${item.name}**\n${description.length > 500 ? `${description.slice(0, 497)}…` : description}\nTiến độ: **${progress}** · Thưởng: ${rewards || "Không có"}`;
 }
 const pending = (list) =>
   list.filter((item) => item.complete && !item.claimed).length;
 
 const ACHIEVEMENT_PAGE_SIZE = 5;
 const ACHIEVEMENT_STATUSES = Object.freeze([
-  { label: 'Tất cả', value: 'all' },
-  { label: 'Đang làm', value: 'progress' },
-  { label: 'Có thể nhận', value: 'ready' },
-  { label: 'Đã nhận', value: 'claimed' },
+  { label: "Tất cả", value: "all" },
+  { label: "Đang làm", value: "progress" },
+  { label: "Có thể nhận", value: "ready" },
+  { label: "Đã nhận", value: "claimed" },
 ]);
 const ACHIEVEMENT_CATEGORIES = Object.freeze([
-  { label: 'Mọi loại', value: 'all' },
-  { label: 'Số ván chơi', value: 'games' },
-  { label: 'Số ván thắng', value: 'wins' },
-  { label: 'Khám phá game', value: 'gameTypes' },
-  { label: 'Mốc xu', value: 'balance' },
-  { label: 'Sinh tồn', value: 'hardcoreFloor' },
+  { label: "Mọi loại", value: "all" },
+  { label: "Số ván chơi", value: "games" },
+  { label: "Số ván thắng", value: "wins" },
+  { label: "Khám phá game", value: "gameTypes" },
+  { label: "Mốc xu", value: "balance" },
+  { label: "Sinh tồn", value: "hardcoreFloor" },
 ]);
-function selection(value, choices) { return choices.some(choice => choice.value === value) ? value : 'all'; }
-function pageNumber(value) { const page = Number(value); return Number.isSafeInteger(page) && page >= 0 ? page : 0; }
+function selection(value, choices) {
+  return choices.some((choice) => choice.value === value) ? value : "all";
+}
+function pageNumber(value) {
+  const page = Number(value);
+  return Number.isSafeInteger(page) && page >= 0 ? page : 0;
+}
 
-function menuRow(userId, status = 'all', category = 'all', page = 0) {
+function menuRow(userId, status = "all", category = "all", page = 0) {
   return new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId(`kiemtra:${userId}:${status}:${category}:${page}`)
@@ -148,34 +164,88 @@ function menuRow(userId, status = 'all', category = 'all', page = 0) {
       ),
   );
 }
-function achievementPanel(guildId, userId, status = 'all', category = 'all', requestedPage = 0) {
+function achievementPanel(
+  guildId,
+  userId,
+  status = "all",
+  category = "all",
+  requestedPage = 0,
+) {
   status = selection(status, ACHIEVEMENT_STATUSES);
   category = selection(category, ACHIEVEMENT_CATEGORIES);
-  const achievements = getAchievements(guildId, userId).filter(item =>
-    (category === 'all' || item.metric === category) &&
-    (status === 'all' || status === 'progress' && !item.complete && !item.claimed || status === 'ready' && item.complete && !item.claimed || status === 'claimed' && item.claimed));
-  const pages = Math.max(1, Math.ceil(achievements.length / ACHIEVEMENT_PAGE_SIZE));
-  const page = Math.min(pageNumber(requestedPage), pages - 1);
-  const visible = achievements.slice(page * ACHIEVEMENT_PAGE_SIZE, (page + 1) * ACHIEVEMENT_PAGE_SIZE);
-  const embed = base('🏅 THÀNH TỰU')
-    .setDescription(visible.length ? visible.map(achievementLine).join('\n\n') : 'Không có thành tựu trong bộ lọc này.')
-    .setFooter({ text: `Trang ${page + 1}/${pages} · ${achievements.length} thành tựu` });
-  const filterRow = (name, current, choices) => new ActionRowBuilder().addComponents(new StringSelectMenuBuilder()
-    .setCustomId(`kiemtra-${name}:${userId}:${status}:${category}`)
-    .setPlaceholder(name === 'status' ? 'Lọc theo trạng thái' : 'Lọc theo loại thành tựu')
-    .addOptions(choices.map(choice => new StringSelectMenuOptionBuilder()
-      .setLabel(choice.label).setValue(choice.value).setDefault(choice.value === current))));
-  const pageRow = new ActionRowBuilder().addComponents(
-    new ButtonBuilder().setCustomId(`kiemtra-page:${userId}:${status}:${category}:${Math.max(0, page - 1)}`)
-      .setLabel('Trước').setStyle(ButtonStyle.Secondary).setDisabled(page === 0),
-    new ButtonBuilder().setCustomId(`kiemtra-page:${userId}:${status}:${category}:${page}`)
-      .setLabel(`Trang ${page + 1}/${pages}`).setStyle(ButtonStyle.Secondary).setDisabled(true),
-    new ButtonBuilder().setCustomId(`kiemtra-page:${userId}:${status}:${category}:${Math.min(pages - 1, page + 1)}`)
-      .setLabel('Sau').setStyle(ButtonStyle.Secondary).setDisabled(page >= pages - 1),
+  const achievements = getAchievements(guildId, userId).filter(
+    (item) =>
+      (category === "all" || item.metric === category) &&
+      (status === "all" ||
+        (status === "progress" && !item.complete && !item.claimed) ||
+        (status === "ready" && item.complete && !item.claimed) ||
+        (status === "claimed" && item.claimed)),
   );
-  return { embeds: [embed], components: [menuRow(userId, status, category, page),
-    filterRow('status', status, ACHIEVEMENT_STATUSES), filterRow('category', category, ACHIEVEMENT_CATEGORIES), pageRow],
-    allowedMentions: { parse: [] } };
+  const pages = Math.max(
+    1,
+    Math.ceil(achievements.length / ACHIEVEMENT_PAGE_SIZE),
+  );
+  const page = Math.min(pageNumber(requestedPage), pages - 1);
+  const visible = achievements.slice(
+    page * ACHIEVEMENT_PAGE_SIZE,
+    (page + 1) * ACHIEVEMENT_PAGE_SIZE,
+  );
+  const embed = base("🏅 THÀNH TỰU")
+    .setDescription(
+      visible.length
+        ? visible.map(achievementLine).join("\n\n")
+        : "Không có thành tựu trong bộ lọc này.",
+    )
+    .setFooter({
+      text: `Trang ${page + 1}/${pages} · ${achievements.length} thành tựu`,
+    });
+  const filterRow = (name, current, choices) =>
+    new ActionRowBuilder().addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId(`kiemtra-${name}:${userId}:${status}:${category}`)
+        .setPlaceholder(
+          name === "status" ? "Lọc theo trạng thái" : "Lọc theo loại thành tựu",
+        )
+        .addOptions(
+          choices.map((choice) =>
+            new StringSelectMenuOptionBuilder()
+              .setLabel(choice.label)
+              .setValue(choice.value)
+              .setDefault(choice.value === current),
+          ),
+        ),
+    );
+  const pageRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(
+        `kiemtra-page:${userId}:${status}:${category}:${Math.max(0, page - 1)}`,
+      )
+      .setLabel("Trước")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(page === 0),
+    new ButtonBuilder()
+      .setCustomId(`kiemtra-page:${userId}:${status}:${category}:${page}`)
+      .setLabel(`Trang ${page + 1}/${pages}`)
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(true),
+    new ButtonBuilder()
+      .setCustomId(
+        `kiemtra-page:${userId}:${status}:${category}:${Math.min(pages - 1, page + 1)}`,
+      )
+      .setLabel("Sau")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(page >= pages - 1),
+  );
+  return {
+    embeds: [embed],
+    components: [
+      menuRow(userId, status, category, page),
+      filterRow("status", status, ACHIEVEMENT_STATUSES),
+      filterRow("category", category, ACHIEVEMENT_CATEGORIES),
+      pageRow,
+    ],
+    allowedMentions: { parse: [] },
+  };
 }
 function base(title) {
   return new EmbedBuilder().setColor(0x8b5cf6).setTitle(title);
@@ -337,7 +407,8 @@ module.exports = {
     });
   },
   async handleSelect(interaction) {
-    const [, ownerId, rawStatus, rawCategory, rawPage] = interaction.customId.split(":");
+    const [, ownerId, rawStatus, rawCategory, rawPage] =
+      interaction.customId.split(":");
     if (interaction.user.id !== ownerId)
       return interaction.reply({
         content: "Chỉ người mở lệnh này mới dùng được menu.",
@@ -346,7 +417,10 @@ module.exports = {
     const status = selection(rawStatus, ACHIEVEMENT_STATUSES);
     const category = selection(rawCategory, ACHIEVEMENT_CATEGORIES);
     const page = pageNumber(rawPage);
-    if (interaction.values[0] === 'thanhtuu') return interaction.update(achievementPanel(interaction.guildId, ownerId, status, category, page));
+    if (interaction.values[0] === "thanhtuu")
+      return interaction.update(
+        achievementPanel(interaction.guildId, ownerId, status, category, page),
+      );
     return interaction.update({
       embeds: [
         build(
@@ -361,15 +435,30 @@ module.exports = {
     });
   },
   async handleAchievementFilter(interaction) {
-    const [kind, ownerId, rawStatus, rawCategory] = interaction.customId.split(':');
-    if (interaction.user.id !== ownerId) return interaction.reply({ content: 'Chỉ người mở lệnh này mới dùng được bộ lọc.', flags: MessageFlags.Ephemeral });
-    const status = kind === 'kiemtra-status' ? interaction.values[0] : rawStatus;
-    const category = kind === 'kiemtra-category' ? interaction.values[0] : rawCategory;
-    return interaction.update(achievementPanel(interaction.guildId, ownerId, status, category, 0));
+    const [kind, ownerId, rawStatus, rawCategory] =
+      interaction.customId.split(":");
+    if (interaction.user.id !== ownerId)
+      return interaction.reply({
+        content: "Chỉ người mở lệnh này mới dùng được bộ lọc.",
+        flags: MessageFlags.Ephemeral,
+      });
+    const status =
+      kind === "kiemtra-status" ? interaction.values[0] : rawStatus;
+    const category =
+      kind === "kiemtra-category" ? interaction.values[0] : rawCategory;
+    return interaction.update(
+      achievementPanel(interaction.guildId, ownerId, status, category, 0),
+    );
   },
   async handleAchievementPage(interaction) {
-    const [, ownerId, status, category, page] = interaction.customId.split(':');
-    if (interaction.user.id !== ownerId) return interaction.reply({ content: 'Chỉ người mở lệnh này mới chuyển trang.', flags: MessageFlags.Ephemeral });
-    return interaction.update(achievementPanel(interaction.guildId, ownerId, status, category, page));
+    const [, ownerId, status, category, page] = interaction.customId.split(":");
+    if (interaction.user.id !== ownerId)
+      return interaction.reply({
+        content: "Chỉ người mở lệnh này mới chuyển trang.",
+        flags: MessageFlags.Ephemeral,
+      });
+    return interaction.update(
+      achievementPanel(interaction.guildId, ownerId, status, category, page),
+    );
   },
 };

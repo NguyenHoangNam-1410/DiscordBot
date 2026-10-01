@@ -1,18 +1,26 @@
-const { db } = require('../db');
-const { getGameChannel } = require('./gameChannelService');
-const { expireVuaChallenge } = require('./funGameService');
+const { db } = require("../db");
+const { getGameChannel } = require("./gameChannelService");
+const { expireVuaChallenge } = require("./funGameService");
 
 function expireChallenge(guildId, game, now) {
-  if (game === 'vuatiengviet') return expireVuaChallenge(guildId, now);
+  if (game === "vuatiengviet") return expireVuaChallenge(guildId, now);
   return null;
 }
 
 function timeoutMessage(game, result) {
-  return '⌛ Câu khó đã hết thời gian và không còn hiệu lực.';
+  return "⌛ Câu khó đã hết thời gian và không còn hiệu lực.";
 }
 
-async function processExpiredChallenges(client, logger = console, now = Date.now()) {
-  const rows = db.prepare("SELECT guild_id, game FROM game_sessions WHERE game = 'vuatiengviet'").all();
+async function processExpiredChallenges(
+  client,
+  logger = console,
+  now = Date.now(),
+) {
+  const rows = db
+    .prepare(
+      "SELECT guild_id, game FROM game_sessions WHERE game = 'vuatiengviet'",
+    )
+    .all();
   let expired = 0;
   for (const row of rows) {
     const result = expireChallenge(row.guild_id, row.game, now);
@@ -23,11 +31,20 @@ async function processExpiredChallenges(client, logger = console, now = Date.now
     try {
       const channel = await client.channels.fetch(setting.channel_id);
       if (channel?.isTextBased?.()) {
-        await channel.send({ content: timeoutMessage(row.game, result), allowedMentions: { parse: [] } });
-        await require('../commands/vuatiengviet').postNextQuestionMessage(row.guild_id, channel);
+        await channel.send({
+          content: timeoutMessage(row.game, result),
+          allowedMentions: { parse: [] },
+        });
+        await require("../commands/vuatiengviet").postNextQuestionMessage(
+          row.guild_id,
+          channel,
+        );
       }
     } catch (error) {
-      logger.warn?.({ err: error, guildId: row.guild_id, game: row.game }, 'failed to announce expired hard question');
+      logger.warn?.(
+        { err: error, guildId: row.guild_id, game: row.game },
+        "failed to announce expired hard question",
+      );
     }
   }
   return expired;
@@ -38,9 +55,13 @@ function startTimedChallengeMaintenance(client, logger = console) {
   const run = async () => {
     if (running) return;
     running = true;
-    try { await processExpiredChallenges(client, logger); }
-    catch (error) { logger.error?.({ err: error }, 'timed challenge maintenance failed'); }
-    finally { running = false; }
+    try {
+      await processExpiredChallenges(client, logger);
+    } catch (error) {
+      logger.error?.({ err: error }, "timed challenge maintenance failed");
+    } finally {
+      running = false;
+    }
   };
   void run();
   const timer = setInterval(run, 1000);
@@ -48,4 +69,8 @@ function startTimedChallengeMaintenance(client, logger = console) {
   return timer;
 }
 
-module.exports = { processExpiredChallenges, startTimedChallengeMaintenance, timeoutMessage };
+module.exports = {
+  processExpiredChallenges,
+  startTimedChallengeMaintenance,
+  timeoutMessage,
+};
