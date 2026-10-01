@@ -1185,6 +1185,7 @@ function auditRiftModifiers() {
   );
   const many = {
     ...state,
+    escapeTokens: 2,
     items: Array.from({ length: 17 }, (_, index) => ({
       name: `Rift item ${index}`,
       rarity: "legendary",
@@ -1217,6 +1218,40 @@ function auditRiftModifiers() {
     if (tab === "items") {
       assert.match(embed.footer.text, /Trang 4\/4/);
       assert(embed.fields.some((field) => field.name.includes("Rift item 16")));
+    }
+  }
+  // Discord rejects duplicate custom IDs even when one of the buttons is disabled.
+  for (const count of [0, 5, 6, 11, 17]) {
+    const paged = { ...many, items: many.items.slice(0, count) };
+    for (
+      let requestedPage = 0;
+      requestedPage < Math.max(1, Math.ceil(count / 5));
+      requestedPage++
+    ) {
+      const payload = view.hardcorePrivatePayload(
+        paged,
+        hardcore.CLASSES,
+        hardcore.ITEMS,
+        "adbb2ec70f97",
+        "1555167918780711013",
+        "items",
+        requestedPage,
+      );
+      const ids = payload.components.flatMap((row) =>
+        row.toJSON().components.map((component) => component.custom_id),
+      );
+      assert.equal(
+        new Set(ids).size,
+        ids.length,
+        `Unique button IDs: ${count} items, page ${requestedPage}`,
+      );
+      assert(ids.every((id) => id.length <= 100));
+      const embed = payload.embeds[0].toJSON();
+      assert.match(
+        embed.fields.find((field) => field.name === "🎒 Vật tư còn lại").value,
+        /Vé Thoát Hiểm ×2/,
+      );
+      if (count > 5) assert(ids.some((id) => id.includes(":page_items_")));
     }
   }
   for (const [hp, filled] of [
@@ -1496,16 +1531,18 @@ async function finishChecks() {
   assert.equal(messages.length, 1);
   assert.deepEqual(edits[0].components, []);
   const detailReplies = [];
+  const detailDeferrals = [];
   await hardcore.handleHardcoreButton({
     customId: `hardcore:${resume.session.id}:0:view_effects_0`,
     guildId: "resume-hardcore",
     channelId: "c",
     user: { id: "player" },
     message: { id: "new" },
-    deferUpdate: async () => {},
-    followUp: async (payload) => detailReplies.push(payload),
+    deferReply: async (payload) => detailDeferrals.push(payload),
+    editReply: async (payload) => detailReplies.push(payload),
   });
-  assert.equal(detailReplies[0].flags, 64, "Details are ephemeral");
+  assert.equal(detailDeferrals[0].flags, 64, "Details are ephemeral");
+  assert.equal(detailReplies[0].embeds.length, 1);
   assert.equal(
     repository.getSession(resume.session.id).state_json,
     previousState,
@@ -1526,6 +1563,83 @@ async function finishChecks() {
     repository.getSession(resume.session.id).state_json,
     previousState,
   );
+  const inventoryState = repository.parseState(
+    repository.getSession(resume.session.id),
+  );
+  inventoryState.escapeTokens = 2;
+  inventoryState.items = Array.from({ length: 11 }, (_, index) => ({
+    name: `Inventory ${index}`,
+    rarity: "common",
+    level: 1,
+    definition: { attack: 2 },
+  }));
+  repository.saveState(resume.session, inventoryState);
+  const inventorySnapshot = repository.getSession(resume.session.id).state_json;
+  for (const action of [
+    "view_items_0",
+    "page_items_1",
+    "page_items_0",
+    "page_items_2",
+  ]) {
+    const panelReplies = [];
+    const privateNavigation = action.startsWith("page_");
+    await hardcore.handleHardcoreButton({
+      customId: `hardcore:${resume.session.id}:0:${action}${privateNavigation ? ":new" : ""}`,
+      guildId: "resume-hardcore",
+      channelId: "c",
+      user: { id: "player" },
+      message: { id: privateNavigation ? "private" : "new" },
+      deferReply: async (payload) => assert.equal(payload.flags, 64),
+      deferUpdate: async () => {},
+      editReply: async (payload) => panelReplies.push(payload),
+    });
+    assert.equal(panelReplies.length, 1);
+    const payload = panelReplies[0];
+    const ids = payload.components.flatMap((row) =>
+      row.toJSON().components.map((component) => component.custom_id),
+    );
+    assert.equal(new Set(ids).size, ids.length);
+    assert.match(
+      payload.embeds[0].toJSON().footer.text,
+      new RegExp(`Trang ${Number(action.split("_").at(-1)) + 1}/3`),
+    );
+    assert.equal(
+      repository.getSession(resume.session.id).state_json,
+      inventorySnapshot,
+      "Inventory navigation preserves tickets and run state",
+    );
+  }
+  const failures = [];
+  const warnings = [];
+  let sendAttempts = 0;
+  await hardcore.handleHardcoreButton(
+    {
+      customId: `hardcore:${resume.session.id}:0:view_items_0`,
+      guildId: "resume-hardcore",
+      channelId: "c",
+      user: { id: "player" },
+      message: { id: "new" },
+      deferReply: async () => {},
+      editReply: async (payload) => {
+        if (++sendAttempts === 1)
+          throw Object.assign(new Error("Invalid Form Body"), { code: 50035 });
+        warnings.push(payload);
+      },
+    },
+    { error: (context) => failures.push(context) },
+  );
+  assert.equal(
+    failures[0].err.code,
+    50035,
+    "Asynchronous Discord errors are captured with session context",
+  );
+  assert.equal(failures[0].sessionId, resume.session.id);
+  assert.match(warnings[0].content, /Không thể mở bảng chi tiết/);
+  assert.equal(
+    repository.getSession(resume.session.id).state_json,
+    inventorySnapshot,
+  );
+  repository.saveState(resume.session, JSON.parse(previousState));
   const oldReplies = [];
   await hardcore.handleHardcoreButton({
     customId: `hardcore:${resume.session.id}:0:continue`,

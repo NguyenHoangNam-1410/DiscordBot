@@ -308,7 +308,7 @@ function statLine(state, showChanges = true) {
       ? [
           `Chính xác ${state.accuracy} · Né ${state.evasion}${delta("evasion")}\nChí mạng ${Math.round(state.critChance * 100)}%${delta("critChance", true)} · Luck ${state.luck}${delta("luck")}`,
         ]
-      : []),
+      : [`${STAT_EMOJI.luck} Luck **${state.luck || 0}**`]),
   ].join("\n");
 }
 function ownedEquipment(state, itemCatalog) {
@@ -476,13 +476,17 @@ function hardcorePrivatePayload(
     });
   if (tab === "items") {
     embed.addFields({
+      name: "🎒 Vật tư còn lại",
+      value: `${STAT_EMOJI.potions} **Bình máu ×${state.potions || 0}** · Hồi 35% HP tối đa, tối thiểu 20 HP; quái còn sống sẽ phản công.\n${STAT_EMOJI.tickets} **Vé Thoát Hiểm ×${state.escapeTokens || 0}** · Tự dùng 1 vé khi chạy khỏi RNGesus thất bại; chạy thành công giữ vé.`,
+    });
+    embed.addFields({
       name: "🎒 Tổng hiệu ứng trang bị",
       value: equipmentSummary(state, itemCatalog),
     });
     if (!owned.length)
       embed.addFields({
         name: "Vật phẩm",
-        value: "Chưa có vật phẩm trong run.",
+        value: "Chưa có trang bị trong run.",
       });
     for (const item of owned.slice(
       page * pageSize,
@@ -606,7 +610,7 @@ function hardcorePrivatePayload(
         button(
           sessionId,
           state.turn,
-          `view_items_${Math.max(0, page - 1)}:${originMessageId}`,
+          `page_items_${Math.max(0, page - 1)}:${originMessageId}`,
           "Trước",
           "arrow_left",
           ButtonStyle.Secondary,
@@ -615,7 +619,7 @@ function hardcorePrivatePayload(
         button(
           sessionId,
           state.turn,
-          `view_items_${page + 1}:${originMessageId}`,
+          `page_items_${page + 1}:${originMessageId}`,
           "Sau",
           "arrow_right",
           ButtonStyle.Secondary,
@@ -660,7 +664,7 @@ function hardcoreEmbed(
       `${classIcon} SINH TỒN · TẦNG ${state.floor}${state.floor > 100 ? " · OVERRUN" : ""}`,
     )
     .setDescription(
-      `${icon("bust_in_silhouette")} <@${userId}> · **${regionForFloor(state.floor).name}**\n\n${encounterSummary(state)}`,
+      `${icon("bust_in_silhouette")} <@${userId}> · **${regionForFloor(state.floor).name}**`,
     )
     .addFields(
       {
@@ -669,8 +673,24 @@ function hardcoreEmbed(
         inline: false,
       },
       {
+        name: state.encounter.type === "combat" ? "Đối thủ" : "Tình huống",
+        value: encounterSummary(state),
+        inline: false,
+      },
+      {
         name: `${icon("compass")} Tiến trình`,
         value: `Đã vượt ${state.cleared} · Boss ${state.bosses} · Modifier ${Object.values(state.modifiers || {}).reduce((total, count) => total + count, 0)}\n${chaosLabel(state)}`,
+        inline: false,
+      },
+      {
+        name: "🌀 Rift modifier",
+        value:
+          Object.entries(state.modifiers || {})
+            .filter(([, stacks]) => stacks > 0)
+            .map(
+              ([key, stacks]) => `${RIFT_MODIFIERS[key]?.name || key} ×${stacks}`,
+            )
+            .join(" · ") || "Chưa có · Nhận lần đầu sau tầng 10.",
         inline: false,
       },
       {

@@ -1957,7 +1957,17 @@ async function showHardcoreTurn(
 async function handleHardcoreButton(interaction, logger) {
   const [, sessionId, rawTurn, action, originMessageId] =
     interaction.customId.split(":");
-  await interaction.deferUpdate();
+  const detailAction =
+    /^(?:view|page)_(stats|items|effects|encounter)_(\d{1,4})$/.exec(action);
+  const openingDetails = Boolean(detailAction && !originMessageId);
+  // Opening a private panel has its own reply; navigation acknowledges that panel.
+  if (openingDetails)
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  else await interaction.deferUpdate();
+  const respond = (content) =>
+    openingDetails
+      ? interaction.editReply({ content, embeds: [], components: [] })
+      : interaction.followUp({ content, flags: MessageFlags.Ephemeral });
   try {
     const session = getSession(sessionId);
     if (
@@ -1965,28 +1975,20 @@ async function handleHardcoreButton(interaction, logger) {
       session.guild_id !== interaction.guildId ||
       session.channel_id !== interaction.channelId
     ) {
-      return interaction.followUp({
-        content: "Lượt Sinh tồn đã kết thúc hoặc nút không còn hợp lệ.",
-        flags: MessageFlags.Ephemeral,
-      });
+      return await respond(
+        "Lượt Sinh tồn đã kết thúc hoặc nút không còn hợp lệ.",
+      );
     }
     if (session.user_id !== interaction.user.id) {
-      return interaction.followUp({
-        content: "Đây là lượt Sinh tồn của người chơi khác.",
-        flags: MessageFlags.Ephemeral,
-      });
+      return await respond("Đây là lượt Sinh tồn của người chơi khác.");
     }
-    const detailAction =
-      /^view_(stats|items|effects|encounter)_(\d{1,4})$/.exec(action);
     const sourceMessageId = detailAction
       ? originMessageId || interaction.message?.id
       : interaction.message?.id;
     if (session.message_id && session.message_id !== sourceMessageId) {
-      return interaction.followUp({
-        content:
-          "Bảng Sinh tồn này đã cũ. Dùng `/choi sinhton tieptuc` để mở bảng hiện tại.",
-        flags: MessageFlags.Ephemeral,
-      });
+      return await respond(
+        "Bảng Sinh tồn này đã cũ. Dùng `/choi sinhton tieptuc` để mở bảng hiện tại.",
+      );
     }
     if (detailAction) {
       const state = parseState(session);
@@ -1999,12 +2001,9 @@ async function handleHardcoreButton(interaction, logger) {
         detailAction[1],
         Number(detailAction[2]),
       );
+      const reply = await interaction.editReply(payload);
       hardcoreRepository.touchSession(sessionId);
-      if (originMessageId) return interaction.editReply(payload);
-      return interaction.followUp({
-        ...payload,
-        flags: MessageFlags.Ephemeral,
-      });
+      return reply;
     }
     const played = playHardcore({
       sessionId,
@@ -2012,7 +2011,7 @@ async function handleHardcoreButton(interaction, logger) {
       expectedTurn: Number(rawTurn),
       action,
     });
-    return showHardcoreTurn(
+    return await showHardcoreTurn(
       interaction,
       sessionId,
       played.state,
@@ -2021,6 +2020,14 @@ async function handleHardcoreButton(interaction, logger) {
       logger,
     );
   } catch (error) {
+    logger?.error?.(
+      { err: error, sessionId, action, originMessageId },
+      "hardcore interaction failed",
+    );
+    if (detailAction)
+      return respond(
+        "Không thể mở bảng chi tiết Sinh tồn. Hãy thử lại hoặc dùng `/choi sinhton tieptuc` để mở UI mới. Run và vật phẩm của bạn vẫn được giữ nguyên.",
+      );
     if (error.message === "STALE_ACTION") {
       const currentSession = getSession(sessionId);
       if (
