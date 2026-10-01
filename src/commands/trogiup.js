@@ -90,7 +90,7 @@ const PAGES = Object.freeze({
       ],
       [
         "🔤 Vua tiếng Việt",
-        "`/choi vtv` — admin bắt đầu phiên; người chơi dùng `/vtv boqua` để bỏ qua câu (mặc định 5 lượt/ngày).",
+        "`/choi vtv` — admin mở UI Vua Tiếng Việt; người chơi dùng nút bỏ qua (mặc định 5 lượt/ngày, hồi chiêu 5 phút) hoặc nút vật phẩm để mở bảng dùng nhanh riêng tư. Admin kết thúc bằng `/vtv ketthuc`.",
       ],
       [
         "📖 Xem luật",

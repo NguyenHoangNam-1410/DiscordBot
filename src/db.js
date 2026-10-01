@@ -843,4 +843,9 @@ runMigration(24, 'remove Vietnamese first-letter item', () => {
   db.prepare('DELETE FROM user_item_effects WHERE effect_id=?').run('quiz_first_letter');
 });
 
+runMigration(25, 'VTV skip cooldown', () => {
+  const columns = new Set(db.prepare('PRAGMA table_info(vua_daily_skips)').all().map(column => column.name));
+  if (!columns.has('cooldown_until')) db.exec('ALTER TABLE vua_daily_skips ADD COLUMN cooldown_until INTEGER NOT NULL DEFAULT 0');
+});
+
 module.exports = { db, dbPath, runMigration };

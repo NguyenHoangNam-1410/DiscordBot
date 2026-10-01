@@ -1,19 +1,16 @@
 const { channelHasGame } = require('./gameChannelService');
-const { getVuaSession, answerVuaSession, vuaQuestionText } = require('./funGameService');
+const { getVuaSession, answerVuaSession } = require('./funGameService');
 const { rewardGame } = require('./economyService');
 const { resultBlock } = require('../utils/rewardText');
 const { getGameReward } = require('./gameRewardService');
 const { addDiamonds } = require('./playerLevelService');
 
-async function reply(message, content) {
-  return message.reply({ content, allowedMentions: { users: [], repliedUser: false } });
-}
-
 async function handleVuaMessage(message, answer) {
   if (!getVuaSession(message.guildId)) return false;
   const result = answerVuaSession(message.guildId, answer);
   if (result.error === 'EXPIRED') {
-    await reply(message, `⌛ Câu khó đã hết thời gian và không còn hiệu lực.\n\nCâu thường mới:\n${vuaQuestionText(result.expiration.nextQuestion)}`);
+    await require('../commands/vuatiengviet').updateQuestionMessage(message.guildId, message.channel,
+      '⌛ Câu khó đã hết thời gian. Câu thường mới đã lên UI.');
     return true;
   }
   if (!result.correct) return true;
@@ -23,7 +20,7 @@ async function handleVuaMessage(message, answer) {
     ? addDiamonds(message.guildId, message.author.id, 10, { reason: 'vuatiengviet:hard-answer' })
     : null;
   const line = resultBlock({ userId: message.author.id, outcome: 'win', stake: 0, payout: reward, gemsGained: diamonds ? 10 : 0, result: { ...account, experienceGained: 0 }, reason: `đúng **${result.question.answer}**` });
-  await reply(message, `🎉 ${line}\n\nCâu tiếp theo:\n${vuaQuestionText(result.nextQuestion)}`);
+  await require('../commands/vuatiengviet').updateQuestionMessage(message.guildId, message.channel, `🎉 ${line}`);
   return true;
 }
 

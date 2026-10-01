@@ -7,6 +7,7 @@ const gameWordData = require('../../data/games/vietnamese-game-words.json');
 const commandCooldowns = new Map();
 const vuaSessions = new Map();
 const HARD_DURATION_MS = 30_000;
+const VTV_SKIP_COOLDOWN_MS = 5 * 60_000;
 const configuredHardChance = Number(process.env.HARD_QUESTION_CHANCE);
 const HARD_QUESTION_CHANCE = Number.isFinite(configuredHardChance) ? Math.max(0, Math.min(1, configuredHardChance)) : 0.1;
 
@@ -225,21 +226,44 @@ function vietnameseDayKey(now = Date.now()) {
   return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
 }
 
+function getVuaSkipStatus(guildId, userId, now = Date.now()) {
+  const limit = Math.min(5, getGameConfig(guildId, 'VTV_DAILY_SKIP_LIMIT'));
+  const dayKey = vietnameseDayKey(now);
+  const usage = db.prepare('SELECT skips_used,cooldown_until FROM vua_daily_skips WHERE guild_id=? AND user_id=? AND day_key=?')
+    .get(String(guildId), String(userId), dayKey);
+  const latestCooldown = db.prepare('SELECT COALESCE(MAX(cooldown_until),0) AS value FROM vua_daily_skips WHERE guild_id=? AND user_id=?')
+    .get(String(guildId), String(userId)).value;
+  const used = usage?.skips_used || 0;
+  const cooldownUntil = Math.max(usage?.cooldown_until || 0, latestCooldown || 0);
+  return { used, limit, remaining: Math.max(0, limit - used), cooldownUntil, cooldownMs: Math.max(0, cooldownUntil - now) };
+}
+
 const skipVuaSessionForPlayerTx = db.transaction((guildId, userId, now = Date.now()) => {
   const session = getVuaSession(guildId);
   if (!session) return { error: 'NO_SESSION' };
-  const limit = getGameConfig(guildId, 'VTV_DAILY_SKIP_LIMIT');
+  const { limit, used, cooldownUntil, remaining } = getVuaSkipStatus(guildId, userId, now);
   const dayKey = vietnameseDayKey(now);
-  const usage = db.prepare('SELECT skips_used FROM vua_daily_skips WHERE guild_id=? AND user_id=? AND day_key=?').get(String(guildId), String(userId), dayKey);
-  const used = usage?.skips_used || 0;
   if (used >= limit) return { error: 'LIMIT_REACHED', used, limit };
-  db.prepare(`INSERT INTO vua_daily_skips(guild_id,user_id,day_key,skips_used) VALUES(?,?,?,1)
-    ON CONFLICT(guild_id,user_id,day_key) DO UPDATE SET skips_used=skips_used+1`).run(String(guildId), String(userId), dayKey);
-  return { ...skipVuaSession(guildId), used: used + 1, limit };
+  if (cooldownUntil > now) return { error: 'COOLDOWN', used, limit, cooldownUntil, cooldownMs: cooldownUntil - now, remaining };
+  const nextCooldown = now + VTV_SKIP_COOLDOWN_MS;
+  db.prepare(`INSERT INTO vua_daily_skips(guild_id,user_id,day_key,skips_used,cooldown_until) VALUES(?,?,?,1,?)
+    ON CONFLICT(guild_id,user_id,day_key) DO UPDATE SET skips_used=skips_used+1,cooldown_until=excluded.cooldown_until`)
+    .run(String(guildId), String(userId), dayKey, nextCooldown);
+  return { ...skipVuaSession(guildId), used: used + 1, limit, remaining: Math.max(0, limit - used - 1), cooldownUntil: nextCooldown, cooldownMs: VTV_SKIP_COOLDOWN_MS };
 });
 
 function skipVuaSessionForPlayer(guildId, userId, now = Date.now()) {
   return skipVuaSessionForPlayerTx(String(guildId), String(userId), now);
+}
+
+function setVuaUiMessage(guildId, channelId, messageId) {
+  const session = getVuaSession(guildId);
+  if (!session) return false;
+  session.uiChannelId = String(channelId);
+  session.uiMessageId = String(messageId);
+  saveSession(guildId, 'vuatiengviet', session);
+  vuaSessions.set(String(guildId), session);
+  return true;
 }
 
 function expireVuaChallenge(guildId, now = Date.now()) {
@@ -294,6 +318,9 @@ module.exports = {
   answerVuaSession,
   skipVuaSession,
   skipVuaSessionForPlayer,
+  getVuaSkipStatus,
+  setVuaUiMessage,
+  VTV_SKIP_COOLDOWN_MS,
   expireVuaChallenge,
   extendVuaChallenge,
   endVuaSession,

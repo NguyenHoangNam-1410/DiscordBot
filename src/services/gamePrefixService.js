@@ -38,12 +38,14 @@ function messageInteraction(message, options = {}) {
   const interaction = {
     guildId: message.guildId,
     channelId: message.channelId,
+    channel: message.channel,
     guild: message.guild,
     client: message.client,
     user: message.author,
     memberPermissions: message.member?.permissions,
     replied: false,
     deferred: false,
+    lastReply: null,
     options: {
       getSubcommand: () => options.subcommand,
       getString: (name, required = false) => options.strings?.[name] ?? (required ? '' : null),
@@ -56,8 +58,10 @@ function messageInteraction(message, options = {}) {
       delete clean.withResponse;
       this.replied = true;
       const sent = await message.reply(clean);
+      this.lastReply = sent;
       return { resource: { message: sent } };
     },
+    async fetchReply() { return this.lastReply; },
     async followUp(payload) {
       const clean = { ...payload };
       delete clean.flags;
@@ -129,7 +133,7 @@ async function handleGamePrefix(message) {
     await message.reply({ content, allowedMentions: { repliedUser: false } });
     return true;
   }
-  const command = COMMANDS[name];
+  let command = COMMANDS[name];
   if (!command) return false;
 
   let options = {};
@@ -206,6 +210,7 @@ async function handleGamePrefix(message) {
       return true;
     }
     options = { subcommand };
+    if (subcommand !== 'batdau') command = vuatiengviet.playerCommand;
   }
 
   await command.execute(messageInteraction(message, options));

@@ -22,7 +22,8 @@ async function processExpiredChallenges(client, logger = console, now = Date.now
     if (!setting || !client?.channels?.fetch) continue;
     try {
       const channel = await client.channels.fetch(setting.channel_id);
-      if (channel?.isTextBased?.()) await channel.send({ content: timeoutMessage(row.game, result) });
+      if (channel?.isTextBased?.()) await require('../commands/vuatiengviet').updateQuestionMessage(row.guild_id, channel,
+        '⌛ Câu khó đã hết thời gian. Câu thường mới đã lên UI.');
     } catch (error) {
       logger.warn?.({ err: error, guildId: row.guild_id, game: row.game }, 'failed to announce expired hard question');
     }

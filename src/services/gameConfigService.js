@@ -18,8 +18,8 @@ const GAME_CONFIG_SPECS = Object.freeze({
     note: 'Số giây trả lời cho mỗi câu khó mới.', clampEnv: true,
   }),
   VTV_DAILY_SKIP_LIMIT: Object.freeze({
-    label: 'Lượt bỏ qua Vua tiếng Việt mỗi ngày', type: 'integer', min: 0, max: 100, fallback: 5,
-    note: 'Số câu mỗi người chơi được bỏ qua mỗi ngày (giờ Việt Nam).',
+    label: 'Lượt bỏ qua Vua tiếng Việt mỗi ngày', type: 'integer', min: 0, max: 5, fallback: 5,
+    note: 'Số câu mỗi người chơi được bỏ qua mỗi ngày (giờ Việt Nam); mỗi lượt có hồi chiêu 5 phút.',
   }),
   POKER_ANTE: Object.freeze({
     label: 'Ante Poker', type: 'integer', min: 10, max: 100_000, fallback: 50,
