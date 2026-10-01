@@ -8,6 +8,7 @@ const { getGameReward } = require('../services/gameRewardService');
 const { getInventory } = require('../services/shopService');
 const { itemGames } = require('../services/itemGameService');
 const { useItem } = require('../services/itemEffectService');
+const { itemIcon } = require('../utils/rarity');
 
 function isAdmin(interaction) {
   const ids = String(process.env.ADMIN_USER_ID || '').split(/[,;\n]/).map(id => id.trim()).filter(Boolean);
@@ -44,9 +45,12 @@ function privateItemPanel(guildId, userId, status = null) {
   const items = getInventory(guildId, userId)
     .filter(row => row.quantity > 0 && itemGames(row.item)?.includes('vuatiengviet'))
     .slice(0, 25);
-  const description = items.length
-    ? `${status ? `${status}\n\n` : ''}Vật phẩm Vua Tiếng Việt đang có:\n\n${items.map(row => `• **${row.item.name} ×${row.quantity}**\n_${row.item.description}_`).join('\n\n')}`.slice(0, 4000)
-    : `${status ? `${status}\n\n` : ''}Bạn chưa có vật phẩm dùng trong Vua Tiếng Việt.`;
+  const rarityLabels = { R: 'R', SR: 'SR', SSR: 'SSR', UR: 'UR', common: 'Thường', rare: 'Hiếm', epic: 'Epic', legendary: 'Huyền thoại', mythic: 'Mythic' };
+  const lines = items.map(({ item, quantity }) => {
+    const rarity = rarityLabels[item.rarity] || item.rarity || 'Vật phẩm';
+    return `${itemIcon(item)} **${item.name}** [${rarity}] · Sở hữu: **×${quantity}**\n${item.description}`;
+  });
+  const description = [status, ...lines].filter(Boolean).join('\n\n') || 'Bạn chưa có vật phẩm dùng trong Vua Tiếng Việt.';
   const rows = [];
   for (let index = 0; index < items.length; index += 5) {
     rows.push(new ActionRowBuilder().addComponents(items.slice(index, index + 5).map(row => new ButtonBuilder()
@@ -54,8 +58,8 @@ function privateItemPanel(guildId, userId, status = null) {
       .setLabel(`${QUICK_LABELS[row.item.effect] || row.item.name} (${row.quantity})`.slice(0, 80))
       .setStyle(ButtonStyle.Secondary))));
   }
-  return { embeds: [new EmbedBuilder().setColor(0x5865F2).setTitle('🎒 VẬT PHẨM VUA TIẾNG VIỆT').setDescription(description)
-    .setFooter({ text: 'Bảng riêng tư chỉ bạn thấy • Dùng nhanh sẽ trừ 1 vật phẩm' })], components: rows };
+  return { embeds: [new EmbedBuilder().setColor(0x5865F2).setTitle('📚 VẬT PHẨM · VUA TIẾNG VIỆT').setDescription(description.slice(0, 4000))
+    .setFooter({ text: 'Số lượng trong kho của bạn · Bảng riêng tư · Chọn nút bên dưới để dùng nhanh' })], components: rows };
 }
 
 async function updateQuestionMessage(guildId, channel, notice = null) {
