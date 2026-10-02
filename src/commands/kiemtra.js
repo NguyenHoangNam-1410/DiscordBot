@@ -98,7 +98,14 @@ const ACHIEVEMENT_CATEGORIES = Object.freeze([
   { label: "Số ván thắng", value: "wins" },
   { label: "Khám phá game", value: "gameTypes" },
   { label: "Mốc xu", value: "balance" },
-  { label: "Sinh tồn", value: "hardcoreFloor" },
+  { label: "Sinh tồn · tầng", value: "hardcoreFloor" },
+  { label: "Sinh tồn · số lượt", value: "hardcoreRuns" },
+  { label: "Sinh tồn · rút lui", value: "hardcoreEscapes" },
+  { label: "Sinh tồn · hoàn thành", value: "hardcoreCompletions" },
+  { label: "Game cược · số ván thắng", value: "betWins" },
+  { label: "Game cược · khám phá", value: "betGames" },
+  { label: "Game cược · tổng đặt cược", value: "betStaked" },
+  { label: "Game cược · thắng lớn", value: "betBigWin" },
 ]);
 function selection(value, choices) {
   return choices.some((choice) => choice.value === value) ? value : "all";
@@ -224,7 +231,7 @@ function achievementPanel(
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page === 0),
     new ButtonBuilder()
-      .setCustomId(`kiemtra-page:${userId}:${status}:${category}:${page}`)
+      .setCustomId(`kiemtra-pageinfo:${userId}:${status}:${category}:${page}`)
       .setLabel(`Trang ${page + 1}/${pages}`)
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(true),
@@ -399,6 +406,7 @@ function build(guildId, user, key, member = null) {
 
 module.exports = {
   claimRoleRewards,
+  achievementPanel,
   async show(interaction) {
     return interaction.reply({
       embeds: [overview(interaction.guildId, interaction.user.id)],
