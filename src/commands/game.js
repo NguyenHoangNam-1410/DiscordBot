@@ -39,12 +39,6 @@ const {
   resetGameConfig,
 } = require("../services/gameConfigService");
 const {
-  MAX_WEEKLY_ROLE_REWARD,
-  listWeeklyRoleRewards,
-  setWeeklyRoleReward,
-  removeWeeklyRoleReward,
-} = require("../services/weeklyRoleRewardService");
-const {
   listGachaPool,
   tierSummary,
   addGachaItem,
@@ -315,41 +309,6 @@ module.exports = {
             .setRequired(true)
             .addChoices(...configChoices),
         ),
-    )
-    .addSubcommand((command) =>
-      command
-        .setName("roleweeklyset")
-        .setDescription("Đặt xu thưởng hàng tuần cho một role")
-        .addRoleOption((option) =>
-          option
-            .setName("role")
-            .setDescription("Role nhận thưởng")
-            .setRequired(true),
-        )
-        .addIntegerOption((option) =>
-          option
-            .setName("xu")
-            .setDescription("Số xu mỗi thành viên nhận")
-            .setRequired(true)
-            .setMinValue(1)
-            .setMaxValue(MAX_WEEKLY_ROLE_REWARD),
-        ),
-    )
-    .addSubcommand((command) =>
-      command
-        .setName("roleweeklyremove")
-        .setDescription("Xóa thưởng hàng tuần của một role")
-        .addRoleOption((option) =>
-          option
-            .setName("role")
-            .setDescription("Role cần xóa cấu hình")
-            .setRequired(true),
-        ),
-    )
-    .addSubcommand((command) =>
-      command
-        .setName("roleweeklylist")
-        .setDescription("Xem các role đang nhận thưởng hàng tuần"),
     )
     .addSubcommand((command) =>
       command
@@ -686,71 +645,6 @@ module.exports = {
       return interaction.reply({
         content: `↩️ **${item.label}** đã trở về **${configValueText(item)}** từ .env/mặc định.`,
         flags: MessageFlags.Ephemeral,
-      });
-    }
-    if (subcommand === "roleweeklyset") {
-      if (!isAdmin(interaction))
-        return interaction.reply({
-          content: "Chỉ admin mới được cấu hình thưởng role hàng tuần.",
-          flags: MessageFlags.Ephemeral,
-        });
-      const role = interaction.options.getRole("role", true);
-      const amount = interaction.options.getInteger("xu", true);
-      const config = setWeeklyRoleReward({
-        guildId: interaction.guildId,
-        roleId: role.id,
-        amount,
-        createdBy: interaction.user.id,
-      });
-      return interaction.reply({
-        content: `✅ <@&${role.id}> được nhận **${formatCoins(config.amount)} :coin:/người/tuần**, áp dụng từ tuần **${config.starts_week_key}**. Thành viên dùng \`/nhiemvu thuongvaitro\` để nhận.`,
-        flags: MessageFlags.Ephemeral,
-        allowedMentions: { parse: [] },
-      });
-    }
-    if (subcommand === "roleweeklyremove") {
-      if (!isAdmin(interaction))
-        return interaction.reply({
-          content: "Chỉ admin mới được xóa cấu hình thưởng role.",
-          flags: MessageFlags.Ephemeral,
-        });
-      const role = interaction.options.getRole("role", true);
-      const removed = removeWeeklyRoleReward(interaction.guildId, role.id);
-      return interaction.reply({
-        content: removed
-          ? `✅ Đã xóa thưởng hàng tuần của <@&${role.id}>.`
-          : "Role này chưa có cấu hình thưởng hàng tuần.",
-        flags: MessageFlags.Ephemeral,
-        allowedMentions: { parse: [] },
-      });
-    }
-    if (subcommand === "roleweeklylist") {
-      if (!isAdmin(interaction))
-        return interaction.reply({
-          content: "Chỉ admin mới được xem cấu hình thưởng role.",
-          flags: MessageFlags.Ephemeral,
-        });
-      const configs = listWeeklyRoleRewards(interaction.guildId);
-      const description = configs.length
-        ? configs
-            .map(
-              (item) =>
-                `<@&${item.role_id}> — **${formatCoins(item.amount)} :coin:/người/tuần**\nÁp dụng từ tuần: **${item.starts_week_key}**`,
-            )
-            .join("\n\n")
-        : "Chưa cấu hình role nhận thưởng hàng tuần.";
-      return interaction.reply({
-        embeds: [
-          new EmbedBuilder()
-            .setColor(0x2ecc71)
-            .setTitle("🎁 THƯỞNG ROLE HÀNG TUẦN")
-            .setDescription(description)
-            .setFooter({
-              text: "Người chơi dùng /nhiemvu nhan (loại Thưởng vai trò) · Không truy lĩnh tuần đã quên",
-            }),
-        ],
-        flags: MessageFlags.Ephemeral,
-        allowedMentions: { parse: [] },
       });
     }
     if (subcommand === "gachaadd") {

@@ -126,15 +126,16 @@ assert.deepEqual(
     .options.map((option) => option.name),
   ["cuahang", "mua", "tui", "sudung", "tang", "quay", "chitiet"],
 );
+// 3 lệnh thưởng vai trò được gộp thành một bảng (xemthuongvaitro) và thêm hesothang: 25 − 2 + 1 = 24, còn trống 1 chỗ
 assert.equal(
   require("../src/commands/quantri").data.toJSON().options.length,
-  25,
+  24,
 );
 const adminOptionNames = require("../src/commands/quantri")
   .data.toJSON()
   .options.map((option) => option.name);
 assert(
-  ["themgacha", "batgacha", "xemgacha", "datbuff"].every((name) =>
+  ["themgacha", "batgacha", "xemgacha", "datbuff", "xemthuongvaitro", "hesothang"].every((name) =>
     adminOptionNames.includes(name),
   ),
 );
@@ -457,8 +458,11 @@ fun.endVuaSession("test-guild");
 const { db } = require("../src/db");
 const levels = require("../src/services/playerLevelService");
 assert.equal(levels.xpForNextLevel(7), 1400);
-assert.equal(levels.gameExperience("loss", 999999, 1), 10);
-assert.equal(levels.gameExperience("win", 1_000_000, 0), 500);
+// EXP nhân hệ số theo mức cược (cược từ 100.000 xu trở lên nhận đủ)
+assert.equal(levels.gameExperience("loss", 999999, 1), 0);
+assert.equal(levels.gameExperience("loss", 0, 100_000), 10);
+assert.equal(levels.gameExperience("win", 1_000_000, 0), 0);
+assert.equal(levels.gameExperience("win", 2_000_000, 100_000), 500);
 levels.addDiamonds("gacha-guild", "alice", 1_000);
 const gacha = require("../src/services/gachaService");
 // vị trí 0–9999 theo thứ tự bậc với tỷ lệ cố định XU 50% · R 22% · SR 14% · SSR 10% · UR 4%

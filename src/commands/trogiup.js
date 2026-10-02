@@ -188,7 +188,11 @@ const PAGES = Object.freeze({
       ],
       [
         "🎁 Thưởng vai trò",
-        "`datthuongvaitro` · `xoathuongvaitro` · `xemthuongvaitro`",
+        "`xemthuongvaitro` — mở bảng thưởng vai trò hàng tuần; dùng các nút để thêm/sửa hoặc xóa mức thưởng của từng vai trò.",
+      ],
+      [
+        "🎯 Hệ số thắng cược 1-1",
+        "`hesothang` — mở bảng hệ số thắng của Xì dách (bot), Oẳn tù tì (bot), Chinchiro, Cò quay Nga và Tài xỉu (Tài/Xỉu/Chẵn/Lẻ); chọn game rồi nhập hệ số mới (x1,1–x3), kèm RTP ước tính.",
       ],
       [
         "🛑 Kết thúc ván",

@@ -42,6 +42,7 @@ const gameCommand = require("./commands/game");
 const vuaTiengVietCommand = require("./commands/vuatiengviet");
 const itemCatalogViewCommand = require("./commands/itemCatalogView");
 const adminCommand = require("./commands/quantri");
+const { handleRoleRewardInteraction, handleWinMultiplierInteraction } = require("./commands/quantriPanels");
 const checklistCommand = require("./commands/kiemtra");
 
 const ROUTES = Object.freeze([
@@ -146,6 +147,12 @@ const ROUTES = Object.freeze([
     prefix: "admin-maintenance:",
     handle: (interaction) => adminCommand.handleMaintenanceButton(interaction),
   },
+  { kind: "button", prefix: "admin-rolereward:", handle: handleRoleRewardInteraction },
+  { kind: "select", prefix: "admin-rolereward:", handle: handleRoleRewardInteraction },
+  { kind: "modal", prefix: "admin-rolereward:", handle: handleRoleRewardInteraction },
+  { kind: "button", prefix: "admin-winmult:", handle: handleWinMultiplierInteraction },
+  { kind: "select", prefix: "admin-winmult:", handle: handleWinMultiplierInteraction },
+  { kind: "modal", prefix: "admin-winmult:", handle: handleWinMultiplierInteraction },
   { kind: "button", prefix: "anxin:", handle: handleCoinRequestButton },
   { kind: "button", prefix: "rpsduel:", handle: handleRpsDuelButton },
   { kind: "button", prefix: "bjduel:", handle: handleBlackjackDuelButton },
@@ -190,7 +197,8 @@ const ROUTES = Object.freeze([
 
 function interactionKind(interaction) {
   if (interaction.isButton()) return "button";
-  if (interaction.isStringSelectMenu()) return "select";
+  // Menu chọn chuỗi và menu chọn vai trò đều định tuyến theo tiền tố customId.
+  if (interaction.isStringSelectMenu() || interaction.isRoleSelectMenu?.()) return "select";
   if (interaction.isModalSubmit()) return "modal";
   return null;
 }

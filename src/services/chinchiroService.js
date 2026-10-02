@@ -22,6 +22,7 @@ const {
 const { formatCoins } = require("../utils/economy");
 const { appEmoji } = require("../utils/appEmoji");
 const { resultBlock, coins } = require("../utils/rewardText");
+const { getWinMultiplier } = require("./winMultiplierService");
 
 const MIN_BET = 10;
 const MAX_BET = 100_000;
@@ -118,7 +119,8 @@ function dealerDecision(hand) {
   return null;
 }
 
-function playerDecision(player, dealer) {
+// normalProfit = hệ số thắng − 1 (admin chỉnh bằng /quantri hesothang, khóa vào ván lúc bắt đầu); các tay đặc biệt giữ nguyên.
+function playerDecision(player, dealer, normalProfit = NORMAL_WIN_MULTIPLIER) {
   if (player.kind === "shonben" || player.kind === "menashi")
     return { outcome: "loss", profitMultiplier: 0 };
   if (player.kind === "hifumi")
@@ -128,7 +130,7 @@ function playerDecision(player, dealer) {
     return { outcome: "win", profitMultiplier: 3 };
   if (player.kind === "zoro") return { outcome: "win", profitMultiplier: 2 };
   if (player.point > dealer.point)
-    return { outcome: "win", profitMultiplier: NORMAL_WIN_MULTIPLIER };
+    return { outcome: "win", profitMultiplier: normalProfit };
   if (player.point === dealer.point)
     return { outcome: "draw", profitMultiplier: 0 };
   return { outcome: "loss", profitMultiplier: 0 };
@@ -278,9 +280,11 @@ const startTx = db.transaction(
     const dealer = rollTurn({ seed: fair.serverSeed, side: "dealer" });
     const immediate = dealerDecision(dealer.hand);
     const effect = immediate ? null : highestEffect(guildId, userId);
+    const winMultiplier = getWinMultiplier(guildId, "chinchiro");
     const state = {
       stake,
       penaltyReserve: stake,
+      winMultiplier,
       dealer,
       player: null,
       effect,
@@ -297,7 +301,7 @@ const startTx = db.transaction(
         userId,
         stake,
         outcome: immediate,
-        profitMultiplier: immediate === "win" ? NORMAL_WIN_MULTIPLIER : 0,
+        profitMultiplier: immediate === "win" ? winMultiplier - 1 : 0,
         penaltyReserve: stake,
       });
       state.result = result;
@@ -372,7 +376,11 @@ const shakeTx = db.transaction((sessionId, userId) => {
     ).run(JSON.stringify(state), Date.now(), session.id);
     return { session, state, complete: false };
   }
-  let decision = playerDecision(state.player.hand, state.dealer.hand);
+  let decision = playerDecision(
+    state.player.hand,
+    state.dealer.hand,
+    (state.winMultiplier ?? NORMAL_WIN_MULTIPLIER + 1) - 1,
+  );
   let extraPenalty = 0;
   let karmaTriggered = false;
   if (

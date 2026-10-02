@@ -21,6 +21,7 @@ const {
 } = require("./effectStateService");
 const { createFairness, fairShuffle } = require("./fairnessService");
 const { resultBlock, coins } = require("../utils/rewardText");
+const { getWinMultiplier, formatMultiplier } = require("./winMultiplierService");
 
 const TABLE_LOBBY_MS = 30_000;
 const TABLE_PLAY_MS = 3 * 60_000;
@@ -145,7 +146,8 @@ function setMessageId(id, messageId) {
   ).run(String(messageId), Date.now(), String(id));
 }
 
-function initialResult(state) {
+// Hệ số thắng mặc định; mỗi server có thể chỉnh bằng /quantri hesothang và hệ số được khóa vào ván lúc bắt đầu.
+function initialResult(state, winMultiplier = REGULAR_WIN_MULTIPLIER) {
   const playerBlackjack = isBlackjack(state.hands[0].cards);
   const dealerBlackjack = isBlackjack(state.dealer);
   if (!playerBlackjack && !dealerBlackjack) return null;
@@ -158,8 +160,8 @@ function initialResult(state) {
   if (playerBlackjack)
     return {
       outcome: "win",
-      payout: Math.floor(state.hands[0].bet * 2.5),
-      reason: "Xì dách tự nhiên trả 3:2",
+      payout: Math.floor(state.hands[0].bet * (winMultiplier + 0.5)),
+      reason: "Xì dách tự nhiên trả thêm 50% cược so với thắng thường",
     };
   // Ngũ linh ranks above Xì dách, so a dealer natural cannot end the hand
   // before the player has had a chance to reach five cards.
@@ -215,13 +217,14 @@ const startTx = db.transaction(
       itemEffect: firstAce ? null : handEffect?.effect_id || null,
       itemEffectUsed: false,
       firstAce,
+      winMultiplier: getWinMultiplier(guildId, "blackjack"),
     };
     if (firstAce) putAceOnTop(state.deck);
     state.hands[0].cards.push(draw(state));
     state.dealer.push(draw(state));
     state.hands[0].cards.push(draw(state));
     state.dealer.push(draw(state));
-    const natural = initialResult(state);
+    const natural = initialResult(state, state.winMultiplier);
     if (natural) {
       const settled = settleReservedGame({
         guildId,
@@ -275,14 +278,14 @@ function startBlackjack(args) {
   return startTx(args);
 }
 
-function evaluateHand(cards, bet, dealerCards) {
+function evaluateHand(cards, bet, dealerCards, winMultiplier = REGULAR_WIN_MULTIPLIER) {
   const score = handScore(cards).total;
   const dealer = handScore(dealerCards).total;
   const playerType = handType(cards);
   const dealerType = handType(dealerCards);
   const win = () => ({
     label: "Thắng",
-    payout: Math.floor(bet * REGULAR_WIN_MULTIPLIER),
+    payout: Math.floor(bet * winMultiplier),
   });
   let result;
   if (playerType === "bust")
@@ -293,7 +296,7 @@ function evaluateHand(cards, bet, dealerCards) {
   else if (playerType === "ngulinh" && dealerType !== "ngulinh")
     result = {
       label: "Ngũ linh · Thắng",
-      payout: Math.floor(bet * REGULAR_WIN_MULTIPLIER),
+      payout: Math.floor(bet * winMultiplier),
     };
   else if (dealerType === "ngulinh" && playerType !== "ngulinh")
     result = { label: "Thua · Nhà cái Ngũ linh", payout: 0 };
@@ -301,7 +304,7 @@ function evaluateHand(cards, bet, dealerCards) {
     if (score < dealer)
       result = {
         label: "Ngũ linh · Thắng",
-        payout: Math.floor(bet * REGULAR_WIN_MULTIPLIER),
+        payout: Math.floor(bet * winMultiplier),
       };
     else if (score === dealer)
       result = { label: "Ngũ linh · Hòa", payout: bet };
@@ -329,7 +332,12 @@ function settleState(session, state, reason = null) {
   const dealer = handScore(state.dealer).total;
   let payout = 0;
   const results = state.hands.map((hand) => {
-    const evaluated = evaluateHand(hand.cards, hand.bet, state.dealer);
+    const evaluated = evaluateHand(
+      hand.cards,
+      hand.bet,
+      state.dealer,
+      state.winMultiplier ?? getWinMultiplier(session.guild_id, "blackjack"),
+    );
     let { label, payout: handPayout } = evaluated;
     if (
       evaluated.type === "bust" &&
@@ -565,7 +573,7 @@ function blackjackEmbed(state, userId, result = null, sessionId = null) {
   }
   if (sessionId && !result)
     embed.setFooter({
-      text: `Mã ván: ${sessionId} • Dừng từ 16 điểm • Nhà cái rút đến 15 • Cùng quắc = hòa • Xì dách tự nhiên trả 3:2 • Không thu phí mở ván`,
+      text: `Mã ván: ${sessionId} • Thắng ${formatMultiplier(state.winMultiplier ?? REGULAR_WIN_MULTIPLIER)} • Dừng từ 16 điểm • Nhà cái rút đến 15 • Cùng quắc = hòa • Xì dách tự nhiên +50% • Không thu phí mở ván`,
     });
   return embed;
 }
