@@ -24,6 +24,12 @@ const GAME_ALIASES = {
   vtv: "vuatiengviet",
   vutiengviet: "vuatiengviet",
 };
+const MAINTENANCE_KEYS = {
+  xidach: "blackjack",
+  domin: "mines",
+  sinhton: "hardcore",
+  vuatiengviet: "vuatiengviet",
+};
 
 function simpleGame(
   name,
@@ -126,6 +132,17 @@ function delegated(interaction) {
 module.exports = {
   data: commandData("choi", "Chọn và chơi tất cả game của bot", options),
   async execute(interaction) {
+    const key = GAME_ALIASES[selected(interaction)] || selected(interaction);
+    const gameKey = MAINTENANCE_KEYS[key] || key;
+    const {
+      isGameMaintenance,
+      GAME_LABELS,
+    } = require("../services/gameChannelService");
+    if (isGameMaintenance(interaction.guildId, gameKey))
+      return interaction.reply({
+        content: `🔴 **${GAME_LABELS[gameKey]}** đang bảo trì. Hãy quay lại khi quản trị mở game.`,
+        flags: MessageFlags.Ephemeral,
+      });
     const route = delegated(interaction);
     if (
       selected(interaction) === "vtv" &&

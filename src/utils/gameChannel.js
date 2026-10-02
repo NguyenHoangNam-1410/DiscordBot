@@ -1,7 +1,18 @@
 const { MessageFlags } = require("discord.js");
-const { getGameChannel } = require("../services/gameChannelService");
+const {
+  getGameChannel,
+  isGameMaintenance,
+  GAME_LABELS,
+} = require("../services/gameChannelService");
 
 async function requireGameChannel(interaction, game) {
+  if (isGameMaintenance(interaction.guildId, game)) {
+    await interaction.reply({
+      content: `🔴 **${GAME_LABELS[game]}** đang bảo trì. Hãy quay lại khi quản trị mở game.`,
+      flags: MessageFlags.Ephemeral,
+    });
+    return false;
+  }
   const setting = getGameChannel(interaction.guildId, game);
   const content = !setting
     ? `Game **${game}** chưa được thiết lập channel. Admin dùng \`/quantri datkenh\` trước.`

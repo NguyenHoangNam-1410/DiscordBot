@@ -153,7 +153,7 @@ function survivalRules() {
       },
     );
 
-  return [overview, combat];
+  return [overview, combat];  
 }
 
 module.exports = {

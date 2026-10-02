@@ -141,6 +141,11 @@ const ROUTES = Object.freeze([
     prefix: "admin-clear-all:",
     handle: (interaction) => adminCommand.handleClearAllButton(interaction),
   },
+  {
+    kind: "button",
+    prefix: "admin-maintenance:",
+    handle: (interaction) => adminCommand.handleMaintenanceButton(interaction),
+  },
   { kind: "button", prefix: "anxin:", handle: handleCoinRequestButton },
   { kind: "button", prefix: "rpsduel:", handle: handleRpsDuelButton },
   { kind: "button", prefix: "bjduel:", handle: handleBlackjackDuelButton },

@@ -19,6 +19,12 @@ const {
   resetServerPlayerData,
 } = require("../services/adminDataService");
 const game = require("./game");
+const {
+  GAMES,
+  GAME_LABELS,
+  isGameMaintenance,
+  setGameMaintenance,
+} = require("../services/gameChannelService");
 const shop = require("./shop");
 const {
   forceEndBlackjackSession,
@@ -38,7 +44,6 @@ const { forceEndHardcoreSession } = require("../services/hardcoreService");
 const GAME_NAMES = {
   setup: "datkenh",
   channels: "xemkenh",
-  reward: "datthuong",
   rewards: "xemthuong",
   maxbet: "datgioihan",
   maxbets: "xemgioihan",
@@ -125,7 +130,12 @@ function adminOptions(command, names, excluded = []) {
     }));
 }
 const options = [
-  ...adminOptions(game, GAME_NAMES, ["config"]),
+  ...adminOptions(game, GAME_NAMES, ["config", "reward"]),
+  {
+    type: ApplicationCommandOptionType.Subcommand,
+    name: "baotri",
+    description: "Bật/tắt bảo trì từng game trong server",
+  },
   ...adminOptions(shop, SHOP_NAMES, ["xem"]),
   {
     type: ApplicationCommandOptionType.Subcommand,
@@ -164,6 +174,59 @@ const options = [
   },
 ];
 
+function maintenancePanel(guildId, ownerId, requestedPage = 0) {
+  const pages = Math.ceil(GAMES.length / 5);
+  const page = Math.max(0, Math.min(pages - 1, requestedPage));
+  const games = GAMES.slice(page * 5, page * 5 + 5);
+  const embed = new EmbedBuilder()
+    .setColor(0x3498db)
+    .setTitle("BẢO TRÌ GAME")
+    .setDescription(
+      games
+        .map(
+          (key) =>
+            `${isGameMaintenance(guildId, key) ? "🔴" : "🟢"} **${GAME_LABELS[key]}** · ${isGameMaintenance(guildId, key) ? "Đang bảo trì" : "Đang hoạt động"}`,
+        )
+        .join("\n"),
+    )
+    .setFooter({
+      text: `Trang ${page + 1}/${pages} · Nhấn tên game để đổi trạng thái. Áp dụng ngay trong server.`,
+    });
+  const toggle = new ActionRowBuilder().addComponents(
+    games.map((key) => {
+      const paused = isGameMaintenance(guildId, key);
+      return new ButtonBuilder()
+        .setCustomId(
+          `admin-maintenance:${ownerId}:${page}:${key}:${paused ? "open" : "pause"}`,
+        )
+        .setLabel(GAME_LABELS[key])
+        .setEmoji(paused ? "🔴" : "🟢")
+        .setStyle(paused ? ButtonStyle.Danger : ButtonStyle.Success);
+    }),
+  );
+  const navigation = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(
+        `admin-maintenance:${ownerId}:${Math.max(0, page - 1)}:previous`,
+      )
+      .setLabel("Trước")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(page === 0),
+    new ButtonBuilder()
+      .setCustomId(`admin-maintenance:${ownerId}:${page}:refresh`)
+      .setLabel("Làm mới")
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(
+        `admin-maintenance:${ownerId}:${Math.min(pages - 1, page + 1)}:next`,
+      )
+      .setLabel("Sau")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(page === pages - 1),
+  );
+  return { embeds: [embed], components: [toggle, navigation] };
+}
+
 function route(interaction) {
   const visible = interaction.options.getSubcommand();
   const oldName = reverse[visible];
@@ -180,6 +243,17 @@ module.exports = {
     options,
   ),
   execute(interaction) {
+    if (interaction.options.getSubcommand() === "baotri") {
+      if (!interaction.guildId || !isAdmin(interaction))
+        return interaction.reply({
+          content: "Chỉ admin mới được quản lý bảo trì trong server.",
+          flags: MessageFlags.Ephemeral,
+        });
+      return interaction.reply({
+        ...maintenancePanel(interaction.guildId, interaction.user.id),
+        flags: MessageFlags.Ephemeral,
+      });
+    }
     if (interaction.options.getSubcommand() === "ketthucvan") {
       if (!interaction.guildId)
         return interaction.reply({
@@ -370,6 +444,42 @@ module.exports = {
       content: `🧹 Đã xóa **${CLEAR_SCOPE_LABELS[scope]}** cho **${result.players.toLocaleString("vi-VN")} người chơi** trong server.${result.forfeitedGames ? ` Đã hủy **${result.forfeitedGames.toLocaleString("vi-VN")}** ván đang chơi và tịch thu **${result.forfeitedStake.toLocaleString("vi-VN")} xu** đang khóa trong ván.` : ""} Lịch sử giao dịch và dữ liệu khác được giữ nguyên.`,
       components: [],
     });
+  },
+  async handleMaintenanceButton(interaction) {
+    const [, ownerId, rawPage, key, action] = interaction.customId.split(":");
+    if (
+      !interaction.guildId ||
+      !isAdmin(interaction) ||
+      interaction.user.id !== ownerId
+    )
+      return interaction.reply({
+        content: "Chỉ quản trị đã mở menu mới được sử dụng bảng này.",
+        flags: MessageFlags.Ephemeral,
+      });
+    const page = Number(rawPage);
+    if (
+      !Number.isSafeInteger(page) ||
+      page < 0 ||
+      page >= Math.ceil(GAMES.length / 5) ||
+      !(GAMES.includes(key)
+        ? ["open", "pause"].includes(action)
+        : ["previous", "next", "refresh"].includes(key))
+    )
+      return interaction.reply({
+        content: "Nút bảo trì không hợp lệ. Mở lại `/quantri baotri`.",
+        flags: MessageFlags.Ephemeral,
+      });
+    await interaction.deferUpdate();
+    if (GAMES.includes(key))
+      setGameMaintenance(
+        interaction.guildId,
+        key,
+        action === "pause",
+        interaction.user.id,
+      );
+    return interaction.editReply(
+      maintenancePanel(interaction.guildId, ownerId, page),
+    );
   },
   autocomplete(interaction) {
     const item = route(interaction);

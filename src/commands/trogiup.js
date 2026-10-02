@@ -167,7 +167,7 @@ const PAGES = Object.freeze({
     fields: [
       [
         "🎮 Kênh và phần thưởng",
-        "`datkenh` · `xemkenh` · `datthuong` · `xemthuong`",
+        "`datkenh` · `xemkenh` · `baotri` · `xemthuong`",
       ],
       [
         "💰 Kinh tế và giới hạn cược",
