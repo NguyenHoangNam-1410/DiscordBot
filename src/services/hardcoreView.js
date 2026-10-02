@@ -461,8 +461,16 @@ function hardcorePrivatePayload(
 ) {
   const owned = ownedEquipment(state, itemCatalog);
   const pageSize = 5;
+  const modifiers = Object.entries(state.modifiers || {}).filter(
+    ([, stacks]) => stacks > 0,
+  );
+  const effectsPageSize = 4;
   const pages =
-    tab === "items" ? Math.max(1, Math.ceil(owned.length / pageSize)) : 1;
+    tab === "items"
+      ? Math.max(1, Math.ceil(owned.length / pageSize))
+      : tab === "effects"
+        ? Math.ceil((5 + Math.max(1, modifiers.length)) / effectsPageSize)
+        : 1;
   const page = Math.max(0, Math.min(pages - 1, requestedPage));
   const title = DETAIL_TABS.find(([key]) => key === tab)?.[1] || "Chi tiết";
   const embed = new EmbedBuilder()
@@ -543,28 +551,27 @@ function hardcorePrivatePayload(
       },
     );
   } else if (tab === "effects") {
-    embed.addFields({
+    const effectFields = [];
+    effectFields.push({
       name: "🎒 Trang bị",
       value: equipmentSummary(state, itemCatalog),
     });
-    embed.addFields({
+    effectFields.push({
       name: "🌀 Tổng hiệu ứng Rift",
       value: riftSummary(state),
     });
-    embed.addFields({
+    effectFields.push({
       name: "ℹ️ Áp dụng",
       value:
         "Nhận một cộng dồn sau mỗi 10 tầng đã vượt; đủ tám loại trước khi lặp. HP/Defense/sát thương/chính xác/né được tính vào quái khi xuất hiện. Bloodlust, Soul Drain và Cursed Ground xử lý theo đòn đánh; Unstable Rift tác động lần roll hòm/encounter. Chỉ số làm tròn xuống và các giới hạn vẫn áp dụng; mở bảng này không roll lại.",
     });
-    for (const [key, stacks] of Object.entries(state.modifiers || {}).filter(
-      ([, value]) => value > 0,
-    ))
-      embed.addFields({
+    for (const [key, stacks] of modifiers)
+      effectFields.push({
         name: `🌀 ${RIFT_MODIFIERS[key]?.name || key} ×${stacks}`.slice(0, 256),
         value: RIFT_MODIFIERS[key]?.text || "Không rõ tác dụng",
       });
-    if (!Object.values(state.modifiers || {}).some((stacks) => stacks > 0))
-      embed.addFields({
+    if (!modifiers.length)
+      effectFields.push({
         name: "🌀 Rift",
         value:
           "Chưa có modifier. Nhận thêm mỗi 10 tầng; đủ tám loại trước khi lặp.",
@@ -576,7 +583,7 @@ function hardcorePrivatePayload(
           Math.max(0, item.level - (item.cleansedLevels || 0)),
       1,
     );
-    embed.addFields(
+    effectFields.push(
       {
         name: "💰 Payout",
         value: `Có thể rút: **${formatCoins(potentialPayout(state))} xu**\nHệ số tầng ×${baseMultiplier(state).toFixed(2)} · hệ số phạt ×${Number(state.payoutFactor).toFixed(3)}\nUR còn nguyền: −${Math.round((1 - curseFactor) * 100)}% · Wrong Portal: −${Math.round((1 - (state.portalPayoutFactor || 1)) * 100)}%\nĐã chi dịch vụ: ${formatCoins(state.payoutServiceSpent ?? state.payoutSpent ?? 0)} xu · thuế/hối lộ: ${formatCoins((state.payoutSpent || 0) - (state.payoutServiceSpent ?? state.payoutSpent ?? 0))} xu\nHệ số tầng dừng tăng sau 100; bonus tiếp tục tăng; trần payout 10.000.000 xu.`,
@@ -585,6 +592,9 @@ function hardcorePrivatePayload(
         name: "🍀 Lucky Break",
         value: `${Math.round(luckyBreakChance(state) * 1000) / 10}% = min(30%, 🍀 ×1,5%). Tránh thuế, trộm bình hoặc riêng đòn phủ đầu Wrong Portal; không xóa hiệu ứng xấu hay Elite.`,
       },
+    );
+    embed.addFields(
+      effectFields.slice(page * effectsPageSize, (page + 1) * effectsPageSize),
     );
   } else {
     embed.setDescription(
@@ -610,7 +620,7 @@ function hardcorePrivatePayload(
         button(
           sessionId,
           state.turn,
-          `page_items_${Math.max(0, page - 1)}:${originMessageId}`,
+          `page_${tab}_${Math.max(0, page - 1)}:${originMessageId}`,
           "Trước",
           "arrow_left",
           ButtonStyle.Secondary,
@@ -619,7 +629,7 @@ function hardcorePrivatePayload(
         button(
           sessionId,
           state.turn,
-          `page_items_${page + 1}:${originMessageId}`,
+          `page_${tab}_${page + 1}:${originMessageId}`,
           "Sau",
           "arrow_right",
           ButtonStyle.Secondary,
