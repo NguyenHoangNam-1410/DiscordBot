@@ -98,7 +98,14 @@ const ACHIEVEMENT_CATEGORIES = Object.freeze([
   { label: "Số ván thắng", value: "wins" },
   { label: "Khám phá game", value: "gameTypes" },
   { label: "Mốc xu", value: "balance" },
-  { label: "Sinh tồn", value: "hardcoreFloor" },
+  { label: "Sinh tồn · tầng", value: "hardcoreFloor" },
+  { label: "Sinh tồn · số lượt", value: "hardcoreRuns" },
+  { label: "Sinh tồn · rút lui", value: "hardcoreEscapes" },
+  { label: "Sinh tồn · hoàn thành", value: "hardcoreCompletions" },
+  { label: "Game cược · số ván thắng", value: "betWins" },
+  { label: "Game cược · khám phá", value: "betGames" },
+  { label: "Game cược · tổng đặt cược", value: "betStaked" },
+  { label: "Game cược · thắng lớn", value: "betBigWin" },
 ]);
 function selection(value, choices) {
   return choices.some((choice) => choice.value === value) ? value : "all";
