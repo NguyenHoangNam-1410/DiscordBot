@@ -49,6 +49,10 @@ const {
   payoutReductionCost,
   SURPRISE_EVENTS,
   SURPRISE_ODDS,
+  PORTAL_GOOD_CHANCE,
+  PORTAL_GOOD_EFFECTS,
+  portalBadEffects,
+  portalEffectOdds,
   SHRINE_KINDS,
   SHRINE_EFFECTS,
   shrineFakeDamage,
@@ -551,23 +555,16 @@ function rollRngesus(state, rolls = {}) {
 }
 
 function makeWrongPortal(state, rolls = {}) {
-  const good = (rolls.goodRoll ?? randomFloat()) < 0.5;
-  const effects = good
-    ? ["healing_sanctuary", "treasure_vault", "rift_blessing"]
-    : [
-        "blood_rift",
-        ...(state.energy > 0 ? ["mana_void"] : []),
-        ...(state.potions > 0 ? ["shattered_supplies"] : []),
-        "payout_corruption",
-        "dimensional_curse",
-      ];
+  const good = (rolls.goodRoll ?? randomFloat()) < PORTAL_GOOD_CHANCE;
+  const effects = good ? PORTAL_GOOD_EFFECTS : portalBadEffects(state);
   const effectRoll = rolls.effectRoll ?? randomFloat();
   return {
     type: "trap",
     kind: "wrong_portal",
     portal: {
       good,
-      goodChance: 0.5,
+      goodChance: PORTAL_GOOD_CHANCE,
+      odds: portalEffectOdds(state),
       effect:
         effects[
           Math.min(effects.length - 1, Math.floor(effectRoll * effects.length))
@@ -2944,6 +2941,7 @@ module.exports = {
   potentialPayout,
   generateEncounter,
   makeSurprise,
+  makeWrongPortal,
   REGIONS,
   RIFT_MODIFIERS,
   regionForFloor,
