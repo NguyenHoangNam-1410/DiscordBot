@@ -80,14 +80,14 @@ const REGIONS = Object.freeze([
   },
 ]);
 const RIFT_MODIFIERS = Object.freeze({
-  stone_skin: { name: "Stone Skin", text: "Defense quái ×1,10 mỗi stack" },
+  stone_skin: { name: "Stone Skin", text: "DEF quái ×1,10 mỗi stack" },
   elemental_dominion: {
     name: "Elemental Dominion",
-    text: "Quái +4% sát thương; quái ngoài boss +4 điểm % cơ hội phép mỗi cộng dồn",
+    text: "Quái +4% ATK; quái ngoài boss +4 điểm % cơ hội phép mỗi cộng dồn",
   },
   bloodlust: {
     name: "Bloodlust",
-    text: "Quái còn tối đa 50% HP +8% sát thương mỗi cộng dồn",
+    text: "Quái còn tối đa 50% HP +8% ATK mỗi cộng dồn",
   },
   unstable_rift: {
     name: "Unstable Rift",
@@ -96,15 +96,15 @@ const RIFT_MODIFIERS = Object.freeze({
   fortified: { name: "Fortified", text: "Quái +10% HP mỗi cộng dồn" },
   swift_horror: {
     name: "Swift Horror",
-    text: "Quái +3 Accuracy và +1 Evasion mỗi cộng dồn",
+    text: "Quái +3 ACC và +1 EVA mỗi cộng dồn",
   },
   soul_drain: {
     name: "Soul Drain",
-    text: "Đòn trúng rút 1 Energy; từ stack 5 rút 2",
+    text: "Đòn trúng rút 1 ENE; từ stack 5 rút 2",
   },
   cursed_ground: {
     name: "Cursed Ground",
-    text: "−4 Resistance hiệu dụng khi nhận phép mỗi cộng dồn; không giảm chỉ số vĩnh viễn",
+    text: "−4 RES hiệu dụng khi nhận phép mỗi cộng dồn; không giảm chỉ số vĩnh viễn",
   },
 });
 function regionForFloor(floor) {
@@ -222,11 +222,11 @@ function payoutReductionCost(state, rate) {
 const SURPRISE_EVENTS = Object.freeze({
   healer: {
     name: "Wandering Healer",
-    text: "Hồi tối đa 30% Max HP (ít nhất 20), thêm 1 bình; tối đa 5 bình.",
+    text: "Hồi tối đa 30% MAX HP (ít nhất 20), thêm 1 bình; tối đa 5 bình.",
   },
   goblin: {
     name: "Treasure Goblin",
-    text: "Bắt thành công: +25% cược vào bonus. Trượt: payout ×0,9. Luck và trang bị tăng cơ hội bắt.",
+    text: "Bắt thành công: +25% cược vào bonus. Trượt: payout ×0,9. LUCK và trang bị tăng cơ hội bắt.",
   },
   blacksmith: {
     name: "Blacksmith",
@@ -238,7 +238,7 @@ const SURPRISE_EVENTS = Object.freeze({
   },
   sacrifice: {
     name: "Altar of Sacrifice",
-    text: "Hiến 20% Max HP hiện tại lấy +3 damage; hoặc trả 10% payout lấy +3 Defense.",
+    text: "Hiến 20% MAX HP hiện tại lấy +3 ATK; hoặc trả 10% payout lấy +3 DEF.",
   },
   gambler: {
     name: "Cursed Gambler",
@@ -250,11 +250,11 @@ const SURPRISE_EVENTS = Object.freeze({
   },
   fountain: {
     name: "Blood Fountain",
-    text: "60% hồi đầy HP; 25% +15 Max HP; 15% gọi Blood Mimic.",
+    text: "60% hồi đầy HP; 25% +15 MAX HP; 15% gọi Blood Mimic.",
   },
   horadric: {
     name: "Horadric Forge",
-    text: "Mất 1 level trang bị và buff của level đó; món Lv.1 sẽ biến mất. Giữ các level còn lại, gỡ cả lời nguyền của level bị nghiền. Chọn nhận đúng 1 bonus: +3 sát thương, +4 Defense, +10 Max HP và hồi 10 HP, hoặc 1 Vé Thoát Hiểm nếu nghiền SSR/UR.",
+    text: "Mất 1 level trang bị và buff của level đó; món Lv.1 sẽ biến mất. Giữ các level còn lại, gỡ cả lời nguyền của level bị nghiền. Chọn nhận đúng 1 bonus: +3 ATK, +4 DEF, +10 MAX HP và hồi 10 HP, hoặc 1 Vé Thoát Hiểm nếu nghiền SSR/UR.",
   },
   merchant: {
     name: "Rift Merchant",
@@ -262,15 +262,15 @@ const SURPRISE_EVENTS = Object.freeze({
   },
   mirror: {
     name: "Mirror of Fate",
-    text: "Đổi 10% Max HP lấy +10% damage; hoặc +8 Defense/−2 damage; đập: 20% +2 Luck, 80% đấu clone.",
+    text: "Đổi 10% MAX HP lấy +10% ATK; hoặc +8 DEF/−2 ATK; đập: 20% +2 LUCK, 80% đấu clone.",
   },
   treasure_room: {
     name: "Treasure Room",
-    text: "Một trong ba hòm là Mimic. Đỏ: +5 damage; xanh: +6 Defense/+5 Resistance; vàng: +50% cược/+1 Luck.",
+    text: "Một trong ba hòm là Mimic. Đỏ: +5 ATK; xanh: +6 DEF/+5 RES; vàng: +50% cược/+1 LUCK.",
   },
   contract: {
     name: "Rift Contract",
-    text: "Trong 3 tầng kế tiếp: không bình → SSR; không skill → +50% cược; không thủ → +5 damage. Vi phạm chỉ hủy thưởng.",
+    text: "Trong 3 tầng kế tiếp: không bình → SSR; không skill → +50% cược; không thủ → +5 ATK. Vi phạm chỉ hủy thưởng.",
   },
   class_shrine: {
     name: "Class Shrine",
@@ -278,22 +278,22 @@ const SURPRISE_EVENTS = Object.freeze({
   },
   doors: {
     name: "Strange Doors",
-    text: "Cửa sáng/vàng tốt 70%, đen tốt 60%. Sáng: hồi đầy/+1 bình hoặc mất 20% Max HP; vàng: +50% cược hoặc Mimic; đen: SSR hoặc Boss.",
+    text: "Cửa sáng/vàng tốt 70%, đen tốt 60%. Sáng: hồi đầy/+1 bình hoặc mất 20% MAX HP; vàng: +50% cược hoặc Mimic; đen: SSR hoặc Boss.",
   },
 });
 const CLASS_SHRINE_TEXT = Object.freeze({
-  barbarian: "+8 Defense khi HP ≤30%.",
+  barbarian: "+8 DEF khi HP ≤30%.",
   assassin: "Né chắc chắn đòn phản công kế tiếp.",
   amazon: "Barrage có 20% bắn phát thứ ba.",
-  druid: "Hồi 5% Max HP khi hoàn tất tầng.",
+  druid: "Hồi 5% MAX HP khi hoàn tất tầng.",
   necromancer: "Hấp thụ đòn quái kế tiếp.",
-  paladin: "+10 Resistance hiệu dụng khi nhận phép.",
-  sorceress: "Skill kế tiếp không tốn Energy.",
+  paladin: "+10 RES hiệu dụng khi nhận phép.",
+  sorceress: "Skill kế tiếp không tốn ENE.",
 });
 const MERCHANT_OFFERS = Object.freeze({
   potion: { label: "+1 bình", rate: 0.05 },
   heal: { label: "Hồi đầy HP", rate: 0.08 },
-  luck: { label: "+1 Luck", rate: 0.1 },
+  luck: { label: "+1 LUCK", rate: 0.1 },
   item: { label: "Item SR", rate: 0.15 },
   ticket: { label: "+1 Vé", rate: 0.25 },
 });
@@ -330,10 +330,10 @@ function surpriseOptions(state) {
       return [
         option(
           "event_blood",
-          "Hiến 20% HP · +3 damage",
+          "Hiến 20% HP · +3 ATK",
           state.hp <= Math.floor(state.maxHp * 0.2),
         ),
-        paid("event_gold", "+3 Defense", 0.1),
+        paid("event_gold", "+3 DEF", 0.1),
       ];
     case "gambler":
       return [
@@ -349,9 +349,9 @@ function surpriseOptions(state) {
       return [option("event_drink", "Uống")];
     case "horadric":
       return [
-        option("event_grind_attack", "Đổi 1 level → +3 damage"),
-        option("event_grind_defense", "Đổi 1 level → +4 Defense"),
-        option("event_grind_hp", "Đổi 1 level → +10 Max HP / hồi 10"),
+        option("event_grind_attack", "Đổi 1 level → +3 ATK"),
+        option("event_grind_defense", "Đổi 1 level → +4 DEF"),
+        option("event_grind_hp", "Đổi 1 level → +10 MAX HP / hồi 10"),
         option(
           "event_grind_ticket",
           "Đổi 1 level → +1 Vé",
@@ -370,10 +370,10 @@ function surpriseOptions(state) {
       return [
         option(
           "event_mirror_damage",
-          "−10% HP · +10% damage",
+          "−10% HP · +10% ATK",
           state.hp <= Math.floor(state.maxHp * 0.1),
         ),
-        option("event_mirror_guard", "+8 Defense · −2 damage"),
+        option("event_mirror_guard", "+8 DEF · −2 ATK"),
         option("event_break", "Đập gương"),
       ];
     case "treasure_room":

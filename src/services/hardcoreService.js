@@ -182,23 +182,23 @@ const BOSS_NAMES = [
 ];
 const FALLBACK_ITEMS = Object.freeze({
   common: [
-    { name: "Rusted Edge", attack: 2, text: "+2 sát thương" },
-    { name: "Dented Plate", defense: 2, text: "+2 Defense" },
+    { name: "Rusted Edge", attack: 2, text: "+2 ATK" },
+    { name: "Dented Plate", defense: 2, text: "+2 DEF" },
     { name: "Red Potion Belt", potions: 1, text: "+1 bình máu" },
-    { name: "Rabbit Foot", luck: 1, text: "+1 Luck" },
+    { name: "Rabbit Foot", luck: 1, text: "+1 LUCK" },
   ],
   rare: [
     {
       name: "Hunter’s Fang",
       attack: 4,
       critChance: 0.04,
-      text: "+4 sát thương, +4% Crit",
+      text: "+4 ATK, +4% Crit",
     },
     {
       name: "Runed Carapace",
       defense: 5,
       resistance: 5,
-      text: "+5 Defense, +5 Resistance",
+      text: "+5 DEF, +5 RES",
     },
     {
       name: "Heart of the Wild",
@@ -206,7 +206,7 @@ const FALLBACK_ITEMS = Object.freeze({
       heal: 22,
       text: "+22 HP tối đa và hiện tại",
     },
-    { name: "Lucky Coin", luck: 3, text: "+3 Luck" },
+    { name: "Lucky Coin", luck: 3, text: "+3 LUCK" },
   ],
   legendary: [
     {
@@ -221,19 +221,19 @@ const FALLBACK_ITEMS = Object.freeze({
       attack: 9,
       critChance: 0.08,
       maxHp: -15,
-      text: "+9 sát thương, +8% Crit, −15 HP tối đa",
+      text: "+9 ATK, +8% Crit, −15 HP tối đa",
     },
     {
       name: "Warden’s Bulwark",
       defense: 10,
       resistance: 12,
-      text: "+10 Defense, +12 Resistance",
+      text: "+10 DEF, +12 RES",
     },
     {
       name: "Eye of RNGesus",
       luck: 7,
       attack: 3,
-      text: "+7 Luck, +3 sát thương",
+      text: "+7 LUCK, +3 ATK",
     },
   ],
   cursed: [
@@ -242,20 +242,20 @@ const FALLBACK_ITEMS = Object.freeze({
       attack: 14,
       defenseSet: 0,
       bonusPenalty: 0.15,
-      text: "+14 sát thương, Defense về 0, payout −15%",
+      text: "+14 ATK, DEF về 0, payout −15%",
     },
     {
       name: "Schrödinger’s Armor",
       defense: 12,
       maxHp: -20,
       bonusPenalty: 0.15,
-      text: "+12 Defense, −20 HP tối đa, payout −15%",
+      text: "+12 DEF, −20 HP tối đa, payout −15%",
     },
     {
       name: "Goblin’s Debt",
       luck: 10,
       bonusPenalty: 0.15,
-      text: "+10 Luck, mất 15% payout hiện tại",
+      text: "+10 LUCK, mất 15% payout hiện tại",
     },
   ],
 });
@@ -918,7 +918,7 @@ function completeFloor(state, log, rewardMultiplier = 1) {
       } else {
         state.damageMin += 5;
         state.damageMax += 5;
-        log += "\n📜 Hoàn thành hợp đồng: +5 sát thương.";
+        log += "\n📜 Hoàn thành hợp đồng: +5 ATK.";
       }
       state.contract = null;
     }
@@ -931,7 +931,7 @@ function completeFloor(state, log, rewardMultiplier = 1) {
     state.hp = state.maxHp;
     const previousPotions = state.potions;
     state.potions = Math.min(5, state.potions + 2);
-    log += `\n🏕️ Checkpoint: +${growth.hp} HP tối đa, +${growth.attack} sát thương, hồi đầy HP; bình máu ${previousPotions} → ${state.potions} (tối đa 5).`;
+    log += `\n🏕️ Checkpoint: ❤️ MAX HP +${growth.hp}, ⚔️ ATK +${growth.attack}, hồi đầy HP; 🧪 POT ${previousPotions} → ${state.potions} (tối đa 5).`;
   }
   if (
     clearedFloor % 10 === 0 &&
@@ -1745,8 +1745,8 @@ function enemyTurn(state, defend = false, dodge = false) {
   }
   const riftEffects = [];
   if (previousEnergy > state.energy)
-    riftEffects.push(`−${previousEnergy - state.energy} Energy`);
-  return `${label} Bạn nhận **${damage} sát thương**.${defend ? ` 🛡️ Thủ thế chặn thêm **${blocked} sát thương** (giảm 40%, miễn chí mạng).` : ""}${recovery}${riftEffects.length ? ` 🌀 Rift: ${riftEffects.join(", ")}.` : ""}`;
+    riftEffects.push(`−${previousEnergy - state.energy} ENE`);
+  return `${label} Bạn nhận **${damage} DMG**.${defend ? ` 🛡️ Thủ thế chặn thêm **${blocked} DMG** (giảm 40%, miễn chí mạng).` : ""}${recovery}${riftEffects.length ? ` 🌀 Rift: ${riftEffects.join(", ")}.` : ""}`;
 }
 
 function playerAttack(state, action) {
@@ -1857,7 +1857,7 @@ function playerAttack(state, action) {
     ? `${skill}Ascendant Riftwalker miễn nhiễm đòn này.`
     : !hit
       ? `${skill}Đòn đánh trượt.`
-      : `${skill}${attacks.some((attack) => attack.crit) ? "Critical! " : ""}Gây **${damage} sát thương**${attacks.length > 1 ? ` qua ${attacks.length} phát` : ""}.`;
+      : `${skill}${attacks.some((attack) => attack.crit) ? "CRIT! " : ""}Gây **${damage} DMG**${attacks.length > 1 ? ` qua ${attacks.length} phát` : ""}.`;
   return {
     log: `${log}${healing ? ` Hồi **${healing} HP**.` : ""}`,
     dodge,
@@ -1873,13 +1873,13 @@ function applyShrine(state, kind) {
   }
   if (kind === "armor") {
     state.defense += 3;
-    return "🛡️ Armor Shrine: +3 Defense.";
+    return "🛡️ Armor Shrine: +3 DEF.";
   }
   if (kind === "blood") {
     state.hp = Math.max(1, state.hp - 15);
     state.damageMin += 4;
     state.damageMax += 4;
-    return "🩸 Mất 15 HP, +4 sát thương.";
+    return "🩸 Mất 15 HP, +4 ATK.";
   }
   if (kind === "experience") {
     state.bonus += Math.floor(state.stake * 0.25);
@@ -1889,11 +1889,11 @@ function applyShrine(state, kind) {
     state.damageMin += 7;
     state.damageMax += 7;
     state.defense = Math.max(0, state.defense - 4);
-    return "☣️ +7 sát thương, −4 Defense.";
+    return "☣️ +7 ATK, −4 DEF.";
   }
   const damage = Math.max(10, Math.floor(state.maxHp * 0.3));
   state.hp = Math.max(0, state.hp - damage);
-  return `🤡 Shrine giả gây ${damage} damage.`;
+  return `🤡 Shrine giả gây ${damage} DMG.`;
 }
 
 const DISPLAY_STATS = [
@@ -1974,7 +1974,7 @@ function resolveWrongPortal(state) {
       state.defense += 4;
       state.resistance = clamp(state.resistance + 5, -50, 75);
       state.luck += 1;
-      log = "✨ Rift Blessing: +4 Defense, +5 Resistance và +1 Luck.";
+      log = "✨ Rift Blessing: +4 DEF, +5 RES và +1 LUCK.";
     } else throw new Error("INVALID_ACTION");
     completeFloor(state, `🌀 Portal tốt! ${log}`, 0);
     return;
@@ -1985,10 +1985,10 @@ function resolveWrongPortal(state) {
       Math.floor(state.maxHp * 0.15),
     );
     state.hp -= damage;
-    log = `🩸 Blood Rift gây **${damage} sát thương** (tối đa 15% HP tối đa; giữ ít nhất 1 HP).`;
+    log = `🩸 Blood Rift gây **${damage} DMG** (tối đa 15% MAX HP; giữ ít nhất 1 HP).`;
   } else if (event.portal.effect === "mana_void") {
     state.energy = 0;
-    log = "🕳️ Mana Void: Energy về 0.";
+    log = "🕳️ Mana Void: ENE về 0.";
   } else if (event.portal.effect === "shattered_supplies") {
     const lost = Math.min(2, state.potions);
     state.potions -= lost;
@@ -2002,7 +2002,7 @@ function resolveWrongPortal(state) {
     const previousResistance = state.resistance;
     state.defense = Math.max(0, state.defense - 5);
     state.resistance = clamp(state.resistance - 5, -50, 75);
-    log = `💀 Dimensional Curse: −${previousDefense - state.defense} Defense, −${previousResistance - state.resistance}% Resistance.`;
+    log = `💀 Dimensional Curse: −${previousDefense - state.defense} DEF, −${previousResistance - state.resistance}% RES.`;
   } else throw new Error("INVALID_ACTION");
   state.encounter = event.enemy;
   state.lastLog = `🌀 Portal xấu! ${log}\n⚠️ **Rift Ambusher** cấp Elite đánh phủ đầu!\n${enemyTurn(state)}`;
@@ -2074,12 +2074,12 @@ function resolveSurprise(state, action) {
       if (state.hp <= lost) throw new Error("INSUFFICIENT_HP");
       state.hp -= lost;
       addAttack(3);
-      return done(`🩸 Hiến **${lost} HP**, +3 sát thương.`);
+      return done(`🩸 Hiến **${lost} HP**, +3 ATK.`);
     }
     if (action === "event_gold") {
       const cost = payEventCost(state, 0.1);
       state.defense += 3;
-      return done(`🛡️ +3 Defense, dùng **${cost} xu** từ payout.`);
+      return done(`🛡️ +3 DEF, dùng **${cost} xu** từ payout.`);
     }
   }
   if (
@@ -2177,17 +2177,17 @@ function resolveSurprise(state, action) {
       state.hp -= lost;
       state.damageMin = Math.floor(state.damageMin * 1.1);
       state.damageMax = Math.floor(state.damageMax * 1.1);
-      return done(`🪞 Mất **${lost} HP**, +10% sát thương.`);
+      return done(`🪞 Mất **${lost} HP**, +10% ATK.`);
     }
     if (action === "event_mirror_guard") {
       state.defense += 8;
       addAttack(-2);
-      return done("🪞 +8 Defense, −2 sát thương.");
+      return done("🪞 +8 DEF, −2 ATK.");
     }
     if (action === "event_break") {
       if (event.lucky) {
         state.luck += 2;
-        return done("🪞 Đập gương: +2 Luck.");
+        return done("🪞 Đập gương: +2 LUCK.");
       }
       return combat(
         event.enemy,
@@ -2204,16 +2204,16 @@ function resolveSurprise(state, action) {
       return combat(event.enemy, "📦 Hòm hóa thành Mimic!");
     if (key === "red") {
       addAttack(5);
-      return done("📦 Hòm đỏ: +5 sát thương.");
+      return done("📦 Hòm đỏ: +5 ATK.");
     }
     if (key === "blue") {
       state.defense += 6;
       state.resistance = clamp(state.resistance + 5, -50, 75);
-      return done("📦 Hòm xanh: +6 Defense, +5 Resistance.");
+      return done("📦 Hòm xanh: +6 DEF, +5 RES.");
     }
     state.bonus += Math.floor(state.stake * 0.5);
     state.luck += 1;
-    return done("📦 Hòm vàng: bonus +50% cược, +1 Luck.");
+    return done("📦 Hòm vàng: bonus +50% cược, +1 LUCK.");
   }
   if (
     event.kind === "contract" &&
@@ -2307,17 +2307,17 @@ const actionTx = db.transaction(
         if (action === "upgrade_attack") {
           state.damageMin += 5;
           state.damageMax += 5;
-          state.lastLog = "⚔️ +5 sát thương.";
+          state.lastLog = "⚔️ +5 ATK.";
         } else if (action === "upgrade_hp") {
           state.maxHp += 30;
           state.hp = Math.min(state.maxHp, state.hp + 30);
           state.lastLog = "❤️ +30 HP tối đa và hiện tại.";
         } else if (action === "upgrade_defense") {
           state.defense += 6;
-          state.lastLog = "🛡️ +6 Defense.";
+          state.lastLog = "🛡️ +6 DEF.";
         } else if (action === "upgrade_luck") {
           state.luck += 2;
-          state.lastLog = "🍀 +2 Luck.";
+          state.lastLog = "🍀 +2 LUCK.";
         } else throw new Error("INVALID_ACTION");
         setNextEncounter(
           state,

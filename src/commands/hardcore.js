@@ -79,7 +79,12 @@ function ratesEmbed() {
       {
         name: "RNGesus",
         value:
-          "Base: tầng 1–4 0%, 5–9 0,3%, 10–19 0,6%, 20+ 1%. Volatility ×0,25–3; dry heat tối đa 2,5%; 2,5% cơ hội spike +4–10%; trần cuối 12%. Chạy 75%, trượt tự dùng vé; dùng vé trực tiếp vượt an toàn. Cầu nguyện 30%: 85% SSR/15% UR; trượt chết. Hối lộ: payout ×0,6. Chiến đấu chết ngay.",
+          "Roll riêng trước encounter thường. Volatility ×0,25–3; chuỗi không gặp tăng +0,05 điểm % mỗi lượt, tối đa +2,5 điểm %; 2,5% cơ hội spike thêm 4–10 điểm %. Xác suất cuối bị chặn ở 12%. Bảng bên dưới là trung bình ước tính, không phải tỷ lệ cố định từng tầng.",
+      },
+      {
+        name: "📊 Xác suất RNGesus ước tính",
+        value:
+          "Tầng 1–4 · nền 0% · mọi chuỗi: **0%**\nTầng 5–9 · nền 0,3% · khô 0 lượt: **~0,66%** · khô 50 lượt: **~3,16%**\nTầng 10–19 · nền 0,6% · khô 0 lượt: **~1,15%** · khô 50 lượt: **~3,65%**\nTầng 20+ · nền 1% · khô 0 lượt: **~1,80%** · khô 50 lượt: **~4,29%**\nKhô lượt = số lần liên tiếp không gặp RNGesus ở các tầng có roll. Spike 4–10 điểm % được tính trung bình vào con số trên.",
       },
       {
         name: "Luck",
