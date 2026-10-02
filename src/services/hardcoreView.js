@@ -28,6 +28,7 @@ const {
   shrineOutcomes,
   surpriseOdds,
   FIXED_SURPRISES,
+  trapOdds,
 } = require("./hardcoreEngine");
 const { regionForFloor, RIFT_MODIFIERS } = require("./hardcoreEngine");
 const { resultBlock } = require("../utils/rewardText");
@@ -382,13 +383,15 @@ function encounterText(state) {
       potion_thief: "🦹 KẺ TRỘM BÌNH MÁU",
       wrong_portal: `${icon("cyclone")} WRONG PORTAL`,
     };
-    const detail =
-      encounter.kind === "tax_collector"
-        ? `Hệ số payout ×0,85, giảm ${formatCoins(payoutReductionCost(state, 0.15))} xu hiện tại nếu không có Lucky Break.`
-        : encounter.kind === "potion_thief"
-          ? "Đi tiếp có thể mất 1 bình máu."
-          : `${Math.round((encounter.portal?.goodChance ?? 0.5) * 100)}% Portal tốt: nhận lợi ích, qua tầng. Còn lại: penalty rồi Rift Ambusher Elite đánh phủ đầu; hạ nó mới qua tầng. LUCK không đổi Portal. Đích đến đã lưu; có thể rút trước khi chấp nhận.`;
-    return `**${names[encounter.kind]}**\nChọn **Chấp nhận số phận**: ${detail}\n🍀 Lucky Break: **${Math.round(luckyBreakChance(state) * 1000) / 10}%** tránh thuế hoặc trộm bình.`;
+    const mark = { good: "🟢", mixed: "🟡", bad: "🔴" };
+    const outcomes = (trapOdds(state, encounter) || [])
+      .map((item) => `${mark[item.tone]} **${percentText(item.chance)}** · ${item.text}`)
+      .join("\n");
+    const note =
+      encounter.kind === "wrong_portal"
+        ? "LUCK không đổi Portal. Đích đến đã lưu; có thể rút trước khi chấp nhận."
+        : `🍀 Lucky Break hiện tại: **${percentText(luckyBreakChance(state))}** (theo LUCK).`;
+    return `**${names[encounter.kind]}**\nChọn **Chấp nhận số phận**, kết quả có thể là:\n${outcomes}\n${note}`;
   }
   return "🕳️ **PHÒNG TRỐNG**\nBấm **Đi tiếp** để vượt tầng. Có thể rút thưởng thay vì tiếp tục.";
 }

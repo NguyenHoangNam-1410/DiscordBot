@@ -586,6 +586,70 @@ function surpriseOdds(state, event) {
   }
 }
 
+// Bẫy: Wrong Portal chọn đồng đều trong nhóm tốt/xấu; makeWrongPortal và UI dùng chung các hằng số này.
+const PORTAL_GOOD_CHANCE = 0.5;
+const PORTAL_GOOD_EFFECTS = Object.freeze(["healing_sanctuary", "treasure_vault", "rift_blessing"]);
+function portalBadEffects(state) {
+  return [
+    "blood_rift",
+    ...(state.energy > 0 ? ["mana_void"] : []),
+    ...(state.potions > 0 ? ["shattered_supplies"] : []),
+    "payout_corruption",
+    "dimensional_curse",
+  ];
+}
+// Tỷ lệ từng hiệu ứng Portal tính trước khi roll (lưu cùng Portal để mở lại UI không đổi).
+function portalEffectOdds(state, goodChance = PORTAL_GOOD_CHANCE) {
+  const bad = portalBadEffects(state);
+  return [
+    ...PORTAL_GOOD_EFFECTS.map((effect) => ({ effect, good: true, chance: goodChance / PORTAL_GOOD_EFFECTS.length })),
+    ...bad.map((effect) => ({ effect, good: false, chance: (1 - goodChance) / bad.length })),
+  ];
+}
+const PORTAL_EFFECT_TEXT = Object.freeze({
+  healing_sanctuary: "Healing Sanctuary: +10 HP tối đa, hồi đầy HP, +1 bình",
+  treasure_vault: "Treasure Vault: bonus +50% cược",
+  rift_blessing: "Rift Blessing: +4 DEF, +5 RES, +1 LUCK",
+  blood_rift: "Blood Rift: mất tối đa 15% MAX HP (giữ ít nhất 1 HP)",
+  mana_void: "Mana Void: ENE về 0",
+  shattered_supplies: "Shattered Supplies: mất tối đa 2 bình máu",
+  payout_corruption: "Payout Corruption: payout ×0,9 từ đây về sau",
+  dimensional_curse: "Dimensional Curse: −5 DEF, −5% RES",
+});
+// Kết quả của bẫy khi bấm "Chấp nhận số phận".
+function trapOdds(state, event) {
+  const lucky = luckyBreakChance(state);
+  const costText = (rate) => `${payoutReductionCost(state, rate).toLocaleString("vi-VN")} xu`;
+  if (event.kind === "tax_collector")
+    return [
+      { tone: "good", chance: lucky, text: "Lucky Break: tránh được thuế" },
+      { tone: "bad", chance: 1 - lucky, text: `Mất thuế: payout ×0,85, giảm ${costText(0.15)} hiện tại` },
+    ];
+  if (event.kind === "potion_thief")
+    return state.potions > 0
+      ? [
+          { tone: "good", chance: lucky, text: "Lucky Break: giữ được bình máu" },
+          { tone: "bad", chance: 1 - lucky, text: "Bị trộm mất 1 bình máu" },
+        ]
+      : [{ tone: "mixed", chance: 1, text: "Không còn bình để mất: không có gì xảy ra" }];
+  if (event.kind === "wrong_portal") {
+    const odds = event.portal?.odds;
+    if (!odds) {
+      const good = event.portal?.goodChance ?? PORTAL_GOOD_CHANCE;
+      return [
+        { tone: "good", chance: good, text: "Portal tốt: nhận lợi ích rồi qua tầng" },
+        { tone: "bad", chance: 1 - good, text: "Portal xấu: chịu penalty, Rift Ambusher Elite đánh phủ đầu" },
+      ];
+    }
+    return odds.map((item) => ({
+      tone: item.good ? "good" : "bad",
+      chance: item.chance,
+      text: item.good ? PORTAL_EFFECT_TEXT[item.effect] : `${PORTAL_EFFECT_TEXT[item.effect]} + Elite đánh phủ đầu`,
+    }));
+  }
+  return null;
+}
+
 module.exports = {
   runDiamondReward,
   clamp,
@@ -615,6 +679,11 @@ module.exports = {
   CLASS_SHRINE_TEXT,
   MERCHANT_OFFERS,
   surpriseOptions,
+  PORTAL_GOOD_CHANCE,
+  PORTAL_GOOD_EFFECTS,
+  portalBadEffects,
+  portalEffectOdds,
+  trapOdds,
   SURPRISE_ODDS,
   FIXED_SURPRISES,
   surpriseOdds,
