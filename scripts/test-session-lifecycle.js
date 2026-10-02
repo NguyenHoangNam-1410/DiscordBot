@@ -68,35 +68,6 @@ function bet(guildId, roundId, userId, choice, amount) {
       );
   }
 
-  // Oẳn tù tì đấu người
-  const rps = require("../src/services/rpsDuelService");
-  const rpsGuild = "force-rps";
-  const invited = rps.createDuel({
-    guildId: rpsGuild,
-    channelId: "c",
-    challengerId: "alice",
-    opponentId: "bob",
-    stake: 100,
-  });
-  const invitedEnd = rps.forceEndRpsDuel(invited.id, rpsGuild, "admin");
-  assert.equal(invitedEnd.refunded, false);
-  assert.equal(balance(rpsGuild, "alice"), START);
-  const playing = rps.createDuel({
-    guildId: rpsGuild,
-    channelId: "c",
-    challengerId: "carol",
-    opponentId: "dave",
-    stake: 100,
-  });
-  rps.acceptDuel(playing.id, "dave");
-  assert.equal(balance(rpsGuild, "carol"), START - 100);
-  const playingEnd = rps.forceEndRpsDuel(playing.id, rpsGuild, "admin");
-  assert.equal(playingEnd.refunded, true);
-  assert.equal(balance(rpsGuild, "carol"), START);
-  assert.equal(balance(rpsGuild, "dave"), START);
-  assert.equal(rps.forceEndRpsDuel(playing.id, rpsGuild, "admin"), null);
-  assert.equal(balance(rpsGuild, "carol"), START);
-
   // Xì dách đấu người
   const bjDuel = require("../src/services/blackjackDuelService");
   const bjGuild = "force-bj-duel";
@@ -143,57 +114,6 @@ function bet(guildId, roundId, userId, choice, amount) {
   });
   assert.match(replies[0].content, /Đã buộc kết thúc/);
   assert.equal(balance(quantriGuild, "alice"), START);
-
-  // Nút chọn Oẳn tù tì phải xác nhận interaction
-  const acknowledgeGuild = "rps-ack";
-  const ackDuel = rps.createDuel({
-    guildId: acknowledgeGuild,
-    channelId: "c",
-    challengerId: "alice",
-    opponentId: "bob",
-    stake: 100,
-  });
-  rps.acceptDuel(ackDuel.id, "bob");
-  const ackCalls = [];
-  const press = async (userId, choice) => {
-    const calls = [];
-    await rps.handleRpsDuelButton({
-      customId: `rpsduel:${ackDuel.id}:choose:${choice}`,
-      guildId: acknowledgeGuild,
-      channelId: "c",
-      user: { id: userId },
-      update: async (payload) => {
-        calls.push(payload);
-        return payload;
-      },
-      reply: async (payload) => {
-        calls.push({ reply: payload });
-        return payload;
-      },
-      message: {
-        edit: async () => {
-          throw new Error(
-            "không được sửa message mà không xác nhận interaction",
-          );
-        },
-      },
-    });
-    return calls;
-  };
-  const firstPress = await press("alice", "bua");
-  ackCalls.push(firstPress);
-  assert.equal(firstPress.length, 1);
-  assert(
-    firstPress[0].embeds,
-    "lượt chọn đầu phải cập nhật embed qua interaction.update",
-  );
-  const secondPress = await press("bob", "keo");
-  ackCalls.push(secondPress);
-  assert.equal(secondPress.length, 1);
-  assert(
-    secondPress[0].embeds && secondPress[0].components.length,
-    "lượt chọn cuối cập nhật embed kết quả kèm nút tái đấu",
-  );
 
   // Hủy đua ngựa đang chạy: dừng animation và không ghi đè thông báo hủy
   const horse = require("../src/services/horseRaceService");
@@ -344,57 +264,6 @@ function bet(guildId, roundId, userId, choice, amount) {
 
   // Ván hết hạn: người làm hết hạn mất cược, người đã thao tác được hoàn
   const afk = "afk-expiry";
-  const expiryTime = Date.now() + rps.PLAY_TTL_MS + 1_000;
-  const rpsExpiry = rps.createDuel({
-    guildId: afk,
-    channelId: "c",
-    challengerId: "alice",
-    opponentId: "bob",
-    stake: 100,
-  });
-  rps.acceptDuel(rpsExpiry.id, "bob");
-  rps.chooseHand(rpsExpiry.id, "alice", "bua");
-  const rpsExpired = rps.expireDuel(rpsExpiry.id, expiryTime);
-  assert.deepEqual(rpsExpired.forfeited, ["bob"]);
-  assert.equal(balance(afk, "alice"), START, "người đã chọn được hoàn cược");
-  assert.equal(
-    balance(afk, "bob"),
-    START - 100,
-    "người không chọn kịp mất cược",
-  );
-  const rpsBothAfk = rps.createDuel({
-    guildId: afk,
-    channelId: "c",
-    challengerId: "carol",
-    opponentId: "dave",
-    stake: 100,
-  });
-  rps.acceptDuel(rpsBothAfk.id, "dave");
-  assert.deepEqual(rps.expireDuel(rpsBothAfk.id, expiryTime).forfeited.sort(), [
-    "carol",
-    "dave",
-  ]);
-  assert.equal(balance(afk, "carol"), START - 100);
-  assert.equal(balance(afk, "dave"), START - 100);
-  assert.match(
-    JSON.stringify(rps.duelEmbed(rps.getDuel(rpsExpiry.id)).toJSON()),
-    /{"name":"Kết quả"/,
-  );
-  const invitedOnly = rps.createDuel({
-    guildId: afk,
-    channelId: "c",
-    challengerId: "erin",
-    opponentId: "frank",
-    stake: 100,
-  });
-  assert.deepEqual(
-    rps.expireDuel(invitedOnly.id, Date.now() + rps.INVITE_TTL_MS + 1_000)
-      .forfeited,
-    [],
-    "lời mời chưa chấp nhận không có ai mất cược",
-  );
-  assert.equal(balance(afk, "erin"), START);
-
   const bjExpiry = bjDuel.createBlackjackDuel({
     guildId: afk,
     channelId: "c",
@@ -851,45 +720,6 @@ function bet(guildId, roundId, userId, choice, amount) {
   assert.equal(balance(afk, "quinn"), START);
   assert.equal(balance(afk, "ruth"), START - 50);
 
-  // Nút xác nhận Oẳn tù tì với bot sau khi hết hạn
-  const rpsBot = require("../src/services/rpsBotService");
-  const botRound = rpsBot.createRpsBotRound({
-    guildId: "rps-bot-expiry",
-    channelId: "c",
-    userId: "alice",
-    stake: 100,
-    choice: "bua",
-  });
-  db.prepare("UPDATE rps_bot_rounds SET expires_at=? WHERE id=?").run(
-    Date.now() - 1,
-    botRound.id,
-  );
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    const botUpdates = [];
-    await rpsBot.handleRpsBotButton({
-      customId: `rpsbot:${botRound.id}:confirm`,
-      user: { id: "alice" },
-      update: async (payload) => {
-        botUpdates.push(payload);
-        return payload;
-      },
-      reply: async (payload) => {
-        botUpdates.push({ reply: payload });
-        return payload;
-      },
-    });
-    assert.equal(botUpdates.length, 1);
-    assert(
-      botUpdates[0].embeds && botUpdates[0].components.length === 0,
-      `lần bấm ${attempt + 1}: phải đóng nút xác nhận đã hết hạn`,
-    );
-  }
-  assert.equal(
-    balance("rps-bot-expiry", "alice"),
-    START,
-    "ván xác nhận hết hạn không được trừ cược",
-  );
-
   // RESET SERVER xóa cả phiên Vua tiếng Việt (DB và bộ nhớ)
   const vuaReset = "vua-reset-guild";
   const funGame = require("../src/services/funGameService");
@@ -1098,28 +928,6 @@ function bet(guildId, roundId, userId, choice, amount) {
     balance(lockedGuild, "carol") > START - 200,
     "người khác trong ván vẫn được thanh toán",
   );
-
-  const clearDuel = rps.createDuel({
-    guildId: lockedGuild,
-    channelId: "c",
-    challengerId: "dave",
-    opponentId: "erin",
-    stake: 100,
-  });
-  rps.acceptDuel(clearDuel.id, "erin");
-  adminData.clearPlayerData({
-    guildId: lockedGuild,
-    userId: "dave",
-    scope: "coins",
-    adminId: "admin",
-  });
-  assert.equal(
-    balance(lockedGuild, "dave"),
-    0,
-    "người bị xóa xu không nhận lại cược duel",
-  );
-  assert.equal(balance(lockedGuild, "erin"), START, "đối thủ được hoàn cược");
-  assert.equal(rps.getDuel(clearDuel.id).status, "expired");
 
   const clearPoker = require("../src/services/pokerService").startPoker({
     guildId: lockedGuild,
@@ -1717,24 +1525,7 @@ function bet(guildId, roundId, userId, choice, amount) {
   const oldRecordTime = Date.now() - 30 * 86_400_000;
   const makeDuel = (table, status, updatedAt) => {
     const id = crypto.randomBytes(4).toString("hex");
-    if (table === "rps_duels")
-      db.prepare(
-        "INSERT INTO rps_duels(id,guild_id,channel_id,message_id,challenger_id,opponent_id,stake,status,expires_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-      ).run(
-        id,
-        recordGuild,
-        "c",
-        null,
-        "a",
-        "b",
-        100,
-        status,
-        updatedAt,
-        updatedAt,
-        updatedAt,
-      );
-    else
-      db.prepare(
+    db.prepare(
         "INSERT INTO blackjack_duels(id,guild_id,channel_id,message_id,challenger_id,opponent_id,stake,state_json,status,expires_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
       ).run(
         id,
@@ -1772,9 +1563,6 @@ function bet(guildId, roundId, userId, choice, amount) {
     return id;
   };
   const oldRecords = {
-    rps_duels: ["completed", "declined", "expired"].map((status) =>
-      makeDuel("rps_duels", status, oldRecordTime),
-    ),
     blackjack_duels: ["completed", "expired"].map((status) =>
       makeDuel("blackjack_duels", status, oldRecordTime),
     ),
@@ -1783,10 +1571,6 @@ function bet(guildId, roundId, userId, choice, amount) {
     ),
   };
   const keptRecords = {
-    rps_duels: [
-      makeDuel("rps_duels", "playing", oldRecordTime),
-      makeDuel("rps_duels", "completed", Date.now()),
-    ],
     blackjack_duels: [makeDuel("blackjack_duels", "invited", oldRecordTime)],
     blackjack_tables: [
       makeTable("playing", oldRecordTime),
@@ -1796,7 +1580,6 @@ function bet(guildId, roundId, userId, choice, amount) {
   };
   const cleanupResult = recordCleanup.cleanupFinishedGameRecords();
   assert.deepEqual(cleanupResult, {
-    rpsDuels: 3,
     blackjackDuels: 2,
     blackjackTables: 2,
   });
@@ -1817,7 +1600,6 @@ function bet(guildId, roundId, userId, choice, amount) {
         `${table} đang hoạt động hoặc còn mới không được xóa`,
       );
   assert.deepEqual(recordCleanup.cleanupFinishedGameRecords(), {
-    rpsDuels: 0,
     blackjackDuels: 0,
     blackjackTables: 0,
   });

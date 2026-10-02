@@ -32,7 +32,6 @@ const {
   chinchiroEmbed,
   chinchiroRows,
 } = require("./chinchiroService");
-const rpsDuel = require("./rpsDuelService");
 const blackjackDuel = require("./blackjackDuelService");
 const { formatCoins } = require("../utils/economy");
 
@@ -151,50 +150,22 @@ async function handleReplayButton(interaction, logger = console) {
       };
       setMessage = (id) =>
         !started.immediate && setChinchiroMessage(started.session.id, id);
-    } else if (game === "oantuti") {
-      const command = require("../commands/oantuti");
-      const replayOptions = {
-        getInteger: () => Number(args[0]),
-        getString: (name) => (name === "chon" ? args[1] : null),
-        getUser: () => null,
-      };
-      const proxy = new Proxy(interaction, {
-        get(target, property) {
-          if (property === "isReplay") return true;
-          if (property === "options") return replayOptions;
-          const value = Reflect.get(target, property, target);
-          return typeof value === "function" ? value.bind(target) : value;
-        },
-      });
-      return command.execute(proxy);
-    } else if (game === "rpsduel" || game === "bjduel") {
+    } else if (game === "bjduel") {
       const opponentId = interaction.user.id === args[1] ? args[2] : args[1];
       if (![args[1], args[2]].includes(interaction.user.id))
         return interaction.reply({
           content: "Chỉ người trong ván cũ mới có thể tái đấu.",
           flags: MessageFlags.Ephemeral,
         });
-      const service = game === "rpsduel" ? rpsDuel : blackjackDuel;
-      const duel =
-        game === "rpsduel"
-          ? service.createDuel({
-              guildId: interaction.guildId,
-              channelId: interaction.channelId,
-              challengerId: interaction.user.id,
-              opponentId,
-              stake: Number(args[0]),
-            })
-          : service.createBlackjackDuel({
-              guildId: interaction.guildId,
-              channelId: interaction.channelId,
-              challengerId: interaction.user.id,
-              opponentId,
-              stake: Number(args[0]),
-            });
-      const embed =
-        game === "rpsduel"
-          ? service.duelEmbed(duel)
-          : service.blackjackDuelEmbed(duel);
+      const service = blackjackDuel;
+      const duel = service.createBlackjackDuel({
+        guildId: interaction.guildId,
+        channelId: interaction.channelId,
+        challengerId: interaction.user.id,
+        opponentId,
+        stake: Number(args[0]),
+      });
+      const embed = service.blackjackDuelEmbed(duel);
       const rows = service.inviteButtons(duel.id);
       const response = await interaction.reply({
         content: `<@${opponentId}>, bạn nhận được lời tái đấu!`,
@@ -204,10 +175,7 @@ async function handleReplayButton(interaction, logger = console) {
         withResponse: true,
       });
       const id = response?.resource?.message?.id || response?.id;
-      if (id)
-        (game === "rpsduel"
-          ? service.setDuelMessage
-          : service.setBlackjackDuelMessage)(duel.id, id);
+      if (id) service.setBlackjackDuelMessage(duel.id, id);
       return duel;
     } else
       return interaction.reply({

@@ -110,7 +110,6 @@ assert.deepEqual(
     "baucua",
     "taixiu",
     "chinchiro",
-    "oantuti",
     "xidach",
     "poker",
     "duangua",
@@ -184,7 +183,6 @@ assert.deepEqual(
   [...GAMES],
   [
     "baucua",
-    "oantuti",
     "taixiu",
     "chinchiro",
     "blackjack",
@@ -210,7 +208,7 @@ assert.equal(
 );
 const { listCatalog } = require("../src/services/itemCatalogService");
 const catalog = listCatalog();
-assert.equal(catalog.filter((item) => item.type === "consumable").length, 37);
+assert.equal(catalog.filter((item) => item.type === "consumable").length, 34);
 assert.deepEqual(
   [
     ...new Set(
@@ -813,7 +811,6 @@ const dropGames = [
   "baucua",
   "taixiu",
   "duangua",
-  "oantuti",
   "blackjack",
   "poker",
   "mines",
@@ -893,7 +890,7 @@ for (const game of dropGames) {
   };
   assert(
     Math.abs(rateOf("poker") - 0.06) < 0.01 &&
-      Math.abs(rateOf("oantuti") - 0.03) < 0.01,
+      Math.abs(rateOf("coquay") - 0.05) < 0.01,
   );
 }
 dropConfig.setGameConfig(
@@ -1034,14 +1031,14 @@ const itemEffects = require("../src/services/itemEffectService");
 require("../src/services/shopService").addInventory(
   "stack-use-guild",
   "alice",
-  "rps_counter_charm",
+  "horse_jackpot",
   2,
 );
 itemEffects.useItem({
   guildId: "stack-use-guild",
   userId: "alice",
   channelId: "channel",
-  itemId: "rps_counter_charm",
+  itemId: "horse_jackpot",
 });
 assert.throws(
   () =>
@@ -1049,7 +1046,7 @@ assert.throws(
       guildId: "stack-use-guild",
       userId: "alice",
       channelId: "channel",
-      itemId: "rps_counter_charm",
+      itemId: "horse_jackpot",
     }),
   /EFFECT_ALREADY_ACTIVE/,
 );
@@ -1057,7 +1054,7 @@ assert.equal(
   require("../src/services/shopService").getInventoryQuantity(
     "stack-use-guild",
     "alice",
-    "rps_counter_charm",
+    "horse_jackpot",
   ),
   1,
 );
@@ -1369,7 +1366,6 @@ assert(
     .find((option) => option.value === "vuatiengviet")
     .description.includes("%"),
 );
-const rps = require("../src/services/rpsDuelService");
 const economy = require("../src/services/economyService");
 const gameConfig = require("../src/services/gameConfigService");
 assert.equal(
@@ -1710,47 +1706,6 @@ for (const guildId of [
     gameConfig.setGameConfig(guildId, key, 0, "test");
   }
 }
-const duel = rps.createDuel({
-  guildId: "duel-guild",
-  channelId: "duel-channel",
-  challengerId: "alice",
-  opponentId: "bob",
-  stake: 100,
-  now: 1000,
-});
-assert.equal(duel.status, "invited");
-assert.equal(rps.acceptDuel(duel.id, "bob", 2000).status, "playing");
-assert.equal(economy.getAccount("duel-guild", "alice").balance, 900);
-assert.equal(economy.getAccount("duel-guild", "bob").balance, 900);
-assert.equal(rps.chooseHand(duel.id, "alice", "bua", 3000).completed, false);
-const duelResult = rps.chooseHand(duel.id, "bob", "keo", 4000);
-assert.equal(duelResult.completed, true);
-assert.equal(duelResult.challengerAccount.experienceGained, 10);
-assert.match(
-  JSON.stringify(rps.duelEmbed(duelResult.duel, duelResult).toJSON()),
-  /\+10 :test_tube:/,
-);
-assert.equal(duelResult.duel.winner_id, "alice");
-assert.equal(economy.getAccount("duel-guild", "alice").balance, 1100);
-assert.equal(economy.getAccount("duel-guild", "bob").balance, 900);
-const timeout = rps.createDuel({
-  guildId: "timeout-guild",
-  channelId: "duel-channel",
-  challengerId: "alice",
-  opponentId: "bob",
-  stake: 250,
-  now: 1000,
-});
-rps.acceptDuel(timeout.id, "bob", 2000);
-const expired = rps.expireDuel(timeout.id, 2000 + rps.PLAY_TTL_MS + 1);
-assert.equal(
-  expired.refunded,
-  false,
-  "không ai chọn kịp thì không ai được hoàn cược",
-);
-assert.deepEqual(expired.forfeited.sort(), ["alice", "bob"]);
-assert.equal(economy.getAccount("timeout-guild", "alice").balance, 750);
-assert.equal(economy.getAccount("timeout-guild", "bob").balance, 750);
 const blackjackDuel = require("../src/services/blackjackDuelService");
 const cardDuel = blackjackDuel.createBlackjackDuel({
   guildId: "card-guild",
@@ -1808,7 +1763,6 @@ assert.equal(economy.getAccount("card-guild", "bob").balance, 900);
 assert.doesNotThrow(() =>
   blackjackDuel.blackjackDuelEmbed(cardResult.duel).toJSON(),
 );
-assert.doesNotThrow(() => rps.duelEmbed(duelResult.duel).toJSON());
 const cardTimeout = blackjackDuel.createBlackjackDuel({
   guildId: "card-timeout",
   channelId: "card-channel",
@@ -2113,29 +2067,6 @@ assert.equal(
   balanceBeforeInvalidRaise,
 );
 poker.playerAction(cappedPoker.session.id, "alice", "fold");
-betLimits.setGameBetLimit("rps-limit-guild", "oantuti", 100);
-assert.throws(
-  () =>
-    rps.createDuel({
-      guildId: "rps-limit-guild",
-      channelId: "c",
-      challengerId: "alice",
-      opponentId: "bob",
-      stake: 500,
-    }),
-  /BET_LIMIT/,
-);
-assert.throws(
-  () =>
-    require("../src/services/rpsBotService").createRpsBotRound({
-      guildId: "rps-limit-guild",
-      channelId: "c",
-      userId: "alice",
-      stake: 500,
-      choice: "bua",
-    }),
-  /BET_LIMIT/,
-);
 for (const variant of ["texas", "sixplus", "pineapple", "omaha"]) {
   const started = poker.startPoker({
     guildId: `poker-${variant}`,

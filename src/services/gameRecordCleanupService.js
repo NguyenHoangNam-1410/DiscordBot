@@ -15,11 +15,6 @@ function cleanupFinishedGameRecords(
 ) {
   const cutoff = now - retentionDays * 86_400_000;
   return db.transaction(() => {
-    const duels = db
-      .prepare(
-        "DELETE FROM rps_duels WHERE status IN ('completed','declined','expired') AND updated_at<?",
-      )
-      .run(cutoff).changes;
     const blackjackDuels = db
       .prepare(
         "DELETE FROM blackjack_duels WHERE status IN ('completed','declined','expired') AND updated_at<?",
@@ -40,7 +35,6 @@ function cleanupFinishedGameRecords(
       deleteTable.run(id);
     }
     return {
-      rpsDuels: duels,
       blackjackDuels,
       blackjackTables: oldTables.length,
     };

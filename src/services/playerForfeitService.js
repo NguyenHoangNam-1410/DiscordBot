@@ -11,7 +11,6 @@ function forfeitActiveGames({ guildId, userId, adminId }) {
   const chinchiro = require("./chinchiroService");
   const hardcore = require("./hardcoreService");
   const poker = require("./pokerService");
-  const rps = require("./rpsDuelService");
   const blackjackDuel = require("./blackjackDuelService");
   const options = { label: "admin-clear", forfeit: true, forfeitUserId: user };
   return db.transaction(() => {
@@ -53,16 +52,6 @@ function forfeitActiveGames({ guildId, userId, adminId }) {
       if (poker.forceEndPokerSession(row.id, guild, admin, options)) {
         games += 1;
         amount += (own?.committed || 0) + (own?.lobbyAnte || 0);
-      }
-    }
-    for (const row of db
-      .prepare(
-        "SELECT id, stake FROM rps_duels WHERE guild_id=? AND status='playing' AND (challenger_id=? OR opponent_id=?)",
-      )
-      .all(guild, user, user)) {
-      if (rps.forceEndRpsDuel(row.id, guild, admin, Date.now(), options)) {
-        games += 1;
-        amount += row.stake;
       }
     }
     for (const row of db

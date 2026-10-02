@@ -146,25 +146,6 @@ CREATE INDEX IF NOT EXISTS idx_coin_requests_requester ON coin_requests(guild_id
 CREATE INDEX IF NOT EXISTS idx_coin_requests_expiry ON coin_requests(status, expires_at);
 CREATE INDEX IF NOT EXISTS idx_coin_requests_daily ON coin_requests(requester_id, created_at DESC);
 
-CREATE TABLE IF NOT EXISTS rps_duels (
-  id TEXT PRIMARY KEY,
-  guild_id TEXT NOT NULL,
-  channel_id TEXT NOT NULL,
-  message_id TEXT,
-  challenger_id TEXT NOT NULL,
-  opponent_id TEXT NOT NULL,
-  stake INTEGER NOT NULL CHECK(stake >= 10 AND stake <= 100000),
-  challenger_choice TEXT CHECK(challenger_choice IS NULL OR challenger_choice IN ('bua','keo','bao')),
-  opponent_choice TEXT CHECK(opponent_choice IS NULL OR opponent_choice IN ('bua','keo','bao')),
-  status TEXT NOT NULL DEFAULT 'invited' CHECK(status IN ('invited','playing','completed','declined','expired')),
-  winner_id TEXT,
-  expires_at INTEGER NOT NULL,
-  created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
-);
-CREATE INDEX IF NOT EXISTS idx_rps_duels_active ON rps_duels(guild_id, status, expires_at);
-CREATE INDEX IF NOT EXISTS idx_rps_duels_players ON rps_duels(guild_id, challenger_id, opponent_id, status);
-
 CREATE TABLE IF NOT EXISTS game_channels (
   guild_id TEXT NOT NULL,
   game TEXT NOT NULL,
@@ -429,21 +410,6 @@ CREATE TABLE IF NOT EXISTS achievement_notifications (
   achievement_id TEXT NOT NULL,
   unlocked_at INTEGER NOT NULL,
   PRIMARY KEY (guild_id,user_id,achievement_id)
-);
-
-CREATE TABLE IF NOT EXISTS rps_bot_rounds (
-  id TEXT PRIMARY KEY,
-  guild_id TEXT NOT NULL,
-  channel_id TEXT NOT NULL,
-  user_id TEXT NOT NULL,
-  stake INTEGER NOT NULL,
-  choice TEXT NOT NULL,
-  fair_json TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending',
-  result_json TEXT,
-  expires_at INTEGER NOT NULL,
-  created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS onboarding_claims (
@@ -970,6 +936,74 @@ runMigration(25, "VTV skip cooldown", () => {
     db.exec(
       "ALTER TABLE vua_daily_skips ADD COLUMN cooldown_until INTEGER NOT NULL DEFAULT 0",
     );
+});
+
+runMigration(26, "remove Oan tu ti game", () => {
+  const now = Date.now();
+  const hasTable = (name) =>
+    Boolean(
+      db
+        .prepare("SELECT 1 FROM sqlite_master WHERE type='table' AND name=?")
+        .get(name),
+    );
+  // Ván đấu đang chạy đã thu tiền cược của cả hai người: hoàn lại trước khi xóa game.
+  if (hasTable("rps_duels")) {
+    const refund = (guildId, userId, amount, reason, operationId) => {
+      const account = db
+        .prepare(
+          "SELECT balance FROM economy_accounts WHERE guild_id=? AND user_id=?",
+        )
+        .get(guildId, userId);
+      if (!account) return;
+      const balance = account.balance + amount;
+      db.prepare(
+        "UPDATE economy_accounts SET balance=?,updated_at=? WHERE guild_id=? AND user_id=?",
+      ).run(balance, now, guildId, userId);
+      db.prepare(
+        "INSERT INTO economy_transactions(guild_id,user_id,amount,balance_after,reason,operation_id,created_at) VALUES(?,?,?,?,?,?,?)",
+      ).run(guildId, userId, amount, balance, reason, operationId, now);
+    };
+    for (const duel of db
+      .prepare("SELECT * FROM rps_duels WHERE status='playing'")
+      .all())
+      for (const userId of [duel.challenger_id, duel.opponent_id])
+        refund(
+          duel.guild_id,
+          userId,
+          duel.stake,
+          "oantuti-removed:refund",
+          `refund:oantuti-removed:${duel.id}:${userId}`,
+        );
+  }
+  // Bỏ phần ván/thắng/thua/hòa của game này khỏi tổng số của tài khoản.
+  db.exec(`UPDATE economy_accounts SET
+      games_played=MAX(0,games_played-COALESCE((SELECT played FROM game_player_stats s WHERE s.guild_id=economy_accounts.guild_id AND s.user_id=economy_accounts.user_id AND s.game='oantuti'),0)),
+      wins=MAX(0,wins-COALESCE((SELECT wins FROM game_player_stats s WHERE s.guild_id=economy_accounts.guild_id AND s.user_id=economy_accounts.user_id AND s.game='oantuti'),0)),
+      losses=MAX(0,losses-COALESCE((SELECT losses FROM game_player_stats s WHERE s.guild_id=economy_accounts.guild_id AND s.user_id=economy_accounts.user_id AND s.game='oantuti'),0)),
+      draws=MAX(0,draws-COALESCE((SELECT draws FROM game_player_stats s WHERE s.guild_id=economy_accounts.guild_id AND s.user_id=economy_accounts.user_id AND s.game='oantuti'),0))
+    WHERE EXISTS (SELECT 1 FROM game_player_stats s WHERE s.guild_id=economy_accounts.guild_id AND s.user_id=economy_accounts.user_id AND s.game='oantuti')`);
+  for (const table of [
+    "game_player_stats",
+    "game_history",
+    "game_channels",
+    "game_sessions",
+    "game_rewards",
+    "game_bet_limits",
+    "multiplayer_rounds",
+  ])
+    db.prepare(`DELETE FROM ${table} WHERE game IN ('oantuti','rpsduel')`).run();
+  db.prepare("DELETE FROM game_settings WHERE setting_key='WIN_MULT_OANTUTI'").run();
+  const items = ["rps_loss_shield", "rps_counter_charm", "rps_coward_privilege"];
+  const marks = items.map(() => "?").join(",");
+  db.prepare(`DELETE FROM user_inventory WHERE item_id IN (${marks})`).run(...items);
+  db.prepare(`DELETE FROM shop_items WHERE cosmetic_id IN (${marks})`).run(...items);
+  db.prepare(
+    `DELETE FROM gacha_pool_entries WHERE item_id IN (${marks}) OR reward_key IN (${marks})`,
+  ).run(...items, ...items);
+  db.prepare(
+    "DELETE FROM user_item_effects WHERE effect_id IN ('rps_counter','rps_draw_win','rps_loss_shield')",
+  ).run();
+  db.exec("DROP TABLE IF EXISTS rps_duels; DROP TABLE IF EXISTS rps_bot_rounds");
 });
 
 module.exports = { db, dbPath, runMigration };

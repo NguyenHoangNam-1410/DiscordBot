@@ -13,7 +13,7 @@ assert.equal(r.signedCoins(0), "±0 :coin:");
 // Dòng kết quả gọn: <user> thắng: +xu +exp, kèm BUFF SỰ KIỆN
 const drops = [
   { type: "diamonds", amount: 3 },
-  { type: "item", name: "Bùa Khắc Chế", rarity: "SSR", amount: 1 },
+  { type: "item", name: "Trúng Đậm", rarity: "SSR", amount: 1 },
 ];
 assert.equal(
   r.resultLine({
@@ -77,7 +77,7 @@ assert.equal(r.bonusLine(null), "");
 appEmoji.setApplicationEmojisForTest([]);
 assert.equal(
   r.bonusLine(drops),
-  "🎉 **BUFF SỰ KIỆN:** +3 :gem: · 🟠 [SSR] Bùa Khắc Chế",
+  "🎉 **BUFF SỰ KIỆN:** +3 :gem: · 🟠 [SSR] Trúng Đậm",
 );
 assert.equal(
   r.bonusLine([{ type: "coins", amount: 250 }]),
@@ -87,7 +87,7 @@ assert.equal(
 appEmoji.setApplicationEmojisForTest([["ssr_icon", "123"]]);
 assert.equal(
   r.bonusLine([drops[1]]),
-  "🎉 **BUFF SỰ KIỆN:** <:ssr_icon:123> [SSR] Bùa Khắc Chế",
+  "🎉 **BUFF SỰ KIỆN:** <:ssr_icon:123> [SSR] Trúng Đậm",
 );
 appEmoji.setApplicationEmojisForTest([]);
 assert.equal(
@@ -98,7 +98,7 @@ assert.equal(
     payout: 102000,
     result: { experienceGained: 11, bonusDrops: drops },
   }),
-  "**<@1>** thắng: **+51.000 :coin: +11 :test_tube:**\n🎉 **BUFF SỰ KIỆN:** +3 :gem: · 🟠 [SSR] Bùa Khắc Chế",
+  "**<@1>** thắng: **+51.000 :coin: +11 :test_tube:**\n🎉 **BUFF SỰ KIỆN:** +3 :gem: · 🟠 [SSR] Trúng Đậm",
 );
 assert.equal(
   r.rewardSummary({

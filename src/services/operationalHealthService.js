@@ -19,7 +19,7 @@ function getOperationalHealth() {
     "SELECT COUNT(*) count FROM multiplayer_rounds WHERE status IN ('open','racing')",
   );
   const duels = scalar(
-    "SELECT (SELECT COUNT(*) FROM rps_duels WHERE status IN ('invited','playing')) + (SELECT COUNT(*) FROM blackjack_duels WHERE status IN ('invited','playing')) count",
+    "SELECT (SELECT COUNT(*) FROM blackjack_duels WHERE status IN ('invited','playing')) count",
   );
   const migration = db
     .prepare("SELECT COALESCE(MAX(version),0) version FROM schema_migrations")

@@ -6,7 +6,6 @@ const BET_GAMES = Object.freeze([
   "baucua",
   "taixiu",
   "chinchiro",
-  "oantuti",
   "blackjack",
   "poker",
   "duangua",

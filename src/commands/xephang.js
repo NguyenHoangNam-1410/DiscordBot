@@ -15,7 +15,6 @@ const GAMES = Object.freeze([
   ["baucua", "Bầu cua", "🎲"],
   ["taixiu", "Tài xỉu", "🎯"],
   ["chinchiro", "Chinchiro", "🎲"],
-  ["oantuti", "Oẳn tù tì", "✊"],
   ["blackjack", "Xì dách", "🃏"],
   ["poker", "Poker", "♠️"],
   ["duangua", "Đua ngựa", "🏇"],

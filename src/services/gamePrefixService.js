@@ -2,7 +2,6 @@ const { normalizeSearch } = require("../utils/text");
 const baucua = require("../commands/baucua");
 const taixiu = require("../commands/taixiu");
 const chinchiro = require("../commands/chinchiro");
-const oantuti = require("../commands/oantuti");
 const blackjack = require("../commands/blackjack");
 const poker = require("../commands/poker");
 const duangua = require("../commands/duangua");
@@ -29,7 +28,6 @@ const COMMANDS = {
   baucua,
   taixiu,
   chinchiro,
-  oantuti,
   blackjack,
   poker,
   duangua,
@@ -44,7 +42,6 @@ const NAME_ALIASES = {
   vua: "vuatiengviet",
   vtv: "vuatiengviet",
   vutiengviet: "vuatiengviet",
-  ott: "oantuti",
   xidach: "blackjack",
   xi_dach: "blackjack",
   hc: "hardcore",
@@ -75,7 +72,6 @@ const BET_LABELS = {
   baucua: "Bầu cua",
   taixiu: "Tài xỉu",
   chinchiro: "Chinchiro",
-  oantuti: "Oẳn tù tì",
   blackjack: "Xì dách",
   poker: "Poker",
   duangua: "Đua ngựa",
@@ -137,8 +133,6 @@ function messageInteraction(message, options = {}) {
 }
 
 function help(prefix, command) {
-  if (command === "oantuti")
-    return `Cách dùng: \`${prefix}ott <bua|keo|bao> <số xu>\` hoặc \`${prefix}ott solo @người_chơi <số xu>\``;
   if (command === "blackjack")
     return `Cách dùng: \`${prefix}xidach <số xu> [bot|nguoichoi]\` — mặc định chơi với nhà cái bot; \`nguoichoi\` mở bàn làm nhà cái cho tối đa 3 người`;
   if (command === "poker")
@@ -247,34 +241,7 @@ async function handleGamePrefix(message) {
   if (!command) return false;
 
   let options = {};
-  if (name === "oantuti") {
-    if (normalizeSearch(parts[0] || "") === "solo") {
-      const opponent = message.mentions?.users?.first?.();
-      const amount = Number(parts[2]);
-      if (!opponent || !Number.isSafeInteger(amount)) {
-        await message.reply({
-          content: help(prefix, name),
-          allowedMentions: { repliedUser: false },
-        });
-        return true;
-      }
-      options = { users: { doithu: opponent }, integers: { xu: amount } };
-    } else {
-      const choice = normalizeSearch(parts[0] || "");
-      const amount = Number(parts[1]);
-      if (
-        !["bua", "keo", "bao"].includes(choice) ||
-        !Number.isSafeInteger(amount)
-      ) {
-        await message.reply({
-          content: help(prefix, name),
-          allowedMentions: { repliedUser: false },
-        });
-        return true;
-      }
-      options = { strings: { chon: choice }, integers: { xu: amount } };
-    }
-  } else if (name === "blackjack") {
+  if (name === "blackjack") {
     const ante = Number(parts[0]);
     const mode = normalizeSearch(parts[1] || "bot");
     if (

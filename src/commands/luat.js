@@ -19,10 +19,6 @@ const RULES = {
     "Chinchiro",
     "Nhà cái lắc trước. Khi thắng bằng điểm thường, lãi 80% cược (hệ số mặc định x1,8; admin chỉnh được bằng `/quantri hesothang`); Shigoro lãi x1, Bão x2, Pin-Zoro x3. Hifumi 1-2-3 mất cược và bị phạt thêm x1. Bot giữ trước một khoản ký quỹ bằng tiền cược để bảo đảm phạt Hifumi, rồi hoàn lại khi không bị phạt. Mỗi ván mới cách nhau 30 giây, kể cả bấm Chơi lại.",
   ],
-  oantuti: [
-    "Oẳn tù tì",
-    "Búa thắng Kéo, Kéo thắng Bao, Bao thắng Búa. Thắng nhận x2 (mặc định; admin chỉnh được bằng `/quantri hesothang`), hòa hoàn cược.",
-  ],
   blackjack: [
     "Xì dách",
     "Chọn `chedochoi`: **nhà cái bot** (chơi một mình, có gấp đôi và tách bài; thắng thường nhận 2× cược, mặc định; admin chỉnh được bằng `/quantri hesothang`) hoặc **người chơi khác**. **Mọi chế độ:** chỉ được **Dừng khi có ít nhất 16 điểm** (nút Dừng bị khóa nếu dưới 16); khi quắc mọi nút bị khóa; **cả hai cùng quắc thì hòa** và hoàn cược; Gấp đôi chốt tay sau 1 lá nên không bị ràng buộc 16 điểm. Ở chế độ người chơi: Một người mở bàn làm nhà cái; tối đa 3 người chơi có 30 giây để vào. Nhà cái chọn ante, không quá 25% số dư của mình. Người chơi lần lượt rút hoặc dừng; bài của mỗi người được giữ kín, dùng nút **Xem bài của tôi** để xem và thao tác trong bảng riêng, bài chỉ lộ khi kết thúc; nhà cái rút đến khi có ít nhất 15 điểm. Ngũ linh (đủ 5 lá, không quắc) mạnh hơn Xì dách; nếu cả hai cùng Ngũ linh thì tay có tổng điểm nhỏ hơn thắng. Người quắc thua, nhưng nếu nhà cái cũng quắc thì **hòa** và hoàn ante. Thắng nhận lại 2× ante, hòa nhận lại ante. Người tham gia bị khóa khỏi cược game khác đến khi ván kết thúc.",

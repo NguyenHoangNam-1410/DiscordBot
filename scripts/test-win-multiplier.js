@@ -17,7 +17,6 @@ const blackjack = require("../src/services/blackjackService");
 const chinchiro = require("../src/services/chinchiroService");
 const coquay = require("../src/services/coquayService");
 const multiplayer = require("../src/services/multiplayerGameService");
-const rpsBot = require("../src/services/rpsBotService");
 const channels = require("../src/services/gameChannelService");
 const roleRewards = require("../src/services/weeklyRoleRewardService");
 const quantri = require("../src/commands/quantri");
@@ -30,7 +29,7 @@ const noDrops = (guild) => { for (const key of ["GAME_COIN_DROP_CHANCE"]) config
 (async () => {
   // ───── 1) Dịch vụ: mặc định, đặt, khôi phục, kiểm tra phạm vi, tách theo server ─────
   assert.deepEqual(Object.fromEntries(wm.WIN_MULTIPLIER_GAMES.map((item) => [item.game, wm.getWinMultiplier("g1", item.game)])),
-    { blackjack: 2, oantuti: 2, chinchiro: 1.8, coquay: 2, taixiu: 2 }, "mặc định giữ nguyên như trước khi có lệnh");
+    { blackjack: 2, chinchiro: 1.8, coquay: 2, taixiu: 2 }, "mặc định giữ nguyên như trước khi có lệnh");
   assert.equal(wm.parseMultiplier("x1,9"), 1.9); assert.equal(wm.parseMultiplier(" 2.25 "), 2.25); assert.equal(wm.parseMultiplier("1.234"), 1.23);
   for (const bad of ["", "abc", "1.09", "3.01", "-2", "0", "NaN", "1e9"]) assert.throws(() => wm.parseMultiplier(bad), /INVALID_WIN_MULTIPLIER/, `phải từ chối "${bad}"`);
   assert.equal(wm.setWinMultiplier("g1", "chinchiro", "1,9", "boss").value, 1.9);
@@ -124,22 +123,6 @@ const noDrops = (guild) => { for (const key of ["GAME_COIN_DROP_CHANCE"]) config
   const settled = await multiplayer.settleRound(opened.id, null, console, [6, 5, 4]);
   assert.equal(settled.settlements[0].payout, 1900, "thanh toán theo hệ số khóa lúc mở ván (1,9) dù cấu hình đã đổi thành 2,8");
 
-  // ───── 6) Oẳn tù tì với bot ─────
-  const rpsGuild = "rps-guild"; noDrops(rpsGuild); channels.setGameChannel(rpsGuild, "oantuti", "rps-channel");
-  wm.setWinMultiplier(rpsGuild, "oantuti", 1.6, "boss");
-  let sawWin = false; let sawDraw = false;
-  for (let attempt = 0; attempt < 120 && !(sawWin && sawDraw); attempt += 1) {
-    const user = `rps${attempt}`; fund(rpsGuild, user);
-    const round = rpsBot.createRpsBotRound({ guildId: rpsGuild, channelId: "rps-channel", userId: user, stake: 1000, choice: "bua" });
-    assert.match(JSON.stringify(rpsBot.pendingEmbed(round).toJSON()), /Thắng x1,6/);
-    await rpsBot.handleRpsBotButton({ customId: `rpsbot:${round.id}`, guildId: rpsGuild, channelId: "rps-channel", user: { id: user }, update: async () => {}, reply: async () => {} });
-    const stored = JSON.parse(db.prepare("SELECT result_json FROM rps_bot_rounds WHERE id=?").get(round.id).result_json);
-    if (stored.outcome === "win") { assert.equal(stored.payout, 1600); sawWin = true; }
-    if (stored.outcome === "draw") { assert.equal(stored.payout, 1000); sawDraw = true; }
-    if (stored.outcome === "loss") assert.equal(stored.payout, 0);
-  }
-  assert(sawWin && sawDraw, "phải gặp cả thắng và hòa trong các ván thử");
-
   // ───── 7) RTP ước tính khớp với mô phỏng / liệt kê thật ─────
   for (const m of [1.5, 2, 2.5]) {
     const { simulate } = require("../src/services/blackjackSim");
@@ -162,7 +145,7 @@ const noDrops = (guild) => { for (const key of ["GAME_COIN_DROP_CHANCE"]) config
   for (let a = 1; a <= 6; a += 1) for (let b = 1; b <= 6; b += 1) for (let c = 1; c <= 6; c += 1)
     taixiuReturn += multiplayer.calculatePayout("taixiu", "tai", 1_000_000, { total: a + b + c, triple: a === b && b === c }, 2.2);
   assert(Math.abs(taixiuReturn / 216 / 1_000_000 * 100 - wm.estimateRtp("taixiu", 2.2)) < 0.01, "Tài xỉu: RTP công thức khớp liệt kê 216 kết quả");
-  assert(Math.abs(wm.estimateRtp("oantuti", 2) - 100) < 1e-9);
+  assert.throws(() => wm.getWinMultiplier("g1", "oantuti"), /INVALID_WIN_MULTIPLIER_GAME/, "Oẳn tù tì đã bị gỡ");
   assert(Math.abs(require("../src/services/coquayEngine").solve().value(3, 3, 0, 0, "player", 1) - wm.COQUAY_OPTIMAL_WIN_PROBABILITY) < 0.002, "Cò quay: xác suất thắng tối ưu khớp lời giải");
 
   // ───── 8) Đăng ký lệnh: gộp 3 lệnh vai trò, thêm lệnh hệ số thắng ─────
@@ -186,7 +169,7 @@ const noDrops = (guild) => { for (const key of ["GAME_COIN_DROP_CHANCE"]) config
   const panelJson = JSON.stringify(panel.embeds[0].toJSON()); assert.match(panelJson, /HỆ SỐ THẮNG/); assert.match(panelJson, /Xì dách.*x2/); assert.match(panelJson, /RTP ước tính/); assert.match(panelJson, /Chinchiro.*x1,8/);
   assert.match(panelJson, /⚠️ có lợi cho người chơi/, "cảnh báo khi RTP trên 100%");
   const rows = panel.components.map((row) => row.toJSON());
-  assert.equal(rows[0].components[0].type, 3); assert.equal(rows[0].components[0].options.length, 5);
+  assert.equal(rows[0].components[0].type, 3); assert.equal(rows[0].components[0].options.length, 4);
   assert.equal(rows[1].components.find((button) => button.custom_id.endsWith(":reset")).disabled, true, "chưa tùy chỉnh thì chưa cần khôi phục");
   const denied = call({ user: { id: "stranger" }, options: { getSubcommand: () => "hesothang" } }); await quantri.execute(denied.interaction);
   assert.match(denied.sent.replies[0].content, /Chỉ admin/); const stranger = call({ user: { id: "stranger" }, options: { getSubcommand: () => "xemthuongvaitro" } }); await quantri.execute(stranger.interaction);

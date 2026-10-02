@@ -81,7 +81,7 @@ const PAGES = Object.freeze({
     fields: [
       [
         "🎲 Game cược",
-        "`/baucua` · `/taixiu` · `/chinchiro` · `/oantuti` · `/xidach` · `/poker` — mở bàn hoặc chơi theo lựa chọn của từng game",
+        "`/baucua` · `/taixiu` · `/chinchiro` · `/xidach` · `/poker` — mở bàn hoặc chơi theo lựa chọn của từng game",
       ],
       ["🏇 Thử thách khác", "`/duangua` · `/domin` · `/coquay`"],
       [
@@ -192,11 +192,11 @@ const PAGES = Object.freeze({
       ],
       [
         "🎯 Hệ số thắng cược 1-1",
-        "`hesothang` — mở bảng hệ số thắng của Xì dách (bot), Oẳn tù tì (bot), Chinchiro, Cò quay Nga và Tài xỉu (Tài/Xỉu/Chẵn/Lẻ); chọn game rồi nhập hệ số mới (x1,1–x3), kèm RTP ước tính.",
+        "`hesothang` — mở bảng hệ số thắng của Xì dách (bot), Chinchiro, Cò quay Nga và Tài xỉu (Tài/Xỉu/Chẵn/Lẻ); chọn game rồi nhập hệ số mới (x1,1–x3), kèm RTP ước tính.",
       ],
       [
         "🛑 Kết thúc ván",
-        "`ketthucvan` — nhập mã ván để buộc kết thúc và hoàn cược mọi loại ván có mã: Xì dách, Poker, Dò mìn, Cò quay Nga, Chinchiro, Sinh tồn, Oẳn tù tì đấu người, Bầu cua, Tài xỉu, Đua ngựa.",
+        "`ketthucvan` — nhập mã ván để buộc kết thúc và hoàn cược mọi loại ván có mã: Xì dách, Poker, Dò mìn, Cò quay Nga, Chinchiro, Sinh tồn, Bầu cua, Tài xỉu, Đua ngựa.",
       ],
       [
         "🧹 Dữ liệu người chơi",
