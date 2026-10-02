@@ -289,7 +289,6 @@ async function renderProfileCard({
   );
   ctx.fillStyle = "rgba(255,255,255,.35)";
   ctx.font = '12px "Segoe UI", sans-serif';
-  ctx.fillText(`Màu hồ sơ: ${appearance.color.name}`, 952, 291);
   drawSurvivalFrame(ctx, appearance.frame);
   return canvas.encode("png");
 }
