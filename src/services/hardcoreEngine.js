@@ -427,6 +427,61 @@ function curseTarget(state) {
     ) || null
   );
 }
+// Shrine: loại hiệu ứng được chọn đồng đều khi gặp, số liệu dùng chung cho cả xử lý lẫn UI.
+const SHRINE_KINDS = Object.freeze([
+  "healing",
+  "armor",
+  "experience",
+  "blood",
+  "corrupted",
+  "fake",
+]);
+const SHRINE_EFFECTS = Object.freeze({
+  armorDefense: 3,
+  bloodHp: 15,
+  bloodAttack: 4,
+  experiencePercent: 0.25,
+  corruptedAttack: 7,
+  corruptedDefense: 4,
+  fakeMaxHpPercent: 0.3,
+  fakeMinDamage: 10,
+});
+function shrineFakeDamage(state) {
+  return Math.max(
+    SHRINE_EFFECTS.fakeMinDamage,
+    Math.floor(state.maxHp * SHRINE_EFFECTS.fakeMaxHpPercent),
+  );
+}
+// Bảng kết quả hiển thị cho người chơi, tính theo trạng thái hiện tại của run.
+function shrineOutcomes(state) {
+  const chance = 1 / SHRINE_KINDS.length;
+  const lethal = state.hp <= shrineFakeDamage(state);
+  const rows = {
+    healing: {
+      tone: "good",
+      text: `Hồi đầy HP (+${Math.max(0, state.maxHp - state.hp)} HP)`,
+    },
+    armor: { tone: "good", text: `+${SHRINE_EFFECTS.armorDefense} DEF` },
+    experience: {
+      tone: "good",
+      text: `Payout +${Math.floor(state.stake * SHRINE_EFFECTS.experiencePercent)} xu (25% tiền cược)`,
+    },
+    blood: {
+      tone: "mixed",
+      text: `−${SHRINE_EFFECTS.bloodHp} HP nhưng +${SHRINE_EFFECTS.bloodAttack} ATK (không chết vì Shrine này)`,
+    },
+    corrupted: {
+      tone: "mixed",
+      text: `+${SHRINE_EFFECTS.corruptedAttack} ATK nhưng −${SHRINE_EFFECTS.corruptedDefense} DEF`,
+    },
+    fake: {
+      tone: "bad",
+      text: `Shrine giả: mất ${shrineFakeDamage(state)} HP${lethal ? " — **đủ để giết bạn ở mức HP hiện tại**" : ""}`,
+    },
+  };
+  return SHRINE_KINDS.map((kind) => ({ kind, chance, ...rows[kind] }));
+}
+
 module.exports = {
   runDiamondReward,
   clamp,
@@ -456,4 +511,8 @@ module.exports = {
   CLASS_SHRINE_TEXT,
   MERCHANT_OFFERS,
   surpriseOptions,
+  SHRINE_KINDS,
+  SHRINE_EFFECTS,
+  shrineFakeDamage,
+  shrineOutcomes,
 };

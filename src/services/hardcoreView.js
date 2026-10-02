@@ -25,6 +25,7 @@ const {
   SURPRISE_EVENTS,
   CLASS_SHRINE_TEXT,
   surpriseOptions,
+  shrineOutcomes,
 } = require("./hardcoreEngine");
 const { regionForFloor, RIFT_MODIFIERS } = require("./hardcoreEngine");
 const { resultBlock } = require("../utils/rewardText");
@@ -50,6 +51,25 @@ function healthBar(hp, maxHp) {
         : 0;
   return `${STAT_EMOJI.hp} HP \`${"█".repeat(filled)}${"░".repeat(segments - filled)}\` **${formatCoins(current)}/${formatCoins(maximum)}**`;
 }
+function shrineChanceLines(state) {
+  const outcomes = shrineOutcomes(state);
+  const share = (tone) =>
+    Math.round(
+      outcomes
+        .filter((item) => item.tone === tone)
+        .reduce((sum, item) => sum + item.chance, 0) * 100,
+    );
+  const mark = { good: "🟢", mixed: "🟡", bad: "🔴" };
+  const percent = (value) => `${(value * 100).toFixed(1).replace(".", ",")}%`;
+  return `${outcomes
+    .map(
+      (item) => `${mark[item.tone]} **${percent(item.chance)}** · ${item.text}`,
+    )
+    .join(
+      "\n",
+    )}\n**Tổng:** 🟢 có lợi ${share("good")}% · 🟡 đánh đổi ${share("mixed")}% · 🔴 gây hại ${share("bad")}%.`;
+}
+
 const CLASS_PROFILES = Object.freeze({
   amazon: {
     role: "Bắn hai phát, ACC cao",
@@ -305,7 +325,7 @@ function encounterText(state) {
   if (encounter.type === "chest")
     return `${icon("package")} **HÒM BÍ ẨN**\n${encounter.inspected ? "Đã kiểm tra một lần; kết quả có thể không phát hiện được Mimic." : "Kiểm tra một lần để thử phát hiện Mimic; Mở để nhận đồ hoặc có thể phải đánh Mimic; Bán để lấy thêm 15% tiền cược vào payout."}${encounter.revealed ? `\n${icon("warning")} Mimic đã bị phát hiện: **Tránh Mimic** để đi tiếp an toàn.` : ""}`;
   if (encounter.type === "shrine")
-    return `${icon("moyai")} **SHRINE KHÔNG RÕ NGUỒN GỐC**\n**Chạm Shrine** để nhận hiệu ứng ngẫu nhiên (có cả hiệu ứng gây hại), hoặc **Bỏ qua** để đi tiếp.`;
+    return `${icon("moyai")} **SHRINE KHÔNG RÕ NGUỒN GỐC**\n**Chạm Shrine** để nhận một hiệu ứng ngẫu nhiên, hoặc **Bỏ qua** để đi tiếp. Loại hiệu ứng được chọn đồng đều:\n${shrineChanceLines(state)}`;
   if (encounter.type === "rngesus")
     return `${icon("skull")} **RNGesus · HP ∞ · KHÔNG THỂ BỊ ĐÁNH BẠI**\nChiến đấu là chết. Bỏ chạy: **75%**; thất bại tự dùng 1 vé nếu còn, hết vé thì chết. Chạy thành công giữ vé. Có thể dùng vé để vượt an toàn. Hối lộ: payout ×0,6 (giảm ${formatCoins(payoutReductionCost(state, 0.4))} xu hiện tại). Cầu nguyện: **${Math.round((encounter.prayerChance ?? 0.3) * 100)}%**, nhận 85% SSR / 15% UR; trượt sẽ chết.`;
   if (encounter.type === "surprise")
@@ -485,7 +505,7 @@ function encounterSummary(state) {
   if (e.type === "rngesus")
     return "☠️ **RNGesus** · Không thể thắng hoặc rút thưởng.\nChạy thất bại tự dùng vé nếu còn; hết vé sẽ chết.";
   if (e.type === "shrine")
-    return "🗿 **Shrine** · Chạm để nhận hiệu ứng, có thể gây hại.";
+    return "🗿 **Shrine** · Chạm để nhận hiệu ứng ngẫu nhiên: 50% có lợi, 33% đánh đổi, 17% gây hại.";
   if (e.type === "surprise")
     return SURPRISE_EVENTS[e.kind]
       ? `❓ **${SURPRISE_EVENTS[e.kind].name}**\n${SURPRISE_EVENTS[e.kind].text}`

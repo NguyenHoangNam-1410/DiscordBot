@@ -48,6 +48,9 @@ const {
   classShrineActive,
   payoutReductionCost,
   SURPRISE_EVENTS,
+  SHRINE_KINDS,
+  SHRINE_EFFECTS,
+  shrineFakeDamage,
   MERCHANT_OFFERS,
 } = require("./hardcoreEngine");
 const { ITEMS } = require("../hardcore/item");
@@ -658,14 +661,7 @@ function generateEncounter(state) {
   if (roll < 0.83 - extraChests / 2)
     return {
       type: "shrine",
-      kind: pick([
-        "healing",
-        "armor",
-        "blood",
-        "experience",
-        "corrupted",
-        "fake",
-      ]),
+      kind: pick(SHRINE_KINDS),
     };
   if (roll < 0.88) return makeChest(state, true);
   if (roll < 0.94) {
@@ -1866,32 +1862,33 @@ function playerAttack(state, action) {
 }
 
 function applyShrine(state, kind) {
+  const effects = SHRINE_EFFECTS;
   if (kind === "healing") {
     const heal = state.maxHp - state.hp;
     state.hp = state.maxHp;
     return `💚 Healing Shrine hồi ${heal} HP.`;
   }
   if (kind === "armor") {
-    state.defense += 3;
-    return "🛡️ Armor Shrine: +3 DEF.";
+    state.defense += effects.armorDefense;
+    return `🛡️ Armor Shrine: +${effects.armorDefense} DEF.`;
   }
   if (kind === "blood") {
-    state.hp = Math.max(1, state.hp - 15);
-    state.damageMin += 4;
-    state.damageMax += 4;
-    return "🩸 Mất 15 HP, +4 ATK.";
+    state.hp = Math.max(1, state.hp - effects.bloodHp);
+    state.damageMin += effects.bloodAttack;
+    state.damageMax += effects.bloodAttack;
+    return `🩸 Mất ${effects.bloodHp} HP, +${effects.bloodAttack} ATK.`;
   }
   if (kind === "experience") {
-    state.bonus += Math.floor(state.stake * 0.25);
+    state.bonus += Math.floor(state.stake * effects.experiencePercent);
     return "✨ Payout tạm thời tăng thêm 25% tiền cược.";
   }
   if (kind === "corrupted") {
-    state.damageMin += 7;
-    state.damageMax += 7;
-    state.defense = Math.max(0, state.defense - 4);
-    return "☣️ +7 ATK, −4 DEF.";
+    state.damageMin += effects.corruptedAttack;
+    state.damageMax += effects.corruptedAttack;
+    state.defense = Math.max(0, state.defense - effects.corruptedDefense);
+    return `☣️ +${effects.corruptedAttack} ATK, −${effects.corruptedDefense} DEF.`;
   }
-  const damage = Math.max(10, Math.floor(state.maxHp * 0.3));
+  const damage = shrineFakeDamage(state);
   state.hp = Math.max(0, state.hp - damage);
   return `🤡 Shrine giả gây ${damage} DMG.`;
 }
@@ -2866,6 +2863,7 @@ module.exports = {
   MAX_FLOOR,
   COMPLETION_FLOOR,
   CLASSES,
+  applyShrine,
   ITEMS,
   hitChance,
   defenseReduction,
