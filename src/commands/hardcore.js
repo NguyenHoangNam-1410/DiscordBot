@@ -2,6 +2,9 @@ const {
   EmbedBuilder,
   MessageFlags,
   SlashCommandBuilder,
+  ActionRowBuilder,
+  StringSelectMenuBuilder,
+  StringSelectMenuOptionBuilder,
 } = require("discord.js");
 const { requireGameChannel } = require("../utils/gameChannel");
 const { formatCoins } = require("../utils/economy");
@@ -38,8 +41,51 @@ function recordEmbed(user, record) {
     );
 }
 
-function ratesEmbed() {
-  return new EmbedBuilder()
+const RATE_CATEGORIES = Object.freeze([
+  {
+    id: "encounters",
+    name: "Encounter & sự kiện",
+    emoji: "🌀",
+    fields: [
+      "Encounter",
+      "15 surprise event",
+      "Hợp đồng và Class Shrine",
+      "Wrong Portal",
+    ],
+  },
+  {
+    id: "loot",
+    name: "Hòm, item & Luck",
+    emoji: "🎁",
+    fields: ["Hòm và pity", "100 trang bị riêng", "Luck"],
+  },
+  {
+    id: "rngesus",
+    name: "RNGesus",
+    emoji: "☠️",
+    fields: ["RNGesus", "📊 Xác suất RNGesus ước tính"],
+  },
+  {
+    id: "combat",
+    name: "Chiến đấu & Rift",
+    emoji: "⚔️",
+    fields: ["Phòng thủ và boss", "Rift"],
+  },
+  {
+    id: "rewards",
+    name: "Dịch vụ & phần thưởng",
+    emoji: "💎",
+    fields: [
+      "Dịch vụ và Merchant",
+      "Payout",
+      "Kim cương và khung hồ sơ",
+      "Giới hạn",
+    ],
+  },
+]);
+
+function ratesEmbed(category = null) {
+  const embed = new EmbedBuilder()
     .setColor(0xe67e22)
     .setTitle("🎰 SINH TỒN · TỶ LỆ VÀ CƠ CHẾ")
     .setDescription(
@@ -122,6 +168,38 @@ function ratesEmbed() {
           "Tầng 100 hoàn thành; Overrun tới 999, phải hạ Final Boss. Vé tối đa 1, nhận thêm bỏ đi; bình tối đa 5. Run không hoạt động 7 ngày mất cược. /sinhton tieptuc giữ nguyên tiến trình và kết quả đã roll.",
       },
     );
+  const selected = RATE_CATEGORIES.find((item) => item.id === category);
+  if (selected)
+    embed.setFields(
+      embed.data.fields.filter((field) => selected.fields.includes(field.name)),
+    );
+  return embed;
+}
+
+function ratesPayload(userId, category = "encounters") {
+  const selected =
+    RATE_CATEGORIES.find((item) => item.id === category) || RATE_CATEGORIES[0];
+  const menu = new StringSelectMenuBuilder()
+    .setCustomId(`hardcore-rates:${userId}`)
+    .setPlaceholder("Chọn nhóm tỷ lệ Sinh tồn…")
+    .addOptions(
+      RATE_CATEGORIES.map((item) =>
+        new StringSelectMenuOptionBuilder()
+          .setLabel(item.name)
+          .setValue(item.id)
+          .setEmoji(item.emoji)
+          .setDefault(item.id === selected.id),
+      ),
+    );
+  return {
+    embeds: [
+      ratesEmbed(selected.id).setTitle(
+        `🎰 SINH TỒN · ${selected.name.toUpperCase()}`,
+      ),
+    ],
+    components: [new ActionRowBuilder().addComponents(menu)],
+    allowedMentions: { parse: [] },
+  };
 }
 
 module.exports = {
@@ -154,6 +232,15 @@ module.exports = {
     ),
   recordEmbed,
   ratesEmbed,
+  async handleRatesSelect(interaction) {
+    const [, ownerId] = interaction.customId.split(":");
+    if (interaction.user.id !== ownerId)
+      return interaction.reply({
+        content: "Chỉ người mở bảng tỷ lệ mới có thể chọn nhóm.",
+        flags: MessageFlags.Ephemeral,
+      });
+    return interaction.update(ratesPayload(ownerId, interaction.values[0]));
+  },
   async execute(interaction) {
     if (!interaction.guildId)
       return interaction.reply({
@@ -193,7 +280,7 @@ module.exports = {
     }
     if (subcommand === "rates")
       return interaction.reply({
-        embeds: [ratesEmbed()],
+        ...ratesPayload(interaction.user.id),
         flags: MessageFlags.Ephemeral,
       });
     if (subcommand === "batdau")
