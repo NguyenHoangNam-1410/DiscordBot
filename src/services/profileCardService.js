@@ -1,8 +1,28 @@
-const { createCanvas, loadImage } = require("@napi-rs/canvas");
+const path = require("node:path");
+const { createCanvas, loadImage, GlobalFonts } = require("@napi-rs/canvas");
 
 const WIDTH = 1000;
 const HEIGHT = 340;
 const AVATAR_FETCH_TIMEOUT_MS = 3_000;
+
+// Font đóng gói kèm bot (Noto, giấy phép OFL) để thẻ hiển thị giống nhau trên mọi máy chủ: Noto Sans cho chữ Latin/tiếng Việt,
+// Noto Sans Math cho chữ kiểu toán học như 𝓞𝓰𝓰𝔂, Noto Sans Symbols 2 cho ký hiệu. Thiếu font hệ thống không còn làm hiện ô vuông.
+const FONT_DIR = path.join(__dirname, "../../assets/fonts");
+const BUNDLED_FONTS = [
+  ["NotoSans-Regular.ttf", "Noto Sans"],
+  ["NotoSans-Bold.ttf", "Noto Sans"],
+  ["NotoSansMath-Regular.ttf", "Noto Sans Math"],
+  ["NotoSansSymbols2-Regular.ttf", "Noto Sans Symbols 2"],
+];
+for (const [file, family] of BUNDLED_FONTS) {
+  try {
+    GlobalFonts.registerFromPath(path.join(FONT_DIR, file), family);
+  } catch {
+    // Không có file font thì vẫn vẽ được bằng font hệ thống.
+  }
+}
+const FONT_FAMILY =
+  '"Noto Sans", "Noto Sans Math", "Noto Sans Symbols 2", "Segoe UI", sans-serif';
 
 function roundedRect(ctx, x, y, width, height, radius) {
   const r = Math.min(radius, width / 2, height / 2);
@@ -77,7 +97,7 @@ async function drawAvatar(ctx, avatarUrl, displayName, accent) {
     ctx.fillStyle = accent;
     ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
     ctx.fillStyle = "#ffffff";
-    ctx.font = '700 58px "Segoe UI", sans-serif';
+    ctx.font = `700 58px ${FONT_FAMILY}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(
@@ -100,10 +120,10 @@ async function drawAvatar(ctx, avatarUrl, displayName, accent) {
 
 function drawStat(ctx, x, y, label, value, accent) {
   ctx.fillStyle = "rgba(255,255,255,.55)";
-  ctx.font = '600 13px "Segoe UI", sans-serif';
+  ctx.font = `600 13px ${FONT_FAMILY}`;
   ctx.fillText(label.toUpperCase(), x, y);
   ctx.fillStyle = "#ffffff";
-  ctx.font = '700 24px "Segoe UI", sans-serif';
+  ctx.font = `700 24px ${FONT_FAMILY}`;
   ctx.fillText(String(value), x, y + 31);
   ctx.fillStyle = accent;
   ctx.fillRect(x, y + 41, 34, 3);
@@ -212,22 +232,22 @@ async function renderProfileCard({
 
   ctx.textAlign = "center";
   ctx.fillStyle = "#ffffff";
-  ctx.font = '700 22px "Segoe UI", sans-serif';
+  ctx.font = `700 22px ${FONT_FAMILY}`;
   ctx.fillText(fitText(ctx, displayName, 188), 144, 259);
   ctx.fillStyle = "rgba(255,255,255,.5)";
-  ctx.font = '14px "Segoe UI", sans-serif';
+  ctx.font = `14px ${FONT_FAMILY}`;
   ctx.fillText(fitText(ctx, `@${username}`, 180), 144, 283);
   ctx.textAlign = "left";
 
   ctx.fillStyle = "rgba(255,255,255,.5)";
-  ctx.font = '800 21px "Segoe UI", sans-serif';
+  ctx.font = `800 21px ${FONT_FAMILY}`;
   ctx.fillText(
     fitText(ctx, `SERVER • ${String(serverName).toUpperCase()}`, 470),
     320,
     76,
   );
   ctx.fillStyle = "#ffffff";
-  ctx.font = '800 32px "Segoe UI", sans-serif';
+  ctx.font = `800 32px ${FONT_FAMILY}`;
   ctx.fillText(fitText(ctx, displayName, 430), 320, 111);
   roundedRect(ctx, 810, 58, 112, 38, 12);
   ctx.fillStyle = `${accent}22`;
@@ -235,7 +255,7 @@ async function renderProfileCard({
   ctx.strokeStyle = `${accent}99`;
   ctx.stroke();
   ctx.fillStyle = accent;
-  ctx.font = '800 18px "Segoe UI", sans-serif';
+  ctx.font = `800 18px ${FONT_FAMILY}`;
   ctx.textAlign = "center";
   ctx.fillText(`#${rank}`, 866, 83);
   ctx.textAlign = "left";
@@ -268,7 +288,7 @@ async function renderProfileCard({
   );
 
   ctx.fillStyle = "rgba(255,255,255,.55)";
-  ctx.font = '600 13px "Segoe UI", sans-serif';
+  ctx.font = `600 13px ${FONT_FAMILY}`;
   ctx.fillText(`TIẾN ĐỘ CẤP ${level}`, 320, 258);
   roundedRect(ctx, 420, 246, 430, 16, 8);
   ctx.fillStyle = "rgba(255,255,255,.1)";
@@ -280,7 +300,7 @@ async function renderProfileCard({
     ctx.fill();
   }
   ctx.fillStyle = "#ffffff";
-  ctx.font = '700 14px "Segoe UI", sans-serif';
+  ctx.font = `700 14px ${FONT_FAMILY}`;
   ctx.textAlign = "right";
   ctx.fillText(
     `${experience.toLocaleString("vi-VN")} / ${target.toLocaleString("vi-VN")} EXP`,
@@ -288,7 +308,7 @@ async function renderProfileCard({
     259,
   );
   ctx.fillStyle = "rgba(255,255,255,.35)";
-  ctx.font = '12px "Segoe UI", sans-serif';
+  ctx.font = `12px ${FONT_FAMILY}`;
   drawSurvivalFrame(ctx, appearance.frame);
   return canvas.encode("png");
 }
