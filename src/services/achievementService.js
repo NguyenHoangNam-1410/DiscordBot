@@ -345,6 +345,159 @@ const ACHIEVEMENTS = Object.freeze([
     diamonds: 200,
     metric: "betBigWin",
   },
+  {
+    id: "gacha_pulls_1",
+    name: "Lần quay đầu tiên",
+    description: "Quay Gacha 1 lượt",
+    target: 1,
+    reward: 2_000,
+    diamonds: 10,
+    metric: "gachaPulls",
+  },
+  {
+    id: "gacha_pulls_10",
+    name: "Thử vận may",
+    description: "Quay Gacha tổng cộng 10 lượt",
+    target: 10,
+    reward: 5_000,
+    diamonds: 20,
+    metric: "gachaPulls",
+  },
+  {
+    id: "gacha_pulls_50",
+    name: "Nghiện gacha nhẹ",
+    description: "Quay Gacha tổng cộng 50 lượt",
+    target: 50,
+    reward: 15_000,
+    diamonds: 50,
+    metric: "gachaPulls",
+  },
+  {
+    id: "gacha_pulls_200",
+    name: "Con nghiện gacha",
+    description: "Quay Gacha tổng cộng 200 lượt",
+    target: 200,
+    reward: 40_000,
+    diamonds: 120,
+    metric: "gachaPulls",
+  },
+  {
+    id: "gacha_pulls_1000",
+    name: "Đại gia gacha",
+    description: "Quay Gacha tổng cộng 1.000 lượt",
+    target: 1_000,
+    reward: 120_000,
+    diamonds: 350,
+    metric: "gachaPulls",
+  },
+  {
+    id: "gacha_sr_5",
+    name: "Ánh sáng tím",
+    description: "Nhận 5 vật phẩm SR trở lên từ Gacha",
+    target: 5,
+    reward: 6_000,
+    diamonds: 25,
+    metric: "gachaSR",
+  },
+  {
+    id: "gacha_sr_25",
+    name: "Sưu tầm SR",
+    description: "Nhận 25 vật phẩm SR trở lên từ Gacha",
+    target: 25,
+    reward: 20_000,
+    diamonds: 70,
+    metric: "gachaSR",
+  },
+  {
+    id: "gacha_sr_100",
+    name: "Kho báu SR",
+    description: "Nhận 100 vật phẩm SR trở lên từ Gacha",
+    target: 100,
+    reward: 60_000,
+    diamonds: 180,
+    metric: "gachaSR",
+  },
+  {
+    id: "gacha_ssr_1",
+    name: "Hào quang vàng",
+    description: "Nhận 1 vật phẩm SSR trở lên từ Gacha",
+    target: 1,
+    reward: 10_000,
+    diamonds: 40,
+    metric: "gachaSSR",
+  },
+  {
+    id: "gacha_ssr_5",
+    name: "Tay vàng",
+    description: "Nhận 5 vật phẩm SSR trở lên từ Gacha",
+    target: 5,
+    reward: 30_000,
+    diamonds: 100,
+    metric: "gachaSSR",
+  },
+  {
+    id: "gacha_ssr_20",
+    name: "Thần may mắn",
+    description: "Nhận 20 vật phẩm SSR trở lên từ Gacha",
+    target: 20,
+    reward: 90_000,
+    diamonds: 260,
+    metric: "gachaSSR",
+  },
+  {
+    id: "gacha_ur_1",
+    name: "Huyền thoại xuất hiện",
+    description: "Nhận 1 vật phẩm UR từ Gacha",
+    target: 1,
+    reward: 30_000,
+    diamonds: 120,
+    metric: "gachaUR",
+  },
+  {
+    id: "gacha_ur_3",
+    name: "Con cưng của vận may",
+    description: "Nhận 3 vật phẩm UR từ Gacha",
+    target: 3,
+    reward: 80_000,
+    diamonds: 250,
+    metric: "gachaUR",
+  },
+  {
+    id: "gacha_ur_10",
+    name: "Chúa tể UR",
+    description: "Nhận 10 vật phẩm UR từ Gacha",
+    target: 10,
+    reward: 200_000,
+    diamonds: 500,
+    metric: "gachaUR",
+  },
+  {
+    id: "gacha_spent_1k",
+    name: "Đốt kim cương",
+    description: "Tiêu 1.000 kim cương để quay Gacha",
+    target: 1_000,
+    reward: 5_000,
+    diamonds: 15,
+    metric: "gachaSpent",
+  },
+  {
+    id: "gacha_spent_10k",
+    name: "Nhà đầu tư gacha",
+    description: "Tiêu 10.000 kim cương để quay Gacha",
+    target: 10_000,
+    reward: 30_000,
+    diamonds: 80,
+    metric: "gachaSpent",
+  },
+  {
+    id: "gacha_spent_50k",
+    name: "Cá voi gacha",
+    description: "Tiêu 50.000 kim cương để quay Gacha",
+    target: 50_000,
+    reward: 100_000,
+    diamonds: 300,
+    metric: "gachaSpent",
+  },
 ]);
 
 const BETTING_GAMES = Object.freeze(["baucua","oantuti","taixiu","chinchiro","blackjack","poker","duangua","mines","coquay"]);
@@ -383,7 +536,32 @@ function metrics(guildId, userId) {
        FROM game_history WHERE guild_id=? AND user_id=? AND game IN (${BETTING_SQL})`,
     )
     .get(guild, user);
+  const gacha = { pulls: 0, spent: 0, sr: 0, ssr: 0, ur: 0 };
+  const tierRank = { SR: 1, SSR: 2, UR: 3 };
+  for (const row of db
+    .prepare(
+      "SELECT pulls,diamond_cost,results_json FROM gacha_history WHERE guild_id=? AND user_id=?",
+    )
+    .iterate(guild, user)) {
+    gacha.pulls += row.pulls;
+    gacha.spent += row.diamond_cost;
+    let results = [];
+    try {
+      results = JSON.parse(row.results_json);
+    } catch {}
+    for (const result of results) {
+      const rank = tierRank[result?.tier] || 0;
+      if (rank >= 1) gacha.sr += 1;
+      if (rank >= 2) gacha.ssr += 1;
+      if (rank >= 3) gacha.ur += 1;
+    }
+  }
   return {
+    gachaPulls: gacha.pulls,
+    gachaSpent: gacha.spent,
+    gachaSR: gacha.sr,
+    gachaSSR: gacha.ssr,
+    gachaUR: gacha.ur,
     hardcoreRuns: hardcore.runs || 0,
     hardcoreEscapes: hardcore.escapes || 0,
     hardcoreCompletions: hardcore.completions || 0,

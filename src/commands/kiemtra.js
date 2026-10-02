@@ -106,6 +106,11 @@ const ACHIEVEMENT_CATEGORIES = Object.freeze([
   { label: "Game cược · khám phá", value: "betGames" },
   { label: "Game cược · tổng đặt cược", value: "betStaked" },
   { label: "Game cược · thắng lớn", value: "betBigWin" },
+  { label: "Gacha · số lượt quay", value: "gachaPulls" },
+  { label: "Gacha · vật phẩm SR+", value: "gachaSR" },
+  { label: "Gacha · vật phẩm SSR+", value: "gachaSSR" },
+  { label: "Gacha · vật phẩm UR", value: "gachaUR" },
+  { label: "Gacha · kim cương đã tiêu", value: "gachaSpent" },
 ]);
 function selection(value, choices) {
   return choices.some((choice) => choice.value === value) ? value : "all";
