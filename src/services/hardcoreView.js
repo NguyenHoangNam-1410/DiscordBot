@@ -317,7 +317,7 @@ function encounterText(state) {
     const names = {
       tax_collector: "🧾 TAX COLLECTOR",
       potion_thief: "🦹 KẺ TRỘM BÌNH MÁU",
-      wrong_portal: "🌀 WRONG PORTAL",
+      wrong_portal: `${icon("cyclone")} WRONG PORTAL`,
     };
     const detail =
       encounter.kind === "tax_collector"
@@ -492,7 +492,7 @@ function encounterSummary(state) {
       {
         tax_collector: "🧾 **Tax Collector** · Có thể mất 15% payout hiện tại.",
         potion_thief: "🦹 **Kẻ trộm** · Có thể mất 1 🧪.",
-        wrong_portal: `🌀 **Wrong Portal** · ${Math.round((e.portal?.goodChance ?? 0.5) * 100)}% tốt / ${Math.round((1 - (e.portal?.goodChance ?? 0.5)) * 100)}% xấu + Elite đánh phủ đầu.`,
+        wrong_portal: `${icon("cyclone")} **Wrong Portal** · ${Math.round((e.portal?.goodChance ?? 0.5) * 100)}% tốt / ${Math.round((1 - (e.portal?.goodChance ?? 0.5)) * 100)}% xấu + Elite đánh phủ đầu.`,
       }[e.kind] || "⚠️ **Bẫy**"
     );
   return "🕳️ **Phòng trống** · Đi tiếp hoặc rút thưởng.";
@@ -669,7 +669,7 @@ function hardcorePrivatePayload(
       value: equipmentSummary(state, itemCatalog),
     });
     effectFields.push({
-      name: "🌀 Tổng hiệu ứng Rift",
+      name: `${icon("cyclone")} Tổng hiệu ứng Rift`,
       value: riftSummary(state),
     });
     effectFields.push({
@@ -679,12 +679,15 @@ function hardcorePrivatePayload(
     });
     for (const [key, stacks] of modifiers)
       effectFields.push({
-        name: `🌀 ${RIFT_MODIFIERS[key]?.name || key} ×${stacks}`.slice(0, 256),
+        name: `${icon("cyclone")} ${RIFT_MODIFIERS[key]?.name || key} ×${stacks}`.slice(
+          0,
+          256,
+        ),
         value: RIFT_MODIFIERS[key]?.text || "Không rõ tác dụng",
       });
     if (!modifiers.length)
       effectFields.push({
-        name: "🌀 Rift",
+        name: `${icon("cyclone")} Rift`,
         value:
           "Chưa có modifier. Nhận thêm mỗi 10 tầng; đủ tám loại trước khi lặp.",
       });
@@ -728,7 +731,7 @@ function hardcorePrivatePayload(
     });
     if (state.encounter.kind === "wrong_portal")
       embed.addFields({
-        name: "🌀 Đích đến có thể gặp",
+        name: `${icon("cyclone")} Đích đến có thể gặp`,
         value: `${Math.round((state.encounter.portal?.goodChance ?? 0.5) * 100)}% tốt, chọn đều: +10 Max HP, hồi đầy, +1 bình (tối đa 5); bonus +50% cược; hoặc +4 Defense/+5 Resistance/+1 Luck.\nCòn lại là nhánh xấu: mất tối đa 15% Max HP nhưng giữ ít nhất 1; Energy về 0; mất tối đa 2 bình; payout ×0,9; hoặc −5 Defense/Resistance. Sau đó Elite đánh phủ đầu; hạ nó mới qua tầng. Luck không tác động Portal; kết quả giấu trước khi chấp nhận.`,
       });
   }
@@ -818,7 +821,7 @@ function hardcoreEmbed(
         inline: false,
       },
       {
-        name: "🌀 Rift modifier",
+        name: `${icon("cyclone")} Rift modifier`,
         value:
           Object.entries(state.modifiers || {})
             .filter(([, stacks]) => stacks > 0)
@@ -832,9 +835,9 @@ function hardcoreEmbed(
       {
         name: `${icon("moneybag")} Rút thưởng`,
         value: result
-          ? `Đã nhận **${formatCoins(result.payout)} xu** · 💎 **${formatCoins(result.diamonds || 0)}**`
+          ? `Đã nhận **${formatCoins(result.payout)} ${icon("coin")}** - **${formatCoins(result.diamonds || 0)} ${icon("gem")}**`
           : state.cleared
-            ? `**${formatCoins(payout)} ${icon("coin")}** 💎 **${formatCoins(runDiamondReward(state))}**`
+            ? `**${formatCoins(payout)} ${icon("coin")}** - **${formatCoins(runDiamondReward(state))} ${icon("gem")}**`
             : "Chưa thể rút",
         inline: true,
       },
@@ -855,7 +858,7 @@ function hardcoreEmbed(
       ? `rút thưởng tầng ${state.floor}`
       : result.reason === "forfeit"
         ? "bỏ run"
-        : `💀 tử trận tầng ${state.floor}`;
+        : `${icon("skull")} tử trận tầng ${state.floor}`;
     embed.addFields({
       name: `${icon("checkered_flag")} KẾT QUẢ`,
       value: resultBlock({
@@ -868,7 +871,7 @@ function hardcoreEmbed(
       }),
     });
     embed.addFields({
-      name: "💎 Kim cương Sinh tồn",
+      name: `${icon("gem")} Kim cương Sinh tồn`,
       value: won
         ? `Đã cộng **${formatCoins(result.diamonds || 0)}** kim cương vào tài khoản.`
         : `Mất **${formatCoins(result.diamondsLost || 0)}** kim cương tạm giữ.`,
