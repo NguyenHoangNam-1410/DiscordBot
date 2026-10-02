@@ -224,7 +224,7 @@ function achievementPanel(
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(page === 0),
     new ButtonBuilder()
-      .setCustomId(`kiemtra-page:${userId}:${status}:${category}:${page}`)
+      .setCustomId(`kiemtra-pageinfo:${userId}:${status}:${category}:${page}`)
       .setLabel(`Trang ${page + 1}/${pages}`)
       .setStyle(ButtonStyle.Secondary)
       .setDisabled(true),
@@ -399,6 +399,7 @@ function build(guildId, user, key, member = null) {
 
 module.exports = {
   claimRoleRewards,
+  achievementPanel,
   async show(interaction) {
     return interaction.reply({
       embeds: [overview(interaction.guildId, interaction.user.id)],
