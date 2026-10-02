@@ -435,6 +435,57 @@ function chooseRarity(state) {
   return "fake_legendary";
 }
 
+// Phân phối loại hòm theo đúng thứ tự roll của makeChest, để UI hiển thị tỷ lệ thật.
+function chestOdds(state, treasure = false) {
+  const unstable = state.modifiers?.unstable_rift || 0;
+  const mimicAllowed = state.pityRare < 5;
+  const ancient = mimicAllowed ? Math.min(0.08, 0.03 + unstable * 0.01) : 0;
+  const mimicUpTo = mimicAllowed
+    ? Math.min(
+        0.6,
+        Math.min(0.3, 0.15 + unstable * 0.03) + (state.mimicChance || 0),
+      )
+    : 0;
+  const mimic = Math.max(0, mimicUpTo - ancient);
+  const rest = Math.max(0, 1 - ancient - mimic);
+  const odds = {
+    ancient_mimic: ancient,
+    mimic,
+    legendary: 0,
+    cursed: 0,
+    rare: 0,
+    common: 0,
+    empty: 0,
+    fake_legendary: 0,
+  };
+  if (treasure) {
+    const chance = legendaryChance(state, true);
+    odds.legendary = rest * chance;
+    odds.rare = rest * (1 - chance);
+  } else {
+    const chance = legendaryChance(state);
+    const bands = [
+      ["legendary", chance],
+      ["cursed", chance + 0.03],
+      ["rare", state.pityRare >= 5 ? 1 : chance + 0.25],
+      ["common", chance + 0.65],
+      ["empty", 0.95],
+      ["fake_legendary", 1],
+    ];
+    let low = 0;
+    for (const [kind, limit] of bands) {
+      const high = Math.min(1, Math.max(low, limit));
+      odds[kind] = rest * (high - low);
+      low = high;
+    }
+  }
+  odds.detect = Math.min(
+    0.95,
+    0.25 + state.luck * 0.03 + (state.mimicDetection || 0),
+  );
+  return odds;
+}
+
 function makeChest(state, treasure = false) {
   const unstable = state.modifiers?.unstable_rift || 0;
   const mimicRoll = randomFloat();
@@ -456,6 +507,8 @@ function makeChest(state, treasure = false) {
   const rarity = ITEMS[kind] ? kind : null;
   return {
     type: "chest",
+    treasure,
+    odds: chestOdds(state, treasure),
     kind,
     rarity,
     item: rarity ? pick(ITEMS[rarity]) : null,
@@ -2857,6 +2910,8 @@ function cleanupStaleHardcoreSessions(now = Date.now()) {
 }
 
 module.exports = {
+  makeChest,
+  chestOdds,
   MIN_BET,
   MAX_BET,
   MAX_PAYOUT,

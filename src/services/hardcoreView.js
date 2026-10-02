@@ -51,6 +51,30 @@ function healthBar(hp, maxHp) {
         : 0;
   return `${STAT_EMOJI.hp} HP \`${"█".repeat(filled)}${"░".repeat(segments - filled)}\` **${formatCoins(current)}/${formatCoins(maximum)}**`;
 }
+const percentText = (value) => `${(value * 100).toFixed(1).replace(".", ",")}%`;
+// Tỷ lệ loại hòm được lưu lúc tạo (hòm của run cũ không có thì bỏ qua).
+function chestChanceLines(chest) {
+  const odds = chest.odds;
+  if (!odds) return "";
+  const mimic = (odds.mimic || 0) + (odds.ancient_mimic || 0);
+  const rows = [
+    ["🟢", `Đồ ${rarityLabel("legendary")}`, odds.legendary],
+    ["🟢", `Đồ ${rarityLabel("rare")}`, odds.rare],
+    ["🟢", `Đồ ${rarityLabel("common")}`, odds.common],
+    ["🟡", `Đồ ${rarityLabel("cursed")} (mạnh nhưng kèm nguyền rủa)`, odds.cursed],
+    ["🔴", `Mimic — phải chiến đấu${odds.ancient_mimic > 0 ? ` (gồm Mimic cổ đại ${percentText(odds.ancient_mimic)})` : ""}`, mimic],
+    ["🔴", "Hòm trống", odds.empty],
+    ["🔴", "Đồ SSR giả (không có chỉ số)", odds.fake_legendary],
+  ].filter(([, , chance]) => chance > 0.0005);
+  const share = (marks) =>
+    rows
+      .filter(([mark]) => marks.includes(mark))
+      .reduce((sum, [, , chance]) => sum + chance, 0);
+  return `Tỷ lệ khi **Mở**:\n${rows
+    .map(([mark, label, chance]) => `${mark} **${percentText(chance)}** · ${label}`)
+    .join("\n")}\n**Tổng:** 🟢 có lợi ${percentText(share("🟢"))} · 🟡 đánh đổi ${percentText(share("🟡"))} · 🔴 bất lợi ${percentText(share("🔴"))}\n🔍 Kiểm tra: phát hiện Mimic (nếu có) **${percentText(odds.detect)}**.\n`;
+}
+
 function shrineChanceLines(state) {
   const outcomes = shrineOutcomes(state);
   const share = (tone) =>
@@ -323,7 +347,7 @@ function encounterText(state) {
     return `${icon("crossed_swords")} **${encounter.name}** · ${rankLabel(encounter.rank)}\n${healthBar(encounter.hp, encounter.maxHp)}\n${STAT_EMOJI.attack} ATK ${formatCoins(encounter.damageMin)}–${formatCoins(encounter.damageMax)} · ${STAT_EMOJI.defense} DEF ${formatCoins(encounter.defense)}\n**Loại DMG:** ${damageType}\n**Đòn kế tiếp:** ${encounter.nextDamageType === "magic" ? "Phép" : "Vật lý"}${mechanic ? `\n**Cơ chế boss:** ${mechanic}` : ""}\n**Tấn công:** đánh và hồi 1 ENE. **Phòng thủ:** DEF ×2, miễn chí mạng và giảm thêm 40% DMG vật lý/phép sau giảm trừ, hồi 1 ENE. **Kỹ năng:** 2 ENE — ${skillHint}\n**Bình máu:** hồi ${Math.round(Math.max(0.1, Math.min(0.75, 0.35 + (state.potionPower || 0))) * 100)}% MAX HP, ít nhất 20; quái vẫn phản công.`;
   }
   if (encounter.type === "chest")
-    return `${icon("package")} **HÒM BÍ ẨN**\n${encounter.inspected ? "Đã kiểm tra một lần; kết quả có thể không phát hiện được Mimic." : "Kiểm tra một lần để thử phát hiện Mimic; Mở để nhận đồ hoặc có thể phải đánh Mimic; Bán để lấy thêm 15% tiền cược vào payout."}${encounter.revealed ? `\n${icon("warning")} Mimic đã bị phát hiện: **Tránh Mimic** để đi tiếp an toàn.` : ""}`;
+    return `${icon("package")} **${encounter.treasure ? "HÒM KHO BÁU" : "HÒM BÍ ẨN"}**\n${chestChanceLines(encounter)}${encounter.inspected ? "Đã kiểm tra một lần; kết quả có thể không phát hiện được Mimic." : "Kiểm tra một lần để thử phát hiện Mimic; Mở để nhận đồ hoặc có thể phải đánh Mimic; Bán để lấy thêm 15% tiền cược vào payout."}${encounter.revealed ? `\n${icon("warning")} Mimic đã bị phát hiện: **Tránh Mimic** để đi tiếp an toàn.` : ""}`;
   if (encounter.type === "shrine")
     return `${icon("moyai")} **SHRINE KHÔNG RÕ NGUỒN GỐC**\n**Chạm Shrine** để nhận một hiệu ứng ngẫu nhiên, hoặc **Bỏ qua** để đi tiếp. Loại hiệu ứng được chọn đồng đều:\n${shrineChanceLines(state)}`;
   if (encounter.type === "rngesus")
