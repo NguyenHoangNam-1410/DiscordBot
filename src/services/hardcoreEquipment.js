@@ -63,54 +63,54 @@ function effectText(item, level) {
   const effects = [];
   const sign = (value) => `${value > 0 ? "+" : "−"}${Math.abs(value)}`;
   if (item.attack)
-    effects.push(
-      `${STAT_EMOJI.attack} ${sign(item.attack * level)} sát thương`,
-    );
+    effects.push(`${STAT_EMOJI.attack} ATK ${sign(item.attack * level)}`);
   if (item.defense)
-    effects.push(`${STAT_EMOJI.defense} ${sign(item.defense * level)} Defense`);
+    effects.push(`${STAT_EMOJI.defense} DEF ${sign(item.defense * level)}`);
   if (item.maxHp)
-    effects.push(`${STAT_EMOJI.hp} ${sign(item.maxHp * level)} HP tối đa`);
+    effects.push(`${STAT_EMOJI.hp} MAX HP ${sign(item.maxHp * level)}`);
   if (item.resistance)
     effects.push(
-      `${STAT_EMOJI.resistance} ${sign(item.resistance * level)}% Resist`,
+      `${STAT_EMOJI.resistance} RES ${sign(item.resistance * level)}%`,
     );
   if (item.critChance)
     effects.push(
-      `${STAT_EMOJI.crit} ${sign(Math.round(item.critChance * level * 100))}% chí mạng`,
+      `${STAT_EMOJI.crit} CRIT ${sign(Math.round(item.critChance * level * 100))}%`,
     );
   if (item.luck)
-    effects.push(`${STAT_EMOJI.luck} ${sign(item.luck * level)} Luck`);
+    effects.push(`${STAT_EMOJI.luck} LUCK ${sign(item.luck * level)}`);
   if (item.heal)
-    effects.push(`${STAT_EMOJI.hp} hồi tối đa ${item.heal} khi nhặt`);
+    effects.push(`${STAT_EMOJI.hp} HP hồi tối đa ${item.heal} khi nhặt`);
   if (item.potions)
-    effects.push(`${STAT_EMOJI.potions} đã nhận ${item.potions * level}`);
+    effects.push(`${STAT_EMOJI.potions} POT đã nhận ${item.potions * level}`);
   if (item.escapeTokens)
     effects.push(`${STAT_EMOJI.tickets} đã nhận ${item.escapeTokens * level}`);
   if (item.defenseSet !== undefined)
-    effects.push(`${STAT_EMOJI.defense} đặt về ${item.defenseSet} khi nhặt`);
+    effects.push(
+      `${STAT_EMOJI.defense} DEF đặt về ${item.defenseSet} khi nhặt`,
+    );
   if (item.bonusPenalty)
     effects.push(
       `${STAT_EMOJI.payout} −${Math.round((1 - (1 - item.bonusPenalty) ** level) * 100)}% cộng dồn`,
     );
   for (const [key, label] of Object.entries({
-    accuracy: "Accuracy",
-    evasion: "Evasion",
-    maxEnergy: "Energy tối đa",
+    accuracy: `${STAT_EMOJI.accuracy} ACC`,
+    evasion: `${STAT_EMOJI.evasion} EVA`,
+    maxEnergy: `${STAT_EMOJI.energy} MAX ENE`,
   }))
-    if (item[key]) effects.push(`${sign(item[key] * level)} ${label}`);
+    if (item[key]) effects.push(`${label} ${sign(item[key] * level)}`);
   for (const [key, label] of Object.entries({
     potionPower: "hồi bình máu",
-    bossDamage: "damage lên Boss",
-    eliteDamage: "damage lên Elite",
+    bossDamage: `${STAT_EMOJI.attack} DMG lên Boss`,
+    eliteDamage: `${STAT_EMOJI.attack} DMG lên Elite`,
     mimicDetection: "phát hiện Mimic",
     goblinChance: "bắt Goblin",
     legendaryFind: "cơ hội SSR",
     floorHpLoss: "HP mất mỗi tầng",
     mimicChance: "Mimic",
-    damageTaken: "damage nhận vào",
+    damageTaken: `${STAT_EMOJI.attack} DMG nhận vào`,
   }))
     if (item[key])
-      effects.push(`${sign(Math.round(item[key] * level * 100))}% ${label}`);
+      effects.push(`${label} ${sign(Math.round(item[key] * level * 100))}%`);
   return effects.join(" · ") || item.text || "Không rõ tác dụng";
 }
 

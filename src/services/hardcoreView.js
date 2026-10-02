@@ -48,41 +48,41 @@ function healthBar(hp, maxHp) {
       : ratio > 0
         ? Math.max(1, Math.min(segments - 1, Math.round(ratio * segments)))
         : 0;
-  return `${STAT_EMOJI.hp} \`${"█".repeat(filled)}${"░".repeat(segments - filled)}\` **${formatCoins(current)}/${formatCoins(maximum)} HP**`;
+  return `${STAT_EMOJI.hp} HP \`${"█".repeat(filled)}${"░".repeat(segments - filled)}\` **${formatCoins(current)}/${formatCoins(maximum)}**`;
 }
 const CLASS_PROFILES = Object.freeze({
   amazon: {
-    role: "Bắn hai phát, Accuracy cao",
+    role: "Bắn hai phát, ACC cao",
     effect:
-      "Bắn hai phát vật lý, mỗi phát 85% sát thương; mỗi phát tính trúng và chí mạng riêng.",
+      "Bắn hai phát vật lý, DMG mỗi phát bằng 85% ATK; mỗi phát tính trúng và chí mạng riêng.",
   },
   barbarian: {
     role: "HP cao, đánh vật lý mạnh",
-    effect: "Gây 165% sát thương vật lý.",
+    effect: "Gây DMG vật lý bằng 165% ATK.",
   },
   assassin: {
-    role: "Né và chí mạng cao",
-    effect: "Gây 130% sát thương vật lý và né hoàn toàn đòn phản công.",
+    role: "EVA và CRIT cao",
+    effect: "Gây DMG vật lý bằng 130% ATK và né hoàn toàn đòn phản công.",
   },
   sorceress: {
     role: "Sát thương phép mạnh",
     effect:
-      "Gây 210% sát thương phép, luôn trúng; chịu ảnh hưởng kháng phép của quái.",
+      "Gây DMG phép bằng 210% ATK, luôn trúng; chịu ảnh hưởng kháng phép của quái.",
   },
   druid: {
-    role: "Tấn công và tự hồi máu",
+    role: "ATK và hồi HP",
     effect:
-      "Gây 135% sát thương vật lý, hồi 12% HP tối đa (không vượt HP tối đa).",
+      "Gây DMG vật lý bằng 135% ATK, hồi 12% HP tối đa (không vượt HP tối đa).",
   },
   necromancer: {
-    role: "Nhiều Energy, chặn phản công",
+    role: "Nhiều ENE, chặn phản công",
     effect:
-      "Gây 155% sát thương phép, luôn trúng, chặn hoàn toàn đòn phản công.",
+      "Gây DMG phép bằng 155% ATK, luôn trúng, chặn hoàn toàn đòn phản công.",
   },
   paladin: {
-    role: "Defense và kháng phép cao",
+    role: "DEF và RES cao",
     effect:
-      "Gây 140% sát thương vật lý rồi thủ: Defense ×2, miễn chí mạng, giảm thêm 40% sát thương phản công sau giảm trừ (tối thiểu 1).",
+      "Gây DMG vật lý bằng 140% ATK rồi thủ: DEF ×2, miễn chí mạng, giảm thêm 40% sát thương phản công sau giảm trừ (tối thiểu 1).",
   },
 });
 
@@ -127,20 +127,20 @@ function hardcoreSetupPayload(draft, classes, context) {
       },
       {
         name: "📊 Chỉ số ban đầu",
-        value: `${healthBar(character.hp, character.hp)}\n${STAT_EMOJI.attack} ${character.damageMin}–${character.damageMax} · ${STAT_EMOJI.defense} ${character.defense} Defense · ${STAT_EMOJI.resistance} ${character.resistance}% Resist\n${STAT_EMOJI.energy} Energy ${character.energy}/${character.energy} · ${STAT_EMOJI.potions} 3 bình · ${STAT_EMOJI.tickets} 0 vé\nChính xác ${character.accuracy} · Né ${character.evasion} · Chí mạng ${Math.round(character.critChance * 100)}% · Luck 0`,
+        value: `${healthBar(character.hp, character.hp)}\n${STAT_EMOJI.attack} ATK ${character.damageMin}–${character.damageMax} · ${STAT_EMOJI.defense} DEF ${character.defense} · ${STAT_EMOJI.resistance} RES ${character.resistance}%\n${STAT_EMOJI.energy} ENE ${character.energy}/${character.energy} · ${STAT_EMOJI.potions} POT 3 · ${STAT_EMOJI.tickets} Vé 0\n${STAT_EMOJI.accuracy} ACC ${character.accuracy} · ${STAT_EMOJI.evasion} EVA ${character.evasion} · ${STAT_EMOJI.crit} CRIT ${Math.round(character.critChance * 100)}% · ${STAT_EMOJI.luck} LUCK 0`,
       },
       {
-        name: `✨ ${character.skill} · 2 Energy`,
+        name: `✨ ${character.skill} · 2 ENE`,
         value: CLASS_PROFILES[draft.classKey].effect,
       },
     );
   } else
     embed.addFields({
-      name: "🧙 Chọn một trong 7 nhân vật",
+      name: "🧙Chọn một trong 7 nhân vật",
       value: Object.values(classes)
         .map(
           (entry) =>
-            `${entry.emoji} **${entry.name}** · ${entry.hp} HP · ${entry.damageMin}–${entry.damageMax} sát thương · ${entry.defense} Defense`,
+            `${entry.emoji} **${entry.name}** · ${STAT_EMOJI.hp} HP ${entry.hp} · ${STAT_EMOJI.attack} ATK ${entry.damageMin}–${entry.damageMax} · ${STAT_EMOJI.defense} DEF ${entry.defense}`,
         )
         .join("\n"),
     });
@@ -148,7 +148,7 @@ function hardcoreSetupPayload(draft, classes, context) {
     .addFields({
       name: "📖 Ký hiệu",
       value:
-        "❤️ HP · ⚔️ sát thương · 🛡️ phòng thủ · 🎯 chính xác · 💨 né · 💥 chí mạng · 🔮 kháng phép · ✨ năng lượng · 🍀 Luck · 🧪 bình máu · 🎫 vé.\nRút thưởng để chốt xu và kim cương tạm giữ; tử trận mất toàn bộ. Mỗi 5 tầng có checkpoint hồi đầy HP.",
+        "❤️ HP · ⚔️ ATK · 🛡️ DEF · 🎯 ACC · 💨 EVA · 💥 CRIT · 🔮 RES · ✨ ENE · 🍀 LUCK · 🧪 POT · 🎫 vé.\nRút thưởng để chốt xu và kim cương tạm giữ; tử trận mất toàn bộ. Mỗi 5 tầng có checkpoint hồi đầy HP.",
     })
     .setFooter({ text: "Bảng chuẩn bị hết hạn sau 5 phút không thao tác." });
   const customId = (action) =>
@@ -274,7 +274,7 @@ function equipmentServicePreview(state) {
       "Không rõ tác dụng",
       "không có buff chỉ số lâu dài",
     );
-    return `⚒️ **HORADRIC FORGE** · **${target.name} Lv.${level}** [${rarityLabel(target.rarity)}]\n**Mất:** 1 level. ${level === 1 ? "Món này sẽ bị xóa." : `Món còn Lv.${level - 1}.`} Không tốn xu.\n**Hiệu ứng level bị gỡ:** ${removed} (theo phần đã áp dụng và giới hạn hiện tại).\n**Giữ:** các món khác, level còn lại và vật tư đã nhận khi nhặt. HP/Energy hiện tại có thể giảm nếu chỉ số tối đa giảm.\n**Lời nguyền:** nếu level bị nghiền còn nguyền, gỡ lớp đó và hoàn phần phạt; các lớp khác giữ nguyên.\n**Chọn đúng 1 bonus:** +3 sát thương; +4 Defense; +10 Max HP và hồi tối đa 10 HP${ticket ? "; hoặc +1 Vé Thoát Hiểm" : ". Vé chỉ đổi được từ SSR/UR"}.\nVé giữ tối đa 1; đang có vé thì vé mới bị bỏ. Bỏ qua để giữ nguyên món.`;
+    return `⚒️ **HORADRIC FORGE** · **${target.name} Lv.${level}** [${rarityLabel(target.rarity)}]\n**Mất:** 1 level. ${level === 1 ? "Món này sẽ bị xóa." : `Món còn Lv.${level - 1}.`} Không tốn xu.\n**Hiệu ứng level bị gỡ:** ${removed} (theo phần đã áp dụng và giới hạn hiện tại).\n**Giữ:** các món khác, level còn lại và vật tư đã nhận khi nhặt. HP/ENE hiện tại có thể giảm nếu chỉ số tối đa giảm.\n**Lời nguyền:** nếu level bị nghiền còn nguyền, gỡ lớp đó và hoàn phần phạt; các lớp khác giữ nguyên.\n**Chọn đúng 1 bonus:** +3 ATK; +4 DEF; +10 MAX HP và hồi tối đa 10 HP${ticket ? "; hoặc +1 Vé Thoát Hiểm" : ". Vé chỉ đổi được từ SSR/UR"}.\nVé giữ tối đa 1; đang có vé thì vé mới bị bỏ. Bỏ qua để giữ nguyên món.`;
   }
   return null;
 }
@@ -289,10 +289,9 @@ function encounterText(state) {
   if (encounter.type === "combat") {
     const skillHint = CLASS_PROFILES[state.classKey].effect;
     const mechanic = {
-      butcher:
-        "Blood Frenzy: mỗi lần ra đòn +8% sát thương, tối đa 5 cộng dồn.",
+      butcher: "Blood Frenzy: mỗi lần ra đòn +8% ATK, tối đa 5 cộng dồn.",
       riftwalker: "Miễn nhiễm đòn đầu trong mỗi chu kỳ 3 lần bạn tấn công.",
-      assur: "+18 Evasion và +12 điểm % chí mạng.",
+      assur: "+18 EVA và +12 điểm % CRIT.",
       lucion: "Hồi HP bằng 35% sát thương gây ra.",
       deimoss: "Abyssal Spires: giảm 25% sát thương nhận vào.",
     }[encounter.mechanic];
@@ -301,7 +300,7 @@ function encounterText(state) {
       magic: "Phép cố định",
       mixed: "Vật lý / phép",
     }[enemyDamageType(encounter)];
-    return `${icon("crossed_swords")} **${encounter.name}** · ${rankLabel(encounter.rank)}\n${healthBar(encounter.hp, encounter.maxHp)}\n${icon("crossed_swords")} ${formatCoins(encounter.damageMin)}–${formatCoins(encounter.damageMax)} · ${icon("shield")} ${formatCoins(encounter.defense)}\n**Sát thương:** ${damageType}\n**Đòn kế tiếp:** ${encounter.nextDamageType === "magic" ? "Phép" : "Vật lý"}${mechanic ? `\n**Cơ chế boss:** ${mechanic}` : ""}\n**Tấn công:** đánh và hồi 1 Energy. **Phòng thủ:** Defense ×2, miễn chí mạng và giảm thêm 40% damage vật lý/phép sau giảm trừ, hồi 1 Energy. **Kỹ năng:** 2 Energy — ${skillHint}\n**Bình máu:** hồi ${Math.round(Math.max(0.1, Math.min(0.75, 0.35 + (state.potionPower || 0))) * 100)}% Max HP, ít nhất 20; quái vẫn phản công.`;
+    return `${icon("crossed_swords")} **${encounter.name}** · ${rankLabel(encounter.rank)}\n${healthBar(encounter.hp, encounter.maxHp)}\n${STAT_EMOJI.attack} ATK ${formatCoins(encounter.damageMin)}–${formatCoins(encounter.damageMax)} · ${STAT_EMOJI.defense} DEF ${formatCoins(encounter.defense)}\n**Loại DMG:** ${damageType}\n**Đòn kế tiếp:** ${encounter.nextDamageType === "magic" ? "Phép" : "Vật lý"}${mechanic ? `\n**Cơ chế boss:** ${mechanic}` : ""}\n**Tấn công:** đánh và hồi 1 ENE. **Phòng thủ:** DEF ×2, miễn chí mạng và giảm thêm 40% DMG vật lý/phép sau giảm trừ, hồi 1 ENE. **Kỹ năng:** 2 ENE — ${skillHint}\n**Bình máu:** hồi ${Math.round(Math.max(0.1, Math.min(0.75, 0.35 + (state.potionPower || 0))) * 100)}% MAX HP, ít nhất 20; quái vẫn phản công.`;
   }
   if (encounter.type === "chest")
     return `${icon("package")} **HÒM BÍ ẨN**\n${encounter.inspected ? "Đã kiểm tra một lần; kết quả có thể không phát hiện được Mimic." : "Kiểm tra một lần để thử phát hiện Mimic; Mở để nhận đồ hoặc có thể phải đánh Mimic; Bán để lấy thêm 15% tiền cược vào payout."}${encounter.revealed ? `\n${icon("warning")} Mimic đã bị phát hiện: **Tránh Mimic** để đi tiếp an toàn.` : ""}`;
@@ -324,7 +323,7 @@ function encounterText(state) {
         ? `Hệ số payout ×0,85, giảm ${formatCoins(payoutReductionCost(state, 0.15))} xu hiện tại nếu không có Lucky Break.`
         : encounter.kind === "potion_thief"
           ? "Đi tiếp có thể mất 1 bình máu."
-          : `${Math.round((encounter.portal?.goodChance ?? 0.5) * 100)}% Portal tốt: nhận lợi ích, qua tầng. Còn lại: penalty rồi Rift Ambusher Elite đánh phủ đầu; hạ nó mới qua tầng. Luck không đổi Portal. Đích đến đã lưu; có thể rút trước khi chấp nhận.`;
+          : `${Math.round((encounter.portal?.goodChance ?? 0.5) * 100)}% Portal tốt: nhận lợi ích, qua tầng. Còn lại: penalty rồi Rift Ambusher Elite đánh phủ đầu; hạ nó mới qua tầng. LUCK không đổi Portal. Đích đến đã lưu; có thể rút trước khi chấp nhận.`;
     return `**${names[encounter.kind]}**\nChọn **Chấp nhận số phận**: ${detail}\n🍀 Lucky Break: **${Math.round(luckyBreakChance(state) * 1000) / 10}%** tránh thuế hoặc trộm bình.`;
   }
   return "🕳️ **PHÒNG TRỐNG**\nBấm **Đi tiếp** để vượt tầng. Có thể rút thưởng thay vì tiếp tục.";
@@ -361,13 +360,13 @@ function statLine(state, showChanges = true) {
     showChanges ? change(state, key, percent) : "";
   return [
     `${healthBar(state.hp, state.maxHp)}${hpDelta}`,
-    `${STAT_EMOJI.energy} Energy **${state.energy}/${state.maxEnergy}**${delta("energy")} · ${STAT_EMOJI.potions} ${state.potions} bình · ${STAT_EMOJI.tickets} ${state.escapeTokens} vé`,
-    `${STAT_EMOJI.attack} ${formatCoins(state.damageMin)}–${formatCoins(state.damageMax)}${damageDelta} · ${STAT_EMOJI.defense} ${formatCoins(state.defense)} Defense${delta("defense")} · ${STAT_EMOJI.resistance} ${state.resistance}% Resist${delta("resistance")}`,
+    `${STAT_EMOJI.energy} ENE **${state.energy}/${state.maxEnergy}**${delta("energy")} · ${STAT_EMOJI.potions} POT ${state.potions} · ${STAT_EMOJI.tickets} Vé ${state.escapeTokens}`,
+    `${STAT_EMOJI.attack} ATK ${formatCoins(state.damageMin)}–${formatCoins(state.damageMax)}${damageDelta} · ${STAT_EMOJI.defense} DEF ${formatCoins(state.defense)}${delta("defense")} · ${STAT_EMOJI.resistance} RES ${state.resistance}%${delta("resistance")}`,
     ...(showChanges
       ? [
-          `Chính xác ${state.accuracy} · Né ${state.evasion}${delta("evasion")}\nChí mạng ${Math.round(state.critChance * 100)}%${delta("critChance", true)} · Luck ${state.luck}${delta("luck")}`,
+          `${STAT_EMOJI.accuracy} ACC ${state.accuracy} · ${STAT_EMOJI.evasion} EVA ${state.evasion}${delta("evasion")}\n${STAT_EMOJI.crit} CRIT ${Math.round(state.critChance * 100)}%${delta("critChance", true)} · ${STAT_EMOJI.luck} LUCK ${state.luck}${delta("luck")}`,
         ]
-      : [`${STAT_EMOJI.luck} Luck **${state.luck || 0}**`]),
+      : [`${STAT_EMOJI.luck} LUCK **${state.luck || 0}**`]),
   ].join("\n");
 }
 function ownedEquipment(state, itemCatalog) {
@@ -398,24 +397,24 @@ function equipmentSummary(state, itemCatalog) {
         value * Math.max(0, item.level - (item.cleansedLevels || 0));
   }
   const effects = [
-    ["attack", "Sát thương"],
-    ["defense", "Defense"],
-    ["maxHp", "HP tối đa"],
-    ["resistance", "Resist"],
-    ["critChance", "Chí mạng"],
-    ["luck", "Luck"],
-    ["accuracy", "Accuracy"],
-    ["evasion", "Evasion"],
-    ["maxEnergy", "Energy"],
+    ["attack", `${STAT_EMOJI.attack} ATK`],
+    ["defense", `${STAT_EMOJI.defense} DEF`],
+    ["maxHp", `${STAT_EMOJI.hp} MAX HP`],
+    ["resistance", `${STAT_EMOJI.resistance} RES`],
+    ["critChance", `${STAT_EMOJI.crit} CRIT`],
+    ["luck", `${STAT_EMOJI.luck} LUCK`],
+    ["accuracy", `${STAT_EMOJI.accuracy} ACC`],
+    ["evasion", `${STAT_EMOJI.evasion} EVA`],
+    ["maxEnergy", `${STAT_EMOJI.energy} MAX ENE`],
     ["potionPower", "Hồi bình"],
-    ["bossDamage", "Boss damage"],
-    ["eliteDamage", "Elite damage"],
+    ["bossDamage", `${STAT_EMOJI.attack} DMG lên Boss`],
+    ["eliteDamage", `${STAT_EMOJI.attack} DMG lên Elite`],
     ["mimicDetection", "Phát hiện Mimic"],
     ["goblinChance", "Bắt Goblin"],
     ["legendaryFind", "SSR"],
     ["floorHpLoss", "HP mất/tầng"],
     ["mimicChance", "Mimic"],
-    ["damageTaken", "Damage nhận"],
+    ["damageTaken", `${STAT_EMOJI.attack} DMG nhận`],
   ]
     .filter(([key]) => totals[key])
     .map(
@@ -429,7 +428,7 @@ function equipmentSummary(state, itemCatalog) {
         item.level > (item.cleansedLevels || 0),
     )
   )
-    effects.push("Defense đặt lại khi nhặt");
+    effects.push(`${STAT_EMOJI.defense} DEF đặt lại khi nhặt`);
   if (items.some((item) => !item.definition))
     effects.push("có hiệu ứng chưa rõ");
   return `${items.length} món${effects.length ? ` · ${effects.join(" · ")}` : ""}`.slice(
@@ -440,24 +439,28 @@ function equipmentSummary(state, itemCatalog) {
 function riftSummary(state) {
   const m = state.modifiers || {};
   const effects = [];
-  if (m.fortified) effects.push(`HP quái +${m.fortified * 10}%`);
+  if (m.fortified)
+    effects.push(`${STAT_EMOJI.hp} HP quái +${m.fortified * 10}%`);
   if (m.stone_skin)
-    effects.push(`Defense quái ×${(1.1 ** m.stone_skin).toFixed(2)}`);
+    effects.push(
+      `${STAT_EMOJI.defense} DEF quái ×${(1.1 ** m.stone_skin).toFixed(2)}`,
+    );
   if (m.elemental_dominion)
     effects.push(
-      `Sát thương quái +${m.elemental_dominion * 4}% · Phép +${m.elemental_dominion * 4} điểm % (trừ boss, tỷ lệ tối đa 75%)`,
+      `${STAT_EMOJI.attack} ATK quái +${m.elemental_dominion * 4}% · Phép +${m.elemental_dominion * 4} điểm % (trừ boss, tỷ lệ tối đa 75%)`,
     );
-  if (m.bloodlust)
-    effects.push(`Sát thương quái +${m.bloodlust * 8}% khi HP ≤50%`);
+  if (m.bloodlust) effects.push(`ATK quái +${m.bloodlust * 8}% khi HP ≤50%`);
   if (m.swift_horror)
     effects.push(
-      `Chính xác quái +${m.swift_horror * 3} · Né quái +${m.swift_horror}`,
+      `${STAT_EMOJI.accuracy} ACC quái +${m.swift_horror * 3} · ${STAT_EMOJI.evasion} EVA quái +${m.swift_horror}`,
     );
   if (m.soul_drain)
-    effects.push(`Energy −${m.soul_drain >= 5 ? 2 : 1}/đòn trúng`);
+    effects.push(
+      `${STAT_EMOJI.energy} ENE −${m.soul_drain >= 5 ? 2 : 1}/đòn trúng`,
+    );
   if (m.cursed_ground)
     effects.push(
-      `Resistance hiệu dụng −${m.cursed_ground * 4} khi nhận phép, thấp nhất −50%; chỉ số gốc giữ nguyên`,
+      `${STAT_EMOJI.resistance} RES hiệu dụng −${m.cursed_ground * 4} khi nhận phép, thấp nhất −50%; chỉ số gốc giữ nguyên`,
     );
   if (m.unstable_rift)
     effects.push(
@@ -476,7 +479,7 @@ function encounterSummary(state) {
   const servicePreview = equipmentServicePreview(state);
   if (servicePreview) return servicePreview;
   if (e.type === "combat")
-    return `👹 **${e.name}** · ${rankLabel(e.rank)}\n${healthBar(e.hp, e.maxHp)}\n${STAT_EMOJI.attack} ${formatCoins(e.damageMin)}–${formatCoins(e.damageMax)} · ${enemyDamageType(e) === "magic" ? "Phép" : enemyDamageType(e) === "physical" ? "Vật lý" : "Hỗn hợp"} · ${STAT_EMOJI.defense} ${formatCoins(e.defense)} Defense\nĐòn kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}**`;
+    return `👹 **${e.name}** · ${rankLabel(e.rank)}\n${healthBar(e.hp, e.maxHp)}\n${STAT_EMOJI.attack} ATK ${formatCoins(e.damageMin)}–${formatCoins(e.damageMax)} · ${enemyDamageType(e) === "magic" ? "Phép" : enemyDamageType(e) === "physical" ? "Vật lý" : "Hỗn hợp"} · ${STAT_EMOJI.defense} DEF ${formatCoins(e.defense)}\nĐòn kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}**`;
   if (e.type === "chest")
     return `📦 **Hòm bí ẩn** · ${e.revealed ? "😈 Đã phát hiện Mimic" : e.inspected ? "Đã kiểm tra" : "Chưa kiểm tra"}`;
   if (e.type === "rngesus")
@@ -572,7 +575,7 @@ function hardcorePrivatePayload(
   if (tab === "items") {
     embed.addFields({
       name: "🎒 Vật tư còn lại",
-      value: `${STAT_EMOJI.potions} **Bình máu ×${state.potions || 0}** · Hồi ${Math.round(Math.max(0.1, Math.min(0.75, 0.35 + (state.potionPower || 0))) * 100)}% Max HP, tối thiểu 20 HP; quái còn sống phản công.\n${STAT_EMOJI.tickets} **Vé Thoát Hiểm ×${state.escapeTokens || 0}** · Tối đa 1, nhận thêm bị bỏ. Dùng để vượt RNGesus hoặc tự dùng khi chạy thất bại; chạy thành công giữ vé.`,
+      value: `${STAT_EMOJI.potions} **Bình máu ×${state.potions || 0}** · Hồi ${Math.round(Math.max(0.1, Math.min(0.75, 0.35 + (state.potionPower || 0))) * 100)}% MAX HP, tối thiểu 20 HP; quái còn sống phản công.\n${STAT_EMOJI.tickets} **Vé Thoát Hiểm ×${state.escapeTokens || 0}** · Tối đa 1, nhận thêm bị bỏ. Dùng để vượt RNGesus hoặc tự dùng khi chạy thất bại; chạy thành công giữ vé.`,
     });
     embed.addFields({
       name: "🎒 Tổng hiệu ứng trang bị",
@@ -624,12 +627,12 @@ function hardcorePrivatePayload(
       },
       {
         name: "🎒 Vật tư",
-        value: `${STAT_EMOJI.potions} ${state.potions}${change(state, "potions")} · ${STAT_EMOJI.tickets} ${state.escapeTokens}${change(state, "escapeTokens")} · ${STAT_EMOJI.crit} ×${state.critDamage || 1.75}`,
+        value: `${STAT_EMOJI.potions} POT ${state.potions}${change(state, "potions")} · ${STAT_EMOJI.tickets} ${state.escapeTokens}${change(state, "escapeTokens")} · ${STAT_EMOJI.crit} CRIT DMG ×${state.critDamage || 1.75}`,
       },
       {
         name: "📖 Ký hiệu",
         value:
-          "❤️ HP / tối đa\n⚔️ khoảng sát thương · 🛡️ phòng thủ\n🎯 chính xác · 💨 né (dùng để tính cơ hội trúng)\n💥 tỷ lệ chí mạng · 🔮 kháng phép\n✨ năng lượng / tối đa · 🍀 Luck\n🧪 bình máu · 🎫 Vé Thoát Hiểm · 💰 payout",
+          "❤️ HP: máu · ⚔️ ATK: sức tấn công\n🛡️ DEF: phòng thủ · 🔮 RES: kháng phép\n🎯 ACC: chính xác · 💨 EVA: né tránh\n💥 CRIT: tỷ lệ chí mạng · CRIT DMG: hệ số chí mạng\n✨ ENE: năng lượng · 🍀 LUCK: may mắn\n🧪 POT: bình máu · DMG: sát thương thực tế sau giảm trừ",
       },
       {
         name: `✨ ${classes[state.classKey].skill} · tốn 2 ✨`,
@@ -638,7 +641,7 @@ function hardcorePrivatePayload(
       {
         name: "⚔️ Giao tranh",
         value:
-          "Tấn công/thủ hồi 1 Energy. Thủ: Defense ×2, miễn chí mạng, giảm thêm 40% phản công. Bình hồi 35% Max HP + Potion Power (10–75%), ít nhất 20; quái còn sống phản công. Giảm vật lý tối đa 75%; Resistance −50..75%; trúng 20..95%.",
+          "Tấn công/thủ hồi 1 ENE. Thủ: DEF ×2, miễn chí mạng, giảm thêm 40% phản công. Bình hồi 35% MAX HP + Potion Power (10–75%), ít nhất 20; quái còn sống phản công. Giảm vật lý tối đa 75%; RES −50..75%; trúng 20..95%.",
       },
       {
         name: "🎒 Hiệu ứng item hiệu dụng",
@@ -675,7 +678,7 @@ function hardcorePrivatePayload(
     effectFields.push({
       name: "ℹ️ Áp dụng",
       value:
-        "Nhận một cộng dồn sau mỗi 10 tầng đã vượt; đủ tám loại trước khi lặp. HP/Defense/sát thương/chính xác/né được tính vào quái khi xuất hiện. Bloodlust, Soul Drain và Cursed Ground xử lý theo đòn đánh; Unstable Rift tác động lần roll hòm/encounter. Chỉ số làm tròn xuống và các giới hạn vẫn áp dụng; mở bảng này không roll lại.",
+        "Nhận một cộng dồn sau mỗi 10 tầng đã vượt; đủ tám loại trước khi lặp. HP/DEF/ATK/ACC/EVA được tính vào quái khi xuất hiện. Bloodlust, Soul Drain và Cursed Ground xử lý theo đòn đánh; Unstable Rift tác động lần roll hòm/encounter. Chỉ số làm tròn xuống và các giới hạn vẫn áp dụng; mở bảng này không roll lại.",
     });
     for (const [key, stacks] of modifiers)
       effectFields.push({
@@ -705,7 +708,7 @@ function hardcorePrivatePayload(
       },
       {
         name: "🍀 Lucky Break",
-        value: `${Math.round(luckyBreakChance(state) * 1000) / 10}% = min(30%, Luck ×1,5%). Tránh Tax Collector hoặc Potion Thief; không tác động Wrong Portal.`,
+        value: `${Math.round(luckyBreakChance(state) * 1000) / 10}% = min(30%, LUCK ×1,5%). Tránh Tax Collector hoặc Potion Thief; không tác động Wrong Portal.`,
       },
     );
     if (state.contract)
@@ -732,7 +735,7 @@ function hardcorePrivatePayload(
     if (state.encounter.kind === "wrong_portal")
       embed.addFields({
         name: `${icon("cyclone")} Đích đến có thể gặp`,
-        value: `${Math.round((state.encounter.portal?.goodChance ?? 0.5) * 100)}% tốt, chọn đều: +10 Max HP, hồi đầy, +1 bình (tối đa 5); bonus +50% cược; hoặc +4 Defense/+5 Resistance/+1 Luck.\nCòn lại là nhánh xấu: mất tối đa 15% Max HP nhưng giữ ít nhất 1; Energy về 0; mất tối đa 2 bình; payout ×0,9; hoặc −5 Defense/Resistance. Sau đó Elite đánh phủ đầu; hạ nó mới qua tầng. Luck không tác động Portal; kết quả giấu trước khi chấp nhận.`,
+        value: `${Math.round((state.encounter.portal?.goodChance ?? 0.5) * 100)}% tốt, chọn đều: +10 MAX HP, hồi đầy, +1 bình (tối đa 5); bonus +50% cược; hoặc +4 DEF/+5 RES/+1 LUCK.\nCòn lại là nhánh xấu: mất tối đa 15% MAX HP nhưng giữ ít nhất 1; ENE về 0; mất tối đa 2 bình; payout ×0,9; hoặc −5 DEF/RES. Sau đó Elite đánh phủ đầu; hạ nó mới qua tầng. LUCK không tác động Portal; kết quả giấu trước khi chấp nhận.`,
       });
   }
   const components = [
@@ -932,7 +935,7 @@ function hardcoreActionRows(sessionId, state, disabled, classes) {
           sessionId,
           turn,
           "upgrade_attack",
-          "+5",
+          "ATK +5",
           "crossed_swords",
           ButtonStyle.Primary,
         ),
@@ -940,7 +943,7 @@ function hardcoreActionRows(sessionId, state, disabled, classes) {
           sessionId,
           turn,
           "upgrade_hp",
-          "+30",
+          "MAX HP +30",
           "heart",
           ButtonStyle.Success,
         ),
@@ -948,7 +951,7 @@ function hardcoreActionRows(sessionId, state, disabled, classes) {
           sessionId,
           turn,
           "upgrade_defense",
-          "+6",
+          "DEF +6",
           "shield",
           ButtonStyle.Secondary,
         ),
@@ -956,7 +959,7 @@ function hardcoreActionRows(sessionId, state, disabled, classes) {
           sessionId,
           turn,
           "upgrade_luck",
-          "+2",
+          "LUCK +2",
           "four_leaf_clover",
           ButtonStyle.Secondary,
         ),
