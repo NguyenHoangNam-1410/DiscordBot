@@ -56,3 +56,13 @@ const borderPoints = (thickness) => { const points = [];
   assert(drawn.some((item) => item.text === "0" && item.y === stats[0].y + 31 && item.x === 815), "tầng sinh tồn mặc định 0");
   console.log(JSON.stringify({ ok: true, profileCard: true }));
 })().catch((error) => { console.error(error); process.exitCode = 1; });
+
+{
+  const { GlobalFonts } = require("@napi-rs/canvas");
+  const families = GlobalFonts.families.map((item) => item.family);
+  for (const family of ["Noto Sans", "Noto Sans Math", "Noto Sans Symbols 2"]) assert(families.includes(family), `thiếu font đóng gói: ${family}`);
+  const { createCanvas } = require("@napi-rs/canvas");
+  const ctx = createCanvas(200, 80).getContext("2d");
+  ctx.font = '700 40px "Noto Sans", "Noto Sans Math", "Noto Sans Symbols 2"';
+  assert(ctx.measureText("𝓞𝓰𝓰𝔂").width > 60, "ký tự toán học in nghiêng phải có glyph, không phải ô vuông trống");
+}
