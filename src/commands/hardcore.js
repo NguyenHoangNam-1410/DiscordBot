@@ -13,6 +13,7 @@ const {
   getHardcoreRecord,
   getHardcoreTop,
   getHardcoreRun,
+  withHardcoreSession,
 } = require("../services/hardcoreService");
 
 function recordEmbed(user, record) {
@@ -40,70 +41,80 @@ function recordEmbed(user, record) {
 function ratesEmbed() {
   return new EmbedBuilder()
     .setColor(0xe67e22)
-    .setTitle("🎰 SINH TỒN · TỶ LỆ RNG")
+    .setTitle("🎰 SINH TỒN · TỶ LỆ VÀ CƠ CHẾ")
     .setDescription(
-      "Tỷ lệ được roll và lưu khi encounter xuất hiện; restart bot không đổi kết quả.",
+      "Kết quả ẩn được lưu trong run; mở UI mới hoặc restart không roll lại.",
     )
     .addFields(
       {
-        name: "Hòm",
+        name: "Encounter",
         value:
-          "Trước tiên: 12% Mimic · 3% Ancient Mimic.\nNếu không phải Mimic: 20% rỗng · 5% đồ giả · 40% R · 22% SR · 10% SSR · 3% UR (Nguyền). Nhặt lại cùng trang bị sẽ tăng cấp và cộng thêm hiệu ứng.",
+          "53% quái thường · 12% Elite · 10% hòm · 8% Shrine · 5% kho báu · 6% bẫy · 4% surprise · 2% phòng trống. Boss mỗi 50 tầng; tầng 999 là Final Boss. RNGesus roll trước pool này.",
       },
       {
-        name: "Encounter cơ bản",
+        name: "Hòm và pity",
         value:
-          "47% quái thường · 12% Elite · 10% hòm thường · 8% Shrine · 5% hòm kho báu · 6% bẫy · 6% bất ngờ · 3% Thợ rèn · 2% Giải nguyền · 1% phòng trống. Roll RNGesus trước; boss bắt buộc mỗi 50 tầng và tầng 999.",
+          "3% Ancient Mimic, tổng 15% Mimic. Hòm còn lại: SSR 10% · UR 3% · SR 22% · R 40% · rỗng 20% · giả 5%. SSR = min(35%, 10% + max(0,pity−9)×2% + Luck×0,2% + Legendary Find). Năm hòm không SR+ bảo đảm hòm tiếp tối thiểu SR, không Mimic. Kho báu: SSR 35%, SR 65%; Unstable tăng SSR kho báu tối đa 70%.",
       },
       {
-        name: "Nguồn trang bị",
+        name: "100 trang bị riêng",
         value:
-          "R: Tiered Unique · SR: Runeword · SSR: Sacred Unique/Set, Relic, Mystic Orb, Cycle, Trophy và phần thưởng đặc biệt · UR: SU Nguyền, giảm payout 15%. Các Tier của cùng món gộp thành một loại và nhặt lại sẽ tăng Lv. Hòm kho báu: 65% SR, 35% SSR. Item chỉ tồn tại trong run.",
+          "R 32 · SR 28 · SSR 24 · UR 16. Nhặt lại tăng level. Buff và curse UR tách riêng; chỉ Goblin’s Debt (−15%) và Crown of Ruin (−10%) phạt payout. Item chỉ tồn tại trong run; các món từ run cũ vẫn được đọc.",
       },
       {
-        name: "Rift và Luck",
+        name: "15 surprise event",
         value:
-          "Mỗi 10 tầng cộng thêm modifier; tám loại đầu không lặp. Unstable Rift tăng hòm, hòm tốt và Mimic. Luck tăng phát hiện Mimic và tỷ lệ SSR; các hiệu ứng này làm thay đổi tỷ lệ hòm cơ bản.",
+          "Healer · Treasure Goblin · Blacksmith · Purifier · Altar of Sacrifice · Cursed Gambler · Lost Adventurer · Blood Fountain · Horadric Forge · Rift Merchant · Mirror of Fate · Treasure Room · Rift Contract · Class Shrine · Strange Doors. Chọn đều trong pool hợp lệ; có thể bỏ qua.",
       },
       {
-        name: "RNGesus · Chaos",
+        name: "Dịch vụ và Merchant",
         value:
-          "Base theo tầng: 5–9 là 0,3% · 10–19 là 0,6% · 20+ là 1%. Mỗi tầng nhân ngẫu nhiên x0,25–x3, tích Chaos khi lâu không gặp và có 2,5% khả năng Chaos Spike; xác suất cuối bị chặn ở 12%.\nBỏ chạy: 75%; thất bại tự dùng 1 Vé Thoát Hiểm nếu còn, hết vé thì chết. Chạy thành công giữ vé. Cầu nguyện: 30% · Boss không thể bị đánh bại.",
+          "Rèn: 12% payout để tăng 1 level, gồm buff/curse mới. Giải nguyền: 20% để gỡ 1 lớp curse, giữ buff. Merchant bán 3/5 offer: bình 5%, hồi đầy 8%, Luck 10%, SR 15%, vé 25% payout. Nút hiển thị số xu thực tế.",
       },
       {
-        name: "Bất ngờ và dịch vụ",
+        name: "Hợp đồng và Class Shrine",
         value:
-          "Khám phá lối đi bí ẩn: 25% cứu trợ (hồi 35% HP, 1 bình), 25% nhận Vé Thoát Hiểm, 25% kho xu (+50% cược vào bonus), 25% Champion phục kích ra đòn trước. Có thể bỏ qua. Thợ rèn tăng 1 cấp trang bị SSR/SR/R; Giải nguyền gỡ 1 cộng dồn phạt payout đồ UR. Phí hiện trên UI và chỉ dùng payout đang có của run.",
+          "Ba tầng không bình → SSR; không skill → bonus +50% cược; không thủ → +5 damage. Vi phạm chỉ hủy thưởng. Class Shrine buff riêng tối đa 3 tầng; xem Rift & hiệu ứng để biết buff đang có.",
       },
       {
-        name: "Phòng thủ và boss",
+        name: "RNGesus",
         value:
-          "Phòng thủ: Defense ×2, giảm thêm 50% sát thương sau giảm trừ (tối thiểu 1), hồi 1 Energy. The Butcher / Assur luôn gây vật lý; Riftwalker / Lucion / Deimoss luôn gây phép, kể cả boss cuối. Rift không đổi loại sát thương boss.",
+          "Base: tầng 1–4 0%, 5–9 0,3%, 10–19 0,6%, 20+ 1%. Volatility ×0,25–3; dry heat tối đa 2,5%; 2,5% cơ hội spike +4–10%; trần cuối 12%. Chạy 75%, trượt tự dùng vé; dùng vé trực tiếp vượt an toàn. Cầu nguyện 30%: 85% SSR/15% UR; trượt chết. Hối lộ: payout ×0,6. Chiến đấu chết ngay.",
       },
       {
-        name: "Sự kiện xấu",
+        name: "Luck",
         value:
-          "6% encounter thường là Tax Collector, trộm bình máu hoặc Wrong Portal (mỗi loại khoảng 2%). Tax mất 15% payout hiện tại. Wrong Portal: 25% lợi ích rồi qua tầng; 75% hiệu ứng xấu và Rift Ambusher Elite đánh phủ đầu. Kết quả lưu sẵn; Luck không tăng tỷ lệ portal tốt.",
+          "SSR +Luck×0,2%; phát hiện Mimic = min(95%,25%+Luck×3%+item); Goblin = min(90%,min(80%,60%+Luck×1%)+item). Lucky Break = min(30%,Luck×1,5%), chỉ né Tax Collector/Potion Thief. Không tác động Wrong Portal.",
       },
       {
         name: "Wrong Portal",
         value:
-          "25% tốt, chọn đều: Healing Sanctuary (+10 Max HP, đầy HP, +1 bình, tối đa 5); Treasure Vault (+50% cược vào bonus); Rift Blessing (+4 Defense, +5 Resistance, +1 Luck). Qua tầng, không cộng thưởng quái. 75% xấu, chọn đều trong pool: Blood Rift (tối đa 15% Max HP, giữ ít nhất 1 HP); Mana Void (Energy về 0, chỉ khi còn Energy); Shattered Supplies (mất tối đa 2 bình, chỉ khi còn bình); Payout Corruption (hệ số payout toàn run ×0,9); Dimensional Curse (mất tối đa 5 Defense/Resistance). Sau đó Elite đánh phủ đầu; hạ nó mới qua tầng.",
+          "50% tốt: Healing Sanctuary (+10 Max HP, đầy HP, +1 bình), Treasure Vault (bonus +50% cược), Rift Blessing (+4 Defense/+5 Resistance/+1 Luck). 50% xấu: mất 15% Max HP (giữ ≥1), Energy về 0, mất tối đa 2 bình, payout ×0,9 hoặc −5 Defense/Resistance; sau đó Elite đánh phủ đầu.",
       },
       {
-        name: "Lucky Break",
+        name: "Phòng thủ và boss",
         value:
-          "Cơ hội tránh hậu quả = min(30%, Luck × 1,5%). Áp dụng cho Tax Collector, kẻ trộm bình và riêng đòn phủ đầu Wrong Portal; không xóa hiệu ứng xấu hoặc Elite của portal. Kết quả roll lưu cùng encounter, tạo lại UI không đổi kết quả.",
+          "Thủ: Defense ×2, miễn chí mạng, giảm thêm 40% damage sau giảm trừ, hồi 1 Energy. Butcher/Assur/Deimoss gây vật lý; Riftwalker/Lucion gây phép. Bình hồi clamp(35%+Potion Power,10%,75%) Max HP, ít nhất 20.",
       },
       {
-        name: "Pity",
+        name: "Rift",
         value:
-          "Chỉ hòm đã mở tính pity (kể cả Mimic). 5 hòm không SR+ bảo đảm hòm kế tối thiểu SR, không Mimic. Sau 10 hòm không SSR+, mỗi hòm kế +2% cơ hội SSR. Cả hòm thường và kho báu áp dụng Luck/pity; SSR tối đa 35% / 60% tương ứng.",
+          "Mỗi 10 tầng thêm 1 stack, phát đủ 8 loại trước khi lặp. Stone Skin +10% Defense; Elemental +4% damage/+4 điểm % phép; Bloodlust +8% damage khi HP ≤50%; Fortified +10% HP; Swift +3 Accuracy/+1 Evasion; Soul Drain 1 Energy, từ stack 5 là 2; Cursed Ground −4 Resistance hiệu dụng/stack; Unstable tăng hòm và Mimic.",
+      },
+      {
+        name: "Payout",
+        value:
+          "Hệ số = 1 + min(f,50)×0,06 + max(0,f−50)×0,10 + floor(f/5)×0,15; f dừng ở 100. Mốc 5/50/100: ×1,45/×5,50/×12,00. Payout = max(0,min(10.000.000,floor((cược×hệ số+bonus)×payoutFactor))−payoutSpent). Phí dịch vụ tăng payoutSpent; thuế/hối lộ/Goblin/curse nhân payoutFactor.",
+      },
+      {
+        name: "Kim cương và khung hồ sơ",
+        value:
+          "Tổng kim cương tạm giữ: tầng 100/200/300/400/500/600/700/800/900 = 100/200/400/800/1.600/3.200/6.400/12.800/25.600; hạ boss tầng 999 = 51.200. Rút thưởng mới cộng vào tài khoản; chết, bỏ run hoặc hết hạn mất hết. Khung hồ sơ vĩnh viễn: vượt 333 Bạc, 666 Vàng, 999 Kim cương. /hoso hiển thị tầng cao nhất đã vượt.",
       },
       {
         name: "Giới hạn",
         value:
-          "Tầng 100 hoàn thành chính thức · Overrun đến 999 · Phải hạ Deimoss để công nhận tầng 999 · Hệ số tầng dừng sau 100; bonus vẫn tăng · Tối đa 10.000.000 xu · Run không hoạt động 7 ngày sẽ mất cược.",
+          "Tầng 100 hoàn thành; Overrun tới 999, phải hạ Final Boss. Vé tối đa 1, nhận thêm bỏ đi; bình tối đa 5. Run không hoạt động 7 ngày mất cược. /sinhton tieptuc giữ nguyên tiến trình và kết quả đã roll.",
       },
     );
 }
@@ -187,39 +198,53 @@ module.exports = {
       });
     if (!(await requireGameChannel(interaction, "hardcore"))) return null;
     if (subcommand === "tieptuc") {
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const run = getHardcoreRun(interaction.guildId, interaction.user.id);
       if (!run)
-        return interaction.reply({
+        return interaction.editReply({
           content: "Bạn không có lượt Sinh tồn nào đang diễn ra.",
-          flags: MessageFlags.Ephemeral,
         });
-      if (run.session.channel_id !== interaction.channelId)
-        return interaction.reply({
-          content:
-            "Hãy tiếp tục lượt này trong kênh Sinh tồn nơi bạn đã bắt đầu.",
-          flags: MessageFlags.Ephemeral,
+      return withHardcoreSession(run.session.id, async () => {
+        const current = getHardcoreRun(
+          interaction.guildId,
+          interaction.user.id,
+        );
+        if (!current || current.session.id !== run.session.id)
+          return interaction.editReply({
+            content: "Lượt Sinh tồn này đã kết thúc.",
+          });
+        if (current.session.channel_id !== interaction.channelId)
+          return interaction.editReply({
+            content:
+              "Hãy tiếp tục lượt này trong kênh Sinh tồn nơi bạn đã bắt đầu.",
+          });
+        const message = await interaction.channel.send({
+          embeds: [
+            hardcoreEmbed(
+              current.state,
+              interaction.user.id,
+              null,
+              current.session.id,
+            ),
+          ],
+          components: hardcoreRows(current.session.id, current.state),
+          allowedMentions: { parse: [] },
         });
-      const message = await interaction.channel.send({
-        embeds: [
-          hardcoreEmbed(run.state, interaction.user.id, null, run.session.id),
-        ],
-        components: hardcoreRows(run.session.id, run.state),
-        allowedMentions: { parse: [] },
-      });
-      setMessageId(run.session.id, message.id);
-      if (run.session.message_id) {
-        const previous = await interaction.channel.messages
-          .fetch(run.session.message_id)
-          .catch(() => null);
-        if (previous) await previous.edit({ components: [] }).catch(() => null);
-      }
-      return interaction.reply({
-        content: "Đã mở bảng Sinh tồn mới. Bảng cũ đã được khóa.",
-        flags: MessageFlags.Ephemeral,
+        setMessageId(current.session.id, message.id);
+        if (current.session.message_id) {
+          const previous = await interaction.channel.messages
+            .fetch(current.session.message_id)
+            .catch(() => null);
+          if (previous)
+            await previous.edit({ components: [] }).catch(() => null);
+        }
+        return interaction.editReply({
+          content: "Đã mở bảng Sinh tồn mới. Bảng cũ đã được khóa.",
+        });
       });
     }
     return interaction.reply({
-      content: "Dùng `/choi sinhton batdau` để mở bảng chuẩn bị.",
+      content: "Dùng `/sinhton batdau` để mở bảng chuẩn bị.",
       flags: MessageFlags.Ephemeral,
     });
   },

@@ -14,11 +14,11 @@ const { getGameChannel } = require("./gameChannelService");
 const { requireGameChannel } = require("../utils/gameChannel");
 const { createFairness, fairInt } = require("./fairnessService");
 const hardcoreRepository = require("./hardcoreRepository");
+const { addDiamonds } = require("./playerLevelService");
 const hardcoreView = require("./hardcoreView");
 const {
   rarityLabel,
   normalizeEquipment,
-  loadMedianEquipment,
   effectText,
 } = require("./hardcoreEquipment");
 const { chaosLabel } = hardcoreView;
@@ -31,6 +31,7 @@ const {
   enemyScale,
   baseMultiplier,
   potentialPayout,
+  runDiamondReward,
   REGIONS,
   RIFT_MODIFIERS,
   regionForFloor,
@@ -42,7 +43,14 @@ const {
   curseTarget,
   luckyBreakChance,
   goblinCatchChance,
+  itemEffects,
+  itemCurse,
+  classShrineActive,
+  payoutReductionCost,
+  SURPRISE_EVENTS,
+  MERCHANT_OFFERS,
 } = require("./hardcoreEngine");
+const { ITEMS } = require("../hardcore/item");
 
 const MIN_BET = 10;
 const MAX_BET = 100_000;
@@ -56,14 +64,14 @@ const CLASSES = Object.freeze({
   amazon: {
     name: "Amazon",
     emoji: "🏹",
-    hp: 105,
-    damageMin: 15,
-    damageMax: 20,
-    defense: 6,
-    accuracy: 95,
-    evasion: 12,
-    critChance: 0.12,
-    resistance: 8,
+    hp: 100,
+    damageMin: 16,
+    damageMax: 23,
+    defense: 5,
+    accuracy: 92,
+    evasion: 14,
+    critChance: 0.14,
+    resistance: 5,
     energy: 3,
     skill: "Barrage",
   },
@@ -113,41 +121,41 @@ const CLASSES = Object.freeze({
     name: "Druid",
     emoji: "🌿",
     hp: 110,
-    damageMin: 14,
-    damageMax: 19,
+    damageMin: 15,
+    damageMax: 22,
     defense: 7,
-    accuracy: 85,
-    evasion: 12,
+    accuracy: 82,
+    evasion: 10,
     critChance: 0.1,
-    resistance: 12,
+    resistance: 10,
     energy: 3,
     skill: "Wild Regeneration",
   },
   necromancer: {
     name: "Necromancer",
     emoji: "💀",
-    hp: 95,
-    damageMin: 16,
-    damageMax: 22,
-    defense: 5,
-    accuracy: 85,
+    hp: 100,
+    damageMin: 15,
+    damageMax: 21,
+    defense: 6,
+    accuracy: 84,
     evasion: 10,
     critChance: 0.1,
-    resistance: 15,
-    energy: 5,
+    resistance: 12,
+    energy: 4,
     skill: "Totem Ward",
   },
   paladin: {
     name: "Paladin",
     emoji: "🛡️",
     hp: 115,
-    damageMin: 14,
-    damageMax: 19,
-    defense: 12,
-    accuracy: 85,
-    evasion: 8,
-    critChance: 0.1,
-    resistance: 20,
+    damageMin: 15,
+    damageMax: 22,
+    defense: 9,
+    accuracy: 84,
+    evasion: 7,
+    critChance: 0.09,
+    resistance: 15,
     energy: 3,
     skill: "Divine Shield",
   },
@@ -251,7 +259,6 @@ const FALLBACK_ITEMS = Object.freeze({
     },
   ],
 });
-const ITEMS = Object.freeze(loadMedianEquipment(FALLBACK_ITEMS));
 
 const fairStateContext = new AsyncLocalStorage();
 function nextFair(maximum, context) {
@@ -306,8 +313,12 @@ function makeEnemy(floor, rank = "normal", forcedName = null, modifiers = {}) {
     normal: [1, 1, 1],
     champion: [1.4, 1.15, 1.4],
     elite: [2, 1.35, 2],
-    boss: [3.2, 1.35, 4],
-    final_boss: [5.8, 2.15, 8],
+    boss: [
+      2.6 + (Math.max(0, Math.floor(floor / 50) - 1) % 5) * 0.075,
+      1.1 + (Math.max(0, Math.floor(floor / 50) - 1) % 5) * 0.0375,
+      4,
+    ],
+    final_boss: [7.2, 1.05, 10],
     mimic: [1.7, 1.25, 1.8],
     ancient_mimic: [2.8, 1.5, 3],
   }[rank];
@@ -324,24 +335,30 @@ function makeEnemy(floor, rank = "normal", forcedName = null, modifiers = {}) {
             ? "Ancient Mimic"
             : "Mimic"
           : pick(ENEMY_NAMES));
-  const maxHp = Math.max(
-    10,
-    Math.floor(
-      28 * scale.hp * rankStats[0] * (1 + (modifiers.fortified || 0) * 0.1),
+  const maxHp = Math.min(
+    1_000_000_000_000,
+    Math.max(
+      10,
+      Math.floor(
+        28 * scale.hp * rankStats[0] * (1 + (modifiers.fortified || 0) * 0.1),
+      ),
     ),
   );
   const damageFactor = 1 + (modifiers.elemental_dominion || 0) * 0.04;
-  const damageMin = Math.max(
-    2,
-    Math.floor(5 * scale.damage * rankStats[1] * damageFactor),
+  const damageMin = Math.min(
+    1_000_000_000_000,
+    Math.max(2, Math.floor(5 * scale.damage * rankStats[1] * damageFactor)),
   );
-  const damageMax = Math.max(
-    damageMin + 1,
-    Math.floor(9 * scale.damage * rankStats[1] * damageFactor),
+  const damageMax = Math.min(
+    1_000_000_000_000,
+    Math.max(
+      damageMin + 1,
+      Math.floor(9 * scale.damage * rankStats[1] * damageFactor),
+    ),
   );
   const mechanic = boss ? BOSS_MECHANICS[name] : null;
   const damageType = enemyDamageType({ name, rank, mechanic });
-  return {
+  const enemy = {
     type: "combat",
     rank,
     name,
@@ -350,21 +367,19 @@ function makeEnemy(floor, rank = "normal", forcedName = null, modifiers = {}) {
     damageMin,
     damageMax,
     defense: Math.floor(
-      (4 + floor * 0.65) *
-        (rank === "final_boss" ? 2 : boss ? 1.25 : 1) *
-        (1 + (modifiers.stone_skin || 0) * 0.1),
+      Math.floor(4 + floor * 1.8 * (boss ? 1.25 : 1)) *
+        1.1 ** (modifiers.stone_skin || 0),
     ),
-    accuracy:
-      70 + Math.min(20, floor * 0.1) + (modifiers.swift_horror || 0) * 3,
+    accuracy: 70 + floor * 3 + (modifiers.swift_horror || 0) * 3,
     evasion:
       4 +
-      Math.min(25, Math.floor(floor / 25)) +
-      (modifiers.swift_horror || 0) * 2 +
-      (name === "Assur" ? 20 : 0),
-    critChance: name === "Assur" ? 0.3 : boss ? 0.1 : 0.05,
+      Math.floor(floor / 12) +
+      (modifiers.swift_horror || 0) +
+      (name === "Assur" ? 18 : 0),
+    critChance: (boss ? 0.1 : 0.05) + (name === "Assur" ? 0.12 : 0),
     critDamage: 1.5,
     critResistance: boss ? 0.08 : 0,
-    resistance: Math.min(60, Math.floor(floor * 0.08)),
+    resistance: Math.min(60, Math.floor(floor * 0.8)),
     damageType,
     magicChance:
       damageType === "magic"
@@ -374,23 +389,36 @@ function makeEnemy(floor, rank = "normal", forcedName = null, modifiers = {}) {
           : Math.min(
               0.75,
               (rank === "elite" || rank === "ancient_mimic" ? 0.2 : 0.05) +
-                (modifiers.elemental_dominion || 0) * 0.02,
+                (modifiers.elemental_dominion || 0) * 0.04,
             ),
     rewardMultiplier: rankStats[2],
     attacks: 0,
     incomingAttacks: 0,
     mechanic,
   };
+  rollEnemyIntent(enemy);
+  return enemy;
+}
+function rollEnemyIntent(enemy) {
+  const type = enemyDamageType(enemy);
+  enemy.nextDamageType =
+    type === "mixed"
+      ? randomFloat() < enemy.magicChance
+        ? "magic"
+        : "physical"
+      : type;
 }
 
 function legendaryChance(state, treasure = false) {
   const unstable = state.modifiers?.unstable_rift || 0;
   return Math.min(
-    treasure ? 0.6 : 0.35,
-    (treasure ? 0.35 : 0.1) +
-      Math.max(0, state.pityLegendary - 9) * 0.02 +
-      state.luck * 0.002 +
-      Math.min(0.08, unstable * 0.01),
+    treasure ? 0.7 : 0.35,
+    treasure
+      ? 0.35 + unstable * 0.05
+      : 0.1 +
+          Math.max(0, (state.pityLegendary || 0) - 9) * 0.02 +
+          (state.luck || 0) * 0.002 +
+          (state.legendaryFind || 0),
   );
 }
 function chooseRarity(state) {
@@ -408,9 +436,14 @@ function makeChest(state, treasure = false) {
   const unstable = state.modifiers?.unstable_rift || 0;
   const mimicRoll = randomFloat();
   const kind =
-    state.pityRare < 5 && mimicRoll < 0.03 + Math.min(0.05, unstable * 0.005)
+    state.pityRare < 5 && mimicRoll < Math.min(0.08, 0.03 + unstable * 0.01)
       ? "ancient_mimic"
-      : state.pityRare < 5 && mimicRoll < 0.15 + Math.min(0.15, unstable * 0.01)
+      : state.pityRare < 5 &&
+          mimicRoll <
+            Math.min(
+              0.6,
+              Math.min(0.3, 0.15 + unstable * 0.03) + (state.mimicChance || 0),
+            )
         ? "mimic"
         : treasure
           ? randomFloat() < legendaryChance(state, true)
@@ -425,7 +458,9 @@ function makeChest(state, treasure = false) {
     item: rarity ? pick(ITEMS[rarity]) : null,
     inspected: false,
     revealed: false,
-    detectionSuccess: randomFloat() < Math.min(0.85, 0.25 + state.luck * 0.03),
+    detectionSuccess:
+      randomFloat() <
+      Math.min(0.95, 0.25 + state.luck * 0.03 + (state.mimicDetection || 0)),
   };
 }
 
@@ -459,7 +494,7 @@ function rollRngesus(state, rolls = {}) {
 }
 
 function makeWrongPortal(state, rolls = {}) {
-  const good = (rolls.goodRoll ?? randomFloat()) < 0.25;
+  const good = (rolls.goodRoll ?? randomFloat()) < 0.5;
   const effects = good
     ? ["healing_sanctuary", "treasure_vault", "rift_blessing"]
     : [
@@ -475,6 +510,7 @@ function makeWrongPortal(state, rolls = {}) {
     kind: "wrong_portal",
     portal: {
       good,
+      goodChance: 0.5,
       effect:
         effects[
           Math.min(effects.length - 1, Math.floor(effectRoll * effects.length))
@@ -485,6 +521,107 @@ function makeWrongPortal(state, rolls = {}) {
       : makeEnemy(state.floor, "elite", "Rift Ambusher", state.modifiers),
     luckyBreakRoll: good ? null : (rolls.luckyBreakRoll ?? randomFloat()),
   };
+}
+function makeSurprise(state, forcedKind = null) {
+  const pool = Object.keys(SURPRISE_EVENTS).filter(
+    (key) =>
+      (key !== "blacksmith" ||
+        (forgeTarget(state) && potentialPayout(state) > 0)) &&
+      (key !== "purifier" ||
+        (curseTarget(state) && potentialPayout(state) > 0)) &&
+      (key !== "horadric" || forgeTarget(state)) &&
+      (key !== "contract" ||
+        (!state.contract && state.floor <= MAX_FLOOR - 3)) &&
+      (!["merchant", "gambler"].includes(key) || potentialPayout(state) > 0) &&
+      (key !== "sacrifice" ||
+        state.hp > Math.max(1, Math.floor(state.maxHp * 0.2)) ||
+        potentialPayout(state) > 0) &&
+      (key !== "healer" || state.hp < state.maxHp || state.potions < 5),
+  );
+  const kind = forcedKind || pick(pool);
+  const event = { type: "surprise", kind };
+  if (kind === "goblin") event.successRoll = randomFloat();
+  if (kind === "gambler") event.win = randomFloat() < 0.5;
+  if (kind === "adventurer") {
+    event.adventurerVersion = 3;
+    const rarity = randomFloat() < 0.8 ? "common" : "rare";
+    event.rescueItem = pick(ITEMS[rarity]);
+    event.robItem = randomFloat() < 0.25 ? pick(ITEMS.legendary) : null;
+  }
+  if (kind === "fountain") {
+    const roll = randomFloat();
+    event.outcome = roll < 0.6 ? "heal" : roll < 0.85 ? "hp" : "mimic";
+    if (event.outcome === "mimic")
+      event.enemy = makeEnemy(
+        state.floor,
+        "mimic",
+        "Blood Mimic",
+        state.modifiers,
+      );
+  }
+  if (kind === "horadric") {
+    const target = forgeTarget(state);
+    event.targetName = target.name;
+    event.targetRarity = target.rarity;
+    event.targetBase = target.definition?.base || "";
+  }
+  if (kind === "merchant") {
+    const offers = Object.keys(MERCHANT_OFFERS);
+    event.offers = [];
+    while (event.offers.length < 3)
+      event.offers.push(offers.splice(randomInt(0, offers.length - 1), 1)[0]);
+    event.item = pick(ITEMS.rare);
+  }
+  if (kind === "mirror") {
+    event.lucky = randomFloat() < 0.2;
+    event.enemy = {
+      ...makeEnemy(state.floor, "elite", "Mirror Clone", state.modifiers),
+      hp: state.maxHp,
+      maxHp: state.maxHp,
+      damageMin: state.damageMin,
+      damageMax: state.damageMax,
+      defense: state.defense,
+      accuracy: state.accuracy,
+      evasion: state.evasion,
+      resistance: state.resistance,
+      critChance: state.critChance,
+      damageType: "physical",
+      nextDamageType: "physical",
+      magicChance: 0,
+    };
+  }
+  if (kind === "treasure_room") {
+    event.mimicChest = pick(["red", "blue", "gold"]);
+    event.enemy = makeEnemy(
+      state.floor,
+      "mimic",
+      "Treasure Room Mimic",
+      state.modifiers,
+    );
+  }
+  if (kind === "contract") event.item = pick(ITEMS.legendary);
+  if (kind === "doors") {
+    event.doors = {
+      light: randomFloat() < 0.7,
+      gold: randomFloat() < 0.7,
+      dark: randomFloat() < 0.6,
+    };
+    event.item = pick(ITEMS.legendary);
+    event.mimic = makeEnemy(
+      state.floor,
+      "mimic",
+      "Golden Door Mimic",
+      state.modifiers,
+    );
+    event.boss = makeEnemy(
+      state.floor,
+      "boss",
+      pick(BOSS_NAMES),
+      state.modifiers,
+    );
+    event.boss.name = `Premature Rift Boss · ${event.boss.name}`;
+  }
+  return event;
 }
 
 function generateEncounter(state) {
@@ -501,21 +638,24 @@ function generateEncounter(state) {
       fleeSuccess: fleeRoll < 0.75,
       fleeChance: 0.75,
       prayerSuccess: randomFloat() < 0.3,
+      prayerChance: 0.3,
+      prayerRarity: randomFloat() < 0.85 ? "legendary" : "cursed",
+      prayerItemRoll: randomFloat(),
       chaosChance: state.lastChaosChance,
       chaosSpike: state.lastChaosSpike,
     };
   }
   const roll = randomFloat();
   const extraChests = Math.min(
-    0.12,
-    (state.modifiers?.unstable_rift || 0) * 0.01,
+    0.16,
+    (state.modifiers?.unstable_rift || 0) * 0.02,
   );
-  if (roll < 0.47 - extraChests)
+  if (roll < 0.53 - extraChests)
     return makeEnemy(state.floor, "normal", null, state.modifiers);
-  if (roll < 0.59 - extraChests)
+  if (roll < 0.65 - extraChests)
     return makeEnemy(state.floor, "elite", null, state.modifiers);
-  if (roll < 0.69) return makeChest(state);
-  if (roll < 0.77)
+  if (roll < 0.75 - extraChests / 2) return makeChest(state);
+  if (roll < 0.83 - extraChests / 2)
     return {
       type: "shrine",
       kind: pick([
@@ -527,26 +667,14 @@ function generateEncounter(state) {
         "fake",
       ]),
     };
-  if (roll < 0.82) return makeChest(state, true);
-  if (roll < 0.88) {
+  if (roll < 0.88) return makeChest(state, true);
+  if (roll < 0.94) {
     const kind = pick(["tax_collector", "potion_thief", "wrong_portal"]);
     return kind === "wrong_portal"
       ? makeWrongPortal(state)
       : { type: "trap", kind, luckyBreakRoll: randomFloat() };
   }
-  if (roll < 0.94) {
-    const kind = pick(["healing", "escape_ticket", "cache", "ambush"]);
-    return {
-      type: "surprise",
-      kind,
-      enemy:
-        kind === "ambush"
-          ? makeEnemy(state.floor, "champion", null, state.modifiers)
-          : null,
-    };
-  }
-  if (roll < 0.97) return { type: "blacksmith" };
-  if (roll < 0.99) return { type: "cleanse" };
+  if (roll < 0.98) return makeSurprise(state);
   return { type: "empty" };
 }
 
@@ -555,34 +683,19 @@ function grantEscapeTickets(state, amount) {
   const received = Math.max(0, Math.floor(Number(amount) || 0));
   state.escapeTokens = Math.min(1, held + received);
   state.lastDiscardedEscapeTokens =
-    (state.lastDiscardedEscapeTokens || 0) +
-    Math.max(0, held + received - 1);
+    (state.lastDiscardedEscapeTokens || 0) + Math.max(0, held + received - 1);
 }
 
 function applyItem(state, item, rarity = "common") {
   if (!item) return null;
+  rarity = item.rarity || rarity;
   state.items = normalizeEquipment(state.items);
-  if (item.attack) {
-    state.damageMin += item.attack;
-    state.damageMax += item.attack;
-  }
-  if (item.defense) state.defense += item.defense;
-  if (item.defenseSet !== undefined) state.defense = item.defenseSet;
-  if (item.resistance)
-    state.resistance = clamp(state.resistance + item.resistance, -50, 75);
-  if (item.critChance)
-    state.critChance = Math.min(0.75, state.critChance + item.critChance);
-  if (item.luck) state.luck += item.luck;
-  if (item.potions) state.potions += item.potions;
-  if (item.escapeTokens) grantEscapeTickets(state, item.escapeTokens);
-  if (item.maxHp) {
-    state.maxHp = Math.max(20, state.maxHp + item.maxHp);
-    state.hp = Math.min(
-      state.maxHp,
-      Math.max(1, state.hp + (item.heal || Math.max(0, item.maxHp))),
-    );
-  }
-  if (item.bonusPenalty) state.payoutFactor *= 1 - item.bonusPenalty;
+  const buff = { ...itemEffects(item) };
+  const curse = rarity === "cursed" ? itemCurse(item) : {};
+  if (!item.effects && rarity === "cursed")
+    for (const key of Object.keys(curse)) delete buff[key];
+  const buffDelta = applyEquipmentEffects(state, buff);
+  const curseDelta = applyEquipmentEffects(state, curse);
   let equipment = state.items.find(
     (entry) =>
       entry.name === item.name &&
@@ -597,7 +710,153 @@ function applyItem(state, item, rarity = "common") {
     state.items.push(equipment);
   }
   equipment.definition = { ...item };
+  equipment.levelEffects ||= [];
+  equipment.levelEffects.push({
+    buff: buffDelta,
+    curse: curseDelta,
+    curseFactor: curse.bonusPenalty ? 1 - curse.bonusPenalty : 1,
+    cleansed: false,
+  });
   return equipment;
+}
+const ITEM_LIMITS = Object.freeze({
+  defense: [0, Infinity],
+  accuracy: [0, Infinity],
+  evasion: [0, Infinity],
+  luck: [0, Infinity],
+  maxHp: [20, Infinity],
+  maxEnergy: [1, Infinity],
+  resistance: [-50, 75],
+  critChance: [0, 0.75],
+  potionPower: [-0.3, 0.5],
+  bossDamage: [0, 1],
+  eliteDamage: [0, 1],
+  mimicDetection: [0, 0.5],
+  goblinChance: [0, 0.3],
+  legendaryFind: [0, 0.25],
+  floorHpLoss: [0, 0.2],
+  mimicChance: [0, 0.3],
+  damageTaken: [0, 0.5],
+});
+function applyEquipmentEffects(state, effects) {
+  const keys = [
+    "damageMin",
+    "damageMax",
+    "hp",
+    "energy",
+    ...Object.keys(ITEM_LIMITS),
+  ];
+  const before = Object.fromEntries(
+    keys.map((key) => [key, Number(state[key]) || 0]),
+  );
+  if (effects.attack) {
+    state.damageMin = Math.max(1, state.damageMin + effects.attack);
+    state.damageMax = Math.max(
+      state.damageMin,
+      state.damageMax + effects.attack,
+    );
+  }
+  for (const [key, limits] of Object.entries(ITEM_LIMITS))
+    if (effects[key])
+      state[key] = +clamp((state[key] || 0) + effects[key], ...limits).toFixed(
+        8,
+      );
+  if (effects.defenseSet !== undefined)
+    state.defense = Math.max(0, effects.defenseSet);
+  state.hp = Math.min(state.hp, state.maxHp);
+  state.energy = Math.min(state.energy, state.maxEnergy);
+  if (effects.heal)
+    state.hp = Math.min(state.maxHp, Math.max(1, state.hp + effects.heal));
+  if (effects.potions)
+    state.potions = clamp(state.potions + effects.potions, 0, 5);
+  if (effects.escapeTokens) grantEscapeTickets(state, effects.escapeTokens);
+  if (effects.bonusPenalty) state.payoutFactor *= 1 - effects.bonusPenalty;
+  return Object.fromEntries(
+    keys
+      .map((key) => [
+        key,
+        +((Number(state[key]) || 0) - before[key]).toFixed(8),
+      ])
+      .filter(([, delta]) => delta),
+  );
+}
+function reverseEquipmentDelta(state, delta, restoreHp = false) {
+  for (const [key, amount] of Object.entries(delta || {})) {
+    if (key === "hp" || key === "energy") continue;
+    const limits = ITEM_LIMITS[key] || [1, Infinity];
+    state[key] = +clamp((state[key] || 0) - amount, ...limits).toFixed(8);
+  }
+  state.damageMax = Math.max(state.damageMin, state.damageMax);
+  state.hp = Math.min(
+    state.maxHp,
+    restoreHp ? state.hp - (delta?.hp || 0) : state.hp,
+  );
+  state.energy = Math.min(
+    state.maxEnergy,
+    restoreHp ? state.energy - (delta?.energy || 0) : state.energy,
+  );
+}
+function cleanseItem(state, target) {
+  const record = target.levelEffects?.find((entry) => !entry.cleansed);
+  if (record) {
+    reverseEquipmentDelta(state, record.curse, true);
+    state.payoutFactor = Math.min(1, state.payoutFactor / record.curseFactor);
+    record.cleansed = true;
+  } else {
+    // Older saved items retain their definitions; no catalog replacement is applied.
+    const curse = itemCurse(target.definition);
+    const inverse = Object.fromEntries(
+      Object.entries(curse)
+        .filter(([key]) => !["defenseSet", "bonusPenalty"].includes(key))
+        .map(([key, value]) => [key, -value]),
+    );
+    applyEquipmentEffects(state, inverse);
+    if (curse.bonusPenalty)
+      state.payoutFactor = Math.min(
+        1,
+        state.payoutFactor / (1 - curse.bonusPenalty),
+      );
+  }
+  target.cleansedLevels = (target.cleansedLevels || 0) + 1;
+}
+function grindItem(state, target) {
+  const record = target.levelEffects?.pop();
+  if (record) {
+    if (!record.cleansed) {
+      reverseEquipmentDelta(state, record.curse, true);
+      state.payoutFactor = Math.min(1, state.payoutFactor / record.curseFactor);
+    } else
+      target.cleansedLevels = Math.max(0, (target.cleansedLevels || 0) - 1);
+    reverseEquipmentDelta(state, record.buff);
+  } else {
+    if (
+      target.rarity === "cursed" &&
+      target.level > (target.cleansedLevels || 0)
+    )
+      cleanseItem(state, target);
+    const effects = { ...itemEffects(target.definition) };
+    for (const key of [
+      "heal",
+      "potions",
+      "escapeTokens",
+      "bonusPenalty",
+      "defenseSet",
+    ])
+      delete effects[key];
+    if (!target.definition.effects && target.rarity === "cursed")
+      for (const key of Object.keys(itemCurse(target.definition)))
+        delete effects[key];
+    applyEquipmentEffects(
+      state,
+      Object.fromEntries(
+        Object.entries(effects).map(([key, value]) => [key, -value]),
+      ),
+    );
+    target.cleansedLevels = Math.max(0, (target.cleansedLevels || 0) - 1);
+  }
+  target.level -= 1;
+  if (target.level <= 0)
+    state.items = state.items.filter((item) => item !== target);
 }
 
 function updatePity(state, rarity) {
@@ -624,10 +883,45 @@ function completeFloor(state, log, rewardMultiplier = 1) {
   if (clearedFloor === MAX_FLOOR && !state.finalBossDefeated)
     throw new Error("FINAL_BOSS_REQUIRED");
   state.cleared = Math.max(state.cleared, clearedFloor);
+  const previousDiamonds = state.runDiamonds || 0;
+  state.runDiamonds = runDiamondReward(state);
+  if (state.runDiamonds > previousDiamonds)
+    log += `\n💎 Kim cương tạm giữ: **${state.runDiamonds.toLocaleString("vi-VN")}**. Rút thưởng mới nhận; tử trận mất toàn bộ.`;
+  const frame = { 333: "Bạc", 666: "Vàng", 999: "Kim cương" }[clearedFloor];
+  if (frame) log += `\n🏅 Đạt mốc khung hồ sơ **${frame}** (giữ vĩnh viễn).`;
   state.bonus += Math.floor(state.stake * 0.01 * rewardMultiplier);
   state.energy = Math.min(state.maxEnergy, state.energy + 1);
   if (["boss", "final_boss"].includes(state.encounter.rank)) {
     state.bosses += 1;
+  }
+  if (classShrineActive(state) && state.classKey === "druid") {
+    const healed = Math.min(
+      state.maxHp - state.hp,
+      Math.floor(state.maxHp * 0.05),
+    );
+    state.hp += healed;
+    log += `\n🌿 Class Shrine hồi ${healed} HP.`;
+  }
+  if (
+    state.contract &&
+    clearedFloor >= state.contract.from &&
+    clearedFloor <= state.contract.until
+  ) {
+    state.contract.remaining -= 1;
+    if (state.contract.remaining <= 0) {
+      if (state.contract.kind === "potion") {
+        const equipment = applyItem(state, state.contract.item, "legendary");
+        log += `\n📜 Hoàn thành hợp đồng: nhận **${equipment.name}** [SSR].`;
+      } else if (state.contract.kind === "skill") {
+        state.bonus += Math.floor(state.stake * 0.5);
+        log += "\n📜 Hoàn thành hợp đồng: bonus +50% cược.";
+      } else {
+        state.damageMin += 5;
+        state.damageMax += 5;
+        log += "\n📜 Hoàn thành hợp đồng: +5 sát thương.";
+      }
+      state.contract = null;
+    }
   }
   if (clearedFloor % 5 === 0) {
     const growth = checkpointGrowth(clearedFloor);
@@ -652,6 +946,17 @@ function completeFloor(state, log, rewardMultiplier = 1) {
     log += `\n🌀 Rift: **${RIFT_MODIFIERS[key].name} ×${state.modifiers[key]}**.`;
   }
   if (clearedFloor >= COMPLETION_FLOOR) state.completed = true;
+  if (state.floorHpLoss > 0) {
+    const lost = Math.max(1, Math.floor(state.maxHp * state.floorHpLoss));
+    state.hp = Math.max(0, state.hp - lost);
+    log += `\n🩸 Lời nguyền mất ${lost} HP sau tầng.`;
+    if (state.hp <= 0) {
+      state.lastLog = log;
+      return;
+    }
+  }
+  if (state.classShrine && clearedFloor >= state.classShrine.until)
+    state.classShrine = null;
   if (clearedFloor >= MAX_FLOOR) {
     state.floor = MAX_FLOOR;
     state.phase = "summit";
@@ -715,6 +1020,49 @@ function parseState(session) {
   state.payoutServiceSpent ??= state.payoutSpent;
   state.completed ||= state.cleared >= COMPLETION_FLOOR;
   state.items = normalizeEquipment(state.items);
+  for (const key of Object.keys(ITEM_LIMITS)) state[key] ??= 0;
+  state.contract ??= null;
+  state.classShrine ??= null;
+  state.runDiamonds = runDiamondReward(state);
+  if (
+    state.encounter.kind === "adventurer" &&
+    state.encounter.adventurerVersion === 2
+  ) {
+    // Preserve the saved success/failure; only upgrade a successful theft's reward.
+    if (state.encounter.robItem) {
+      const seed = state.fair?.serverSeed || session.id;
+      state.encounter.robItem =
+        ITEMS.legendary[
+          fairInt(
+            seed,
+            `hardcore:adventurer-ssr:${state.floor}`,
+            state.turn,
+            ITEMS.legendary.length,
+          )
+        ];
+    }
+    state.encounter.adventurerVersion = 3;
+  }
+  if (
+    state.encounter.type === "surprise" &&
+    state.encounter.kind === "adventurer" &&
+    state.encounter.adventurerVersion !== 3
+  ) {
+    // Convert the previous R/SR/UR rewards once using a stable seed; reopening cannot reroll.
+    const seed = state.fair?.serverSeed || session.id;
+    state.encounter = fairStateContext.run(
+      {
+        fair: { serverSeed: seed },
+        fairCounter: fairInt(
+          seed,
+          `hardcore:adventurer-upgrade:${state.floor}`,
+          state.turn,
+          1_000_000,
+        ),
+      },
+      () => makeSurprise(state, "adventurer"),
+    );
+  }
   for (const item of state.items) {
     item.definition ||=
       ITEMS[item.rarity]?.find((entry) => entry.name === item.name) ||
@@ -749,30 +1097,36 @@ function parseState(session) {
   if (state.encounter.kind === "wrong_portal" && !state.encounter.portal) {
     // Upgrade old portals deterministically, including runs without a fairness seed.
     const seed = state.fair?.serverSeed || session.id;
-    state.encounter = makeWrongPortal(state, {
-      goodRoll:
-        fairInt(
-          seed,
-          `hardcore:portal-upgrade:${state.floor}:good`,
-          state.turn,
-          1_000_000,
-        ) / 1_000_000,
-      effectRoll:
-        fairInt(
-          seed,
-          `hardcore:portal-upgrade:${state.floor}:effect`,
-          state.turn,
-          1_000_000,
-        ) / 1_000_000,
-      luckyBreakRoll:
-        fairInt(
-          seed,
-          `hardcore:lucky-break-upgrade:${state.floor}`,
-          state.turn,
-          1_000_000,
-        ) / 1_000_000,
-    });
+    state.encounter = fairStateContext.run(
+      { ...state, fair: { serverSeed: seed } },
+      () =>
+        makeWrongPortal(state, {
+          goodRoll:
+            fairInt(
+              seed,
+              `hardcore:portal-upgrade:${state.floor}:good`,
+              state.turn,
+              1_000_000,
+            ) / 1_000_000,
+          effectRoll:
+            fairInt(
+              seed,
+              `hardcore:portal-upgrade:${state.floor}:effect`,
+              state.turn,
+              1_000_000,
+            ) / 1_000_000,
+          luckyBreakRoll:
+            fairInt(
+              seed,
+              `hardcore:lucky-break-upgrade:${state.floor}`,
+              state.turn,
+              1_000_000,
+            ) / 1_000_000,
+        }),
+    );
   }
+  if (state.encounter.kind === "wrong_portal")
+    state.encounter.portal.goodChance ??= 0.25;
   if (
     state.encounter.type === "trap" &&
     state.encounter.luckyBreakRoll === undefined
@@ -792,6 +1146,30 @@ function parseState(session) {
       ? BOSS_MECHANICS[state.encounter.name]
       : null;
     state.encounter.damageType = enemyDamageType(state.encounter);
+    state.encounter.nextDamageType ||=
+      state.encounter.damageType === "mixed"
+        ? fairInt(
+            state.fair?.serverSeed || session.id,
+            `hardcore:intent-upgrade:${state.floor}`,
+            state.turn,
+            1_000_000,
+          ) /
+            1_000_000 <
+          state.encounter.magicChance
+          ? "magic"
+          : "physical"
+        : state.encounter.damageType;
+  }
+  if (state.encounter.type === "rngesus") {
+    state.encounter.prayerChance ??= 0.3;
+    state.encounter.prayerRarity ??= "legendary";
+    state.encounter.prayerItemRoll ??=
+      fairInt(
+        state.fair?.serverSeed || session.id,
+        `hardcore:prayer-item:${state.floor}`,
+        state.turn,
+        1_000_000,
+      ) / 1_000_000;
   }
   if (
     state.encounter.type === "rngesus" &&
@@ -814,7 +1192,10 @@ function parseState(session) {
     state.floor = MAX_FLOOR;
     state.cleared = MAX_FLOOR - 1;
     state.phase = "encounter";
-    state.encounter = makeEnemy(MAX_FLOOR, "final_boss", null, state.modifiers);
+    state.encounter = fairStateContext.run(
+      { ...state, fair: { serverSeed: state.fair?.serverSeed || session.id } },
+      () => makeEnemy(MAX_FLOOR, "final_boss", null, state.modifiers),
+    );
     state.lastLog =
       "Boss cuối Deimoss chặn lối ra. Hạ boss để công nhận tầng 999.";
   }
@@ -877,7 +1258,8 @@ const startTx = db.transaction(
       finalBossDefeated: false,
       modifiers: {},
       lastModifierFloor: 0,
-      runVersion: 3,
+      runVersion: 4,
+      runDiamonds: 0,
       turn: 0,
       phase: "encounter",
       lastLog: "Run bắt đầu.",
@@ -887,6 +1269,9 @@ const startTx = db.transaction(
       fair: createFairness(),
       fairCounter: 0,
     };
+    for (const key of Object.keys(ITEM_LIMITS)) state[key] ??= 0;
+    state.contract = null;
+    state.classShrine = null;
     state.encounter =
       forcedEncounter ||
       fairStateContext.run(state, () => generateEncounter(state));
@@ -941,7 +1326,7 @@ function touchSetup(draft) {
     draft
       .edit?.(
         closedSetup(
-          "Bảng chuẩn bị đã hết hạn. Dùng `/choi sinhton batdau` để chọn lại.",
+          "Bảng chuẩn bị đã hết hạn. Dùng `/sinhton batdau` để chọn lại.",
         ),
       )
       .catch(() => {});
@@ -958,7 +1343,7 @@ async function openHardcoreSetup(interaction, initial = {}) {
   if (getHardcoreByUser(interaction.guildId, interaction.user.id))
     return interaction.reply({
       content:
-        "Bạn đang có một run chưa kết thúc. Dùng `/choi sinhton tieptuc` để tiếp tục.",
+        "Bạn đang có một run chưa kết thúc. Dùng `/sinhton tieptuc` để tiếp tục.",
       flags: MessageFlags.Ephemeral,
     });
   for (const previous of setupDrafts.values()) {
@@ -1035,7 +1420,7 @@ async function refreshSetup(interaction, draft, notice = null) {
 }
 function setupError(error) {
   return error.message === "ACTIVE_SESSION"
-    ? "Bạn đang có một run chưa kết thúc. Dùng `/choi sinhton tieptuc`."
+    ? "Bạn đang có một run chưa kết thúc. Dùng `/sinhton tieptuc`."
     : error.message === "BET_LIMIT"
       ? `Giới hạn cược hiện tại là **${formatCoins(error.maxBet)} xu**. Hãy nhập lại mức cược.`
       : error.code === "INSUFFICIENT_FUNDS"
@@ -1055,14 +1440,13 @@ async function handleHardcoreSetup(interaction, logger = console) {
       draft
         .edit?.(
           closedSetup(
-            "Bảng chuẩn bị đã hết hạn. Dùng `/choi sinhton batdau` để chọn lại.",
+            "Bảng chuẩn bị đã hết hạn. Dùng `/sinhton batdau` để chọn lại.",
           ),
         )
         .catch(() => {});
     }
     return interaction.reply({
-      content:
-        "Bảng chuẩn bị đã hết hạn. Dùng `/choi sinhton batdau` để mở lại.",
+      content: "Bảng chuẩn bị đã hết hạn. Dùng `/sinhton batdau` để mở lại.",
       flags: MessageFlags.Ephemeral,
     });
   }
@@ -1144,7 +1528,7 @@ async function handleHardcoreSetup(interaction, logger = console) {
     closeSetup(draft);
     return interaction.update(
       closedSetup(
-        "Kênh Sinh tồn đã thay đổi. Hãy dùng `/choi sinhton batdau` tại kênh được cấu hình.",
+        "Kênh Sinh tồn đã thay đổi. Hãy dùng `/sinhton batdau` tại kênh được cấu hình.",
       ),
     );
   }
@@ -1210,7 +1594,7 @@ async function handleHardcoreSetup(interaction, logger = console) {
     );
     await interaction.followUp({
       content:
-        "Run đã bắt đầu trong kênh. Dùng `/choi sinhton tieptuc` nếu cần mở lại bảng.",
+        "Run đã bắt đầu trong kênh. Dùng `/sinhton tieptuc` nếu cần mở lại bảng.",
       flags: MessageFlags.Ephemeral,
     });
   }
@@ -1223,6 +1607,8 @@ function getHardcoreRun(guildId, userId) {
 }
 
 function finishRun(session, state, reason) {
+  const diamonds =
+    reason === "cashout" || reason === "summit" ? runDiamondReward(state) : 0;
   let payout =
     reason === "cashout" || reason === "summit" ? potentialPayout(state) : 0;
   const outcome =
@@ -1237,11 +1623,18 @@ function finishRun(session, state, reason) {
     operationId: `settle:hardcore:${session.id}`,
     countGame: reason !== "forfeit",
   });
+  if (diamonds > 0)
+    addDiamonds(session.guild_id, session.user_id, diamonds, {
+      reason: "hardcore:cashout",
+      operationId: `settle:hardcore-diamonds:${session.id}`,
+    });
   recordRun(session.guild_id, session.user_id, state, reason);
   hardcoreRepository.deleteSession(session.id);
   return {
     reason,
     payout,
+    diamonds,
+    diamondsLost: diamonds ? 0 : runDiamondReward(state),
     outcome,
     balance: account.balance,
     achievements: account.unlockedAchievements,
@@ -1281,23 +1674,32 @@ function forceEndHardcoreSession(
 
 function enemyTurn(state, defend = false, dodge = false) {
   const enemy = state.encounter;
-  const previousResistance = state.resistance;
   const previousEnergy = state.energy;
   enemy.attacks = (enemy.attacks || 0) + 1;
-  if (dodge) return "💨 Bạn né hoàn toàn đòn phản công.";
+  const shrine = classShrineActive(state);
+  const shrineDodge =
+    shrine && ["assassin", "necromancer"].includes(state.classKey);
+  const damageType = enemy.nextDamageType || enemyDamageType(enemy);
+  rollEnemyIntent(enemy);
+  if (shrineDodge) state.classShrine.consumed = true;
+  if (dodge || shrineDodge)
+    return "💨 Bạn chặn hoặc né hoàn toàn đòn phản công.";
+  const shrineDefense =
+    shrine && state.classKey === "barbarian" && state.hp <= state.maxHp * 0.3
+      ? 8
+      : 0;
   const defender = {
-    defense: defend ? state.defense * 2 : state.defense,
+    defense: (state.defense + shrineDefense) * (defend ? 2 : 1),
     evasion: state.evasion,
-    critResistance: 0,
+    critResistance: defend ? 1 : 0,
   };
   const multiplier =
     (enemy.mechanic === "butcher" ? 1 + Math.min(5, enemy.attacks) * 0.08 : 1) *
-    (enemy.hp < enemy.maxHp * 0.5
+    (enemy.hp <= enemy.maxHp * 0.5
       ? 1 + (state.modifiers?.bloodlust || 0) * 0.08
       : 1);
   let damage;
   let label;
-  const damageType = enemyDamageType(enemy);
   if (
     damageType === "magic" ||
     (damageType === "mixed" && randomFloat() < enemy.magicChance)
@@ -1307,12 +1709,11 @@ function enemyTurn(state, defend = false, dodge = false) {
     const raw = Math.floor(
       randomInt(enemy.damageMin, enemy.damageMax) * multiplier,
     );
-    damage = magicAfterResistance(raw, state.resistance);
-    state.resistance = clamp(
-      state.resistance - (state.modifiers?.cursed_ground || 0) * 2,
-      -50,
-      75,
-    );
+    const effectiveResistance =
+      state.resistance -
+      (state.modifiers?.cursed_ground || 0) * 4 +
+      (shrine && state.classKey === "paladin" ? 10 : 0);
+    damage = magicAfterResistance(raw, effectiveResistance);
     label = "🔮";
   } else {
     const hit = resolvePhysicalAttack(enemy, defender, state.floor, {
@@ -1322,13 +1723,19 @@ function enemyTurn(state, defend = false, dodge = false) {
     damage = hit.damage;
     label = hit.crit ? "💢 Critical!" : "⚔️";
   }
-  const blocked = defend ? damage - Math.max(1, Math.floor(damage * 0.5)) : 0;
+  const blocked = defend ? damage - Math.max(1, Math.floor(damage * 0.6)) : 0;
   if (defend) damage -= blocked;
+  damage = Math.max(1, Math.floor(damage * (1 + (state.damageTaken || 0))));
   const dealt = Math.min(state.hp, damage);
   state.hp = Math.max(0, state.hp - damage);
   state.energy = Math.max(
     0,
-    state.energy - Math.min(2, state.modifiers?.soul_drain || 0),
+    state.energy -
+      ((state.modifiers?.soul_drain || 0) >= 5
+        ? 2
+        : state.modifiers?.soul_drain
+          ? 1
+          : 0),
   );
   let recovery = "";
   if (enemy.mechanic === "lucion") {
@@ -1339,9 +1746,7 @@ function enemyTurn(state, defend = false, dodge = false) {
   const riftEffects = [];
   if (previousEnergy > state.energy)
     riftEffects.push(`−${previousEnergy - state.energy} Energy`);
-  if (previousResistance > state.resistance)
-    riftEffects.push(`−${previousResistance - state.resistance} Resist`);
-  return `${label} Bạn nhận **${damage} sát thương**.${defend ? ` 🛡️ Thủ thế chặn thêm **${blocked} sát thương** (giảm 50%).` : ""}${recovery}${riftEffects.length ? ` 🌀 Rift: ${riftEffects.join(", ")}.` : ""}`;
+  return `${label} Bạn nhận **${damage} sát thương**.${defend ? ` 🛡️ Thủ thế chặn thêm **${blocked} sát thương** (giảm 40%, miễn chí mạng).` : ""}${recovery}${riftEffects.length ? ` 🌀 Rift: ${riftEffects.join(", ")}.` : ""}`;
 }
 
 function playerAttack(state, action) {
@@ -1355,7 +1760,12 @@ function playerAttack(state, action) {
     if (state.hp >= state.maxHp) throw new Error("FULL_HP");
     const healed = Math.min(
       state.maxHp - state.hp,
-      Math.max(20, Math.floor(state.maxHp * 0.35)),
+      Math.max(
+        20,
+        Math.floor(
+          state.maxHp * clamp(0.35 + (state.potionPower || 0), 0.1, 0.75),
+        ),
+      ),
     );
     state.potions -= 1;
     state.hp += healed;
@@ -1366,8 +1776,10 @@ function playerAttack(state, action) {
   let defend = false;
   let healing = 0;
   if (action === "skill") {
-    if (state.energy < 2) throw new Error("NO_ENERGY");
-    state.energy -= 2;
+    const free = state.classKey === "sorceress" && classShrineActive(state);
+    if (!free && state.energy < 2) throw new Error("NO_ENERGY");
+    if (free) state.classShrine.consumed = true;
+    else state.energy -= 2;
     if (["sorceress", "necromancer"].includes(state.classKey)) {
       const raw = Math.floor(
         randomInt(state.damageMin, state.damageMax) *
@@ -1386,6 +1798,12 @@ function playerAttack(state, action) {
         resolvePhysicalAttack(state, enemy, state.floor, { multiplier: 0.85 }),
         resolvePhysicalAttack(state, enemy, state.floor, { multiplier: 0.85 }),
       ];
+      if (classShrineActive(state) && randomFloat() < 0.2)
+        attacks.push(
+          resolvePhysicalAttack(state, enemy, state.floor, {
+            multiplier: 0.85,
+          }),
+        );
     } else {
       const multiplier = {
         assassin: 1.3,
@@ -1414,7 +1832,7 @@ function playerAttack(state, action) {
   enemy.incomingAttacks = (enemy.incomingAttacks || 0) + 1;
   const immune =
     enemy.mechanic === "riftwalker" && enemy.incomingAttacks % 3 === 1;
-  const damage = immune
+  const calculatedDamage = immune
     ? 0
     : attacks.reduce(
         (total, attack) =>
@@ -1426,6 +1844,12 @@ function playerAttack(state, action) {
             : 0),
         0,
       );
+  const bonus = ["boss", "final_boss"].includes(enemy.rank)
+    ? state.bossDamage || 0
+    : ["elite", "ancient_mimic"].includes(enemy.rank)
+      ? state.eliteDamage || 0
+      : 0;
+  const damage = Math.floor(calculatedDamage * (1 + bonus));
   enemy.hp = Math.max(0, enemy.hp - damage);
   const skill =
     action === "skill" ? `✨ ${CLASSES[state.classKey].skill}: ` : "⚔️ ";
@@ -1433,7 +1857,7 @@ function playerAttack(state, action) {
     ? `${skill}Ascendant Riftwalker miễn nhiễm đòn này.`
     : !hit
       ? `${skill}Đòn đánh trượt.`
-      : `${skill}${attacks.some((attack) => attack.crit) ? "Critical! " : ""}Gây **${damage} sát thương**${attacks.length > 1 ? " qua hai phát" : ""}.`;
+      : `${skill}${attacks.some((attack) => attack.crit) ? "Critical! " : ""}Gây **${damage} sát thương**${attacks.length > 1 ? ` qua ${attacks.length} phát` : ""}.`;
   return {
     log: `${log}${healing ? ` Hồi **${healing} HP**.` : ""}`,
     dodge,
@@ -1485,6 +1909,17 @@ const DISPLAY_STATS = [
   "evasion",
   "resistance",
   "escapeTokens",
+  "accuracy",
+  "maxEnergy",
+  "potionPower",
+  "bossDamage",
+  "eliteDamage",
+  "mimicDetection",
+  "goblinChance",
+  "legendaryFind",
+  "floorHpLoss",
+  "mimicChance",
+  "damageTaken",
 ];
 function statSnapshot(state) {
   return Object.fromEntries(
@@ -1501,16 +1936,16 @@ function statChanges(state, before) {
 }
 function payRunService(state, service) {
   const cost = serviceCost(state, service);
-  if (potentialPayout(state) < cost) throw new Error("INSUFFICIENT_RUN_PAYOUT");
+  if (cost <= 0 || potentialPayout(state) < cost)
+    throw new Error("INSUFFICIENT_RUN_PAYOUT");
   state.payoutSpent = (state.payoutSpent || 0) + cost;
   state.payoutServiceSpent = (state.payoutServiceSpent || 0) + cost;
   return cost;
 }
 function chargeCurrentPayout(state, rate) {
-  const available = potentialPayout(state);
-  const remaining = Math.floor(available * (1 - rate));
-  const cost = available - remaining;
-  state.payoutSpent = (state.payoutSpent || 0) + cost;
+  const cost = payoutReductionCost(state, rate);
+  state.payoutFactor *= 1 - rate;
+  state.payoutTaxLoss = (state.payoutTaxLoss || 0) + cost;
   return cost;
 }
 
@@ -1559,10 +1994,9 @@ function resolveWrongPortal(state) {
     state.potions -= lost;
     log = `📦 Shattered Supplies: mất **${lost} bình máu**.`;
   } else if (event.portal.effect === "payout_corruption") {
-    state.payoutFactor *= 0.9;
+    const cost = chargeCurrentPayout(state, 0.1);
     state.portalPayoutFactor = (state.portalPayoutFactor || 1) * 0.9;
-    log =
-      "☣️ Payout Corruption: giảm 10% hệ số payout của toàn bộ run, gồm thưởng kiếm được về sau.";
+    log = `☣️ Payout Corruption: payout ×0,9, giảm **${cost} xu** hiện tại; áp dụng cả thưởng về sau.`;
   } else if (event.portal.effect === "dimensional_curse") {
     const previousDefense = state.defense;
     const previousResistance = state.resistance;
@@ -1571,7 +2005,272 @@ function resolveWrongPortal(state) {
     log = `💀 Dimensional Curse: −${previousDefense - state.defense} Defense, −${previousResistance - state.resistance}% Resistance.`;
   } else throw new Error("INVALID_ACTION");
   state.encounter = event.enemy;
-  state.lastLog = `🌀 Portal xấu! ${log}\n⚠️ **Rift Ambusher** cấp Elite đánh phủ đầu!\n${luckyBreak(state, event) ? LUCKY_BREAK_LOG : enemyTurn(state)}`;
+  state.lastLog = `🌀 Portal xấu! ${log}\n⚠️ **Rift Ambusher** cấp Elite đánh phủ đầu!\n${enemyTurn(state)}`;
+}
+function payEventCost(state, rate) {
+  const cost = Math.ceil(potentialPayout(state) * rate);
+  if (cost <= 0 || potentialPayout(state) < cost)
+    throw new Error("INSUFFICIENT_RUN_PAYOUT");
+  state.payoutSpent = (state.payoutSpent || 0) + cost;
+  state.payoutServiceSpent = (state.payoutServiceSpent || 0) + cost;
+  return cost;
+}
+function resolveSurprise(state, action) {
+  const event = state.encounter;
+  const done = (log) => completeFloor(state, log, 0);
+  const addAttack = (amount) => {
+    state.damageMin = Math.max(1, state.damageMin + amount);
+    state.damageMax = Math.max(state.damageMin, state.damageMax + amount);
+  };
+  const receive = (item) => {
+    const owned = applyItem(state, item, item.rarity);
+    return `Nhận **${owned.name} Lv.${owned.level}** [${rarityLabel(owned.rarity)}]: ${item.text}${item.curse ? `; curse: ${item.curse.text}` : ""}.`;
+  };
+  const combat = (enemy, log) => {
+    state.encounter = enemy;
+    state.lastLog = log;
+  };
+  if (event.kind === "healer" && action === "event_accept") {
+    const healed = Math.min(
+      state.maxHp - state.hp,
+      Math.max(20, Math.floor(state.maxHp * 0.3)),
+    );
+    state.hp += healed;
+    state.potions = Math.min(5, state.potions + 1);
+    return done(
+      `💚 Wandering Healer: hồi **${healed} HP**, +1 bình (tối đa 5).`,
+    );
+  }
+  if (event.kind === "goblin" && action === "event_catch") {
+    if (event.successRoll < goblinCatchChance(state)) {
+      const bonus = Math.floor(state.stake * 0.25);
+      state.bonus += bonus;
+      return done(`💰 Bắt được Treasure Goblin! Bonus **+${bonus} xu**.`);
+    }
+    const lost = chargeCurrentPayout(state, 0.1);
+    return done(
+      `🏃 Treasure Goblin trốn thoát: payout ×0,9, mất **${lost} xu**.`,
+    );
+  }
+  if (event.kind === "blacksmith" && action === "event_forge") {
+    const target = forgeTarget(state);
+    if (!target) throw new Error("NO_FORGE_ITEM");
+    const cost = payEventCost(state, 0.12);
+    const log = receive(target.definition);
+    return done(`🔨 Rèn: ${log}\nDùng **${cost} xu** từ payout.`);
+  }
+  if (event.kind === "purifier" && action === "event_cleanse") {
+    const target = curseTarget(state);
+    if (!target) throw new Error("NO_CURSE");
+    const cost = payEventCost(state, 0.2);
+    cleanseItem(state, target);
+    return done(
+      `✨ Giải một lớp curse của **${target.name}**; giữ buff. Dùng **${cost} xu** từ payout.`,
+    );
+  }
+  if (event.kind === "sacrifice") {
+    if (action === "event_blood") {
+      const lost = Math.max(1, Math.floor(state.maxHp * 0.2));
+      if (state.hp <= lost) throw new Error("INSUFFICIENT_HP");
+      state.hp -= lost;
+      addAttack(3);
+      return done(`🩸 Hiến **${lost} HP**, +3 sát thương.`);
+    }
+    if (action === "event_gold") {
+      const cost = payEventCost(state, 0.1);
+      state.defense += 3;
+      return done(`🛡️ +3 Defense, dùng **${cost} xu** từ payout.`);
+    }
+  }
+  if (
+    event.kind === "gambler" &&
+    ["event_bet10", "event_bet25"].includes(action)
+  ) {
+    const cost = payEventCost(state, action === "event_bet10" ? 0.1 : 0.25);
+    if (event.win) {
+      // Return the stake, then credit the profit through bonus (subject to the payout cap).
+      state.payoutSpent -= cost;
+      state.payoutServiceSpent -= cost;
+      state.bonus += Math.ceil(cost / state.payoutFactor);
+      return done(
+        `🎲 Cursed Gambler: thắng cược **${cost} xu**, nhận lại **${cost * 2} xu** trước trần payout.`,
+      );
+    }
+    return done(`🎲 Cursed Gambler: thua **${cost} xu** từ payout.`);
+  }
+  if (
+    event.kind === "adventurer" &&
+    ["event_rescue", "event_rob"].includes(action)
+  ) {
+    if (action === "event_rescue") {
+      if (state.potions < 2) throw new Error("NO_RESCUE_POTIONS");
+      state.potions -= 2;
+      return done(
+        `🧭 Cứu Lost Adventurer bằng 2 bình máu. ${receive(event.rescueItem)}`,
+      );
+    }
+    return done(
+      event.robItem
+        ? `🗡️ Cướp đồ Lost Adventurer. ${receive(event.robItem)}`
+        : "🗡️ Cướp đồ Lost Adventurer. Không có gì xảy ra.",
+    );
+  }
+  if (event.kind === "fountain" && action === "event_drink") {
+    if (event.outcome === "mimic")
+      return combat(event.enemy, "🩸 Blood Fountain hóa thành Blood Mimic!");
+    if (event.outcome === "heal") {
+      state.hp = state.maxHp;
+      return done("🩸 Blood Fountain: hồi đầy HP.");
+    }
+    state.maxHp += 15;
+    return done("🩸 Blood Fountain: +15 HP tối đa.");
+  }
+  if (
+    event.kind === "horadric" &&
+    [
+      "event_grind_attack",
+      "event_grind_defense",
+      "event_grind_hp",
+      "event_grind_ticket",
+    ].includes(action)
+  ) {
+    const target = state.items.find(
+      (item) =>
+        item.name === event.targetName &&
+        item.rarity === event.targetRarity &&
+        (item.definition?.base || "") === event.targetBase,
+    );
+    if (
+      !target ||
+      (action === "event_grind_ticket" &&
+        !["legendary", "cursed"].includes(target.rarity))
+    )
+      throw new Error("NO_FORGE_ITEM");
+    grindItem(state, target);
+    const rewards = {
+      event_grind_attack: { attack: 3 },
+      event_grind_defense: { defense: 4 },
+      event_grind_hp: { maxHp: 10, heal: 10 },
+      event_grind_ticket: { escapeTokens: 1 },
+    };
+    applyEquipmentEffects(state, rewards[action]);
+    return done(
+      `⚒️ Nghiền một level **${target.name}**: ${effectText(rewards[action], 1)}.`,
+    );
+  }
+  if (event.kind === "merchant" && action.startsWith("event_buy_")) {
+    const key = action.slice("event_buy_".length);
+    if (!event.offers.includes(key)) throw new Error("INVALID_ACTION");
+    const cost = payEventCost(state, MERCHANT_OFFERS[key].rate);
+    let log = MERCHANT_OFFERS[key].label;
+    if (key === "potion") state.potions = Math.min(5, state.potions + 1);
+    if (key === "heal") state.hp = state.maxHp;
+    if (key === "luck") state.luck += 1;
+    if (key === "ticket") grantEscapeTickets(state, 1);
+    if (key === "item") log = receive(event.item);
+    return done(`🛒 Rift Merchant: ${log}; dùng **${cost} xu** từ payout.`);
+  }
+  if (event.kind === "mirror") {
+    if (action === "event_mirror_damage") {
+      const lost = Math.max(1, Math.floor(state.maxHp * 0.1));
+      if (state.hp <= lost) throw new Error("INSUFFICIENT_HP");
+      state.hp -= lost;
+      state.damageMin = Math.floor(state.damageMin * 1.1);
+      state.damageMax = Math.floor(state.damageMax * 1.1);
+      return done(`🪞 Mất **${lost} HP**, +10% sát thương.`);
+    }
+    if (action === "event_mirror_guard") {
+      state.defense += 8;
+      addAttack(-2);
+      return done("🪞 +8 Defense, −2 sát thương.");
+    }
+    if (action === "event_break") {
+      if (event.lucky) {
+        state.luck += 2;
+        return done("🪞 Đập gương: +2 Luck.");
+      }
+      return combat(
+        event.enemy,
+        "🪞 Mirror Clone xuất hiện; hạ clone để qua tầng.",
+      );
+    }
+  }
+  if (
+    event.kind === "treasure_room" &&
+    ["event_chest_red", "event_chest_blue", "event_chest_gold"].includes(action)
+  ) {
+    const key = action.slice("event_chest_".length);
+    if (key === event.mimicChest)
+      return combat(event.enemy, "📦 Hòm hóa thành Mimic!");
+    if (key === "red") {
+      addAttack(5);
+      return done("📦 Hòm đỏ: +5 sát thương.");
+    }
+    if (key === "blue") {
+      state.defense += 6;
+      state.resistance = clamp(state.resistance + 5, -50, 75);
+      return done("📦 Hòm xanh: +6 Defense, +5 Resistance.");
+    }
+    state.bonus += Math.floor(state.stake * 0.5);
+    state.luck += 1;
+    return done("📦 Hòm vàng: bonus +50% cược, +1 Luck.");
+  }
+  if (
+    event.kind === "contract" &&
+    [
+      "event_contract_potion",
+      "event_contract_skill",
+      "event_contract_defend",
+    ].includes(action)
+  ) {
+    if (state.contract) throw new Error("INVALID_ACTION");
+    state.contract = {
+      kind: action.slice("event_contract_".length),
+      from: state.floor + 1,
+      until: state.floor + 3,
+      remaining: 3,
+      item: event.item,
+    };
+    return done(
+      "📜 Nhận Rift Contract cho 3 tầng kế tiếp. Vi phạm chỉ hủy phần thưởng.",
+    );
+  }
+  if (event.kind === "class_shrine" && action === "event_bless") {
+    state.classShrine = {
+      from: state.floor + 1,
+      until: state.floor + 3,
+      consumed: false,
+    };
+    return done(
+      `✨ Class Shrine chúc phúc **${CLASSES[state.classKey].name}** trong tối đa 3 tầng kế tiếp.`,
+    );
+  }
+  if (
+    event.kind === "doors" &&
+    ["event_door_light", "event_door_gold", "event_door_dark"].includes(action)
+  ) {
+    const key = action.slice("event_door_".length);
+    if (key === "light") {
+      if (event.doors.light) {
+        state.hp = state.maxHp;
+        state.potions = Math.min(5, state.potions + 1);
+        return done("🚪 Cửa sáng: hồi đầy HP, +1 bình.");
+      }
+      const lost = Math.min(state.hp - 1, Math.floor(state.maxHp * 0.2));
+      state.hp -= lost;
+      return done(`🚪 Cửa sáng: mất **${lost} HP**, giữ ít nhất 1 HP.`);
+    }
+    if (key === "gold") {
+      if (!event.doors.gold)
+        return combat(event.mimic, "🚪 Golden Door Mimic chặn đường!");
+      state.bonus += Math.floor(state.stake * 0.5);
+      return done("🚪 Cửa vàng: bonus +50% cược.");
+    }
+    if (!event.doors.dark)
+      return combat(event.boss, "🚪 Premature Rift Boss xuất hiện!");
+    return done(`🚪 Cửa đen: ${receive(event.item)}`);
+  }
+  throw new Error("INVALID_ACTION");
 }
 
 const actionTx = db.transaction(
@@ -1629,6 +2328,15 @@ const actionTx = db.transaction(
           throw new Error("INVALID_ACTION");
         const acted = playerAttack(state, action);
         let log = acted.log;
+        if (
+          state.contract &&
+          state.floor >= state.contract.from &&
+          state.floor <= state.contract.until &&
+          state.contract.kind === action
+        ) {
+          state.contract = null;
+          log = `📜 Vi phạm Rift Contract: hủy thưởng hợp đồng.\n${log}`;
+        }
         if (state.encounter.hp <= 0) {
           const enemy = state.encounter;
           if (
@@ -1736,15 +2444,10 @@ const actionTx = db.transaction(
           const target = curseTarget(state);
           if (!target) throw new Error("NO_CURSE");
           const cost = payRunService(state, service);
-          const penalty = target.definition.bonusPenalty;
-          target.cleansedLevels = (target.cleansedLevels || 0) + 1;
-          state.payoutFactor = Math.min(
-            1,
-            Number((state.payoutFactor / (1 - penalty)).toPrecision(15)),
-          );
+          cleanseItem(state, target);
           completeFloor(
             state,
-            `✨ Gỡ một cộng dồn phạt payout **${Math.round(penalty * 100)}%** của **${target.name}**; giữ chỉ số trang bị.\n💰 Đã dùng **${cost} xu** từ payout của run.`,
+            `✨ Gỡ một lớp curse của **${target.name}**; giữ buff trang bị.\n💰 Đã dùng **${cost} xu** từ payout của run.`,
             0,
           );
         } else throw new Error("INVALID_ACTION");
@@ -1752,9 +2455,13 @@ const actionTx = db.transaction(
         if (action === "ignore")
           completeFloor(
             state,
-            "🚶 Bạn tránh lối đi bí ẩn và đi tiếp an toàn.",
+            state.encounter.kind === "adventurer"
+              ? "🚶 Bỏ mặc Lost Adventurer. Không có gì xảy ra."
+              : "🚶 Bạn tránh lối đi bí ẩn và đi tiếp an toàn.",
             0,
           );
+        else if (SURPRISE_EVENTS[state.encounter.kind])
+          resolveSurprise(state, action);
         else if (action === "explore") {
           const event = state.encounter;
           if (event.kind === "ambush") {
@@ -1813,7 +2520,7 @@ const actionTx = db.transaction(
             const cost = chargeCurrentPayout(state, 0.15);
             completeFloor(
               state,
-              `🧾 Tax Collector thu **${cost} xu** (15% payout hiện tại, làm tròn lên).`,
+              `🧾 Tax Collector: hệ số payout ×0,85, giảm **${cost} xu** hiện tại.`,
               0,
             );
           }
@@ -1875,7 +2582,7 @@ const actionTx = db.transaction(
           const cost = chargeCurrentPayout(state, 0.4);
           completeFloor(
             state,
-            `💸 Hối lộ RNGesus **${cost} xu** (40% payout hiện tại, làm tròn lên) để đi tiếp.`,
+            `💸 Hối lộ RNGesus: hệ số payout ×0,6, giảm **${cost} xu** hiện tại để đi tiếp.`,
             0,
           );
         } else if (action === "pray") {
@@ -1885,20 +2592,52 @@ const actionTx = db.transaction(
               state,
               result: finishRun(session, state, "rngesus"),
             };
-          const item = pick(ITEMS.legendary);
-          const equipment = applyItem(state, item, "legendary");
+          const rarity = event.prayerRarity || "legendary";
+          const pool = ITEMS[rarity];
+          const item =
+            pool[
+              Math.min(
+                pool.length - 1,
+                Math.floor(event.prayerItemRoll * pool.length),
+              )
+            ];
+          const equipment = applyItem(state, item, rarity);
           completeFloor(
             state,
-            `🙏 RNGesus cười và trao **${item.name} Lv.${equipment.level}** (${rarityLabel("legendary")}).`,
+            `🙏 RNGesus cười và trao **${item.name} Lv.${equipment.level}** (${rarityLabel(rarity)}).`,
             2,
+          );
+        } else if (action === "ticket") {
+          if (state.escapeTokens <= 0) throw new Error("NO_TICKET");
+          state.escapeTokens -= 1;
+          completeFloor(
+            state,
+            "🎫 Dùng một Vé Thoát Hiểm, vượt tầng an toàn.",
+            0,
           );
         } else throw new Error("INVALID_ACTION");
       } else throw new Error("INVALID_ACTION");
+
+      if (state.hp <= 0)
+        return {
+          settled: true,
+          state,
+          result: finishRun(session, state, "death"),
+        };
 
       if (state.lastDiscardedEscapeTokens)
         state.lastLog += `\n🎫 Chỉ giữ tối đa 1 Vé Thoát Hiểm; bỏ ${state.lastDiscardedEscapeTokens} vé nhận thêm.`;
       delete state.lastDiscardedEscapeTokens;
       state.lastStatChanges = statChanges(state, before);
+      // Persist cleared floors immediately; deaths and session cleanup must not erase milestones.
+      if (state.cleared > 0)
+        hardcoreRepository.upsertRecord(session.guild_id, session.user_id, {
+          bestFloor: state.cleared,
+          runs: 0,
+          deaths: 0,
+          escapes: 0,
+          completions: 0,
+        });
       saveState(session, state);
       return { settled: false, state, result: null };
     });
@@ -1968,6 +2707,16 @@ async function showHardcoreTurn(
   }
 }
 
+const hardcoreQueues = new Map();
+function withHardcoreSession(sessionId, action) {
+  const previous = hardcoreQueues.get(sessionId) || Promise.resolve();
+  const next = previous.catch(() => {}).then(action);
+  hardcoreQueues.set(sessionId, next);
+  return next.finally(() => {
+    if (hardcoreQueues.get(sessionId) === next)
+      hardcoreQueues.delete(sessionId);
+  });
+}
 async function handleHardcoreButton(interaction, logger) {
   const [, sessionId, rawTurn, action, originMessageId] =
     interaction.customId.split(":");
@@ -1982,109 +2731,117 @@ async function handleHardcoreButton(interaction, logger) {
     openingDetails
       ? interaction.editReply({ content, embeds: [], components: [] })
       : interaction.followUp({ content, flags: MessageFlags.Ephemeral });
-  try {
-    const session = getSession(sessionId);
-    if (
-      !session ||
-      session.guild_id !== interaction.guildId ||
-      session.channel_id !== interaction.channelId
-    ) {
-      return await respond(
-        "Lượt Sinh tồn đã kết thúc hoặc nút không còn hợp lệ.",
-      );
-    }
-    if (session.user_id !== interaction.user.id) {
-      return await respond("Đây là lượt Sinh tồn của người chơi khác.");
-    }
-    const sourceMessageId = detailAction
-      ? originMessageId || interaction.message?.id
-      : interaction.message?.id;
-    if (session.message_id && session.message_id !== sourceMessageId) {
-      return await respond(
-        "Bảng Sinh tồn này đã cũ. Dùng `/choi sinhton tieptuc` để mở bảng hiện tại.",
-      );
-    }
-    if (detailAction) {
-      const state = parseState(session);
-      const payload = hardcoreView.hardcorePrivatePayload(
-        state,
-        CLASSES,
-        ITEMS,
-        sessionId,
-        sourceMessageId,
-        detailAction[1],
-        Number(detailAction[2]),
-      );
-      const reply = await interaction.editReply(payload);
-      hardcoreRepository.touchSession(sessionId);
-      return reply;
-    }
-    const played = playHardcore({
-      sessionId,
-      userId: interaction.user.id,
-      expectedTurn: Number(rawTurn),
-      action,
-    });
-    return await showHardcoreTurn(
-      interaction,
-      sessionId,
-      played.state,
-      played.result,
-      played.settled,
-      logger,
-    );
-  } catch (error) {
-    logger?.error?.(
-      { err: error, sessionId, action, originMessageId },
-      "hardcore interaction failed",
-    );
-    if (detailAction)
-      return respond(
-        "Không thể mở bảng chi tiết Sinh tồn. Hãy thử lại hoặc dùng `/choi sinhton tieptuc` để mở UI mới. Run và vật phẩm của bạn vẫn được giữ nguyên.",
-      );
-    if (error.message === "STALE_ACTION") {
-      const currentSession = getSession(sessionId);
+  return withHardcoreSession(sessionId, async () => {
+    try {
+      const session = getSession(sessionId);
       if (
-        currentSession &&
-        (!currentSession.message_id ||
-          currentSession.message_id === interaction.message?.id)
+        !session ||
+        session.guild_id !== interaction.guildId ||
+        session.channel_id !== interaction.channelId
       ) {
-        const currentState = parseState(currentSession);
-        return showHardcoreTurn(
-          interaction,
-          sessionId,
-          currentState,
-          null,
-          false,
-          logger,
+        return await respond(
+          "Lượt Sinh tồn đã kết thúc hoặc nút không còn hợp lệ.",
         );
       }
-      return interaction.followUp({
-        content:
-          "Nút này thuộc bảng Sinh tồn cũ. Hãy mở bảng đang chơi để tiếp tục.",
-        flags: MessageFlags.Ephemeral,
+      if (session.user_id !== interaction.user.id) {
+        return await respond("Đây là lượt Sinh tồn của người chơi khác.");
+      }
+      const sourceMessageId = detailAction
+        ? originMessageId || interaction.message?.id
+        : interaction.message?.id;
+      if (session.message_id && session.message_id !== sourceMessageId) {
+        return await respond(
+          "Bảng Sinh tồn này đã cũ. Dùng `/sinhton tieptuc` để mở bảng hiện tại.",
+        );
+      }
+      if (detailAction) {
+        const state = parseState(session);
+        const payload = hardcoreView.hardcorePrivatePayload(
+          state,
+          CLASSES,
+          ITEMS,
+          sessionId,
+          sourceMessageId,
+          detailAction[1],
+          Number(detailAction[2]),
+        );
+        const reply = await interaction.editReply(payload);
+        hardcoreRepository.touchSession(sessionId);
+        return reply;
+      }
+      const played = playHardcore({
+        sessionId,
+        userId: interaction.user.id,
+        expectedTurn: Number(rawTurn),
+        action,
       });
+      return await showHardcoreTurn(
+        interaction,
+        sessionId,
+        played.state,
+        played.result,
+        played.settled,
+        logger,
+      );
+    } catch (error) {
+      logger?.error?.(
+        { err: error, sessionId, action, originMessageId },
+        "hardcore interaction failed",
+      );
+      if (detailAction)
+        return respond(
+          "Không thể mở bảng chi tiết Sinh tồn. Hãy thử lại hoặc dùng `/sinhton tieptuc` để mở UI mới. Run và vật phẩm của bạn vẫn được giữ nguyên.",
+        );
+      if (error.message === "STALE_ACTION") {
+        const currentSession = getSession(sessionId);
+        if (
+          currentSession &&
+          (!currentSession.message_id ||
+            currentSession.message_id === interaction.message?.id)
+        ) {
+          const currentState = parseState(currentSession);
+          return showHardcoreTurn(
+            interaction,
+            sessionId,
+            currentState,
+            null,
+            false,
+            logger,
+          );
+        }
+        return interaction.followUp({
+          content:
+            "Nút này thuộc bảng Sinh tồn cũ. Hãy mở bảng đang chơi để tiếp tục.",
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+      const content =
+        error.message === "NO_ENERGY"
+          ? "Không đủ năng lượng dùng kỹ năng."
+          : error.message === "NO_POTION"
+            ? "Bạn đã hết bình máu."
+            : error.message === "NO_RESCUE_POTIONS"
+              ? "Cứu Lost Adventurer cần ít nhất 2 bình máu."
+              : error.message === "FULL_HP"
+                ? "HP đang đầy."
+                : error.message === "ALREADY_INSPECTED"
+                  ? "Bạn đã kiểm tra hòm này."
+                  : error.message === "CANNOT_RETREAT"
+                    ? "Không thể rút thưởng khi gặp RNGesus."
+                    : error.message === "INSUFFICIENT_RUN_PAYOUT"
+                      ? "Payout tích lũy của run chưa đủ trả phí dịch vụ."
+                      : error.message === "NO_FORGE_ITEM"
+                        ? "Bạn chưa có trang bị phù hợp để rèn."
+                        : error.message === "NO_CURSE"
+                          ? "Không có lời nguyền của đồ UR cần giải."
+                          : error.message === "INSUFFICIENT_HP"
+                            ? "HP hiện tại chưa đủ cho lựa chọn này."
+                            : error.message === "NO_TICKET"
+                              ? "Bạn không còn Vé Thoát Hiểm."
+                              : "Không thể thực hiện lựa chọn này.";
+      return interaction.followUp({ content, flags: MessageFlags.Ephemeral });
     }
-    const content =
-      error.message === "NO_ENERGY"
-        ? "Không đủ năng lượng dùng kỹ năng."
-        : error.message === "NO_POTION"
-          ? "Bạn đã hết bình máu."
-          : error.message === "FULL_HP"
-            ? "HP đang đầy."
-            : error.message === "ALREADY_INSPECTED"
-              ? "Bạn đã kiểm tra hòm này."
-              : error.message === "CANNOT_RETREAT"
-                ? "Không thể rút thưởng khi gặp RNGesus."
-                : error.message === "INSUFFICIENT_RUN_PAYOUT"
-                  ? "Payout tích lũy của run chưa đủ trả phí dịch vụ."
-                  : error.message === "NO_FORGE_ITEM"
-                    ? "Bạn chưa có trang bị phù hợp để rèn."
-                    : error.message === "NO_CURSE"
-                      ? "Không có cộng dồn phạt payout của đồ UR cần giải."
-                      : "Không thể thực hiện lựa chọn này.";
-    return interaction.followUp({ content, flags: MessageFlags.Ephemeral });
-  }
+  });
 }
 
 function cleanupStaleHardcoreSessions(now = Date.now()) {
@@ -2123,6 +2880,7 @@ module.exports = {
   baseMultiplier,
   potentialPayout,
   generateEncounter,
+  makeSurprise,
   REGIONS,
   RIFT_MODIFIERS,
   regionForFloor,
@@ -2151,6 +2909,7 @@ module.exports = {
   hardcoreRows,
   forceEndHardcoreSession,
   handleHardcoreButton,
+  withHardcoreSession,
   getHardcoreRecord,
   getHardcoreTop,
   cleanupStaleHardcoreSessions,

@@ -2,7 +2,16 @@ const COMMAND_FILES = Object.freeze([
   "batdau",
   "trogiup",
   "huongdan",
-  "choi",
+  "baucua",
+  "taixiu",
+  "chinchiro",
+  "oantuti",
+  "xidach",
+  "poker",
+  "duangua",
+  "domin",
+  "coquay",
+  "sinhton",
   "luat",
   "hoso",
   "xu",
@@ -16,10 +25,11 @@ const COMMAND_FILES = Object.freeze([
 ]);
 
 function loadCommands(base = "./commands") {
+  const standalone = require(`${base}/choi`).standaloneCommands;
   return COMMAND_FILES.map((name) =>
     name === "vtv"
       ? require(`${base}/vuatiengviet`).playerCommand
-      : require(`${base}/${name}`),
+      : standalone[name] || require(`${base}/${name}`),
   );
 }
 

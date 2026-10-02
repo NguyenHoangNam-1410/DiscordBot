@@ -1,4 +1,26 @@
 const { db } = require("../db");
+const hardcoreRepository = require("./hardcoreRepository");
+
+const SURVIVAL_FRAMES = Object.freeze([
+  {
+    id: "survival_silver",
+    name: "Khung Bạc",
+    floor: 333,
+    colors: ["#687481", "#f3f7fc", "#a7b3c0", "#ffffff", "#687481"],
+  },
+  {
+    id: "survival_gold",
+    name: "Khung Vàng",
+    floor: 666,
+    colors: ["#926213", "#ffec9b", "#d6a72f", "#fff4b8", "#926213"],
+  },
+  {
+    id: "survival_diamond",
+    name: "Khung Kim cương",
+    floor: 999,
+    colors: ["#528cc7", "#efffff", "#82e9f5", "#e6ceff", "#528cc7"],
+  },
+]);
 
 const CATALOG = Object.freeze([
   {
@@ -194,7 +216,21 @@ function getOwnedCosmetics(guildId, userId) {
 }
 function getProfileAppearance(guildId, userId) {
   const row = ensureProfile(guildId, userId);
-  return { color: getCosmetic(row.color_id) || getCosmetic("color_red") };
+  const record = hardcoreRepository.getRecord(guildId, userId);
+  const session = hardcoreRepository.getByUser(guildId, userId);
+  const state = session ? hardcoreRepository.parseState(session) : null;
+  const activeFloor = state
+    ? Math.min(state.cleared || 0, state.finalBossDefeated ? 999 : 998)
+    : 0;
+  const bestFloor = Math.max(record?.best_floor || 0, activeFloor);
+  const frame =
+    [...SURVIVAL_FRAMES].reverse().find((item) => bestFloor >= item.floor) ||
+    null;
+  return {
+    color: getCosmetic(row.color_id) || getCosmetic("color_red"),
+    bestFloor,
+    frame,
+  };
 }
 module.exports = {
   CATALOG,

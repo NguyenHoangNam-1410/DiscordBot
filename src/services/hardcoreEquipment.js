@@ -41,6 +41,10 @@ function normalizeEquipment(items) {
       );
       if (item.text) previous.text = item.text;
       if (item.definition) previous.definition = item.definition;
+      previous.levelEffects = [
+        ...(previous.levelEffects || []),
+        ...(item.levelEffects || []),
+      ];
     } else
       merged.set(key, {
         ...item,
@@ -54,6 +58,8 @@ function normalizeEquipment(items) {
 
 function effectText(item, level) {
   if (!item) return "Không rõ tác dụng";
+  if (item.effects)
+    return effectText({ ...item.effects, text: item.text }, level);
   const effects = [];
   const sign = (value) => `${value > 0 ? "+" : "−"}${Math.abs(value)}`;
   if (item.attack)
@@ -86,199 +92,26 @@ function effectText(item, level) {
     effects.push(
       `${STAT_EMOJI.payout} −${Math.round((1 - (1 - item.bonusPenalty) ** level) * 100)}% cộng dồn`,
     );
+  for (const [key, label] of Object.entries({
+    accuracy: "Accuracy",
+    evasion: "Evasion",
+    maxEnergy: "Energy tối đa",
+  }))
+    if (item[key]) effects.push(`${sign(item[key] * level)} ${label}`);
+  for (const [key, label] of Object.entries({
+    potionPower: "hồi bình máu",
+    bossDamage: "damage lên Boss",
+    eliteDamage: "damage lên Elite",
+    mimicDetection: "phát hiện Mimic",
+    goblinChance: "bắt Goblin",
+    legendaryFind: "cơ hội SSR",
+    floorHpLoss: "HP mất mỗi tầng",
+    mimicChance: "Mimic",
+    damageTaken: "damage nhận vào",
+  }))
+    if (item[key])
+      effects.push(`${sign(Math.round(item[key] * level * 100))}% ${label}`);
   return effects.join(" · ") || item.text || "Không rõ tác dụng";
-}
-
-function statText(value) {
-  if (value == null) return "";
-  if (Array.isArray(value)) return value.map(statText).join("\n");
-  if (
-    typeof value === "object" &&
-    (value.stat || value.name) &&
-    (value.value != null || value.min != null)
-  )
-    return `${value.stat || value.name} ${value.value ?? `${value.min} to ${value.max ?? value.min}`}`;
-  if (typeof value === "object")
-    return Object.entries(value)
-      .map(([key, part]) => `${key} ${statText(part)}`)
-      .join("\n");
-  const text = String(value);
-  if (/^[\[{]/.test(text.trim())) {
-    try {
-      return statText(JSON.parse(text));
-    } catch {
-      /* Plain text stats are supported too. */
-    }
-  }
-  return text
-    .replace(/<br\s*\/?\s*>/gi, "\n")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/&(?:nbsp|amp);/g, " ");
-}
-
-function convertMedianItem(row, rarity) {
-  const name = String(row.name || row.item_name || row.title || "").trim();
-  if (!name) return null;
-  const base = String(
-    row.base_type ||
-      row.base_item ||
-      row.base_name ||
-      row.base ||
-      row.item_base ||
-      "",
-  )
-    .trim()
-    .replace(/\s+/g, " ");
-  const source = String(
-    row.type_code ||
-      row.source_type ||
-      row.source ||
-      row.category ||
-      row.item_type ||
-      row.type ||
-      row.quality ||
-      row.section ||
-      "",
-  );
-  const text = statText(
-    row.stats_json ||
-      row.stats ||
-      row.modifiers ||
-      row.properties ||
-      row.mods ||
-      row.description ||
-      "",
-  );
-  const item = {
-    id: row.id ?? name,
-    name,
-    base,
-    source,
-    variant: row.tier_or_variant || null,
-  };
-  const totals = {
-    attack: 0,
-    defense: 0,
-    resistance: 0,
-    maxHp: 0,
-    critChance: 0,
-  };
-  for (const line of text.split(/[\n;]|<br\s*\/?\s*>/i)) {
-    if (
-      /required|item level|socketed|chance to cast|based on character level|(?:strength|dexterity) damage bonus|life stolen|enemy.*resist/i.test(
-        line,
-      )
-    )
-      continue;
-    const numbers = [...line.matchAll(/[-+]?\d+(?:\.\d+)?/g)].map((match) =>
-      Number(match[0]),
-    );
-    if (!numbers.length) continue;
-    const value =
-      numbers.length >= 2 && /\bto\b|\d\s*[-–]\s*\d/.test(line)
-        ? (Math.abs(numbers[0]) + Math.abs(numbers[1])) / 2
-        : numbers[0];
-    if (/resist|all res|kháng/i.test(line)) totals.resistance += value * 0.3;
-    else if (/critical|deadly strike|crushing blow/i.test(line))
-      totals.critChance += value / 1000;
-    else if (/defen|armor|phòng thủ/i.test(line))
-      totals.defense += value * 0.05;
-    else if (/life|vitality|hit points|maximum hp/i.test(line))
-      totals.maxHp += value * 0.15;
-    else if (/damage|strength|dexterity|energy|sát thương/i.test(line))
-      totals.attack += value * 0.03;
-  }
-  for (const [key, value] of Object.entries(totals)) {
-    if (value > 0)
-      item[key] =
-        key === "critChance"
-          ? Math.min(0.06, value)
-          : Math.max(
-              1,
-              Math.round(
-                Math.min(
-                  { attack: 14, defense: 30, resistance: 12, maxHp: 50 }[key],
-                  value,
-                ),
-              ),
-            );
-  }
-  if (!Object.keys(totals).some((key) => item[key]))
-    item.attack = { common: 2, rare: 4, legendary: 9, cursed: 14 }[rarity];
-  if (item.maxHp) item.heal = item.maxHp;
-  if (rarity === "cursed") item.bonusPenalty = 0.15;
-  item.text = effectText(item, 1);
-  return item;
-}
-
-// Keep the bundled catalog portable; an explicit SQLite path can override it.
-function loadMedianEquipment(fallback, databasePath) {
-  const path = require("node:path");
-  const fs = require("node:fs");
-  const filename = path.resolve(
-    databasePath ||
-      process.env.MEDIAN_XL_DB_PATH ||
-      path.join(__dirname, "../data/median-xl-items.json"),
-  );
-  if (!fs.existsSync(filename)) return fallback;
-  let database;
-  try {
-    let rows;
-    if (path.extname(filename).toLowerCase() === ".json") {
-      rows = JSON.parse(fs.readFileSync(filename, "utf8"));
-    } else {
-      database = new (require("better-sqlite3"))(filename, {
-        readonly: true,
-        fileMustExist: true,
-      });
-      rows = database.prepare("SELECT * FROM items").all();
-    }
-    if (!Array.isArray(rows)) throw new Error("INVALID_MEDIAN_CATALOG");
-    const result = { common: [], rare: [], legendary: [], cursed: [] };
-    for (const row of rows) {
-      const source = String(
-        row.type_code || row.source_type || row.source || row.type || "",
-      ).toUpperCase();
-      const rarity = ["TU", "TIERED_UNIQUE"].includes(source)
-        ? "common"
-        : ["RW", "RUNEWORD"].includes(source)
-          ? "rare"
-          : [
-                "SU", "SACRED_UNIQUE", "SET", "SET_PIECE", "RELIC", "UMO",
-                "UNIQUE_MYSTIC_ORB", "CYCLE", "TROPHY", "SLEEP", "DUNGEON_REWARD",
-              ].includes(source)
-            ? "legendary"
-            : null;
-      if (!rarity) continue;
-      const item = convertMedianItem(row, rarity);
-      if (item) result[rarity].push(item);
-      if (source === "SU" || source === "SACRED_UNIQUE") {
-        const cursed = convertMedianItem(row, "cursed");
-        if (cursed) result.cursed.push(cursed);
-      }
-    }
-    return Object.fromEntries(
-      Object.entries(result).map(([key, items]) => {
-        const unique = new Map();
-        for (const item of items) {
-          const identity = `${item.source}:${item.name}:${item.base}`;
-          const previous = unique.get(identity);
-          const tier = (entry) =>
-            Number(
-              String(entry.variant || "").match(/Tier\s+(\d+)/i)?.[1] || 0,
-            );
-          if (!previous || tier(item) > tier(previous))
-            unique.set(identity, item);
-        }
-        return [key, unique.size ? [...unique.values()] : fallback[key]];
-      }),
-    );
-  } catch (error) {
-    console.warn(`Median XL equipment unavailable: ${error.message}`);
-    return fallback;
-  } finally {
-    database?.close();
-  }
 }
 
 module.exports = {
@@ -287,6 +120,4 @@ module.exports = {
   rarityLabel,
   normalizeEquipment,
   effectText,
-  convertMedianItem,
-  loadMedianEquipment,
 };

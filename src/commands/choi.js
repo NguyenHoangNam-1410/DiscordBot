@@ -129,7 +129,57 @@ function delegated(interaction) {
   return { command: games[key] };
 }
 
+const standaloneCommands = Object.fromEntries(
+  options
+    .filter((option) => option.name !== "vtv")
+    .map((option) => {
+      const key = option.name;
+      const gameKey = MAINTENANCE_KEYS[key] || key;
+      const command = games[key];
+      const route = (interaction) => ({
+        subcommand:
+          key === "sinhton"
+            ? { xephang: "top", tyle: "rates" }[
+                interaction.options.getSubcommand()
+              ] || interaction.options.getSubcommand()
+            : undefined,
+        optionNames:
+          key === "sinhton"
+            ? { class: "nhanvat", user: "nguoidung" }
+            : key === "domin"
+              ? { min: "somin" }
+              : {},
+      });
+      return [
+        key,
+        {
+          data: commandData(key, option.description, option.options || []),
+          async execute(interaction) {
+            const {
+              isGameMaintenance,
+              GAME_LABELS,
+            } = require("../services/gameChannelService");
+            if (isGameMaintenance(interaction.guildId, gameKey))
+              return interaction.reply({
+                content: `🔴 **${GAME_LABELS[gameKey]}** đang bảo trì. Hãy quay lại khi quản trị mở game.`,
+                flags: MessageFlags.Ephemeral,
+              });
+            return command.execute(
+              remapOptions(interaction, route(interaction)),
+            );
+          },
+          autocomplete(interaction) {
+            return command.autocomplete?.(
+              remapOptions(interaction, route(interaction)),
+            );
+          },
+        },
+      ];
+    }),
+);
+
 module.exports = {
+  standaloneCommands,
   data: commandData("choi", "Chọn và chơi tất cả game của bot", options),
   async execute(interaction) {
     const key = GAME_ALIASES[selected(interaction)] || selected(interaction);

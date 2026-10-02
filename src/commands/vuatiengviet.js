@@ -425,7 +425,12 @@ const command = {
 const playerCommand = {
   data: new SlashCommandBuilder()
     .setName("vtv")
-    .setDescription("Lệnh người chơi cho Vua tiếng Việt")
+    .setDescription("Bắt đầu và quản lý Vua tiếng Việt")
+    .addSubcommand((option) =>
+      option
+        .setName("batdau")
+        .setDescription("Bắt đầu phiên Vua tiếng Việt (chỉ admin)"),
+    )
     .addSubcommand((option) =>
       option
         .setName("boqua")
@@ -437,6 +442,8 @@ const playerCommand = {
         .setDescription("Kết thúc phiên hiện tại (chỉ admin)"),
     ),
   async execute(interaction) {
+    if (interaction.options.getSubcommand() === "batdau")
+      return command.execute(interaction);
     if (!interaction.guildId)
       return interaction.reply({
         content: "Lệnh này chỉ dùng trong server.",
@@ -469,7 +476,7 @@ const playerCommand = {
     if (!getVuaSession(interaction.guildId))
       return interaction.reply({
         content:
-          "Hiện chưa có phiên Vua Tiếng Việt. Hãy nhờ admin bắt đầu bằng `/choi vtv`.",
+          "Hiện chưa có phiên Vua Tiếng Việt. Hãy nhờ admin bắt đầu bằng `/vtv batdau`.",
         flags: MessageFlags.Ephemeral,
       });
     const result = skipVuaSessionForPlayer(

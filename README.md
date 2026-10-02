@@ -30,7 +30,7 @@ Bot cần bật **Message Content Intent** trong Discord Developer Portal nếu 
 
 - `/batdau`: hướng dẫn người mới và nhận một lần 500 xu cùng màu hồ sơ Xanh Băng.
 - `/trogiup`: chọn tab để xem lệnh theo từng nhóm; `/huongdan` vẫn là bản tóm tắt ngắn.
-- `/choi`: một lệnh chung để chọn đủ 9 game.
+- Lệnh game riêng: `/baucua`, `/taixiu`, `/chinchiro`, `/oantuti`, `/xidach`, `/poker`, `/duangua`, `/domin`, `/coquay`, `/sinhton` và `/vtv`.
 - `/vatpham`: cửa hàng, mua, túi đồ, sử dụng, tặng và quay Gacha.
 - Vật phẩm bậc R–SSR mới: Kính Soi Chữ, Đồng Hồ Gia Hạn (Vua tiếng Việt); Máy Quét Hàng/Cột (Mines); Kính Lúp Nứt, Bảo Hiểm Trắng Tay (Bầu cua); Ống Ngắm Tổng Điểm, Bảo Hiểm Sát Nút (Tài xỉu); Vé Khán Đài (Đua ngựa); Bùa Giảm Đau (Oẳn tù tì); Miếng Đệm Quắc (Xì dách); Phiếu Bỏ Bài (Poker); Nước Thanh Tẩy (hủy hiệu ứng đang chờ). Vật phẩm bảo hiểm chỉ tiêu hao khi thực sự được hoàn. Vé Gacha ×10 bảo đảm ít nhất một SSR, nhân đôi trọng số UR và không thể trao đổi.
 - `/nhiemvu`: nhiệm vụ, điểm danh, thành tựu và thưởng vai trò hàng tuần; `kiemtra` mở menu xem/nhận nhanh mọi thưởng chưa nhận, `nhan` nhận tất cả hoặc theo loại (nhiệm vụ, thành tựu, thưởng vai trò), `tanthu` nhận thưởng tân thủ (1 vé Gacha ×10 + 3000 kim cương, một lần).
@@ -38,7 +38,7 @@ Bot cần bật **Message Content Intent** trong Discord Developer Portal nếu 
 - `/xu vanchoi`: xem kết quả, tiền cược và payout của 10 ván gần nhất.
 - `/hoso [nguoidung]`: thẻ hồ sơ, huy hiệu và bảng thống kê đủ 9 game gồm số ván, thắng/thua/hòa, tỷ lệ thắng, tổng cược, tổng nhận và dòng xu ròng.
 - `/vatpham quay luot:<1|10>`: quay bằng kim cương; gói 10 lượt bảo đảm tối thiểu một phần thưởng SR.
-- `/choi chinchiro xu:<số xu>`: chơi Xúc Xắc Ngầm với Nhà cái trong một embed; người chơi chỉ bấm lắc khi Nhà cái cần so điểm.
+- `/chinchiro xu:<số xu>`: chơi Xúc Xắc Ngầm với Nhà cái trong một embed; người chơi chỉ bấm lắc khi Nhà cái cần so điểm.
 - Admin dùng `!addgem @người_chơi <số lượng>` để cộng kim cương. Mọi thay đổi kim cương và lượt gacha đều có operation ID chống xử lý trùng.
 - **Gacha: tỷ lệ theo độ hiếm là cố định.** Mặc định XU 50% · R 22% · SR 14% · SSR 10% · UR 4%. Bậc được chọn trước theo tỷ lệ này, rồi vật phẩm trong bậc được chọn **ngẫu nhiên đều**; thêm hay bớt vật phẩm không làm đổi tỷ lệ bậc (bậc có nhiều vật phẩm chỉ chia nhỏ tỷ lệ cho từng vật phẩm). Admin đổi tỷ lệ bậc bằng `/quantri config` với `GACHA_RATE_XU|R|SR|SSR|UR` (trọng số, tự chuẩn hóa về 100%; SR/SSR/UR tối thiểu 0.1), `/quantri themgacha` để thêm vật phẩm catalog vào bậc, `/quantri batgacha` để bật/tắt một phần thưởng và `/quantri xemgacha` để xem tỷ lệ từng bậc và từng vật phẩm.
 - **Thưởng sự kiện sau ván:** mỗi ván hợp lệ roll độc lập khả năng rơi thêm xu, gem (chỉnh bằng `/quantri config`) và **vật phẩm riêng của chính game đó** (không rơi vật phẩm dùng chung như vé Gacha). Mỗi game có tỷ lệ riêng: Bầu cua, Tài xỉu, Xì dách, Dò mìn, Chinchiro 4% · Đua ngựa, Poker 6% · Cò quay Nga 5% · Oẳn tù tì, Vua tiếng Việt 3% · Sinh tồn chưa có vật phẩm riêng nên không rơi. Độ hiếm rơi cố định R 60% · SR 28% · SSR 9% · UR 3% (game không có vật phẩm ở độ hiếm nào thì bỏ qua và chuẩn hóa lại), vật phẩm trong độ hiếm chọn ngẫu nhiên đều. Hệ số chung `GAME_ITEM_DROP_MULTIPLIER` (mặc định 1, 0 để tắt) nhân tất cả tỷ lệ này.
@@ -51,15 +51,15 @@ Các game cược tiếp tục dùng seed và HMAC-SHA256 nội bộ để tạo
 
 ### Oẳn tù tì solo
 
-- Đấu với bot: `/choi ott xu:<số xu> chon:<bua|keo|bao>`
-- Thách đấu người khác: `/choi ott xu:<số xu> doithu:@người_chơi`
+- Đấu với bot: `/oantuti xu:<số xu> chon:<bua|keo|bao>`
+- Thách đấu người khác: `/oantuti xu:<số xu> doithu:@người_chơi`
 - Với prefix: `!ott solo @người_chơi <số xu>`
 
 Đối thủ có 60 giây để chấp nhận. Sau khi chấp nhận, cả hai có 2 phút để bí mật chọn Búa, Kéo hoặc Bao. Bot giữ cược của hai người, trả toàn bộ cho người thắng và tự hoàn tiền nếu ván hết hạn.
 
 ### Xì dách
 
-- Chọn đối thủ bằng `chedochoi`: **nhà cái bot** (mặc định, chơi một mình với gấp đôi và tách bài) hoặc **người chơi khác**: `/choi xidach ante:<số xu> chedochoi:nguoichoi` mở bàn, bạn làm nhà cái, tối đa 3 người vào bàn trong 30 giây.
+- Chọn đối thủ bằng `chedochoi`: **nhà cái bot** (mặc định, chơi một mình với gấp đôi và tách bài) hoặc **người chơi khác**: `/xidach ante:<số xu> chedochoi:nguoichoi` mở bàn, bạn làm nhà cái, tối đa 3 người vào bàn trong 30 giây.
 - Ở bàn nhiều người, bài mỗi người được giữ kín: bấm **Xem bài của tôi** để xem bài và Rút bài/Dừng trong bảng riêng (chỉ bạn thấy); bot nhắc người đến lượt trong kênh và bài chỉ lộ khi ván kết thúc.
 - Với prefix: `!xidach <số xu> [bot|nguoichoi]` (mặc định bot).
 
@@ -67,11 +67,11 @@ Trong ván với nhà cái bot, thắng thường nhận 2× tổng cược, Xì
 
 ### Poker
 
-`/choi poker` chơi với hai bot và hỗ trợ Texas Hold’em, Poker 6+, Crazy Pineapple và Omaha 5 lá. Lệnh không cần nhập buy-in: mỗi người tự đóng ante 50 xu (đổi bằng `POKER_ANTE`), sau đó xu chỉ bị trừ thêm khi Call hoặc Raise. Ngay từ Flop, mỗi bot lật công khai một lá tẩy và giữ nguyên lá đó trong suốt ván. Ván có ba hành động Tố, Theo/Check và Bỏ bài; Turn và River có vòng cược riêng. Nhập toàn bộ stack trong cửa sổ Tố để All-in. Giao diện đánh giá bộ bài mạnh nhất hiện tại của người chơi sau mỗi lượt. Bot cân nhắc sức mạnh bài, draw sảnh/thùng, pot odds, áp lực stack, phong cách riêng và bluff; bot Crazy Pineapple tự chọn lá bỏ tốt nhất nhưng không được bỏ lá đã công khai. Hệ thống tự động hoàn phần cược không ai theo, tạo Main Pot và nhiều Side Pot theo mức đóng góp, rồi xét riêng những người đủ điều kiện cho từng pot khi Showdown. Omaha bắt buộc dùng đúng hai lá tẩy và ba lá chung.
+`/poker` chơi với hai bot và hỗ trợ Texas Hold’em, Poker 6+, Crazy Pineapple và Omaha 5 lá. Lệnh không cần nhập buy-in: mỗi người tự đóng ante 50 xu (đổi bằng `POKER_ANTE`), sau đó xu chỉ bị trừ thêm khi Call hoặc Raise. Ngay từ Flop, mỗi bot lật công khai một lá tẩy và giữ nguyên lá đó trong suốt ván. Ván có ba hành động Tố, Theo/Check và Bỏ bài; Turn và River có vòng cược riêng. Nhập toàn bộ stack trong cửa sổ Tố để All-in. Giao diện đánh giá bộ bài mạnh nhất hiện tại của người chơi sau mỗi lượt. Bot cân nhắc sức mạnh bài, draw sảnh/thùng, pot odds, áp lực stack, phong cách riêng và bluff; bot Crazy Pineapple tự chọn lá bỏ tốt nhất nhưng không được bỏ lá đã công khai. Hệ thống tự động hoàn phần cược không ai theo, tạo Main Pot và nhiều Side Pot theo mức đóng góp, rồi xét riêng những người đủ điều kiện cho từng pot khi Showdown. Omaha bắt buộc dùng đúng hai lá tẩy và ba lá chung.
 
-`/choi domin` có một ô đặc biệt không trùng vị trí mìn. Mở một ô cùng hàng hoặc cùng cột với ô đặc biệt sẽ phát cảnh báo trong mục tín hiệu riêng, còn ô trên bàn vẫn hiển thị 💎 như mọi ô an toàn khác. Tìm đúng ô 🌟 sẽ nhân thêm x1.50 vào multiplier hiện tại cho đến khi rút thưởng. Hệ số cơ sở đã tính xác suất nhận bonus và giảm dần theo số ô mở để tránh chiến thuật rút thưởng tạo xu vô hạn. Bỏ ván ngay không tính EXP hay tiến độ nhiệm vụ.
+`/domin` có một ô đặc biệt không trùng vị trí mìn. Mở một ô cùng hàng hoặc cùng cột với ô đặc biệt sẽ phát cảnh báo trong mục tín hiệu riêng, còn ô trên bàn vẫn hiển thị 💎 như mọi ô an toàn khác. Tìm đúng ô 🌟 sẽ nhân thêm x1.50 vào multiplier hiện tại cho đến khi rút thưởng. Hệ số cơ sở đã tính xác suất nhận bonus và giảm dần theo số ô mở để tránh chiến thuật rút thưởng tạo xu vô hạn. Bỏ ván ngay không tính EXP hay tiến độ nhiệm vụ.
 
-`/choi coquay cuoc:<xu>` (hoặc `!coquay <xu>`) là Cò quay Nga kiểu Buckshot Roulette: bạn và Bot mỗi bên 3 máu, cược một lần từ đầu, thắng nhận x2. Tự bắn đạn lép thì giữ lượt; tự bắn đạn thật mất 1 máu và mất lượt; bắn đối phương thì luôn chuyển lượt. Mỗi đợt nạp công khai số đạn thật/lép (đợt 1: 2–3 viên, đợt 2: 4–5, từ đợt 3: 6–8; luôn có ít nhất 1 thật và 1 lép). Bot chỉ dùng thông tin công khai và chọn nước tối ưu. Vật phẩm Gacha dùng bằng nút trong ván, mỗi loại 1 lần/ván: Kính Lúp Soi Nòng (SR), Bia Đỡ Đạn (SR), Cưa Cầm Tay (SSR), Còng Số 8 (UR).
+`/coquay cuoc:<xu>` (hoặc `!coquay <xu>`) là Cò quay Nga kiểu Buckshot Roulette: bạn và Bot mỗi bên 3 máu, cược một lần từ đầu, thắng nhận x2. Tự bắn đạn lép thì giữ lượt; tự bắn đạn thật mất 1 máu và mất lượt; bắn đối phương thì luôn chuyển lượt. Mỗi đợt nạp công khai số đạn thật/lép (đợt 1: 2–3 viên, đợt 2: 4–5, từ đợt 3: 6–8; luôn có ít nhất 1 thật và 1 lép). Bot chỉ dùng thông tin công khai và chọn nước tối ưu. Vật phẩm Gacha dùng bằng nút trong ván, mỗi loại 1 lần/ván: Kính Lúp Soi Nòng (SR), Bia Đỡ Đạn (SR), Cưa Cầm Tay (SSR), Còng Số 8 (UR).
 
 Dò mìn dùng 2–7 mìn trên bàn 20 ô. Giáp Chống Nổ chỉ vô hiệu hóa **một** quả mìn đầu tiên bạn chạm trên mỗi bản đồ; quả mìn thứ hai vẫn phát nổ như bình thường.
 
@@ -81,9 +81,9 @@ Sau 30 giây nhận cược, bot khóa cược và hiển thị cuộc đua tr�
 
 Ngựa được chia thành các hệ Cân bằng, Tốc độ, Bền bỉ, Kỹ thuật, Bí ẩn, Phòng thủ, Đột biến và Thần thoại. Sau khi khóa cược, bot mới RNG và công bố debuff của đường đua như mưa lớn, bùn lầy, gió ngược, cua gắt, nắng nóng, sương mù, mặt đường trơn hoặc khán đài náo loạn. Debuff tăng hoặc giảm cơ hội chiến thắng theo hệ ngựa và không được tiết lộ trong thời gian đặt cược.
 
-Sinh tồn được giảm độ khó trong 10 tầng đầu: boss đầu có ít máu và sát thương hơn, Barbarian khởi đầu mạnh hơn, người chơi có 3 bình máu và nhận hồi phục cùng 1 bình sau khi thắng boss tầng 5 và 10. Bài mô phỏng chính sách chơi thận trọng nằm trong `scripts/simulate-hardcore.js`.
+Sinh tồn bắt đầu bằng `/sinhton batdau`: chọn class, nhập cược rồi xác nhận trên UI riêng. Mỗi 5 tầng có checkpoint hồi đầy HP và tăng chỉ số; boss mỗi 50 tầng, tầng 999 là Deimoss dạng Final Boss. Pool surprise có 15 sự kiện; Wrong Portal 50/50. Phòng thủ nhân đôi Defense, miễn chí mạng và giảm thêm 40% sát thương. Payout tính cả checkpoint, đạt hệ số ×12 ở tầng 100 rồi giữ nguyên hệ số trong Overrun; trần 10.000.000 xu.
 
-Danh mục trang bị Sinh tồn được đóng gói trong `src/data/median-xl-items.json` (2.055 dòng vật phẩm từ dữ liệu Median XL), nên triển khai đầy đủ thư mục `src` rồi khởi động lại bot là đủ để nạp danh mục. Các Tier của cùng một món được gộp thành một loại để nhặt lại tăng Lv.; danh mục hiện có 218 R, 231 SR, 912 SSR và 420 biến thể UR Nguyền. Chỉ số nguồn được quy đổi sang chỉ số Sinh tồn; item chỉ tồn tại trong run và danh mục không được nhập vào database game. Có thể dùng `MEDIAN_XL_DB_PATH` để nạp một tệp SQLite khác khi cần.
+Trang bị Sinh tồn dùng catalog riêng `src/hardcore/item.js`: 100 món (32 R, 28 SR, 24 SSR, 16 UR), nhặt lại tăng level. UR có buff và curse tách riêng; chỉ Goblin’s Debt và Crown of Ruin giảm payout. Purifier dùng payout để gỡ một lớp curse và giữ buff. Vật phẩm chỉ tồn tại trong run; session cũ vẫn đọc định nghĩa trang bị đã lưu, không cần xóa hoặc migration SQLite. `/sinhton tieptuc` tạo UI mới, giữ kết quả ẩn đã roll. Lost Adventurer: cứu mất 2 bình nhận R 80% / SR 20%; cướp nhận SSR 25%, không có gì 75%. Kim cương là tổng thưởng tạm giữ: tầng 100/200/300/400/500/600/700/800/900 giữ 100/200/400/800/1.600/3.200/6.400/12.800/25.600; hạ boss tầng 999 giữ 51.200. Chỉ rút thưởng mới cộng kim cương vào tài khoản; chết/bỏ run/hết hạn mất toàn bộ. Phí dịch vụ không trừ kim cương. `/hoso` hiển thị tầng cao nhất đã vượt, tự dùng khung cao nhất đã mở: Bạc 333, Vàng 666, Kim cương 999. Thành tích và khung được giữ sau khi run kết thúc. Vé Thoát Hiểm giữ tối đa 1; bình tối đa 5. Run không thao tác 7 ngày sẽ mất cược.
 
 ## Thiết lập kênh
 

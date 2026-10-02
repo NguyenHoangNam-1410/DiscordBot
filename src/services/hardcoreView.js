@@ -12,11 +12,19 @@ const { formatCoins } = require("../utils/economy");
 const {
   baseMultiplier,
   potentialPayout,
+  runDiamondReward,
   enemyDamageType,
   serviceCost,
   forgeTarget,
   curseTarget,
   luckyBreakChance,
+  itemEffects,
+  itemCurse,
+  classShrineActive,
+  payoutReductionCost,
+  SURPRISE_EVENTS,
+  CLASS_SHRINE_TEXT,
+  surpriseOptions,
 } = require("./hardcoreEngine");
 const { regionForFloor, RIFT_MODIFIERS } = require("./hardcoreEngine");
 const { resultBlock } = require("../utils/rewardText");
@@ -74,7 +82,7 @@ const CLASS_PROFILES = Object.freeze({
   paladin: {
     role: "Defense và kháng phép cao",
     effect:
-      "Gây 140% sát thương vật lý rồi thủ: Defense ×2, giảm thêm 50% sát thương phản công sau giảm trừ (tối thiểu 1).",
+      "Gây 140% sát thương vật lý rồi thủ: Defense ×2, miễn chí mạng, giảm thêm 40% sát thương phản công sau giảm trừ (tối thiểu 1).",
   },
 });
 
@@ -140,7 +148,7 @@ function hardcoreSetupPayload(draft, classes, context) {
     .addFields({
       name: "📖 Ký hiệu",
       value:
-        "❤️ HP · ⚔️ sát thương · 🛡️ phòng thủ · 🎯 chính xác · 💨 né · 💥 chí mạng · 🔮 kháng phép · ✨ năng lượng · 🍀 Luck · 🧪 bình máu · 🎫 vé.\nRút thưởng để chốt payout; tử trận mất cược. Mỗi 5 tầng có checkpoint hồi đầy HP.",
+        "❤️ HP · ⚔️ sát thương · 🛡️ phòng thủ · 🎯 chính xác · 💨 né · 💥 chí mạng · 🔮 kháng phép · ✨ năng lượng · 🍀 Luck · 🧪 bình máu · 🎫 vé.\nRút thưởng để chốt xu và kim cương tạm giữ; tử trận mất toàn bộ. Mỗi 5 tầng có checkpoint hồi đầy HP.",
     })
     .setFooter({ text: "Bảng chuẩn bị hết hạn sau 5 phút không thao tác." });
   const customId = (action) =>
@@ -213,19 +221,78 @@ function rankLabel(rank) {
     }[rank] || rank
   );
 }
+function equipmentServicePreview(state) {
+  const event = state.encounter;
+  const kind =
+    event.type === "surprise"
+      ? event.kind
+      : event.type === "cleanse"
+        ? "purifier"
+        : event.type;
+  if (kind === "blacksmith") {
+    const target = forgeTarget(state);
+    if (!target) return "🔨 **THỢ RÈN**\nChưa có trang bị phù hợp để nâng cấp.";
+    const definition = target.definition;
+    const buff = { ...itemEffects(definition) };
+    if (target.rarity === "cursed" && !definition.effects)
+      for (const key of Object.keys(itemCurse(definition))) delete buff[key];
+    const curse = target.rarity === "cursed" ? itemCurse(definition) : {};
+    return `🔨 **THỢ RÈN** · **${target.name} Lv.${target.level} → ${target.level + 1}**\n**Mất:** ${formatCoins(serviceCost(state, "blacksmith"))} xu từ payout hiện tại (12%, làm tròn lên).\n**Giữ:** trang bị, toàn bộ level và buff đã có.\n**Nhận thêm:** ${effectText(buff, 1)}; các giới hạn chỉ số/vật tư vẫn áp dụng.${Object.keys(curse).length ? `\n**Thêm 1 lớp nguyền:** ${effectText(curse, 1)}. Lớp đã giải trước đó vẫn được giữ trạng thái đã giải.` : ""}\nBot chọn UR → SSR → SR → R, rồi level thấp nhất. Bỏ qua để giữ nguyên tài nguyên.`;
+  }
+  if (kind === "purifier") {
+    const target = curseTarget(state);
+    if (!target)
+      return "✨ **PURIFIER · GIẢI NGUYỀN**\nChưa có lời nguyền UR cần gỡ.";
+    const layers = target.level - (target.cleansedLevels || 0);
+    return `✨ **PURIFIER · GIẢI NGUYỀN** · **${target.name} Lv.${target.level}**\n**Mất:** ${formatCoins(serviceCost(state, "cleanse"))} xu từ payout hiện tại (20%, làm tròn lên).\n**Gỡ:** 1 lớp nguyền — ${effectText(itemCurse(target.definition), 1)}.\n**Giữ:** món, level và toàn bộ buff của trang bị.\n**Nhận lại:** phần chỉ số/hệ số payout thực tế bị lớp này trừ, theo giới hạn hiện tại; không nhận item mới.\nSau khi gỡ còn **${layers - 1} lớp nguyền** trên món này. Thuế, hối lộ, Rift và lời nguyền từ món khác vẫn áp dụng.`;
+  }
+  if (kind === "horadric") {
+    const target = (state.items || []).find(
+      (item) =>
+        item.name === event.targetName &&
+        item.rarity === event.targetRarity &&
+        (item.definition?.base || "") === event.targetBase,
+    );
+    if (!target)
+      return "⚒️ **HORADRIC FORGE**\nKhông tìm thấy trang bị đã chọn để nghiền.";
+    const level = target.level;
+    const ticket = ["legendary", "cursed"].includes(target.rarity);
+    const buff = { ...itemEffects(target.definition) };
+    if (target.rarity === "cursed" && !target.definition.effects)
+      for (const key of Object.keys(itemCurse(target.definition)))
+        delete buff[key];
+    for (const key of [
+      "heal",
+      "potions",
+      "escapeTokens",
+      "bonusPenalty",
+      "defenseSet",
+      "text",
+    ])
+      delete buff[key];
+    const removed = effectText(buff, 1).replace(
+      "Không rõ tác dụng",
+      "không có buff chỉ số lâu dài",
+    );
+    return `⚒️ **HORADRIC FORGE** · **${target.name} Lv.${level}** [${rarityLabel(target.rarity)}]\n**Mất:** 1 level. ${level === 1 ? "Món này sẽ bị xóa." : `Món còn Lv.${level - 1}.`} Không tốn xu.\n**Hiệu ứng level bị gỡ:** ${removed} (theo phần đã áp dụng và giới hạn hiện tại).\n**Giữ:** các món khác, level còn lại và vật tư đã nhận khi nhặt. HP/Energy hiện tại có thể giảm nếu chỉ số tối đa giảm.\n**Lời nguyền:** nếu level bị nghiền còn nguyền, gỡ lớp đó và hoàn phần phạt; các lớp khác giữ nguyên.\n**Chọn đúng 1 bonus:** +3 sát thương; +4 Defense; +10 Max HP và hồi tối đa 10 HP${ticket ? "; hoặc +1 Vé Thoát Hiểm" : ". Vé chỉ đổi được từ SSR/UR"}.\nVé giữ tối đa 1; đang có vé thì vé mới bị bỏ. Bỏ qua để giữ nguyên món.`;
+  }
+  return null;
+}
 function encounterText(state) {
   const encounter = state.encounter;
   if (state.phase === "upgrade")
     return `${icon("gift")} **NÂNG CẤP SAU MỐC TẦNG ${encounter.milestone}**\nChọn đúng một nút để nhận nâng cấp trong phần còn lại của run. +HP tăng giới hạn tối đa và hồi 30 HP; Rút thưởng chốt payout.`;
   if (state.phase === "summit")
     return `${icon("trophy")} **ĐÃ CHINH PHỤC TẦNG 999**\nĐây là giới hạn Sinh tồn. Bấm **Rút thưởng** để nhận payout hiện tại.`;
+  const servicePreview = equipmentServicePreview(state);
+  if (servicePreview) return servicePreview;
   if (encounter.type === "combat") {
     const skillHint = CLASS_PROFILES[state.classKey].effect;
     const mechanic = {
       butcher:
         "Blood Frenzy: mỗi lần ra đòn +8% sát thương, tối đa 5 cộng dồn.",
       riftwalker: "Miễn nhiễm đòn đầu trong mỗi chu kỳ 3 lần bạn tấn công.",
-      assur: "Né cao, 30% chí mạng.",
+      assur: "+18 Evasion và +12 điểm % chí mạng.",
       lucion: "Hồi HP bằng 35% sát thương gây ra.",
       deimoss: "Abyssal Spires: giảm 25% sát thương nhận vào.",
     }[encounter.mechanic];
@@ -234,26 +301,18 @@ function encounterText(state) {
       magic: "Phép cố định",
       mixed: "Vật lý / phép",
     }[enemyDamageType(encounter)];
-    return `${icon("crossed_swords")} **${encounter.name}** · ${rankLabel(encounter.rank)}\n${healthBar(encounter.hp, encounter.maxHp)}\n${icon("crossed_swords")} ${formatCoins(encounter.damageMin)}–${formatCoins(encounter.damageMax)} · ${icon("shield")} ${formatCoins(encounter.defense)}\n**Sát thương:** ${damageType}${mechanic ? `\n**Cơ chế boss:** ${mechanic}` : ""}\n**Tấn công:** đánh và hồi 1 năng lượng. **Phòng thủ:** Defense ×2 và giảm thêm 50% sát thương vật lý/phép sau giảm trừ (tối thiểu 1), hồi 1 năng lượng. **Kỹ năng:** tốn 2 năng lượng — ${skillHint}\n**Bình máu:** hồi 35% HP tối đa; quái vẫn đánh trả nếu còn sống.`;
+    return `${icon("crossed_swords")} **${encounter.name}** · ${rankLabel(encounter.rank)}\n${healthBar(encounter.hp, encounter.maxHp)}\n${icon("crossed_swords")} ${formatCoins(encounter.damageMin)}–${formatCoins(encounter.damageMax)} · ${icon("shield")} ${formatCoins(encounter.defense)}\n**Sát thương:** ${damageType}\n**Đòn kế tiếp:** ${encounter.nextDamageType === "magic" ? "Phép" : "Vật lý"}${mechanic ? `\n**Cơ chế boss:** ${mechanic}` : ""}\n**Tấn công:** đánh và hồi 1 Energy. **Phòng thủ:** Defense ×2, miễn chí mạng và giảm thêm 40% damage vật lý/phép sau giảm trừ, hồi 1 Energy. **Kỹ năng:** 2 Energy — ${skillHint}\n**Bình máu:** hồi ${Math.round(Math.max(0.1, Math.min(0.75, 0.35 + (state.potionPower || 0))) * 100)}% Max HP, ít nhất 20; quái vẫn phản công.`;
   }
   if (encounter.type === "chest")
     return `${icon("package")} **HÒM BÍ ẨN**\n${encounter.inspected ? "Đã kiểm tra một lần; kết quả có thể không phát hiện được Mimic." : "Kiểm tra một lần để thử phát hiện Mimic; Mở để nhận đồ hoặc có thể phải đánh Mimic; Bán để lấy thêm 15% tiền cược vào payout."}${encounter.revealed ? `\n${icon("warning")} Mimic đã bị phát hiện: **Tránh Mimic** để đi tiếp an toàn.` : ""}`;
   if (encounter.type === "shrine")
     return `${icon("moyai")} **SHRINE KHÔNG RÕ NGUỒN GỐC**\n**Chạm Shrine** để nhận hiệu ứng ngẫu nhiên (có cả hiệu ứng gây hại), hoặc **Bỏ qua** để đi tiếp.`;
   if (encounter.type === "rngesus")
-    return `${icon("skull")} **RNGesus · HP ∞ · KHÔNG THỂ BỊ ĐÁNH BẠI**\nChiến đấu là chết. Bỏ chạy: **75% thành công**; thất bại tự dùng **1 Vé Thoát Hiểm** nếu còn, hết vé thì chết. Chạy thành công giữ vé. Hối lộ: trả 40% payout hiện tại (làm tròn lên); Cầu nguyện: 30% nhận SSR, nếu trượt sẽ chết.`;
+    return `${icon("skull")} **RNGesus · HP ∞ · KHÔNG THỂ BỊ ĐÁNH BẠI**\nChiến đấu là chết. Bỏ chạy: **75%**; thất bại tự dùng 1 vé nếu còn, hết vé thì chết. Chạy thành công giữ vé. Có thể dùng vé để vượt an toàn. Hối lộ: payout ×0,6 (giảm ${formatCoins(payoutReductionCost(state, 0.4))} xu hiện tại). Cầu nguyện: **${Math.round((encounter.prayerChance ?? 0.3) * 100)}%**, nhận 85% SSR / 15% UR; trượt sẽ chết.`;
   if (encounter.type === "surprise")
-    return "❓ **LỐI ĐI BÍ ẨN**\n**Khám phá**: mỗi kết quả 25% — người cứu trợ (hồi 35% HP, nhận 1 bình), Vé Thoát Hiểm, kho xu (+50% tiền cược vào bonus) hoặc Champion phục kích ra đòn trước. **Bỏ qua** để đi tiếp an toàn.";
-  if (encounter.type === "blacksmith") {
-    const target = forgeTarget(state);
-    const cost = serviceCost(state, "blacksmith");
-    return `🔨 **THỢ RÈN**\n${target ? `Nâng **${target.name} Lv.${target.level} → ${target.level + 1}**, cộng thêm hiệu ứng: ${effectText(target.definition, 1)}.` : "Chưa có trang bị phù hợp để nâng cấp."}\nƯu tiên SSR → SR → R, rồi cấp thấp nhất; đồ UR và đồ cấp vật tư không thể rèn. Phí **${formatCoins(cost)} xu**, trừ payout đang có của run. Mỗi lần gặp rèn một lần; có thể bỏ qua.`;
-  }
-  if (encounter.type === "cleanse") {
-    const target = curseTarget(state);
-    const cost = serviceCost(state, "cleanse");
-    return `✨ **GIẢI NGUYỀN**\n${target ? `Gỡ một cộng dồn phạt payout **${Math.round(target.definition.bonusPenalty * 100)}%** của **${target.name}**; còn ${target.level - (target.cleansedLevels || 0)} cộng dồn.` : "Không có lời nguyền payout của trang bị UR cần giải."}\nGiữ chỉ số và cấp trang bị. Phí **${formatCoins(cost)} xu**, trừ payout đang có của run. Thuế, hối lộ và Rift Modifier vẫn áp dụng; có thể bỏ qua.`;
-  }
+    return SURPRISE_EVENTS[encounter.kind]
+      ? `❓ **${SURPRISE_EVENTS[encounter.kind].name}**\n${SURPRISE_EVENTS[encounter.kind].text}${encounter.kind === "class_shrine" ? `\n${CLASS_SHRINE_TEXT[state.classKey]}` : ""}${encounter.kind === "horadric" ? `\nMón sẽ nghiền: **${encounter.targetName}** [${rarityLabel(encounter.targetRarity)}].` : ""}\nCó thể bỏ qua hoặc rút thưởng. Kết quả ẩn đã lưu; mở UI không roll lại.`
+      : "❓ **Lối đi bí ẩn từ run cũ** · Khám phá hoặc bỏ qua; giữ nguyên kết quả đã lưu.";
   if (encounter.type === "trap") {
     const names = {
       tax_collector: "🧾 TAX COLLECTOR",
@@ -262,11 +321,11 @@ function encounterText(state) {
     };
     const detail =
       encounter.kind === "tax_collector"
-        ? "Đi tiếp sẽ giảm payout 15%."
+        ? `Hệ số payout ×0,85, giảm ${formatCoins(payoutReductionCost(state, 0.15))} xu hiện tại nếu không có Lucky Break.`
         : encounter.kind === "potion_thief"
           ? "Đi tiếp có thể mất 1 bình máu."
-          : "25% Portal tốt: nhận lợi ích và qua tầng an toàn. 75% Portal xấu: chịu hiệu ứng rồi gặp Rift Ambusher cấp Elite đánh phủ đầu; hạ nó mới qua tầng. Đích đến đã được lưu, Luck không đổi tỷ lệ Portal tốt. Có thể rút thưởng trước khi chấp nhận.";
-    return `**${names[encounter.kind]}**\nChọn **Chấp nhận số phận** để xử lý: ${detail}\n🍀 Lucky Break: **${Math.round(luckyBreakChance(state) * 1000) / 10}%** tránh thuế, trộm bình hoặc riêng đòn phủ đầu của portal xấu.`;
+          : `${Math.round((encounter.portal?.goodChance ?? 0.5) * 100)}% Portal tốt: nhận lợi ích, qua tầng. Còn lại: penalty rồi Rift Ambusher Elite đánh phủ đầu; hạ nó mới qua tầng. Luck không đổi Portal. Đích đến đã lưu; có thể rút trước khi chấp nhận.`;
+    return `**${names[encounter.kind]}**\nChọn **Chấp nhận số phận**: ${detail}\n🍀 Lucky Break: **${Math.round(luckyBreakChance(state) * 1000) / 10}%** tránh thuế hoặc trộm bình.`;
   }
   return "🕳️ **PHÒNG TRỐNG**\nBấm **Đi tiếp** để vượt tầng. Có thể rút thưởng thay vì tiếp tục.";
 }
@@ -326,16 +385,17 @@ function equipmentSummary(state, itemCatalog) {
   if (!items.length) return "Chưa có trang bị.";
   const totals = {};
   for (const item of items) {
-    for (const key of [
-      "attack",
-      "defense",
-      "maxHp",
-      "resistance",
-      "critChance",
-      "luck",
-    ])
+    const buffs = { ...itemEffects(item.definition) };
+    const curses = item.rarity === "cursed" ? itemCurse(item.definition) : {};
+    if (!item.definition?.effects && item.rarity === "cursed")
+      for (const key of Object.keys(curses)) delete buffs[key];
+    for (const [key, value] of Object.entries(buffs))
+      if (typeof value === "number")
+        totals[key] = (totals[key] || 0) + value * item.level;
+    for (const [key, value] of Object.entries(curses))
       totals[key] =
-        (totals[key] || 0) + (item.definition?.[key] || 0) * item.level;
+        (totals[key] || 0) +
+        value * Math.max(0, item.level - (item.cleansedLevels || 0));
   }
   const effects = [
     ["attack", "Sát thương"],
@@ -344,42 +404,64 @@ function equipmentSummary(state, itemCatalog) {
     ["resistance", "Resist"],
     ["critChance", "Chí mạng"],
     ["luck", "Luck"],
+    ["accuracy", "Accuracy"],
+    ["evasion", "Evasion"],
+    ["maxEnergy", "Energy"],
+    ["potionPower", "Hồi bình"],
+    ["bossDamage", "Boss damage"],
+    ["eliteDamage", "Elite damage"],
+    ["mimicDetection", "Phát hiện Mimic"],
+    ["goblinChance", "Bắt Goblin"],
+    ["legendaryFind", "SSR"],
+    ["floorHpLoss", "HP mất/tầng"],
+    ["mimicChance", "Mimic"],
+    ["damageTaken", "Damage nhận"],
   ]
     .filter(([key]) => totals[key])
     .map(
       ([key, label]) =>
-        `${label} ${signed(totals[key], key === "critChance")}${key === "resistance" ? "%" : ""}`,
+        `${label} ${signed(totals[key], ["critChance", "potionPower", "bossDamage", "eliteDamage", "mimicDetection", "goblinChance", "legendaryFind", "floorHpLoss", "mimicChance", "damageTaken"].includes(key))}${key === "resistance" ? "%" : ""}`,
     );
-  if (items.some((item) => item.definition?.defenseSet !== undefined))
+  if (
+    items.some(
+      (item) =>
+        itemCurse(item.definition).defenseSet !== undefined &&
+        item.level > (item.cleansedLevels || 0),
+    )
+  )
     effects.push("Defense đặt lại khi nhặt");
   if (items.some((item) => !item.definition))
     effects.push("có hiệu ứng chưa rõ");
-  return `${items.length} món${effects.length ? ` · ${effects.join(" · ")}` : ""}`;
+  return `${items.length} món${effects.length ? ` · ${effects.join(" · ")}` : ""}`.slice(
+    0,
+    950,
+  );
 }
 function riftSummary(state) {
   const m = state.modifiers || {};
   const effects = [];
   if (m.fortified) effects.push(`HP quái +${m.fortified * 10}%`);
-  if (m.stone_skin) effects.push(`Defense quái +${m.stone_skin * 10}%`);
+  if (m.stone_skin)
+    effects.push(`Defense quái ×${(1.1 ** m.stone_skin).toFixed(2)}`);
   if (m.elemental_dominion)
     effects.push(
-      `Sát thương quái +${m.elemental_dominion * 4}% · Phép +${m.elemental_dominion * 2} điểm % (trừ boss, tỷ lệ tối đa 75%)`,
+      `Sát thương quái +${m.elemental_dominion * 4}% · Phép +${m.elemental_dominion * 4} điểm % (trừ boss, tỷ lệ tối đa 75%)`,
     );
   if (m.bloodlust)
-    effects.push(`Sát thương quái +${m.bloodlust * 8}% khi dưới 50% HP`);
+    effects.push(`Sát thương quái +${m.bloodlust * 8}% khi HP ≤50%`);
   if (m.swift_horror)
     effects.push(
-      `Chính xác quái +${m.swift_horror * 3} · Né quái +${m.swift_horror * 2}`,
+      `Chính xác quái +${m.swift_horror * 3} · Né quái +${m.swift_horror}`,
     );
   if (m.soul_drain)
-    effects.push(`Energy −${Math.min(2, m.soul_drain)}/đòn trúng`);
+    effects.push(`Energy −${m.soul_drain >= 5 ? 2 : 1}/đòn trúng`);
   if (m.cursed_ground)
     effects.push(
-      `Resist −${m.cursed_ground * 2} điểm %/đòn phép, thấp nhất −50%`,
+      `Resistance hiệu dụng −${m.cursed_ground * 4} khi nhận phép, thấp nhất −50%; chỉ số gốc giữ nguyên`,
     );
   if (m.unstable_rift)
     effects.push(
-      `Hòm thường +${Math.min(12, m.unstable_rift)} điểm % · SSR +${Math.min(8, m.unstable_rift)} điểm % · Mimic tăng`,
+      `Hòm thường/kho báu mỗi loại +${Math.min(16, m.unstable_rift * 2) / 2} điểm % · SSR kho báu ${Math.min(70, 35 + m.unstable_rift * 5)}% · Mimic ${Math.min(30, 15 + m.unstable_rift * 3)}% (Ancient ${Math.min(8, 3 + m.unstable_rift)}%) trước item`,
     );
   return effects.length
     ? effects.join("\n")
@@ -391,8 +473,10 @@ function encounterSummary(state) {
     return `🎁 **Chọn nâng cấp** · Đã vượt tầng ${e.milestone}`;
   if (state.phase === "summit")
     return "🏆 **Đã chinh phục tầng 999** · Rút thưởng để hoàn tất.";
+  const servicePreview = equipmentServicePreview(state);
+  if (servicePreview) return servicePreview;
   if (e.type === "combat")
-    return `👹 **${e.name}** · ${rankLabel(e.rank)}\n${healthBar(e.hp, e.maxHp)}\n${STAT_EMOJI.attack} ${formatCoins(e.damageMin)}–${formatCoins(e.damageMax)} · ${enemyDamageType(e) === "magic" ? "Phép" : enemyDamageType(e) === "physical" ? "Vật lý" : `Hỗn hợp (${Math.round((e.magicChance || 0) * 100)}% phép)`} · ${STAT_EMOJI.defense} ${formatCoins(e.defense)} Defense`;
+    return `👹 **${e.name}** · ${rankLabel(e.rank)}\n${healthBar(e.hp, e.maxHp)}\n${STAT_EMOJI.attack} ${formatCoins(e.damageMin)}–${formatCoins(e.damageMax)} · ${enemyDamageType(e) === "magic" ? "Phép" : enemyDamageType(e) === "physical" ? "Vật lý" : "Hỗn hợp"} · ${STAT_EMOJI.defense} ${formatCoins(e.defense)} Defense\nĐòn kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}**`;
   if (e.type === "chest")
     return `📦 **Hòm bí ẩn** · ${e.revealed ? "😈 Đã phát hiện Mimic" : e.inspected ? "Đã kiểm tra" : "Chưa kiểm tra"}`;
   if (e.type === "rngesus")
@@ -400,18 +484,15 @@ function encounterSummary(state) {
   if (e.type === "shrine")
     return "🗿 **Shrine** · Chạm để nhận hiệu ứng, có thể gây hại.";
   if (e.type === "surprise")
-    return "❓ **Lối đi bí ẩn** · Khám phá có thể gặp phục kích.";
-  if (e.type === "blacksmith")
-    return "🔨 **Thợ rèn** · Nâng 1 cấp trang bị; dùng payout của run.";
-  if (e.type === "cleanse")
-    return "✨ **Giải nguyền** · Gỡ 1 lớp phạt payout UR; dùng payout của run.";
+    return SURPRISE_EVENTS[e.kind]
+      ? `❓ **${SURPRISE_EVENTS[e.kind].name}**\n${SURPRISE_EVENTS[e.kind].text}`
+      : "❓ **Lối đi bí ẩn từ run cũ** · Khám phá hoặc bỏ qua.";
   if (e.type === "trap")
     return (
       {
         tax_collector: "🧾 **Tax Collector** · Có thể mất 15% payout hiện tại.",
         potion_thief: "🦹 **Kẻ trộm** · Có thể mất 1 🧪.",
-        wrong_portal:
-          "🌀 **Wrong Portal** · 25% tốt / 75% xấu + Elite đánh phủ đầu.",
+        wrong_portal: `🌀 **Wrong Portal** · ${Math.round((e.portal?.goodChance ?? 0.5) * 100)}% tốt / ${Math.round((1 - (e.portal?.goodChance ?? 0.5)) * 100)}% xấu + Elite đánh phủ đầu.`,
       }[e.kind] || "⚠️ **Bẫy**"
     );
   return "🕳️ **Phòng trống** · Đi tiếp hoặc rút thưởng.";
@@ -469,7 +550,13 @@ function hardcorePrivatePayload(
     tab === "items"
       ? Math.max(1, Math.ceil(owned.length / pageSize))
       : tab === "effects"
-        ? Math.ceil((5 + Math.max(1, modifiers.length)) / effectsPageSize)
+        ? Math.ceil(
+            (5 +
+              Math.max(1, modifiers.length) +
+              (state.contract ? 1 : 0) +
+              (classShrineActive(state) ? 1 : 0)) /
+              effectsPageSize,
+          )
         : 1;
   const page = Math.max(0, Math.min(pages - 1, requestedPage));
   const title = DETAIL_TABS.find(([key]) => key === tab)?.[1] || "Chi tiết";
@@ -485,7 +572,7 @@ function hardcorePrivatePayload(
   if (tab === "items") {
     embed.addFields({
       name: "🎒 Vật tư còn lại",
-      value: `${STAT_EMOJI.potions} **Bình máu ×${state.potions || 0}** · Hồi 35% HP tối đa, tối thiểu 20 HP; quái còn sống sẽ phản công.\n${STAT_EMOJI.tickets} **Vé Thoát Hiểm ×${state.escapeTokens || 0}** · Tối đa 1 vé, nhận thêm bị bỏ. Tự dùng khi chạy khỏi RNGesus thất bại; chạy thành công giữ vé.`,
+      value: `${STAT_EMOJI.potions} **Bình máu ×${state.potions || 0}** · Hồi ${Math.round(Math.max(0.1, Math.min(0.75, 0.35 + (state.potionPower || 0))) * 100)}% Max HP, tối thiểu 20 HP; quái còn sống phản công.\n${STAT_EMOJI.tickets} **Vé Thoát Hiểm ×${state.escapeTokens || 0}** · Tối đa 1, nhận thêm bị bỏ. Dùng để vượt RNGesus hoặc tự dùng khi chạy thất bại; chạy thành công giữ vé.`,
     });
     embed.addFields({
       name: "🎒 Tổng hiệu ứng trang bị",
@@ -502,12 +589,16 @@ function hardcorePrivatePayload(
     )) {
       const d = item.definition;
       const curses = Math.max(0, item.level - (item.cleansedLevels || 0));
+      const buff = { ...itemEffects(d) };
+      if (item.rarity === "cursed" && !d?.effects)
+        for (const key of Object.keys(itemCurse(d))) delete buff[key];
       const effects = d
-        ? effectText({ ...d, bonusPenalty: 0 }, item.level)
+        ? effectText(buff, item.level)
         : item.text || "Không rõ tác dụng";
-      const curse = d?.bonusPenalty
-        ? `\n${STAT_EMOJI.payout} ${curses ? `−${Math.round((1 - (1 - d.bonusPenalty) ** curses) * 100)}% · ${curses} lớp nguyền` : "Đã giải hết lời nguyền"}`
-        : "";
+      const curse =
+        item.rarity === "cursed" && Object.keys(itemCurse(d)).length
+          ? `\n☣️ ${curses ? `${effectText(itemCurse(d), curses)} · ${curses} lớp curse` : "Đã giải hết lời nguyền"}`
+          : "";
       embed.addFields({
         name: `${item.name} · Lv.${item.level} [${rarityLabel(item.rarity)}]`.slice(
           0,
@@ -547,7 +638,28 @@ function hardcorePrivatePayload(
       {
         name: "⚔️ Giao tranh",
         value:
-          "Tấn công/thủ hồi 1 ✨. Thủ: 🛡️ ×2 và giảm thêm 50% phản công. 🧪 hồi 35% ❤️ tối đa, tối thiểu 20; quái còn sống sẽ phản công. Giảm vật lý tối đa 75%; 🔮 từ −50% đến 75%; cơ hội trúng từ 20% đến 95%.",
+          "Tấn công/thủ hồi 1 Energy. Thủ: Defense ×2, miễn chí mạng, giảm thêm 40% phản công. Bình hồi 35% Max HP + Potion Power (10–75%), ít nhất 20; quái còn sống phản công. Giảm vật lý tối đa 75%; Resistance −50..75%; trúng 20..95%.",
+      },
+      {
+        name: "🎒 Hiệu ứng item hiệu dụng",
+        value: effectText(
+          Object.fromEntries(
+            [
+              "potionPower",
+              "bossDamage",
+              "eliteDamage",
+              "mimicDetection",
+              "goblinChance",
+              "legendaryFind",
+              "floorHpLoss",
+              "mimicChance",
+              "damageTaken",
+            ]
+              .filter((key) => state[key])
+              .map((key) => [key, state[key]]),
+          ),
+          1,
+        ).replace("Không rõ tác dụng", "Chưa có hiệu ứng bổ sung."),
       },
     );
   } else if (tab === "effects") {
@@ -579,20 +691,30 @@ function hardcorePrivatePayload(
     const curseFactor = owned.reduce(
       (factor, item) =>
         factor *
-        (1 - (item.definition?.bonusPenalty || 0)) **
+        (1 - (itemCurse(item.definition).bonusPenalty || 0)) **
           Math.max(0, item.level - (item.cleansedLevels || 0)),
       1,
     );
     effectFields.push(
       {
         name: "💰 Payout",
-        value: `Có thể rút: **${formatCoins(potentialPayout(state))} xu**\nHệ số tầng ×${baseMultiplier(state).toFixed(2)} · hệ số phạt ×${Number(state.payoutFactor).toFixed(3)}\nUR còn nguyền: −${Math.round((1 - curseFactor) * 100)}% · Wrong Portal: −${Math.round((1 - (state.portalPayoutFactor || 1)) * 100)}%\nĐã chi dịch vụ: ${formatCoins(state.payoutServiceSpent ?? state.payoutSpent ?? 0)} xu · thuế/hối lộ: ${formatCoins((state.payoutSpent || 0) - (state.payoutServiceSpent ?? state.payoutSpent ?? 0))} xu\nHệ số tầng dừng tăng sau 100; bonus tiếp tục tăng; trần payout 10.000.000 xu.`,
+        value: `Có thể rút: **${formatCoins(potentialPayout(state))} xu**\n💎 Tạm giữ: **${formatCoins(runDiamondReward(state))}** kim cương. Vượt 100: 100; mỗi 100 tầng tiếp theo nhân đôi; hạ boss 999: 51.200. Rút thưởng mới nhận; chết mất hết.\nHệ số tầng/checkpoint ×${baseMultiplier(state).toFixed(2)} · hệ số phạt ×${Number(state.payoutFactor).toFixed(3)}\nUR còn nguyền: −${Math.round((1 - curseFactor) * 100)}% · Wrong Portal: −${Math.round((1 - (state.portalPayoutFactor || 1)) * 100)}%\nĐã chi từ payout: ${formatCoins(state.payoutSpent || 0)} xu. Thuế/hối lộ/Goblin nhân hệ số payout.\nMốc 5/50/100: ×1,45/×5,50/×12,00; hệ số dừng sau 100, bonus tiếp tục tăng. Trần 10.000.000 xu.`,
       },
       {
         name: "🍀 Lucky Break",
-        value: `${Math.round(luckyBreakChance(state) * 1000) / 10}% = min(30%, 🍀 ×1,5%). Tránh thuế, trộm bình hoặc riêng đòn phủ đầu Wrong Portal; không xóa hiệu ứng xấu hay Elite.`,
+        value: `${Math.round(luckyBreakChance(state) * 1000) / 10}% = min(30%, Luck ×1,5%). Tránh Tax Collector hoặc Potion Thief; không tác động Wrong Portal.`,
       },
     );
+    if (state.contract)
+      effectFields.push({
+        name: "📜 Rift Contract",
+        value: `Không dùng **${{ potion: "bình", skill: "skill", defend: "phòng thủ" }[state.contract.kind]}** · còn ${state.contract.remaining} tầng. Vi phạm chỉ hủy thưởng.`,
+      });
+    if (classShrineActive(state))
+      effectFields.push({
+        name: "✨ Class Shrine",
+        value: `${CLASS_SHRINE_TEXT[state.classKey]} Hết hiệu lực sau tầng ${state.classShrine.until}.`,
+      });
     embed.addFields(
       effectFields.slice(page * effectsPageSize, (page + 1) * effectsPageSize),
     );
@@ -607,8 +729,7 @@ function hardcorePrivatePayload(
     if (state.encounter.kind === "wrong_portal")
       embed.addFields({
         name: "🌀 Đích đến có thể gặp",
-        value:
-          "25% tốt, chọn đều: hồi đầy ❤️, +10 ❤️ tối đa, +1 🧪 (trần 5); kho xu +50% cược; chúc phúc +4 🛡️, +5% 🔮, +1 🍀.\n75% xấu, chọn đều trong pool hợp lệ: mất tối đa 15% ❤️ tối đa nhưng giữ ít nhất 1; ✨ về 0 nếu còn; mất tối đa 2 🧪 nếu còn; hệ số 💰 toàn run ×0,9; −5 🛡️/🔮. Sau đó Elite đánh phủ đầu, hạ nó mới qua tầng. 🍀 không đổi tỷ lệ portal tốt. Đích đến được giấu trước khi chấp nhận.",
+        value: `${Math.round((state.encounter.portal?.goodChance ?? 0.5) * 100)}% tốt, chọn đều: +10 Max HP, hồi đầy, +1 bình (tối đa 5); bonus +50% cược; hoặc +4 Defense/+5 Resistance/+1 Luck.\nCòn lại là nhánh xấu: mất tối đa 15% Max HP nhưng giữ ít nhất 1; Energy về 0; mất tối đa 2 bình; payout ×0,9; hoặc −5 Defense/Resistance. Sau đó Elite đánh phủ đầu; hạ nó mới qua tầng. Luck không tác động Portal; kết quả giấu trước khi chấp nhận.`,
       });
   }
   const components = [
@@ -666,9 +787,13 @@ function hardcoreEmbed(
         ? result.outcome === "win"
           ? 0x2ecc71
           : 0xe74c3c
-        : state.floor > 100
-          ? 0x9b59b6
-          : 0xe67e22,
+        : state.hp <= state.maxHp * 0.3
+          ? 0xe74c3c
+          : state.encounter.type !== "combat"
+            ? 0x3498db
+            : state.floor > 100
+              ? 0x9b59b6
+              : 0xe67e22,
     )
     .setTitle(
       `${classIcon} SINH TỒN · TẦNG ${state.floor}${state.floor > 100 ? " · OVERRUN" : ""}`,
@@ -698,21 +823,24 @@ function hardcoreEmbed(
           Object.entries(state.modifiers || {})
             .filter(([, stacks]) => stacks > 0)
             .map(
-              ([key, stacks]) => `${RIFT_MODIFIERS[key]?.name || key} ×${stacks}`,
+              ([key, stacks]) =>
+                `${RIFT_MODIFIERS[key]?.name || key} ×${stacks}`,
             )
             .join(" · ") || "Chưa có · Nhận lần đầu sau tầng 10.",
         inline: false,
       },
       {
         name: `${icon("moneybag")} Rút thưởng`,
-        value: state.cleared
-          ? `**${formatCoins(payout)} ${icon("coin")}**`
-          : "Chưa thể rút",
+        value: result
+          ? `Đã nhận **${formatCoins(result.payout)} xu** · 💎 **${formatCoins(result.diamonds || 0)}**`
+          : state.cleared
+            ? `**${formatCoins(payout)} ${icon("coin")}**\n💎 **${formatCoins(runDiamondReward(state))}** tạm giữ · tử trận mất hết`
+            : "Chưa thể rút",
         inline: true,
       },
       {
         name: "🎒 Trang bị",
-        value: `${equipmentSummary(state, itemCatalog)}${state.payoutFactor < 1 ? `\nPayout sau phạt ×${Number(state.payoutFactor).toFixed(3)}` : ""}`,
+        value: `${equipmentSummary(state, itemCatalog).slice(0, 400)}${state.payoutFactor < 1 ? `\nPayout sau phạt ×${Number(state.payoutFactor).toFixed(3)}` : ""}${state.contract ? `\nHợp đồng: không ${{ potion: "bình", skill: "skill", defend: "thủ" }[state.contract.kind]} · ${state.contract.remaining} tầng` : ""}${classShrineActive(state) ? `\nClass Shrine · hết sau tầng ${state.classShrine.until}` : ""}`,
         inline: false,
       },
       {
@@ -739,6 +867,12 @@ function hardcoreEmbed(
         reason,
       }),
     });
+    embed.addFields({
+      name: "💎 Kim cương Sinh tồn",
+      value: won
+        ? `Đã cộng **${formatCoins(result.diamonds || 0)}** kim cương vào tài khoản.`
+        : `Mất **${formatCoins(result.diamondsLost || 0)}** kim cương tạm giữ.`,
+    });
     if (result.achievements?.length)
       embed.addFields({
         name: `${icon("sports_medal")} Thành tựu mới`,
@@ -746,7 +880,7 @@ function hardcoreEmbed(
       });
   } else
     embed.setFooter({
-      text: `${sessionId ? `Mã ván: ${sessionId} • ` : ""}Lượt ${state.turn} • Cược ${formatCoins(state.stake)} xu • /choi sinhton tieptuc`,
+      text: `${sessionId ? `Mã ván: ${sessionId} • ` : ""}Lượt ${state.turn} • Cược ${formatCoins(state.stake)} xu • /sinhton tieptuc`,
     });
   return embed;
 }
@@ -853,7 +987,8 @@ function hardcoreActionRows(sessionId, state, disabled, classes) {
           classes[state.classKey].skill,
           "sparkles",
           ButtonStyle.Success,
-          state.energy < 2,
+          state.energy < 2 &&
+            !(state.classKey === "sorceress" && classShrineActive(state)),
         ),
         button(
           sessionId,
@@ -952,7 +1087,7 @@ function hardcoreActionRows(sessionId, state, disabled, classes) {
           sessionId,
           turn,
           "bribe",
-          "Hối lộ −40%",
+          `Hối lộ · ${formatCoins(payoutReductionCost(state, 0.4))} xu`,
           "money_with_wings",
           ButtonStyle.Secondary,
         ),
@@ -960,34 +1095,51 @@ function hardcoreActionRows(sessionId, state, disabled, classes) {
           sessionId,
           turn,
           "pray",
-          "Cầu nguyện 30%",
+          `Cầu nguyện ${Math.round((state.encounter.prayerChance ?? 0.3) * 100)}%`,
           "pray",
           ButtonStyle.Success,
         ),
-      ),
-    ];
-  if (type === "surprise")
-    return [
-      new ActionRowBuilder().addComponents(
         button(
           sessionId,
           turn,
-          "explore",
-          "Khám phá",
-          "mag",
-          ButtonStyle.Primary,
-        ),
-        button(
-          sessionId,
-          turn,
-          "ignore",
-          "Bỏ qua",
-          "walking",
+          "ticket",
+          "Dùng vé",
+          "ticket",
           ButtonStyle.Secondary,
+          state.escapeTokens <= 0,
         ),
-        retreat,
       ),
     ];
+  if (type === "surprise") {
+    const actions = surpriseOptions(state).map((choice) =>
+      button(
+        sessionId,
+        turn,
+        choice.action,
+        choice.label,
+        "sparkles",
+        ButtonStyle.Primary,
+        choice.disabled,
+      ),
+    );
+    actions.push(
+      button(
+        sessionId,
+        turn,
+        "ignore",
+        state.encounter.kind === "adventurer" ? "Bỏ mặc" : "Bỏ qua",
+        "walking",
+        ButtonStyle.Secondary,
+      ),
+      retreat,
+    );
+    const rows = [];
+    for (let offset = 0; offset < actions.length; offset += 5)
+      rows.push(
+        new ActionRowBuilder().addComponents(actions.slice(offset, offset + 5)),
+      );
+    return rows;
+  }
   if (type === "blacksmith" || type === "cleanse") {
     const cost = serviceCost(state, type);
     const eligible =
@@ -1001,7 +1153,9 @@ function hardcoreActionRows(sessionId, state, disabled, classes) {
           `${type === "blacksmith" ? "Rèn" : "Giải nguyền"} · ${formatCoins(cost)} xu`,
           type === "blacksmith" ? "hammer" : "sparkles",
           ButtonStyle.Success,
-          !eligible || potentialPayout(state) < cost,
+          !eligible ||
+            potentialPayout(state) <= 0 ||
+            potentialPayout(state) < cost,
         ),
         button(
           sessionId,
@@ -1021,7 +1175,11 @@ function hardcoreActionRows(sessionId, state, disabled, classes) {
         sessionId,
         turn,
         "continue",
-        type === "trap" ? "Chấp nhận số phận" : "Đi tiếp",
+        type === "trap"
+          ? state.encounter.kind === "tax_collector"
+            ? `Thuế · ${formatCoins(payoutReductionCost(state, 0.15))} xu`
+            : "Chấp nhận số phận"
+          : "Đi tiếp",
         "arrow_right",
         ButtonStyle.Primary,
       ),

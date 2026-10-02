@@ -1,5 +1,7 @@
 # Đối chiếu Sinh tồn với đặc tả — 01/10/2026
 
+> Tài liệu lịch sử ngày 01/10/2026. Từ bản rework 02/10/2026, catalog và bộ nạp Median XL đã được loại bỏ; Sinh tồn dùng `src/hardcore/item.js`. Các tham chiếu dữ liệu cũ bên dưới chỉ mô tả phiên bản đã đối chiếu.
+
 ## Phạm vi và thứ tự áp dụng
 
 Đặc tả gốc: [Sinh tồn: Hành trình 999 tầng](C:/Users/NAMNGUYEN04248/Downloads/2026-10-01-hardcore-survival-999.md).

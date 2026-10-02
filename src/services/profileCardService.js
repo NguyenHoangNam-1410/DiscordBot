@@ -109,6 +109,42 @@ function drawStat(ctx, x, y, label, value, accent) {
   ctx.fillRect(x, y + 41, 34, 3);
 }
 
+function drawSurvivalFrame(ctx, frame) {
+  if (!frame) return;
+  ctx.save();
+  const metal = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
+  frame.colors.forEach((color, index) =>
+    metal.addColorStop(index / (frame.colors.length - 1), color),
+  );
+  ctx.strokeStyle = metal;
+  ctx.lineWidth = 9;
+  roundedRect(ctx, 7, 7, WIDTH - 14, HEIGHT - 14, 22);
+  ctx.stroke();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = frame.colors[1];
+  roundedRect(ctx, 15, 15, WIDTH - 30, HEIGHT - 30, 16);
+  ctx.stroke();
+  if (frame.id === "survival_diamond") {
+    for (const [x, y] of [
+      [22, 22],
+      [WIDTH - 22, 22],
+      [22, HEIGHT - 22],
+      [WIDTH - 22, HEIGHT - 22],
+    ]) {
+      ctx.beginPath();
+      ctx.moveTo(x, y - 10);
+      ctx.lineTo(x + 9, y);
+      ctx.lineTo(x, y + 10);
+      ctx.lineTo(x - 9, y);
+      ctx.closePath();
+      ctx.fillStyle = "#eaffff";
+      ctx.fill();
+      ctx.stroke();
+    }
+  }
+  ctx.restore();
+}
+
 async function renderProfileCard({
   displayName,
   username,
@@ -188,6 +224,11 @@ async function renderProfileCard({
 
   ctx.fillStyle = "rgba(255,255,255,.55)";
   ctx.font = '600 13px "Segoe UI", sans-serif';
+  ctx.fillText(
+    `SINH TỒN • TẦNG CAO NHẤT ${Number(appearance.bestFloor || 0).toLocaleString("vi-VN")}${appearance.frame ? ` • ${appearance.frame.name.toUpperCase()}` : ""}`,
+    320,
+    225,
+  );
   ctx.fillText(`TIẾN ĐỘ CẤP ${level}`, 320, 258);
   roundedRect(ctx, 420, 246, 430, 16, 8);
   ctx.fillStyle = "rgba(255,255,255,.1)";
@@ -209,6 +250,7 @@ async function renderProfileCard({
   ctx.fillStyle = "rgba(255,255,255,.35)";
   ctx.font = '12px "Segoe UI", sans-serif';
   ctx.fillText(`Màu hồ sơ: ${appearance.color.name}`, 952, 291);
+  drawSurvivalFrame(ctx, appearance.frame);
   return canvas.encode("png");
 }
 

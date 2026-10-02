@@ -58,7 +58,7 @@ const PAGES = Object.freeze({
       ],
       [
         "🎮 Chơi game",
-        "`/choi` — chọn game; `/luat trochoi:<game>` — xem luật ngắn.",
+        "`/huongdan` — xem danh sách game; `/luat trochoi:<game>` — xem luật ngắn.",
       ],
       [
         "🎒 Nhận và dùng vật phẩm",
@@ -77,20 +77,20 @@ const PAGES = Object.freeze({
   trochoi: {
     title: "🎮 TRỢ GIÚP · TRÒ CHƠI",
     description:
-      "Mọi game đều nằm dưới `/choi`. Chọn game trong danh sách Discord hiện ra.",
+      "Mỗi game có một lệnh riêng. Gõ tên game để chọn trong danh sách Discord.",
     fields: [
       [
         "🎲 Game cược",
-        "`/choi baucua` · `/choi taixiu` · `/choi chinchiro` · `/choi oantuti` · `/choi xidach` · `/choi poker` — mở bàn hoặc chơi theo lựa chọn của từng game",
+        "`/baucua` · `/taixiu` · `/chinchiro` · `/oantuti` · `/xidach` · `/poker` — mở bàn hoặc chơi theo lựa chọn của từng game",
       ],
-      ["🏇 Thử thách khác", "`/choi duangua` · `/choi domin` · `/choi coquay`"],
+      ["🏇 Thử thách khác", "`/duangua` · `/domin` · `/coquay`"],
       [
         "⚔️ Sinh tồn",
-        "`/choi sinhton batdau` — mở UI chọn nhân vật, xem chỉ số/kỹ năng, nhập cược rồi bấm Bắt đầu. Trong run dùng nút để đánh, dùng vật phẩm, xử lý sự kiện hoặc rút thưởng. `/luat trochoi: Sinh tồn` giải thích từng hành động; `hoso` — thành tích; `xephang` — top tầng; `tyle` — tỷ lệ sự kiện.",
+        "`/sinhton batdau` — mở UI chọn nhân vật, xem chỉ số/kỹ năng, nhập cược rồi bấm Bắt đầu. Trong run dùng nút để đánh, dùng vật phẩm, xử lý sự kiện hoặc rút thưởng. `/luat trochoi: Sinh tồn` giải thích từng hành động; `hoso` — thành tích; `xephang` — top tầng; `tyle` — tỷ lệ sự kiện.",
       ],
       [
         "🔤 Vua tiếng Việt",
-        "`/choi vtv` — admin mở UI Vua Tiếng Việt; người chơi dùng nút bỏ qua (mặc định 5 lượt/ngày, hồi chiêu 5 phút) hoặc nút vật phẩm để mở bảng dùng nhanh riêng tư. Admin kết thúc bằng `/vtv ketthuc`.",
+        "`/vtv batdau` — admin mở UI Vua Tiếng Việt; người chơi dùng nút bỏ qua (mặc định 5 lượt/ngày, hồi chiêu 5 phút) hoặc nút vật phẩm để mở bảng dùng nhanh riêng tư. Admin kết thúc bằng `/vtv ketthuc`.",
       ],
       [
         "📖 Xem luật",

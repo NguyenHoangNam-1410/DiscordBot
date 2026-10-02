@@ -33,7 +33,7 @@ module.exports = {
         {
           name: "2 · Chọn trò chơi",
           value:
-            "Dùng `/choi` để chọn game. Người mới nên thử Vua tiếng Việt hoặc Oẳn tù tì.",
+            "Dùng lệnh riêng như `/oantuti` hoặc `/sinhton batdau` để bắt đầu. Người mới nên thử Vua tiếng Việt hoặc Oẳn tù tì.",
         },
         {
           name: "3 · Theo dõi tiến độ",

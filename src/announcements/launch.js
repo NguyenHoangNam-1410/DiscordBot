@@ -13,7 +13,7 @@ function launchEmbeds() {
         value: [
           "**1️⃣ `/batdau`** — nhận gói chào mừng và xem hướng dẫn nhanh",
           "**2️⃣ `/nhiemvu tanthu`** — nhận quà tân thủ",
-          "**3️⃣ `/choi`** — chọn game và bắt đầu. Người mới nên thử **Vua tiếng Việt** hoặc **Oẳn tù tì**.",
+          "**3️⃣ Chọn game** — dùng `/oantuti`, `/poker` hoặc `/sinhton batdau`. Người mới nên thử **Vua tiếng Việt** hoặc **Oẳn tù tì**.",
         ].join("\n"),
       },
       {
@@ -42,7 +42,7 @@ function launchEmbeds() {
     {
       name: "🎮 Trò chơi",
       value:
-        "`/choi` có **10 game**: Bầu cua · Tài xỉu · Chinchiro · Oẳn tù tì · Xì dách · Poker · Đua ngựa · Dò mìn · Sinh tồn · Vua tiếng Việt\n\nMỗi ván bạn nhận **EXP** để lên cấp và có cơ hội rơi thêm **xu, kim cương hoặc lượt Gacha**. Lên cấp còn có quà.",
+        "Bot có **11 game với lệnh riêng**: Bầu cua · Tài xỉu · Chinchiro · Oẳn tù tì · Xì dách · Poker · Đua ngựa · Dò mìn · Sinh tồn · Vua tiếng Việt\n\nMỗi ván bạn nhận **EXP** để lên cấp và có cơ hội rơi thêm **xu, kim cương hoặc lượt Gacha**. Lên cấp còn có quà.",
     },
     {
       name: "🎰 Gacha và vật phẩm",

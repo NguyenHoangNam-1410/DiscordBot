@@ -10,7 +10,6 @@ process.env.DB_PATH = path.join(temporary, "test.sqlite");
 const { db } = require("../src/db");
 const hardcore = require("../src/services/hardcoreService");
 const repository = require("../src/services/hardcoreRepository");
-const equipment = require("../src/services/hardcoreEquipment");
 
 function fixedRoll(value, work) {
   const original = crypto.randomInt;
@@ -278,70 +277,30 @@ assert.equal(
   fixedRoll(0.11, () => hardcore.chooseRarity(pitySsr)),
   "legendary",
 );
-const converted = equipment.convertMedianItem(
-  {
-    id: 1,
-    name: "Test SU",
-    base_item: "Sacred Sword",
-    type: "SU",
-    stats: ["+100% Enhanced Damage", "+20% All Resistances", "+100 to Life"],
-  },
-  "cursed",
-);
-assert.equal(converted.attack, 3);
-assert.equal(converted.resistance, 6);
-assert.equal(converted.maxHp, 15);
-assert.equal(converted.bonusPenalty, 0.15);
-const actualSchema = equipment.convertMedianItem(
-  {
-    name: "Median weapon",
-    base_type: "Short Sword",
-    type_code: "TU",
-    tier_or_variant: "Tier 4",
-    stats_json: JSON.stringify([
-      "Required Strength: 999",
-      "Strength Damage Bonus: (0.11 per Strength)%",
-      "+100% Enhanced Damage",
-      "Poison Resist +(10 to 20)%",
-      "-50% to Enemy Fire Resistance",
-      "20% Life stolen per Hit",
-    ]),
-  },
-  "common",
-);
-assert.equal(actualSchema.attack, 3);
-assert.equal(actualSchema.resistance, 5);
-assert(!actualSchema.maxHp);
-assert.equal(actualSchema.base, "Short Sword");
-assert.equal(actualSchema.source, "TU");
+// Saved equipment definitions remain readable after removing the old catalog.
+const legacyEquipment = {
+  id: 1,
+  name: "Legacy Sword",
+  base: "Sacred Sword",
+  attack: 3,
+  resistance: 6,
+  maxHp: 15,
+  heal: 15,
+  bonusPenalty: 0.15,
+};
 const gear = stateFor();
-hardcore.applyItem(gear, converted, "cursed");
-hardcore.applyItem(gear, converted, "cursed");
+hardcore.applyItem(gear, legacyEquipment, "cursed");
+hardcore.applyItem(gear, legacyEquipment, "cursed");
 assert.equal(gear.items[0].level, 2);
 assert.equal(gear.items[0].definition.base, "Sacred Sword");
 assert.equal(gear.damageMin, 106);
 assert(Math.abs(gear.payoutFactor - 0.85 ** 2) < 1e-8);
-hardcore.applyItem(gear, { ...converted, bonusPenalty: 0 }, "legendary");
+hardcore.applyItem(gear, { ...legacyEquipment, bonusPenalty: 0 }, "legendary");
 assert.equal(
   gear.items.length,
   2,
-  "Cursed and normal SU must preserve separate effect levels",
+  "Cursed and normal saved gear must preserve separate effect levels",
 );
-const medianPath = path.join(temporary, "median.sqlite");
-const median = new (require("better-sqlite3"))(medianPath);
-median.exec(
-  "CREATE TABLE items (id INTEGER, name TEXT, base_item TEXT, type TEXT, stats TEXT)",
-);
-for (const type of ["TU", "RW", "SU", "Set"])
-  median
-    .prepare("INSERT INTO items VALUES (?,?,?,?,?)")
-    .run(type.length, `${type} test`, "Sword", type, "+50% Enhanced Damage");
-median.close();
-const catalog = equipment.loadMedianEquipment(hardcore.ITEMS, medianPath);
-assert.equal(catalog.common[0].source, "TU");
-assert.equal(catalog.rare[0].source, "RW");
-assert.equal(catalog.legendary.length, 2);
-assert.equal(catalog.cursed.length, 1);
 const started = hardcore.startHardcore({
   guildId: "test-hardcore",
   userId: "player",
@@ -410,7 +369,7 @@ largeUi.items = Array.from({ length: 150 }, (_, index) => ({
   name: `Trang bị ${index}`,
   rarity: "legendary",
   level: 1,
-  definition: converted,
+  definition: legacyEquipment,
 }));
 const embed = hardcore.hardcoreEmbed(largeUi, "player").toJSON();
 assert(embed.fields.length <= 25);
@@ -1681,7 +1640,7 @@ async function finishChecks() {
   )
     fs.rmSync(temporary, { recursive: true, force: true });
   console.log(
-    "Hardcore passed: 7 classes, 8 regions, checkpoints, modifiers, bosses, chest pity/Luck, Median gear, current-payout charges, legacy migration, vendors, surprises, RNGesus auto-ticket, setup/resume UI, live records and timeout.",
+    "Hardcore passed: 7 classes, 8 regions, checkpoints, modifiers, bosses, chest pity/Luck, saved gear, current-payout charges, legacy migration, vendors, surprises, RNGesus auto-ticket, setup/resume UI, live records and timeout.",
   );
 }
 finishChecks().catch((error) => {

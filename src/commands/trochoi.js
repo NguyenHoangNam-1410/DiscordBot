@@ -13,9 +13,9 @@ function helpEmbed(prefix = process.env.COMMAND_PREFIX || "!") {
     )
     .addFields(
       {
-        name: "🎲 /choi",
+        name: "🎲 Lệnh trò chơi",
         value:
-          "`baucua` · `taixiu` · `chinchiro` · `ott` · `xidach` · `poker` · `duangua` · `domin`\nNhóm `sinhton` và `vtv` có thêm các thao tác riêng.",
+          "`/baucua` · `/taixiu` · `/chinchiro` · `/oantuti` · `/xidach` · `/poker` · `/duangua` · `/domin` · `/coquay`\n`/sinhton batdau` mở run; `/vtv batdau` dành cho admin.",
       },
       {
         name: "🎒 /vatpham",

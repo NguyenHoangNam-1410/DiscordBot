@@ -157,11 +157,7 @@ for (const classKey of selectedClass === "all"
     targetFloor,
     maxTurns,
     timeouts,
-    equipmentSource: Object.values(hardcore.ITEMS).some((items) =>
-      items.some((item) => item.id != null),
-    )
-      ? "Median XL"
-      : "fallback",
+    equipmentSource: "src/hardcore/item.js",
     passedFloor10: floors.filter((floor) => floor >= 10).length,
     passedFloor50: floors.filter((floor) => floor >= 50).length,
     passedFloor100: floors.filter((floor) => floor >= 100).length,

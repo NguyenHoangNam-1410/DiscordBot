@@ -58,6 +58,13 @@ function overviewField(summary) {
     value: `Đã chơi **${summary.activeGames}/9 game**${summary.favorite ? ` · Chơi nhiều nhất: **${summary.favorite.label.replace(/^\S+\s/, "")}** (${number(summary.favorite.played)} ván)` : ""}\nTổng cược **${number(summary.wagered)} :coin:** · Tổng nhận **${number(summary.payout)} :coin:** · Dòng xu ròng **${signed(summary.net)} xu**`,
   };
 }
+function survivalField(appearance) {
+  return {
+    name: "🏔️ Sinh tồn",
+    value: `Tầng cao nhất đã vượt: **${number(appearance.bestFloor || 0)}**\n${appearance.frame ? `🖼️ **${appearance.frame.name}** · Đã mở vĩnh viễn` : "Khung hồ sơ: Bạc 333 · Vàng 666 · Kim cương 999"}`,
+    inline: false,
+  };
+}
 function levelField(
   progress = { level: 1, experience: 0, diamonds: 0, free_gacha_pulls: 0 },
   guildId = null,
@@ -141,6 +148,7 @@ function overviewEmbed(
         inline: true,
       },
       levelField(progress, guildId),
+      survivalField(appearance),
       overviewField(summarizeGameStats(stats)),
     )
     .setFooter({ text: "Chọn một game trong menu để xem chi tiết" });
@@ -272,6 +280,7 @@ function fallbackEmbed(
     )
     .addFields(
       levelField(progress, guildId),
+      survivalField(appearance),
       overviewField(summarizeGameStats(stats)),
     )
     .setFooter({ text: "Đang dùng giao diện hồ sơ dự phòng" });
@@ -337,6 +346,7 @@ module.exports = {
         )
         .addFields(
           levelField(levelProgress, interaction.guildId),
+          survivalField(appearance),
           overviewField(gameSummary),
         )
         .setImage(`attachment://profile-${user.id}.png`)
