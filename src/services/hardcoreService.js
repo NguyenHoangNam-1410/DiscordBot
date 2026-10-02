@@ -48,6 +48,7 @@ const {
   classShrineActive,
   payoutReductionCost,
   SURPRISE_EVENTS,
+  SURPRISE_ODDS,
   SHRINE_KINDS,
   SHRINE_EFFECTS,
   shrineFakeDamage,
@@ -597,16 +598,25 @@ function makeSurprise(state, forcedKind = null) {
   const kind = forcedKind || pick(pool);
   const event = { type: "surprise", kind };
   if (kind === "goblin") event.successRoll = randomFloat();
-  if (kind === "gambler") event.win = randomFloat() < 0.5;
+  if (kind === "gambler") event.win = randomFloat() < SURPRISE_ODDS.gamblerWin;
   if (kind === "adventurer") {
     event.adventurerVersion = 3;
-    const rarity = randomFloat() < 0.8 ? "common" : "rare";
+    const rarity =
+      randomFloat() < SURPRISE_ODDS.adventurerRescueCommon ? "common" : "rare";
     event.rescueItem = pick(ITEMS[rarity]);
-    event.robItem = randomFloat() < 0.25 ? pick(ITEMS.legendary) : null;
+    event.robItem =
+      randomFloat() < SURPRISE_ODDS.adventurerRobLegendary
+        ? pick(ITEMS.legendary)
+        : null;
   }
   if (kind === "fountain") {
     const roll = randomFloat();
-    event.outcome = roll < 0.6 ? "heal" : roll < 0.85 ? "hp" : "mimic";
+    event.outcome =
+      roll < SURPRISE_ODDS.fountainHeal
+        ? "heal"
+        : roll < SURPRISE_ODDS.fountainHeal + SURPRISE_ODDS.fountainMaxHp
+          ? "hp"
+          : "mimic";
     if (event.outcome === "mimic")
       event.enemy = makeEnemy(
         state.floor,
@@ -629,7 +639,7 @@ function makeSurprise(state, forcedKind = null) {
     event.item = pick(ITEMS.rare);
   }
   if (kind === "mirror") {
-    event.lucky = randomFloat() < 0.2;
+    event.lucky = randomFloat() < SURPRISE_ODDS.mirrorLucky;
     event.enemy = {
       ...makeEnemy(state.floor, "elite", "Mirror Clone", state.modifiers),
       hp: state.maxHp,
@@ -658,9 +668,9 @@ function makeSurprise(state, forcedKind = null) {
   if (kind === "contract") event.item = pick(ITEMS.legendary);
   if (kind === "doors") {
     event.doors = {
-      light: randomFloat() < 0.7,
-      gold: randomFloat() < 0.7,
-      dark: randomFloat() < 0.6,
+      light: randomFloat() < SURPRISE_ODDS.doorLight,
+      gold: randomFloat() < SURPRISE_ODDS.doorGold,
+      dark: randomFloat() < SURPRISE_ODDS.doorDark,
     };
     event.item = pick(ITEMS.legendary);
     event.mimic = makeEnemy(

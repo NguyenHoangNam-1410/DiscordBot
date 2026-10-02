@@ -242,15 +242,15 @@ const SURPRISE_EVENTS = Object.freeze({
   },
   gambler: {
     name: "Cursed Gambler",
-    text: "Cược 10% hoặc 25% payout. 50% thắng và nhận lại gấp đôi; kết quả đã lưu.",
+    text: "Cược 10% hoặc 25% payout; thắng thì nhận lại gấp đôi. Kết quả đã lưu.",
   },
   adventurer: {
     name: "Lost Adventurer",
-    text: "Cứu người: mất 2 bình máu, nhận R 80% / SR 20%. Cướp đồ: 25% nhận trang bị SSR, 75% không có gì xảy ra. Bỏ mặc: không có gì xảy ra.",
+    text: "Cứu người: mất 2 bình máu để nhận trang bị. Cướp đồ: có thể nhận trang bị SSR hoặc không có gì xảy ra. Bỏ mặc: không có gì xảy ra.",
   },
   fountain: {
     name: "Blood Fountain",
-    text: "60% hồi đầy HP; 25% +15 MAX HP; 15% gọi Blood Mimic.",
+    text: "Uống một ngụm: có thể hồi đầy HP, tăng MAX HP hoặc gọi Blood Mimic.",
   },
   horadric: {
     name: "Horadric Forge",
@@ -262,7 +262,7 @@ const SURPRISE_EVENTS = Object.freeze({
   },
   mirror: {
     name: "Mirror of Fate",
-    text: "Đổi 10% MAX HP lấy +10% ATK; hoặc +8 DEF/−2 ATK; đập: 20% +2 LUCK, 80% đấu clone.",
+    text: "Đổi 10% MAX HP lấy +10% ATK; hoặc +8 DEF/−2 ATK; hoặc đập gương (may rủi).",
   },
   treasure_room: {
     name: "Treasure Room",
@@ -278,7 +278,7 @@ const SURPRISE_EVENTS = Object.freeze({
   },
   doors: {
     name: "Strange Doors",
-    text: "Cửa sáng/vàng tốt 70%, đen tốt 60%. Sáng: hồi đầy/+1 bình hoặc mất 20% MAX HP; vàng: +50% cược hoặc Mimic; đen: SSR hoặc Boss.",
+    text: "Mỗi cửa có thể tốt hoặc xấu. Sáng: hồi đầy/+1 bình hoặc mất 20% MAX HP; vàng: +50% cược hoặc Mimic; đen: SSR hoặc Boss.",
   },
 });
 const CLASS_SHRINE_TEXT = Object.freeze({
@@ -482,6 +482,110 @@ function shrineOutcomes(state) {
   return SHRINE_KINDS.map((kind) => ({ kind, chance, ...rows[kind] }));
 }
 
+// Tỷ lệ của các sự kiện bí ẩn có may rủi; makeSurprise dùng chung để UI luôn khớp với roll thật.
+const SURPRISE_ODDS = Object.freeze({
+  gamblerWin: 0.5,
+  adventurerRescueCommon: 0.8,
+  adventurerRobLegendary: 0.25,
+  fountainHeal: 0.6,
+  fountainMaxHp: 0.25,
+  fountainMimic: 0.15,
+  mirrorLucky: 0.2,
+  treasureRoomMimic: 1 / 3,
+  doorLight: 0.7,
+  doorGold: 0.7,
+  doorDark: 0.6,
+});
+const FIXED_SURPRISES = Object.freeze([
+  "healer",
+  "blacksmith",
+  "purifier",
+  "sacrifice",
+  "merchant",
+  "horadric",
+  "contract",
+  "class_shrine",
+]);
+// Mỗi mục: một lựa chọn của người chơi và các kết quả có thể xảy ra (chance là xác suất 0–1).
+function surpriseOdds(state, event) {
+  const o = SURPRISE_ODDS;
+  const pair = (title, goodChance, goodText, badText, mixed = false) => ({
+    title,
+    outcomes: [
+      { tone: "good", chance: goodChance, text: goodText },
+      { tone: mixed ? "mixed" : "bad", chance: 1 - goodChance, text: badText },
+    ],
+  });
+  switch (event.kind) {
+    case "goblin":
+      return [
+        pair(
+          "Bắt Goblin",
+          goblinCatchChance(state),
+          `Bắt được: bonus +${Math.floor(state.stake * 0.25)} xu (25% cược)`,
+          "Goblin trốn thoát: payout ×0,9",
+        ),
+      ];
+    case "gambler":
+      return [
+        pair(
+          "Cược 10% hoặc 25% payout",
+          o.gamblerWin,
+          "Thắng: nhận lại gấp đôi số đã cược",
+          "Thua: mất số đã cược",
+        ),
+      ];
+    case "adventurer":
+      return [
+        {
+          title: "Cứu người (mất 2 bình)",
+          outcomes: [
+            { tone: "good", chance: o.adventurerRescueCommon, text: "Nhận đồ R" },
+            { tone: "good", chance: 1 - o.adventurerRescueCommon, text: "Nhận đồ SR" },
+          ],
+        },
+        pair("Cướp đồ", o.adventurerRobLegendary, "Nhận đồ SSR", "Không có gì xảy ra", true),
+      ];
+    case "fountain":
+      return [
+        {
+          title: "Uống",
+          outcomes: [
+            { tone: "good", chance: o.fountainHeal, text: "Hồi đầy HP" },
+            { tone: "good", chance: o.fountainMaxHp, text: "+15 HP tối đa" },
+            { tone: "bad", chance: o.fountainMimic, text: "Blood Mimic xuất hiện, phải chiến đấu" },
+          ],
+        },
+      ];
+    case "mirror":
+      return [
+        pair(
+          "Đập gương",
+          o.mirrorLucky,
+          "+2 LUCK",
+          "Mirror Clone sao chép chỉ số của bạn, phải hạ nó để qua tầng",
+        ),
+      ];
+    case "treasure_room":
+      return [
+        pair(
+          "Mỗi hòm (đỏ / xanh / vàng)",
+          1 - o.treasureRoomMimic,
+          "Phần thưởng: đỏ +5 ATK · xanh +6 DEF, +5 RES · vàng +50% cược, +1 LUCK",
+          "Mimic, phải chiến đấu",
+        ),
+      ];
+    case "doors":
+      return [
+        pair("Cửa sáng", o.doorLight, "Hồi đầy HP, +1 bình", "Mất 20% MAX HP (giữ ít nhất 1 HP)"),
+        pair("Cửa vàng", o.doorGold, "Bonus +50% cược", "Golden Door Mimic chặn đường"),
+        pair("Cửa đen", o.doorDark, "Nhận đồ SSR", "Premature Rift Boss xuất hiện"),
+      ];
+    default:
+      return null;
+  }
+}
+
 module.exports = {
   runDiamondReward,
   clamp,
@@ -511,6 +615,9 @@ module.exports = {
   CLASS_SHRINE_TEXT,
   MERCHANT_OFFERS,
   surpriseOptions,
+  SURPRISE_ODDS,
+  FIXED_SURPRISES,
+  surpriseOdds,
   SHRINE_KINDS,
   SHRINE_EFFECTS,
   shrineFakeDamage,
