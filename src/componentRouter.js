@@ -38,6 +38,7 @@ const gachaCommand = require("./commands/gacha");
 const useCommand = require("./commands/use");
 const leaderboardCommand = require("./commands/xephang");
 const helpCommand = require("./commands/trogiup");
+const rulesCommand = require("./commands/luat");
 const gameCommand = require("./commands/game");
 const vuaTiengVietCommand = require("./commands/vuatiengviet");
 const itemCatalogViewCommand = require("./commands/itemCatalogView");
@@ -46,6 +47,7 @@ const { handleRoleRewardInteraction, handleWinMultiplierInteraction } = require(
 const checklistCommand = require("./commands/kiemtra");
 
 const ROUTES = Object.freeze([
+  { kind: "button", prefix: "luat:", handle: (interaction) => rulesCommand.handleButton(interaction) },
   {
     kind: "button",
     prefix: "replay:",

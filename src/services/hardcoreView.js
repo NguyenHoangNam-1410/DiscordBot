@@ -834,7 +834,7 @@ function hardcoreEmbed(
         value: result
           ? `Đã nhận **${formatCoins(result.payout)} xu** · 💎 **${formatCoins(result.diamonds || 0)}**`
           : state.cleared
-            ? `**${formatCoins(payout)} ${icon("coin")}**\n💎 **${formatCoins(runDiamondReward(state))}** tạm giữ · tử trận mất hết`
+            ? `**${formatCoins(payout)} ${icon("coin")}** 💎 **${formatCoins(runDiamondReward(state))}**`
             : "Chưa thể rút",
         inline: true,
       },

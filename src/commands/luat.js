@@ -2,6 +2,9 @@ const {
   SlashCommandBuilder,
   EmbedBuilder,
   MessageFlags,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
 } = require("discord.js");
 const RULES = {
   baucua: [
@@ -148,7 +151,7 @@ function survivalRules() {
       {
         name: "☠️ Khi gặp RNGesus",
         value:
-          "RNGesus không thể bị đánh bại; **Chiến đấu** làm run kết thúc. **Bỏ chạy** có 75% thành công, giữ vé; thất bại tự dùng 1 Vé Thoát Hiểm nếu còn, hết vé thì chết. **Dùng vé** vượt an toàn (giữ tối đa 1 vé). **Hối lộ** nhân payout ×0,6. **Cầu nguyện**: 30% thành công, nhận 85% SSR/15% UR; thất bại là chết. Không có nút rút thưởng.",
+          "RNGesus không thể bị đánh bại; **Chiến đấu** làm run kết thúc. **Bỏ chạy** có 75% thành công, giữ vé; thất bại tự dùng 1 Vé Thoát Hiểm nếu còn, hết vé thì chết. Vé chỉ được dùng tự động khi bỏ chạy thất bại (giữ tối đa 1 vé). **Hối lộ** nhân payout ×0,6. **Cầu nguyện**: 30% thành công, nhận 85% SSR/15% UR; thất bại là chết. Không có nút rút thưởng.",
         inline: false,
       },
       {
@@ -159,11 +162,78 @@ function survivalRules() {
       },
     );
 
-  return [overview, combat];
+  // Discord counts the text of every embed in the same message together.
+  // Keep one bounded page per message, with room for emoji expansion.
+  const pages = [];
+  for (const section of [overview, combat]) {
+    const { fields = [], ...base } = section.toJSON();
+    const baseLength =
+      (base.title || "").length + (base.description || "").length;
+    let page = new EmbedBuilder(base);
+    let length = baseLength;
+    let count = 0;
+    for (const field of fields) {
+      const fieldLength = field.name.length + field.value.length;
+      if (count && (length + fieldLength > 3400 || count >= 20)) {
+        pages.push(page);
+        page = new EmbedBuilder(base);
+        length = baseLength;
+        count = 0;
+      }
+      page.addFields(field);
+      length += fieldLength;
+      count += 1;
+    }
+    pages.push(page);
+  }
+  return pages;
+}
+
+function survivalRulesPayload(userId, requestedPage = 0) {
+  const pages = survivalRules();
+  const page = Math.max(0, Math.min(pages.length - 1, requestedPage));
+  pages[page].setFooter({
+    text: `Trang ${page + 1}/${pages.length} · Luật Sinh tồn`,
+  });
+  return {
+    embeds: [pages[page]],
+    components: [
+      new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`luat:hardcore:${userId}:${Math.max(0, page - 1)}:prev`)
+          .setLabel("Trước")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(page === 0),
+        new ButtonBuilder()
+          .setCustomId(
+            `luat:hardcore:${userId}:${Math.min(pages.length - 1, page + 1)}:next`,
+          )
+          .setLabel("Sau")
+          .setStyle(ButtonStyle.Secondary)
+          .setDisabled(page === pages.length - 1),
+      ),
+    ],
+    allowedMentions: { parse: [] },
+  };
 }
 
 module.exports = {
   RULES,
+  async handleButton(interaction) {
+    const [, game, ownerId, pageText] = interaction.customId.split(":");
+    if (interaction.user.id !== ownerId)
+      return interaction.reply({
+        content: "Chỉ người mở luật mới có thể chuyển trang.",
+        flags: MessageFlags.Ephemeral,
+      });
+    const page = Number(pageText);
+    if (game !== "hardcore" || !Number.isSafeInteger(page) || page < 0)
+      return interaction.reply({
+        content: "Trang luật không hợp lệ. Hãy mở lại /luat.",
+        flags: MessageFlags.Ephemeral,
+      });
+    return interaction.update(survivalRulesPayload(ownerId, page));
+  },
   data: new SlashCommandBuilder()
     .setName("luat")
     .setDescription("Xem luật ngắn của từng game")
@@ -180,7 +250,7 @@ module.exports = {
     const key = interaction.options.getString("trochoi", true);
     if (key === "hardcore")
       return interaction.reply({
-        embeds: survivalRules(),
+        ...survivalRulesPayload(interaction.user.id),
         flags: MessageFlags.Ephemeral,
       });
     const [name, text] = RULES[key];
