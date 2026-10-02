@@ -147,19 +147,6 @@ const UTILITY_ITEMS = [
       "Hoàn 20% tiền cược nếu ngựa bạn chọn về ba. Chỉ tiêu hao khi được hoàn và không chồng với Bảo Hiểm Về Nhì hoặc Trúng Đậm.",
   },
   {
-    id: "rps_loss_shield",
-    type: "consumable",
-    name: "Bùa Giảm Đau",
-    effect: "rps_loss_shield",
-    rarity: "R",
-    price: 0,
-    shopEligible: false,
-    stackable: true,
-    tradeable: true,
-    description:
-      "Hoàn 20% tiền cược khi thua bot trong Oẳn tù tì. Chỉ tiêu hao khi được hoàn.",
-  },
-  {
     id: "blackjack_bust_guard",
     type: "consumable",
     name: "Miếng Đệm Quắc",
@@ -292,30 +279,6 @@ const UTILITY_ITEMS = [
     stackable: true,
     tradeable: true,
     description: "Nhân đôi payout nếu ngựa đã chọn thắng cuộc đua kế tiếp.",
-  },
-  {
-    id: "rps_counter_charm",
-    type: "consumable",
-    name: "Bùa Khắc Chế",
-    effect: "rps_counter",
-    rarity: "SR",
-    price: shopPrice(1000),
-    stackable: true,
-    tradeable: true,
-    description:
-      "Trong ván với bot kế tiếp, bot chỉ có thể hòa hoặc thua lựa chọn của bạn.",
-  },
-  {
-    id: "rps_coward_privilege",
-    type: "consumable",
-    name: "Đặc Quyền Kẻ Hèn",
-    effect: "rps_draw_win",
-    rarity: "SSR",
-    price: shopPrice(2500),
-    stackable: true,
-    tradeable: true,
-    description:
-      "Ván với bot kế tiếp nếu hòa sẽ tính thắng và trả payout 1,5 lần cược.",
   },
   {
     id: "coquay_magnifier",

@@ -8,7 +8,6 @@ const GAME_ITEM_DROP_CHANCE = Object.freeze({
   baucua: 0.04,
   taixiu: 0.04,
   duangua: 0.06,
-  oantuti: 0.03,
   blackjack: 0.04,
   poker: 0.06,
   mines: 0.04,

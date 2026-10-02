@@ -9,7 +9,6 @@ const { db } = require("../src/db");
 const economy = require("../src/services/economyService");
 const mines = require("../src/services/minesService");
 const levels = require("../src/services/playerLevelService");
-const { fairInt } = require("../src/services/fairnessService");
 const { setGameConfig } = require("../src/services/gameConfigService");
 const results = {};
 
@@ -23,91 +22,6 @@ async function run() {
   ]) {
     setGameConfig(guildId, key, 0, "audit");
   }
-  const rps = require("../src/services/rpsBotService");
-  let winsWithoutStake = 0;
-  let rejected = 0;
-  let collected = 0;
-  for (let i = 0; i < 120; i += 1) {
-    const round = rps.createRpsBotRound({
-      guildId,
-      channelId: "c",
-      userId: "empty",
-      stake: 100000,
-      choice: "bua",
-    });
-    await rps.handleRpsBotButton({
-      customId: `rpsbot:${round.id}:confirm`,
-      guildId,
-      channelId: "c",
-      user: { id: "empty" },
-      update: async () => {},
-      reply: async () => {
-        rejected += 1;
-      },
-    });
-    const balance = economy.getAccount(guildId, "empty").balance;
-    if (balance > 0) {
-      winsWithoutStake += 1;
-      collected += balance;
-      while (economy.getAccount(guildId, "empty").balance > 0) {
-        economy.transferCoins({
-          guildId,
-          fromUserId: "empty",
-          toUserId: "collector",
-          amount: Math.min(
-            100000,
-            economy.getAccount(guildId, "empty").balance,
-          ),
-        });
-      }
-    }
-  }
-  results.rpsZeroBalance = {
-    attempts: 120,
-    winsWithoutStake,
-    rejected,
-    collected,
-    vulnerable: winsWithoutStake > 0,
-  };
-  assert.equal(
-    winsWithoutStake,
-    0,
-    "Oẳn tù tì không được trả thắng khi thiếu cược",
-  );
-  assert.equal(rejected, 120, "Mọi lượt xác nhận thiếu tiền phải bị từ chối");
-  economy.creditCoins({ guildId, userId: "funded", amount: 100 });
-  const paidRound = rps.createRpsBotRound({
-    guildId,
-    channelId: "c",
-    userId: "funded",
-    stake: 100,
-    choice: "bua",
-  });
-  let seed = 0;
-  while (fairInt(String(seed), "rps-bot", 0, 3) !== 1) seed += 1;
-  db.prepare("UPDATE rps_bot_rounds SET fair_json=? WHERE id=?").run(
-    JSON.stringify({ serverSeed: String(seed) }),
-    paidRound.id,
-  );
-  let paidUpdates = 0;
-  const paidInteraction = {
-    customId: `rpsbot:${paidRound.id}:confirm`,
-    guildId,
-    channelId: "c",
-    user: { id: "funded" },
-    update: async () => {
-      paidUpdates += 1;
-    },
-    reply: async () => {
-      throw new Error("Paid RPS round unexpectedly rejected");
-    },
-  };
-  await rps.handleRpsBotButton(paidInteraction);
-  await rps.handleRpsBotButton(paidInteraction);
-  assert.equal(economy.getAccount(guildId, "funded").balance, 200);
-  assert.equal(paidUpdates, 2);
-  results.rpsFundedWinAndDuplicate = true;
-
   economy.creditCoins({ guildId, userId: "farmer", amount: 1000 });
   for (let i = 0; i < 20; i += 1) {
     const round = mines.startMines({

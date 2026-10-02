@@ -183,10 +183,10 @@ async function run() {
     require("../src/commands/nhiemvu").rewardText({
       coins: 30000,
       diamonds: 100,
-      item: "rps_counter_charm",
+      item: "horse_jackpot",
       quantity: 1,
     }),
-    /Bùa Khắc Chế ×1/,
+    /Trúng Đậm ×1/,
   );
   assert.deepEqual(
     require("../src/commands/nhiemvu")

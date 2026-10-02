@@ -180,7 +180,6 @@ const report = [
   taixiu("tong:10"),
   ...blackjack(),
   ...[2, 3, 4, 5, 6, 7].map(mines),
-  analytic("oantuti", 100, 33.333, "Uniform fair bot; draw refunds stake"),
   {
     game: "poker",
     iterations: "policy-dependent",

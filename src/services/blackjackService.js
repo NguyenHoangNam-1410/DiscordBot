@@ -845,15 +845,6 @@ function hasOtherWagerSession(guildId, userId) {
       .get(guild, user, user)
   )
     return true;
-  if (
-    db
-      .prepare(
-        `SELECT 1 FROM rps_duels WHERE guild_id=? AND status IN ('invited','playing')
-    AND (challenger_id=? OR opponent_id=?) LIMIT 1`,
-      )
-      .get(guild, user, user)
-  )
-    return true;
   const pokerSessions = db
     .prepare("SELECT state_json FROM poker_sessions WHERE guild_id=?")
     .all(guild);

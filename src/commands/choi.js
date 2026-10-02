@@ -7,7 +7,6 @@ const {
 
 const games = {
   baucua: require("./baucua"),
-  oantuti: require("./oantuti"),
   taixiu: require("./taixiu"),
   chinchiro: require("./chinchiro"),
   xidach: require("./blackjack"),
@@ -20,7 +19,6 @@ const games = {
 };
 
 const GAME_ALIASES = {
-  ott: "oantuti",
   vtv: "vuatiengviet",
   vutiengviet: "vuatiengviet",
 };
@@ -73,11 +71,6 @@ const options = [
   simpleGame("baucua", games.baucua, "Mở bàn Bầu cua nhiều người"),
   simpleGame("taixiu", games.taixiu, "Mở bàn Tài xỉu nhiều người"),
   simpleGame("chinchiro", games.chinchiro, "Chơi Xúc Xắc Ngầm với Nhà cái"),
-  simpleGame(
-    "oantuti",
-    games.oantuti,
-    "Chơi Oẳn tù tì với bot hoặc người khác",
-  ),
   simpleGame(
     "xidach",
     games.xidach,

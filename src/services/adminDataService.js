@@ -111,8 +111,6 @@ const RESET_PLAYER_TABLES = Object.freeze([
   "poker_sessions",
   "profile_cosmetics",
   "profile_loadouts",
-  "rps_bot_rounds",
-  "rps_duels",
   "season_claims",
   "season_scores",
   "server_event_contributions",

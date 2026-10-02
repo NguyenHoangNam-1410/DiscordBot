@@ -4,7 +4,7 @@ Phiên bản bot độc lập chỉ dành cho trò chơi và hệ thống xu. Kh
 
 ## Trò chơi
 
-- Bầu cua, Tài xỉu, Chinchiro, Oẳn tù tì
+- Bầu cua, Tài xỉu, Chinchiro
 - Xì dách, Đua ngựa nhiều người, Dò mìn, Cò quay Nga
 - Vua tiếng Việt
 - Sinh tồn
@@ -30,9 +30,9 @@ Bot cần bật **Message Content Intent** trong Discord Developer Portal nếu 
 
 - `/batdau`: hướng dẫn người mới và nhận một lần 500 xu cùng màu hồ sơ Xanh Băng.
 - `/trogiup`: chọn tab để xem lệnh theo từng nhóm; `/huongdan` vẫn là bản tóm tắt ngắn.
-- Lệnh game riêng: `/baucua`, `/taixiu`, `/chinchiro`, `/oantuti`, `/xidach`, `/poker`, `/duangua`, `/domin`, `/coquay`, `/sinhton` và `/vtv`.
+- Lệnh game riêng: `/baucua`, `/taixiu`, `/chinchiro`, `/xidach`, `/poker`, `/duangua`, `/domin`, `/coquay`, `/sinhton` và `/vtv`.
 - `/vatpham`: cửa hàng, mua, túi đồ, sử dụng, tặng và quay Gacha.
-- Vật phẩm bậc R–SSR mới: Kính Soi Chữ, Đồng Hồ Gia Hạn (Vua tiếng Việt); Máy Quét Hàng/Cột (Mines); Kính Lúp Nứt, Bảo Hiểm Trắng Tay (Bầu cua); Ống Ngắm Tổng Điểm, Bảo Hiểm Sát Nút (Tài xỉu); Vé Khán Đài (Đua ngựa); Bùa Giảm Đau (Oẳn tù tì); Miếng Đệm Quắc (Xì dách); Phiếu Bỏ Bài (Poker); Nước Thanh Tẩy (hủy hiệu ứng đang chờ). Vật phẩm bảo hiểm chỉ tiêu hao khi thực sự được hoàn. Vé Gacha ×10 bảo đảm ít nhất một SSR, nhân đôi trọng số UR và không thể trao đổi.
+- Vật phẩm bậc R–SSR mới: Kính Soi Chữ, Đồng Hồ Gia Hạn (Vua tiếng Việt); Máy Quét Hàng/Cột (Mines); Kính Lúp Nứt, Bảo Hiểm Trắng Tay (Bầu cua); Ống Ngắm Tổng Điểm, Bảo Hiểm Sát Nút (Tài xỉu); Vé Khán Đài (Đua ngựa); Miếng Đệm Quắc (Xì dách); Phiếu Bỏ Bài (Poker); Nước Thanh Tẩy (hủy hiệu ứng đang chờ). Vật phẩm bảo hiểm chỉ tiêu hao khi thực sự được hoàn. Vé Gacha ×10 bảo đảm ít nhất một SSR, nhân đôi trọng số UR và không thể trao đổi.
 - `/nhiemvu`: nhiệm vụ, điểm danh, thành tựu và thưởng vai trò hàng tuần; `kiemtra` mở menu xem/nhận nhanh mọi thưởng chưa nhận, `nhan` nhận tất cả hoặc theo loại (nhiệm vụ, thành tựu, thưởng vai trò), `tanthu` nhận thưởng tân thủ (1 vé Gacha ×10 + 3000 kim cương, một lần).
 - `/xephang`: bảng xếp hạng chung có dropdown để chuyển giữa tài sản và từng game.
 - `/xu vanchoi`: xem kết quả, tiền cược và payout của 10 ván gần nhất.
@@ -41,21 +41,13 @@ Bot cần bật **Message Content Intent** trong Discord Developer Portal nếu 
 - `/chinchiro xu:<số xu>`: chơi Xúc Xắc Ngầm với Nhà cái trong một embed; người chơi chỉ bấm lắc khi Nhà cái cần so điểm.
 - Admin dùng `!addgem @người_chơi <số lượng>` để cộng kim cương. Mọi thay đổi kim cương và lượt gacha đều có operation ID chống xử lý trùng.
 - **Gacha: tỷ lệ theo độ hiếm là cố định.** Mặc định XU 50% · R 22% · SR 14% · SSR 10% · UR 4%. Bậc được chọn trước theo tỷ lệ này, rồi vật phẩm trong bậc được chọn **ngẫu nhiên đều**; thêm hay bớt vật phẩm không làm đổi tỷ lệ bậc (bậc có nhiều vật phẩm chỉ chia nhỏ tỷ lệ cho từng vật phẩm). Admin đổi tỷ lệ bậc bằng `/quantri config` với `GACHA_RATE_XU|R|SR|SSR|UR` (trọng số, tự chuẩn hóa về 100%; SR/SSR/UR tối thiểu 0.1), `/quantri themgacha` để thêm vật phẩm catalog vào bậc, `/quantri batgacha` để bật/tắt một phần thưởng và `/quantri xemgacha` để xem tỷ lệ từng bậc và từng vật phẩm.
-- **Thưởng sự kiện sau ván:** mỗi ván hợp lệ roll độc lập khả năng rơi thêm xu, gem (chỉnh bằng `/quantri config`) và **vật phẩm riêng của chính game đó** (không rơi vật phẩm dùng chung như vé Gacha). Mỗi game có tỷ lệ riêng: Bầu cua, Tài xỉu, Xì dách, Dò mìn, Chinchiro 4% · Đua ngựa, Poker 6% · Cò quay Nga 5% · Oẳn tù tì, Vua tiếng Việt 3% · Sinh tồn chưa có vật phẩm riêng nên không rơi. Độ hiếm rơi cố định R 60% · SR 28% · SSR 9% · UR 3% (game không có vật phẩm ở độ hiếm nào thì bỏ qua và chuẩn hóa lại), vật phẩm trong độ hiếm chọn ngẫu nhiên đều. Hệ số chung `GAME_ITEM_DROP_MULTIPLIER` (mặc định 1, 0 để tắt) nhân tất cả tỷ lệ này.
+- **Thưởng sự kiện sau ván:** mỗi ván hợp lệ roll độc lập khả năng rơi thêm xu, gem (chỉnh bằng `/quantri config`) và **vật phẩm riêng của chính game đó** (không rơi vật phẩm dùng chung như vé Gacha). Mỗi game có tỷ lệ riêng: Bầu cua, Tài xỉu, Xì dách, Dò mìn, Chinchiro 4% · Đua ngựa, Poker 6% · Cò quay Nga 5% · Vua tiếng Việt 3% · Sinh tồn chưa có vật phẩm riêng nên không rơi. Độ hiếm rơi cố định R 60% · SR 28% · SSR 9% · UR 3% (game không có vật phẩm ở độ hiếm nào thì bỏ qua và chuẩn hóa lại), vật phẩm trong độ hiếm chọn ngẫu nhiên đều. Hệ số chung `GAME_ITEM_DROP_MULTIPLIER` (mặc định 1, 0 để tắt) nhân tất cả tỷ lệ này.
 - `/quantri datbuff` bật hệ số nhân có thời hạn: **xu drop**, **gem drop** (nhân số lượng khi đã roll trúng), **tỷ lệ rơi vật phẩm game** (nhân tỷ lệ rơi vật phẩm, tối đa 100%) và **tăng tỷ lệ ra vật phẩm Gacha** (nhân tỷ lệ các bậc R–UR so với bậc XU). Dùng `/quantri datbuff` với hành động `Xem buff đang chạy` để xem thời gian còn lại.
 - Admin dùng `/quantri xemthuongvaitro` để mở bảng thưởng vai trò hàng tuần: xem danh sách và dùng các nút **Thêm / Sửa vai trò** (chọn vai trò rồi nhập số xu) hoặc **Xóa vai trò**; ba lệnh riêng lẻ cũ đã được gộp vào bảng này để nhường chỗ cho lệnh mới. Người chơi phải dùng `/nhiemvu nhan` (loại Thưởng vai trò) trong tuần để nhận; quên nhận sẽ mất phần tuần đó.
 
 ## Kiểm chứng công bằng
 
 Các game cược tiếp tục dùng seed và HMAC-SHA256 nội bộ để tạo kết quả xác định. Thông tin kỹ thuật về seed/commit không hiển thị trên embed game để giao diện ngắn gọn hơn.
-
-### Oẳn tù tì solo
-
-- Đấu với bot: `/oantuti xu:<số xu> chon:<bua|keo|bao>`
-- Thách đấu người khác: `/oantuti xu:<số xu> doithu:@người_chơi`
-- Với prefix: `!ott solo @người_chơi <số xu>`
-
-Đối thủ có 60 giây để chấp nhận. Sau khi chấp nhận, cả hai có 2 phút để bí mật chọn Búa, Kéo hoặc Bao. Bot giữ cược của hai người, trả toàn bộ cho người thắng và tự hoàn tiền nếu ván hết hạn.
 
 ### Xì dách
 
@@ -109,9 +101,9 @@ Admin dùng `/quantri xoadulieu` để xóa xu, kim cương, EXP/cấp của m�
 - `/luat` mở luật ngắn theo từng game. Kết quả có nút chơi lại; thành tựu mới hiện ngay và huy hiệu xuất hiện trên `/hoso`.
 
 SQLite được tạo tự động tại `data/game-bot.sqlite`. Bot sao lưu nhất quán khi khởi động và sau mỗi 24 giờ vào `data/backups`, mặc định giữ 14 bản gần nhất. Có thể đổi lịch và số bản giữ lại bằng `DB_BACKUP_INTERVAL_HOURS`, `DB_BACKUP_RETENTION` và `DB_BACKUP_DIR`.
-`/quantri ketthucvan mavan:<mã>` buộc kết thúc và hoàn cược mọi loại ván có mã (Xì dách với bot và bàn nhiều người, Xì dách và Oẳn tù tì đấu người, Poker, Dò mìn, Cò quay Nga, Chinchiro, Sinh tồn, Bầu cua, Tài xỉu, Đua ngựa). Ván Xì dách với bot, Dò mìn, Cò quay Nga, Chinchiro và Sinh tồn không hoạt động quá `SOLO_SESSION_TTL_MINUTES` phút (mặc định 10; 2 phút nếu tin nhắn ván chưa gửi được) sẽ tự đóng và **người chơi mất tiền cược** (để không thể bỏ ván đang thua rồi đòi hoàn); riêng ván chưa có tin nhắn vì lỗi gửi thì hoàn cược. Với Oẳn tù tì và Xì dách đấu người, bàn Xì dách và bàn Poker hết hạn giữa chừng, người còn nợ một hành động mất cược, người đã hoàn tất lượt được hoàn; hết hạn ở lời mời hoặc sảnh chờ thì hoàn cho tất cả. Admin kết thúc ván bằng `ketthucvan` vẫn hoàn cược cho mọi người.
+`/quantri ketthucvan mavan:<mã>` buộc kết thúc và hoàn cược mọi loại ván có mã (Xì dách với bot và bàn nhiều người, Xì dách đấu người, Poker, Dò mìn, Cò quay Nga, Chinchiro, Sinh tồn, Bầu cua, Tài xỉu, Đua ngựa). Ván Xì dách với bot, Dò mìn, Cò quay Nga, Chinchiro và Sinh tồn không hoạt động quá `SOLO_SESSION_TTL_MINUTES` phút (mặc định 10; 2 phút nếu tin nhắn ván chưa gửi được) sẽ tự đóng và **người chơi mất tiền cược** (để không thể bỏ ván đang thua rồi đòi hoàn); riêng ván chưa có tin nhắn vì lỗi gửi thì hoàn cược. Với Xì dách đấu người, bàn Xì dách và bàn Poker hết hạn giữa chừng, người còn nợ một hành động mất cược, người đã hoàn tất lượt được hoàn; hết hạn ở lời mời hoặc sảnh chờ thì hoàn cho tất cả. Admin kết thúc ván bằng `ketthucvan` vẫn hoàn cược cho mọi người.
 
-Duel Oẳn tù tì, duel và bàn Xì dách đã kết thúc được giữ `GAME_RECORD_RETENTION_DAYS` ngày (mặc định 7) rồi tự xóa cùng dữ liệu bộ bài/tay bài. Lịch sử kim cương và gacha mặc định được giữ 180 ngày; điều chỉnh bằng `DIAMOND_LOG_RETENTION_DAYS` và `GACHA_HISTORY_RETENTION_DAYS`.
+Duel và bàn Xì dách đã kết thúc được giữ `GAME_RECORD_RETENTION_DAYS` ngày (mặc định 7) rồi tự xóa cùng dữ liệu bộ bài/tay bài. Lịch sử kim cương và gacha mặc định được giữ 180 ngày; điều chỉnh bằng `DIAMOND_LOG_RETENTION_DAYS` và `GACHA_HISTORY_RETENTION_DAYS`.
 
 Khi nhận `SIGINT` hoặc `SIGTERM`, bot dừng các tác vụ nền, chờ bản sao lưu đang chạy hoàn tất, đóng kết nối Discord và SQLite trước khi thoát.
 
@@ -125,7 +117,7 @@ Mọi game dùng chung `src/utils/rewardText.js`: metric luôn đi kèm icon (xu
 
 ```
 <người chơi> thắng: +102.000 :coin: +11 :test_tube:
-🎉 BUFF SỰ KIỆN: +3 :gem: · 🟠 [SSR] Bùa Khắc Chế
+🎉 BUFF SỰ KIỆN: +3 :gem: · 🟠 [SSR] Trúng Đậm
 ```
 
 Số xu là **thay đổi ròng** (tiền nhận về − tiền cược): thắng `+`, thua `-` (mất cược), hòa `±0`. Vật phẩm rơi hiện icon độ hiếm: nếu đã tải emoji ứng dụng tên `r_icon`, `sr_icon`, `ssr_icon`, `ur_icon` thì bot dùng chúng, không thì dùng vòng tròn màu (🔵🟣🟠🔴).
@@ -137,7 +129,6 @@ Số xu là **thay đổi ròng** (tiền nhận về − tiền cược): thắ
 | Game | Mặc định | Phạm vi áp dụng |
 |---|---|---|
 | Xì dách (với bot) | x2 | Thắng thường và Ngũ linh; Xì dách tự nhiên = hệ số + 0,5 |
-| Oẳn tù tì (với bot) | x2 | Hòa vẫn hoàn cược |
 | Chinchiro | x1,8 | Thắng bằng điểm cao hơn nhà cái; Shigoro, Bão, Pin-Zoro giữ nguyên |
 | Cò quay Nga | x2 | Hạ Bot về 0 máu |
 | Tài xỉu | x2 | Cửa Tài/Xỉu/Chẵn/Lẻ (ra bộ ba vẫn thua); Bộ ba và Tổng cụ thể giữ nguyên |

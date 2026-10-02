@@ -190,9 +190,6 @@ const ARMED_MESSAGES = {
   horse_second_insurance:
     "🏇 Bảo Hiểm Về Nhì đã sẵn sàng cho cuộc đua kế tiếp.",
   horse_jackpot: "🏇 Trúng Đậm đã sẵn sàng cho cuộc đua kế tiếp.",
-  rps_counter: "✊ Bùa Khắc Chế đã sẵn sàng cho ván Oẳn tù tì với bot kế tiếp.",
-  rps_draw_win:
-    "✊ Đặc Quyền Kẻ Hèn đã sẵn sàng cho ván Oẳn tù tì với bot kế tiếp.",
   mines_blast_shield: "💣 Giáp Chống Nổ đã sẵn sàng cho ván Mines kế tiếp.",
   poker_insurance:
     "♠️ Bảo Hiểm Cược đã sẵn sàng cho ván Poker với bot kế tiếp.",
@@ -209,7 +206,6 @@ const ARMED_MESSAGES = {
     "☂️ Bảo Hiểm Trắng Tay đã sẵn sàng; chỉ tiêu khi được hoàn ở ván Bầu cua.",
   horse_consolation:
     "🎫 Vé Khán Đài đã sẵn sàng; chỉ tiêu khi ngựa bạn chọn về ba.",
-  rps_loss_shield: "🩹 Bùa Giảm Đau đã sẵn sàng; chỉ tiêu khi bạn thua bot.",
   blackjack_bust_guard:
     "🧷 Miếng Đệm Quắc đã sẵn sàng; chỉ tiêu khi bạn quắc đúng 22 điểm.",
   poker_fold_coupon:

@@ -294,8 +294,8 @@ const ACHIEVEMENTS = Object.freeze([
   {
     id: "bet_types_9",
     name: "Thông thạo mọi bàn cược",
-    description: "Chơi đủ 9 game cược",
-    target: 9,
+    description: "Chơi đủ 8 game cược",
+    target: 8,
     reward: 50_000,
     diamonds: 150,
     metric: "betGames",
@@ -500,7 +500,7 @@ const ACHIEVEMENTS = Object.freeze([
   },
 ]);
 
-const BETTING_GAMES = Object.freeze(["baucua","oantuti","taixiu","chinchiro","blackjack","poker","duangua","mines","coquay"]);
+const BETTING_GAMES = Object.freeze(["baucua","taixiu","chinchiro","blackjack","poker","duangua","mines","coquay"]);
 const BETTING_SQL = BETTING_GAMES.map((game) => `'${game}'`).join(",");
 
 function metrics(guildId, userId) {

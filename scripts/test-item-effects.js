@@ -32,7 +32,6 @@ const NEW_ITEMS = {
   taixiu_edge_insurance: "SR",
   baucua_blank_insurance: "SSR",
   horse_consolation: "R",
-  rps_loss_shield: "R",
   blackjack_bust_guard: "R",
   poker_fold_coupon: "R",
   effect_cleanser: "SSR",
@@ -560,47 +559,6 @@ db.prepare("UPDATE multiplayer_rounds SET status='closed' WHERE id=?").run(
   const untriggered = await runRace("erin", []);
   assert.equal(untriggered.consolation, 0);
 
-  // Oẳn tù tì: Bùa Giảm Đau
-  const rps = require("../src/services/rpsBotService");
-  const rpsGuild = "rps-item-guild";
-  fund(rpsGuild, "alice", 1_000_000);
-  effects.addEffectCharge(rpsGuild, "alice", "rps_loss_shield");
-  let rpsChecked = false;
-  let rpsKeptOnWin = false;
-  for (let attempt = 0; attempt < 80 && !rpsChecked; attempt += 1) {
-    const round = rps.createRpsBotRound({
-      guildId: rpsGuild,
-      channelId: "c",
-      userId: "alice",
-      stake: 100,
-      choice: "bua",
-    });
-    await rps.handleRpsBotButton({
-      customId: `rpsbot:${round.id}:confirm`,
-      user: { id: "alice" },
-      update: async () => {},
-      reply: async () => {},
-    });
-    const stored = JSON.parse(
-      db
-        .prepare("SELECT result_json FROM rps_bot_rounds WHERE id=?")
-        .get(round.id).result_json,
-    );
-    const armed = effects.getActiveEffect(rpsGuild, "alice", "rps_loss_shield");
-    if (stored.outcome === "loss") {
-      assert.equal(stored.lossRefund, 20);
-      assert.equal(stored.payout, 20);
-      assert.equal(armed, null);
-      rpsChecked = true;
-    } else {
-      assert.equal(stored.lossRefund, 0);
-      assert(armed);
-      rpsKeptOnWin = true;
-    }
-  }
-  assert(rpsChecked, "không gặp ván thua Oẳn tù tì để kiểm tra bùa");
-  void rpsKeptOnWin;
-
   // Xì dách: Miếng Đệm Quắc (quắc đúng 22 điểm)
   const blackjack = require("../src/services/blackjackService");
   const bjGuild = "bj-item-guild";
@@ -695,17 +653,17 @@ db.prepare("UPDATE multiplayer_rounds SET status='closed' WHERE id=?").run(
     shop.getInventoryQuantity(cleanGuild, "alice", "effect_cleanser"),
     1,
   );
-  giveAndUse(cleanGuild, "alice", "c", "rps_counter_charm");
-  assert(effects.getActiveEffect(cleanGuild, "alice", "rps_counter"));
+  giveAndUse(cleanGuild, "alice", "c", "horse_jackpot");
+  assert(effects.getActiveEffect(cleanGuild, "alice", "horse_jackpot"));
   const cleansed = itemEffects.useItem({
     guildId: cleanGuild,
     userId: "alice",
     channelId: "c",
     itemId: "effect_cleanser",
   });
-  assert(cleansed.message.includes("Bùa Khắc Chế"));
+  assert(cleansed.message.includes("Trúng Đậm"));
   assert.equal(
-    effects.getActiveEffect(cleanGuild, "alice", "rps_counter"),
+    effects.getActiveEffect(cleanGuild, "alice", "horse_jackpot"),
     null,
   );
   assert.equal(
@@ -763,7 +721,7 @@ db.prepare("UPDATE multiplayer_rounds SET status='closed' WHERE id=?").run(
     });
     fund(guildId, "alice", 5000);
     shop.addInventory(guildId, "alice", "mines_radar", 3);
-    effects.addEffectCharge(guildId, "alice", "rps_counter");
+    effects.addEffectCharge(guildId, "alice", "horse_jackpot");
     require("../src/services/playerLevelService").addDiamonds(
       guildId,
       "alice",

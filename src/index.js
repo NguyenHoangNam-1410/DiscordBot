@@ -32,7 +32,6 @@ const {
 const {
   startCommerceMaintenance,
 } = require("./services/commerceMaintenanceService");
-const { startRpsDuelMaintenance } = require("./services/rpsDuelService");
 const {
   startStaleSessionMaintenance,
 } = require("./services/staleSessionService");
@@ -125,7 +124,6 @@ client.once(Events.ClientReady, () => {
   const resumedHorseRaces = resumeHorseRaces(client, logger);
   maintenanceTimers.push(startTimedChallengeMaintenance(client, logger));
   maintenanceTimers.push(startCommerceMaintenance(client, logger));
-  maintenanceTimers.push(startRpsDuelMaintenance(client, logger));
   maintenanceTimers.push(startBlackjackDuelMaintenance(client, logger));
   maintenanceTimers.push(startBlackjackTableMaintenance(client));
   maintenanceTimers.push(startPokerMaintenance(client, logger));

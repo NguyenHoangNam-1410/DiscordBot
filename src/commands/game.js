@@ -53,7 +53,6 @@ const {
 
 const LABELS = {
   baucua: "Bầu cua",
-  oantuti: "Oẳn tù tì",
   taixiu: "Tài xỉu",
   chinchiro: "Chinchiro",
   blackjack: "Xì dách",

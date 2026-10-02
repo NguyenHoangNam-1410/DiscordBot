@@ -5,7 +5,6 @@ const COMMAND_FILES = Object.freeze([
   "baucua",
   "taixiu",
   "chinchiro",
-  "oantuti",
   "xidach",
   "poker",
   "duangua",

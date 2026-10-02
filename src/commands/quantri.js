@@ -33,7 +33,6 @@ const {
   blackjackTableEmbed,
 } = require("../services/blackjackService");
 const { forceEndPokerSession } = require("../services/pokerService");
-const { forceEndRpsDuel } = require("../services/rpsDuelService");
 const { forceEndBlackjackDuel } = require("../services/blackjackDuelService");
 const { forceEndSharedRound } = require("../services/roundAdminService");
 const { pokerTableEmbed } = require("../services/pokerMultiplayerService");
@@ -299,7 +298,6 @@ module.exports = {
         forceEndCoquaySession,
         forceEndChinchiroSession,
         forceEndHardcoreSession,
-        forceEndRpsDuel,
         forceEndBlackjackDuel,
         forceEndSharedRound,
       ];

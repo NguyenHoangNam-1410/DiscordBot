@@ -28,9 +28,7 @@ const {
   handleHardcoreSetup,
 } = require("./services/hardcoreService");
 const { handleCoinRequestButton } = require("./services/coinRequestService");
-const { handleRpsDuelButton } = require("./services/rpsDuelService");
 const { handleReplayButton } = require("./services/replayService");
-const { handleRpsBotButton } = require("./services/rpsBotService");
 const { handleChinchiroButton } = require("./services/chinchiroService");
 const profileCommand = require("./commands/hoso");
 const shopCommand = require("./commands/shop");
@@ -140,7 +138,6 @@ const ROUTES = Object.freeze([
     prefix: "gacha:",
     handle: (interaction) => gachaCommand.handleButton(interaction),
   },
-  { kind: "button", prefix: "rpsbot:", handle: handleRpsBotButton },
   { kind: "button", prefix: "chinchiro:", handle: handleChinchiroButton },
   {
     kind: "button",
@@ -193,7 +190,6 @@ const ROUTES = Object.freeze([
     handle: handleWinMultiplierInteraction,
   },
   { kind: "button", prefix: "anxin:", handle: handleCoinRequestButton },
-  { kind: "button", prefix: "rpsduel:", handle: handleRpsDuelButton },
   { kind: "button", prefix: "bjduel:", handle: handleBlackjackDuelButton },
   {
     kind: "button",
@@ -252,7 +248,7 @@ async function routeComponentInteraction(interaction, logger) {
   );
   if (!route) return false;
   const gameAction =
-    /^(replay:|rpsbot:|chinchiro:|rpsduel:|bjduel:|poker:|poker-private:|hardcore:|hardcore-setup:|hardcore-setup-modal:|mines:|coquay:|horserace:|blackjack:|gamebet:|gamebet-modal:|poker-modal:|poker-private-modal:|horserace-modal:)/.test(
+    /^(replay:|chinchiro:|bjduel:|poker:|poker-private:|hardcore:|hardcore-setup:|hardcore-setup-modal:|mines:|coquay:|horserace:|blackjack:|gamebet:|gamebet-modal:|poker-modal:|poker-private-modal:|horserace-modal:)/.test(
       interaction.customId,
     );
   if (

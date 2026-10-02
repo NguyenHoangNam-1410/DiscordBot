@@ -38,7 +38,7 @@ function dropText(drop) {
   if (drop.type === "diamonds") return `+${gems(drop.amount)}`;
   return `+${number(drop.amount)} ${drop.type}`;
 }
-// `BUFF SỰ KIỆN: +3 :gem: · 🟠 [SSR] Bùa Khắc Chế` (rỗng nếu không có gì rơi).
+// `BUFF SỰ KIỆN: +3 :gem: · 🟠 [SSR] Trúng Đậm` (rỗng nếu không có gì rơi).
 function bonusLine(drops) {
   if (!Array.isArray(drops) || !drops.length) return "";
   return `🎉 **BUFF SỰ KIỆN:** ${drops.map(dropText).join(" · ")}`;
@@ -118,7 +118,7 @@ function resultBlock({
     .join("\n");
 }
 
-// `+30.000 :coin: +100 :gem: +50 :test_tube: · 🟣 [SR] Bùa Khắc Chế ×1` — phần thưởng nhiệm vụ/thành tựu/cấp.
+// `+30.000 :coin: +100 :gem: +50 :test_tube: · 🟣 [SR] Trúng Đậm ×1` — phần thưởng nhiệm vụ/thành tựu/cấp.
 function rewardSummary({
   coins: coinAmount = 0,
   diamonds = 0,

@@ -2,7 +2,6 @@ const { db } = require("../db");
 
 const GAME_LABELS = Object.freeze({
   baucua: "🎲 Bầu cua",
-  oantuti: "✊ Oẳn tù tì",
   taixiu: "🎯 Tài xỉu",
   chinchiro: "🎲 Chinchiro",
   blackjack: "🃏 Xì dách",

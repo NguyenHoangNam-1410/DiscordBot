@@ -2,7 +2,6 @@ const { db } = require("../db");
 
 const GAMES = Object.freeze([
   "baucua",
-  "oantuti",
   "taixiu",
   "chinchiro",
   "blackjack",
@@ -16,7 +15,6 @@ const GAMES = Object.freeze([
 
 const GAME_LABELS = Object.freeze({
   baucua: "Bầu cua",
-  oantuti: "Oẳn tù tì",
   taixiu: "Tài xỉu",
   chinchiro: "Chinchiro",
   blackjack: "Xì dách",
