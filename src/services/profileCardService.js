@@ -109,27 +109,62 @@ function drawStat(ctx, x, y, label, value, accent) {
   ctx.fillRect(x, y + 41, 34, 3);
 }
 
-function drawSurvivalFrame(ctx, frame) {
-  if (!frame) return;
-  ctx.save();
+// Độ dày khung: phủ kín toàn bộ mép thẻ (kể cả bốn góc) để không lộ màu hồ sơ ở viền.
+const FRAME_THICKNESS = 15;
+
+function metalGradient(ctx, frame) {
   const metal = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
   frame.colors.forEach((color, index) =>
     metal.addColorStop(index / (frame.colors.length - 1), color),
   );
-  ctx.strokeStyle = metal;
-  ctx.lineWidth = 9;
-  roundedRect(ctx, 7, 7, WIDTH - 14, HEIGHT - 14, 22);
-  ctx.stroke();
-  ctx.lineWidth = 1;
+  return metal;
+}
+
+// Nền thẻ: có khung thì tô kim loại kín cả canvas rồi chỉ vẽ nền hồ sơ bên trong khung.
+function drawCardBackground(ctx, accent, frame) {
+  if (!frame) return drawBackground(ctx, accent);
+  ctx.fillStyle = metalGradient(ctx, frame);
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+  ctx.save();
+  roundedRect(
+    ctx,
+    FRAME_THICKNESS,
+    FRAME_THICKNESS,
+    WIDTH - FRAME_THICKNESS * 2,
+    HEIGHT - FRAME_THICKNESS * 2,
+    14,
+  );
+  ctx.clip();
+  drawBackground(ctx, accent);
+  ctx.restore();
+  return undefined;
+}
+
+// Chi tiết trang trí đè lên khung (đã được tô kín ở drawCardBackground).
+function drawSurvivalFrame(ctx, frame) {
+  if (!frame) return;
+  ctx.save();
+  const bevel = frame.colors[frame.colors.length - 1];
+  ctx.lineWidth = 2;
+  ctx.strokeStyle = bevel;
+  ctx.strokeRect(1, 1, WIDTH - 2, HEIGHT - 2);
+  ctx.lineWidth = 3;
   ctx.strokeStyle = frame.colors[1];
-  roundedRect(ctx, 15, 15, WIDTH - 30, HEIGHT - 30, 16);
+  roundedRect(
+    ctx,
+    FRAME_THICKNESS - 1.5,
+    FRAME_THICKNESS - 1.5,
+    WIDTH - (FRAME_THICKNESS - 1.5) * 2,
+    HEIGHT - (FRAME_THICKNESS - 1.5) * 2,
+    15,
+  );
   ctx.stroke();
   if (frame.id === "survival_diamond") {
     for (const [x, y] of [
-      [22, 22],
-      [WIDTH - 22, 22],
-      [22, HEIGHT - 22],
-      [WIDTH - 22, HEIGHT - 22],
+      [FRAME_THICKNESS / 2 + 1, FRAME_THICKNESS / 2 + 1],
+      [WIDTH - FRAME_THICKNESS / 2 - 1, FRAME_THICKNESS / 2 + 1],
+      [FRAME_THICKNESS / 2 + 1, HEIGHT - FRAME_THICKNESS / 2 - 1],
+      [WIDTH - FRAME_THICKNESS / 2 - 1, HEIGHT - FRAME_THICKNESS / 2 - 1],
     ]) {
       ctx.beginPath();
       ctx.moveTo(x, y - 10);
@@ -139,6 +174,8 @@ function drawSurvivalFrame(ctx, frame) {
       ctx.closePath();
       ctx.fillStyle = "#eaffff";
       ctx.fill();
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = frame.colors[1];
       ctx.stroke();
     }
   }
@@ -164,7 +201,7 @@ async function renderProfileCard({
   const target = Math.max(1, Number(xpTarget) || 200);
   const expPercent = Math.max(0, Math.min(100, (experience / target) * 100));
 
-  drawBackground(ctx, accent);
+  drawCardBackground(ctx, accent, appearance.frame);
   roundedRect(ctx, 34, 34, 220, 272, 18);
   ctx.fillStyle = "rgba(4,6,10,.65)";
   ctx.fill();
@@ -203,32 +240,35 @@ async function renderProfileCard({
   ctx.fillText(`#${rank}`, 866, 83);
   ctx.textAlign = "left";
 
+  // Thứ tự: Xu → Kim cương → Cấp độ → Tầng sinh tồn (tầng cao nhất đã đạt).
   drawStat(
     ctx,
     320,
     153,
-    "Số dư",
-    `${Number(account.balance).toLocaleString("vi-VN")} xu`,
+    "Xu",
+    Number(account.balance).toLocaleString("vi-VN"),
     accent,
   );
-  drawStat(ctx, 530, 153, "Tổng số ván", account.games_played, accent);
-  drawStat(ctx, 690, 153, "Cấp độ", level, accent);
   drawStat(
     ctx,
-    855,
+    530,
     153,
     "Kim cương",
     Number(progress.diamonds || 0).toLocaleString("vi-VN"),
     accent,
   );
+  drawStat(ctx, 690, 153, "Cấp độ", level, accent);
+  drawStat(
+    ctx,
+    815,
+    153,
+    "Tầng sinh tồn",
+    Number(appearance.bestFloor || 0).toLocaleString("vi-VN"),
+    accent,
+  );
 
   ctx.fillStyle = "rgba(255,255,255,.55)";
   ctx.font = '600 13px "Segoe UI", sans-serif';
-  ctx.fillText(
-    `SINH TỒN • TẦNG CAO NHẤT ${Number(appearance.bestFloor || 0).toLocaleString("vi-VN")}${appearance.frame ? ` • ${appearance.frame.name.toUpperCase()}` : ""}`,
-    320,
-    225,
-  );
   ctx.fillText(`TIẾN ĐỘ CẤP ${level}`, 320, 258);
   roundedRect(ctx, 420, 246, 430, 16, 8);
   ctx.fillStyle = "rgba(255,255,255,.1)";
