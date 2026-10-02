@@ -26,6 +26,8 @@ const {
   CLASS_SHRINE_TEXT,
   surpriseOptions,
   shrineOutcomes,
+  surpriseOdds,
+  FIXED_SURPRISES,
 } = require("./hardcoreEngine");
 const { regionForFloor, RIFT_MODIFIERS } = require("./hardcoreEngine");
 const { resultBlock } = require("../utils/rewardText");
@@ -73,6 +75,24 @@ function chestChanceLines(chest) {
   return `Tỷ lệ khi **Mở**:\n${rows
     .map(([mark, label, chance]) => `${mark} **${percentText(chance)}** · ${label}`)
     .join("\n")}\n**Tổng:** 🟢 có lợi ${percentText(share("🟢"))} · 🟡 đánh đổi ${percentText(share("🟡"))} · 🔴 bất lợi ${percentText(share("🔴"))}\n🔍 Kiểm tra: phát hiện Mimic (nếu có) **${percentText(odds.detect)}**.\n`;
+}
+
+// Tỷ lệ kết quả của sự kiện bí ẩn: loại có may rủi liệt kê từng lựa chọn, loại còn lại ghi rõ là cố định.
+function surpriseChanceLines(state, event) {
+  const sections = surpriseOdds(state, event);
+  if (!sections)
+    return FIXED_SURPRISES.includes(event.kind)
+      ? "\n🎯 **Không có may rủi:** kết quả cố định như mô tả."
+      : "";
+  const mark = { good: "🟢", mixed: "🟡", bad: "🔴" };
+  return `\n🎲 **Tỷ lệ kết quả**\n${sections
+    .map(
+      (section) =>
+        `**${section.title}**\n${section.outcomes
+          .map((item) => `${mark[item.tone]} **${percentText(item.chance)}** · ${item.text}`)
+          .join("\n")}`,
+    )
+    .join("\n")}`;
 }
 
 function shrineChanceLines(state) {
@@ -354,7 +374,7 @@ function encounterText(state) {
     return `${icon("skull")} **RNGesus · HP ∞ · KHÔNG THỂ BỊ ĐÁNH BẠI**\nChiến đấu là chết. Bỏ chạy: **75%**; thất bại tự dùng 1 vé nếu còn, hết vé thì chết. Chạy thành công giữ vé. Có thể dùng vé để vượt an toàn. Hối lộ: payout ×0,6 (giảm ${formatCoins(payoutReductionCost(state, 0.4))} xu hiện tại). Cầu nguyện: **${Math.round((encounter.prayerChance ?? 0.3) * 100)}%**, nhận 85% SSR / 15% UR; trượt sẽ chết.`;
   if (encounter.type === "surprise")
     return SURPRISE_EVENTS[encounter.kind]
-      ? `❓ **${SURPRISE_EVENTS[encounter.kind].name}**\n${SURPRISE_EVENTS[encounter.kind].text}${encounter.kind === "class_shrine" ? `\n${CLASS_SHRINE_TEXT[state.classKey]}` : ""}${encounter.kind === "horadric" ? `\nMón sẽ nghiền: **${encounter.targetName}** [${rarityLabel(encounter.targetRarity)}].` : ""}\nCó thể bỏ qua hoặc rút thưởng. Kết quả ẩn đã lưu; mở UI không roll lại.`
+      ? `❓ **${SURPRISE_EVENTS[encounter.kind].name}**\n${SURPRISE_EVENTS[encounter.kind].text}${encounter.kind === "class_shrine" ? `\n${CLASS_SHRINE_TEXT[state.classKey]}` : ""}${encounter.kind === "horadric" ? `\nMón sẽ nghiền: **${encounter.targetName}** [${rarityLabel(encounter.targetRarity)}].` : ""}${surpriseChanceLines(state, encounter)}\nCó thể bỏ qua hoặc rút thưởng. Kết quả ẩn đã lưu; mở UI không roll lại.`
       : "❓ **Lối đi bí ẩn từ run cũ** · Khám phá hoặc bỏ qua; giữ nguyên kết quả đã lưu.";
   if (encounter.type === "trap") {
     const names = {
