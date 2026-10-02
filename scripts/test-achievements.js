@@ -12,7 +12,7 @@ const { achievementPanel } = require("../src/commands/kiemtra");
 
 assert.equal(new Set(ACHIEVEMENTS.map((item) => item.id)).size, ACHIEVEMENTS.length, "id thành tựu phải duy nhất");
 const byMetric = (metric) => ACHIEVEMENTS.filter((item) => item.metric === metric);
-for (const metric of ["hardcoreRuns", "hardcoreEscapes", "hardcoreCompletions", "betWins", "betGames", "betStaked", "betBigWin"])
+for (const metric of ["hardcoreRuns", "hardcoreEscapes", "hardcoreCompletions", "betWins", "betGames", "betStaked", "betBigWin", "gachaPulls", "gachaSR", "gachaSSR", "gachaUR", "gachaSpent"])
   assert(byMetric(metric).length >= 2, `thiếu thành tựu ${metric}`);
 
 const G = "g", U = "u";
@@ -40,12 +40,26 @@ assert.equal(progress("bet_staked_100k").progress, 100_000, "chỉ tính tiền 
 assert(progress("bet_staked_100k").complete && !progress("bet_staked_1m").complete);
 assert(progress("bet_big_50k").complete && !progress("bet_big_500k").complete);
 
+const gh = db.prepare("INSERT INTO gacha_history(guild_id,user_id,pulls,diamond_cost,results_json,created_at,payment_type) VALUES(?,?,?,?,?,?,?)");
+const tiers = (list) => JSON.stringify(list.map((tier) => ({ tier })));
+gh.run(G, U, 10, 900, tiers(["XU", "R", "R", "R", "R", "R", "R", "SR", "SR", "SSR"]), now, "diamonds");
+gh.run(G, U, 1, 0, tiers(["UR"]), now, "gacha_ticket_1");
+gh.run("other", U, 5, 500, tiers(["UR", "UR", "UR", "UR", "UR"]), now, "diamonds");
+assert.equal(progress("gacha_pulls_10").progress, 10, "11 lượt trong server này, trần theo mục tiêu");
+assert(progress("gacha_pulls_10").complete && !progress("gacha_pulls_50").complete);
+assert.equal(progress("gacha_sr_100").progress, 4, "SR+ = SR, SSR, UR (2+1+1)");
+assert.equal(progress("gacha_ssr_20").progress, 2, "SSR+ = SSR, UR");
+assert.equal(progress("gacha_ur_10").progress, 1, "chỉ UR của server này");
+assert(progress("gacha_ur_1").complete && !progress("gacha_ur_3").complete);
+assert.equal(progress("gacha_spent_1k").progress, 900, "chỉ cộng kim cương đã tiêu, vé không tính");
+assert(!progress("gacha_spent_1k").complete);
+
 const claimed = claimAchievements(G, U).map((item) => item.id);
-for (const id of ["hc_runs_25", "hc_escape_10", "hc_clear_1", "bet_wins_10", "bet_staked_100k", "bet_big_50k"]) assert(claimed.includes(id), `phải nhận được ${id}`);
+for (const id of ["hc_runs_25", "hc_escape_10", "hc_clear_1", "bet_wins_10", "bet_staked_100k", "bet_big_50k", "gacha_pulls_10", "gacha_ssr_1", "gacha_ur_1"]) assert(claimed.includes(id), `phải nhận được ${id}`);
 const again = claimAchievements(G, U).map((item) => item.id);
 assert(again.every((id) => !claimed.includes(id)), "không nhận trùng thành tựu đã nhận (xu thưởng có thể mở thêm mốc xu)");
 
-for (const category of ["hardcoreRuns", "hardcoreEscapes", "hardcoreCompletions", "betWins", "betGames", "betStaked", "betBigWin"]) {
+for (const category of ["gachaPulls", "gachaSR", "gachaSSR", "gachaUR", "gachaSpent", "hardcoreRuns", "hardcoreEscapes", "hardcoreCompletions", "betWins", "betGames", "betStaked", "betBigWin"]) {
   const embed = achievementPanel(G, U, "all", category, 0).embeds[0].toJSON();
   assert(String(embed.description || JSON.stringify(embed.fields)).length > 10, `bộ lọc ${category} phải có kết quả`);
 }
