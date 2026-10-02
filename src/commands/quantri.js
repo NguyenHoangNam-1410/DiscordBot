@@ -19,6 +19,7 @@ const {
   resetServerPlayerData,
 } = require("../services/adminDataService");
 const game = require("./game");
+const { roleRewardPanel, winMultiplierPanel } = require("./quantriPanels");
 const {
   GAMES,
   GAME_LABELS,
@@ -51,9 +52,6 @@ const GAME_NAMES = {
   health: "trangthai",
   configs: "xemcauhinh",
   configreset: "khoiphuc",
-  roleweeklyset: "datthuongvaitro",
-  roleweeklyremove: "xoathuongvaitro",
-  roleweeklylist: "xemthuongvaitro",
   gachaadd: "themgacha",
   gachatoggle: "batgacha",
   gachapool: "xemgacha",
@@ -135,6 +133,16 @@ const options = [
     type: ApplicationCommandOptionType.Subcommand,
     name: "baotri",
     description: "Bật/tắt bảo trì từng game trong server",
+  },
+  {
+    type: ApplicationCommandOptionType.Subcommand,
+    name: "xemthuongvaitro",
+    description: "Xem và quản lý thưởng vai trò hàng tuần (thêm, sửa, xóa bằng nút)",
+  },
+  {
+    type: ApplicationCommandOptionType.Subcommand,
+    name: "hesothang",
+    description: "Xem và chỉnh hệ số thắng cược 1-1 với nhà cái của từng game",
   },
   ...adminOptions(shop, SHOP_NAMES, ["xem"]),
   {
@@ -251,6 +259,23 @@ module.exports = {
         });
       return interaction.reply({
         ...maintenancePanel(interaction.guildId, interaction.user.id),
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+    if (["xemthuongvaitro", "hesothang"].includes(interaction.options.getSubcommand())) {
+      const name = interaction.options.getSubcommand();
+      if (!interaction.guildId || !isAdmin(interaction))
+        return interaction.reply({
+          content:
+            name === "hesothang"
+              ? "Chỉ admin mới được chỉnh hệ số thắng."
+              : "Chỉ admin mới được quản lý thưởng vai trò.",
+          flags: MessageFlags.Ephemeral,
+        });
+      return interaction.reply({
+        ...(name === "hesothang"
+          ? winMultiplierPanel(interaction.guildId, interaction.user.id)
+          : roleRewardPanel(interaction.guildId, interaction.user.id, { interaction })),
         flags: MessageFlags.Ephemeral,
       });
     }

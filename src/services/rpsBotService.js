@@ -16,6 +16,7 @@ const {
 } = require("./effectStateService");
 const { formatCoins } = require("../utils/economy");
 const { resultBlock, coins } = require("../utils/rewardText");
+const { getWinMultiplier, formatMultiplier } = require("./winMultiplierService");
 
 const HANDS = {
   bua: { label: "Búa", emoji: "✊", beats: "keo" },
@@ -91,7 +92,7 @@ function pendingEmbed(round) {
     .setColor(0x5865f2)
     .setTitle("✊ OẲN TÙ TÌ · XÁC NHẬN")
     .setDescription(
-      `Bạn chọn ${HANDS[round.choice].emoji} **${HANDS[round.choice].label}** · Cược **${formatCoins(round.stake)} :coin:**\n\nBấm xác nhận để bắt đầu.`,
+      `Bạn chọn ${HANDS[round.choice].emoji} **${HANDS[round.choice].label}** · Cược **${formatCoins(round.stake)} :coin:** · Thắng ${formatMultiplier(getWinMultiplier(round.guild_id, "oantuti"))}\n\nBấm xác nhận để bắt đầu.`,
     )
     .setFooter({ text: "Hết hạn sau 60 giây; chưa trừ xu trước khi xác nhận" });
 }
@@ -142,10 +143,11 @@ const settleTx = db.transaction((id, userId, now) => {
         : "loss";
   const cowardWin = effect?.effect_id === "rps_draw_win" && outcome === "draw";
   if (cowardWin) outcome = "win";
+  const winMultiplier = getWinMultiplier(row.guild_id, "oantuti");
   let payout = cowardWin
-    ? Math.floor(row.stake * 1.5)
+    ? Math.floor(row.stake * Math.min(1.5, winMultiplier))
     : outcome === "win"
-      ? row.stake * 2
+      ? Math.floor(row.stake * winMultiplier)
       : outcome === "draw"
         ? row.stake
         : 0;

@@ -18,6 +18,7 @@ const { createFairness, fairInt } = require("./fairnessService");
 const { consumeInventory, getInventoryQuantity } = require("./shopService");
 const engine = require("./coquayEngine");
 const { resultBlock, coins } = require("../utils/rewardText");
+const { getWinMultiplier, formatMultiplier } = require("./winMultiplierService");
 
 const MIN_BET = 10;
 const MAX_BET = 100_000;
@@ -46,8 +47,9 @@ function rngFor(state) {
       : crypto.randomInt(maximum);
   };
 }
-function payoutFor(stake) {
-  return Math.floor(stake * PAYOUT_MULTIPLIER);
+// Hệ số được khóa vào ván lúc bắt đầu (admin chỉnh bằng /quantri hesothang); ván cũ chưa có thì dùng mặc định.
+function payoutFor(stake, multiplier = PAYOUT_MULTIPLIER) {
+  return Math.floor(stake * multiplier);
 }
 function getSession(id) {
   return (
@@ -130,6 +132,7 @@ const startTx = db.transaction(
       fairCounter: 0,
       usedItems: {},
       forcedChambers,
+      winMultiplier: getWinMultiplier(guildId, "coquay"),
     };
     loadNext(state);
     const now = Date.now();
@@ -212,7 +215,7 @@ function runBot(state) {
 }
 function settle(session, state, reason) {
   const won = reason === "won";
-  const payout = won ? payoutFor(state.stake) : 0;
+  const payout = won ? payoutFor(state.stake, state.winMultiplier) : 0;
   const outcome = won ? "win" : "loss";
   const account = settleReservedGame({
     guildId: session.guild_id,
@@ -321,7 +324,7 @@ function coquayEmbed(
       },
       {
         name: "🏆 THẮNG NHẬN",
-        value: `**${formatCoins(payoutFor(state.stake))} :coin:** (x${PAYOUT_MULTIPLIER})`,
+        value: `**${formatCoins(payoutFor(state.stake, state.winMultiplier))} :coin:** (${formatMultiplier(state.winMultiplier ?? PAYOUT_MULTIPLIER)})`,
         inline: true,
       },
       {

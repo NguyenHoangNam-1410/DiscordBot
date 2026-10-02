@@ -20,6 +20,7 @@ const {
   bonusLine,
   coins,
 } = require("../utils/rewardText");
+const { getWinMultiplier, formatMultiplier } = require("./winMultiplierService");
 
 const ROUND_MS = 30_000;
 const MIN_BET = 10;
@@ -105,6 +106,13 @@ function roundStats(roundId) {
     .get(roundId);
 }
 
+function roundEvenMultiplier(round) {
+  try {
+    return JSON.parse(round.result_json || "{}").evenMultiplier || getWinMultiplier(round.guild_id, "taixiu");
+  } catch {
+    return 2;
+  }
+}
 function roundEmbed(round) {
   const stats = roundStats(round.id);
   const maxBet = getGameBetLimit(round.guild_id, round.game);
@@ -112,7 +120,7 @@ function roundEmbed(round) {
   const description =
     round.game === "baucua"
       ? "Chọn một hoặc nhiều linh vật. Linh vật xuất hiện 1/2/3 lần trả lãi 1×/2×/3× tiền cược. Vật phẩm không áp dụng."
-      : "Mỗi người chỉ chọn một cửa trong ván và có thể cược thêm vào cửa đó. Tài/Xỉu và Chẵn/Lẻ trả 1:1, nhưng thua khi ra bộ ba. Bộ ba bất kỳ trả 34:1. Tổng cụ thể trả theo độ hiếm. Vật phẩm không áp dụng.";
+      : `Mỗi người chỉ chọn một cửa trong ván và có thể cược thêm vào cửa đó. Tài/Xỉu và Chẵn/Lẻ trả ${formatMultiplier(roundEvenMultiplier(round))} tiền cược (nhận về cả vốn), nhưng thua khi ra bộ ba. Bộ ba bất kỳ trả 34:1. Tổng cụ thể trả theo độ hiếm. Vật phẩm không áp dụng.`;
   const embed = new EmbedBuilder()
     .setColor(round.game === "baucua" ? 0xe67e22 : 0x8e44ad)
     .setTitle(`🎲 ${gameLabel(round.game)} · ĐANG NHẬN CƯỢC`)
@@ -236,18 +244,20 @@ const placeBetTx = db.transaction(({ roundId, userId, choice, amount }) => {
   };
 });
 
-function calculatePayout(game, choice, amount, result) {
+// evenMultiplier: hệ số cửa 1:1 (Tài/Xỉu/Chẵn/Lẻ), admin chỉnh bằng /quantri hesothang và được khóa vào ván lúc mở.
+function calculatePayout(game, choice, amount, result, evenMultiplier = 2) {
+  const even = Math.floor(amount * evenMultiplier);
   if (game === "baucua") {
     const matches = result.symbols.filter((symbol) => symbol === choice).length;
     return matches ? amount * (matches + 1) : 0;
   }
   const { dice, total, triple } = result;
   if (choice === "tai")
-    return !triple && total >= 11 && total <= 17 ? amount * 2 : 0;
+    return !triple && total >= 11 && total <= 17 ? even : 0;
   if (choice === "xiu")
-    return !triple && total >= 4 && total <= 10 ? amount * 2 : 0;
-  if (choice === "chan") return !triple && total % 2 === 0 ? amount * 2 : 0;
-  if (choice === "le") return !triple && total % 2 === 1 ? amount * 2 : 0;
+    return !triple && total >= 4 && total <= 10 ? even : 0;
+  if (choice === "chan") return !triple && total % 2 === 0 ? even : 0;
+  if (choice === "le") return !triple && total % 2 === 1 ? even : 0;
   if (choice === "bo_ba") return triple ? amount * 35 : 0;
   if (choice.startsWith("tong:")) {
     const target = Number(choice.split(":")[1]);
@@ -306,7 +316,13 @@ const settleTx = db.transaction((roundId, forcedDice = null) => {
   for (const bet of bets) {
     const summary = users.get(bet.user_id) || { stake: 0, payout: 0 };
     summary.stake += bet.amount;
-    const payout = calculatePayout(round.game, bet.choice, bet.amount, result);
+    const payout = calculatePayout(
+      round.game,
+      bet.choice,
+      bet.amount,
+      result,
+      stored.evenMultiplier || getWinMultiplier(round.guild_id, "taixiu"),
+    );
     summary.payout += payout;
     users.set(bet.user_id, summary);
     if (!individualBets.has(bet.user_id)) individualBets.set(bet.user_id, []);
@@ -506,7 +522,10 @@ async function createRound(interaction, game, logger = console) {
     message_id: null,
     status: "open",
     closes_at: now + ROUND_MS,
-    result_json: JSON.stringify({ fair }),
+    result_json: JSON.stringify({
+      fair,
+      ...(game === "taixiu" ? { evenMultiplier: getWinMultiplier(interaction.guildId, "taixiu") } : {}),
+    }),
     created_at: now,
   };
   db.prepare(

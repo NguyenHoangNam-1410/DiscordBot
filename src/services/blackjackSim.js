@@ -7,6 +7,7 @@ const {
   createShoe,
   PLAYER_MIN_STAND,
   DEALER_MIN_STAND,
+  REGULAR_WIN_MULTIPLIER,
 } = require("./blackjackService");
 
 const UNIT_BET = 1000; // engine floors payouts to whole coins, so simulate a realistic stake instead of 1
@@ -21,7 +22,7 @@ function legalAction(cards, action) {
 }
 
 // Mirrors blackjackService.actionTx/settleState for a hand without items: hit, stand, double, one split.
-function playRound(deck, strategy) {
+function playRound(deck, strategy, winMultiplier = REGULAR_WIN_MULTIPLIER) {
   const draw = () => deck.pop();
   const hands = [{ cards: [], bet: UNIT_BET, status: "playing" }];
   const dealer = [];
@@ -29,7 +30,7 @@ function playRound(deck, strategy) {
   dealer.push(draw());
   hands[0].cards.push(draw());
   dealer.push(draw());
-  const natural = initialResult({ hands, dealer });
+  const natural = initialResult({ hands, dealer }, winMultiplier);
   if (natural)
     return { stake: UNIT_BET, payout: natural.payout, hands: 1, natural: true };
   let split = false;
@@ -83,7 +84,8 @@ function playRound(deck, strategy) {
     dealer.push(draw());
   const stake = hands.reduce((sum, hand) => sum + hand.bet, 0);
   const payout = hands.reduce(
-    (sum, hand) => sum + evaluateHand(hand.cards, hand.bet, dealer).payout,
+    (sum, hand) =>
+      sum + evaluateHand(hand.cards, hand.bet, dealer, winMultiplier).payout,
     0,
   );
   return { stake, payout, hands: hands.length, natural: false };
@@ -120,6 +122,7 @@ function simulate(
   strategyName,
   rounds,
   random = (max) => crypto.randomInt(max),
+  winMultiplier = REGULAR_WIN_MULTIPLIER,
 ) {
   const strategy = STRATEGIES[strategyName];
   const template = freshShoeCards();
@@ -143,7 +146,7 @@ function simulate(
         return typeof value === "function" ? value.bind(target) : value;
       },
     });
-    const result = playRound(lazy, strategy);
+    const result = playRound(lazy, strategy, winMultiplier);
     stake += result.stake;
     payout += result.payout;
     if (result.natural) naturals += 1;

@@ -43,7 +43,7 @@ Bot cần bật **Message Content Intent** trong Discord Developer Portal nếu 
 - **Gacha: tỷ lệ theo độ hiếm là cố định.** Mặc định XU 50% · R 22% · SR 14% · SSR 10% · UR 4%. Bậc được chọn trước theo tỷ lệ này, rồi vật phẩm trong bậc được chọn **ngẫu nhiên đều**; thêm hay bớt vật phẩm không làm đổi tỷ lệ bậc (bậc có nhiều vật phẩm chỉ chia nhỏ tỷ lệ cho từng vật phẩm). Admin đổi tỷ lệ bậc bằng `/quantri config` với `GACHA_RATE_XU|R|SR|SSR|UR` (trọng số, tự chuẩn hóa về 100%; SR/SSR/UR tối thiểu 0.1), `/quantri themgacha` để thêm vật phẩm catalog vào bậc, `/quantri batgacha` để bật/tắt một phần thưởng và `/quantri xemgacha` để xem tỷ lệ từng bậc và từng vật phẩm.
 - **Thưởng sự kiện sau ván:** mỗi ván hợp lệ roll độc lập khả năng rơi thêm xu, gem (chỉnh bằng `/quantri config`) và **vật phẩm riêng của chính game đó** (không rơi vật phẩm dùng chung như vé Gacha). Mỗi game có tỷ lệ riêng: Bầu cua, Tài xỉu, Xì dách, Dò mìn, Chinchiro 4% · Đua ngựa, Poker 6% · Cò quay Nga 5% · Oẳn tù tì, Vua tiếng Việt 3% · Sinh tồn chưa có vật phẩm riêng nên không rơi. Độ hiếm rơi cố định R 60% · SR 28% · SSR 9% · UR 3% (game không có vật phẩm ở độ hiếm nào thì bỏ qua và chuẩn hóa lại), vật phẩm trong độ hiếm chọn ngẫu nhiên đều. Hệ số chung `GAME_ITEM_DROP_MULTIPLIER` (mặc định 1, 0 để tắt) nhân tất cả tỷ lệ này.
 - `/quantri datbuff` bật hệ số nhân có thời hạn: **xu drop**, **gem drop** (nhân số lượng khi đã roll trúng), **tỷ lệ rơi vật phẩm game** (nhân tỷ lệ rơi vật phẩm, tối đa 100%) và **tăng tỷ lệ ra vật phẩm Gacha** (nhân tỷ lệ các bậc R–UR so với bậc XU). Dùng `/quantri datbuff` với hành động `Xem buff đang chạy` để xem thời gian còn lại.
-- Admin dùng `/quantri datthuongvaitro` để gắn mức xu riêng, `/quantri xemthuongvaitro` để xem và `/quantri xoathuongvaitro` để xóa. Người chơi phải dùng `/nhiemvu nhan` (loại Thưởng vai trò) trong tuần để nhận; quên nhận sẽ mất phần tuần đó.
+- Admin dùng `/quantri xemthuongvaitro` để mở bảng thưởng vai trò hàng tuần: xem danh sách và dùng các nút **Thêm / Sửa vai trò** (chọn vai trò rồi nhập số xu) hoặc **Xóa vai trò**; ba lệnh riêng lẻ cũ đã được gộp vào bảng này để nhường chỗ cho lệnh mới. Người chơi phải dùng `/nhiemvu nhan` (loại Thưởng vai trò) trong tuần để nhận; quên nhận sẽ mất phần tuần đó.
 
 ## Kiểm chứng công bằng
 
@@ -129,3 +129,17 @@ Mọi game dùng chung `src/utils/rewardText.js`: metric luôn đi kèm icon (xu
 ```
 
 Số xu là **thay đổi ròng** (tiền nhận về − tiền cược): thắng `+`, thua `-` (mất cược), hòa `±0`. Vật phẩm rơi hiện icon độ hiếm: nếu đã tải emoji ứng dụng tên `r_icon`, `sr_icon`, `ssr_icon`, `ur_icon` thì bot dùng chúng, không thì dùng vòng tròn màu (🔵🟣🟠🔴).
+
+## Hệ số thắng cược 1-1 với nhà cái
+
+`/quantri hesothang` mở bảng (menu + modal) để admin chỉnh **hệ số thắng** của các game đấu 1-1 với nhà cái. Hệ số là tổng tiền nhận về / tiền cược khi thắng (x2 = ăn 1 đền 1), cho phép từ **x1,1 đến x3**:
+
+| Game | Mặc định | Phạm vi áp dụng |
+|---|---|---|
+| Xì dách (với bot) | x2 | Thắng thường và Ngũ linh; Xì dách tự nhiên = hệ số + 0,5 |
+| Oẳn tù tì (với bot) | x2 | Hòa vẫn hoàn cược |
+| Chinchiro | x1,8 | Thắng bằng điểm cao hơn nhà cái; Shigoro, Bão, Pin-Zoro giữ nguyên |
+| Cò quay Nga | x2 | Hạ Bot về 0 máu |
+| Tài xỉu | x2 | Cửa Tài/Xỉu/Chẵn/Lẻ (ra bộ ba vẫn thua); Bộ ba và Tổng cụ thể giữ nguyên |
+
+Hệ số được khóa vào ván lúc bắt đầu (Tài xỉu: lúc mở ván), nên ván đang chơi không bị đổi giữa chừng. Bảng hiển thị RTP ước tính khi chơi tối ưu và không dùng vật phẩm, kèm cảnh báo ⚠️ nếu trên 100% (người chơi có lợi). Giá trị được lưu theo từng server và có nút **Khôi phục mặc định**. Chênh lệch nhỏ vì làm tròn xu xuống số nguyên.
