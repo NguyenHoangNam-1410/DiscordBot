@@ -558,7 +558,7 @@ function generateEncounter(state, session, rng) {
       type: "rngesus",
       name: "RNGesus",
       fleeSuccess: rng() < 0.75,
-      prayerSuccess: rng() < 0.1,
+      prayerSuccess: rng() < 0.3,
       prayerItem: randomItem(rng() < 0.85 ? "legendary" : "cursed", rng),
     };
   const due = state.debts.findIndex((debt) => debt.due <= state.floor);
@@ -1054,7 +1054,7 @@ function actions(state) {
       { action: "fight", label: "Đánh (chết)" },
       { action: "flee", label: "Chạy · 75%" },
       { action: "bribe", label: "Hối lộ · 40% payout" },
-      { action: "pray", label: "Cầu nguyện · 10%" },
+      { action: "pray", label: "Cầu nguyện · 30%" },
       {
         action: "ticket",
         label: "Vé Thoát Hiểm",
