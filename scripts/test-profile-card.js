@@ -46,7 +46,7 @@ const borderPoints = (thickness) => { const points = [];
   for (const [x, y] of [[300, 20], [650, 320], [140, 330]]) assert(lightness(at(plain, x, y)) > 200, `nền thẻ phải sáng kiểu pastel tại (${x},${y})`);
   // Nền một màu phẳng, không gradient hay đường trang trí: các điểm trống ngoài panel giống hệt nhau
   const flat = at(plain, 300, 20);
-  for (const [x, y] of [[990, 330], [10, 330], [650, 336], [20, 150], [975, 150], [500, 12], [10, 12]]) assert.deepEqual(at(plain, x, y), flat, `nền phải là một màu phẳng, điểm (${x},${y}) khác`);
+  for (const [x, y] of [[990, 330], [10, 330], [650, 336], [6, 150], [995, 150], [500, 12], [10, 12]]) assert.deepEqual(at(plain, x, y), flat, `nền phải là một màu phẳng, điểm (${x},${y}) khác`);
 
   // Nhãn và thứ tự chỉ số: Xu → Kim cương → Cấp độ → Tầng sinh tồn
   drawn.length = 0; await render(FRAMES.silver);
