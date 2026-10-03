@@ -63,7 +63,7 @@ function statLine(s, changes = false, compact = false) {
     `${E.str} STR **${s.str}**${d("str")} · ${E.dex} DEX **${s.dex}**${d("dex")} · ${E.vit} VIT **${s.vit}**${d("vit")} · ${E.ene} ENE **${s.ene}**${d("ene")}`,
     `${E.mana} Mana **${s.mana}/${s.maxMana}**${d("mana")}${d("maxMana", " MAX")} · ${E.potion} Bình ${s.potions}${d("potions")} · ${E.ticket} Vé ${s.escapeTokens}${d("escapeTokens")}`,
     `${E.attack} Vật lý **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")} · ${E.magic} Phép **${s.spellMin}–${s.spellMax}**${d("spellMin")}`,
-    `${E.defense} DEF **${defense}**${inverse ? " (Paradox)" : d("defense")} · RES **${s.resistance}%**${d("resistance")} · ${E.luck} LUCK **${s.luck}**${d("luck")}`,
+    `${E.defense} DEF **${defense}**${inverse ? " (Paradox)" : d("defense")} · ${E.res} RES **${s.resistance}%**${d("resistance")} · ${E.luck} LUCK **${s.luck}**${d("luck")}`,
   ];
   if (!compact)
     lines.push(
@@ -209,7 +209,7 @@ function encounterText(s) {
       deimoss: "Abyssal Spires giảm 25% sát thương nhận.",
     };
     return (
-      `**${e.name}** · ${e.rank}\n${E.hp} ${e.hp}/${e.maxHp} · ${E.attack} ${e.damageMin}–${e.damageMax} · ${E.defense} ${e.defense} · RES ${e.resistance}%\n` +
+      `**${e.name}** · ${e.rank}\n${E.hp} ${e.hp}/${e.maxHp} · ${E.attack} ${e.damageMin}–${e.damageMax} · ${E.defense} ${e.defense} · ${E.res} RES ${e.resistance}%\n` +
       `Đòn quái kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}** · Dự báo nhận **${p.low}–${p.high} HP** · Quái đánh trúng bạn **${percent(p.chance)}** *(chưa Crit/chưa Thủ)*\n` +
       `Bạn đánh vật lý trúng quái **${percent(world.hitChance(s.accuracy, e.evasion))}**; trượt gây 0 DMG nhưng vẫn hồi Mana khi đánh thường. Skill phép luôn trúng.\n` +
       (e.mechanic ? `Cơ chế: ${mechanisms[e.mechanic]}\n` : "") +
@@ -221,7 +221,7 @@ function encounterText(s) {
   if (e.type === "chest")
     return `**${e.name}**${e.revealed ? " · ⚠️ Đã phát hiện Mimic" : ""}\nKiểm tra: ${percent(e.detectionChance)} phát hiện nếu là Mimic; không phát hiện chưa chắc an toàn. Bán: +15% cược. Mở: nhận item/rỗng/SSR giả hoặc chiến đấu Mimic.\nPity SR+: ${s.pityRare}/5 · Pity SSR: ${s.pityLegendary}/10 · ${e.guaranteed ? "Hòm này đảm bảo SR+, không Mimic." : `Cơ hội SSR cơ bản ${percent(core.legendaryChance(s))}.`}`;
   if (e.type === "shrine")
-    return "🗿 **SHRINE KHÔNG RÕ NGUỒN GỐC**\nMỗi loại **16,7%** khi chạm:\n💚 **Healing:** hồi đầy HP.\n🛡️ **Armor:** +5 STR hoặc +5 VIT (50/50).\n🩸 **Blood:** +8 STR, −5 VIT.\n✨ **Experience:** bonus +25% tiền cược.\n☣️ **Corrupted:** +12 STR, −8 VIT.\n🤡 **Fake:** mất 30% Max HP, tối thiểu 10.\nCó thể bỏ qua.";
+    return `${E.shrine} **SHRINE KHÔNG RÕ NGUỒN GỐC**\nMỗi loại **16,7%** khi chạm:\n💚 **Healing:** hồi đầy HP.\n🛡️ **Armor:** +5 STR hoặc +5 VIT (50/50).\n🩸 **Blood:** +8 STR, −5 VIT.\n✨ **Experience:** bonus +25% tiền cược.\n☣️ **Corrupted:** +12 STR, −8 VIT.\n🤡 **Fake:** mất 30% Max HP, tối thiểu 10.\nCó thể bỏ qua.`;
   if (e.type === "echo")
     return `**${e.name}** · ${e.echo.profile.classKey} · tử trận tầng ${e.echo.floor} · ${e.echo.kills} mạng\nCầu nguyện: hồi 15% HP, giữ mộ. Cướp: nhận một item, 50% đánh thức. Khiêu chiến: quái mạnh hơn 25%, hạ mới nhận loot. Bỏ đi: giữ mộ. Claim hết hạn sau 30 phút không thao tác.`;
   if (e.type === "memory")
@@ -275,10 +275,10 @@ function encounterSummary(s) {
         ancient_mimic: "Ancient Mimic",
       }[e.rank] || e.rank;
     const preview = core.incomingPreview(s);
-    return `👹 **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} Sát thương ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · RES ${e.resistance}%\nBạn đánh vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} HP** · Quái trúng bạn **${percent(preview.chance)}** *(chưa Crit/Phòng thủ)*`;
+    return `👹 **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} Sát thương ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\nBạn đánh vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} HP** · Quái trúng bạn **${percent(preview.chance)}** *(chưa Crit/Phòng thủ)*`;
   }
   if (e.type === "chest")
-    return `📦 **${e.name}** · ${e.revealed ? "😈 Đã phát hiện Mimic" : e.inspected ? "Đã kiểm tra" : "Chưa kiểm tra"}\n${e.guaranteed ? "Đảm bảo SR+, không Mimic." : "Kiểm tra một lần; không phát hiện chưa chắc an toàn."}`;
+    return `${E.chest} **${e.name}** · ${e.revealed ? "😈 Đã phát hiện Mimic" : e.inspected ? "Đã kiểm tra" : "Chưa kiểm tra"}\n${e.guaranteed ? "Đảm bảo SR+, không Mimic." : "Kiểm tra một lần; không phát hiện chưa chắc an toàn."}`;
   if (e.type === "rngesus")
     return "☠️ **RNGesus** · Không thể thắng hoặc rút thưởng.\nBỏ chạy 75%; thất bại tự dùng vé, hết vé thì chết. Cầu nguyện 30%; trượt chết. Hối lộ giảm 40% payout.";
   if (e.type === "shrine") return encounterText(s);
@@ -341,7 +341,7 @@ function viewLabel(tab, s) {
   return {
     stats: "Chỉ số",
     items: `Vật phẩm (${s.items.length})`,
-    effects: "Rift & hiệu ứng",
+    effects: `Rift & hiệu ứng (${Object.values(s.modifiers || {}).filter((stacks) => stacks > 0).length})`,
     encounter: "Chi tiết",
   }[tab];
 }
@@ -564,13 +564,13 @@ function button(
     skill: ["sparkles", "✨"],
     potion: ["potion", "🧪"],
     retreat: ["moneybag", "💰"],
-    open: ["unlock", "🔓"],
+    open: ["chest", "📦"],
     inspect: ["mag", "🔍"],
     sell: ["moneybag", "💰"],
     leave: ["walking", "🚶"],
     skip: ["walking", "🚶"],
     event_skip: ["walking", "🚶"],
-    touch: ["moyai", "🗿"],
+    touch: ["shrine", "🗿"],
     next: ["arrow_right", "➡️"],
     fight: ["PHYS", "⚔️"],
     flee: ["runner", "🏃"],
