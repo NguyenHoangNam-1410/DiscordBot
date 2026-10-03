@@ -17,7 +17,7 @@ const RULES = {
   ],
   chinchiro: [
     "Chinchiro",
-    "Nhà cái lắc trước. Khi thắng bằng điểm thường, lãi 80% cược (hệ số mặc định x1,8; admin chỉnh được bằng `/quantri hesothang`); Shigoro lãi x1, Bão x2, Pin-Zoro x3. Hifumi 1-2-3 mất cược và bị phạt thêm x1. Bot giữ trước một khoản ký quỹ bằng tiền cược để bảo đảm phạt Hifumi, rồi hoàn lại khi không bị phạt. Mỗi ván mới cách nhau 30 giây, kể cả bấm Chơi lại.",
+    "Nhà cái lắc trước. Khi thắng bằng điểm thường, lãi 80% cược (hệ số mặc định x1,8; admin chỉnh được bằng `/quantri hesothang`); Shigoro lãi x1, Bão x2, Pin-Zoro x3. Hifumi 1-2-3 mất cược và bị phạt thêm x1. Bot giữ trước một khoản ký quỹ bằng tiền cược để bảo đảm phạt Hifumi, rồi hoàn lại khi không bị phạt.",
   ],
   blackjack: [
     "Xì dách",

@@ -26,7 +26,6 @@ const { getWinMultiplier } = require("./winMultiplierService");
 
 const MIN_BET = 10;
 const MAX_BET = 100_000;
-const REPLAY_COOLDOWN_MS = 30_000;
 const NORMAL_WIN_MULTIPLIER = 0.8;
 const DICE_FALLBACK = [
   ":one:",
@@ -283,26 +282,12 @@ const startTx = db.transaction(
     }
     if (getSessionByUser(guildId, userId)) throw new Error("ACTIVE_SESSION");
     const now = Date.now();
-    const nextAt =
-      db
-        .prepare(
-          "SELECT next_at FROM chinchiro_cooldowns WHERE guild_id=? AND user_id=?",
-        )
-        .get(String(guildId), String(userId))?.next_at || 0;
-    if (nextAt > now) {
-      const error = new Error("CHINCHIRO_COOLDOWN");
-      error.retryAfter = nextAt - now;
-      throw error;
-    }
     spendCoins({
       guildId,
       userId,
       amount: stake * 2,
       reason: "chinchiro:stake-and-hifumi-reserve",
     });
-    db.prepare(
-      "INSERT INTO chinchiro_cooldowns(guild_id,user_id,next_at) VALUES(?,?,?) ON CONFLICT(guild_id,user_id) DO UPDATE SET next_at=excluded.next_at",
-    ).run(String(guildId), String(userId), now + REPLAY_COOLDOWN_MS);
     const fair = createFairness();
     if (forcedSeed !== null) {
       fair.serverSeed = String(forcedSeed);
@@ -593,7 +578,6 @@ async function handleChinchiroButton(interaction) {
 module.exports = {
   MIN_BET,
   MAX_BET,
-  REPLAY_COOLDOWN_MS,
   EFFECT_PRIORITY,
   evaluateDice,
   recordChinchiroRun,

@@ -61,7 +61,6 @@ const apply = (kind, outcome) => {
 };
 const seen = new Set();
 for (let game = 0; game < 400; game += 1) {
-  db.prepare("DELETE FROM chinchiro_cooldowns").run(); // bỏ thời gian chờ 30 giây giữa các ván
   const started = chinchiro.startChinchiro({ guildId: G, channelId: "c", userId: "real", stake: 1000 });
   if (started.immediate) { apply(null, started.result.outcome); continue; }
   let step;
@@ -70,6 +69,7 @@ for (let game = 0; game < 400; game += 1) {
   seen.add(kind);
   apply(kind, step.result.outcome);
 }
+assert.equal(chinchiro.REPLAY_COOLDOWN_MS, undefined, "đã bỏ thời gian chờ giữa các ván Chinchiro");
 const real = record("real");
 assert.equal(real.shigoro_wins, tally.shigoro);
 assert.equal(real.zoro_wins, tally.zoro);

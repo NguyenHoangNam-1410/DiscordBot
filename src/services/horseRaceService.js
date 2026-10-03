@@ -2,6 +2,7 @@ const crypto = require("node:crypto");
 const { MessageFlags } = require("discord.js");
 const { db } = require("../db");
 const { spendCoins, settleReservedGame } = require("./economyService");
+const { recordHorseRun } = require("./horseRecordService");
 const { formatCoins } = require("../utils/economy");
 const { getGameBetLimit } = require("./gameBetLimitService");
 const { createFairness, fairInt, fairShuffle } = require("./fairnessService");
@@ -1068,6 +1069,14 @@ const settleHorseTx = db.transaction((roundId, forcedWinner = null) => {
       game: "duangua",
       outcome,
       operationId: `settle:duangua:${round.id}:${userId}`,
+    });
+    recordHorseRun({
+      guildId: round.guild_id,
+      userId,
+      outcome,
+      winnerMultiplier: market.horses[winner].multiplier,
+      winnerSpecial: Boolean(HORSES[winner]?.special),
+      distinctHorses: new Set(summary.bets.map((bet) => bet.choice)).size,
     });
     settlements.push({
       userId,

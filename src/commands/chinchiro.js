@@ -43,11 +43,6 @@ module.exports = {
           content: "Bạn đang có một ván Chinchiro chưa kết thúc.",
           flags: MessageFlags.Ephemeral,
         });
-      if (error.message === "CHINCHIRO_COOLDOWN")
-        return interaction.reply({
-          content: `Bạn có thể mở ván Chinchiro tiếp theo sau **${Math.ceil(error.retryAfter / 1000)} giây**.`,
-          flags: MessageFlags.Ephemeral,
-        });
       if (error.message === "BET_LIMIT")
         return interaction.reply({
           content: `Giới hạn cược Chinchiro của server là **${formatCoins(error.maxBet)} :coin:**.`,
