@@ -1034,4 +1034,15 @@ runMigration(28, "chinchiro achievement records", () => {
     PRIMARY KEY (guild_id,user_id))`);
 });
 
+runMigration(29, "poker achievement records", () => {
+  db.exec(`CREATE TABLE IF NOT EXISTS poker_records (
+    guild_id TEXT NOT NULL,user_id TEXT NOT NULL,
+    best_win_rank INTEGER NOT NULL DEFAULT 0,
+    fold_wins INTEGER NOT NULL DEFAULT 0,
+    allin_wins INTEGER NOT NULL DEFAULT 0,
+    pvp_wins INTEGER NOT NULL DEFAULT 0,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY (guild_id,user_id))`);
+});
+
 module.exports = { db, dbPath, runMigration };
