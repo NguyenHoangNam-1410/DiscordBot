@@ -498,6 +498,141 @@ const ACHIEVEMENTS = Object.freeze([
     diamonds: 300,
     metric: "gachaSpent",
   },
+  {
+    id: "mines_wins_5",
+    name: "Thợ dò mìn tập sự",
+    description: "Thắng 5 ván Dò mìn",
+    target: 5,
+    reward: 5_000,
+    diamonds: 20,
+    metric: "minesWins",
+  },
+  {
+    id: "mines_wins_25",
+    name: "Chuyên gia gỡ mìn",
+    description: "Thắng 25 ván Dò mìn",
+    target: 25,
+    reward: 20_000,
+    diamonds: 60,
+    metric: "minesWins",
+  },
+  {
+    id: "mines_wins_100",
+    name: "Bậc thầy bãi mìn",
+    description: "Thắng 100 ván Dò mìn",
+    target: 100,
+    reward: 70_000,
+    diamonds: 200,
+    metric: "minesWins",
+  },
+  {
+    id: "mines_clear_1",
+    name: "Quét sạch bãi mìn",
+    description: "Mở hết ô an toàn trong 1 ván Dò mìn",
+    target: 1,
+    reward: 15_000,
+    diamonds: 50,
+    metric: "minesClears",
+  },
+  {
+    id: "mines_clear_5",
+    name: "Không sót ô nào",
+    description: "Mở hết ô an toàn trong 5 ván Dò mìn",
+    target: 5,
+    reward: 50_000,
+    diamonds: 150,
+    metric: "minesClears",
+  },
+  {
+    id: "mines_clear_20",
+    name: "Bàn tay vàng bãi mìn",
+    description: "Mở hết ô an toàn trong 20 ván Dò mìn",
+    target: 20,
+    reward: 150_000,
+    diamonds: 400,
+    metric: "minesClears",
+  },
+  {
+    id: "mines_hard_4",
+    name: "Chơi với lửa",
+    description: "Thắng một ván Dò mìn có ít nhất 4 mìn",
+    target: 4,
+    reward: 8_000,
+    diamonds: 30,
+    metric: "minesHardWin",
+  },
+  {
+    id: "mines_hard_6",
+    name: "Gan dạ",
+    description: "Thắng một ván Dò mìn có ít nhất 6 mìn",
+    target: 6,
+    reward: 25_000,
+    diamonds: 90,
+    metric: "minesHardWin",
+  },
+  {
+    id: "mines_hard_7",
+    name: "Đi trên lưỡi dao",
+    description: "Thắng một ván Dò mìn có 7 mìn",
+    target: 7,
+    reward: 60_000,
+    diamonds: 200,
+    metric: "minesHardWin",
+  },
+  {
+    id: "mines_mult_5",
+    name: "Chốt lời đẹp",
+    description: "Chốt thắng Dò mìn với hệ số từ x5",
+    target: 5,
+    reward: 10_000,
+    diamonds: 35,
+    metric: "minesBestMultiplier",
+  },
+  {
+    id: "mines_mult_20",
+    name: "Hệ số khủng",
+    description: "Chốt thắng Dò mìn với hệ số từ x20",
+    target: 20,
+    reward: 40_000,
+    diamonds: 120,
+    metric: "minesBestMultiplier",
+  },
+  {
+    id: "mines_mult_100",
+    name: "Trúng độc đắc bãi mìn",
+    description: "Chốt thắng Dò mìn với hệ số từ x100",
+    target: 100,
+    reward: 150_000,
+    diamonds: 400,
+    metric: "minesBestMultiplier",
+  },
+  {
+    id: "mines_star_1",
+    name: "Ngôi sao may mắn",
+    description: "Tìm thấy ngôi sao trong 1 ván Dò mìn",
+    target: 1,
+    reward: 5_000,
+    diamonds: 20,
+    metric: "minesStars",
+  },
+  {
+    id: "mines_star_10",
+    name: "Thợ săn sao",
+    description: "Tìm thấy ngôi sao trong 10 ván Dò mìn",
+    target: 10,
+    reward: 20_000,
+    diamonds: 60,
+    metric: "minesStars",
+  },
+  {
+    id: "mines_star_30",
+    name: "Chòm sao riêng",
+    description: "Tìm thấy ngôi sao trong 30 ván Dò mìn",
+    target: 30,
+    reward: 60_000,
+    diamonds: 180,
+    metric: "minesStars",
+  },
 ]);
 
 const BETTING_GAMES = Object.freeze(["baucua","taixiu","chinchiro","blackjack","poker","duangua","mines","coquay"]);
@@ -556,7 +691,24 @@ function metrics(guildId, userId) {
       if (rank >= 3) gacha.ur += 1;
     }
   }
+  const mines =
+    db
+      .prepare(
+        "SELECT clears,best_multiplier,max_mines_won,star_finds FROM mines_records WHERE guild_id=? AND user_id=?",
+      )
+      .get(guild, user) || {};
+  const minesWins =
+    db
+      .prepare(
+        "SELECT COALESCE(wins,0) wins FROM game_player_stats WHERE guild_id=? AND user_id=? AND game='mines'",
+      )
+      .get(guild, user)?.wins || 0;
   return {
+    minesWins,
+    minesClears: mines.clears || 0,
+    minesHardWin: mines.max_mines_won || 0,
+    minesBestMultiplier: Math.floor(mines.best_multiplier || 0),
+    minesStars: mines.star_finds || 0,
     gachaPulls: gacha.pulls,
     gachaSpent: gacha.spent,
     gachaSR: gacha.sr,

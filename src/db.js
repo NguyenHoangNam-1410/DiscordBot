@@ -1006,4 +1006,19 @@ runMigration(26, "remove Oan tu ti game", () => {
   db.exec("DROP TABLE IF EXISTS rps_duels; DROP TABLE IF EXISTS rps_bot_rounds");
 });
 
+runMigration(27, "mines achievement records", () => {
+  db.exec(`CREATE TABLE IF NOT EXISTS mines_records (
+    guild_id TEXT NOT NULL,user_id TEXT NOT NULL,
+    clears INTEGER NOT NULL DEFAULT 0,
+    best_multiplier REAL NOT NULL DEFAULT 0,
+    max_mines_won INTEGER NOT NULL DEFAULT 0,
+    star_finds INTEGER NOT NULL DEFAULT 0,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY (guild_id,user_id))`);
+  // Lịch sử cũ vẫn cho biết hệ số cao nhất đã chốt (trả thưởng / tiền cược của ván thắng).
+  db.exec(`INSERT OR IGNORE INTO mines_records(guild_id,user_id,best_multiplier,updated_at)
+    SELECT guild_id,user_id,MAX(CAST(payout AS REAL)/stake),${Date.now()} FROM game_history
+    WHERE game='mines' AND outcome='win' AND stake>0 GROUP BY guild_id,user_id`);
+});
+
 module.exports = { db, dbPath, runMigration };

@@ -260,6 +260,29 @@ function startMines(args) {
   return startTx(args);
 }
 
+// Số liệu riêng của Dò mìn cho thành tựu (ván bỏ cuộc không tính).
+function recordMinesRun(session, state, reason, outcome, payout) {
+  const win = outcome === "win";
+  db.prepare(
+    `INSERT INTO mines_records(guild_id,user_id,clears,best_multiplier,max_mines_won,star_finds,updated_at)
+     VALUES(?,?,?,?,?,?,?)
+     ON CONFLICT(guild_id,user_id) DO UPDATE SET
+       clears=clears+excluded.clears,
+       best_multiplier=MAX(best_multiplier,excluded.best_multiplier),
+       max_mines_won=MAX(max_mines_won,excluded.max_mines_won),
+       star_finds=star_finds+excluded.star_finds,
+       updated_at=excluded.updated_at`,
+  ).run(
+    session.guild_id,
+    session.user_id,
+    reason === "cleared" ? 1 : 0,
+    win ? payout / state.stake : 0,
+    win ? state.mineCount : 0,
+    state.specialFound ? 1 : 0,
+    Date.now(),
+  );
+}
+
 function settle(session, state, reason) {
   const won = reason === "cashout" || reason === "cleared";
   let payout = won ? payoutFor(state) : 0;
@@ -275,6 +298,7 @@ function settle(session, state, reason) {
     countGame: reason !== "forfeit",
   });
   db.prepare("DELETE FROM mines_sessions WHERE id = ?").run(session.id);
+  if (reason !== "forfeit") recordMinesRun(session, state, reason, outcome, payout);
   state.status = reason;
   return {
     reason,
