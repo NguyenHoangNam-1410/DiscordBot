@@ -650,10 +650,43 @@ function clampPage(page, pages) {
 }
 function setupPreview(classKey) {
   const state = stats.createState(classKey, 10);
+  const c = stats.CLASSES[classKey];
+  const main = stats.mainStat(state).toUpperCase();
+  const builds = {
+    amazon:
+      "Ưu tiên DEX cho sát thương, trúng/né và Crit; thêm VIT khi thiếu HP. Trang bị vật lý, ACC và Crit hợp với hai phát Barrage.",
+    barbarian:
+      "Ưu tiên STR cho sát thương và DEF; thêm VIT để tăng HP. Chọn trang bị vật lý và chống chịu, dùng Iron Will khi đủ Mana.",
+    assassin:
+      "Ưu tiên DEX cho sát thương, né và Crit; thêm VIT để tránh chết nhanh. Luân phiên đánh thường lấy Mana và Shadow Step để né phản công.",
+    sorceress:
+      "Ưu tiên ENE cho skill phép, RES và Max Mana; thêm VIT cho HP. Chọn trang bị phép, đánh thường hồi Mana rồi dùng Arcane Burst.",
+    druid:
+      "Ưu tiên STR cho sát thương vật lý; thêm VIT cho HP và lượng hồi từ skill. Chọn trang bị vật lý/chống chịu, dùng Wild Regeneration khi đã mất HP.",
+    necromancer:
+      "Ưu tiên ENE cho skill phép, RES và Max Mana; thêm VIT cho HP. Đánh thường hồi Mana, dùng Totem Ward để vừa gây phép vừa chặn phản công.",
+    paladin:
+      "Ưu tiên STR cho sát thương và DEF; thêm VIT cho HP. Chọn trang bị vật lý/chống chịu, dùng Divine Shield để gây sát thương rồi thủ.",
+  };
+  const manaGain = Math.max(
+    1,
+    Math.floor(
+      state.maxMana *
+        (["sorceress", "necromancer"].includes(classKey) ? 0.7 : 0.4),
+    ),
+  );
   return {
-    name: `${stats.CLASSES[classKey].emoji} ${stats.CLASSES[classKey].name} · v2`,
-    stats: statLine(state, false),
-    skill: SKILLS[classKey],
+    name: `${c.emoji} ${c.name}`,
+    role: `Build ${main} · ${{ amazon: "Hai phát vật lý", barbarian: "Vật lý và chống chịu", assassin: "Crit và né phản công", sorceress: "Skill phép mạnh", druid: "Vật lý và hồi phục", necromancer: "Phép và chặn phản công", paladin: "Vật lý và phòng thủ" }[classKey]}`,
+    attributes: `${E.str} **${state.str}** · ${E.dex} **${state.dex}** · ${E.vit} **${state.vit}** · ${E.ene} **${state.ene}**`,
+    stats: `${E.str} **${state.str}** · ${E.dex} **${state.dex}** · ${E.vit} **${state.vit}** · ${E.ene} **${state.ene}**\n${E.hp} **${state.hp}** · ${E.mana} **${state.mana}** · ${E.defense} **${state.defense}** · ${E.potion} **${state.potions}**\nVật lý **${state.damageMin}–${state.damageMax}** · Phép **${state.spellMin}–${state.spellMax}** · RES **${state.resistance}%** · Crit **${percent(state.critChance)}**`,
+    build: builds[classKey],
+    attack: `Một đòn **vật lý ${state.damageMin}–${state.damageMax}** trước giảm trừ; có thể trượt, có thể Crit ×1,75. Hồi **${manaGain} Mana** ở chỉ số ban đầu (40% Max Mana; class phép 70%, làm tròn xuống, tối thiểu 1). Quái còn sống sẽ phản công.`,
+    defend:
+      "Không gây sát thương; hồi **1 Mana**. Trong lần phản công này: **DEF ×2** khi nhận vật lý, **+15 RES** khi nhận phép, giảm thêm **15% sát thương** và miễn Crit. Không duy trì sang lượt sau.",
+    skill: `${SKILLS[classKey]} Tốn **2 Mana**, không hồi Mana như đánh thường. ${["sorceress", "necromancer"].includes(classKey) ? "Sát thương phép chịu RES của quái, không Crit." : "Mỗi đòn vật lý có thể trượt/Crit, chịu DEF của quái."} ${["assassin", "necromancer"].includes(classKey) ? "Chặn phản công của lượt này kể cả skill không gây sát thương." : classKey === "paladin" ? "Nếu quái sống, nhận phản công với hiệu quả Phòng thủ; skill không cộng 1 Mana." : "Nếu quái sống, nhận phản công bình thường."}`,
+    passive: `Đặc tính thường trực: vật lý lấy **${Math.round(c.strWeight * 100)}% STR + ${Math.round((1 - c.strWeight) * 100)}% DEX**; Crit nền **${percent(c.baseCrit)}**, RES nền **${c.baseRes}%**, cộng thêm từ thuộc tính/trang bị. Hiệu ứng né/chặn/hồi HP của skill chỉ kích hoạt khi dùng skill.`,
+    shrine: `Chỉ có khi nhận **Class Shrine**, tối đa 3 tầng: ${SHRINES[classKey]}`,
     power: balance.power(state),
   };
 }

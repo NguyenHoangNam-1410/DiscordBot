@@ -214,18 +214,23 @@ function hardcoreSetupPayload(draft, classes, context) {
       const preview = require("./hardcoreV2View").setupPreview(draft.classKey);
       const fields = embed.data.fields.filter(
         (field) =>
-          !["📊 Chỉ số ban đầu", `✨ ${character.skill} · 2 ENE`].includes(
-            field.name,
-          ),
+          ![
+            `${require("./hardcoreStats").CLASSES[draft.classKey].emoji} ${character.name}`,
+            "📊 Chỉ số ban đầu",
+            `✨ ${character.skill} · 2 ENE`,
+          ].includes(field.name),
       );
-      embed.setFields(fields).addFields(
-        { name: "📊 Chỉ số ban đầu · v2.0.1", value: preview.stats },
-        { name: `✨ ${character.skill} · 2 Mana`, value: preview.skill },
-        {
-          name: "Sở trường class",
-          value: `Sức mạnh ×${preview.power}; đã tính vào dải sát thương ở trên.`,
-        },
-      );
+      embed
+        .setFields(fields)
+        .addFields(
+          { name: preview.name, value: preview.stats },
+          { name: "🧭 Hướng build", value: preview.build },
+          { name: "⚔️ Tấn công", value: preview.attack },
+          { name: "🛡️ Phòng thủ", value: preview.defend },
+          { name: `✨ ${character.skill} · 2 Mana`, value: preview.skill },
+          { name: "📖 Đặc tính / nội tại", value: preview.passive },
+          { name: "⛩️ Phước lành có điều kiện", value: preview.shrine },
+        );
     }
   } else
     embed.addFields({
@@ -241,23 +246,26 @@ function hardcoreSetupPayload(draft, classes, context) {
     const fields = embed.data.fields.filter(
       (field) => field.name !== "🧙Chọn một trong 7 nhân vật",
     );
-    const v2Classes = require("./hardcoreStats").CLASSES;
-    embed.setFields(fields).addFields({
-      name: "🧙Chọn một trong 7 nhân vật · v2",
-      value: Object.values(v2Classes)
-        .map(
-          (c) =>
-            `${c.emoji} **${c.name}** · STR ${c.str} / DEX ${c.dex} / VIT ${c.vit} / ENE ${c.ene}`,
-        )
-        .join("\n"),
-    });
+    const v2View = require("./hardcoreV2View");
+    const previews = Object.keys(classes).map((key) =>
+      v2View.setupPreview(key),
+    );
+    embed.setFields(fields);
+    for (let i = 0; i < previews.length; i += 4)
+      embed.addFields({
+        name: i === 0 ? "🧙 Chọn một trong 7 nhân vật" : "🧙 Nhân vật (tiếp)",
+        value: previews
+          .slice(i, i + 4)
+          .map((p) => `**${p.name}**\n${p.attributes}\n${p.role}`)
+          .join("\n\n"),
+      });
   }
   embed
     .addFields({
       name: "📖 Ký hiệu",
       value:
         context.gameplayVersion === 2
-          ? "STR/DEX/VIT/ENE tạo chỉ số chiến đấu. ENE là thuộc tính, Mana là tài nguyên dùng skill. Rút thưởng mới nhận xu/gem; tử trận mất toàn bộ. Mỗi 5 tầng: hồi đầy HP, thêm 2 bình, chọn +5 thuộc tính."
+          ? `${icon("STR")} STR: vật lý/DEF · ${icon("DEX")} DEX: trúng/né/Crit\n${icon("VIT")} VIT: HP/bình máu · ${icon("ENE")} ENE: phép/RES/Max Mana\n❤️ HP · ✨ Mana · 🛡️ DEF · 🧪 số bình. ENE là thuộc tính; Mana dùng skill.\nChọn nhân vật để xem hướng build và cơ chế từng hành động. Mỗi 5 tầng: hồi đầy HP, thêm 2 bình, chọn +5 thuộc tính. Rút thưởng mới nhận xu/gem; tử trận mất toàn bộ.`
           : "❤️ HP · ⚔️ ATK · 🛡️ DEF · 🎯 ACC · 💨 EVA · 💥 CRIT · 🔮 RES · ✨ ENE · 🍀 LUCK · 🧪 POT · 🎫 vé.\nRút thưởng để chốt xu và kim cương tạm giữ; tử trận mất toàn bộ. Mỗi 5 tầng có checkpoint hồi đầy HP.",
     })
     .setFooter({
@@ -276,7 +284,10 @@ function hardcoreSetupPayload(draft, classes, context) {
           context.gameplayVersion === 2
             ? require("./hardcoreStats").CLASSES[value].emoji
             : entry.emoji,
-        description: CLASS_PROFILES[value].role,
+        description:
+          context.gameplayVersion === 2
+            ? require("./hardcoreV2View").setupPreview(value).role
+            : CLASS_PROFILES[value].role,
         default: value === draft.classKey,
       })),
     );
