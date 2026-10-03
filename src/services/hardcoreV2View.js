@@ -24,6 +24,10 @@ const E = {
   crit: icon("boom", "💥"),
   potion: icon("test_tube", "🧪"),
   ticket: icon("ticket", "🎫"),
+  str: icon("STR", "💪"),
+  dex: icon("DEX", "🗡️"),
+  vit: icon("VIT", "❤️"),
+  ene: icon("ENE", "🔮"),
 };
 const rarityLabel = (r) =>
   ({ common: "R", rare: "SR", legendary: "SSR", cursed: "UR" })[r];
@@ -70,7 +74,7 @@ function statLine(s, changes = true, compact = false) {
   const defense = inverse ? (s.damageMin + s.damageMax) / 2 : s.defense;
   const lines = [
     `${healthBar(s.hp, s.maxHp)}${d("hp")}${d("maxHp", " MAX")}`,
-    `STR **${s.str}**${d("str")} · DEX **${s.dex}**${d("dex")} · VIT **${s.vit}**${d("vit")} · ENE **${s.ene}**${d("ene")}`,
+    `${E.str} STR **${s.str}**${d("str")} · ${E.dex} DEX **${s.dex}**${d("dex")} · ${E.vit} VIT **${s.vit}**${d("vit")} · ${E.ene} ENE **${s.ene}**${d("ene")}`,
     `${E.mana} Mana **${s.mana}/${s.maxMana}**${d("mana")}${d("maxMana", " MAX")} · ${E.potion} Bình ${s.potions}${d("potions")} · ${E.ticket} Vé ${s.escapeTokens}${d("escapeTokens")}`,
     `${E.attack} Vật lý **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")} · ${E.res} Phép **${s.spellMin}–${s.spellMax}**${d("spellMin")}`,
     `${E.defense} DEF **${defense}**${inverse ? " (Paradox)" : d("defense")} · RES **${s.resistance}%**${d("resistance")} · ${E.luck} LUCK **${s.luck}**${d("luck")}`,
@@ -83,10 +87,10 @@ function statLine(s, changes = true, compact = false) {
 }
 function effectText(effects, level = 1) {
   const names = {
-    str: "STR",
-    dex: "DEX",
-    vit: "VIT",
-    ene: "ENE",
+    str: `${E.str} STR`,
+    dex: `${E.dex} DEX`,
+    vit: `${E.vit} VIT`,
+    ene: `${E.ene} ENE`,
     luck: "Luck",
     maxHp: "Max HP",
     maxMana: "Max Mana",
@@ -431,10 +435,10 @@ function button(id, label, style = ButtonStyle.Secondary, disabled = false) {
     symbol = label === "Trước" ? ["arrow_left", "⬅️"] : ["arrow_right", "➡️"];
   if (action.startsWith("upgrade_"))
     symbol = {
-      str: ["crossed_swords", "⚔️"],
-      dex: ["dart", "🎯"],
-      vit: ["heart", "❤️"],
-      ene: ["sparkles", "✨"],
+      str: ["STR", "💪"],
+      dex: ["DEX", "🗡️"],
+      vit: ["VIT", "❤️"],
+      ene: ["ENE", "🔮"],
     }[action.slice(8)];
   if (action.startsWith("buy_")) symbol = ["shopping_cart", "🛒"];
   const b = new ButtonBuilder()
