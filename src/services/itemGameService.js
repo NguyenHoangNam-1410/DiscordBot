@@ -69,7 +69,41 @@ function gameLabels(item) {
       );
 }
 
+const RARITY_RANK = Object.freeze({
+  mythic: 5,
+  UR: 4,
+  legendary: 4,
+  SSR: 3,
+  epic: 3,
+  SR: 2,
+  rare: 2,
+  R: 1,
+  common: 1,
+});
+
+// Vị trí nhóm game: vật phẩm theo game đứng theo thứ tự GAME_FILTERS, vật phẩm dùng chung sau đó, vật phẩm hồ sơ cuối cùng.
+function gameGroupIndex(item) {
+  const games = itemGames(item);
+  if (games === null) return GAME_FILTERS.length;
+  if (!games.length) return GAME_FILTERS.length + 1;
+  const indexes = games
+    .map((id) => GAME_FILTERS.findIndex((game) => game.id === id))
+    .filter((index) => index >= 0);
+  return indexes.length ? Math.min(...indexes) : GAME_FILTERS.length;
+}
+
+// Độ hiếm cao trước; cùng độ hiếm thì cùng game đứng gần nhau; cuối cùng theo tên.
+function compareItems(a, b) {
+  return (
+    (RARITY_RANK[b?.rarity] || 0) - (RARITY_RANK[a?.rarity] || 0) ||
+    gameGroupIndex(a) - gameGroupIndex(b) ||
+    String(a?.name || "").localeCompare(String(b?.name || ""), "vi")
+  );
+}
+
 module.exports = {
+  compareItems,
+  gameGroupIndex,
   GAME_FILTERS,
   EFFECT_GAMES,
   itemGames,

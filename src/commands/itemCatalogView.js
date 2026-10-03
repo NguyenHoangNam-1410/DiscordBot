@@ -15,6 +15,7 @@ const {
   GAME_FILTERS,
   itemMatchesGame,
   gameLabels,
+  compareItems,
 } = require("../services/itemGameService");
 
 const PAGE_SIZE = 8;
@@ -38,9 +39,9 @@ function catalogPanel(
   requestedPage = 0,
 ) {
   const filter = FILTERS.find((item) => item.id === selectedGame) || FILTERS[0];
-  const catalog = listCatalog().filter((item) =>
-    itemMatchesGame(item, filter.id),
-  );
+  const catalog = listCatalog()
+    .filter((item) => itemMatchesGame(item, filter.id))
+    .sort(compareItems);
   const inventory = new Map(
     getInventory(guildId, userId).map((row) => [row.item_id, row.quantity]),
   );

@@ -8,6 +8,7 @@ const {
   equipCosmetic,
 } = require("./profileCosmeticService");
 const { getCatalogItem, listCatalog } = require("./itemCatalogService");
+const { compareItems } = require("./itemGameService");
 
 const MAX_PRICE = 100_000_000;
 const ROTATION_MS = 86_400_000;
@@ -399,7 +400,8 @@ function getInventory(guildId, userId) {
     )
     .all(String(guildId), String(userId))
     .map((row) => ({ ...row, item: getCatalogItem(row.item_id) }))
-    .filter((row) => row.item);
+    .filter((row) => row.item)
+    .sort((a, b) => compareItems(a.item, b.item));
 }
 function requirementFailure(item, account) {
   if (account.games_played < item.min_games)
