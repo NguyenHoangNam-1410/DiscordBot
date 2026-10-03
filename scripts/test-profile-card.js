@@ -26,16 +26,24 @@ const borderPoints = (thickness) => { const points = [];
   return points; };
 
 (async () => {
+  const plain = await pixels(await render(null));
+  const at = (data, x, y) => { const i = (y * WIDTH + x) * 4; return [data[i], data[i + 1], data[i + 2]]; };
   // Khung phải bọc kín toàn bộ mép (kể cả bốn góc), không lộ màu hồ sơ ở viền
   for (const [name, frame] of Object.entries(FRAMES)) {
     const data = await pixels(await render(frame));
-    const leaked = borderPoints(13).filter(([x, y]) => isAccent(data, x, y));
+    // Khung mỏng ~7,5px: từ độ sâu 10px trở vào thẻ giống hệt thẻ không khung (nền hồ sơ)
+    for (const [x, y] of [[500, 10], [500, 12], [10, 170], [12, 170], [WIDTH - 11, 170], [WIDTH - 13, 170], [500, HEIGHT - 11]])
+      assert.deepEqual(at(data, x, y), at(plain, x, y), `${name}: khung phải mỏng, điểm (${x},${y}) vẫn còn khung`);
+    assert.notDeepEqual(at(data, 500, 3), at(plain, 500, 3), `${name}: viền ngoài phải là khung kim loại`);
+    const leaked = borderPoints(6).filter(([x, y]) => isAccent(data, x, y));
     assert.equal(leaked.length, 0, `${name}: lộ màu hồ sơ ở ${leaked.length} điểm viền, ví dụ ${JSON.stringify(leaked.slice(0, 3))}`);
     for (const [x, y] of [[0, 0], [WIDTH - 1, 0], [0, HEIGHT - 1], [WIDTH - 1, HEIGHT - 1]]) assert(!isAccent(data, x, y), `${name}: góc (${x},${y}) lộ màu hồ sơ`);
   }
   // Không có khung thì vẫn có vạch màu hồ sơ ở mép trên (đối chứng để chắc phép kiểm tra có tác dụng)
-  const plain = await pixels(await render(null));
   assert(borderPoints(5).some(([x, y]) => isAccent(plain, x, y)), "không khung: vạch màu hồ sơ phải còn");
+  // Giao diện pastel: nền sáng (không còn tối), chữ tối, thanh nhấn vẫn đúng màu hồ sơ
+  const lightness = ([r, g, b]) => (r + g + b) / 3;
+  for (const [x, y] of [[300, 20], [650, 320], [140, 330]]) assert(lightness(at(plain, x, y)) > 200, `nền thẻ phải sáng kiểu pastel tại (${x},${y})`);
 
   // Nhãn và thứ tự chỉ số: Xu → Kim cương → Cấp độ → Tầng sinh tồn
   drawn.length = 0; await render(FRAMES.silver);

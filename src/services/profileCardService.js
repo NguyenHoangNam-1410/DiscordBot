@@ -61,16 +61,45 @@ async function fetchAvatar(avatarUrl) {
   }
 }
 
+// Bảng màu pastel: nền sáng pha từ màu hồ sơ, chữ tối để dễ đọc; màu hồ sơ gốc chỉ dùng cho chi tiết nhấn.
+function parseHex(color) {
+  const hex = String(color).replace("#", "");
+  const full = hex.length === 3 ? [...hex].map((c) => c + c).join("") : hex.slice(0, 6);
+  const value = Number.parseInt(full, 16);
+  return Number.isFinite(value) ? [(value >> 16) & 255, (value >> 8) & 255, value & 255] : [100, 116, 139];
+}
+function toHex(rgb) {
+  return `#${rgb.map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("")}`;
+}
+function mix(color, other, amount) {
+  const from = parseHex(color);
+  const to = parseHex(other);
+  return toHex(from.map((v, i) => v + (to[i] - v) * amount));
+}
+function luminance(color) {
+  const [r, g, b] = parseHex(color).map((v) => {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+  });
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+// Màu nhấn đủ đậm để thấy rõ trên nền pastel (màu quá sáng như trắng được làm đậm dần).
+function strongAccent(accent) {
+  let color = accent;
+  for (let i = 0; i < 12 && luminance(color) > 0.28; i += 1) color = mix(color, "#000000", 0.12);
+  return color;
+}
+const INK = "#1e293b";
+const INK_SOFT = "#64748b";
+
 function drawBackground(ctx, accent) {
   const gradient = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
-  gradient.addColorStop(0, "#090b10");
-  gradient.addColorStop(0.65, "#151922");
-  gradient.addColorStop(1, accent);
+  gradient.addColorStop(0, mix(accent, "#ffffff", 0.9));
+  gradient.addColorStop(0.6, mix(accent, "#ffffff", 0.78));
+  gradient.addColorStop(1, mix(accent, "#ffffff", 0.52));
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
-  ctx.fillStyle = "rgba(0,0,0,.55)";
-  ctx.fillRect(0, 0, WIDTH, HEIGHT);
-  ctx.strokeStyle = `${accent}33`;
+  ctx.strokeStyle = "rgba(255,255,255,.45)";
   ctx.lineWidth = 2;
   for (let x = -HEIGHT; x < WIDTH; x += 70) {
     ctx.beginPath();
@@ -80,6 +109,17 @@ function drawBackground(ctx, accent) {
   }
   ctx.fillStyle = accent;
   ctx.fillRect(0, 0, WIDTH, 7);
+}
+
+function drawPanel(ctx, x, y, width, height, radius, alpha) {
+  ctx.save();
+  ctx.shadowColor = "rgba(30,41,59,.14)";
+  ctx.shadowBlur = 16;
+  ctx.shadowOffsetY = 4;
+  roundedRect(ctx, x, y, width, height, radius);
+  ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+  ctx.fill();
+  ctx.restore();
 }
 
 async function drawAvatar(ctx, avatarUrl, displayName, accent) {
@@ -94,23 +134,23 @@ async function drawAvatar(ctx, avatarUrl, displayName, accent) {
   if (avatar)
     ctx.drawImage(avatar, x - radius, y - radius, radius * 2, radius * 2);
   else {
-    ctx.fillStyle = accent;
+    ctx.fillStyle = mix(accent, "#ffffff", 0.35);
     ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = strongAccent(accent);
     ctx.font = `700 58px ${FONT_FAMILY}`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(
-      String(displayName).trim().slice(0, 1).toUpperCase() || "?",
+      Array.from(String(displayName).trim())[0]?.toUpperCase() || "?",
       x,
       y + 2,
     );
   }
   ctx.restore();
   ctx.save();
-  ctx.strokeStyle = accent;
-  ctx.shadowColor = accent;
-  ctx.shadowBlur = 18;
+  ctx.strokeStyle = "#ffffff";
+  ctx.shadowColor = "rgba(30,41,59,.25)";
+  ctx.shadowBlur = 14;
   ctx.lineWidth = 8;
   ctx.beginPath();
   ctx.arc(x, y, radius + 7, 0, Math.PI * 2);
@@ -119,18 +159,20 @@ async function drawAvatar(ctx, avatarUrl, displayName, accent) {
 }
 
 function drawStat(ctx, x, y, label, value, accent) {
-  ctx.fillStyle = "rgba(255,255,255,.55)";
+  ctx.fillStyle = INK_SOFT;
   ctx.font = `600 13px ${FONT_FAMILY}`;
   ctx.fillText(label.toUpperCase(), x, y);
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = INK;
   ctx.font = `700 24px ${FONT_FAMILY}`;
   ctx.fillText(String(value), x, y + 31);
-  ctx.fillStyle = accent;
+  ctx.fillStyle = strongAccent(accent);
   ctx.fillRect(x, y + 41, 34, 3);
 }
 
 // Độ dày khung: phủ kín toàn bộ mép thẻ (kể cả bốn góc) để không lộ màu hồ sơ ở viền.
-const FRAME_THICKNESS = 15;
+const FRAME_THICKNESS = 7.5;
+// Các chi tiết trang trí co giãn theo độ dày khung (thiết kế gốc dày 15px).
+const FRAME_SCALE = FRAME_THICKNESS / 15;
 
 function metalGradient(ctx, frame) {
   const metal = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
@@ -152,7 +194,7 @@ function drawCardBackground(ctx, accent, frame) {
     FRAME_THICKNESS,
     WIDTH - FRAME_THICKNESS * 2,
     HEIGHT - FRAME_THICKNESS * 2,
-    14,
+    14 * FRAME_SCALE + 4,
   );
   ctx.clip();
   drawBackground(ctx, accent);
@@ -165,32 +207,34 @@ function drawSurvivalFrame(ctx, frame) {
   if (!frame) return;
   ctx.save();
   const bevel = frame.colors[frame.colors.length - 1];
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 1;
   ctx.strokeStyle = bevel;
-  ctx.strokeRect(1, 1, WIDTH - 2, HEIGHT - 2);
-  ctx.lineWidth = 3;
+  ctx.strokeRect(0.5, 0.5, WIDTH - 1, HEIGHT - 1);
+  ctx.lineWidth = 1.5;
   ctx.strokeStyle = frame.colors[1];
   roundedRect(
     ctx,
-    FRAME_THICKNESS - 1.5,
-    FRAME_THICKNESS - 1.5,
-    WIDTH - (FRAME_THICKNESS - 1.5) * 2,
-    HEIGHT - (FRAME_THICKNESS - 1.5) * 2,
-    15,
+    FRAME_THICKNESS - 0.75,
+    FRAME_THICKNESS - 0.75,
+    WIDTH - (FRAME_THICKNESS - 0.75) * 2,
+    HEIGHT - (FRAME_THICKNESS - 0.75) * 2,
+    15 * FRAME_SCALE + 4,
   );
   ctx.stroke();
   if (frame.id === "survival_diamond") {
+    const reach = 10 * FRAME_SCALE + 1;
+    const edge = FRAME_THICKNESS / 2 + 0.5;
     for (const [x, y] of [
-      [FRAME_THICKNESS / 2 + 1, FRAME_THICKNESS / 2 + 1],
-      [WIDTH - FRAME_THICKNESS / 2 - 1, FRAME_THICKNESS / 2 + 1],
-      [FRAME_THICKNESS / 2 + 1, HEIGHT - FRAME_THICKNESS / 2 - 1],
-      [WIDTH - FRAME_THICKNESS / 2 - 1, HEIGHT - FRAME_THICKNESS / 2 - 1],
+      [edge, edge],
+      [WIDTH - edge, edge],
+      [edge, HEIGHT - edge],
+      [WIDTH - edge, HEIGHT - edge],
     ]) {
       ctx.beginPath();
-      ctx.moveTo(x, y - 10);
-      ctx.lineTo(x + 9, y);
-      ctx.lineTo(x, y + 10);
-      ctx.lineTo(x - 9, y);
+      ctx.moveTo(x, y - reach);
+      ctx.lineTo(x + reach * 0.9, y);
+      ctx.lineTo(x, y + reach);
+      ctx.lineTo(x - reach * 0.9, y);
       ctx.closePath();
       ctx.fillStyle = "#eaffff";
       ctx.fill();
@@ -222,39 +266,36 @@ async function renderProfileCard({
   const expPercent = Math.max(0, Math.min(100, (experience / target) * 100));
 
   drawCardBackground(ctx, accent, appearance.frame);
-  roundedRect(ctx, 34, 34, 220, 272, 18);
-  ctx.fillStyle = "rgba(4,6,10,.65)";
-  ctx.fill();
-  roundedRect(ctx, 282, 34, 684, 272, 18);
-  ctx.fillStyle = "rgba(4,6,10,.7)";
-  ctx.fill();
+  drawPanel(ctx, 34, 34, 220, 272, 18, 0.72);
+  drawPanel(ctx, 282, 34, 684, 272, 18, 0.62);
   await drawAvatar(ctx, avatarUrl, displayName, accent);
 
   ctx.textAlign = "center";
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = INK;
   ctx.font = `700 22px ${FONT_FAMILY}`;
   ctx.fillText(fitText(ctx, displayName, 188), 144, 259);
-  ctx.fillStyle = "rgba(255,255,255,.5)";
+  ctx.fillStyle = INK_SOFT;
   ctx.font = `14px ${FONT_FAMILY}`;
   ctx.fillText(fitText(ctx, `@${username}`, 180), 144, 283);
   ctx.textAlign = "left";
 
-  ctx.fillStyle = "rgba(255,255,255,.5)";
+  ctx.fillStyle = INK_SOFT;
   ctx.font = `800 21px ${FONT_FAMILY}`;
   ctx.fillText(
     fitText(ctx, `SERVER • ${String(serverName).toUpperCase()}`, 470),
     320,
     76,
   );
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = INK;
   ctx.font = `800 32px ${FONT_FAMILY}`;
   ctx.fillText(fitText(ctx, displayName, 430), 320, 111);
   roundedRect(ctx, 810, 58, 112, 38, 12);
-  ctx.fillStyle = `${accent}22`;
+  ctx.fillStyle = "rgba(255,255,255,.8)";
   ctx.fill();
-  ctx.strokeStyle = `${accent}99`;
+  ctx.strokeStyle = mix(strongAccent(accent), "#ffffff", 0.35);
+  ctx.lineWidth = 1.5;
   ctx.stroke();
-  ctx.fillStyle = accent;
+  ctx.fillStyle = strongAccent(accent);
   ctx.font = `800 18px ${FONT_FAMILY}`;
   ctx.textAlign = "center";
   ctx.fillText(`#${rank}`, 866, 83);
@@ -287,19 +328,19 @@ async function renderProfileCard({
     accent,
   );
 
-  ctx.fillStyle = "rgba(255,255,255,.55)";
+  ctx.fillStyle = INK_SOFT;
   ctx.font = `600 13px ${FONT_FAMILY}`;
   ctx.fillText(`TIẾN ĐỘ CẤP ${level}`, 320, 258);
   roundedRect(ctx, 420, 246, 430, 16, 8);
-  ctx.fillStyle = "rgba(255,255,255,.1)";
+  ctx.fillStyle = "rgba(30,41,59,.1)";
   ctx.fill();
   const barWidth = (430 * expPercent) / 100;
   if (barWidth > 0) {
     roundedRect(ctx, 420, 246, barWidth, 16, 8);
-    ctx.fillStyle = accent;
+    ctx.fillStyle = mix(accent, "#000000", luminance(accent) > 0.5 ? 0.25 : 0);
     ctx.fill();
   }
-  ctx.fillStyle = "#ffffff";
+  ctx.fillStyle = INK;
   ctx.font = `700 14px ${FONT_FAMILY}`;
   ctx.textAlign = "right";
   ctx.fillText(
@@ -307,8 +348,6 @@ async function renderProfileCard({
     920,
     259,
   );
-  ctx.fillStyle = "rgba(255,255,255,.35)";
-  ctx.font = `12px ${FONT_FAMILY}`;
   drawSurvivalFrame(ctx, appearance.frame);
   return canvas.encode("png");
 }
