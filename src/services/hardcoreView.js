@@ -253,7 +253,7 @@ function hardcoreSetupPayload(draft, classes, context) {
     embed.setFields(fields);
     for (let i = 0; i < previews.length; i += 4)
       embed.addFields({
-        name: i === 0 ? "🧙 Chọn một trong 7 nhân vật" : "🧙 Nhân vật (tiếp)",
+        name: i === 0 ? "🧙 Chọn một trong 7 nhân vật" : "\u200b",
         value: previews
           .slice(i, i + 4)
           .map((p) => `**${p.name}**\n${p.attributes}\n${p.role}`)
