@@ -85,6 +85,22 @@ function statLine(s, changes = false, compact = false) {
     );
   return lines.join("\n");
 }
+function battleStats(s) {
+  const range = core.physicalRange(s);
+  const defense =
+    s.paradox?.kind === "inverse" ? (s.damageMin + s.damageMax) / 2 : s.defense;
+  const skill = core.skillDamagePreview(s);
+  const detail = {
+    amazon: `Hai phát vật lý, trúng/Crit riêng.${skill.extraShot ? " 20% thêm phát thứ ba." : ""}`,
+    barbarian: "Vật lý, có thể trượt/Crit.",
+    assassin: "Vật lý, có thể trượt/Crit; né phản công.",
+    sorceress: "Phép luôn trúng, không Crit.",
+    druid: `Vật lý, có thể trượt/Crit; hồi ${money(Math.floor(s.maxHp * 0.12))} HP (tối đa Max HP).`,
+    necromancer: "Phép luôn trúng, không Crit; chặn phản công.",
+    paladin: "Vật lý, có thể trượt/Crit; tự Phòng thủ.",
+  }[s.classKey];
+  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} Mana **${s.mana}/${s.maxMana}** · ${E.potion} **${s.potions}** bình · ${E.ticket} **${s.escapeTokens}** vé\n${E.attack} Vật lý **${range[0]}–${range[1]}** · ${E.defense} DEF **${defense}** · ${E.res} RES **${s.resistance}%**\n${E.mana} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} Mana): ${skill.low}–${skill.high} DMG**\n${detail}\n*Dự báo lên quái hiện tại${skill.magic ? "" : ` nếu ${skill.shots === 2 ? "cả hai phát " : ""}trúng, chưa Crit`}.*`;
+}
 function effectText(effects, level = 1) {
   const names = {
     str: `${E.str} STR`,
@@ -331,11 +347,9 @@ function embed(state, userId, result = null, sessionId = null) {
     .addFields(
       {
         name: `${c.emoji} ${c.name}`,
-        value: (
-          statLine(state, false, state.phase !== "upgrade") +
-          (state.phase === "encounter" && state.encounter.type === "combat"
-            ? `\n${E.mana} **${c.skill} (${core.skillManaCost(state)} Mana):** ${SKILLS[state.classKey]}`
-            : "")
+        value: (state.phase === "encounter" && state.encounter.type === "combat"
+          ? battleStats(state)
+          : statLine(state, false, state.phase !== "upgrade")
         ).slice(0, 1024),
       },
       {

@@ -782,6 +782,47 @@ function attackManaGain(state) {
 function skillManaCost(state) {
   return state.classKey === "sorceress" && shrineActive(state) ? 0 : 2;
 }
+function skillDamagePreview(state) {
+  const e = state.encounter;
+  const magic = ["sorceress", "necromancer"].includes(state.classKey);
+  const multiplier = {
+    amazon: 0.85,
+    barbarian: 1.65,
+    assassin: 1.3,
+    sorceress: 2.1,
+    druid: 1.35,
+    necromancer: 1.55,
+    paladin: 1.4,
+  }[state.classKey];
+  const shots = state.classKey === "amazon" ? 2 : 1;
+  const range = magic ? [state.spellMin, state.spellMax] : physicalRange(state);
+  const bonus = ["boss", "final_boss"].includes(e.rank)
+    ? state.bossDamage
+    : e.rank === "elite"
+      ? state.eliteDamage
+      : 0;
+  const damage = (raw) => {
+    const hit = attackDamage(state, e, state, () => 0, {
+      player: true,
+      magic,
+      raw,
+      multiplier,
+      critical: false,
+    });
+    let n = Math.floor(hit.damage * shots * (1 + bonus));
+    if (e.mechanic === "riftwalker" && e.combatTurn % 3 === 0) n = 0;
+    if (e.mechanic === "deimoss" && n > 0)
+      n = Math.max(1, Math.floor(n * 0.75));
+    return n;
+  };
+  return {
+    low: damage(range[0]),
+    high: damage(range[1]),
+    magic,
+    shots,
+    extraShot: state.classKey === "amazon" && Boolean(shrineActive(state)),
+  };
+}
 function playerAttack(state, action, rng) {
   const e = state.encounter;
   let dodge = false,
@@ -1605,6 +1646,7 @@ module.exports = {
   playerAttack,
   attackManaGain,
   skillManaCost,
+  skillDamagePreview,
   enemyTurn,
   incomingPreview,
   physicalRange,
