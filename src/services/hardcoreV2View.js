@@ -70,14 +70,11 @@ function statLine(s, changes = true, compact = false) {
   const defense = inverse ? (s.damageMin + s.damageMax) / 2 : s.defense;
   const lines = [
     `${healthBar(s.hp, s.maxHp)}${d("hp")}${d("maxHp", " MAX")}`,
-    `${E.mana} Mana **${s.mana}/${s.maxMana}**${d("mana")}${d("maxMana", " MAX")} · ${E.potion} POT ${s.potions}${d("potions")} · ${E.ticket} Vé ${s.escapeTokens}${d("escapeTokens")}`,
-    `${E.attack} ATK **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")} · ${E.res} Phép **${s.spellMin}–${s.spellMax}**${d("spellMin")}`,
+    `STR **${s.str}**${d("str")} · DEX **${s.dex}**${d("dex")} · VIT **${s.vit}**${d("vit")} · ENE **${s.ene}**${d("ene")}`,
+    `${E.mana} Mana **${s.mana}/${s.maxMana}**${d("mana")}${d("maxMana", " MAX")} · ${E.potion} Bình ${s.potions}${d("potions")} · ${E.ticket} Vé ${s.escapeTokens}${d("escapeTokens")}`,
+    `${E.attack} Vật lý **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")} · ${E.res} Phép **${s.spellMin}–${s.spellMax}**${d("spellMin")}`,
     `${E.defense} DEF **${defense}**${inverse ? " (Paradox)" : d("defense")} · RES **${s.resistance}%**${d("resistance")} · ${E.luck} LUCK **${s.luck}**${d("luck")}`,
   ];
-  if (!compact || s.phase === "upgrade")
-    lines.push(
-      `STR **${s.str}**${d("str")} · DEX **${s.dex}**${d("dex")} · VIT **${s.vit}**${d("vit")} · ENE **${s.ene}**${d("ene")}`,
-    );
   if (!compact)
     lines.push(
       `${icon("dart", "🎯")} ACC **${s.accuracy}**${d("accuracy")} · ${icon("dash", "💨")} EVA **${s.evasion}**${d("evasion")} · ${E.crit} CRIT **${percent(s.critChance)}**${d("critChance", "%")}\nBình **${percent(s.potionRate)}** Max HP`,
@@ -230,7 +227,7 @@ function encounterSummary(s) {
         ancient_mimic: "Ancient Mimic",
       }[e.rank] || e.rank;
     const preview = core.incomingPreview(s);
-    return `👹 **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} ATK ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · RES ${e.resistance}%\nĐòn kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}** · Nhận ${preview.low}–${preview.high} HP (chưa Crit/Thủ)`;
+    return `👹 **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} Sát thương ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · RES ${e.resistance}%\nĐòn kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}** · Nhận ${preview.low}–${preview.high} HP (chưa Crit/Thủ)`;
   }
   if (e.type === "chest")
     return `📦 **${e.name}** · ${e.revealed ? "😈 Đã phát hiện Mimic" : e.inspected ? "Đã kiểm tra" : "Chưa kiểm tra"}\n${e.guaranteed ? "Đảm bảo SR+, không Mimic." : "Kiểm tra một lần; không phát hiện chưa chắc an toàn."}`;
