@@ -225,9 +225,12 @@ function hardcoreSetupPayload(draft, classes, context) {
         .addFields(
           { name: preview.name, value: preview.stats },
           { name: "🧭 Hướng build", value: preview.build },
-          { name: "⚔️ Tấn công", value: preview.attack },
-          { name: "🛡️ Phòng thủ", value: preview.defend },
-          { name: `✨ ${character.skill} · 2 Mana`, value: preview.skill },
+          { name: `${icon("PHYS", "⚔️")} Tấn công`, value: preview.attack },
+          { name: `${icon("DEF", "🛡️")} Phòng thủ`, value: preview.defend },
+          {
+            name: `${preview.skillIcon} ${character.skill} · 2 Mana`,
+            value: preview.skill,
+          },
           { name: "📖 Đặc tính / nội tại", value: preview.passive },
           { name: "⛩️ Phước lành có điều kiện", value: preview.shrine },
         );
@@ -251,11 +254,11 @@ function hardcoreSetupPayload(draft, classes, context) {
       v2View.setupPreview(key),
     );
     embed.setFields(fields);
-    for (let i = 0; i < previews.length; i += 4)
+    for (let i = 0; i < previews.length; i += 3)
       embed.addFields({
         name: i === 0 ? "🧙 Chọn một trong 7 nhân vật" : "\u200b",
         value: previews
-          .slice(i, i + 4)
+          .slice(i, i + 3)
           .map((p) => `**${p.name}**\n${p.attributes}\n${p.role}`)
           .join("\n\n"),
       });
@@ -265,7 +268,7 @@ function hardcoreSetupPayload(draft, classes, context) {
       name: "📖 Ký hiệu",
       value:
         context.gameplayVersion === 2
-          ? `${icon("STR")} STR: vật lý/DEF · ${icon("DEX")} DEX: trúng/né/Crit\n${icon("VIT")} VIT: HP/bình máu · ${icon("ENE")} ENE: phép/RES/Max Mana\n❤️ HP · ✨ Mana · 🛡️ DEF · 🧪 số bình. ENE là thuộc tính; Mana dùng skill.\nChọn nhân vật để xem hướng build và cơ chế từng hành động. Mỗi 5 tầng: hồi đầy HP, thêm 2 bình, chọn +5 thuộc tính. Rút thưởng mới nhận xu/gem; tử trận mất toàn bộ.`
+          ? `${icon("STR")} STR: vật lý/DEF · ${icon("DEX")} DEX: trúng/né/Crit\n${icon("VIT")} VIT: HP/bình máu · ${icon("ENE")} ENE: phép/RES/Max Mana\n${icon("HP", "❤️")} HP · ${icon("MANA", "💧")} Mana · ${icon("DEF", "🛡️")} DEF · ${icon("potion", "🧪")} Bình. ENE là thuộc tính; Mana dùng skill.\nChọn nhân vật để xem hướng build và cơ chế từng hành động. Mỗi 5 tầng: hồi đầy HP, thêm 2 bình, chọn +5 thuộc tính. Rút thưởng mới nhận xu/gem; tử trận mất toàn bộ.`
           : "❤️ HP · ⚔️ ATK · 🛡️ DEF · 🎯 ACC · 💨 EVA · 💥 CRIT · 🔮 RES · ✨ ENE · 🍀 LUCK · 🧪 POT · 🎫 vé.\nRút thưởng để chốt xu và kim cương tạm giữ; tử trận mất toàn bộ. Mỗi 5 tầng có checkpoint hồi đầy HP.",
     })
     .setFooter({

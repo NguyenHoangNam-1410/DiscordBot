@@ -15,20 +15,32 @@ const emoji = require("../discordEmojiMap");
 const { resultBlock } = require("../utils/rewardText");
 const icon = (key, fallback) => emoji[`:${key}:`] || fallback;
 const E = {
-  hp: icon("heart", "❤️"),
-  attack: icon("crossed_swords", "⚔️"),
-  defense: icon("shield", "🛡️"),
-  mana: icon("sparkles", "✨"),
+  hp: icon("HP", "❤️"),
+  attack: icon("PHYS", "⚔️"),
+  defense: icon("DEF", "🛡️"),
+  mana: icon("MANA", "💧"),
+  magic: icon("ELE", "🔮"),
   res: icon("crystal_ball", "🔮"),
-  luck: icon("four_leaf_clover", "🍀"),
+  luck: icon("LUCK", "🍀"),
   crit: icon("boom", "💥"),
-  potion: icon("test_tube", "🧪"),
+  potion: icon("potion", "🧪"),
   ticket: icon("ticket", "🎫"),
   str: icon("STR", "💪"),
   dex: icon("DEX", "🗡️"),
   vit: icon("VIT", "❤️"),
   ene: icon("ENE", "🔮"),
 };
+const SKILL_ICONS = Object.fromEntries(
+  Object.entries({
+    amazon: "skill_barrage",
+    barbarian: "skill_ironwill",
+    assassin: "skill_shadowstep",
+    sorceress: "skill_arcaneburst",
+    druid: "skill_windgeneration",
+    necromancer: "skill_totemward",
+    paladin: "skill_devineshield",
+  }).map(([key, name]) => [key, icon(name, "✨")]),
+);
 const rarityLabel = (r) =>
   ({ common: "R", rare: "SR", legendary: "SSR", cursed: "UR" })[r];
 const percent = (n) => `${Math.round(n * 1000) / 10}%`;
@@ -76,7 +88,7 @@ function statLine(s, changes = false, compact = false) {
     `${healthBar(s.hp, s.maxHp)}${d("hp")}${d("maxHp", " MAX")}`,
     `${E.str} STR **${s.str}**${d("str")} · ${E.dex} DEX **${s.dex}**${d("dex")} · ${E.vit} VIT **${s.vit}**${d("vit")} · ${E.ene} ENE **${s.ene}**${d("ene")}`,
     `${E.mana} Mana **${s.mana}/${s.maxMana}**${d("mana")}${d("maxMana", " MAX")} · ${E.potion} Bình ${s.potions}${d("potions")} · ${E.ticket} Vé ${s.escapeTokens}${d("escapeTokens")}`,
-    `${E.attack} Vật lý **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")} · ${E.res} Phép **${s.spellMin}–${s.spellMax}**${d("spellMin")}`,
+    `${E.attack} Vật lý **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")} · ${E.magic} Phép **${s.spellMin}–${s.spellMax}**${d("spellMin")}`,
     `${E.defense} DEF **${defense}**${inverse ? " (Paradox)" : d("defense")} · RES **${s.resistance}%**${d("resistance")} · ${E.luck} LUCK **${s.luck}**${d("luck")}`,
   ];
   if (!compact)
@@ -99,7 +111,7 @@ function battleStats(s) {
     necromancer: "Phép luôn trúng, không Crit; chặn phản công.",
     paladin: "Vật lý, có thể trượt/Crit; tự Phòng thủ.",
   }[s.classKey];
-  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} Mana **${s.mana}/${s.maxMana}** · ${E.potion} **${s.potions}** bình · ${E.ticket} **${s.escapeTokens}** vé\n${E.attack} Vật lý **${range[0]}–${range[1]}** · ${E.defense} DEF **${defense}** · ${E.res} RES **${s.resistance}%**\n${E.mana} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} Mana): ${skill.low}–${skill.high} DMG**\n${detail}\n*Dự báo lên quái hiện tại${skill.magic ? "" : ` nếu ${skill.shots === 2 ? "cả hai phát " : ""}trúng, chưa Crit`}.*`;
+  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} Mana **${s.mana}/${s.maxMana}** · ${E.potion} Bình **${s.potions}** · ${E.ticket} Vé **${s.escapeTokens}**\n${E.attack} Vật lý **${range[0]}–${range[1]}** · ${E.defense} DEF **${defense}** · ${E.res} RES **${s.resistance}%**\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} Mana): ${skill.low}–${skill.high} DMG**\n${detail}\n*Dự báo lên quái hiện tại${skill.magic ? "" : ` nếu ${skill.shots === 2 ? "cả hai phát " : ""}trúng, chưa Crit`}.*`;
 }
 function effectText(effects, level = 1) {
   const names = {
@@ -107,12 +119,12 @@ function effectText(effects, level = 1) {
     dex: `${E.dex} DEX`,
     vit: `${E.vit} VIT`,
     ene: `${E.ene} ENE`,
-    luck: "Luck",
-    maxHp: "Max HP",
-    maxMana: "Max Mana",
-    physical: "Vật lý",
-    spell: "Phép",
-    defense: "DEF",
+    luck: `${E.luck} Luck`,
+    maxHp: `${E.hp} Max HP`,
+    maxMana: `${E.mana} Max Mana`,
+    physical: `${E.attack} Vật lý`,
+    spell: `${E.magic} Phép`,
+    defense: `${E.defense} DEF`,
     accuracy: "ACC",
     evasion: "EVA",
     resistance: "RES",
@@ -169,24 +181,28 @@ function statTransitions(before, after) {
       parts.push(`${name} ${format(before)}→**${format(after)}**`);
   };
   for (const key of stats.ATTRIBUTES)
-    add(key.toUpperCase(), [key], (s) => s[key]);
-  add("Max HP", ["maxHp"], (s) => s.maxHp);
+    add(`${E[key]} ${key.toUpperCase()}`, [key], (s) => s[key]);
+  add(`${E.hp} Max HP`, ["maxHp"], (s) => s.maxHp);
   add(
-    "Vật lý",
+    `${E.attack} Vật lý`,
     ["damageMin", "damageMax"],
     (s) => `${s.damageMin}–${s.damageMax}`,
   );
-  add("Phép", ["spellMin", "spellMax"], (s) => `${s.spellMin}–${s.spellMax}`);
+  add(
+    `${E.magic} Phép`,
+    ["spellMin", "spellMax"],
+    (s) => `${s.spellMin}–${s.spellMax}`,
+  );
   for (const [key, label] of [
-    ["defense", "DEF"],
+    ["defense", `${E.defense} DEF`],
     ["accuracy", "ACC"],
     ["evasion", "EVA"],
-    ["maxMana", "Max Mana"],
+    ["maxMana", `${E.mana} Max Mana`],
   ])
     add(label, [key], (s) => s[key]);
   add("Crit", ["critChance"], (s) => percent(s.critChance));
   add("RES", ["resistance"], (s) => `${s.resistance}%`);
-  add("Bình", ["potionRate"], (s) => percent(s.potionRate));
+  add(`${E.potion} Bình`, ["potionRate"], (s) => percent(s.potionRate));
   return parts.join(" · ") || "Không thay đổi chỉ số chiến đấu.";
 }
 function encounterText(s) {
@@ -275,7 +291,7 @@ function encounterSummary(s) {
         ancient_mimic: "Ancient Mimic",
       }[e.rank] || e.rank;
     const preview = core.incomingPreview(s);
-    return `👹 **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} Sát thương ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · RES ${e.resistance}%\nBạn đánh vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.res} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} HP** · Quái trúng bạn **${percent(preview.chance)}** *(chưa Crit/Phòng thủ)*`;
+    return `👹 **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} Sát thương ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · RES ${e.resistance}%\nBạn đánh vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} HP** · Quái trúng bạn **${percent(preview.chance)}** *(chưa Crit/Phòng thủ)*`;
   }
   if (e.type === "chest")
     return `📦 **${e.name}** · ${e.revealed ? "😈 Đã phát hiện Mimic" : e.inspected ? "Đã kiểm tra" : "Chưa kiểm tra"}\n${e.guaranteed ? "Đảm bảo SR+, không Mimic." : "Kiểm tra một lần; không phát hiện chưa chắc an toàn."}`;
@@ -520,13 +536,19 @@ function embed(state, userId, result = null, sessionId = null) {
     text: `${sessionId ? `Mã ván: ${sessionId} • ` : ""}Lượt ${state.turn} • Cược ${money(state.stake)} xu • /sinhton tieptuc`,
   });
 }
-function button(id, label, style = ButtonStyle.Secondary, disabled = false) {
+function button(
+  id,
+  label,
+  style = ButtonStyle.Secondary,
+  disabled = false,
+  emojiOverride = null,
+) {
   const action = id.split(":")[3] || "";
   const symbols = {
-    attack: ["crossed_swords", "⚔️"],
-    defend: ["shield", "🛡️"],
+    attack: ["PHYS", "⚔️"],
+    defend: ["DEF", "🛡️"],
     skill: ["sparkles", "✨"],
-    potion: ["test_tube", "🧪"],
+    potion: ["potion", "🧪"],
     retreat: ["moneybag", "💰"],
     open: ["unlock", "🔓"],
     inspect: ["mag", "🔍"],
@@ -536,14 +558,14 @@ function button(id, label, style = ButtonStyle.Secondary, disabled = false) {
     event_skip: ["walking", "🚶"],
     touch: ["moyai", "🗿"],
     next: ["arrow_right", "➡️"],
-    fight: ["crossed_swords", "⚔️"],
+    fight: ["PHYS", "⚔️"],
     flee: ["runner", "🏃"],
     bribe: ["moneybag", "💰"],
     pray: ["pray", "🙏"],
     ticket: ["ticket", "🎫"],
     event_smith: ["hammer", "🔨"],
     event_cleanse: ["sparkles", "✨"],
-    event_heal: ["heart", "❤️"],
+    event_heal: ["HP", "❤️"],
   };
   let symbol = id.startsWith("replay:") ? ["repeat", "🔁"] : symbols[action];
   if (action.startsWith("view_"))
@@ -568,7 +590,8 @@ function button(id, label, style = ButtonStyle.Secondary, disabled = false) {
     .setLabel(label.slice(0, 80))
     .setStyle(style)
     .setDisabled(Boolean(disabled));
-  if (symbol) b.setEmoji(icon(...symbol));
+  if (emojiOverride) b.setEmoji(emojiOverride);
+  else if (symbol) b.setEmoji(icon(...symbol));
   return b;
 }
 function chunkRows(buttons) {
@@ -612,6 +635,7 @@ function rows(sessionId, state, disabled = false) {
             ? ButtonStyle.Success
             : ButtonStyle.Secondary,
       a.disabled,
+      a.action === "skill" ? SKILL_ICONS[state.classKey] : null,
     ),
   );
   if (state.encounter.type !== "rngesus")
@@ -683,13 +707,16 @@ function privatePayload(
         value:
           "STR: vật lý và DEF. DEX: trúng/né/Crit; damage chính Amazon/Assassin. VIT: Max HP và bình máu. ENE: phép/RES/Max Mana. ENE là thuộc tính; Mana là tài nguyên dùng skill.",
       },
-      { name: "Kỹ năng", value: SKILLS[state.classKey] },
       {
-        name: "⚔️ Tấn công",
+        name: `${SKILL_ICONS[state.classKey]} ${stats.CLASSES[state.classKey].skill}`,
+        value: SKILLS[state.classKey],
+      },
+      {
+        name: `${E.attack} Tấn công`,
         value: `Một đòn vật lý, có thể trượt/Crit ×1,75. Hồi **${core.attackManaGain(state)} Mana** (tối đa Max Mana), kể cả đánh trượt. Quái còn sống sẽ phản công.`,
       },
       {
-        name: "🛡️ Phòng thủ",
+        name: `${E.defense} Phòng thủ`,
         value:
           "Không gây sát thương, hồi **1 Mana**. Lần phản công này: DEF ×2 khi nhận vật lý, +15 RES khi nhận phép, giảm thêm 15% sát thương, miễn Crit. Hết hiệu lực sau phản công.",
       },
@@ -785,9 +812,10 @@ function setupPreview(classKey) {
   const manaGain = core.attackManaGain(state);
   return {
     name: `${c.emoji} ${c.name}`,
+    skillIcon: SKILL_ICONS[classKey],
     role: `Build ${main} · ${{ amazon: "Hai phát vật lý", barbarian: "Vật lý và chống chịu", assassin: "Crit và né phản công", sorceress: "Skill phép mạnh", druid: "Vật lý và hồi phục", necromancer: "Phép và chặn phản công", paladin: "Vật lý và phòng thủ" }[classKey]}`,
-    attributes: `${E.str} **${state.str}** · ${E.dex} **${state.dex}** · ${E.vit} **${state.vit}** · ${E.ene} **${state.ene}**`,
-    stats: `${E.str} **${state.str}** · ${E.dex} **${state.dex}** · ${E.vit} **${state.vit}** · ${E.ene} **${state.ene}**\n${E.hp} **${state.hp}** · ${E.mana} **${state.mana}** · ${E.defense} **${state.defense}** · ${E.potion} **${state.potions}**\nVật lý **${state.damageMin}–${state.damageMax}** · Phép **${state.spellMin}–${state.spellMax}** · RES **${state.resistance}%** · Crit **${percent(state.critChance)}**`,
+    attributes: `${E.str} STR **${state.str}** · ${E.dex} DEX **${state.dex}** · ${E.vit} VIT **${state.vit}** · ${E.ene} ENE **${state.ene}**`,
+    stats: `${E.str} STR **${state.str}** · ${E.dex} DEX **${state.dex}** · ${E.vit} VIT **${state.vit}** · ${E.ene} ENE **${state.ene}**\n${E.hp} HP **${state.hp}** · ${E.mana} Mana **${state.mana}** · ${E.defense} DEF **${state.defense}** · ${E.potion} Bình **${state.potions}**\n${E.attack} Vật lý **${state.damageMin}–${state.damageMax}** · ${E.magic} Phép **${state.spellMin}–${state.spellMax}** · RES **${state.resistance}%** · Crit **${percent(state.critChance)}**`,
     build: builds[classKey],
     attack: `Một đòn **vật lý ${state.damageMin}–${state.damageMax}** trước giảm trừ; có thể trượt, có thể Crit ×1,75. Hồi **${manaGain} Mana** ở chỉ số ban đầu (40% Max Mana; class phép 70%, làm tròn xuống, tối thiểu 1). Quái còn sống sẽ phản công.`,
     defend:

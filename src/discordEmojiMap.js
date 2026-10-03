@@ -27,6 +27,20 @@
  * THE SOFTWARE.
  */
 module.exports = Object.freeze({
+  ":HP:": "<:HP:1555983046262394890>",
+  ":MANA:": "<:MANA:1555983051811594240>",
+  ":DEF:": "<:DEF:1555983042093260891>",
+  ":potion:": "<:potion:1555983060548194344>",
+  ":PHYS:": "<:PHYS:1555983056488108153>",
+  ":ELE:": "<:ELE:1555983043997597816>",
+  ":LUCK:": "<:LUCK:1555983049361985699>",
+  ":skill_barrage:": "<:skill_barrage:1555983064901877922>",
+  ":skill_ironwill:": "<:skill_ironwill:1555983072284119070>",
+  ":skill_shadowstep:": "<:skill_shadowstep:1555983074565693511>",
+  ":skill_arcaneburst:": "<:skill_arcaneburst:1555983062834086068>",
+  ":skill_windgeneration:": "<:skill_windgeneration:1555983079212847124>",
+  ":skill_totemward:": "<:skill_totemward:1555983076839129118>",
+  ":skill_devineshield:": "<:skill_devineshield:1555983069587185806>",
   ":class_amazon:": "<:class_amazon:1555937851886149753>",
   ":class_barbarian:": "<:class_barbarian:1555937856365666446>",
   ":class_assassin:": "<:class_assassin:1555937854121713734>",

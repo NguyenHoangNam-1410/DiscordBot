@@ -20,6 +20,11 @@ logs/
 # Coverage
 coverage/
 
+# Local generated Discord emoji assets
+/output/stat-icons/
+/output/class-icons/
+/output/survival-ui-icons/
+
 # OS
 .DS_Store
 Thumbs.db
