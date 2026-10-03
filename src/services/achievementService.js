@@ -633,7 +633,170 @@ const ACHIEVEMENTS = Object.freeze([
     diamonds: 180,
     metric: "minesStars",
   },
+  {
+    id: "chin_wins_5",
+    name: "Tay lắc học việc",
+    description: "Thắng 5 ván Chinchiro",
+    target: 5,
+    reward: 5_000,
+    diamonds: 20,
+    metric: "chinchiroWins",
+  },
+  {
+    id: "chin_wins_25",
+    name: "Cao thủ chén bát",
+    description: "Thắng 25 ván Chinchiro",
+    target: 25,
+    reward: 20_000,
+    diamonds: 60,
+    metric: "chinchiroWins",
+  },
+  {
+    id: "chin_wins_100",
+    name: "Vua xúc xắc",
+    description: "Thắng 100 ván Chinchiro",
+    target: 100,
+    reward: 70_000,
+    diamonds: 200,
+    metric: "chinchiroWins",
+  },
+  {
+    id: "chin_shigoro_1",
+    name: "Tứ Ngũ Lục!",
+    description: "Thắng bằng Shigoro 4-5-6",
+    target: 1,
+    reward: 8_000,
+    diamonds: 30,
+    metric: "chinchiroShigoro",
+  },
+  {
+    id: "chin_shigoro_5",
+    name: "Sáu cửa tay",
+    description: "Thắng bằng Shigoro 5 lần",
+    target: 5,
+    reward: 25_000,
+    diamonds: 80,
+    metric: "chinchiroShigoro",
+  },
+  {
+    id: "chin_shigoro_20",
+    name: "Bậc thầy 4-5-6",
+    description: "Thắng bằng Shigoro 20 lần",
+    target: 20,
+    reward: 80_000,
+    diamonds: 220,
+    metric: "chinchiroShigoro",
+  },
+  {
+    id: "chin_zoro_1",
+    name: "Bão xúc xắc",
+    description: "Thắng bằng Bão (ba xúc xắc giống nhau, kể cả Pin-Zoro)",
+    target: 1,
+    reward: 15_000,
+    diamonds: 50,
+    metric: "chinchiroZoro",
+  },
+  {
+    id: "chin_zoro_3",
+    name: "Gọi gió hô mưa",
+    description: "Thắng bằng Bão 3 lần",
+    target: 3,
+    reward: 40_000,
+    diamonds: 120,
+    metric: "chinchiroZoro",
+  },
+  {
+    id: "chin_zoro_10",
+    name: "Chúa tể bão",
+    description: "Thắng bằng Bão 10 lần",
+    target: 10,
+    reward: 120_000,
+    diamonds: 320,
+    metric: "chinchiroZoro",
+  },
+  {
+    id: "chin_pin_1",
+    name: "Pin-Zoro",
+    description: "Thắng bằng Pin-Zoro 1-1-1",
+    target: 1,
+    reward: 30_000,
+    diamonds: 100,
+    metric: "chinchiroPinZoro",
+  },
+  {
+    id: "chin_pin_3",
+    name: "Ba chấm nhất thiên hạ",
+    description: "Thắng bằng Pin-Zoro 3 lần",
+    target: 3,
+    reward: 100_000,
+    diamonds: 300,
+    metric: "chinchiroPinZoro",
+  },
+  {
+    id: "chin_hifumi_1",
+    name: "Hifumi xui xẻo",
+    description: "Lắc ra Hifumi 1-2-3",
+    target: 1,
+    reward: 3_000,
+    diamonds: 10,
+    metric: "chinchiroHifumi",
+  },
+  {
+    id: "chin_hifumi_10",
+    name: "Bạn thân của Hifumi",
+    description: "Lắc ra Hifumi 10 lần",
+    target: 10,
+    reward: 15_000,
+    diamonds: 50,
+    metric: "chinchiroHifumi",
+  },
+  {
+    id: "chin_streak_3",
+    name: "Đà thắng",
+    description: "Thắng liên tiếp 3 ván Chinchiro",
+    target: 3,
+    reward: 8_000,
+    diamonds: 30,
+    metric: "chinchiroStreak",
+  },
+  {
+    id: "chin_streak_5",
+    name: "Chuỗi nóng",
+    description: "Thắng liên tiếp 5 ván Chinchiro",
+    target: 5,
+    reward: 30_000,
+    diamonds: 90,
+    metric: "chinchiroStreak",
+  },
+  {
+    id: "chin_streak_10",
+    name: "Bất bại",
+    description: "Thắng liên tiếp 10 ván Chinchiro",
+    target: 10,
+    reward: 120_000,
+    diamonds: 320,
+    metric: "chinchiroStreak",
+  },
 ]);
+
+// Nhóm bộ lọc ở /kiemtra (Discord giới hạn 25 mục chọn): các chỉ số cùng chủ đề gộp thành một mục lọc.
+const CATEGORY_GROUPS = Object.freeze({
+  hardcoreRuns: "hardcoreJourney",
+  hardcoreEscapes: "hardcoreJourney",
+  hardcoreCompletions: "hardcoreJourney",
+  gachaSR: "gachaRare",
+  gachaSSR: "gachaRare",
+  gachaUR: "gachaRare",
+  minesClears: "minesFeats",
+  minesHardWin: "minesFeats",
+  minesBestMultiplier: "minesFeats",
+  minesStars: "minesFeats",
+  chinchiroShigoro: "chinchiroHands",
+  chinchiroZoro: "chinchiroHands",
+  chinchiroPinZoro: "chinchiroHands",
+  chinchiroHifumi: "chinchiroHands",
+});
+const achievementCategory = (item) => CATEGORY_GROUPS[item.metric] || item.metric;
 
 const BETTING_GAMES = Object.freeze(["baucua","taixiu","chinchiro","blackjack","poker","duangua","mines","coquay"]);
 const BETTING_SQL = BETTING_GAMES.map((game) => `'${game}'`).join(",");
@@ -703,7 +866,25 @@ function metrics(guildId, userId) {
         "SELECT COALESCE(wins,0) wins FROM game_player_stats WHERE guild_id=? AND user_id=? AND game='mines'",
       )
       .get(guild, user)?.wins || 0;
+  const chinchiro =
+    db
+      .prepare(
+        "SELECT shigoro_wins,zoro_wins,pin_zoro_wins,hifumi,best_streak FROM chinchiro_records WHERE guild_id=? AND user_id=?",
+      )
+      .get(guild, user) || {};
+  const chinchiroWins =
+    db
+      .prepare(
+        "SELECT COALESCE(wins,0) wins FROM game_player_stats WHERE guild_id=? AND user_id=? AND game='chinchiro'",
+      )
+      .get(guild, user)?.wins || 0;
   return {
+    chinchiroWins,
+    chinchiroShigoro: chinchiro.shigoro_wins || 0,
+    chinchiroZoro: (chinchiro.zoro_wins || 0) + (chinchiro.pin_zoro_wins || 0),
+    chinchiroPinZoro: chinchiro.pin_zoro_wins || 0,
+    chinchiroHifumi: chinchiro.hifumi || 0,
+    chinchiroStreak: chinchiro.best_streak || 0,
     minesWins,
     minesClears: mines.clears || 0,
     minesHardWin: mines.max_mines_won || 0,
@@ -790,6 +971,7 @@ function detectAchievementUnlocks(guildId, userId, now = Date.now()) {
 
 module.exports = {
   ACHIEVEMENTS,
+  achievementCategory,
   BETTING_GAMES,
   getAchievements,
   claimAchievements,

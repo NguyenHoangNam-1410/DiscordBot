@@ -74,7 +74,7 @@ assert.equal(record().star_finds, stars, "bỏ cuộc không cộng số liệu 
 // Dữ liệu người khác không bị lẫn
 assert.equal(getAchievements(G, "other").find((item) => item.id === "mines_star_1").progress, 0);
 // Bộ lọc /kiemtra
-for (const category of ["minesWins", "minesClears", "minesHardWin", "minesBestMultiplier", "minesStars"]) {
+for (const category of ["minesWins", "minesFeats"]) {
   const embed = achievementPanel(G, U, "all", category, 0).embeds[0].toJSON();
   assert(String(embed.description || "").includes("Dò mìn"), `bộ lọc ${category} phải có kết quả`);
 }

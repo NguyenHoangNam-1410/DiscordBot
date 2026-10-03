@@ -1021,4 +1021,17 @@ runMigration(27, "mines achievement records", () => {
     WHERE game='mines' AND outcome='win' AND stake>0 GROUP BY guild_id,user_id`);
 });
 
+runMigration(28, "chinchiro achievement records", () => {
+  db.exec(`CREATE TABLE IF NOT EXISTS chinchiro_records (
+    guild_id TEXT NOT NULL,user_id TEXT NOT NULL,
+    shigoro_wins INTEGER NOT NULL DEFAULT 0,
+    zoro_wins INTEGER NOT NULL DEFAULT 0,
+    pin_zoro_wins INTEGER NOT NULL DEFAULT 0,
+    hifumi INTEGER NOT NULL DEFAULT 0,
+    current_streak INTEGER NOT NULL DEFAULT 0,
+    best_streak INTEGER NOT NULL DEFAULT 0,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY (guild_id,user_id))`);
+});
+
 module.exports = { db, dbPath, runMigration };

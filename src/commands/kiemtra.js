@@ -16,6 +16,7 @@ const { getAccount, getRank } = require("../services/economyService");
 const {
   getAchievements,
   claimAchievements,
+  achievementCategory,
 } = require("../services/achievementService");
 const { getPlayerProgression } = require("../services/playerLevelService");
 const {
@@ -99,22 +100,18 @@ const ACHIEVEMENT_CATEGORIES = Object.freeze([
   { label: "Khám phá game", value: "gameTypes" },
   { label: "Mốc xu", value: "balance" },
   { label: "Sinh tồn · tầng", value: "hardcoreFloor" },
-  { label: "Sinh tồn · số lượt", value: "hardcoreRuns" },
-  { label: "Sinh tồn · rút lui", value: "hardcoreEscapes" },
-  { label: "Sinh tồn · hoàn thành", value: "hardcoreCompletions" },
+  { label: "Sinh tồn · hành trình", value: "hardcoreJourney" },
   { label: "Game cược · số ván thắng", value: "betWins" },
   { label: "Game cược · khám phá", value: "betGames" },
   { label: "Game cược · tổng đặt cược", value: "betStaked" },
   { label: "Game cược · thắng lớn", value: "betBigWin" },
   { label: "Dò mìn · số ván thắng", value: "minesWins" },
-  { label: "Dò mìn · quét sạch bãi", value: "minesClears" },
-  { label: "Dò mìn · thắng nhiều mìn", value: "minesHardWin" },
-  { label: "Dò mìn · hệ số cao", value: "minesBestMultiplier" },
-  { label: "Dò mìn · ngôi sao", value: "minesStars" },
+  { label: "Dò mìn · thành tích", value: "minesFeats" },
+  { label: "Chinchiro · số ván thắng", value: "chinchiroWins" },
+  { label: "Chinchiro · tay đặc biệt", value: "chinchiroHands" },
+  { label: "Chinchiro · chuỗi thắng", value: "chinchiroStreak" },
   { label: "Gacha · số lượt quay", value: "gachaPulls" },
-  { label: "Gacha · vật phẩm SR+", value: "gachaSR" },
-  { label: "Gacha · vật phẩm SSR+", value: "gachaSSR" },
-  { label: "Gacha · vật phẩm UR", value: "gachaUR" },
+  { label: "Gacha · vật phẩm hiếm", value: "gachaRare" },
   { label: "Gacha · kim cương đã tiêu", value: "gachaSpent" },
 ]);
 function selection(value, choices) {
@@ -192,7 +189,7 @@ function achievementPanel(
   category = selection(category, ACHIEVEMENT_CATEGORIES);
   const achievements = getAchievements(guildId, userId).filter(
     (item) =>
-      (category === "all" || item.metric === category) &&
+      (category === "all" || achievementCategory(item) === category) &&
       (status === "all" ||
         (status === "progress" && !item.complete && !item.claimed) ||
         (status === "ready" && item.complete && !item.claimed) ||
