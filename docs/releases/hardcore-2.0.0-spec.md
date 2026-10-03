@@ -1,0 +1,478 @@
+# Sinh tồn 999 — tài liệu release hiện hành
+
+> Tài liệu đầu vào do người dùng cung cấp. Các tuyên bố về mã và kiểm thử bên dưới thuộc tài liệu gốc; trạng thái triển khai thực tế của repository được ghi trong `HARDCORE-RELEASE-2.0.0.md`. Convention hiện tại đăng ký `/sinhton` độc lập thay cho `/choi sinhton` trong tài liệu này.
+
+**Ngày chốt tài liệu:** 03/10/2026  
+**Phiên bản gameplay:** Stat v2 · Item catalog v2  
+**Trạng thái:** Đã triển khai và đã chạy toàn bộ kiểm thử
+
+Tài liệu này mô tả hành vi thực tế của game Sinh tồn đang có trong source code. Các phiên Sinh tồn cũ tiếp tục dùng luật v1 đã lưu trong state; mọi run mới dùng hệ thống bốn thuộc tính và catalog item v2.
+
+## 1. Lệnh và vòng đời một run
+
+- `/choi sinhton batdau`: mở bảng chọn một trong bảy class và nhập tiền cược.
+- `/choi sinhton tieptuc`: chuyển phiên đang chơi sang channel hiện tại và dựng lại giao diện từ state đã lưu.
+- `/choi sinhton hoso`: xem tầng cao nhất, số run, số lần hoàn thành tầng 100, rút thưởng và tử trận.
+- `/choi sinhton xephang`: bảng xếp hạng theo tầng cao nhất, sau đó theo số lần hoàn thành.
+- `/choi sinhton tyle`: xem tỷ lệ RNG rút gọn trong Discord.
+- Prefix cũng được hỗ trợ: `<prefix>sinhton <xu> <class>` hoặc `tieptuc|hoso|xephang|tyle`.
+- Tiền cược tối thiểu 10 xu, tối đa 100.000 xu và còn chịu giới hạn cược riêng do server cấu hình.
+- Bảng chuẩn bị hết hạn sau 5 phút không thao tác. Xu chỉ bị giữ khi người chơi bấm Bắt đầu.
+- Mỗi người chỉ có một phiên Sinh tồn đang hoạt động trong một server.
+- Rút lui sau khi đã vượt ít nhất một tầng sẽ chốt payout. Rút ngay ở tầng đầu là bỏ cuộc và mất cược.
+- Tử trận, chọn đánh RNGesus hoặc cầu nguyện thất bại nhận payout bằng 0.
+- Tầng 100 đánh dấu hoàn thành chính thức; người chơi vẫn có thể Overrun đến tầng 999. Hạ boss tầng 999 rồi xác nhận Summit mới chốt chiến thắng cuối.
+- Bản hiện tại chưa có Character Level độc lập. Tiến triển sức mạnh trong run đến từ checkpoint, item, rèn/nghiền và event.
+
+## 2. Bản đồ 999 tầng
+
+| Tầng | Khu vực | Quái thường |
+|---:|---|---|
+| 1–99 | Sanctuary | Fallen Zealot, Goatman, Dark Cultist, Lost Soul |
+| 100–199 | Duncraig | Possessed Citizen, Necromorb, Ashen Marauder, Powder Keg Fanatic |
+| 200–299 | Fauztinville | Necrobot, Harpylisk, Steel Terror, Fauztinville Drone |
+| 300–399 | Teganze | Teganze Spirit, Storm Shaman, Poisoned Hunter, Elemental Guardian |
+| 400–499 | Scosglen | Moon Panther, Witchblood Druid, Wild Hunt, Ancient Treant |
+| 500–699 | Dimensional Labyrinth | Corrupted Hero, Unstable Anomaly, Abyssal Shrine, Rift Stalker |
+| 700–899 | Heroic Rift | Zakarum Avatar, Heavenly Exile, Heroic Guardian, Fate Devourer |
+| 900–999 | Dimensional Plane | Abyssal Spire, Void Spawn, Dream Eater, Fleshweaver Spawn |
+
+Thứ tự ưu tiên khi tạo encounter: boss tầng 50/final boss → RNGesus → món nợ Tower Remembers → Grave Echo → encounter thường. Boss không bị thay thế bởi event khác.
+
+Tỷ lệ encounter cơ bản ở tầng thường, trước khi Unstable Rift dịch chuyển tỷ lệ sang hòm:
+
+| Encounter | Tỷ lệ cơ bản |
+|---|---:|
+| Quái thường | 53% |
+| Elite | 12% |
+| Hòm thường | 10% |
+| Shrine | 8% |
+| Treasure chest | 5% |
+| Trap | 6% |
+| Surprise event | 4% |
+| Phòng trống | 2% |
+
+Surprise event phải cách surprise event trước ít nhất hai tầng. Nếu điều kiện này không đạt, phần roll đó trở thành phòng trống.
+
+## 3. Bốn thuộc tính và công thức
+
+- **STR:** nguồn chính của damage vật lý và góp vào Defense.
+- **DEX:** Accuracy, Evasion, Critical; đồng thời là nguồn damage chính của Amazon và Assassin.
+- **VIT:** Max HP và hiệu lực bình máu.
+- **ENE:** spell damage, Resistance và Max Mana.
+- **Luck:** chỉ số đặc biệt từ item/event; không thể chọn trực tiếp tại checkpoint.
+
+### 3.1. Chỉ số class ban đầu
+
+| Class | STR | DEX | VIT | ENE | Base HP | Base Mana | Base RES | Base Crit |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| Amazon | 18 | 28 | 20 | 14 | 40 | 2 | 3 | 6% |
+| Barbarian | 30 | 14 | 28 | 8 | 46 | 2 | 2 | 5% |
+| Assassin | 18 | 30 | 18 | 14 | 38 | 2 | 3 | 8% |
+| Sorceress | 10 | 16 | 20 | 34 | 34 | 2 | 8 | 4% |
+| Druid | 20 | 16 | 20 | 24 | 42 | 2 | 6 | 5% |
+| Necromancer | 12 | 16 | 22 | 30 | 36 | 2 | 7 | 4% |
+| Paladin | 26 | 14 | 24 | 16 | 43 | 2 | 10 | 5% |
+
+### 3.2. Công thức dẫn xuất
+
+```text
+Tổng thuộc tính = nền class + điểm checkpoint + điểm event + điểm đã hấp thụ + item
+Max HP = Base HP + VIT*3 + Flat HP
+Weapon Power = STR*trọng số STR của class + DEX*trọng số DEX của class
+Physical Power = floor(Weapon Power*0.60) + Flat Physical
+Damage vật lý = (Physical Power-2) .. (Physical Power+3)
+Spell Power = floor(ENE*0.75) + Flat Spell
+Damage phép = (Spell Power-2) .. (Spell Power+3)
+Defense = floor(STR*0.30 + VIT*0.15) + Flat Defense
+Accuracy = floor(60 + DEX*1.20) + Flat Accuracy
+Evasion = floor(DEX*0.55) + Flat Evasion
+Crit = clamp(Base Crit + DEX*0.001 + Flat Crit, 0%, 60%)
+Resistance = clamp(Base RES + floor(ENE*0.20) + Flat RES, -30%, 70%)
+Max Mana = clamp(floor(Base Mana + ENE/25 + Flat Mana), 1, 10)
+Potion = clamp(35% + min(15%, VIT*0.0005) + bonus item, 10%, 75%)
+```
+
+Trọng số STR/DEX: Barbarian 1/0; Amazon 0,25/0,75; Assassin 0,30/0,70; Paladin 0,90/0,10; Druid 0,80/0,20; Necromancer và Sorceress 0,70/0,30.
+
+```text
+Tỷ lệ né = clamp(Evasion/(Accuracy kẻ đánh + Evasion), 5%, 45%)
+Tỷ lệ trúng = 1 - tỷ lệ né
+Giảm vật lý = clamp(Defense/(Defense + 100 + Floor/2), 0%, 70%)
+Giảm phép = clamp(Resistance, -50%, 75%)
+Critical damage = 175% damage trước giảm trừ
+```
+
+## 4. Combat và kỹ năng class
+
+- **Max Mana:** tăng theo mốc cố định; mỗi 25 ENE thêm 1 Max Mana, sau đó cộng bonus item và cap 10.
+- **Tấn công:** luôn là vật lý, có thể trượt và Critical. Sorceress/Necromancer hồi `max(1, floor(Max Mana*70%))`; năm class vật lý hồi `max(1, floor(Max Mana*40%))`.
+- **Kỹ năng:** tốn 2 Mana, trừ trường hợp Sorceress đang có Class Shrine. Mana và ENE là hai giá trị khác nhau.
+- **Phòng thủ:** hồi 1 Mana; vật lý dùng Defense x2; phép nhận +15 RES; sau giảm trừ còn giảm thêm 15%; miễn Critical trong lượt đó.
+- **Bình máu:** tối thiểu hồi 20 HP, tiêu một bình, không dùng được khi đầy HP. Tối đa giữ 5 bình.
+
+### 4.1. Dự báo chỉ số và sát thương
+
+- Ở checkpoint, mục dự báo hiển thị toàn bộ chỉ số hiện tại và toàn bộ chỉ số sau từng lựa chọn `+5 STR`, `+5 DEX`, `+5 VIT` hoặc `+5 ENE`: HP, damage vật lý, damage phép, DEF, ACC, EVA, Crit, RES, Max Mana và hiệu lực bình máu.
+- Ở combat, dòng **Dự báo nhận** dùng đúng quái và loại đòn kế tiếp đang hiển thị. Dự báo tính tỷ lệ trúng, Defense hoặc Resistance, Rift Modifier, curse tăng damage nhận, Bloodlust/Frenzy và Class Shrine đang hoạt động.
+- Khoảng damage dự báo là lượng HP mất nếu đòn đánh trúng, **chưa tính Critical và chưa dùng nút Phòng thủ**. Vì vậy Critical thực tế có thể cao hơn con số này; bấm Phòng thủ sẽ thấp hơn.
+
+| Class | Skill | Cơ chế |
+|---|---|---|
+| Barbarian | Iron Will | Đòn vật lý ×1,65. |
+| Amazon | Barrage | Hai phát độc lập ×0,85; Class Shrine có 20% thêm phát thứ ba. |
+| Assassin | Shadow Step | Đòn vật lý ×1,30 và né hoàn toàn phản công. |
+| Sorceress | Arcane Burst | Phép ×2,10, luôn trúng, không Critical. |
+| Druid | Wild Regeneration | Đòn vật lý ×1,35 và hồi 12% Max HP. |
+| Necromancer | Totem Ward | Phép ×1,55, luôn trúng, không Critical và chặn phản công. |
+| Paladin | Divine Shield | Đòn vật lý ×1,40 rồi tự nhận trạng thái Phòng thủ trước phản công. |
+
+## 5. Quái, tăng độ khó và boss
+
+```text
+early = min(floor,100)
+overrun = max(0,floor-100)
+scaleHP = 1 + early*0.065 + overrun*0.08
+scaleDamage = 1 + early*0.04 + overrun*0.038
+lateProgress = clamp((floor-400)/599, 0, 1)
+lateHP = 1 + lateProgress*0.50
+lateDamage = 1 + lateProgress*0.90
+```
+
+HP cơ sở quái dùng `28*scaleHP`; damage dùng `5..9*scaleDamage`, sau đó nhân rank, modifier và late multiplier. Normal có hệ số 1; Champion 1,4 HP/1,15 damage; Elite 2 HP/1,35 damage; Mimic 1,7 HP/1,25 damage; Ancient Mimic 2,8 HP/1,5 damage. Boss cuối có 7,2 lần HP.
+
+Boss xuất hiện mỗi 50 tầng và xoay vòng theo danh sách sau; tầng 999 luôn là Deimoss:
+
+| Boss | Loại damage | Cơ chế |
+|---|---|---|
+| The Butcher | physical | Gây sát thương vật lý; mỗi lần ra đòn tăng 8% sát thương, tối đa 5 cộng dồn. |
+| Ascendant Riftwalker | magic | Gây sát thương phép; miễn nhiễm đòn đầu tiên trong mỗi chu kỳ ba lượt. |
+| Assur | physical | Gây sát thương vật lý; có Evasion cao và đòn chí mạng nguy hiểm. |
+| Lucion | magic | Gây sát thương phép; hồi máu bằng 35% sát thương gây ra. |
+| Deimoss the Fleshweaver | physical | Gây sát thương vật lý; Abyssal Spires giảm 25% sát thương nhận vào. |
+
+## 6. Checkpoint, Rift Modifier, Paradox và Severance
+
+- Mỗi 5 tầng: hồi đầy HP, nhận 2 bình và chọn **+5 STR/DEX/VIT/ENE**.
+- Mỗi 10 tầng: thêm một Rift Modifier. Bot ưu tiên loại chưa có; khi đủ tám loại, modifier bắt đầu cộng dồn.
+- Mỗi 25 tầng: bắt buộc chọn một Rift Paradox, hiệu lực trong đúng 5 tầng tiếp theo.
+- Sau tầng 199, 399, 699 và 899: Rift Severance cho xóa toàn bộ stack của một modifier có hại. Không thể xóa Unstable Rift.
+
+### 6.1. Rift Modifier
+
+| Modifier | Hiệu lực mỗi stack |
+|---|---|
+| Stone Skin | +8% Defense theo stack hiệu dụng, cap +64%. |
+| Elemental Dominion | +3% damage và khả năng dùng phép theo stack hiệu dụng, cap +24%. |
+| Bloodlust | Dưới 50% HP, +6% damage theo stack hiệu dụng, cap +48%. |
+| Unstable Rift | Nhiều hòm tốt hơn nhưng Mimic cũng xuất hiện nhiều hơn. |
+| Fortified | +8% HP theo stack hiệu dụng, cap +64%. |
+| Swift Horror | +3 Accuracy và +1,5 Evasion theo stack hiệu dụng. |
+| Soul Drain | Mỗi combat có ceil(stack/4) lần đòn trúng rút 1 Mana, tối đa 3 lần. |
+| Cursed Ground | −3 RES theo stack hiệu dụng khi nhận phép, cap −24. |
+
+Stack hiệu dụng dùng giảm dần: ba stack đầu tính 100%; stack 4–8 tính 50%; stack thứ 9 trở đi tính 25%; tổng cap 8 stack hiệu dụng. Soul Drain giữ ngưỡng riêng 1 charge mỗi bốn stack, cap 3. Unstable Rift giữ công thức riêng vì các thành phần đã có cap: mỗi stack cộng 2 điểm phần trăm encounter hòm, +3 điểm phần trăm Mimic, +1 điểm phần trăm Ancient Mimic và +5 điểm phần trăm SSR trong Treasure Chest.
+
+### 6.2. Rift Paradox
+
+- **Máu là tiền:** mỗi phần trăm Max HP thực sự mất bởi nguồn thù địch cộng 1% payout tạm; mỗi phần trăm HP thực sự hồi trừ 1%. Biên từ −50% đến +50%. Chi phí tự nguyện không tăng bonus. Shop dùng payout gốc đã chốt nên không thể dùng payout ảo để mua đồ.
+- **Ngược đời:** damage vật lý của người chơi lấy Defense làm nguồn tấn công; Defense chống vật lý của người chơi lấy trung bình damage vật lý làm nguồn. Chỉ tồn tại trong năm tầng của Paradox.
+
+## 7. Hòm, rarity, pity và item level
+
+Hòm roll Mimic trước: 3% Ancient Mimic và 12% Mimic ở trạng thái không có modifier/item. Nếu an toàn, tỷ lệ cơ bản là 10% SSR, 3% UR, 22% SR, 40% R, 20% rỗng và 5% SSR giả. Luck cộng 0,2 điểm phần trăm SSR mỗi điểm; bonus SSR tổng bị cap 35%.
+
+- Sau 5 hòm không nhận SR/SSR/UR, hòm sau đảm bảo tối thiểu SR.
+- Sau 10 hòm không nhận SSR, mỗi lần trượt tiếp theo cộng 2 điểm phần trăm SSR.
+- Inspect có xác suất `min(95%, 25% + Luck*3% + Mimic Detection)` phát hiện Mimic.
+- Bán hòm cộng 15% tiền cược vào bonus payout và hoàn thành tầng.
+- Nhặt trùng đúng tên item tăng Level thay vì tạo dòng mới.
+- Mỗi cấp item cộng lại toàn bộ thuộc tính và hiệu ứng đặc biệt của item. Hiệu ứng một lần như bình, hồi HP hoặc Vé cũng kích hoạt khi nhận thêm cấp.
+- Thợ rèn trả 12% payout khả dụng để tăng một cấp. UR chưa giải nguyền cộng lại cả buff và curse.
+- Tu sĩ trả 20% payout khả dụng để giải toàn bộ curse, giữ buff/cấp hiện tại và đổi UR thành SSR.
+- Horadric Forge nghiền đúng một cấp item. Phần chỉ số của cấp bị nghiền được hấp thụ vĩnh viễn trong run, sau đó nhận thêm phần thưởng event.
+
+## 8. Catalog event hiện hành
+
+Kết quả ẩn của event được roll khi encounter được tạo và lưu trong SQLite. Restart bot hoặc `/choi sinhton tieptuc` không roll lại.
+
+### 8.1. Shrine
+
+Khi gặp Shrine, giao diện thay phần chỉ số của lượt trước bằng catalog sáu Shrine bên dưới. Sáu loại được chọn đồng đều, tương đương khoảng 16,7% mỗi loại; kết quả cụ thể vẫn được giữ kín cho tới khi người chơi bấm **Chạm Shrine**.
+
+| Shrine | Kết quả khi chạm |
+|---|---|
+| Healing | Hồi đầy HP. |
+| Armor | +5 STR hoặc +5 VIT, lựa chọn được pre-roll. |
+| Blood | +8 STR, −5 VIT; HP bị clamp nếu Max HP giảm. |
+| Experience | Cộng 25% tiền cược vào bonus payout. |
+| Corrupted | +12 STR, −8 VIT. |
+| Fake | Gây max(10, 30% Max HP) damage. |
+
+### 8.2. Trap và Wrong Portal
+
+- **Tax Collector:** mất 15% payout hiện tại.
+- **Potion Thief:** mất một bình nếu còn bình.
+- Mỗi Luck cho 1,5% Lucky Break né hai trap trên, cap 30%.
+- **Wrong Portal:** cố định 50% tốt/50% xấu; Luck không tác động. Kết quả xấu luôn gọi Rift Ambusher Elite và quái đánh phủ đầu.
+
+| Portal tốt | Kết quả |
+|---|---|
+| Healing Sanctuary | +10 Max HP, hồi đầy HP, +1 bình. |
+| Treasure Vault | +50% tiền cược vào bonus payout. |
+| Rift Blessing | +6 STR, +6 ENE, +1 Luck. |
+
+| Portal xấu | Kết quả trước trận phục kích |
+|---|---|
+| Blood Loss | Mất 15% Max HP nhưng không chết trực tiếp. |
+| Mana Void | Mana về 0. |
+| Supply Loss | Mất tối đa 2 bình. |
+| Payout Corruption | Mất 10% payout hiện tại. |
+| Dimensional Curse | −5 STR và −5 ENE. |
+
+### 8.3. Surprise event
+
+| Event | Lựa chọn và kết quả |
+|---|---|
+| Wandering Healer | Miễn phí hồi max(20, 30% Max HP) và +1 bình. |
+| Treasure Goblin | Cơ hội bắt = min(90%, 60% + Luck*1% + bonus item). Thành công +25% tiền cược; thất bại mất 10% payout. |
+| Altar of Sacrifice | Hiến tối đa 20% Max HP nhưng giữ ít nhất 1 HP để nhận +6 stat damage chính; hoặc trả 10% payout để nhận +6 VIT. |
+| Cursed Gambler | Cược 10% hoặc 25% payout; 50% thắng. Thắng cộng gấp đôi khoản đặt vào bonus, thua mất khoản đã chi. |
+| Lost Adventurer | Cứu bằng 1 bình để nhận R/SR (30% SR); hoặc cướp ngay nhận R với 25% biến thành UR. |
+| Blood Fountain | 60% hồi đầy HP; 25% +15 Max HP/HP; 15% gọi Blood Mimic. |
+| Blacksmith | Trả 12% payout để tăng một cấp item ngẫu nhiên đang có. |
+| Purifier | Trả 20% payout để giải curse một UR ngẫu nhiên đang có. |
+| Horadric Forge | Nghiền một cấp item để chọn +6 stat damage chính, +7 STR/VIT đã pre-roll, +4 VIT; SSR/UR còn có thể đổi lấy một Vé Thoát Hiểm. |
+| Rift Merchant | Hiện ba món ngẫu nhiên: bình 5%, hồi đầy 8%, +1 Luck 10%, SR 15%, Vé 25% payout. Chỉ mua một món. |
+| Mirror of Fate | Chọn +10 stat damage chính; hoặc +8 VIT và +5 STR/DEX phòng thủ; hoặc đập gương: 20% +2 Luck, 80% đấu Mirror Clone dùng chỉ số của người chơi. |
+| Treasure Room | Ba hòm đỏ/xanh/vàng, một hòm là Mimic. Được inspect một màu. Đỏ +5 damage trực tiếp; xanh +6 Defense/+5 RES; vàng +50% cược và +1 Luck. |
+| Rift Contract | Trong 3 tầng: không dùng bình → SSR; không dùng skill → +50% cược; không Defend → +10 stat damage chính. Vi phạm chỉ hủy thưởng. |
+| Class Shrine | Cường hóa class trong 3 tầng: Amazon có cơ hội phát thứ ba; Barbarian +8 Defense khi HP ≤30%; Assassin chắc chắn né một phản công; Sorceress dùng một skill miễn phí; Druid hồi 5% Max HP mỗi tầng sau tầng đầu; Necromancer chặn một đòn; Paladin +10 RES. |
+| Strange Doors | Cửa sáng 70% hồi đầy/+1 bình, xấu mất 20% Max HP; cửa vàng 70% +50% cược, xấu gọi Mimic; cửa tối 60% SSR, xấu gọi Premature Rift Boss. |
+| Rift Duelist | Chọn đấu stat một ván hoặc đấu trang bị tối đa năm ván; chi tiết ở mục dưới. |
+| Payout/HP/Diamond Item Shop | Ba offer item, mua tối đa một món; inventory và giá được khóa từ khi encounter sinh ra. |
+
+### 8.4. Rift Duelist
+
+- Chế độ stat: thắng nhận +6 theo tay đã chọn — Búa→STR, Kéo→DEX, Bao→ENE. Hòa hoặc thua bị trừ tổng cộng tối đa 6 điểm thuộc tính theo chuỗi đã pre-roll; không stat nào xuống dưới 1.
+- Chế độ trang bị: cần thắng 3 trong tối đa 5 ván. Thắng nhận SSR 75% hoặc UR 25%. Thua mất một item R/SR/SSR đã khóa lúc event sinh ra; UR không bị mất. Không có item hợp lệ thì không mất gì.
+- Năm tay đối thủ, chuỗi phạt, reward và item có thể mất đều được pre-roll. Luck không hé lộ hoặc đổi tay.
+- Event không thu tiền và không cộng thêm thưởng tầng ngoài phần thưởng đã chọn.
+
+### 8.5. Ba Item Shop
+
+| Shop | Rarity | Giá | Giới hạn |
+|---|---|---|---|
+| Payout | 45% R, 40% SR, 15% SSR | 5%/12%/25% payout gốc | Tối đa 5 lần/run |
+| Blood | 55% SR, 35% SSR, 10% UR | 12%/25%/40% Max HP lúc shop xuất hiện | Tối đa 3 lần/run |
+| Diamond | 40% SR, 40% SSR, 20% UR | 200/600/1.600 kim cương | Chỉ từ tầng 101, tối đa 2 lần/run |
+
+Mỗi loại shop cách lần xuất hiện trước của cùng loại ít nhất 50 tầng. Blood Shop yêu cầu HP hiện tại lớn hơn giá nên không thể tự sát để mua. Diamond Shop dùng operation ID idempotent để bấm lặp không trừ tiền hai lần.
+
+## 9. RNGesus
+
+- Không xuất hiện trước tầng 5. Base: tầng 5–9 là 0,3%; 10–19 là 0,6%; từ 20 là 1%.
+- Mỗi tầng nhân ngẫu nhiên từ ×0,25 đến ×3; mỗi tầng khô cộng 0,05 điểm phần trăm; 2,5% có Chaos Spike cộng 4–10 điểm phần trăm. Xác suất cuối cap 12%.
+- **Đánh:** chết ngay vì boss không thể bị đánh bại.
+- **Bỏ chạy:** 75% thành công. Nếu thất bại, Vé Thoát Hiểm tự dùng; không có Vé thì chết.
+- **Hối lộ:** mất 40% payout hiện tại và đi tiếp.
+- **Cầu nguyện:** 10% sống và nhận item; trong phần thưởng đó 85% SSR, 15% UR. Thất bại chết.
+- **Dùng Vé:** tiêu một Vé và bỏ qua an toàn.
+
+Trong giao diện, Chaos là mức cảnh báo xác suất gặp RNGesus ở lần roll gần nhất, không phải debuff và không làm giảm chỉ số. `Thấp` là dưới 1%, `Bất ổn` là từ 1% đến dưới 3%, `Nguy hiểm` là từ 3% trở lên. UI hiển thị trực tiếp phần trăm, chuỗi lượt chưa gặp và trạng thái Chaos Spike; xác suất cuối luôn cap 12%.
+
+## 10. Grave Echo và Server Nemesis
+
+- Khi run v2 chết hoặc chết bởi RNGesus sau khi đã vượt tầng 100, bot lưu tên, class, tầng chết, skill, hướng build và tối đa ba item mạnh nhất. Cấp item snapshot cap 5.
+- Không sao chép raw HP/damage. Khi gặp, bot tạo Elite/Boss theo tầng hiện tại rồi áp profile build.
+- Từ tầng 101, mỗi dải 100 tầng có tối đa một lần gặp; mỗi encounter hợp lệ có 1% cơ hội. Không gặp mộ của chính mình.
+- Chỉ chọn Echo có tầng tử trận không lớn hơn hai lần tầng hiện tại; ưu tiên Nemesis, số mạng cao rồi mới xét độ gần tầng.
+- Mỗi server giữ tối đa 10 Echo/Nemesis. Echo thường của cùng một người được thay bằng bản mới; record hết hạn sau 7 ngày.
+- Claim được khóa 30 phút để hai run không thể cùng cướp hoặc giết một Echo.
+
+| Lựa chọn | Kết quả |
+|---|---|
+| Cầu nguyện | Hồi 15% Max HP, thả claim; mộ vẫn tồn tại. |
+| Cướp mộ | Nhận một item snapshot; 50% đánh thức Echo. Nếu không thức, Echo bị xóa. |
+| Khiêu chiến | Gọi Echo mạnh hơn 25%; chưa lấy trước item. |
+| Bỏ đi | Không nhận gì, thả claim; mộ vẫn tồn tại. |
+
+Build DEX cho Echo +8 Evasion; VIT +12 Defense; STR +10% Crit; ENE khiến mọi đòn là phép. Nếu Echo giết người chơi, nó hấp thụ tối đa một item từ run, tăng level và kill, trở thành Server Nemesis rồi tồn tại thêm 7 ngày. Hạ Echo/Nemesis nhận một item nó giữ, bonus payout tăng theo số mạng và xóa record khỏi server.
+
+## 11. The Tower Remembers
+
+- Các hành động được ghi nhớ: cứu/cướp Lost Adventurer, hiến HP/payout, bỏ qua event, đập Mirror, bán hòm, hối lộ/cầu nguyện RNGesus.
+- State giữ tối đa 8 món nợ. Mỗi món kích hoạt ngẫu nhiên sau 10–30 tầng và chỉ một lần.
+- Khi ghi nhận, kết quả tốt/xấu được pre-roll 50/50 và được giữ nguyên qua restart/resume.
+- Hậu quả tốt hồi khoảng 10–20% Max HP và cộng khoảng 10–30% tiền cược vào payout.
+- Hậu quả xấu hoặc lấy 10% payout, hoặc gọi Bounty Hunter Elite.
+- Sau lựa chọn ban đầu bot chỉ báo `The Tower will remember this.` và không tiết lộ kết quả đã roll.
+
+## 12. Payout và kết thúc run
+
+```text
+floorPart = min(cleared,100)
+checkpointCount = min(20, floor(floorPart/5))
+baseMultiplier = 1 + min(floorPart,50)*0.06 + max(0,floorPart-50)*0.10 + checkpointCount*0.15
+gross = floor((stake*baseMultiplier + bonus)*payoutFactor)
+payout = clamp(gross, 0, 10.000.000) - payoutSpent
+```
+
+Hệ số tầng ngừng tăng sau tầng 100; bonus từ combat, item, Shrine và event vẫn tăng. Blood Paradox chỉ tác động preview/chốt cuối, không làm tăng số payout có thể chi trong shop. Cashout hoặc Summit mới trả payout; death/RNGesus/forfeit trả 0.
+
+Thành tích toàn tài khoản hiện có các mốc Sinh tồn: tầng 10 thưởng 10.000 xu và 30 kim cương; tầng 25 thưởng 30.000 xu và 100 kim cương; tầng 50 thưởng 75.000 xu và 250 kim cương. Sinh tồn không roll vật phẩm shop/economy bên ngoài sau ván; item trong catalog chỉ tồn tại trong run.
+
+## 13. Chống lỗi và abuse
+
+- Mọi nút mang `turn`; nút cũ bị từ chối bằng `STALE_ACTION`.
+- Interaction của cùng session được xếp hàng để tránh hai click đồng thời.
+- Toàn bộ mutation run, economy, shop và Grave Echo chạy trong SQLite transaction.
+- Giao dịch kim cương có operation ID idempotent.
+- Payout shop kiểm tra payout gốc sau các khoản đã chi; không dùng bonus Blood Paradox.
+- Blood Shop kiểm tra lại HP ngay lúc mua và giữ ít nhất 1 HP.
+- Kết quả RNG/event, inventory shop, giá, tay Duelist và karma consequence được lưu trong state; resume không reroll.
+- Phiên không hoạt động quá 7 ngày bị tính là forfeit, payout bằng 0 và phiên bị xóa.
+- Item, thuộc tính và stat dẫn xuất được tính lại từ nguồn để tránh cộng chỉ số hai lần khi mở lại UI.
+
+## 14. Catalog 100 item v2
+
+Thuộc tính trong bảng được cộng **mỗi cấp**. Cột đặc biệt chỉ liệt kê hiệu ứng thật sự còn hoạt động trong stat v2; các dòng attack/defense cũ trong source đã được thay bằng bốn thuộc tính. R=Common, SR=Rare, SSR=Legendary, UR=Cursed.
+
+### 14.1. R — Common
+
+| Item | Nhóm | Thuộc tính mỗi cấp | Hiệu ứng đặc biệt | Lời nguyền khi chưa giải |
+|---|---|---|---|---|
+| Rusted Edge | weapon | +5 STR | Không có | — |
+| Iron Dagger | weapon | +1 STR, +4 DEX | Không có | — |
+| Cracked Wand | weapon | +5 ENE | Không có | — |
+| Hunter Bow | weapon | +5 DEX | Không có | — |
+| Militia Spear | weapon | +3 STR, +2 DEX | Không có | — |
+| Bone Club | weapon | +6 STR, -1 DEX | Không có | — |
+| Dented Plate | armor | +3 STR, +2 VIT | Không có | — |
+| Wooden Buckler | armor | +2 STR, +2 VIT, +1 ENE | Không có | — |
+| Worn Boots | armor | +4 DEX | Không có | — |
+| Copper Ring | jewelry | +1 VIT, +4 ENE | Không có | — |
+| Minor Life Charm | charm | +5 VIT | Không có | — |
+| Rabbit Foot | charm | Không cộng thuộc tính | +1 Luck | — |
+| Red Potion Belt | utility | Không cộng thuộc tính | +1 bình khi nhận mỗi cấp | — |
+| Scout Lens | utility | +2 DEX | +2% phát hiện Mimic | — |
+| Mana Fragment | charm | +2 ENE | +1 Max Mana | — |
+| Battle Token | charm | +2 STR, +2 VIT | Không có | — |
+| Silver Thread | jewelry | +2 DEX, +3 ENE | Không có | — |
+| Traveler Map | utility | +2 DEX | +1 Luck | — |
+| Small Ward | armor | +2 STR, +3 VIT | Không có | — |
+| Sharpening Stone | utility | +5 STR | Không có | — |
+| Ember Bead | jewelry | +1 STR, +4 ENE | Không có | — |
+| Fox Mask | armor | +5 DEX | Không có | — |
+| Oak Talisman | charm | +6 VIT | Không có | — |
+| Glass Bead | jewelry | +4 DEX | Không có | — |
+| Field Bandage | utility | Không cộng thuộc tính | hồi 10 HP khi nhận mỗi cấp | — |
+| Iron Nail | charm | +3 STR, +2 VIT | Không có | — |
+| Hawk Feather | charm | +5 DEX | Không có | — |
+| Smoke Vial | utility | +5 DEX | Không có | — |
+| Cold Ash | charm | +5 ENE | Không có | — |
+| Goblin Hook | utility | Không cộng thuộc tính | +2% bắt Goblin | — |
+| Chest Chalk | utility | Không cộng thuộc tính | +3% phát hiện Mimic | — |
+| Faded Clover | charm | +2 VIT | +1 Luck | — |
+
+### 14.2. SR — Rare
+
+| Item | Nhóm | Thuộc tính mỗi cấp | Hiệu ứng đặc biệt | Lời nguyền khi chưa giải |
+|---|---|---|---|---|
+| Hunter’s Fang | weapon | +4 STR, +6 DEX | Không có | — |
+| Runed Carapace | armor | +5 STR, +4 VIT, +3 ENE | Không có | — |
+| Heart of the Wild | charm | +10 VIT | Không có | — |
+| Lucky Coin | charm | +2 VIT | +3 Luck | — |
+| Vanguard Spear | weapon | +6 STR, +6 DEX | Không có | — |
+| Shadowstep Boots | armor | +10 DEX | Không có | — |
+| Bone Talisman | charm | +7 VIT, +5 ENE | Không có | — |
+| Bloodstone | jewelry | +6 STR, +6 VIT | Không có | — |
+| Rift Compass | utility | +3 DEX | +2 Luck, +8% phát hiện Mimic | — |
+| Alchemist Belt | utility | +3 VIT | +5% hiệu lực bình, +1 bình khi nhận mỗi cấp | — |
+| Guardian Seal | armor | +5 STR, +7 VIT | Không có | — |
+| Mana Prism | charm | +10 ENE | +1 Max Mana | — |
+| Goblin Snare | utility | +3 DEX | +1 Luck, +8% bắt Goblin | — |
+| Warden’s Chain | armor | +9 STR, -2 DEX, +5 VIT | Không có | — |
+| Moonlit Blade | weapon | +5 STR, +7 ENE | Không có | — |
+| Assassin’s Ribbon | charm | +11 DEX | Không có | — |
+| Lionheart Emblem | charm | +5 STR, +8 VIT | Không có | — |
+| Stormglass | jewelry | +5 STR, +8 DEX | Không có | — |
+| Saint’s Ward | armor | +4 STR, +3 VIT, +7 ENE | Không có | — |
+| Riftwalker’s Boots | armor | +10 DEX | +1 Luck | — |
+| Executioner’s Mark | charm | +5 STR, +4 DEX | +12% damage Elite | — |
+| Boss Hunter’s Badge | charm | +3 STR, +6 VIT | +12% damage Boss | — |
+| Golden Monocle | utility | +2 DEX | +5% phát hiện Mimic, +3% tìm SSR | — |
+| Deep Flask | utility | +4 VIT | +10% hiệu lực bình | — |
+| War Drums | charm | +5 STR, +4 DEX, +3 VIT | Không có | — |
+| Spirit Lantern | utility | +10 ENE | +1 Max Mana | — |
+| Steel Lotus | armor | +4 STR, +6 DEX, +3 VIT | Không có | — |
+| Fortune Dice | charm | +6 DEX | +4 Luck | — |
+
+### 14.3. SSR — Legendary
+
+| Item | Nhóm | Thuộc tính mỗi cấp | Hiệu ứng đặc biệt | Lời nguyền khi chưa giải |
+|---|---|---|---|---|
+| One More Hit | charm | +12 VIT | +1 Vé Thoát Hiểm khi nhận mỗi cấp | — |
+| The Last Bad Decision | weapon | +12 STR, +12 DEX, -5 VIT | Không có | — |
+| Warden’s Bulwark | armor | +10 STR, +8 VIT, +8 ENE | Không có | — |
+| Eye of RNGesus | charm | +5 STR, +5 DEX, +5 ENE | +7 Luck | — |
+| Phoenix Blood | charm | +16 VIT, +8 ENE | Không có | — |
+| Riftbreaker | weapon | +12 STR, +8 DEX | +20% damage Boss, +15% damage Elite | — |
+| Living Armor | armor | +10 STR, +16 VIT | Không có | — |
+| Mimic Crown | armor | +6 DEX, +6 ENE | +3 Luck, +20% phát hiện Mimic, +5% tìm SSR | — |
+| Endless Flask | utility | +10 VIT, +8 ENE | +20% hiệu lực bình, +1 bình khi nhận mỗi cấp | — |
+| Chrono Shard | charm | +20 DEX | +2 Luck | — |
+| Seraphic Aegis | armor | +10 STR, +6 VIT, +12 ENE | Không có | — |
+| Doomwhisper | weapon | +14 STR, +12 DEX | Không có | — |
+| Worldroot Seed | charm | +4 STR, +22 VIT | Không có | — |
+| Void Lens | utility | +8 DEX, +8 ENE | +15% phát hiện Mimic, +8% tìm SSR | — |
+| Angelic Engine | charm | +6 VIT, +18 ENE | +2 Max Mana | — |
+| Predator’s Instinct | charm | +6 STR, +14 DEX | +25% damage Elite | — |
+| Deimoss Scar | charm | +14 STR, +6 VIT | +30% damage Boss | — |
+| Golden Goblet | utility | +6 DEX, +6 VIT | +5 Luck, +18% bắt Goblin | — |
+| Astral Mail | armor | +6 STR, +8 DEX, +6 VIT, +8 ENE | Không có | — |
+| Blood Moon Edge | weapon | +14 STR, +12 VIT | Không có | — |
+| Oracle Mask | armor | +12 DEX, +10 ENE | +5 Luck | — |
+| Eternal Clover | charm | +4 DEX, +4 VIT | +9 Luck, +4% tìm SSR | — |
+| Titan Heart | charm | +6 STR, +22 VIT | Không có | — |
+| Sevenfold Sigil | jewelry | +7 STR, +7 DEX, +7 VIT, +7 ENE | +3 Luck | — |
+
+### 14.4. UR — Cursed
+
+| Item | Nhóm | Thuộc tính mỗi cấp | Hiệu ứng đặc biệt | Lời nguyền khi chưa giải |
+|---|---|---|---|---|
+| Glass Cannon | weapon | +35 STR, +15 DEX | Không có | Defense = 0 |
+| Schrödinger’s Armor | armor | +20 STR, +30 VIT | Không có | -12 VIT |
+| Goblin’s Debt | charm | +20 DEX, +15 VIT | +12 Luck, +20% bắt Goblin | mất 15% payout hiện tại mỗi cấp nhận |
+| Crown of Ruin | armor | +20 STR, +15 VIT | +8 Luck | mất 10% payout hiện tại mỗi cấp nhận |
+| Blood Pact | weapon | +40 STR, +10 DEX | Không có | -15 VIT |
+| Void Heart | charm | +35 VIT, +20 ENE | Không có | -15% hiệu lực bình |
+| Broken Hourglass | charm | +40 DEX | +8 Luck | mất 4% Max HP sau mỗi tầng |
+| Mimic’s Promise | utility | +20 DEX, +15 ENE | +10% phát hiện Mimic, +12% tìm SSR | +12% Mimic |
+| Berserker Chains | weapon | +40 STR, +10 DEX | +20% damage Elite | nhận thêm 18% damage |
+| Hollow Crown | armor | +10 VIT, +40 ENE | +2 Max Mana | -15 STR |
+| Ashen Wings | armor | +40 DEX, +10 ENE | Không có | -20 Resistance |
+| Soul Leash | charm | +20 STR, +25 ENE | +35% damage Boss | -2 Max Mana |
+| Bleeding Star | jewelry | +20 STR, +30 DEX | Không có | mất 6% Max HP sau mỗi tầng |
+| Null Idol | charm | +20 STR, +15 VIT, +20 ENE | Không có | -15 DEX, -6 Luck |
+| Black Sun | charm | +10 DEX, +30 ENE | +10 Luck, +15% tìm SSR | -20% hiệu lực bình |
+| Oathbreaker | weapon | +25 STR, +15 DEX, +10 VIT | +25% damage Boss, +25% damage Elite | -10 STR, -10 DEX |
+
+## 15. Kiểm thử và cân bằng đã chốt
+
+- Toàn bộ `npm test` đã qua: command, economy, migration, lifecycle, item effect, event, setup, handler và security audit.
+- Catalog validator xác nhận đúng 100 item: 32 R, 28 SR, 24 SSR, 16 UR; chỉ hai curse trực tiếp giảm payout.
+- Bộ Sinh tồn v2 kiểm tra 12 nhóm abuse: stale click, checkpoint lặp, payout ảo, HP shop, kim cương thiếu/bấm lặp, Duelist, Severance, Soul Drain, Grave lease/cap và tương thích v1.
+- Mốc mô phỏng 700 run trước thay đổi hồi Mana/Rift có 0 lần vượt tầng 999, cao nhất 969. Smoke test Mana mới gồm 210 run cũng có 0 lần vượt, cao nhất 934. Theo yêu cầu vận hành, chưa chạy lại mô phỏng dài sau rework stack Rift; các số trên là mốc lịch sử, không được xem là tỷ lệ chính thức của bản mới.
+
+## 16. File nguồn tham chiếu
+
+- `src/services/hardcoreService.js`: gameplay, combat, encounter và transaction.
+- `src/services/hardcoreStats.js`: bốn thuộc tính và chỉ số dẫn xuất.
+- `src/hardcore/item.js`: catalog 100 item.
+- `src/services/hardcoreWorld.js`: khu vực, modifier và boss.
+- `src/services/hardcoreView.js`: embed và component Discord.
+- `src/services/hardcoreRepository.js`: session, record, Grave Echo/Nemesis.
+- `scripts/test-hardcore-v2.js`: kiểm thử công thức và abuse.
+- `scripts/simulate-hardcore.js`: mô phỏng cân bằng 999 tầng.
+

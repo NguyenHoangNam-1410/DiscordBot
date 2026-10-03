@@ -58,7 +58,13 @@ const {
   shrineFakeDamage,
   MERCHANT_OFFERS,
 } = require("./hardcoreEngine");
-const { ITEMS } = require("../hardcore/item");
+// Preserve the legacy catalog for saved runs; v2 has a separate source-based engine.
+const { ITEMS } = require("../hardcore/itemLegacy");
+const hardcoreV2 = require("./hardcoreV2");
+const hardcoreV2View = require("./hardcoreV2View");
+const hardcoreStats = require("./hardcoreStats");
+const hardcoreEchoes = require("./hardcoreEchoRepository");
+const { RELEASE, isV2, useV2 } = require("./hardcoreVersion");
 
 const MIN_BET = 10;
 const MAX_BET = 100_000;
@@ -1054,6 +1060,14 @@ function getHardcoreRecord(guildId, userId) {
     completions: 0,
   };
   const run = getHardcoreRun(guildId, userId);
+  record.versions = db
+    .prepare(
+      `SELECT release_version,gameplay_version,COUNT(*) runs,MAX(cleared) best_floor,
+    SUM(CASE WHEN reason IN ('cashout','summit') THEN 1 ELSE 0 END) escapes
+    FROM hardcore_run_archive WHERE guild_id=? AND user_id=? AND reason IN ('cashout','summit','death','rngesus','forfeit') GROUP BY release_version,gameplay_version`,
+    )
+    .all(String(guildId), String(userId));
+  record.activeVersion = run?.state.releaseVersion || (run ? "legacy-4" : null);
   if (!run) return record;
   return {
     ...record,
@@ -1070,6 +1084,7 @@ const getSession = hardcoreRepository.getSession;
 const getHardcoreByUser = hardcoreRepository.getByUser;
 function parseState(session) {
   const state = hardcoreRepository.parseState(session);
+  if (isV2(state)) return hardcoreV2.normalize(state);
   state.escapeTokens = clamp(Math.floor(Number(state.escapeTokens) || 0), 0, 1);
   state.modifiers ||= {};
   state.payoutSpent ||= 0;
@@ -1261,7 +1276,15 @@ const saveState = hardcoreRepository.saveState;
 const setMessageId = hardcoreRepository.setMessageId;
 
 const startTx = db.transaction(
-  ({ guildId, userId, channelId, stake, classKey, forcedEncounter = null }) => {
+  ({
+    guildId,
+    userId,
+    channelId,
+    stake,
+    classKey,
+    forcedEncounter = null,
+    playerName = String(userId),
+  }) => {
     const template = CLASSES[classKey];
     if (!template) throw new Error("INVALID_CLASS");
     if (!Number.isSafeInteger(stake) || stake < MIN_BET || stake > MAX_BET)
@@ -1279,7 +1302,7 @@ const startTx = db.transaction(
       amount: stake,
       reason: "hardcore:reserve",
     });
-    const state = {
+    let state = {
       classKey,
       className: template.name,
       stake,
@@ -1328,9 +1351,16 @@ const startTx = db.transaction(
     for (const key of Object.keys(ITEM_LIMITS)) state[key] ??= 0;
     state.contract = null;
     state.classShrine = null;
-    state.encounter =
-      forcedEncounter ||
-      fairStateContext.run(state, () => generateEncounter(state));
+    if (useV2()) {
+      const fair = state.fair;
+      state = hardcoreStats.createState(classKey, stake);
+      state.fair = fair;
+      state.fairCounter = 0;
+      state.playerName = String(playerName).slice(0, 80);
+    } else
+      state.encounter =
+        forcedEncounter ||
+        fairStateContext.run(state, () => generateEncounter(state));
     const now = Date.now();
     const session = {
       id: crypto.randomBytes(6).toString("hex"),
@@ -1341,6 +1371,12 @@ const startTx = db.transaction(
       created_at: now,
       updated_at: now,
     };
+    if (isV2(state))
+      state.encounter =
+        forcedEncounter ||
+        fairStateContext.run(state, () =>
+          hardcoreV2.generateEncounter(state, session, randomFloat),
+        );
     hardcoreRepository.insertSession(
       { ...session, created_at: now, updated_at: now },
       state,
@@ -1357,6 +1393,7 @@ const SETUP_IDLE_MS = 5 * 60_000;
 const setupDrafts = new Map();
 function setupContext(draft) {
   return {
+    gameplayVersion: useV2() ? 2 : 1,
     balance: getAccount(draft.guildId, draft.userId).balance,
     maxBet: Math.min(MAX_BET, getGameBetLimit(draft.guildId, "hardcore")),
   };
@@ -1420,6 +1457,11 @@ async function openHardcoreSetup(interaction, initial = {}) {
     id: crypto.randomBytes(6).toString("hex"),
     guildId: interaction.guildId,
     userId: interaction.user.id,
+    playerName:
+      interaction.member?.displayName ||
+      interaction.user.globalName ||
+      interaction.user.username ||
+      interaction.user.id,
     channelId: interaction.channelId,
     classKey: Object.hasOwn(CLASSES, initial.classKey)
       ? initial.classKey
@@ -1549,7 +1591,7 @@ async function handleHardcoreSetup(interaction, logger = console) {
       return refreshSetup(
         interaction,
         draft,
-        `Bạn hiện có **${formatCoins(context.balance)} xu**. Hãy nhập mức cược nhỏ hơn.`,
+        "Không đủ xu cho mức cược này. Hãy nhập mức cược nhỏ hơn hoặc xem số dư qua /hoso.",
       );
     draft.stake = stake;
     return refreshSetup(interaction, draft);
@@ -1605,6 +1647,7 @@ async function handleHardcoreSetup(interaction, logger = console) {
       channelId: draft.channelId,
       stake: draft.stake,
       classKey: draft.classKey,
+      playerName: draft.playerName,
     });
   } catch (error) {
     draft.busy = false;
@@ -1666,7 +1709,11 @@ function finishRun(session, state, reason) {
   const diamonds =
     reason === "cashout" || reason === "summit" ? runDiamondReward(state) : 0;
   let payout =
-    reason === "cashout" || reason === "summit" ? potentialPayout(state) : 0;
+    reason === "cashout" || reason === "summit"
+      ? isV2(state)
+        ? hardcoreV2.payout(state)
+        : potentialPayout(state)
+      : 0;
   const outcome =
     payout > state.stake ? "win" : payout === state.stake ? "draw" : "loss";
   const account = settleReservedGame({
@@ -1685,6 +1732,10 @@ function finishRun(session, state, reason) {
       operationId: `settle:hardcore-diamonds:${session.id}`,
     });
   recordRun(session.guild_id, session.user_id, state, reason);
+  if (isV2(state) && ["death", "rngesus"].includes(reason))
+    hardcoreEchoes.onDeath(session, state);
+  hardcoreEchoes.archive(session, state, reason, payout, diamonds);
+  hardcoreEchoes.releaseAll(session);
   hardcoreRepository.deleteSession(session.id);
   return {
     reason,
@@ -1718,6 +1769,13 @@ function forceEndHardcoreSession(
         operationId: `refund:hardcore-admin:${session.id}:${session.user_id}`,
       });
     if (forfeit) recordRun(session.guild_id, session.user_id, state, "forfeit");
+    hardcoreEchoes.archive(
+      session,
+      state,
+      forfeit ? "forfeit" : label,
+      forfeit ? 0 : state.stake,
+    );
+    hardcoreEchoes.releaseAll(session);
     hardcoreRepository.deleteSession(session.id);
     return {
       session,
@@ -2338,6 +2396,28 @@ const actionTx = db.transaction(
     const state = parseState(session);
     return fairStateContext.run(state, () => {
       if (state.turn !== expectedTurn) throw new Error("STALE_ACTION");
+      if (isV2(state)) {
+        state.turn += 1;
+        const reason = hardcoreV2.act(state, session, action, randomFloat);
+        if (reason) {
+          if (reason === "rngesus") state.hp = 0;
+          return {
+            settled: true,
+            state,
+            result: finishRun(session, state, reason),
+          };
+        }
+        if (state.cleared > 0)
+          hardcoreRepository.upsertRecord(session.guild_id, session.user_id, {
+            bestFloor: state.cleared,
+            runs: 0,
+            deaths: 0,
+            escapes: 0,
+            completions: 0,
+          });
+        saveState(session, state);
+        return { settled: false, state, result: null };
+      }
       if (action === "retreat" && state.encounter.type === "rngesus")
         throw new Error("CANNOT_RETREAT");
       const before = statSnapshot(state);
@@ -2706,6 +2786,8 @@ function playHardcore(args) {
 }
 
 function hardcoreEmbed(state, userId, result = null, sessionId = null) {
+  if (isV2(state))
+    return hardcoreV2View.embed(state, userId, result, sessionId);
   return hardcoreView.hardcoreEmbed(
     state,
     userId,
@@ -2716,6 +2798,7 @@ function hardcoreEmbed(state, userId, result = null, sessionId = null) {
   );
 }
 function hardcoreRows(sessionId, state, disabled = false) {
+  if (isV2(state)) return hardcoreV2View.rows(sessionId, state, disabled);
   return hardcoreView.hardcoreRows(sessionId, state, disabled, CLASSES);
 }
 
@@ -2813,15 +2896,23 @@ async function handleHardcoreButton(interaction, logger) {
       }
       if (detailAction) {
         const state = parseState(session);
-        const payload = hardcoreView.hardcorePrivatePayload(
-          state,
-          CLASSES,
-          ITEMS,
-          sessionId,
-          sourceMessageId,
-          detailAction[1],
-          Number(detailAction[2]),
-        );
+        const payload = isV2(state)
+          ? hardcoreV2View.privatePayload(
+              state,
+              sessionId,
+              sourceMessageId,
+              detailAction[1],
+              Number(detailAction[2]),
+            )
+          : hardcoreView.hardcorePrivatePayload(
+              state,
+              CLASSES,
+              ITEMS,
+              sessionId,
+              sourceMessageId,
+              detailAction[1],
+              Number(detailAction[2]),
+            );
         const reply = await interaction.editReply(payload);
         hardcoreRepository.touchSession(sessionId);
         return reply;
@@ -2873,29 +2964,31 @@ async function handleHardcoreButton(interaction, logger) {
         });
       }
       const content =
-        error.message === "NO_ENERGY"
-          ? "Không đủ năng lượng dùng kỹ năng."
-          : error.message === "NO_POTION"
-            ? "Bạn đã hết bình máu."
-            : error.message === "NO_RESCUE_POTIONS"
-              ? "Cứu Lost Adventurer cần ít nhất 2 bình máu."
-              : error.message === "FULL_HP"
-                ? "HP đang đầy."
-                : error.message === "ALREADY_INSPECTED"
-                  ? "Bạn đã kiểm tra hòm này."
-                  : error.message === "CANNOT_RETREAT"
-                    ? "Không thể rút thưởng khi gặp RNGesus."
-                    : error.message === "INSUFFICIENT_RUN_PAYOUT"
-                      ? "Payout tích lũy của run chưa đủ trả phí dịch vụ."
-                      : error.message === "NO_FORGE_ITEM"
-                        ? "Bạn chưa có trang bị phù hợp để rèn."
-                        : error.message === "NO_CURSE"
-                          ? "Không có lời nguyền của đồ UR cần giải."
-                          : error.message === "INSUFFICIENT_HP"
-                            ? "HP hiện tại chưa đủ cho lựa chọn này."
-                            : error.message === "NO_TICKET"
-                              ? "Bạn không còn Vé Thoát Hiểm."
-                              : "Không thể thực hiện lựa chọn này.";
+        error.message === "INSUFFICIENT_DIAMONDS"
+          ? "Không đủ kim cương để mua vật phẩm này. Xem số dư qua /hoso."
+          : error.message === "NO_ENERGY"
+            ? "Không đủ năng lượng dùng kỹ năng."
+            : error.message === "NO_POTION"
+              ? "Bạn đã hết bình máu."
+              : error.message === "NO_RESCUE_POTIONS"
+                ? "Cứu Lost Adventurer cần ít nhất 2 bình máu."
+                : error.message === "FULL_HP"
+                  ? "HP đang đầy."
+                  : error.message === "ALREADY_INSPECTED"
+                    ? "Bạn đã kiểm tra hòm này."
+                    : error.message === "CANNOT_RETREAT"
+                      ? "Không thể rút thưởng khi gặp RNGesus."
+                      : error.message === "INSUFFICIENT_RUN_PAYOUT"
+                        ? "Payout tích lũy của run chưa đủ trả phí dịch vụ."
+                        : error.message === "NO_FORGE_ITEM"
+                          ? "Bạn chưa có trang bị phù hợp để rèn."
+                          : error.message === "NO_CURSE"
+                            ? "Không có lời nguyền của đồ UR cần giải."
+                            : error.message === "INSUFFICIENT_HP"
+                              ? "HP hiện tại chưa đủ cho lựa chọn này."
+                              : error.message === "NO_TICKET"
+                                ? "Bạn không còn Vé Thoát Hiểm."
+                                : "Không thể thực hiện lựa chọn này.";
       return interaction.followUp({ content, flags: MessageFlags.Ephemeral });
     }
   });
@@ -2905,7 +2998,7 @@ function cleanupStaleHardcoreSessions(now = Date.now()) {
   const rows = hardcoreRepository.listStale(now - STALE_MS);
   const cleanup = db.transaction(() => {
     for (const session of rows) {
-      const forfeit = Boolean(session.message_id);
+      const forfeit = isV2(parseState(session)) || Boolean(session.message_id);
       forceEndHardcoreSession(session.id, session.guild_id, "system", {
         label: forfeit ? "timeout-forfeit" : "timeout-refund",
         forfeit,
@@ -2917,6 +3010,9 @@ function cleanupStaleHardcoreSessions(now = Date.now()) {
 }
 
 module.exports = {
+  RELEASE,
+  V2: hardcoreV2,
+  V2_CLASSES: hardcoreStats.CLASSES,
   makeChest,
   chestOdds,
   MIN_BET,

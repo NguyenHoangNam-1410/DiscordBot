@@ -1,0 +1,374 @@
+{
+  "amazon": {
+    "runs": 20,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "gameplayVersion": "2.0.0",
+    "simulationSeed": "survival-v2-tuning-2026-10-03",
+    "stake": 100000,
+    "completedPercent": 0,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 50,
+        "count": 6
+      },
+      {
+        "floor": 100,
+        "count": 5
+      },
+      {
+        "floor": 39,
+        "count": 2
+      },
+      {
+        "floor": 27,
+        "count": 1
+      },
+      {
+        "floor": 32,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": 13.9108,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 20,
+    "passedFloor50": 8,
+    "passedFloor100": 2,
+    "reachedFinalBoss": 0,
+    "completed999": 0,
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": null,
+    "finalBossMeans": null,
+    "estimatedCompletionPercent": null,
+    "maxFloor": 449,
+    "medianFloor": 49,
+    "meanFloor": 86.5
+  },
+  "barbarian": {
+    "runs": 20,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "gameplayVersion": "2.0.0",
+    "simulationSeed": "survival-v2-tuning-2026-10-03",
+    "stake": 100000,
+    "completedPercent": 0,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 100,
+        "count": 7
+      },
+      {
+        "floor": 50,
+        "count": 6
+      },
+      {
+        "floor": 94,
+        "count": 2
+      },
+      {
+        "floor": 43,
+        "count": 1
+      },
+      {
+        "floor": 45,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": 13.9108,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 20,
+    "passedFloor50": 12,
+    "passedFloor100": 1,
+    "reachedFinalBoss": 0,
+    "completed999": 0,
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": null,
+    "finalBossMeans": null,
+    "estimatedCompletionPercent": null,
+    "maxFloor": 199,
+    "medianFloor": 93,
+    "meanFloor": 80.95
+  },
+  "assassin": {
+    "runs": 20,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "gameplayVersion": "2.0.0",
+    "simulationSeed": "survival-v2-tuning-2026-10-03",
+    "stake": 100000,
+    "completedPercent": 0,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 50,
+        "count": 9
+      },
+      {
+        "floor": 100,
+        "count": 8
+      },
+      {
+        "floor": 850,
+        "count": 2
+      },
+      {
+        "floor": 600,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": 13.9108,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 20,
+    "passedFloor50": 11,
+    "passedFloor100": 3,
+    "reachedFinalBoss": 0,
+    "completed999": 0,
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": null,
+    "finalBossMeans": null,
+    "estimatedCompletionPercent": null,
+    "maxFloor": 849,
+    "medianFloor": 99,
+    "meanFloor": 176.5
+  },
+  "sorceress": {
+    "runs": 20,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "gameplayVersion": "2.0.0",
+    "simulationSeed": "survival-v2-tuning-2026-10-03",
+    "stake": 100000,
+    "completedPercent": 0,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 50,
+        "count": 4
+      },
+      {
+        "floor": 100,
+        "count": 4
+      },
+      {
+        "floor": 39,
+        "count": 1
+      },
+      {
+        "floor": 55,
+        "count": 1
+      },
+      {
+        "floor": 63,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": 13.9108,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 20,
+    "passedFloor50": 15,
+    "passedFloor100": 7,
+    "reachedFinalBoss": 0,
+    "completed999": 0,
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": null,
+    "finalBossMeans": null,
+    "estimatedCompletionPercent": null,
+    "maxFloor": 809,
+    "medianFloor": 99,
+    "meanFloor": 263.4
+  },
+  "druid": {
+    "runs": 20,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "gameplayVersion": "2.0.0",
+    "simulationSeed": "survival-v2-tuning-2026-10-03",
+    "stake": 100000,
+    "completedPercent": 5,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 100,
+        "count": 8
+      },
+      {
+        "floor": 50,
+        "count": 7
+      },
+      {
+        "floor": 25,
+        "count": 1
+      },
+      {
+        "floor": 30,
+        "count": 1
+      },
+      {
+        "floor": 34,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": null,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 20,
+    "passedFloor50": 10,
+    "passedFloor100": 2,
+    "reachedFinalBoss": 1,
+    "completed999": 1,
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": {
+      "maxHp": 3528,
+      "damageMax": 624,
+      "defense": 521,
+      "potions": 5,
+      "resistance": 70
+    },
+    "finalBossMeans": {
+      "maxHp": 38907,
+      "damageMax": 1540,
+      "defense": 1034
+    },
+    "estimatedCompletionPercent": null,
+    "maxFloor": 999,
+    "medianFloor": 99,
+    "meanFloor": 158.45
+  },
+  "necromancer": {
+    "runs": 20,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "gameplayVersion": "2.0.0",
+    "simulationSeed": "survival-v2-tuning-2026-10-03",
+    "stake": 100000,
+    "completedPercent": 45,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 50,
+        "count": 7
+      },
+      {
+        "floor": 999,
+        "count": 3
+      },
+      {
+        "floor": 800,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": null,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 20,
+    "passedFloor50": 13,
+    "passedFloor100": 13,
+    "reachedFinalBoss": 12,
+    "completed999": 9,
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": {
+      "maxHp": 3282,
+      "damageMax": 314,
+      "defense": 315,
+      "potions": 5,
+      "resistance": 70
+    },
+    "finalBossMeans": {
+      "maxHp": 36906,
+      "damageMax": 1588,
+      "defense": 998
+    },
+    "estimatedCompletionPercent": null,
+    "maxFloor": 999,
+    "medianFloor": 998,
+    "meanFloor": 656.35
+  },
+  "paladin": {
+    "runs": 20,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "gameplayVersion": "2.0.0",
+    "simulationSeed": "survival-v2-tuning-2026-10-03",
+    "stake": 100000,
+    "completedPercent": 0,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 50,
+        "count": 11
+      },
+      {
+        "floor": 100,
+        "count": 4
+      },
+      {
+        "floor": 35,
+        "count": 2
+      },
+      {
+        "floor": 23,
+        "count": 1
+      },
+      {
+        "floor": 80,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": 13.9108,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 20,
+    "passedFloor50": 6,
+    "passedFloor100": 1,
+    "reachedFinalBoss": 0,
+    "completed999": 0,
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": null,
+    "finalBossMeans": null,
+    "estimatedCompletionPercent": null,
+    "maxFloor": 199,
+    "medianFloor": 49,
+    "meanFloor": 65.15
+  }
+}

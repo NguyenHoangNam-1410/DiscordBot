@@ -26,7 +26,9 @@ function recordEmbed(user, record) {
   return new EmbedBuilder()
     .setColor(0x9b59b6)
     .setTitle("☠️ HỒ SƠ SINH TỒN")
-    .setDescription(`**Người chơi:** <@${user.id}>`)
+    .setDescription(
+      `**Người chơi:** <@${user.id}>${record.activeVersion ? `\nRun đang chơi: **${record.activeVersion}**` : ""}${record.versions?.length ? `\n\n**Theo phiên bản (từ ngày phát hành v2):**\n${record.versions.map((v) => `${v.release_version}: ${v.runs} run · cao nhất ${v.best_floor} · rút ${v.escapes}`).join("\n")}` : ""}`,
+    )
     .addFields(
       { name: "Tầng cao nhất", value: String(record.best_floor), inline: true },
       { name: "Số run", value: String(record.runs), inline: true },
@@ -85,6 +87,15 @@ const RATE_CATEGORIES = Object.freeze([
 ]);
 
 function ratesEmbed(category = null) {
+  if (require("../services/hardcoreVersion").useV2()) {
+    return new EmbedBuilder()
+      .setColor(0xe67e22)
+      .setTitle("🎰 SINH TỒN v2.0.1 · TỶ LỆ VÀ CƠ CHẾ")
+      .setDescription(
+        "Run mới dùng v2.0.1. Kết quả ẩn được lưu; mở lại UI/restart không roll lại. Run cũ tiếp tục theo luật legacy.",
+      )
+      .addFields(require("../services/hardcoreV2View").ratesFields(category));
+  }
   const embed = new EmbedBuilder()
     .setColor(0xe67e22)
     .setTitle("🎰 SINH TỒN · TỶ LỆ VÀ CƠ CHẾ")
@@ -194,7 +205,7 @@ function ratesPayload(userId, category = "encounters") {
   return {
     embeds: [
       ratesEmbed(selected.id).setTitle(
-        `🎰 SINH TỒN · ${selected.name.toUpperCase()}`,
+        `🎰 SINH TỒN ${require("../services/hardcoreVersion").useV2() ? "v2.0.1" : "legacy"} · ${selected.name.toUpperCase()}`,
       ),
     ],
     components: [new ActionRowBuilder().addComponents(menu)],

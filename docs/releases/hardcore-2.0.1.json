@@ -1,0 +1,65 @@
+{
+  "version": "2.0.1",
+  "date": "2026-10-03",
+  "previousRelease": "2.0.0",
+  "gameplayVersion": 2,
+  "catalogVersion": 2,
+  "schemaMigration": 33,
+  "balanceVersion": "2.0.1",
+  "balanceProfiles": {
+    "amazon": {
+      "power": 2.09
+    },
+    "barbarian": {
+      "power": 1.64
+    },
+    "assassin": {
+      "power": 1
+    },
+    "sorceress": {
+      "power": 1.57
+    },
+    "druid": {
+      "power": 1.12
+    },
+    "necromancer": {
+      "power": 0.54
+    },
+    "paladin": {
+      "power": 1.67
+    }
+  },
+  "change": "Class power coefficients calibrated toward approximately 1% floor999 completion, using Assassin as reference",
+  "existingV2Runs": "Keep snapshotted profile; pre-2.0.1 runs without balance snapshot retain power 1",
+  "legacyRemovalStatus": "retained",
+  "validation": {
+    "evaluationRuns": 7000,
+    "runsPerClass": 1000,
+    "actionTimeouts": 0,
+    "completed999": {
+      "amazon": 14,
+      "barbarian": 6,
+      "assassin": 8,
+      "sorceress": 11,
+      "druid": 13,
+      "necromancer": 15,
+      "paladin": 15
+    },
+    "simulation": "hardcore-2.0.1-simulation.json",
+    "report": "hardcore-2.0.1-simulation.md",
+    "calibration": "hardcore-2.0.1-calibration-model.json",
+    "unitRegressionTests": "not run for this patch",
+    "discordLiveSession": "not performed",
+    "deployment": "not performed",
+    "expectationEquality": "not proven; simulation rates 0.6-1.5%, all exact 95% intervals cover target 1%"
+  },
+  "sourceSha256": {
+    "src/services/hardcoreBalance.js": "8678fb1d7f7e98afc8bbcec2dd22b5f6784f240e303979d19c04144dcac5b47e",
+    "src/services/hardcoreStats.js": "274a36a3893cf8c9b1d76428e90eeadfa2ca4667a82ac0b2cae0603897fb4fc8",
+    "src/services/hardcoreV2.js": "e08da4e3d9dddb079373b3a3e9a65e4faab970212ef7e00cbeb64a398ed6092d",
+    "src/services/hardcoreWorld.js": "7ef8498a89fc2dc329240b8f8d92722ac7be8f8dc35c08d01a87422ce70e90ed",
+    "src/services/hardcoreVersion.js": "b55eef1303b69411ee936008bb7f165266f2ad43b7ef7913a53930fb9c472261",
+    "src/hardcore/item.js": "d8c0fd0cb0bb737abf65e5f43a7ac95123746a23600ec0a174b6f2465e0dc025",
+    "scripts/simulate-hardcore.js": "5cce96db6f146b5a4043dab920f06dd1f785a33180685673db9ba8f17e39fc0e"
+  }
+}

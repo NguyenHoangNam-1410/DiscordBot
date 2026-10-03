@@ -1066,4 +1066,41 @@ runMigration(32, "baucua achievement records", () => {
     PRIMARY KEY (guild_id,user_id))`);
 });
 
+runMigration(33, "hardcore 2.0.0 release history and grave echoes", () => {
+  db.exec(`CREATE TABLE IF NOT EXISTS hardcore_run_archive (
+    session_id TEXT PRIMARY KEY,guild_id TEXT NOT NULL,user_id TEXT NOT NULL,
+    gameplay_version INTEGER NOT NULL,release_version TEXT NOT NULL,
+    class_key TEXT NOT NULL,cleared INTEGER NOT NULL,reason TEXT NOT NULL,
+    stake INTEGER NOT NULL,payout INTEGER NOT NULL,diamonds INTEGER NOT NULL,
+    turns INTEGER NOT NULL,created_at INTEGER NOT NULL,ended_at INTEGER NOT NULL);
+    CREATE INDEX IF NOT EXISTS hardcore_archive_version ON hardcore_run_archive(guild_id,gameplay_version,user_id);
+    CREATE TABLE IF NOT EXISTS hardcore_echoes (
+      id TEXT PRIMARY KEY,guild_id TEXT NOT NULL,user_id TEXT NOT NULL,name TEXT NOT NULL,
+      floor INTEGER NOT NULL,profile_json TEXT NOT NULL,kills INTEGER NOT NULL DEFAULT 0,
+      is_nemesis INTEGER NOT NULL DEFAULT 0,expires_at INTEGER NOT NULL,
+      claimed_by TEXT,claimed_until INTEGER NOT NULL DEFAULT 0,updated_at INTEGER NOT NULL);
+    CREATE INDEX IF NOT EXISTS hardcore_echo_guild ON hardcore_echoes(guild_id,expires_at);
+    CREATE TABLE IF NOT EXISTS hardcore_releases (
+      version TEXT PRIMARY KEY,gameplay_version INTEGER NOT NULL,catalog_version INTEGER NOT NULL,
+      baseline_commit TEXT NOT NULL,installed_at INTEGER NOT NULL);
+  `);
+});
+db.prepare(`INSERT OR IGNORE INTO hardcore_releases VALUES (?,?,?,?,?)`).run(
+  "2.0.0",
+  2,
+  2,
+  "c0c6213",
+  Date.now(),
+);
+
+// Keep the original release row and record the currently installed patch.
+const hardcoreRelease = require("./services/hardcoreVersion").RELEASE;
+db.prepare(`INSERT OR IGNORE INTO hardcore_releases VALUES (?,?,?,?,?)`).run(
+  hardcoreRelease.version,
+  hardcoreRelease.gameplay,
+  hardcoreRelease.catalog,
+  hardcoreRelease.legacyCommit,
+  Date.now(),
+);
+
 module.exports = { db, dbPath, runMigration };

@@ -50,6 +50,36 @@ const RULES = {
 };
 
 function survivalRules() {
+  if (require("../services/hardcoreVersion").useV2()) {
+    const view = require("../services/hardcoreV2View");
+    return [
+      new EmbedBuilder()
+        .setColor(0x9b59b6)
+        .setTitle("📖 SINH TỒN v2.0.1 · CÁCH CHƠI")
+        .setDescription(
+          "Chọn class, đặt cược và vượt từng tầng. Đọc tình huống rồi chọn hành động; rút thưởng để chốt xu và kim cương. Chết/bỏ run mất cược và thưởng tạm giữ. Run cũ giữ luật legacy.",
+        )
+        .addFields(
+          {
+            name: "Bắt đầu và tiếp tục",
+            value:
+              "/sinhton batdau → chọn một trong 7 class → nhập 10–100.000 xu → Bắt đầu. Bảng chuẩn bị hết hạn sau 5 phút; chỉ giữ cược khi xác nhận. Mỗi người một run/server. /sinhton tieptuc dựng lại UI từ state đã lưu. Run không hoạt động 7 ngày bị forfeit.",
+          },
+          {
+            name: "Bốn thuộc tính",
+            value:
+              "STR: vật lý/DEF. DEX: ACC/EVA/Crit và damage chính Amazon/Assassin. VIT: Max HP/hiệu lực bình. ENE: phép/RES/Max Mana. Mana là tài nguyên riêng; skill dùng 2 Mana. Luck đến từ item/event.",
+          },
+        ),
+      ...["combat", "loot", "encounters", "rngesus", "rewards"].map(
+        (category) =>
+          new EmbedBuilder()
+            .setColor(0x9b59b6)
+            .setTitle("📖 SINH TỒN v2.0.1 · LUẬT CHI TIẾT")
+            .addFields(view.ratesFields(category)),
+      ),
+    ];
+  }
   const overview = new EmbedBuilder()
     .setColor(0x9b59b6)
     .setTitle("📖 SINH TỒN · CÁCH CHƠI")

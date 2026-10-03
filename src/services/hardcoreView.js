@@ -64,8 +64,16 @@ function chestChanceLines(chest) {
     ["🟢", `Đồ ${rarityLabel("legendary")}`, odds.legendary],
     ["🟢", `Đồ ${rarityLabel("rare")}`, odds.rare],
     ["🟢", `Đồ ${rarityLabel("common")}`, odds.common],
-    ["🟡", `Đồ ${rarityLabel("cursed")} (mạnh nhưng kèm nguyền rủa)`, odds.cursed],
-    ["🔴", `Mimic — phải chiến đấu${odds.ancient_mimic > 0 ? ` (gồm Mimic cổ đại ${percentText(odds.ancient_mimic)})` : ""}`, mimic],
+    [
+      "🟡",
+      `Đồ ${rarityLabel("cursed")} (mạnh nhưng kèm nguyền rủa)`,
+      odds.cursed,
+    ],
+    [
+      "🔴",
+      `Mimic — phải chiến đấu${odds.ancient_mimic > 0 ? ` (gồm Mimic cổ đại ${percentText(odds.ancient_mimic)})` : ""}`,
+      mimic,
+    ],
     ["🔴", "Hòm trống", odds.empty],
     ["🔴", "Đồ SSR giả (không có chỉ số)", odds.fake_legendary],
   ].filter(([, , chance]) => chance > 0.0005);
@@ -74,8 +82,13 @@ function chestChanceLines(chest) {
       .filter(([mark]) => marks.includes(mark))
       .reduce((sum, [, , chance]) => sum + chance, 0);
   return `Tỷ lệ khi **Mở**:\n${rows
-    .map(([mark, label, chance]) => `${mark} **${percentText(chance)}** · ${label}`)
-    .join("\n")}\n**Tổng:** 🟢 có lợi ${percentText(share("🟢"))} · 🟡 đánh đổi ${percentText(share("🟡"))} · 🔴 bất lợi ${percentText(share("🔴"))}\n🔍 Kiểm tra: phát hiện Mimic (nếu có) **${percentText(odds.detect)}**.\n`;
+    .map(
+      ([mark, label, chance]) =>
+        `${mark} **${percentText(chance)}** · ${label}`,
+    )
+    .join(
+      "\n",
+    )}\n**Tổng:** 🟢 có lợi ${percentText(share("🟢"))} · 🟡 đánh đổi ${percentText(share("🟡"))} · 🔴 bất lợi ${percentText(share("🔴"))}\n🔍 Kiểm tra: phát hiện Mimic (nếu có) **${percentText(odds.detect)}**.\n`;
 }
 
 // Tỷ lệ kết quả của sự kiện bí ẩn: loại có may rủi liệt kê từng lựa chọn, loại còn lại ghi rõ là cố định.
@@ -90,7 +103,10 @@ function surpriseChanceLines(state, event) {
     .map(
       (section) =>
         `**${section.title}**\n${section.outcomes
-          .map((item) => `${mark[item.tone]} **${percentText(item.chance)}** · ${item.text}`)
+          .map(
+            (item) =>
+              `${mark[item.tone]} **${percentText(item.chance)}** · ${item.text}`,
+          )
           .join("\n")}`,
     )
     .join("\n")}`;
@@ -166,11 +182,6 @@ function hardcoreSetupPayload(draft, classes, context) {
     )
     .addFields(
       {
-        name: "💰 Số dư",
-        value: `${formatCoins(context.balance)} xu`,
-        inline: true,
-      },
-      {
         name: "🎲 Cược đã chọn",
         value:
           draft.stake == null
@@ -180,7 +191,7 @@ function hardcoreSetupPayload(draft, classes, context) {
       },
       {
         name: "📏 Giới hạn cược",
-        value: `10–${formatCoins(context.maxBet)} xu${affordable < 10 ? "\nChưa đủ 10 xu để chơi." : `\nHiện có thể cược tối đa ${formatCoins(affordable)} xu.`}`,
+        value: `10–${formatCoins(context.maxBet)} xu. Xem số dư qua /hoso.`,
         inline: true,
       },
     );
@@ -199,6 +210,25 @@ function hardcoreSetupPayload(draft, classes, context) {
         value: CLASS_PROFILES[draft.classKey].effect,
       },
     );
+    if (context.gameplayVersion === 2) {
+      const preview = require("./hardcoreV2View").setupPreview(draft.classKey);
+      const fields = embed.data.fields.filter(
+        (field) =>
+          !["📊 Chỉ số ban đầu", `✨ ${character.skill} · 2 ENE`].includes(
+            field.name,
+          ),
+      );
+      embed
+        .setFields(fields)
+        .addFields(
+          { name: "📊 Chỉ số ban đầu · v2.0.1", value: preview.stats },
+          { name: `✨ ${character.skill} · 2 Mana`, value: preview.skill },
+          {
+            name: "Sở trường class",
+            value: `Sức mạnh ×${preview.power}; đã tính vào dải sát thương ở trên.`,
+          },
+        );
+    }
   } else
     embed.addFields({
       name: "🧙Chọn một trong 7 nhân vật",
@@ -209,13 +239,32 @@ function hardcoreSetupPayload(draft, classes, context) {
         )
         .join("\n"),
     });
+  if (!character && context.gameplayVersion === 2) {
+    const fields = embed.data.fields.filter(
+      (field) => field.name !== "🧙Chọn một trong 7 nhân vật",
+    );
+    const v2Classes = require("./hardcoreStats").CLASSES;
+    embed.setFields(fields).addFields({
+      name: "🧙Chọn một trong 7 nhân vật · v2",
+      value: Object.values(v2Classes)
+        .map(
+          (c) =>
+            `${c.emoji} **${c.name}** · STR ${c.str} / DEX ${c.dex} / VIT ${c.vit} / ENE ${c.ene}`,
+        )
+        .join("\n"),
+    });
+  }
   embed
     .addFields({
       name: "📖 Ký hiệu",
       value:
-        "❤️ HP · ⚔️ ATK · 🛡️ DEF · 🎯 ACC · 💨 EVA · 💥 CRIT · 🔮 RES · ✨ ENE · 🍀 LUCK · 🧪 POT · 🎫 vé.\nRút thưởng để chốt xu và kim cương tạm giữ; tử trận mất toàn bộ. Mỗi 5 tầng có checkpoint hồi đầy HP.",
+        context.gameplayVersion === 2
+          ? "STR/DEX/VIT/ENE tạo chỉ số chiến đấu. ENE là thuộc tính, Mana là tài nguyên dùng skill. Rút thưởng mới nhận xu/gem; tử trận mất toàn bộ. Mỗi 5 tầng: hồi đầy HP, thêm 2 bình, chọn +5 thuộc tính."
+          : "❤️ HP · ⚔️ ATK · 🛡️ DEF · 🎯 ACC · 💨 EVA · 💥 CRIT · 🔮 RES · ✨ ENE · 🍀 LUCK · 🧪 POT · 🎫 vé.\nRút thưởng để chốt xu và kim cương tạm giữ; tử trận mất toàn bộ. Mỗi 5 tầng có checkpoint hồi đầy HP.",
     })
-    .setFooter({ text: "Bảng chuẩn bị hết hạn sau 5 phút không thao tác." });
+    .setFooter({
+      text: `Sinh tồn ${context.gameplayVersion === 2 ? "v2.0.1 · " : "legacy · "}Bảng chuẩn bị hết hạn sau 5 phút không thao tác.`,
+    });
   const customId = (action) =>
     `hardcore-setup:${draft.id}:${draft.version}:${action}`;
   const select = new StringSelectMenuBuilder()
@@ -385,7 +434,10 @@ function encounterText(state) {
     };
     const mark = { good: "🟢", mixed: "🟡", bad: "🔴" };
     const outcomes = (trapOdds(state, encounter) || [])
-      .map((item) => `${mark[item.tone]} **${percentText(item.chance)}** · ${item.text}`)
+      .map(
+        (item) =>
+          `${mark[item.tone]} **${percentText(item.chance)}** · ${item.text}`,
+      )
       .join("\n");
     const note =
       encounter.kind === "wrong_portal"
@@ -869,7 +921,7 @@ function hardcoreEmbed(
               : 0xe67e22,
     )
     .setTitle(
-      `${classIcon} SINH TỒN · TẦNG ${state.floor}${state.floor > 100 ? " · OVERRUN" : ""}`,
+      `${classIcon} SINH TỒN legacy · TẦNG ${state.floor}${state.floor > 100 ? " · OVERRUN" : ""}`,
     )
     .setDescription(
       `${icon("bust_in_silhouette")} <@${userId}> · **${regionForFloor(state.floor).name}**`,

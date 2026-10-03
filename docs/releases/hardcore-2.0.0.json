@@ -1,0 +1,31 @@
+{
+  "version": "2.0.0",
+  "date": "2026-10-03",
+  "gameplayVersion": 2,
+  "catalogVersion": 2,
+  "legacyRunVersion": 4,
+  "legacyCommit": "c0c62134a278561fda4058dd566762be84d23f1f",
+  "legacyBlobs": {
+    "src/services/hardcoreService.js": "17fa18681838523840c5594cd17457d229df48ed",
+    "src/services/hardcoreEngine.js": "00f0979e67b81e1da836a3833dec8ac1d8364d4c",
+    "src/services/hardcoreView.js": "40b5dcf9a0f75e70aad3c5e1723d817c779cb9d7",
+    "src/hardcore/item.js": "17565e4329a738010690c69635edde72d8f2902b"
+  },
+  "schemaMigration": 33,
+  "defaultForNewRuns": "2.0.0",
+  "rollbackForNewRunsEnvironment": {
+    "HARDCORE_GAMEPLAY_VERSION": "legacy"
+  },
+  "legacyRemovalStatus": "retained pending gameplay evaluation",
+  "validation": {
+    "targetedV2Tests": "passed",
+    "migrationAndBackupRestore": "passed",
+    "wholeRepositorySuite": "blocked by existing outdated expectations",
+    "discordLiveSession": "not performed",
+    "simulation": "hardcore-2.0.0-simulation.json",
+    "sqliteSmoke": "hardcore-2.0.0-sqlite-smoke.json",
+    "balanceStatus": "review required: 100 runs/class; Necromancer 26 completions, Assassin 1, others 0",
+    "optimizedSimulation": "hardcore-2.0.0-simulation-100-optimized.json",
+    "policySelection": "hardcore-2.0.0-policy-selection.json"
+  }
+}

@@ -1,0 +1,313 @@
+{
+  "targetPercent": 1,
+  "referenceRuns": 800,
+  "referenceWins": 8,
+  "models": {
+    "amazon": {
+      "intercept": -12.499999999999964,
+      "slope": 10.75,
+      "loss": 72.26619571185724,
+      "power": 2.09,
+      "observations": [
+        {
+          "file": "hardcore-2.0.1-calibration-a.json",
+          "power": 1.1,
+          "n": 50,
+          "wins": 0
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-b.json",
+          "power": 1.25,
+          "n": 50,
+          "wins": 0
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-c.json",
+          "power": 1.45,
+          "n": 50,
+          "wins": 0
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-d.json",
+          "power": 1.7,
+          "n": 50,
+          "wins": 0
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-e.json",
+          "power": 1.9,
+          "n": 100,
+          "wins": 0
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-f.json",
+          "power": 2.2,
+          "n": 100,
+          "wins": 1
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-g.json",
+          "power": 2.5,
+          "n": 100,
+          "wins": 6
+        },
+        {
+          "file": "hardcore-2.0.1-confirmation.json",
+          "power": 2.2,
+          "n": 300,
+          "wins": 9
+        },
+        {
+          "file": "hardcore-2.0.1-policy2-baseline.json",
+          "power": 2.2,
+          "n": 100,
+          "wins": 0
+        }
+      ]
+    },
+    "barbarian": {
+      "intercept": -7.549999999999903,
+      "slope": 6,
+      "loss": 102.046432746193,
+      "power": 1.64,
+      "observations": [
+        {
+          "file": "hardcore-2.0.1-calibration-a.json",
+          "power": 1.1,
+          "n": 50,
+          "wins": 0
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-b.json",
+          "power": 1.25,
+          "n": 50,
+          "wins": 0
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-c.json",
+          "power": 1.45,
+          "n": 50,
+          "wins": 0
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-d.json",
+          "power": 1.7,
+          "n": 50,
+          "wins": 0
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-e.json",
+          "power": 1.9,
+          "n": 100,
+          "wins": 2
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-f.json",
+          "power": 2.2,
+          "n": 100,
+          "wins": 9
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-g.json",
+          "power": 2.5,
+          "n": 100,
+          "wins": 9
+        },
+        {
+          "file": "hardcore-2.0.1-confirmation.json",
+          "power": 1.8,
+          "n": 300,
+          "wins": 6
+        }
+      ]
+    },
+    "sorceress": {
+      "intercept": -7.299999999999904,
+      "slope": 6,
+      "loss": 35.293377092894296,
+      "power": 1.57,
+      "observations": [
+        {
+          "file": "hardcore-2.0.1-confirmation.json",
+          "power": 1.5,
+          "n": 300,
+          "wins": 2
+        },
+        {
+          "file": "hardcore-2.0.1-mage-1.3.json",
+          "power": 1.3,
+          "n": 150,
+          "wins": 1
+        },
+        {
+          "file": "hardcore-2.0.1-mage-1.4.json",
+          "power": 1.4,
+          "n": 150,
+          "wins": 0
+        },
+        {
+          "file": "hardcore-2.0.1-mage-1.6.json",
+          "power": 1.6,
+          "n": 150,
+          "wins": 2
+        },
+        {
+          "file": "hardcore-2.0.1-mage-baseline.json",
+          "power": 1.5,
+          "n": 100,
+          "wins": 1
+        }
+      ]
+    },
+    "druid": {
+      "intercept": -5.1499999999999115,
+      "slope": 4.75,
+      "loss": 67.29090700048077,
+      "power": 1.12,
+      "observations": [
+        {
+          "file": "hardcore-2.0.1-calibration-a.json",
+          "power": 1.1,
+          "n": 50,
+          "wins": 0
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-b.json",
+          "power": 1.25,
+          "n": 50,
+          "wins": 2
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-c.json",
+          "power": 1.45,
+          "n": 50,
+          "wins": 1
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-d.json",
+          "power": 1.7,
+          "n": 50,
+          "wins": 3
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-e.json",
+          "power": 1.15,
+          "n": 100,
+          "wins": 1
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-f.json",
+          "power": 1.2,
+          "n": 100,
+          "wins": 0
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-g.json",
+          "power": 1.3,
+          "n": 100,
+          "wins": 4
+        },
+        {
+          "file": "hardcore-2.0.1-confirmation.json",
+          "power": 1.15,
+          "n": 300,
+          "wins": 3
+        }
+      ]
+    },
+    "necromancer": {
+      "intercept": -0.44999999999992124,
+      "slope": 6.75,
+      "loss": 58.75537989345415,
+      "power": 0.54,
+      "observations": [
+        {
+          "file": "hardcore-2.0.1-calibration-a.json",
+          "power": 0.85,
+          "n": 50,
+          "wins": 8
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-b.json",
+          "power": 0.7,
+          "n": 50,
+          "wins": 4
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-c.json",
+          "power": 0.55,
+          "n": 50,
+          "wins": 1
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-d.json",
+          "power": 0.4,
+          "n": 50,
+          "wins": 0
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-e.json",
+          "power": 0.45,
+          "n": 100,
+          "wins": 1
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-f.json",
+          "power": 0.5,
+          "n": 100,
+          "wins": 0
+        },
+        {
+          "file": "hardcore-2.0.1-calibration-g.json",
+          "power": 0.6,
+          "n": 100,
+          "wins": 2
+        },
+        {
+          "file": "hardcore-2.0.1-confirmation.json",
+          "power": 0.45,
+          "n": 300,
+          "wins": 0
+        }
+      ]
+    },
+    "paladin": {
+      "intercept": -9.34999999999992,
+      "slope": 9.25,
+      "loss": 118.08645803645581,
+      "power": 1.67,
+      "observations": [
+        {
+          "file": "hardcore-2.0.1-paladin-1.4.json",
+          "power": 1.4,
+          "n": 200,
+          "wins": 0
+        },
+        {
+          "file": "hardcore-2.0.1-paladin-1.6.json",
+          "power": 1.6,
+          "n": 200,
+          "wins": 2
+        },
+        {
+          "file": "hardcore-2.0.1-paladin-baseline-calibration.json",
+          "power": 1.9,
+          "n": 300,
+          "wins": 16
+        },
+        {
+          "file": "hardcore-2.0.1-paladin-recalibration.json",
+          "power": 1.55,
+          "n": 1000,
+          "wins": 2
+        },
+        {
+          "file": "hardcore-2.0.1-policy2-baseline.json",
+          "power": 2.2,
+          "n": 100,
+          "wins": 7
+        }
+      ]
+    }
+  }
+}

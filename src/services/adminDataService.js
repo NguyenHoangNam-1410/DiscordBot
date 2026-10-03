@@ -102,6 +102,8 @@ const RESET_PLAYER_TABLES = Object.freeze([
   "game_player_stats",
   "hardcore_records",
   "hardcore_sessions",
+  "hardcore_run_archive",
+  "hardcore_echoes",
   "mines_sessions",
   "coquay_sessions",
   "newbie_bonus_claims",

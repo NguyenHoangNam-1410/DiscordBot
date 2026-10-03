@@ -76,6 +76,15 @@ fairness.createFairness = () => {
   };
 };
 const hardcore = require("../src/services/hardcoreService");
+const balance = require("../src/services/hardcoreBalance");
+if (process.env.HARDCORE_SIM_POWER) {
+  const powers = JSON.parse(process.env.HARDCORE_SIM_POWER);
+  const defaults = balance.forClass;
+  balance.forClass = (classKey) => ({
+    ...defaults(classKey),
+    power: powers[classKey] ?? defaults(classKey).power,
+  });
+}
 const engine = require("../src/services/hardcoreEngine");
 const { getAccount } = require("../src/services/economyService");
 const { createFairness } = require("../src/services/fairnessService");
@@ -91,6 +100,9 @@ const policy = process.env.HARDCORE_SIM_POLICY || "balanced";
 const revealedChestAction = process.env.HARDCORE_SIM_REVEALED_CHEST || "sell";
 if (!["sell", "leave"].includes(revealedChestAction))
   throw new Error("INVALID_CHEST_POLICY");
+const optimalBuilds = process.env.HARDCORE_SIM_BUILDS
+  ? JSON.parse(process.env.HARDCORE_SIM_BUILDS)
+  : {};
 const bestPolicies = Object.freeze({
   amazon: "balanced",
   barbarian: "balanced",
@@ -114,6 +126,7 @@ if (
     "health2",
     "attack2",
     "best",
+    "optimized",
   ].includes(policy)
 )
   throw new Error("INVALID_POLICY");
@@ -125,6 +138,20 @@ if (classesToRun.some((classKey) => !Object.hasOwn(hardcore.CLASSES, classKey)))
   throw new Error("INVALID_CLASS");
 
 function actionFor(state, strategy = policy) {
+  if (
+    state.gameplayVersion === 2 &&
+    strategy === "optimized" &&
+    optimalBuilds[state.classKey] === "baseline"
+  )
+    return actionForV2(state, "balanced");
+  if (state.gameplayVersion === 2 && strategy === "optimized")
+    return require("./hardcore-optimal-policy").choose(
+      state,
+      optimalBuilds[state.classKey] ||
+        process.env.HARDCORE_SIM_BUILD ||
+        "balanced",
+    );
+  if (state.gameplayVersion === 2) return actionForV2(state, strategy);
   // Decisions use public stats and revealed encounters, never saved hidden results.
   if (state.phase === "upgrade") {
     const checkpoint = state.cleared / 5;
@@ -330,6 +357,95 @@ function actionFor(state, strategy = policy) {
   return "continue";
 }
 
+function actionForV2(state, strategy) {
+  const v2 = hardcore.V2;
+  const candidates = v2.actions(state).filter((a) => !a.disabled);
+  const has = (action) => candidates.some((a) => a.action === action);
+  if (state.phase === "upgrade") {
+    const main = require("../src/services/hardcoreStats").mainStat(state);
+    return `upgrade_${state.cleared % 10 === 0 ? "vit" : main}`;
+  }
+  if (state.phase === "paradox") return "paradox_blood";
+  if (state.phase === "severance") {
+    const priorities = [
+      "soul_drain",
+      "cursed_ground",
+      "fortified",
+      "elemental_dominion",
+      "bloodlust",
+      "stone_skin",
+      "swift_horror",
+    ];
+    return (
+      priorities.map((k) => `sever_${k}`).find(has) || candidates[0].action
+    );
+  }
+  if (state.phase === "summit") return "retreat";
+  const e = state.encounter;
+  if (e.type === "combat") {
+    const preview = v2.incomingPreview(state);
+    const dangerous = state.hp < Math.max(preview.high * 2, state.maxHp * 0.35);
+    const protectedSkill =
+      ["assassin", "necromancer"].includes(state.classKey) && has("skill");
+    if (
+      has("potion") &&
+      dangerous &&
+      !protectedSkill &&
+      state.maxHp - state.hp >= state.maxHp * state.potionRate * 0.7
+    )
+      return "potion";
+    if (has("skill") && strategy !== "attack") return "skill";
+    return "attack";
+  }
+  if (e.type === "chest")
+    return e.revealed
+      ? has("leave")
+        ? "leave"
+        : "sell"
+      : !e.inspected
+        ? "inspect"
+        : "open";
+  if (e.type === "shrine") return "skip";
+  if (e.type === "rngesus") return state.escapeTokens ? "flee" : "bribe";
+  if (e.type === "echo") return "echo_pray";
+  if (e.type === "surprise") {
+    if (e.kind === "diamond_shop") return "event_skip";
+    if (e.kind === "duelist") return e.mode ? "hand_0" : "duel_stat";
+    if (e.kind === "treasure_room") {
+      if (!e.inspected) return "inspect_red";
+      return e.mimicColor === "red" ? "event_skip" : "chest_red";
+    }
+    const choices = {
+      healer: "event_heal",
+      goblin: "event_catch",
+      purifier: "event_cleanse",
+      sacrifice: "event_sacrifice_payout",
+      adventurer: "event_rescue",
+      horadric: "forge_main",
+      mirror: "event_mirror_guard",
+      contract: "contract_defend",
+      class_shrine: "event_class",
+      doors: "door_light",
+    };
+    if (choices[e.kind])
+      return has(choices[e.kind]) ? choices[e.kind] : "event_skip";
+    if (["payout_shop", "blood_shop", "merchant"].includes(e.kind)) {
+      const affordable = candidates
+        .filter((a) => a.action.startsWith("buy_"))
+        .filter((a) => {
+          const offer = e.offers[Number(a.action.slice(4))];
+          return (
+            e.kind !== "blood_shop" ||
+            state.hp > offer.price + state.maxHp * 0.35
+          );
+        });
+      return affordable[0]?.action || "event_skip";
+    }
+    return "event_skip";
+  }
+  return candidates[0].action;
+}
+
 const report = {};
 for (const classKey of classesToRun) {
   const classPolicy = policy === "best" ? bestPolicies[classKey] : policy;
@@ -338,6 +454,8 @@ for (const classKey of classesToRun) {
   const deathFloors = {};
   let timeouts = 0;
   for (let i = 0; i < runs; i += 1) {
+    if (process.env.HARDCORE_SIM_ISOLATED === "1")
+      db.prepare("DELETE FROM hardcore_echoes").run();
     const userId = `${classKey}-${i}`;
     seedKey = `${classKey}:${i}`;
     getAccount("simulation", userId);
@@ -374,6 +492,17 @@ for (const classKey of classesToRun) {
       });
       state = played.state;
       if (played.settled) break;
+    }
+    if (
+      state.phase === "summit" &&
+      hardcore.getHardcoreByUser("simulation", userId)
+    ) {
+      state = hardcore.playHardcore({
+        sessionId: started.session.id,
+        userId,
+        expectedTurn: state.turn,
+        action: "retreat",
+      }).state;
     }
     floors.push(
       state.finalBossDefeated && state.hp > 0
@@ -444,8 +573,16 @@ for (const classKey of classesToRun) {
   report[classKey] = {
     runs,
     policy: classPolicy,
+    build: optimalBuilds[classKey] || process.env.HARDCORE_SIM_BUILD || null,
+    externalDiamonds: 0,
+    balanceVersion: balance.VERSION,
+    balanceProfile: balance.forClass(classKey),
     revealedChestAction,
     backend,
+    gameplayVersion:
+      process.env.HARDCORE_GAMEPLAY_VERSION === "legacy"
+        ? "legacy-4"
+        : hardcore.RELEASE.version,
     simulationSeed,
     stake,
     completedPercent: +(
@@ -462,12 +599,20 @@ for (const classKey of classesToRun) {
     targetFloor,
     maxTurns,
     timeouts,
-    equipmentSource: "src/hardcore/item.js",
+    equipmentSource:
+      process.env.HARDCORE_GAMEPLAY_VERSION === "legacy"
+        ? "src/hardcore/itemLegacy.js"
+        : "src/hardcore/item.js",
     passedFloor10: floors.filter((floor) => floor >= 10).length,
     passedFloor50: floors.filter((floor) => floor >= 50).length,
     passedFloor100: floors.filter((floor) => floor >= 100).length,
     reachedFinalBoss: finalStates.length,
     completed999: floors.filter((floor) => floor >= 999).length,
+    runFloors: floors,
+    echoEnvironment:
+      process.env.HARDCORE_SIM_ISOLATED === "1"
+        ? "Isolated runs; no previous graves"
+        : "Shared simulation guild; previous runs may leave graves",
     finalAttempts,
     finalWins,
     finalStateMeans: finalStates.length
@@ -512,7 +657,12 @@ for (const classKey of classesToRun) {
     `${policy}/${classKey}: ${runs} runs completed, ${finalStates.length} reached Deimoss, ${floors.filter((floor) => floor >= 999).length} won`,
   );
 }
-console.log(JSON.stringify(report, null, 2));
+if (process.env.HARDCORE_SIM_OUTPUT)
+  fs.writeFileSync(
+    process.env.HARDCORE_SIM_OUTPUT,
+    JSON.stringify(report, null, 2) + "\n",
+  );
+else console.log(JSON.stringify(report, null, 2));
 db.close();
 if (
   path.dirname(temporary) === path.resolve(os.tmpdir()) &&

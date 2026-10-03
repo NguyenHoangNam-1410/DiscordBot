@@ -1,3 +1,5 @@
+// Regression coverage of saved legacy runs. New gameplay is tested separately.
+process.env.HARDCORE_GAMEPLAY_VERSION = "legacy";
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const os = require("node:os");
