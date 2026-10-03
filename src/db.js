@@ -40,13 +40,6 @@ CREATE TABLE IF NOT EXISTS economy_transactions (
 CREATE INDEX IF NOT EXISTS idx_economy_transactions_created ON economy_transactions(created_at);
 CREATE INDEX IF NOT EXISTS idx_economy_transactions_user ON economy_transactions(guild_id, user_id, created_at DESC);
 
-CREATE TABLE IF NOT EXISTS chinchiro_cooldowns (
-  guild_id TEXT NOT NULL,
-  user_id TEXT NOT NULL,
-  next_at INTEGER NOT NULL,
-  PRIMARY KEY (guild_id, user_id)
-);
-
 CREATE TABLE IF NOT EXISTS profile_cosmetics (
   guild_id TEXT NOT NULL,
   user_id TEXT NOT NULL,
@@ -1041,6 +1034,22 @@ runMigration(29, "poker achievement records", () => {
     fold_wins INTEGER NOT NULL DEFAULT 0,
     allin_wins INTEGER NOT NULL DEFAULT 0,
     pvp_wins INTEGER NOT NULL DEFAULT 0,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY (guild_id,user_id))`);
+});
+
+runMigration(30, "remove chinchiro cooldown", () => {
+  db.exec("DROP TABLE IF EXISTS chinchiro_cooldowns");
+});
+
+runMigration(31, "horse race achievement records", () => {
+  db.exec(`CREATE TABLE IF NOT EXISTS horse_records (
+    guild_id TEXT NOT NULL,user_id TEXT NOT NULL,
+    best_win_multiplier REAL NOT NULL DEFAULT 0,
+    special_wins INTEGER NOT NULL DEFAULT 0,
+    spread_wins INTEGER NOT NULL DEFAULT 0,
+    current_streak INTEGER NOT NULL DEFAULT 0,
+    best_streak INTEGER NOT NULL DEFAULT 0,
     updated_at INTEGER NOT NULL,
     PRIMARY KEY (guild_id,user_id))`);
 });

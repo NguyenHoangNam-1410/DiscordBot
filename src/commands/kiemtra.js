@@ -107,6 +107,7 @@ const ACHIEVEMENT_CATEGORIES = Object.freeze([
   { label: "Game cược · thắng lớn", value: "betBigWin" },
   { label: "Dò mìn · số ván thắng", value: "minesWins" },
   { label: "Dò mìn · thành tích", value: "minesFeats" },
+  { label: "Đua ngựa", value: "horse" },
   { label: "Poker · số ván thắng", value: "pokerWins" },
   { label: "Poker · hạng bài thắng", value: "pokerHands" },
   { label: "Poker · chiến tích", value: "pokerFeats" },

@@ -197,15 +197,13 @@ async function handleReplayButton(interaction, logger = console) {
     const content =
       error.message === "ACTIVE_SESSION"
         ? "Bạn đang có một ván chưa kết thúc."
-        : error.message === "CHINCHIRO_COOLDOWN"
-          ? `Bạn có thể chơi Chinchiro tiếp sau **${Math.ceil(error.retryAfter / 1000)} giây**.`
-          : error.message === "BET_LIMIT"
-            ? `Mức cược cũ vượt giới hạn hiện tại **${formatCoins(error.maxBet)} :coin:**. Hãy tạo ván mới với mức cược thấp hơn.`
-            : error.code === "INSUFFICIENT_FUNDS"
-              ? game === "chinchiro"
-                ? "Bạn cần đủ xu cho tiền cược và khoản ký quỹ Hifumi bằng một lần cược nữa."
-                : "Bạn không đủ xu để chơi lại với mức cược cũ."
-              : "Không thể chơi lại với cấu hình cũ.";
+        : error.message === "BET_LIMIT"
+          ? `Mức cược cũ vượt giới hạn hiện tại **${formatCoins(error.maxBet)} :coin:**. Hãy tạo ván mới với mức cược thấp hơn.`
+          : error.code === "INSUFFICIENT_FUNDS"
+            ? game === "chinchiro"
+              ? "Bạn cần đủ xu cho tiền cược và khoản ký quỹ Hifumi bằng một lần cược nữa."
+              : "Bạn không đủ xu để chơi lại với mức cược cũ."
+            : "Không thể chơi lại với cấu hình cũ.";
     return interaction.reply({ content, flags: MessageFlags.Ephemeral });
   }
 }
