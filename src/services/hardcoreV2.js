@@ -850,15 +850,27 @@ function playerAttack(state, action, rng) {
   let damage = Math.floor(
     hits.reduce((sum, hit) => sum + hit.damage, 0) * (1 + bonus),
   );
-  if (e.mechanic === "riftwalker" && e.combatTurn % 3 === 0) damage = 0;
+  const immune = e.mechanic === "riftwalker" && e.combatTurn % 3 === 0;
+  if (immune) damage = 0;
   if (e.mechanic === "deimoss" && damage > 0)
     damage = Math.max(1, Math.floor(damage * 0.75));
   e.combatTurn++;
   e.hp = Math.max(0, e.hp - damage);
+  const landed = hits.filter((hit) => hit.hit).length;
+  const actionName =
+    action === "skill"
+      ? `✨ ${stats.CLASSES[state.classKey].skill}`
+      : "⚔️ Tấn công";
+  const outcome = !landed
+    ? "Đánh trượt — 0 DMG."
+    : immune
+      ? "Riftwalker miễn sát thương lượt này — 0 DMG."
+      : `${damage} DMG${hits.some((h) => h.crit) ? " · Critical" : ""}.`;
+  const shots = hits.length > 1 ? ` Trúng ${landed}/${hits.length} phát.` : "";
   return {
     defend,
     dodge,
-    log: `${action === "skill" ? `✨ ${stats.CLASSES[state.classKey].skill}` : "⚔️ Tấn công"}: ${damage} DMG${hits.some((h) => h.crit) ? " · Critical" : ""}.`,
+    log: `${actionName}: ${outcome}${shots}`,
   };
 }
 function surpriseActions(state) {

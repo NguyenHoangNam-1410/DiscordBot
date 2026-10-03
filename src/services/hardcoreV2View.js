@@ -167,7 +167,8 @@ function encounterText(s) {
     };
     return (
       `**${e.name}** · ${e.rank}\n${E.hp} ${e.hp}/${e.maxHp} · ${E.attack} ${e.damageMin}–${e.damageMax} · ${E.defense} ${e.defense} · RES ${e.resistance}%\n` +
-      `Đòn kế: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}** · Dự báo nhận **${p.low}–${p.high} HP** · Trúng ${percent(p.chance)} *(chưa Crit/chưa Thủ)*\n` +
+      `Đòn quái kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}** · Dự báo nhận **${p.low}–${p.high} HP** · Quái đánh trúng bạn **${percent(p.chance)}** *(chưa Crit/chưa Thủ)*\n` +
+      `Bạn đánh vật lý trúng quái **${percent(world.hitChance(s.accuracy, e.evasion))}**; trượt gây 0 DMG nhưng vẫn hồi Mana khi đánh thường. Skill phép luôn trúng.\n` +
       (e.mechanic ? `Cơ chế: ${mechanisms[e.mechanic]}\n` : "") +
       `**Tấn công:** vật lý, hồi ${Math.max(1, Math.floor(s.maxMana * (["sorceress", "necromancer"].includes(s.classKey) ? 0.7 : 0.4)))} Mana. **Thủ:** DEF ×2 hoặc +15 RES, giảm thêm 15% DMG, miễn Crit, +1 Mana.\n**${stats.CLASSES[s.classKey].skill} (2 Mana):** ${SKILLS[s.classKey]} **Bình:** hồi ${percent(s.potionRate)} Max HP, ít nhất 20; quái còn sống phản công.`
     );
@@ -231,7 +232,7 @@ function encounterSummary(s) {
         ancient_mimic: "Ancient Mimic",
       }[e.rank] || e.rank;
     const preview = core.incomingPreview(s);
-    return `👹 **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} Sát thương ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · RES ${e.resistance}%\nĐòn kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}** · Nhận ${preview.low}–${preview.high} HP (chưa Crit/Thủ)`;
+    return `👹 **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} Sát thương ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · RES ${e.resistance}%\nBạn đánh vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\nĐòn quái kế: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}** · Trúng bạn ${percent(preview.chance)} · Nhận ${preview.low}–${preview.high} HP (chưa Crit/Thủ)`;
   }
   if (e.type === "chest")
     return `📦 **${e.name}** · ${e.revealed ? "😈 Đã phát hiện Mimic" : e.inspected ? "Đã kiểm tra" : "Chưa kiểm tra"}\n${e.guaranteed ? "Đảm bảo SR+, không Mimic." : "Kiểm tra một lần; không phát hiện chưa chắc an toàn."}`;
