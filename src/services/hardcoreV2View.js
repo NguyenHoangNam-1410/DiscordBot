@@ -170,7 +170,7 @@ function encounterText(s) {
       `Đòn quái kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}** · Dự báo nhận **${p.low}–${p.high} HP** · Quái đánh trúng bạn **${percent(p.chance)}** *(chưa Crit/chưa Thủ)*\n` +
       `Bạn đánh vật lý trúng quái **${percent(world.hitChance(s.accuracy, e.evasion))}**; trượt gây 0 DMG nhưng vẫn hồi Mana khi đánh thường. Skill phép luôn trúng.\n` +
       (e.mechanic ? `Cơ chế: ${mechanisms[e.mechanic]}\n` : "") +
-      `**Tấn công:** vật lý, hồi ${Math.max(1, Math.floor(s.maxMana * (["sorceress", "necromancer"].includes(s.classKey) ? 0.7 : 0.4)))} Mana. **Thủ:** DEF ×2 hoặc +15 RES, giảm thêm 15% DMG, miễn Crit, +1 Mana.\n**${stats.CLASSES[s.classKey].skill} (2 Mana):** ${SKILLS[s.classKey]} **Bình:** hồi ${percent(s.potionRate)} Max HP, ít nhất 20; quái còn sống phản công.`
+      `**Tấn công:** vật lý, hồi ${core.attackManaGain(s)} Mana (tối đa Max Mana). **Thủ:** DEF ×2 hoặc +15 RES, giảm thêm 15% DMG, miễn Crit, +1 Mana.\n**${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} Mana):** ${SKILLS[s.classKey]} **Bình:** hồi ${percent(s.potionRate)} Max HP, ít nhất 20; quái còn sống phản công.`
     );
   }
   if (e.type === "rngesus")
@@ -232,7 +232,7 @@ function encounterSummary(s) {
         ancient_mimic: "Ancient Mimic",
       }[e.rank] || e.rank;
     const preview = core.incomingPreview(s);
-    return `👹 **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} Sát thương ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · RES ${e.resistance}%\nBạn đánh vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\nĐòn quái kế: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}** · Trúng bạn ${percent(preview.chance)} · Nhận ${preview.low}–${preview.high} HP (chưa Crit/Thủ)`;
+    return `👹 **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} Sát thương ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · RES ${e.resistance}%\nBạn đánh vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.res} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} HP** · Quái trúng bạn **${percent(preview.chance)}** *(chưa Crit/Phòng thủ)*`;
   }
   if (e.type === "chest")
     return `📦 **${e.name}** · ${e.revealed ? "😈 Đã phát hiện Mimic" : e.inspected ? "Đã kiểm tra" : "Chưa kiểm tra"}\n${e.guaranteed ? "Đảm bảo SR+, không Mimic." : "Kiểm tra một lần; không phát hiện chưa chắc an toàn."}`;
@@ -307,7 +307,12 @@ function embed(state, userId, result = null, sessionId = null) {
     .addFields(
       {
         name: `${c.emoji} ${c.name}`,
-        value: statLine(state, true, true).slice(0, 1024),
+        value: (
+          statLine(state, true, true) +
+          (state.phase === "encounter" && state.encounter.type === "combat"
+            ? `\n${E.mana} **${c.skill} (${core.skillManaCost(state)} Mana):** ${SKILLS[state.classKey]}`
+            : "")
+        ).slice(0, 1024),
       },
       {
         name: state.encounter.type === "combat" ? "Đối thủ" : "Tình huống",
@@ -669,13 +674,7 @@ function setupPreview(classKey) {
     paladin:
       "Ưu tiên STR cho sát thương và DEF; thêm VIT cho HP. Chọn trang bị vật lý/chống chịu, dùng Divine Shield để gây sát thương rồi thủ.",
   };
-  const manaGain = Math.max(
-    1,
-    Math.floor(
-      state.maxMana *
-        (["sorceress", "necromancer"].includes(classKey) ? 0.7 : 0.4),
-    ),
-  );
+  const manaGain = core.attackManaGain(state);
   return {
     name: `${c.emoji} ${c.name}`,
     role: `Build ${main} · ${{ amazon: "Hai phát vật lý", barbarian: "Vật lý và chống chịu", assassin: "Crit và né phản công", sorceress: "Skill phép mạnh", druid: "Vật lý và hồi phục", necromancer: "Phép và chặn phản công", paladin: "Vật lý và phòng thủ" }[classKey]}`,

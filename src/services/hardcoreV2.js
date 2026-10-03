@@ -770,6 +770,18 @@ function incomingPreview(state) {
         : world.hitChance(e.accuracy, state.evasion),
   };
 }
+function attackManaGain(state) {
+  return Math.max(
+    1,
+    Math.floor(
+      state.maxMana *
+        (["sorceress", "necromancer"].includes(state.classKey) ? 0.7 : 0.4),
+    ),
+  );
+}
+function skillManaCost(state) {
+  return state.classKey === "sorceress" && shrineActive(state) ? 0 : 2;
+}
 function playerAttack(state, action, rng) {
   const e = state.encounter;
   let dodge = false,
@@ -791,10 +803,10 @@ function playerAttack(state, action, rng) {
     };
   }
   if (action === "skill") {
-    const free = state.classKey === "sorceress" && shrineActive(state);
-    if (!free && state.mana < 2) throw new Error("NO_ENERGY");
-    if (free) state.classShrine.consumed = true;
-    else state.mana -= 2;
+    const cost = skillManaCost(state);
+    if (state.mana < cost) throw new Error("NO_ENERGY");
+    if (cost === 0) state.classShrine.consumed = true;
+    else state.mana -= cost;
     if (["sorceress", "necromancer"].includes(state.classKey)) {
       hits = [
         attackDamage(state, e, state, rng, {
@@ -828,19 +840,7 @@ function playerAttack(state, action, rng) {
     }
   } else if (action === "attack") {
     hits = [attackDamage(state, e, state, rng, { player: true })];
-    state.mana = Math.min(
-      state.maxMana,
-      state.mana +
-        Math.max(
-          1,
-          Math.floor(
-            state.maxMana *
-              (["sorceress", "necromancer"].includes(state.classKey)
-                ? 0.7
-                : 0.4),
-          ),
-        ),
-    );
+    state.mana = Math.min(state.maxMana, state.mana + attackManaGain(state));
   } else throw new Error("INVALID_ACTION");
   const bonus = ["boss", "final_boss"].includes(e.rank)
     ? state.bossDamage
@@ -1027,14 +1027,12 @@ function actions(state) {
   const e = state.encounter;
   if (e.type === "combat")
     return [
-      { action: "attack", label: "Tấn công" },
-      { action: "defend", label: "Phòng thủ" },
+      { action: "attack", label: `Tấn công (+${attackManaGain(state)} Mana)` },
+      { action: "defend", label: "Phòng thủ (+1 Mana)" },
       {
         action: "skill",
-        label: stats.CLASSES[state.classKey].skill,
-        disabled:
-          state.mana < 2 &&
-          !(state.classKey === "sorceress" && shrineActive(state)),
+        label: `${stats.CLASSES[state.classKey].skill} (${skillManaCost(state) === 0 ? "0 Mana" : "−2 Mana"})`,
+        disabled: state.mana < skillManaCost(state),
       },
       {
         action: "potion",
@@ -1596,6 +1594,8 @@ module.exports = {
   actions,
   act,
   playerAttack,
+  attackManaGain,
+  skillManaCost,
   enemyTurn,
   incomingPreview,
   physicalRange,
