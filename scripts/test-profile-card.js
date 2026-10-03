@@ -29,7 +29,11 @@ const borderPoints = (thickness) => { const points = [];
   // Khung phải bọc kín toàn bộ mép (kể cả bốn góc), không lộ màu hồ sơ ở viền
   for (const [name, frame] of Object.entries(FRAMES)) {
     const data = await pixels(await render(frame));
-    const leaked = borderPoints(13).filter(([x, y]) => isAccent(data, x, y));
+    // Khung mỏng ~7,5px: kim loại ở độ sâu 3px, đã hết khung (nền hồ sơ tối) từ độ sâu 10px
+    const lum = (y) => { const i = (y * WIDTH + 500) * 4; return data[i] + data[i + 1] + data[i + 2]; };
+    assert(lum(3) > 300, `${name}: viền ngoài phải là kim loại`);
+    assert(lum(10) < 100 && lum(12) < 100, `${name}: khung phải mỏng, không dày quá 9px`);
+    const leaked = borderPoints(6).filter(([x, y]) => isAccent(data, x, y));
     assert.equal(leaked.length, 0, `${name}: lộ màu hồ sơ ở ${leaked.length} điểm viền, ví dụ ${JSON.stringify(leaked.slice(0, 3))}`);
     for (const [x, y] of [[0, 0], [WIDTH - 1, 0], [0, HEIGHT - 1], [WIDTH - 1, HEIGHT - 1]]) assert(!isAccent(data, x, y), `${name}: góc (${x},${y}) lộ màu hồ sơ`);
   }

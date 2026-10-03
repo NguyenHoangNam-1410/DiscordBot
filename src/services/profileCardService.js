@@ -130,7 +130,9 @@ function drawStat(ctx, x, y, label, value, accent) {
 }
 
 // Độ dày khung: phủ kín toàn bộ mép thẻ (kể cả bốn góc) để không lộ màu hồ sơ ở viền.
-const FRAME_THICKNESS = 15;
+const FRAME_THICKNESS = 7.5;
+// Các chi tiết trang trí co giãn theo độ dày khung (thiết kế gốc dày 15px).
+const FRAME_SCALE = FRAME_THICKNESS / 15;
 
 function metalGradient(ctx, frame) {
   const metal = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
@@ -152,7 +154,7 @@ function drawCardBackground(ctx, accent, frame) {
     FRAME_THICKNESS,
     WIDTH - FRAME_THICKNESS * 2,
     HEIGHT - FRAME_THICKNESS * 2,
-    14,
+    14 * FRAME_SCALE + 4,
   );
   ctx.clip();
   drawBackground(ctx, accent);
@@ -165,32 +167,34 @@ function drawSurvivalFrame(ctx, frame) {
   if (!frame) return;
   ctx.save();
   const bevel = frame.colors[frame.colors.length - 1];
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 1;
   ctx.strokeStyle = bevel;
-  ctx.strokeRect(1, 1, WIDTH - 2, HEIGHT - 2);
-  ctx.lineWidth = 3;
+  ctx.strokeRect(0.5, 0.5, WIDTH - 1, HEIGHT - 1);
+  ctx.lineWidth = 1.5;
   ctx.strokeStyle = frame.colors[1];
   roundedRect(
     ctx,
-    FRAME_THICKNESS - 1.5,
-    FRAME_THICKNESS - 1.5,
-    WIDTH - (FRAME_THICKNESS - 1.5) * 2,
-    HEIGHT - (FRAME_THICKNESS - 1.5) * 2,
-    15,
+    FRAME_THICKNESS - 0.75,
+    FRAME_THICKNESS - 0.75,
+    WIDTH - (FRAME_THICKNESS - 0.75) * 2,
+    HEIGHT - (FRAME_THICKNESS - 0.75) * 2,
+    15 * FRAME_SCALE + 4,
   );
   ctx.stroke();
   if (frame.id === "survival_diamond") {
+    const reach = 10 * FRAME_SCALE + 1;
+    const edge = FRAME_THICKNESS / 2 + 0.5;
     for (const [x, y] of [
-      [FRAME_THICKNESS / 2 + 1, FRAME_THICKNESS / 2 + 1],
-      [WIDTH - FRAME_THICKNESS / 2 - 1, FRAME_THICKNESS / 2 + 1],
-      [FRAME_THICKNESS / 2 + 1, HEIGHT - FRAME_THICKNESS / 2 - 1],
-      [WIDTH - FRAME_THICKNESS / 2 - 1, HEIGHT - FRAME_THICKNESS / 2 - 1],
+      [edge, edge],
+      [WIDTH - edge, edge],
+      [edge, HEIGHT - edge],
+      [WIDTH - edge, HEIGHT - edge],
     ]) {
       ctx.beginPath();
-      ctx.moveTo(x, y - 10);
-      ctx.lineTo(x + 9, y);
-      ctx.lineTo(x, y + 10);
-      ctx.lineTo(x - 9, y);
+      ctx.moveTo(x, y - reach);
+      ctx.lineTo(x + reach * 0.9, y);
+      ctx.lineTo(x, y + reach);
+      ctx.lineTo(x - reach * 0.9, y);
       ctx.closePath();
       ctx.fillStyle = "#eaffff";
       ctx.fill();
