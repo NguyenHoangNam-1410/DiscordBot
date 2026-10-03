@@ -93,20 +93,8 @@ const INK = "#1e293b";
 const INK_SOFT = "#64748b";
 
 function drawBackground(ctx, accent) {
-  const gradient = ctx.createLinearGradient(0, 0, WIDTH, HEIGHT);
-  gradient.addColorStop(0, mix(accent, "#ffffff", 0.9));
-  gradient.addColorStop(0.6, mix(accent, "#ffffff", 0.78));
-  gradient.addColorStop(1, mix(accent, "#ffffff", 0.52));
-  ctx.fillStyle = gradient;
+  ctx.fillStyle = mix(accent, "#ffffff", 0.82);
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
-  ctx.strokeStyle = "rgba(255,255,255,.45)";
-  ctx.lineWidth = 2;
-  for (let x = -HEIGHT; x < WIDTH; x += 70) {
-    ctx.beginPath();
-    ctx.moveTo(x, HEIGHT);
-    ctx.lineTo(x + HEIGHT, 0);
-    ctx.stroke();
-  }
   ctx.fillStyle = accent;
   ctx.fillRect(0, 0, WIDTH, 7);
 }
