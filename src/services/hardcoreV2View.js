@@ -14,33 +14,7 @@ const { runDiamondReward } = require("./hardcoreRewards");
 const emoji = require("../discordEmojiMap");
 const { resultBlock } = require("../utils/rewardText");
 const icon = (key, fallback) => emoji[`:${key}:`] || fallback;
-const E = {
-  hp: icon("HP", "❤️"),
-  attack: icon("PHYS", "⚔️"),
-  defense: icon("DEF", "🛡️"),
-  mana: icon("MANA", "💧"),
-  magic: icon("ELE", "🔮"),
-  res: icon("crystal_ball", "🔮"),
-  luck: icon("LUCK", "🍀"),
-  crit: icon("boom", "💥"),
-  potion: icon("potion", "🧪"),
-  ticket: icon("ticket", "🎫"),
-  str: icon("STR", "💪"),
-  dex: icon("DEX", "🗡️"),
-  vit: icon("VIT", "❤️"),
-  ene: icon("ENE", "🔮"),
-};
-const SKILL_ICONS = Object.fromEntries(
-  Object.entries({
-    amazon: "skill_barrage",
-    barbarian: "skill_ironwill",
-    assassin: "skill_shadowstep",
-    sorceress: "skill_arcaneburst",
-    druid: "skill_windgeneration",
-    necromancer: "skill_totemward",
-    paladin: "skill_devineshield",
-  }).map(([key, name]) => [key, icon(name, "✨")]),
-);
+const { E, SKILL_ICONS } = require("./hardcoreIcons");
 const rarityLabel = (r) =>
   ({ common: "R", rare: "SR", legendary: "SSR", cursed: "UR" })[r];
 const percent = (n) => `${Math.round(n * 1000) / 10}%`;
@@ -217,7 +191,7 @@ function statTransitions(before, after, includeResources = false) {
 }
 function encounterText(s) {
   if (s.phase === "upgrade")
-    return "🎁 **CHECKPOINT** · Đã hồi đầy HP và nhận thêm 2 bình.\nChọn **+5 STR, DEX, VIT hoặc ENE**; dự báo thay đổi ở ngay bên dưới.";
+    return `🎁 **CHECKPOINT** · Đã hồi đầy ${E.hp} HP và nhận thêm 2 ${E.potion} bình máu.\nChọn **+5 STR, DEX, VIT hoặc ENE**; dự báo thay đổi ở ngay bên dưới.`;
   if (s.phase === "paradox")
     return "**Máu là tiền:** mất HP do nguồn thù địch tăng payout, hồi HP giảm payout; biên ±50%. Chi phí tự nguyện không tăng thưởng.\n**Ngược đời:** vật lý dùng DEF làm sức tấn công; DEF chống vật lý lấy trung bình sát thương vật lý.\nCả hai chỉ có hiệu lực trong đúng 5 tầng tiếp theo.";
   if (s.phase === "severance")

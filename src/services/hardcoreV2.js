@@ -1,5 +1,6 @@
 "use strict";
 const stats = require("./hardcoreStats");
+const { E, SKILL_ICONS } = require("./hardcoreIcons");
 const world = require("./hardcoreWorld");
 const echoes = require("./hardcoreEchoRepository");
 const { ITEMS } = require("../hardcore/item");
@@ -271,15 +272,14 @@ function completeFloor(state, session, rng, reward = 1) {
     state.classShrine = null;
   if (state.floorHpLoss) {
     const lost = hurt(state, Math.max(1, state.maxHp * state.floorHpLoss));
-    state.lastLog += `\n🩸 Lời nguyền: −${lost} HP.`;
+    state.lastLog += `\n🩸 Lời nguyền: −${lost} ${E.hp} HP.`;
     if (!alive(state)) return;
   }
   if (floor % 5 === 0) {
     heal(state, state.maxHp);
     state.potions = Math.min(5, state.potions + 2);
     state.pendingMilestones.push("upgrade");
-    state.lastLog +=
-      "\n🏕️ Checkpoint: hồi đầy HP, +2 bình (tối đa 5); chọn +5 thuộc tính.";
+    state.lastLog += `\n🏕️ Checkpoint: hồi đầy ${E.hp} HP, +2 ${E.potion} bình máu (tối đa 5); chọn +5 thuộc tính.`;
   }
   if (floor % 10 === 0) {
     const keys = Object.keys(world.RIFT_MODIFIERS),
@@ -793,7 +793,7 @@ function enemyTurn(state, rng, defend = false, dodge = false) {
         : "physical"
       : enemy.damageType;
   return hit.hit
-    ? `${hit.crit ? "💥 Critical! " : ""}Bạn nhận ${actual} DMG${defend ? " (đã phòng thủ)" : ""}.`
+    ? `${hit.crit ? `${E.crit} Critical! ` : ""}Bạn nhận ${actual} DMG${defend ? " (đã phòng thủ)" : ""}.`
     : "💨 Quái đánh trượt.";
 }
 function incomingPreview(state) {
@@ -885,7 +885,11 @@ function playerAttack(state, action, rng) {
     hits = [];
   if (action === "defend") {
     state.mana = Math.min(state.maxMana, state.mana + 1);
-    return { defend: true, dodge: false, log: "🛡️ Phòng thủ và hồi 1 Mana." };
+    return {
+      defend: true,
+      dodge: false,
+      log: `${E.defense} Phòng thủ và hồi 1 ${E.mana} Mana.`,
+    };
   }
   if (action === "potion") {
     if (!state.potions) throw new Error("NO_POTION");
@@ -895,7 +899,7 @@ function playerAttack(state, action, rng) {
     return {
       defend: false,
       dodge: false,
-      log: `🧪 Hồi ${gained} HP; quái còn sống phản công.`,
+      log: `${E.potion} Hồi ${gained} ${E.hp} HP; quái còn sống phản công.`,
     };
   }
   if (action === "skill") {
@@ -955,8 +959,8 @@ function playerAttack(state, action, rng) {
   const landed = hits.filter((hit) => hit.hit).length;
   const actionName =
     action === "skill"
-      ? `✨ ${stats.CLASSES[state.classKey].skill}`
-      : "⚔️ Tấn công";
+      ? `${SKILL_ICONS[state.classKey]} ${stats.CLASSES[state.classKey].skill}`
+      : `${E.attack} Tấn công`;
   const outcome = !landed
     ? "Đánh trượt — 0 DMG."
     : immune
@@ -1569,13 +1573,13 @@ function act(state, session, action, rng) {
       if (alive(state)) completeFloor(state, session, rng, 0);
     } else if (e.type === "trap") {
       if (e.kind !== "portal") {
-        if (e.lucky) state.lastLog = "🍀 Lucky Break: tránh bẫy.";
+        if (e.lucky) state.lastLog = `${E.luck} Lucky Break: tránh bẫy.`;
         else if (e.kind === "tax") {
           penalty(state, 0.15);
           state.lastLog = "Thuế: mất 15% payout.";
         } else {
           state.potions = Math.max(0, state.potions - 1);
-          state.lastLog = "Mất 1 bình máu nếu đang có.";
+          state.lastLog = `Mất 1 ${E.potion} bình máu nếu đang có.`;
         }
         completeFloor(state, session, rng, 0);
       } else if (e.good) {
@@ -1668,7 +1672,7 @@ function act(state, session, action, rng) {
   recompute(state);
   finishEventResult(state);
   if (state.discardedTicketsThisTurn)
-    state.lastLog += `\n🎫 Bỏ ${state.discardedTicketsThisTurn} vé nhận thêm; chỉ giữ tối đa 1.`;
+    state.lastLog += `\n${E.ticket} Bỏ ${state.discardedTicketsThisTurn} vé nhận thêm; chỉ giữ tối đa 1.`;
   delete state.discardedTicketsThisTurn;
   state.lastStatChanges = Object.fromEntries(
     Object.entries(before)
