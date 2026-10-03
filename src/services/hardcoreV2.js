@@ -221,10 +221,23 @@ function nextMilestone(state, session, rng) {
   state.phase = "encounter";
   state.encounter = generateEncounter(state, session, rng);
 }
+function finishEventResult(state) {
+  const pending = state.pendingEventResult;
+  if (!pending) return;
+  recompute(state);
+  const after = Object.fromEntries(
+    Object.keys(pending.before).map((key) => [key, state[key]]),
+  );
+  if (Object.keys(after).some((key) => after[key] !== pending.before[key]))
+    state.lastEventResult = { ...pending, after };
+  delete state.pendingEventResult;
+}
 function completeFloor(state, session, rng, reward = 1) {
   const floor = state.floor;
   if (floor === 999 && !state.finalBossDefeated)
     throw new Error("FINAL_BOSS_REQUIRED");
+  // Record the event effect before floor regeneration and checkpoint rewards.
+  finishEventResult(state);
   state.cleared = floor;
   state.bonus += Math.floor(state.stake * 0.01 * reward);
   if (
@@ -1443,6 +1456,14 @@ function act(state, session, action, rng) {
   );
   state.lastLog = "";
   delete state.lastUpgrade;
+  delete state.lastEventResult;
+  delete state.pendingEventResult;
+  if (state.phase === "encounter" && state.encounter.type !== "combat")
+    state.pendingEventResult = {
+      name: state.encounter.name,
+      type: state.encounter.type,
+      before,
+    };
   state.discardedTicketsThisTurn = 0;
   if (state.phase === "upgrade") {
     const key = action.slice(8);
@@ -1654,6 +1675,7 @@ function act(state, session, action, rng) {
     }
   }
   recompute(state);
+  finishEventResult(state);
   if (state.discardedTicketsThisTurn)
     state.lastLog += `\n🎫 Bỏ ${state.discardedTicketsThisTurn} vé nhận thêm; chỉ giữ tối đa 1.`;
   delete state.discardedTicketsThisTurn;

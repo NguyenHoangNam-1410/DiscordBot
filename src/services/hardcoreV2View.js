@@ -174,7 +174,7 @@ function checkpointPreview(s, key) {
   const p = stats.preview(s, key);
   return statTransitions(s, p);
 }
-function statTransitions(before, after) {
+function statTransitions(before, after, includeResources = false) {
   const parts = [];
   const add = (name, keys, format) => {
     if (keys.some((key) => before[key] !== after[key]))
@@ -201,8 +201,18 @@ function statTransitions(before, after) {
   ])
     add(label, [key], (s) => s[key]);
   add("Crit", ["critChance"], (s) => percent(s.critChance));
-  add("RES", ["resistance"], (s) => `${s.resistance}%`);
+  add(`${E.res} RES`, ["resistance"], (s) => `${s.resistance}%`);
   add(`${E.potion} Bình`, ["potionRate"], (s) => percent(s.potionRate));
+  if (includeResources) {
+    for (const [key, label] of [
+      ["hp", `${E.hp} HP`],
+      ["mana", `${E.mana} Mana`],
+      ["luck", `${E.luck} Luck`],
+      ["potions", `${E.potion} Bình máu`],
+      ["escapeTokens", `${E.ticket} Vé thoát hiểm`],
+    ])
+      add(label, [key], (s) => s[key]);
+  }
   return parts.join(" · ") || "Không thay đổi chỉ số chiến đấu.";
 }
 function encounterText(s) {
@@ -451,6 +461,36 @@ function embed(state, userId, result = null, sessionId = null) {
       name: `${E[state.lastUpgrade.key]} Đã tăng +5 ${state.lastUpgrade.key.toUpperCase()}`,
       value: statTransitions(state.lastUpgrade.before, state.lastUpgrade.after),
     });
+  if (state.lastEventResult) {
+    const receipt = state.lastEventResult;
+    const names = {
+      chest: "Rương",
+      shrine: "Shrine",
+      surprise: "Sự kiện",
+      trap: "Bẫy",
+      rngesus: "RNGesus",
+      echo: "Grave Echo",
+      memory: "The Tower Remembers",
+    };
+    const chunks = [""];
+    for (const change of statTransitions(
+      receipt.before,
+      receipt.after,
+      true,
+    ).split(" · ")) {
+      const index = chunks.length - 1;
+      if (chunks[index].length + change.length + 1 > 1024) chunks.push(change);
+      else chunks[index] += `${chunks[index] ? "\n" : ""}${change}`;
+    }
+    for (const [index, value] of chunks.entries())
+      e.addFields({
+        name:
+          index === 0
+            ? `🎁 Kết quả · ${receipt.name || names[receipt.type] || "Sự kiện"}`
+            : "Kết quả chỉ số",
+        value,
+      });
+  }
   const mods =
     Object.entries(state.modifiers)
       .map(([key, n]) => `${world.RIFT_MODIFIERS[key].name} ×${n}`)
