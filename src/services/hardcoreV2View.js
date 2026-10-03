@@ -285,7 +285,7 @@ function encounterSummary(s) {
   if (e.type === "empty")
     return "🕳️ **PHÒNG TRỐNG**\nĐi tiếp để vượt tầng hoặc rút thưởng.";
   if (e.type === "surprise" && e.kind.endsWith("_shop"))
-    return `🛒 **${e.name}** · mua một món\n${e.offers.map((o, i) => `${i + 1}. **${o.item.name} [${rarityLabel(o.item.rarity)}]** · ${money(o.price)} ${e.kind === "blood_shop" ? "HP" : e.kind === "diamond_shop" ? "kim cương" : "xu payout"}`).join("\n")}\nXem Tình huống để đọc công dụng và điều kiện mua.`;
+    return `🛒 **${e.name}** · mua một món\n${e.offers.map((o, i) => `${i + 1}. **${o.item.name} [${rarityLabel(o.item.rarity)}]** · ${money(o.price)} ${e.kind === "blood_shop" ? "HP" : e.kind === "diamond_shop" ? "kim cương" : "xu payout"}`).join("\n")}\nXem Chi tiết để đọc công dụng và điều kiện mua.`;
   return encounterText(s);
 }
 function equipmentSummary(state) {
@@ -317,6 +317,73 @@ function equipmentSummary(state) {
     0,
     700,
   );
+}
+function hasEncounterDetails(s) {
+  if (s.phase !== "encounter") return false;
+  const e = s.encounter;
+  return (
+    e.type === "chest" ||
+    (e.type === "combat" &&
+      (e.mechanic || ["boss", "final_boss"].includes(e.rank))) ||
+    (e.type === "surprise" &&
+      (e.kind.endsWith("_shop") || e.kind === "merchant"))
+  );
+}
+function viewTabs(s) {
+  return [
+    "stats",
+    "items",
+    "effects",
+    ...(hasEncounterDetails(s) ? ["encounter"] : []),
+  ];
+}
+function viewLabel(tab, s) {
+  return {
+    stats: "Chỉ số",
+    items: `Vật phẩm (${s.items.length})`,
+    effects: "Rift & hiệu ứng",
+    encounter: "Chi tiết",
+  }[tab];
+}
+function encounterDetails(s) {
+  const e = s.encounter;
+  if (e.type === "combat") {
+    const mechanism =
+      {
+        butcher: `Frenzy: mỗi lần phản công tăng 8% sát thương, tối đa 5 stack. Hiện **${e.frenzy}/5**; phản công kế dùng **${Math.min(5, e.frenzy + 1)}/5** stack.`,
+        riftwalker: `Miễn sát thương ở nhịp đầu mỗi chu kỳ 3 lần bạn tấn công/dùng skill. Nhịp kế **${(e.combatTurn % 3) + 1}/3**: **${e.combatTurn % 3 === 0 ? "miễn sát thương" : "có thể gây sát thương"}**. Phòng thủ/uống bình không đẩy nhịp này.`,
+        assur: `EVA **${e.evasion}**, Crit **${percent(e.critChance)}**. Phòng thủ miễn Crit của lần phản công đó.`,
+        lucion:
+          "Hồi HP bằng **35% sát thương thực tế gây lên bạn** sau mỗi phản công, tối đa Max HP. Né/chặn phản công ngăn hồi HP.",
+        deimoss:
+          "Abyssal Spires giảm **25% sát thương bạn gây ra**, áp dụng mọi đòn. Dự báo skill trên bảng chính đã tính giảm trừ này.",
+      }[e.mechanic] || "Boss này không có chu kỳ kích hoạt riêng.";
+    return `**${e.name} · Cơ chế đặc biệt**\n${mechanism}${e.drainCharges > 0 ? `\nSoul Drain: còn **${e.drainCharges}** lần; phản công trúng sẽ hút 1 Mana.` : ""}`;
+  }
+  if (e.type === "chest") {
+    const names = {
+      ancient_mimic: "Ancient Mimic",
+      mimic: "Mimic",
+      legendary: "SSR",
+      cursed: "UR (kèm curse)",
+      rare: "SR",
+      common: "R",
+      empty: "Hòm trống",
+      fake: "SSR giả (không công dụng)",
+    };
+    const odds = e.odds || core.chestOdds(s, e.name === "Treasure Chest");
+    return `**Tỷ lệ mở hòm**\n${Object.entries(odds)
+      .filter(([, n]) => n > 0)
+      .map(([key, n]) => `${names[key]}: **${percent(n)}**`)
+      .join(
+        "\n",
+      )}\n\n**Kiểm tra:** ${percent(e.detectionChance)} phát hiện nếu có Mimic; không phát hiện chưa chắc an toàn.\n**Pity:** SR+ ${s.pityRare}/5 · SSR ${s.pityLegendary}/10.${e.guaranteed ? " Hòm này đảm bảo SR+, không Mimic." : ""}\n**Bán:** bonus +15% tiền cược. Đồ nhận chỉ dùng trong run; trùng tên tăng level. UR có curse.`;
+  }
+  if (e.type === "surprise" && e.kind.endsWith("_shop"))
+    return `**Công dụng các món đang bán**\n${e.offers.map((offer, i) => `${i + 1}. **${offer.item.name} [${rarityLabel(offer.item.rarity)}]**\n${itemText(offer.item)}`).join("\n\n")}\n\nMua tối đa **một món** trong lần gặp. ${e.kind === "blood_shop" ? "Trả bằng HP, phải còn ít nhất 1 HP sau mua." : e.kind === "diamond_shop" ? "Kim cương trừ ngay khi mua, không hoàn lại khi run kết thúc." : "Trả từ payout gốc; bonus Blood Paradox không dùng để mua."}`;
+  if (e.type === "surprise" && e.kind === "merchant")
+    return `**Công dụng hàng hóa**\n${e.offers.map((o) => (o.item ? `**${o.item.name} [SR]**: ${itemText(o.item)}` : { potion: "Bình: thêm 1 bình (giới hạn 5).", heal: "Hồi đầy HP.", luck: "Luck: +1 Luck.", ticket: "Vé thoát: giữ tối đa 1, dùng ở RNGesus." }[o.key] || o.key)).join("\n")}\nChỉ mua một offer; trả từ payout gốc.`;
+  return "Không có thông tin bổ sung; xem bảng chơi chính.";
 }
 function chaosLabel(s) {
   const p = s.lastChaosChance || 0;
@@ -412,7 +479,7 @@ function embed(state, userId, result = null, sessionId = null) {
     },
     {
       name: `${icon("scroll", "📜")} Lượt vừa rồi`,
-      value: (state.lastLog || "Run bắt đầu.").slice(0, 360),
+      value: (state.lastLog || "Run bắt đầu.").slice(0, 1024),
     },
   );
   if (result) {
@@ -562,16 +629,8 @@ function rows(sessionId, state, disabled = false) {
   const result = chunkRows(buttons);
   result.push(
     new ActionRowBuilder().addComponents(
-      ["stats", "items", "effects", "encounter"].map((tab, i) =>
-        button(
-          prefix + `view_${tab}_0`,
-          [
-            "Chỉ số",
-            `Vật phẩm (${state.items.length})`,
-            "Rift & hiệu ứng",
-            "Tình huống",
-          ][i],
-        ),
+      viewTabs(state).map((tab) =>
+        button(prefix + `view_${tab}_0`, viewLabel(tab, state)),
       ),
     ),
   );
@@ -590,7 +649,7 @@ function privatePayload(
   const e = new EmbedBuilder()
     .setColor(0x9b59b6)
     .setTitle(
-      `SINH TỒN v${state.releaseVersion} · ${{ stats: "CHỈ SỐ", items: "TRANG BỊ VÀ CÔNG DỤNG", effects: "RIFT & HIỆU ỨNG", encounter: "TÌNH HUỐNG" }[tab] || "CHI TIẾT"}`,
+      `SINH TỒN v${state.releaseVersion} · ${{ stats: "CHỈ SỐ", items: "TRANG BỊ VÀ CÔNG DỤNG", effects: "RIFT & HIỆU ỨNG", encounter: "CHI TIẾT" }[tab] || "CHI TIẾT"}`,
     )
     .setDescription(
       `${stats.CLASSES[state.classKey].emoji} ${stats.CLASSES[state.classKey].name} · Tầng ${state.floor}`,
@@ -626,6 +685,15 @@ function privatePayload(
       },
       { name: "Kỹ năng", value: SKILLS[state.classKey] },
       {
+        name: "⚔️ Tấn công",
+        value: `Một đòn vật lý, có thể trượt/Crit ×1,75. Hồi **${core.attackManaGain(state)} Mana** (tối đa Max Mana), kể cả đánh trượt. Quái còn sống sẽ phản công.`,
+      },
+      {
+        name: "🛡️ Phòng thủ",
+        value:
+          "Không gây sát thương, hồi **1 Mana**. Lần phản công này: DEF ×2 khi nhận vật lý, +15 RES khi nhận phép, giảm thêm 15% sát thương, miễn Crit. Hết hiệu lực sau phản công.",
+      },
+      {
         name: "Sở trường class",
         value: `Sức mạnh ×${balance.power(state)}. Áp dụng vào sức mạnh vật lý và phép từ thuộc tính/trang bị; dải sát thương đang hiển thị đã tính hệ số. HP, DEF, RES và chi phí Mana giữ theo thuộc tính.`,
       },
@@ -648,29 +716,20 @@ function privatePayload(
     });
   } else {
     e.setDescription(
-      `${stats.CLASSES[state.classKey].emoji} ${stats.CLASSES[state.classKey].name} · Tầng ${state.floor}\n\n${encounterText(state)}`.slice(
+      `${stats.CLASSES[state.classKey].emoji} ${stats.CLASSES[state.classKey].name} · Tầng ${state.floor}\n\n${hasEncounterDetails(state) ? encounterDetails(state) : "Không có thông tin bổ sung; xem bảng chơi chính."}`.slice(
         0,
         4096,
       ),
     );
-    e.addFields({
-      name: "📜 Diễn biến đầy đủ",
-      value: (state.lastLog || "—").slice(0, 1024),
-    });
   }
   e.setFooter({
     text: `v${state.releaseVersion} · Lượt ${state.turn} · Trang ${page + 1}/${pages}`,
   });
   const prefix = `hardcore:${sessionId}:${state.turn}:`;
-  const buttons = ["stats", "items", "effects", "encounter"].map((t, i) =>
+  const buttons = viewTabs(state).map((t) =>
     button(
       prefix + `view_${t}_0:${sourceMessageId}`,
-      [
-        "Chỉ số",
-        `Vật phẩm (${state.items.length})`,
-        "Rift & hiệu ứng",
-        "Tình huống",
-      ][i],
+      viewLabel(t, state),
       t === tab ? ButtonStyle.Primary : ButtonStyle.Secondary,
     ),
   );

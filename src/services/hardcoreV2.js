@@ -294,6 +294,47 @@ function legendaryChance(state) {
     0.35,
   );
 }
+function chestOdds(state, treasure = false) {
+  const guaranteed = state.pityRare >= 5;
+  const unstable = state.modifiers.unstable_rift || 0;
+  const ancient = guaranteed ? 0 : clamp(0.03 + unstable * 0.01, 0, 0.15);
+  const mimic = guaranteed
+    ? 0
+    : clamp(0.12 + unstable * 0.03 + state.mimicChance, 0, 0.65);
+  let loot;
+  if (treasure) {
+    const ssr = Math.min(0.7, 0.35 + unstable * 0.05);
+    loot = { legendary: ssr, rare: 1 - ssr };
+  } else {
+    const ssr = legendaryChance(state);
+    const thresholds = [
+      0,
+      ssr,
+      ssr + 0.03,
+      ssr + 0.25,
+      ssr + 0.65,
+      ssr + 0.85,
+      1,
+    ].map((n) => clamp(n, 0, 1));
+    loot = Object.fromEntries(
+      ["legendary", "cursed", "rare", "common", "empty", "fake"].map(
+        (key, i) => [key, Math.max(0, thresholds[i + 1] - thresholds[i])],
+      ),
+    );
+    if (guaranteed) {
+      loot.rare += loot.common + loot.empty + loot.fake;
+      loot.common = loot.empty = loot.fake = 0;
+    }
+  }
+  const safe = 1 - ancient - mimic;
+  return {
+    ancient_mimic: ancient,
+    mimic,
+    ...Object.fromEntries(
+      Object.entries(loot).map(([key, chance]) => [key, chance * safe]),
+    ),
+  };
+}
 function makeChest(state, rng, treasure = false) {
   const guaranteed = state.pityRare >= 5;
   const unstable = state.modifiers.unstable_rift || 0;
@@ -330,6 +371,7 @@ function makeChest(state, rng, treasure = false) {
     kind,
     rarity,
     guaranteed,
+    odds: chestOdds(state, treasure),
     item: rarity ? randomItem(rarity, rng) : null,
     inspected: false,
     revealed: false,
@@ -1639,6 +1681,7 @@ module.exports = {
   remember,
   completeFloor,
   makeChest,
+  chestOdds,
   makeSurprise,
   generateEncounter,
   actions,
