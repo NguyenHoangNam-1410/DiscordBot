@@ -1,12 +1,13 @@
 "use strict";
 const { RELEASE } = require("./hardcoreVersion");
 const balance = require("./hardcoreBalance");
+const emoji = require("../discordEmojiMap");
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const ATTRIBUTES = ["str", "dex", "vit", "ene"];
 const CLASSES = Object.freeze({
   amazon: {
     name: "Amazon",
-    emoji: "🏹",
+    emoji: emoji[":class_amazon:"],
     str: 18,
     dex: 28,
     vit: 20,
@@ -20,7 +21,7 @@ const CLASSES = Object.freeze({
   },
   barbarian: {
     name: "Barbarian",
-    emoji: "🪓",
+    emoji: emoji[":class_barbarian:"],
     str: 30,
     dex: 14,
     vit: 28,
@@ -34,7 +35,7 @@ const CLASSES = Object.freeze({
   },
   assassin: {
     name: "Assassin",
-    emoji: "🗡️",
+    emoji: emoji[":class_assassin:"],
     str: 18,
     dex: 30,
     vit: 18,
@@ -48,7 +49,7 @@ const CLASSES = Object.freeze({
   },
   sorceress: {
     name: "Sorceress",
-    emoji: "🔮",
+    emoji: emoji[":class_sorceress:"],
     str: 10,
     dex: 16,
     vit: 20,
@@ -62,7 +63,7 @@ const CLASSES = Object.freeze({
   },
   druid: {
     name: "Druid",
-    emoji: "🌿",
+    emoji: emoji[":class_druid:"],
     str: 20,
     dex: 16,
     vit: 20,
@@ -76,7 +77,7 @@ const CLASSES = Object.freeze({
   },
   necromancer: {
     name: "Necromancer",
-    emoji: "💀",
+    emoji: emoji[":class_necromancer:"],
     str: 12,
     dex: 16,
     vit: 22,
@@ -90,7 +91,7 @@ const CLASSES = Object.freeze({
   },
   paladin: {
     name: "Paladin",
-    emoji: "🛡️",
+    emoji: emoji[":class_paladin:"],
     str: 26,
     dex: 14,
     vit: 24,

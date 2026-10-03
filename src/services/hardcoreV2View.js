@@ -298,14 +298,14 @@ function embed(state, userId, result = null, sessionId = null) {
               : 0xe67e22,
     )
     .setTitle(
-      `${icon({ barbarian: "axe", assassin: "dagger_knife", sorceress: "crystal_ball" }[state.classKey], c.emoji)} SINH TỒN v${state.releaseVersion} · TẦNG ${state.floor}${state.floor > 100 ? " · OVERRUN" : ""}`,
+      `${c.emoji} SINH TỒN v${state.releaseVersion} · TẦNG ${state.floor}${state.floor > 100 ? " · OVERRUN" : ""}`,
     )
     .setDescription(
       `${icon("bust_in_silhouette", "👤")} <@${userId}> · **${world.regionForFloor(state.floor).name}**`,
     )
     .addFields(
       {
-        name: c.name,
+        name: `${c.emoji} ${c.name}`,
         value: statLine(state, true, true).slice(0, 1024),
       },
       {
@@ -538,7 +538,7 @@ function privatePayload(
       `SINH TỒN v${state.releaseVersion} · ${{ stats: "CHỈ SỐ", items: "TRANG BỊ VÀ CÔNG DỤNG", effects: "RIFT & HIỆU ỨNG", encounter: "TÌNH HUỐNG" }[tab] || "CHI TIẾT"}`,
     )
     .setDescription(
-      `${stats.CLASSES[state.classKey].name} · Tầng ${state.floor}`,
+      `${stats.CLASSES[state.classKey].emoji} ${stats.CLASSES[state.classKey].name} · Tầng ${state.floor}`,
     );
   if (tab === "items") {
     e.addFields({
@@ -593,7 +593,7 @@ function privatePayload(
     });
   } else {
     e.setDescription(
-      `${stats.CLASSES[state.classKey].name} · Tầng ${state.floor}\n\n${encounterText(state)}`.slice(
+      `${stats.CLASSES[state.classKey].emoji} ${stats.CLASSES[state.classKey].name} · Tầng ${state.floor}\n\n${encounterText(state)}`.slice(
         0,
         4096,
       ),

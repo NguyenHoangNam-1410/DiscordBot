@@ -27,6 +27,13 @@
  * THE SOFTWARE.
  */
 module.exports = Object.freeze({
+  ":class_amazon:": "<:class_amazon:1555937851886149753>",
+  ":class_barbarian:": "<:class_barbarian:1555937856365666446>",
+  ":class_assassin:": "<:class_assassin:1555937854121713734>",
+  ":class_sorceress:": "<:class_sorceress:1555937866167619594>",
+  ":class_druid:": "<:class_druid:1555937859406401547>",
+  ":class_necromancer:": "<:class_necromancer:1555937861705015366>",
+  ":class_paladin:": "<:class_paladin:1555937864112676874>",
   ":STR:": "<:STR:1555934093894754345>",
   ":DEX:": "<:DEX:1555934090148970556>",
   ":VIT:": "<:VIT:1555934095840641085>",

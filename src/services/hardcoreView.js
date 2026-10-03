@@ -198,7 +198,7 @@ function hardcoreSetupPayload(draft, classes, context) {
   if (character) {
     embed.addFields(
       {
-        name: `${character.emoji} ${character.name}`,
+        name: `${context.gameplayVersion === 2 ? require("./hardcoreStats").CLASSES[draft.classKey].emoji : character.emoji} ${character.name}`,
         value: CLASS_PROFILES[draft.classKey].role,
       },
       {
@@ -218,16 +218,14 @@ function hardcoreSetupPayload(draft, classes, context) {
             field.name,
           ),
       );
-      embed
-        .setFields(fields)
-        .addFields(
-          { name: "📊 Chỉ số ban đầu · v2.0.1", value: preview.stats },
-          { name: `✨ ${character.skill} · 2 Mana`, value: preview.skill },
-          {
-            name: "Sở trường class",
-            value: `Sức mạnh ×${preview.power}; đã tính vào dải sát thương ở trên.`,
-          },
-        );
+      embed.setFields(fields).addFields(
+        { name: "📊 Chỉ số ban đầu · v2.0.1", value: preview.stats },
+        { name: `✨ ${character.skill} · 2 Mana`, value: preview.skill },
+        {
+          name: "Sở trường class",
+          value: `Sức mạnh ×${preview.power}; đã tính vào dải sát thương ở trên.`,
+        },
+      );
     }
   } else
     embed.addFields({
@@ -274,7 +272,10 @@ function hardcoreSetupPayload(draft, classes, context) {
       Object.entries(classes).map(([value, entry]) => ({
         label: entry.name,
         value,
-        emoji: entry.emoji,
+        emoji:
+          context.gameplayVersion === 2
+            ? require("./hardcoreStats").CLASSES[value].emoji
+            : entry.emoji,
         description: CLASS_PROFILES[value].role,
         default: value === draft.classKey,
       })),
