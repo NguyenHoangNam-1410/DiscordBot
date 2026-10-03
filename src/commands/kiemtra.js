@@ -236,7 +236,7 @@ function achievementPanel(
   const pageRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(
-        `kiemtra-page:${userId}:${status}:${category}:${Math.max(0, page - 1)}`,
+        `kiemtra-page:${userId}:${status}:${category}:${Math.max(0, page - 1)}:prev`,
       )
       .setLabel("Trước")
       .setStyle(ButtonStyle.Secondary)
@@ -248,7 +248,7 @@ function achievementPanel(
       .setDisabled(true),
     new ButtonBuilder()
       .setCustomId(
-        `kiemtra-page:${userId}:${status}:${category}:${Math.min(pages - 1, page + 1)}`,
+        `kiemtra-page:${userId}:${status}:${category}:${Math.min(pages - 1, page + 1)}:next`,
       )
       .setLabel("Sau")
       .setStyle(ButtonStyle.Secondary)
