@@ -1161,11 +1161,6 @@ function actions(state) {
       { action: "flee", label: "Chạy · 75%" },
       { action: "bribe", label: "Hối lộ · 40% payout" },
       { action: "pray", label: "Cầu nguyện · 30%" },
-      {
-        action: "ticket",
-        label: "Vé Thoát Hiểm",
-        disabled: !state.escapeTokens,
-      },
     ];
   if (e.type === "echo")
     return [
@@ -1625,10 +1620,6 @@ function act(state, session, action, rng) {
         receiveItem(state, e.prayerItem);
         state.lastLog = `Cầu nguyện thành công: ${e.prayerItem.name}.`;
         remember(state, "pray_rngesus", rng);
-      }
-      if (action === "ticket") {
-        state.escapeTokens--;
-        state.lastLog = "Dùng Vé Thoát Hiểm.";
       }
       completeFloor(state, session, rng, 0);
     } else if (e.type === "echo") {

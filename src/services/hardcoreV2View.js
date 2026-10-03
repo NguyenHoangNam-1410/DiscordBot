@@ -243,7 +243,7 @@ function encounterText(s) {
     );
   }
   if (e.type === "rngesus")
-    return "**RNGesus · không thể đánh bại.**\nĐánh: chết. Chạy: **75%**; thất bại tự tiêu vé, không có vé thì chết. Hối lộ: mất **40% payout**. Cầu nguyện: **30%** sống, thưởng 85% SSR/15% UR; trượt chết. Vé: vượt an toàn.";
+    return "**RNGesus · không thể đánh bại.**\nĐánh: chết. Chạy: **75%**; thất bại tự tiêu vé, không có vé thì chết. Hối lộ: mất **40% payout**. Cầu nguyện: **30%** sống, thưởng 85% SSR/15% UR; trượt chết.";
   if (e.type === "chest")
     return `**${e.name}**${e.revealed ? " · ⚠️ Đã phát hiện Mimic" : ""}\nKiểm tra: ${percent(e.detectionChance)} phát hiện nếu là Mimic; không phát hiện chưa chắc an toàn. Bán: +15% cược. Mở: nhận item/rỗng/SSR giả hoặc chiến đấu Mimic.\nPity SR+: ${s.pityRare}/5 · Pity SSR: ${s.pityLegendary}/10 · ${e.guaranteed ? "Hòm này đảm bảo SR+, không Mimic." : `Cơ hội SSR cơ bản ${percent(core.legendaryChance(s))}.`}`;
   if (e.type === "shrine")
@@ -306,7 +306,7 @@ function encounterSummary(s) {
   if (e.type === "chest")
     return `📦 **${e.name}** · ${e.revealed ? "😈 Đã phát hiện Mimic" : e.inspected ? "Đã kiểm tra" : "Chưa kiểm tra"}\n${e.guaranteed ? "Đảm bảo SR+, không Mimic." : "Kiểm tra một lần; không phát hiện chưa chắc an toàn."}`;
   if (e.type === "rngesus")
-    return "☠️ **RNGesus** · Không thể thắng hoặc rút thưởng.\nBỏ chạy 75%; thất bại tự dùng vé, hết vé thì chết. Cầu nguyện 30%; trượt chết. Hối lộ giảm 40% payout; vé vượt an toàn.";
+    return "☠️ **RNGesus** · Không thể thắng hoặc rút thưởng.\nBỏ chạy 75%; thất bại tự dùng vé, hết vé thì chết. Cầu nguyện 30%; trượt chết. Hối lộ giảm 40% payout.";
   if (e.type === "shrine") return encounterText(s);
   if (e.type === "empty")
     return "🕳️ **PHÒNG TRỐNG**\nĐi tiếp để vượt tầng hoặc rút thưởng.";
