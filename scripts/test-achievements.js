@@ -59,7 +59,7 @@ for (const id of ["hc_runs_25", "hc_escape_10", "hc_clear_1", "bet_wins_10", "be
 const again = claimAchievements(G, U).map((item) => item.id);
 assert(again.every((id) => !claimed.includes(id)), "không nhận trùng thành tựu đã nhận (xu thưởng có thể mở thêm mốc xu)");
 
-for (const category of ["gachaPulls", "gachaRare", "gachaSpent", "hardcoreFloor", "hardcoreJourney", "betWins", "betGames", "betStaked", "betBigWin"]) {
+for (const category of ["gachaPulls", "gachaRare", "gachaSpent", "hardcoreFloor", "hardcoreJourney", "betWins", "betGames", "betMoney"]) {
   const embed = achievementPanel(G, U, "all", category, 0).embeds[0].toJSON();
   assert(String(embed.description || JSON.stringify(embed.fields)).length > 10, `bộ lọc ${category} phải có kết quả`);
 }

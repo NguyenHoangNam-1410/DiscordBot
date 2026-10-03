@@ -10,6 +10,7 @@ const {
   TextInputStyle,
 } = require("discord.js");
 const { db } = require("../db");
+const { recordBauCuaRun } = require("./baucuaRecordService");
 const { spendCoins, settleReservedGame } = require("./economyService");
 const { formatCoins } = require("../utils/economy");
 const { getGameBetLimit } = require("./gameBetLimitService");
@@ -347,6 +348,14 @@ const settleTx = db.transaction((roundId, forcedDice = null) => {
       outcome,
       operationId: `settle:${round.game}:${round.id}:${userId}`,
     });
+    if (round.game === "baucua")
+      recordBauCuaRun({
+        guildId: round.guild_id,
+        userId,
+        outcome,
+        bets: individualBets.get(userId) || [],
+        symbols: result.symbols,
+      });
     settlements.push({
       userId,
       ...summary,

@@ -1054,4 +1054,16 @@ runMigration(31, "horse race achievement records", () => {
     PRIMARY KEY (guild_id,user_id))`);
 });
 
+runMigration(32, "baucua achievement records", () => {
+  db.exec(`CREATE TABLE IF NOT EXISTS baucua_records (
+    guild_id TEXT NOT NULL,user_id TEXT NOT NULL,
+    triple_hits INTEGER NOT NULL DEFAULT 0,
+    double_hits INTEGER NOT NULL DEFAULT 0,
+    spread_wins INTEGER NOT NULL DEFAULT 0,
+    current_streak INTEGER NOT NULL DEFAULT 0,
+    best_streak INTEGER NOT NULL DEFAULT 0,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY (guild_id,user_id))`);
+});
+
 module.exports = { db, dbPath, runMigration };
