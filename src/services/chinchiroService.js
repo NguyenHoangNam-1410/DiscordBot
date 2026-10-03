@@ -193,12 +193,43 @@ function setMessageId(id, messageId) {
   ).run(String(messageId), Date.now(), String(id));
 }
 
+// Số liệu riêng của Chinchiro cho thành tựu: tay đặc biệt đã thắng, số lần Hifumi, chuỗi thắng (hòa không phá chuỗi).
+function recordChinchiroRun(guildId, userId, playerKind, outcome) {
+  const won = outcome === "win";
+  db.prepare(
+    `INSERT INTO chinchiro_records(guild_id,user_id,shigoro_wins,zoro_wins,pin_zoro_wins,hifumi,current_streak,best_streak,updated_at)
+     VALUES(?,?,?,?,?,?,?,?,?)
+     ON CONFLICT(guild_id,user_id) DO UPDATE SET
+       shigoro_wins=shigoro_wins+excluded.shigoro_wins,
+       zoro_wins=zoro_wins+excluded.zoro_wins,
+       pin_zoro_wins=pin_zoro_wins+excluded.pin_zoro_wins,
+       hifumi=hifumi+excluded.hifumi,
+       current_streak=CASE WHEN ? = 'win' THEN current_streak+1 WHEN ? = 'loss' THEN 0 ELSE current_streak END,
+       best_streak=MAX(best_streak, CASE WHEN ? = 'win' THEN current_streak+1 ELSE current_streak END),
+       updated_at=excluded.updated_at`,
+  ).run(
+    String(guildId),
+    String(userId),
+    won && playerKind === "shigoro" ? 1 : 0,
+    won && playerKind === "zoro" ? 1 : 0,
+    won && playerKind === "pin_zoro" ? 1 : 0,
+    playerKind === "hifumi" ? 1 : 0,
+    won ? 1 : 0,
+    won ? 1 : 0,
+    Date.now(),
+    outcome,
+    outcome,
+    outcome,
+  );
+}
+
 function settlement({
   id,
   guildId,
   userId,
   stake,
   outcome,
+  playerKind = null,
   profitMultiplier = 0,
   extraPenalty = 0,
   penaltyReserve = 0,
@@ -226,6 +257,7 @@ function settlement({
     outcome,
     operationId: `settle:chinchiro:${id}`,
   });
+  recordChinchiroRun(guildId, userId, playerKind, outcome);
   return {
     outcome,
     payout,
@@ -413,6 +445,7 @@ const shakeTx = db.transaction((sessionId, userId) => {
     userId: session.user_id,
     stake: state.stake,
     outcome: decision.outcome,
+    playerKind: state.player.hand.kind,
     profitMultiplier: decision.profitMultiplier,
     extraPenalty,
     penaltyReserve: state.penaltyReserve || 0,
@@ -563,6 +596,7 @@ module.exports = {
   REPLAY_COOLDOWN_MS,
   EFFECT_PRIORITY,
   evaluateDice,
+  recordChinchiroRun,
   rollTurn,
   dealerDecision,
   playerDecision,
