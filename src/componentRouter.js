@@ -146,6 +146,11 @@ const ROUTES = Object.freeze([
   },
   {
     kind: "button",
+    prefix: "use-page:",
+    handle: (interaction) => useCommand.handlePage(interaction),
+  },
+  {
+    kind: "button",
     prefix: "iteminfo-page:",
     handle: (interaction) => itemCatalogViewCommand.handlePage(interaction),
   },

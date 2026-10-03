@@ -1,5 +1,7 @@
 const {
   ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   EmbedBuilder,
   MessageFlags,
   SlashCommandBuilder,
@@ -13,6 +15,8 @@ const {
   itemMatchesGame,
   gameLabels,
 } = require("../services/itemGameService");
+
+const PAGE_SIZE = 10;
 
 const TYPE_LABELS = {
   color: "Màu hồ sơ",
@@ -42,14 +46,47 @@ function useFilterRow(userId, selected = "all") {
   return new ActionRowBuilder().addComponents(menu);
 }
 
-function usePanel(guildId, userId, status = null, selectedGame = "all") {
+function pageRow(userId, selectedGame, page, pageCount) {
+  const id = (kind, target) =>
+    `use-${kind}:${userId}:${selectedGame}:${target}`;
+  return new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(`${id("page", Math.max(0, page - 1))}:prev`)
+      .setLabel("Trang trước")
+      .setEmoji("⬅️")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(page <= 0),
+    new ButtonBuilder()
+      .setCustomId(id("pageinfo", page))
+      .setLabel(`Trang ${page + 1}/${pageCount}`)
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(true),
+    new ButtonBuilder()
+      .setCustomId(`${id("page", Math.min(pageCount - 1, page + 1))}:next`)
+      .setLabel("Trang sau")
+      .setEmoji("➡️")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(page >= pageCount - 1),
+  );
+}
+
+function usePanel(
+  guildId,
+  userId,
+  status = null,
+  selectedGame = "all",
+  requestedPage = 0,
+) {
   const allInventory = getInventory(guildId, userId);
   const usableInventory = allInventory.filter(
     (entry) => entry.item.type !== "gacha",
   );
-  const inventory = usableInventory
-    .filter((entry) => itemMatchesGame(entry.item, selectedGame))
-    .slice(0, 25);
+  const filtered = usableInventory.filter((entry) =>
+    itemMatchesGame(entry.item, selectedGame),
+  );
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const page = Math.max(0, Math.min(pageCount - 1, Number(requestedPage) || 0));
+  const inventory = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const embed = new EmbedBuilder()
     .setColor(0x5865f2)
     .setTitle("🎒 SỬ DỤNG VẬT PHẨM")
@@ -70,7 +107,7 @@ function usePanel(guildId, userId, status = null, selectedGame = "all") {
         : `${status ? `${status}\n\n` : ""}${usableInventory.length ? "Không có vật phẩm áp dụng cho game này." : "Kho đồ chưa có vật phẩm có thể sử dụng."}`,
     )
     .setFooter({
-      text: "Menu chỉ người mở mới sử dụng được • Hiển thị tối đa 25 vật phẩm",
+      text: `Trang ${page + 1}/${pageCount} · ${filtered.length} vật phẩm · Menu chỉ người mở mới sử dụng được`,
     });
   if (!usableInventory.length) return { embeds: [embed], components: [] };
   if (!inventory.length)
@@ -79,7 +116,7 @@ function usePanel(guildId, userId, status = null, selectedGame = "all") {
       components: [useFilterRow(userId, selectedGame)],
     };
   const select = new StringSelectMenuBuilder()
-    .setCustomId(`use:${userId}:${selectedGame}`)
+    .setCustomId(`use:${userId}:${selectedGame}:${page}`)
     .setPlaceholder("Chọn vật phẩm muốn sử dụng…")
     .addOptions(
       inventory.map((entry) =>
@@ -95,13 +132,13 @@ function usePanel(guildId, userId, status = null, selectedGame = "all") {
           .setEmoji(itemIcon(entry.item)),
       ),
     );
-  return {
-    embeds: [embed],
-    components: [
-      useFilterRow(userId, selectedGame),
-      new ActionRowBuilder().addComponents(select),
-    ],
-  };
+  const components = [
+    useFilterRow(userId, selectedGame),
+    new ActionRowBuilder().addComponents(select),
+  ];
+  if (pageCount > 1)
+    components.push(pageRow(userId, selectedGame, page, pageCount));
+  return { embeds: [embed], components };
 }
 
 function errorText(error) {
@@ -139,7 +176,8 @@ function errorText(error) {
 }
 
 async function handleSelect(interaction) {
-  const [, ownerId, selectedGame = "all"] = interaction.customId.split(":");
+  const [, ownerId, selectedGame = "all", page = "0"] =
+    interaction.customId.split(":");
   if (interaction.user.id !== ownerId)
     return interaction.reply({
       content: "Chỉ người mở kho đồ này mới được chọn vật phẩm.",
@@ -158,6 +196,7 @@ async function handleSelect(interaction) {
         interaction.user.id,
         `✅ Đã dùng **${result.item.name}**.\n✨ **Hiệu ứng:** ${result.item.description}`,
         selectedGame,
+        page,
       ),
     );
     if (result.ephemeral)
@@ -213,6 +252,27 @@ async function handleFilter(interaction) {
   );
 }
 
+async function handlePage(interaction) {
+  const [, ownerId, selectedGame = "all", page = "0"] =
+    interaction.customId.split(":");
+  if (interaction.user.id !== ownerId)
+    return interaction.reply({
+      content: "Chỉ người mở kho đồ này mới được chuyển trang.",
+      flags: MessageFlags.Ephemeral,
+    });
+  if (
+    selectedGame !== "all" &&
+    !GAME_FILTERS.some((game) => game.id === selectedGame)
+  )
+    return interaction.reply({
+      content: "Bộ lọc game không hợp lệ.",
+      flags: MessageFlags.Ephemeral,
+    });
+  return interaction.update(
+    usePanel(interaction.guildId, ownerId, null, selectedGame, page),
+  );
+}
+
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("use")
@@ -231,4 +291,5 @@ module.exports = {
   usePanel,
   handleFilter,
   handleSelect,
+  handlePage,
 };
