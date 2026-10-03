@@ -12,6 +12,7 @@ const { RELEASE } = require("./hardcoreVersion");
 const balance = require("./hardcoreBalance");
 const { runDiamondReward } = require("./hardcoreRewards");
 const emoji = require("../discordEmojiMap");
+const { resultBlock } = require("../utils/rewardText");
 const icon = (key, fallback) => emoji[`:${key}:`] || fallback;
 const E = {
   hp: icon("heart", "❤️"),
@@ -52,18 +53,36 @@ const delta = (state, key, suffix = "") => {
     ? ` (${n > 0 ? "+" : ""}${key === "critChance" ? Math.round(n * 1000) / 10 : n}${suffix})`
     : "";
 };
-function statLine(s, changes = true) {
+function healthBar(hp, maxHp) {
+  const ratio = maxHp > 0 ? Math.max(0, Math.min(1, hp / maxHp)) : 0;
+  const filled =
+    ratio >= 1
+      ? 10
+      : ratio > 0
+        ? Math.max(1, Math.min(9, Math.round(ratio * 10)))
+        : 0;
+  return `${E.hp} HP \`${"█".repeat(filled)}${"░".repeat(10 - filled)}\` **${money(hp)}/${money(maxHp)}**`;
+}
+function statLine(s, changes = true, compact = false) {
   const d = (key, suffix) => (changes ? delta(s, key, suffix) : "");
   const inverse = s.paradox?.kind === "inverse";
   const range = core.physicalRange(s);
   const defense = inverse ? (s.damageMin + s.damageMax) / 2 : s.defense;
-  return (
-    `STR **${s.str}**${d("str")} · DEX **${s.dex}**${d("dex")} · VIT **${s.vit}**${d("vit")} · ENE **${s.ene}**${d("ene")}\n` +
-    `${E.hp} **${s.hp}/${s.maxHp}**${d("hp")}${d("maxHp", " MAX")} · ${E.mana} Mana **${s.mana}/${s.maxMana}**${d("mana")}${d("maxMana", " MAX")} · ${E.potion} ${s.potions}${d("potions")} · ${E.ticket} ${s.escapeTokens}${d("escapeTokens")}\n` +
-    `${E.attack} Vật lý **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")} · ${E.res} Phép **${s.spellMin}–${s.spellMax}**${d("spellMin")}\n` +
-    `${E.defense} DEF **${defense}**${inverse ? " (Paradox)" : d("defense")} · RES **${s.resistance}%**${d("resistance")} · ACC **${s.accuracy}**${d("accuracy")} · EVA **${s.evasion}**${d("evasion")}\n` +
-    `${E.crit} Crit **${percent(s.critChance)}**${d("critChance", "%")} · ${E.luck} **${s.luck}**${d("luck")} · Bình **${percent(s.potionRate)}** Max HP`
-  );
+  const lines = [
+    `${healthBar(s.hp, s.maxHp)}${d("hp")}${d("maxHp", " MAX")}`,
+    `${E.mana} Mana **${s.mana}/${s.maxMana}**${d("mana")}${d("maxMana", " MAX")} · ${E.potion} POT ${s.potions}${d("potions")} · ${E.ticket} Vé ${s.escapeTokens}${d("escapeTokens")}`,
+    `${E.attack} ATK **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")} · ${E.res} Phép **${s.spellMin}–${s.spellMax}**${d("spellMin")}`,
+    `${E.defense} DEF **${defense}**${inverse ? " (Paradox)" : d("defense")} · RES **${s.resistance}%**${d("resistance")} · ${E.luck} LUCK **${s.luck}**${d("luck")}`,
+  ];
+  if (!compact || s.phase === "upgrade")
+    lines.push(
+      `STR **${s.str}**${d("str")} · DEX **${s.dex}**${d("dex")} · VIT **${s.vit}**${d("vit")} · ENE **${s.ene}**${d("ene")}`,
+    );
+  if (!compact)
+    lines.push(
+      `${icon("dart", "🎯")} ACC **${s.accuracy}**${d("accuracy")} · ${icon("dash", "💨")} EVA **${s.evasion}**${d("evasion")} · ${E.crit} CRIT **${percent(s.critChance)}**${d("critChance", "%")}\nBình **${percent(s.potionRate)}** Max HP`,
+    );
+  return lines.join("\n");
 }
 function effectText(effects, level = 1) {
   const names = {
@@ -128,13 +147,13 @@ function checkpointPreview(s, key) {
 }
 function encounterText(s) {
   if (s.phase === "upgrade")
-    return "Chọn **+5 STR, DEX, VIT hoặc ENE**. Chỉ số được tính từ thuộc tính và trang bị; xem dự báo bên dưới.";
+    return "Chọn **+5 STR, DEX, VIT hoặc ENE**. Xem nút **Chỉ số** để đọc dự báo trước khi chọn.";
   if (s.phase === "paradox")
     return "**Máu là tiền:** mất HP do nguồn thù địch tăng payout, hồi HP giảm payout; biên ±50%. Chi phí tự nguyện không tăng thưởng.\n**Ngược đời:** vật lý dùng DEF làm sức tấn công; DEF chống vật lý lấy trung bình sát thương vật lý.\nCả hai chỉ có hiệu lực trong đúng 5 tầng tiếp theo.";
   if (s.phase === "severance")
     return "Xóa **toàn bộ stack** của một modifier có hại. Unstable Rift được giữ. Chọn một nút để tiếp tục.";
   if (s.phase === "summit")
-    return "🏔️ Đã hạ Deimoss tầng 999. Bấm **Xác nhận Summit** để chốt chiến thắng và phần thưởng.";
+    return "🏔️ Đã hạ Deimoss tầng 999. Bấm **Rút thưởng** để chốt chiến thắng và phần thưởng.";
   const e = s.encounter;
   if (e.type === "combat") {
     const p = core.incomingPreview(s);
@@ -197,85 +216,175 @@ function encounterText(s) {
   };
   return `**${e.name}**\n${descriptions[k] || "Chọn một hành động."}`;
 }
+function encounterSummary(s) {
+  if (s.phase !== "encounter") return encounterText(s);
+  const e = s.encounter;
+  if (e.type === "combat") {
+    const rank =
+      {
+        normal: "Thường",
+        elite: "Elite",
+        boss: "BOSS",
+        final_boss: "BOSS CUỐI",
+        mimic: "Mimic",
+        ancient_mimic: "Ancient Mimic",
+      }[e.rank] || e.rank;
+    const preview = core.incomingPreview(s);
+    return `👹 **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} ATK ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · RES ${e.resistance}%\nĐòn kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}** · Nhận ${preview.low}–${preview.high} HP (chưa Crit/Thủ)`;
+  }
+  if (e.type === "chest")
+    return `📦 **${e.name}** · ${e.revealed ? "😈 Đã phát hiện Mimic" : e.inspected ? "Đã kiểm tra" : "Chưa kiểm tra"}\n${e.guaranteed ? "Đảm bảo SR+, không Mimic." : "Kiểm tra một lần; không phát hiện chưa chắc an toàn."}`;
+  if (e.type === "rngesus")
+    return "☠️ **RNGesus** · Không thể thắng hoặc rút thưởng.\nBỏ chạy 75%; thất bại tự dùng vé, hết vé thì chết. Hối lộ giảm 40% payout; vé vượt an toàn.";
+  if (e.type === "shrine")
+    return "🗿 **SHRINE KHÔNG RÕ NGUỒN GỐC**\nChạm để nhận hiệu ứng ngẫu nhiên hoặc bỏ qua. Xem Tình huống để đọc các hiệu ứng.";
+  if (e.type === "empty")
+    return "🕳️ **PHÒNG TRỐNG**\nĐi tiếp để vượt tầng hoặc rút thưởng.";
+  if (e.type === "surprise" && e.kind.endsWith("_shop"))
+    return `🛒 **${e.name}** · mua một món\n${e.offers.map((o, i) => `${i + 1}. **${o.item.name} [${rarityLabel(o.item.rarity)}]** · ${money(o.price)} ${e.kind === "blood_shop" ? "HP" : e.kind === "diamond_shop" ? "kim cương" : "xu payout"}`).join("\n")}\nXem Tình huống để đọc công dụng và điều kiện mua.`;
+  return encounterText(s);
+}
+function equipmentSummary(state) {
+  if (!state.items.length) return "Chưa có trang bị.";
+  const totals = {};
+  const add = (effects, levels) => {
+    if (levels <= 0) return;
+    for (const [key, value] of Object.entries(effects || {})) {
+      if (["heal", "potions", "escapeTokens", "bonusPenalty"].includes(key))
+        continue;
+      if (key === "defenseSet") {
+        if (levels > 0) totals[key] = value;
+      } else totals[key] = (totals[key] || 0) + value * levels;
+    }
+  };
+  for (const item of state.items) {
+    add(item.definition.effects, item.level);
+    add(
+      item.definition.curse?.effects,
+      Math.max(0, item.level - (item.cleansedLevels || 0)),
+    );
+  }
+  const active = Object.fromEntries(
+    Object.entries(totals).filter(
+      ([key, value]) => key === "defenseSet" || value !== 0,
+    ),
+  );
+  return `${state.items.length} món${Object.keys(active).length ? ` · ${effectText(active)}` : ""}`.slice(
+    0,
+    700,
+  );
+}
+function chaosLabel(s) {
+  const p = s.lastChaosChance || 0;
+  const name =
+    p === 0 ? "Yên" : p < 0.01 ? "Thấp" : p < 0.03 ? "Bất ổn" : "NGUY HIỂM";
+  return `${icon(p < 0.01 ? "large_green_circle" : p < 0.03 ? "large_yellow_circle" : "red_circle", p < 0.01 ? "🟢" : p < 0.03 ? "🟡" : "🔴")} Chaos: ${name}${s.lastChaosSpike ? " · SPIKE" : ""}`;
+}
 function embed(state, userId, result = null, sessionId = null) {
   const c = stats.CLASSES[state.classKey];
   const e = new EmbedBuilder()
     .setColor(
       result
-        ? result.payout
+        ? result.outcome === "win"
           ? 0x2ecc71
           : 0xe74c3c
         : state.hp <= state.maxHp * 0.3
           ? 0xe74c3c
-          : 0x9b59b6,
+          : state.encounter.type !== "combat"
+            ? 0x3498db
+            : state.floor > 100
+              ? 0x9b59b6
+              : 0xe67e22,
     )
     .setTitle(
-      `${c.emoji} SINH TỒN v${state.releaseVersion} · TẦNG ${state.floor}${state.floor > 100 ? " · OVERRUN" : ""}`,
+      `${icon({ barbarian: "axe", assassin: "dagger_knife", sorceress: "crystal_ball" }[state.classKey], c.emoji)} SINH TỒN v${state.releaseVersion} · TẦNG ${state.floor}${state.floor > 100 ? " · OVERRUN" : ""}`,
     )
     .setDescription(
-      `<@${userId}> · **${c.name}** · ${world.regionForFloor(state.floor).name}`,
+      `${icon("bust_in_silhouette", "👤")} <@${userId}> · **${world.regionForFloor(state.floor).name}**`,
     )
     .addFields(
       {
-        name: "Chỉ số · thay đổi lượt vừa rồi",
-        value: statLine(state).slice(0, 1024),
+        name: c.name,
+        value: statLine(state, true, true).slice(0, 1024),
       },
       {
-        name:
-          state.encounter.type === "combat"
-            ? "Đối thủ và hành động"
-            : "Tình huống",
-        value: encounterText(state).slice(0, 1024),
+        name: state.encounter.type === "combat" ? "Đối thủ" : "Tình huống",
+        value: encounterSummary(state).slice(0, 1024),
       },
     );
-  if (state.phase === "upgrade")
-    for (const key of stats.ATTRIBUTES)
-      e.addFields({
-        name: `+5 ${key.toUpperCase()} · dự báo`,
-        value: checkpointPreview(state, key),
-      });
   const mods =
     Object.entries(state.modifiers)
       .map(([key, n]) => `${world.RIFT_MODIFIERS[key].name} ×${n}`)
       .join(" · ") || "Chưa có";
-  const chance = state.lastChaosChance || 0;
   e.addFields(
     {
-      name: "Tiến trình và Rift",
+      name: `${icon("compass", "🧭")} Tiến trình`,
+      value: `Đã vượt ${state.cleared} · Boss ${state.bosses} · Modifier ${Object.values(state.modifiers || {}).reduce((sum, n) => sum + n, 0)}\n${chaosLabel(state)}`,
+    },
+    {
+      name: `${icon("cyclone", "🌀")} Rift modifier`,
       value:
-        `Vượt ${state.cleared} · Boss ${state.bosses}\n${mods}\nChaos **${percent(chance)}** (${chance < 0.01 ? "Thấp" : chance < 0.03 ? "Bất ổn" : "Nguy hiểm"}) · Khô ${state.rngesusDry} lượt${state.lastChaosSpike ? " · Chaos Spike" : ""}${state.paradox ? `\nParadox: ${state.paradox.kind === "blood" ? `Máu là tiền ${percent(state.paradox.bloodFactor)}` : "Ngược đời"} · hết tầng ${state.paradox.until}` : ""}`.slice(
+        `${mods}${state.paradox ? `\nParadox: ${state.paradox.kind === "blood" ? `Máu là tiền ${percent(state.paradox.bloodFactor)}` : "Ngược đời"} · hết tầng ${state.paradox.until}` : ""}`.slice(
           0,
           1024,
         ),
     },
     {
-      name: result ? "Kết quả" : "Phần thưởng tạm giữ",
+      name: `${icon("moneybag", "💰")} Rút thưởng`,
       value: result
-        ? `**${result.reason === "cashout" || result.reason === "summit" ? "Đã rút thưởng" : "Kết thúc run"}** · Nhận **${money(result.payout)} xu**, **${money(result.diamonds || 0)} kim cương**.\n${result.payout ? "" : "Tử trận/bỏ run mất cược và thưởng tạm giữ."}`
+        ? `Đã nhận **${money(result.payout)} ${icon("coin", "🪙")}** - **${money(result.diamonds || 0)} ${icon("gem", "💎")}**`
         : state.cleared
-          ? `**${money(core.payout(state))} xu** · **${money(runDiamondReward(state))} kim cương**\nRút thưởng mới nhận; chết/bỏ run mất toàn bộ.`
-          : "Chưa thể rút thưởng.",
-      inline: false,
+          ? `**${money(core.payout(state))} ${icon("coin", "🪙")}** - **${money(runDiamondReward(state))} ${icon("gem", "💎")}**`
+          : "Chưa thể rút",
+      inline: true,
     },
     {
-      name: `Trang bị · ${state.items.length} loại`,
+      name: "🎒 Trang bị",
       value:
-        (state.items
-          .slice(-4)
-          .map((x) => `${x.name} Lv.${x.level} [${rarityLabel(x.rarity)}]`)
-          .join(" · ") || "Chưa có") +
-        (state.classShrine
-          ? `\nClass Shrine đến tầng ${state.classShrine.until}: ${SHRINES[state.classKey]}`
+        equipmentSummary(state) +
+        (state.payoutFactor < 1
+          ? `\nPayout sau phạt ×${state.payoutFactor.toFixed(3)}`
+          : "") +
+        (state.classShrine &&
+        state.floor >= state.classShrine.from &&
+        state.floor <= state.classShrine.until
+          ? `\nClass Shrine · hết sau tầng ${state.classShrine.until}`
           : "") +
         (state.contract
-          ? `\nHợp đồng: không ${state.contract.kind} · ${state.contract.remaining} tầng`
+          ? `\nHợp đồng: không ${{ potion: "bình", skill: "skill", defend: "thủ" }[state.contract.kind]} · ${state.contract.remaining} tầng`
           : ""),
     },
     {
-      name: "Lượt vừa rồi",
-      value: (state.lastLog || "Run bắt đầu.").slice(0, 1024),
+      name: `${icon("scroll", "📜")} Lượt vừa rồi`,
+      value: (state.lastLog || "Run bắt đầu.").slice(0, 360),
     },
   );
+  if (result) {
+    const won = ["cashout", "summit"].includes(result.reason);
+    e.addFields(
+      {
+        name: `${icon("checkered_flag", "🏁")} KẾT QUẢ`,
+        value: resultBlock({
+          userId,
+          outcome: result.outcome,
+          stake: state.stake,
+          payout: result.payout,
+          result,
+          reason: won
+            ? `rút thưởng tầng ${state.floor}`
+            : result.reason === "forfeit"
+              ? "bỏ run"
+              : `tử trận tầng ${state.floor}`,
+        }).slice(0, 1024),
+      },
+      {
+        name: `${icon("gem", "💎")} Kim cương Sinh tồn`,
+        value: won
+          ? `Đã cộng **${money(result.diamonds || 0)}** kim cương vào tài khoản.`
+          : `Mất **${money(result.diamondsLost || 0)}** kim cương tạm giữ.`,
+      },
+    );
+  }
   if (result?.achievements?.length)
     e.addFields({
       name: "Thành tựu mới",
@@ -285,15 +394,59 @@ function embed(state, userId, result = null, sessionId = null) {
         .slice(0, 1024),
     });
   return e.setFooter({
-    text: `v${RELEASE.version} · ${sessionId || ""} · Lượt ${state.turn} · Cược ${money(state.stake)} xu · /sinhton tieptuc`,
+    text: `${sessionId ? `Mã ván: ${sessionId} • ` : ""}Lượt ${state.turn} • Cược ${money(state.stake)} xu • /sinhton tieptuc`,
   });
 }
 function button(id, label, style = ButtonStyle.Secondary, disabled = false) {
-  return new ButtonBuilder()
+  const action = id.split(":")[3] || "";
+  const symbols = {
+    attack: ["crossed_swords", "⚔️"],
+    defend: ["shield", "🛡️"],
+    skill: ["sparkles", "✨"],
+    potion: ["test_tube", "🧪"],
+    retreat: ["moneybag", "💰"],
+    open: ["unlock", "🔓"],
+    inspect: ["mag", "🔍"],
+    sell: ["moneybag", "💰"],
+    leave: ["walking", "🚶"],
+    skip: ["walking", "🚶"],
+    event_skip: ["walking", "🚶"],
+    touch: ["moyai", "🗿"],
+    next: ["arrow_right", "➡️"],
+    fight: ["crossed_swords", "⚔️"],
+    flee: ["runner", "🏃"],
+    bribe: ["moneybag", "💰"],
+    pray: ["pray", "🙏"],
+    ticket: ["ticket", "🎫"],
+    event_smith: ["hammer", "🔨"],
+    event_cleanse: ["sparkles", "✨"],
+    event_heal: ["heart", "❤️"],
+  };
+  let symbol = id.startsWith("replay:") ? ["repeat", "🔁"] : symbols[action];
+  if (action.startsWith("view_"))
+    symbol = {
+      stats: ["bar_chart", "📊"],
+      items: ["school_satchel", "🎒"],
+      effects: ["cyclone", "🌀"],
+      encounter: ["information_source", "ℹ️"],
+    }[action.split("_")[1]];
+  if (action.startsWith("page_"))
+    symbol = label === "Trước" ? ["arrow_left", "⬅️"] : ["arrow_right", "➡️"];
+  if (action.startsWith("upgrade_"))
+    symbol = {
+      str: ["crossed_swords", "⚔️"],
+      dex: ["dart", "🎯"],
+      vit: ["heart", "❤️"],
+      ene: ["sparkles", "✨"],
+    }[action.slice(8)];
+  if (action.startsWith("buy_")) symbol = ["shopping_cart", "🛒"];
+  const b = new ButtonBuilder()
     .setCustomId(id)
     .setLabel(label.slice(0, 80))
     .setStyle(style)
     .setDisabled(Boolean(disabled));
+  if (symbol) b.setEmoji(icon(...symbol));
+  return b;
 }
 function chunkRows(buttons) {
   const rows = [];
@@ -306,27 +459,44 @@ function rows(sessionId, state, disabled = false) {
     return chunkRows([
       button(
         `replay:hardcore:${state.stake}:${state.classKey}`,
-        "Chơi lại · v2",
+        "Chơi lại",
         ButtonStyle.Success,
       ),
     ]);
   const prefix = `hardcore:${sessionId}:${state.turn}:`;
-  const buttons = core
-    .actions(state)
-    .map((a) =>
-      button(
-        prefix + a.action,
-        a.label,
-        a.action === "attack" ? ButtonStyle.Primary : ButtonStyle.Secondary,
-        a.disabled,
-      ),
+  const actions = core.actions(state);
+  if (state.encounter.type === "chest")
+    actions.sort(
+      (a, b) =>
+        ["open", "inspect", "sell", "leave"].indexOf(a.action) -
+        ["open", "inspect", "sell", "leave"].indexOf(b.action),
     );
+  const buttons = actions.map((a) =>
+    button(
+      prefix + a.action,
+      {
+        potion: `Bình máu (${state.potions})`,
+        open: "Mở hòm",
+        inspect: "Kiểm tra",
+        sell: "Bán hòm",
+        leave: "Tránh Mimic",
+      }[a.action] || a.label,
+      a.action === "fight"
+        ? ButtonStyle.Danger
+        : ["attack", "open", "next", "flee"].includes(a.action)
+          ? ButtonStyle.Primary
+          : ["skill", "bribe", "ticket"].includes(a.action)
+            ? ButtonStyle.Success
+            : ButtonStyle.Secondary,
+      a.disabled,
+    ),
+  );
   if (state.encounter.type !== "rngesus")
     buttons.push(
       button(
         prefix + "retreat",
         state.phase === "summit"
-          ? "Xác nhận Summit"
+          ? "Rút thưởng"
           : state.cleared
             ? "Rút thưởng"
             : "Bỏ run",
@@ -341,9 +511,9 @@ function rows(sessionId, state, disabled = false) {
           prefix + `view_${tab}_0`,
           [
             "Chỉ số",
-            "Trang bị và công dụng",
+            `Vật phẩm (${state.items.length})`,
             "Rift & hiệu ứng",
-            "Luật tình huống",
+            "Tình huống",
           ][i],
         ),
       ),
@@ -363,7 +533,9 @@ function privatePayload(
   page = clampPage(page, pages);
   const e = new EmbedBuilder()
     .setColor(0x9b59b6)
-    .setTitle(`SINH TỒN v${state.releaseVersion} · ${tab}`)
+    .setTitle(
+      `SINH TỒN v${state.releaseVersion} · ${{ stats: "CHỈ SỐ", items: "TRANG BỊ VÀ CÔNG DỤNG", effects: "RIFT & HIỆU ỨNG", encounter: "TÌNH HUỐNG" }[tab] || "CHI TIẾT"}`,
+    )
     .setDescription(
       `${stats.CLASSES[state.classKey].name} · Tầng ${state.floor}`,
     );
@@ -418,19 +590,32 @@ function privatePayload(
       name: "Hiệu ứng hiện hành",
       value: `Paradox: ${state.paradox ? `${state.paradox.kind} tới tầng ${state.paradox.until}` : "không"}\nClass Shrine: ${state.classShrine ? `${SHRINES[state.classKey]} Hết tầng ${state.classShrine.until}.` : "không"}\nHợp đồng: ${state.contract ? `không ${state.contract.kind}, còn ${state.contract.remaining} tầng` : "không"}\nPayout gốc ${money(core.rawPayout(state))} xu; bonus Blood Paradox không dùng mua đồ.`,
     });
-  } else
+  } else {
+    e.setDescription(
+      `${stats.CLASSES[state.classKey].name} · Tầng ${state.floor}\n\n${encounterText(state)}`.slice(
+        0,
+        4096,
+      ),
+    );
     e.addFields({
-      name: "Luật tình huống",
-      value: encounterText(state).slice(0, 1024),
+      name: "📜 Diễn biến đầy đủ",
+      value: (state.lastLog || "—").slice(0, 1024),
     });
+  }
   e.setFooter({
-    text: `v${RELEASE.version} · Lượt ${state.turn} · Trang ${page + 1}/${pages}`,
+    text: `v${state.releaseVersion} · Lượt ${state.turn} · Trang ${page + 1}/${pages}`,
   });
   const prefix = `hardcore:${sessionId}:${state.turn}:`;
   const buttons = ["stats", "items", "effects", "encounter"].map((t, i) =>
     button(
       prefix + `view_${t}_0:${sourceMessageId}`,
-      ["Chỉ số", "Trang bị", "Hiệu ứng", "Tình huống"][i],
+      [
+        "Chỉ số",
+        `Vật phẩm (${state.items.length})`,
+        "Rift & hiệu ứng",
+        "Tình huống",
+      ][i],
+      t === tab ? ButtonStyle.Primary : ButtonStyle.Secondary,
     ),
   );
   if (pages > 1)
