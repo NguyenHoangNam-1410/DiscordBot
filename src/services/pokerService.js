@@ -9,6 +9,7 @@ const {
   TextInputBuilder,
   TextInputStyle,
 } = require("discord.js");
+const { recordPokerRun } = require("./pokerRecordService");
 const { db } = require("../db");
 const {
   getAccount,
@@ -539,6 +540,15 @@ function settle(session, state, reason = "showdown") {
     game: "poker",
     outcome,
     operationId: `settle:poker:${session.id}`,
+  });
+  recordPokerRun({
+    guildId: session.guild_id,
+    userId: session.user_id,
+    outcome,
+    reason,
+    score: scores[human.id],
+    variant: state.variant,
+    allIn: human.allIn,
   });
   state.phase = "complete";
   state.result = {
