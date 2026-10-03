@@ -67,7 +67,7 @@ function healthBar(hp, maxHp) {
         : 0;
   return `${E.hp} HP \`${"█".repeat(filled)}${"░".repeat(10 - filled)}\` **${money(hp)}/${money(maxHp)}**`;
 }
-function statLine(s, changes = true, compact = false) {
+function statLine(s, changes = false, compact = false) {
   const d = (key, suffix) => (changes ? delta(s, key, suffix) : "");
   const inverse = s.paradox?.kind === "inverse";
   const range = core.physicalRange(s);
@@ -144,11 +144,38 @@ function itemText(item, level = 1) {
 }
 function checkpointPreview(s, key) {
   const p = stats.preview(s, key);
-  return `HP ${s.maxHp}→${p.maxHp} · VL ${s.damageMin}–${s.damageMax}→${p.damageMin}–${p.damageMax} · Phép ${s.spellMin}–${s.spellMax}→${p.spellMin}–${p.spellMax}\nDEF ${s.defense}→${p.defense} · ACC ${s.accuracy}→${p.accuracy} · EVA ${s.evasion}→${p.evasion} · Crit ${percent(s.critChance)}→${percent(p.critChance)} · RES ${s.resistance}→${p.resistance}% · Mana ${s.maxMana}→${p.maxMana} · Bình ${percent(s.potionRate)}→${percent(p.potionRate)}`;
+  return statTransitions(s, p);
+}
+function statTransitions(before, after) {
+  const parts = [];
+  const add = (name, keys, format) => {
+    if (keys.some((key) => before[key] !== after[key]))
+      parts.push(`${name} ${format(before)}→**${format(after)}**`);
+  };
+  for (const key of stats.ATTRIBUTES)
+    add(key.toUpperCase(), [key], (s) => s[key]);
+  add("Max HP", ["maxHp"], (s) => s.maxHp);
+  add(
+    "Vật lý",
+    ["damageMin", "damageMax"],
+    (s) => `${s.damageMin}–${s.damageMax}`,
+  );
+  add("Phép", ["spellMin", "spellMax"], (s) => `${s.spellMin}–${s.spellMax}`);
+  for (const [key, label] of [
+    ["defense", "DEF"],
+    ["accuracy", "ACC"],
+    ["evasion", "EVA"],
+    ["maxMana", "Max Mana"],
+  ])
+    add(label, [key], (s) => s[key]);
+  add("Crit", ["critChance"], (s) => percent(s.critChance));
+  add("RES", ["resistance"], (s) => `${s.resistance}%`);
+  add("Bình", ["potionRate"], (s) => percent(s.potionRate));
+  return parts.join(" · ") || "Không thay đổi chỉ số chiến đấu.";
 }
 function encounterText(s) {
   if (s.phase === "upgrade")
-    return "Chọn **+5 STR, DEX, VIT hoặc ENE**. Xem nút **Chỉ số** để đọc dự báo trước khi chọn.";
+    return "🎁 **CHECKPOINT** · Đã hồi đầy HP và nhận thêm 2 bình.\nChọn **+5 STR, DEX, VIT hoặc ENE**; dự báo thay đổi ở ngay bên dưới.";
   if (s.phase === "paradox")
     return "**Máu là tiền:** mất HP do nguồn thù địch tăng payout, hồi HP giảm payout; biên ±50%. Chi phí tự nguyện không tăng thưởng.\n**Ngược đời:** vật lý dùng DEF làm sức tấn công; DEF chống vật lý lấy trung bình sát thương vật lý.\nCả hai chỉ có hiệu lực trong đúng 5 tầng tiếp theo.";
   if (s.phase === "severance")
@@ -178,15 +205,15 @@ function encounterText(s) {
   if (e.type === "chest")
     return `**${e.name}**${e.revealed ? " · ⚠️ Đã phát hiện Mimic" : ""}\nKiểm tra: ${percent(e.detectionChance)} phát hiện nếu là Mimic; không phát hiện chưa chắc an toàn. Bán: +15% cược. Mở: nhận item/rỗng/SSR giả hoặc chiến đấu Mimic.\nPity SR+: ${s.pityRare}/5 · Pity SSR: ${s.pityLegendary}/10 · ${e.guaranteed ? "Hòm này đảm bảo SR+, không Mimic." : `Cơ hội SSR cơ bản ${percent(core.legendaryChance(s))}.`}`;
   if (e.type === "shrine")
-    return "**Shrine · sáu loại có tỷ lệ bằng nhau (~16,7%).**\nHealing: đầy HP. Armor: +5 STR hoặc VIT. Blood: +8 STR/−5 VIT. Experience: bonus +25% cược. Corrupted: +12 STR/−8 VIT. Fake: mất max(10,30% Max HP). Có thể bỏ qua.";
+    return "🗿 **SHRINE KHÔNG RÕ NGUỒN GỐC**\nMỗi loại **16,7%** khi chạm:\n💚 **Healing:** hồi đầy HP.\n🛡️ **Armor:** +5 STR hoặc +5 VIT (50/50).\n🩸 **Blood:** +8 STR, −5 VIT.\n✨ **Experience:** bonus +25% tiền cược.\n☣️ **Corrupted:** +12 STR, −8 VIT.\n🤡 **Fake:** mất 30% Max HP, tối thiểu 10.\nCó thể bỏ qua.";
   if (e.type === "echo")
     return `**${e.name}** · ${e.echo.profile.classKey} · tử trận tầng ${e.echo.floor} · ${e.echo.kills} mạng\nCầu nguyện: hồi 15% HP, giữ mộ. Cướp: nhận một item, 50% đánh thức. Khiêu chiến: quái mạnh hơn 25%, hạ mới nhận loot. Bỏ đi: giữ mộ. Claim hết hạn sau 30 phút không thao tác.`;
   if (e.type === "memory")
     return "**The Tower Remembers.** Hành động trong quá khứ được tháp ghi nhớ. Bấm Đi tiếp để nhận hậu quả; kết quả đã được khóa từ lúc lựa chọn ban đầu.";
   if (e.type === "trap")
     return e.kind === "portal"
-      ? "**Wrong Portal: 50% tốt / 50% xấu, Luck không tác động.**\nTốt: hồi đầy/+10 Max HP/+1 bình, bonus 50% cược, hoặc +6 STR/+6 ENE/+1 Luck. Xấu: mất 15% Max HP (giữ ≥1), Mana về 0, mất 2 bình, payout −10%, hoặc −5 STR/ENE; sau đó Elite đánh phủ đầu."
-      : `**${e.name}** · Lucky Break ${percent(Math.min(0.3, s.luck * 0.015))}. ${e.kind === "tax" ? "Mất 15% payout nếu không né được." : "Mất 1 bình nếu đang có."}`;
+      ? "**Wrong Portal: 50% tốt / 50% xấu.** Lucky Break không áp dụng.\nTốt: hồi đầy/+10 Max HP/+1 bình, bonus 50% cược, hoặc +6 STR/+6 ENE/+1 Luck. Xấu: mất 15% Max HP (giữ ≥1), Mana về 0, mất 2 bình, payout −10%, hoặc −5 STR/ENE; sau đó Elite đánh phủ đầu."
+      : `**${e.name}**\n${E.luck} Luck **${s.luck}** · Lucky Break **${percent(Math.min(0.3, s.luck * 0.015))}** để tránh bẫy.\n${e.kind === "tax" ? "Mất 15% payout nếu không né được." : "Mất 1 bình nếu đang có và không né được."}`;
   if (e.type === "empty") return "Phòng trống. Đi tiếp hoặc rút thưởng.";
   const k = e.kind;
   if (k.endsWith("_shop"))
@@ -238,8 +265,7 @@ function encounterSummary(s) {
     return `📦 **${e.name}** · ${e.revealed ? "😈 Đã phát hiện Mimic" : e.inspected ? "Đã kiểm tra" : "Chưa kiểm tra"}\n${e.guaranteed ? "Đảm bảo SR+, không Mimic." : "Kiểm tra một lần; không phát hiện chưa chắc an toàn."}`;
   if (e.type === "rngesus")
     return "☠️ **RNGesus** · Không thể thắng hoặc rút thưởng.\nBỏ chạy 75%; thất bại tự dùng vé, hết vé thì chết. Cầu nguyện 30%; trượt chết. Hối lộ giảm 40% payout; vé vượt an toàn.";
-  if (e.type === "shrine")
-    return "🗿 **SHRINE KHÔNG RÕ NGUỒN GỐC**\nChạm để nhận hiệu ứng ngẫu nhiên hoặc bỏ qua. Xem Tình huống để đọc các hiệu ứng.";
+  if (e.type === "shrine") return encounterText(s);
   if (e.type === "empty")
     return "🕳️ **PHÒNG TRỐNG**\nĐi tiếp để vượt tầng hoặc rút thưởng.";
   if (e.type === "surprise" && e.kind.endsWith("_shop"))
@@ -278,9 +304,7 @@ function equipmentSummary(state) {
 }
 function chaosLabel(s) {
   const p = s.lastChaosChance || 0;
-  const name =
-    p === 0 ? "Yên" : p < 0.01 ? "Thấp" : p < 0.03 ? "Bất ổn" : "NGUY HIỂM";
-  return `${icon(p < 0.01 ? "large_green_circle" : p < 0.03 ? "large_yellow_circle" : "red_circle", p < 0.01 ? "🟢" : p < 0.03 ? "🟡" : "🔴")} Chaos: ${name}${s.lastChaosSpike ? " · SPIKE" : ""}`;
+  return `${icon(p < 0.01 ? "large_green_circle" : p < 0.03 ? "large_yellow_circle" : "red_circle", p < 0.01 ? "🟢" : p < 0.03 ? "🟡" : "🔴")} Chaos: **${percent(p)}**`;
 }
 function embed(state, userId, result = null, sessionId = null) {
   const c = stats.CLASSES[state.classKey];
@@ -308,7 +332,7 @@ function embed(state, userId, result = null, sessionId = null) {
       {
         name: `${c.emoji} ${c.name}`,
         value: (
-          statLine(state, true, true) +
+          statLine(state, false, state.phase !== "upgrade") +
           (state.phase === "encounter" && state.encounter.type === "combat"
             ? `\n${E.mana} **${c.skill} (${core.skillManaCost(state)} Mana):** ${SKILLS[state.classKey]}`
             : "")
@@ -319,6 +343,17 @@ function embed(state, userId, result = null, sessionId = null) {
         value: encounterSummary(state).slice(0, 1024),
       },
     );
+  if (!result && state.phase === "upgrade")
+    for (const key of stats.ATTRIBUTES)
+      e.addFields({
+        name: `${E[key]} +5 ${key.toUpperCase()}`,
+        value: checkpointPreview(state, key),
+      });
+  if (!result && state.lastUpgrade)
+    e.addFields({
+      name: `${E[state.lastUpgrade.key]} Đã tăng +5 ${state.lastUpgrade.key.toUpperCase()}`,
+      value: statTransitions(state.lastUpgrade.before, state.lastUpgrade.after),
+    });
   const mods =
     Object.entries(state.modifiers)
       .map(([key, n]) => `${world.RIFT_MODIFIERS[key].name} ×${n}`)
@@ -720,7 +755,7 @@ function ratesFields(category) {
       {
         name: "RNGesus",
         value:
-          "Nền: tầng 1–4 0%; 5–9 0,3%; 10–19 0,6%; 20+ 1%. Volatility ×0,25–3; mỗi tầng khô +0,05 điểm %; 2,5% Chaos Spike +4–10 điểm %. Cap 12%. Chạy 75%, thất bại tự dùng vé; cầu nguyện 30%, thưởng SSR 85%/UR 15%; đánh chết; hối lộ −40% payout.",
+          "Chaos hiện bằng % trên bảng chơi. Chạy 75%, thất bại tự dùng vé; cầu nguyện 30%, thưởng SSR 85%/UR 15%; đánh chết; hối lộ −40% payout.",
       },
     ],
     combat: [

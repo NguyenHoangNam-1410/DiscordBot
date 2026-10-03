@@ -1355,13 +1355,22 @@ function act(state, session, action, rng) {
       "luck",
       "potions",
       "escapeTokens",
+      "potionRate",
     ].map((key) => [key, state[key]]),
   );
   state.lastLog = "";
+  delete state.lastUpgrade;
   state.discardedTicketsThisTurn = 0;
   if (state.phase === "upgrade") {
     const key = action.slice(8);
     addSource(state, { [key]: 5 }, "checkpoint");
+    state.lastUpgrade = {
+      key,
+      before,
+      after: Object.fromEntries(
+        Object.keys(before).map((name) => [name, state[name]]),
+      ),
+    };
     state.lastLog = `${key.toUpperCase()} +5.`;
     nextMilestone(state, session, rng);
   } else if (state.phase === "paradox") {
