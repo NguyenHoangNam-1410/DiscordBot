@@ -51,11 +51,11 @@ Các game cược tiếp tục dùng seed và HMAC-SHA256 nội bộ để tạo
 
 ### Xì dách
 
-- Chọn đối thủ bằng `chedochoi`: **nhà cái bot** (mặc định, chơi một mình với gấp đôi và tách bài) hoặc **người chơi khác**: `/xidach ante:<số xu> chedochoi:nguoichoi` mở bàn, bạn làm nhà cái, tối đa 3 người vào bàn trong 30 giây.
+- Chọn đối thủ bằng `chedochoi`: **nhà cái bot** (mặc định, chơi một mình với tách bài) hoặc **người chơi khác**: `/xidach ante:<số xu> chedochoi:nguoichoi` mở bàn, bạn làm nhà cái, tối đa 3 người vào bàn trong 30 giây.
 - Ở bàn nhiều người, bài mỗi người được giữ kín: bấm **Xem bài của tôi** để xem bài và Rút bài/Dừng trong bảng riêng (chỉ bạn thấy); bot nhắc người đến lượt trong kênh và bài chỉ lộ khi ván kết thúc.
 - Với prefix: `!xidach <số xu> [bot|nguoichoi]` (mặc định bot).
 
-Trong ván với nhà cái bot, thắng thường nhận 2× tổng cược, Xì dách tự nhiên nhận 2,5×. Người chơi chỉ được Dừng khi có ít nhất 16 điểm (Gấp đôi chốt tay sau 1 lá nên không bị ràng buộc), nhà cái rút đến khi có ít nhất 15 điểm. Người chơi quắc trên 21 thua, nhưng nếu nhà cái cũng quắc thì **hòa** và hoàn cược; khi quắc mọi nút thao tác bị khóa. Luật 16/15 và cùng quắc = hòa áp dụng cho cả bàn nhiều người và đấu người (đấu người vốn đã hòa khi cả hai quắc). Lưu ý cân bằng: với hệ số 2× và luật mới, mô phỏng cho RTP khoảng 107% với chiến thuật cơ bản (người chơi có lợi); hạ `REGULAR_WIN_MULTIPLIER` xuống 1,8 để về khoảng 99%. Ngũ linh (đủ 5 lá không quắc) thắng nhà cái không có Ngũ linh. Trong ván 1v1, mỗi người xem tay bài bằng nút riêng, sau đó chọn Rút bài hoặc Dừng. Người có tay gần 21 nhất thắng toàn bộ tiền cược; Xì dách tự nhiên được ưu tiên cao nhất. Nếu ván hết hạn, cược được hoàn cho cả hai.
+Trong ván với nhà cái bot, thắng thường nhận 2× tổng cược, Xì dách tự nhiên nhận 2,5×. Người chơi chỉ được Dừng khi có ít nhất 16 điểm nhà cái rút đến khi có ít nhất 15 điểm. Người chơi quắc trên 21 thua, nhưng nếu nhà cái cũng quắc thì **hòa** và hoàn cược; khi quắc mọi nút thao tác bị khóa. Luật 16/15 và cùng quắc = hòa áp dụng cho cả bàn nhiều người và đấu người (đấu người vốn đã hòa khi cả hai quắc). Lưu ý cân bằng: với hệ số 2× và luật mới, mô phỏng cho RTP khoảng 108% với chiến thuật cơ bản (người chơi có lợi); hạ `REGULAR_WIN_MULTIPLIER` xuống 1,8 để về khoảng 99%. Ngũ linh (đủ 5 lá không quắc) thắng nhà cái không có Ngũ linh. Trong ván 1v1, mỗi người xem tay bài bằng nút riêng, sau đó chọn Rút bài hoặc Dừng. Người có tay gần 21 nhất thắng toàn bộ tiền cược; Xì dách tự nhiên được ưu tiên cao nhất. Nếu ván hết hạn, cược được hoàn cho cả hai.
 
 ### Poker
 

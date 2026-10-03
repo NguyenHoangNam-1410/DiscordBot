@@ -85,7 +85,7 @@ function blackjack() {
       houseEdge: +(100 - result.rtp).toFixed(3),
       naturalRate: +(result.naturalRate * 100).toFixed(2),
       notes:
-        "Real rules: 6-deck shoe without replacement, player bust always loses, five-card Ngũ linh, 1.9x wins, 2.5x natural, single split, double; no items",
+        "Real rules: 6-deck shoe without replacement, player bust always loses, five-card Ngũ linh, 1.9x wins, 2.5x natural, single split; no double; no items",
     };
   });
 }
