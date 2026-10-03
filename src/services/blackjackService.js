@@ -458,22 +458,6 @@ const actionTx = db.transaction(
     } else if (action === "stand") {
       if (!canStand(hand.cards)) throw new Error("MUST_HIT");
       hand.status = "stand";
-    } else if (action === "double") {
-      if (hand.cards.length !== 2) throw new Error("CANNOT_DOUBLE");
-      if (totalBet(state) + hand.bet > (state.maxBet || MAX_BET)) {
-        const error = new Error("BET_LIMIT");
-        error.maxBet = state.maxBet || MAX_BET;
-        throw error;
-      }
-      spendCoins({
-        guildId: session.guild_id,
-        userId,
-        amount: hand.bet,
-        reason: `blackjack:double:${session.id}`,
-      });
-      hand.bet *= 2;
-      hand.cards.push(draw(state));
-      hand.status = handScore(hand.cards).total > 21 ? "bust" : "stand";
     } else if (action === "split") {
       if (
         state.split ||
@@ -596,13 +580,11 @@ function actionRows(sessionId, state, disabled = false) {
   const withinLimit = hand
     ? totalBet(state) + hand.bet <= (state.maxBet || MAX_BET)
     : false;
-  const canDouble =
+  const canSplit =
     !disabled &&
     hand?.status === "playing" &&
     hand.cards.length === 2 &&
-    withinLimit;
-  const canSplit =
-    canDouble &&
+    withinLimit &&
     !state.split &&
     state.hands.length === 1 &&
     rank(hand.cards[0]) === rank(hand.cards[1]);
@@ -622,12 +604,6 @@ function actionRows(sessionId, state, disabled = false) {
         .setEmoji("✋")
         .setStyle(ButtonStyle.Success)
         .setDisabled(disabled || !mayStand),
-      new ButtonBuilder()
-        .setCustomId(`blackjack:${sessionId}:double`)
-        .setLabel("Gấp đôi")
-        .setEmoji("⏫")
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(!canDouble),
       new ButtonBuilder()
         .setCustomId(`blackjack:${sessionId}:split`)
         .setLabel("Tách bài")
@@ -716,13 +692,11 @@ async function handleBlackjackButton(interaction) {
           ? `Thao tác này vượt giới hạn cược **${formatCoins(error.maxBet)} :coin:/người/ván**.`
           : error.message === "MUST_HIT"
             ? `Bạn cần ít nhất **${PLAYER_MIN_STAND} điểm** mới được dừng; hãy rút thêm bài.`
-            : error.message === "CANNOT_DOUBLE"
-              ? "Chỉ được gấp đôi khi tay bài có đúng hai lá."
-              : error.message === "CANNOT_SPLIT"
-                ? "Chỉ được tách một lần khi hai lá đầu cùng hạng."
-                : error.message === "ITEM_EFFECT_UNAVAILABLE"
-                  ? "Hiệu ứng vật phẩm không còn khả dụng trong ván này."
-                  : "Không thể thực hiện thao tác này.";
+            : error.message === "CANNOT_SPLIT"
+              ? "Chỉ được tách một lần khi hai lá đầu cùng hạng."
+              : error.message === "ITEM_EFFECT_UNAVAILABLE"
+                ? "Hiệu ứng vật phẩm không còn khả dụng trong ván này."
+                : "Không thể thực hiện thao tác này.";
     return interaction.reply({ content, flags: MessageFlags.Ephemeral });
   }
 }

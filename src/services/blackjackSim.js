@@ -21,7 +21,7 @@ function legalAction(cards, action) {
     : action;
 }
 
-// Mirrors blackjackService.actionTx/settleState for a hand without items: hit, stand, double, one split.
+// Mirrors blackjackService.actionTx/settleState for a hand without items: hit, stand, one split.
 function playRound(deck, strategy, winMultiplier = REGULAR_WIN_MULTIPLIER) {
   const draw = () => deck.pop();
   const hands = [{ cards: [], bet: UNIT_BET, status: "playing" }];
@@ -42,7 +42,6 @@ function playRound(deck, strategy, winMultiplier = REGULAR_WIN_MULTIPLIER) {
         strategy({
           cards: hand.cards,
           dealerUp: dealer[0],
-          canDouble: hand.cards.length === 2,
           canSplit:
             !split &&
             hands.length === 1 &&
@@ -55,11 +54,7 @@ function playRound(deck, strategy, winMultiplier = REGULAR_WIN_MULTIPLIER) {
         const score = handScore(hand.cards).total;
         if (score >= 21) hand.status = score > 21 ? "bust" : "stand";
       } else if (action === "stand") hand.status = "stand";
-      else if (action === "double") {
-        hand.bet *= 2;
-        hand.cards.push(draw());
-        hand.status = handScore(hand.cards).total > 21 ? "bust" : "stand";
-      } else if (action === "split") {
+      else if (action === "split") {
         const [first, second] = hand.cards;
         split = true;
         hands.splice(
@@ -94,12 +89,10 @@ function playRound(deck, strategy, winMultiplier = REGULAR_WIN_MULTIPLIER) {
 const STRATEGIES = Object.freeze({
   "mimic-dealer": ({ cards }) =>
     handScore(cards).total < PLAYER_MIN_STAND ? "hit" : "stand",
-  basic: ({ cards, dealerUp, canDouble, canSplit }) => {
+  basic: ({ cards, dealerUp, canSplit }) => {
     const { total, soft } = handScore(cards);
     const up = cardValue(dealerUp);
     if (canSplit && ["A", "8"].includes(rankOf(cards[0]))) return "split";
-    if (canDouble && !soft && (total === 11 || (total === 10 && up <= 9)))
-      return "double";
     if (soft) return total >= 19 || (total === 18 && up <= 8) ? "stand" : "hit";
     if (total >= 17) return "stand";
     if (total >= 13) return up <= 6 ? "stand" : "hit";
