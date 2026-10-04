@@ -1,6 +1,12 @@
 "use strict";
 const stats = require("./hardcoreStats");
-const { E, SKILL_ICONS, RIFT_ICONS, eventIcon } = require("./hardcoreIcons");
+const {
+  E,
+  SKILL_ICONS,
+  RIFT_ICONS,
+  eventIcon,
+  treasureChestIcon,
+} = require("./hardcoreIcons");
 const world = require("./hardcoreWorld");
 const echoes = require("./hardcoreEchoRepository");
 const { ITEMS } = require("../hardcore/item");
@@ -1267,15 +1273,9 @@ function surpriseActions(state) {
         { action: "event_mirror_break", label: "Đập gương" },
       ],
       treasure_room: [
-        ...(!e.inspected
-          ? ["red", "blue", "gold"].map((color) => ({
-              action: `inspect_${color}`,
-              label: `Soi ${color}`,
-            }))
-          : []),
         ...["red", "blue", "gold"].map((color) => ({
           action: `chest_${color}`,
-          label: `Mở ${color}`,
+          label: `Mở rương ${{ red: "đỏ", blue: "xanh", gold: "vàng" }[color]}`,
         })),
       ],
       contract: [
@@ -1339,7 +1339,7 @@ function actions(state) {
   if (e.type === "surprise")
     return [
       ...surpriseActions(state),
-      ...(e.kind === "duelist" && e.mode
+      ...(e.kind === "treasure_room" || (e.kind === "duelist" && e.mode)
         ? []
         : [{ action: "event_skip", label: "Bỏ qua" }]),
     ];
@@ -1611,13 +1611,12 @@ function actSurprise(state, session, action, rng) {
     }
   } else if (k === "treasure_room") {
     const color = action.split("_").at(-1);
-    if (action.startsWith("inspect_")) {
-      if (e.inspected) throw new Error("ALREADY_INSPECTED");
-      e.inspected = color;
-      state.lastLog = `🔍 ${color}: ${e.mimicColor === color ? "Mimic!" : "An toàn."}`;
-      return;
-    }
-    if (color === e.mimicColor) combat(e.enemy, "Hòm là Mimic!");
+    const chestName = `rương ${{ red: "đỏ", blue: "xanh", gold: "vàng" }[color]}`;
+    if (color === e.mimicColor)
+      combat(
+        e.enemy,
+        `${treasureChestIcon(color)} Mở ${chestName}: Mimic xuất hiện!`,
+      );
     else {
       if (color === "red") addSource(state, { physical: 5, spell: 5 });
       if (color === "blue") addSource(state, { defense: 6, resistance: 5 });
@@ -1626,7 +1625,7 @@ function actSurprise(state, session, action, rng) {
         addSource(state, { luck: 1 });
       }
       done(
-        `${E.chest} Nhận thưởng hòm ${{ red: "đỏ", blue: "xanh", gold: "vàng" }[color]}${color === "gold" ? `: bonus +50% cược (${Math.floor(state.stake * 0.5).toLocaleString("vi-VN")} xu)` : ""}.`,
+        `${treasureChestIcon(color)} Nhận thưởng ${chestName}${color === "gold" ? `: bonus +50% cược (${Math.floor(state.stake * 0.5).toLocaleString("vi-VN")} xu)` : ""}.`,
       );
     }
   } else if (k === "contract") {

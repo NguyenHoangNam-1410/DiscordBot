@@ -66,7 +66,7 @@ function eventIcon(key) {
     shrine: "event_shrine",
     class_shrine: "event_shrine",
     chest: "event_chest",
-    treasure_room: "event_chest",
+    treasure_room: "event_treasure_room",
     upgrade: "checkpoint",
     summit: "event_boss",
     final_boss: "event_boss",
@@ -76,4 +76,7 @@ function eventIcon(key) {
     key === "boss_chest" ? E.chest : "⚠️",
   );
 }
-module.exports = { E, SKILL_ICONS, RIFT_ICONS, eventIcon };
+function treasureChestIcon(color) {
+  return icon(`chest_${color}`, { red: "🟥", blue: "🟦", gold: "🟨" }[color]);
+}
+module.exports = { E, SKILL_ICONS, RIFT_ICONS, eventIcon, treasureChestIcon };

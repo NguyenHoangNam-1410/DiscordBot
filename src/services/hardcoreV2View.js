@@ -15,7 +15,13 @@ const emoji = require("../discordEmojiMap");
 const { appEmoji } = require("../utils/appEmoji");
 const { resultBlock } = require("../utils/rewardText");
 const icon = (key, fallback) => appEmoji(key, emoji[`:${key}:`] || fallback);
-const { E, SKILL_ICONS, RIFT_ICONS, eventIcon } = require("./hardcoreIcons");
+const {
+  E,
+  SKILL_ICONS,
+  RIFT_ICONS,
+  eventIcon,
+  treasureChestIcon,
+} = require("./hardcoreIcons");
 const rarityLabel = (r) =>
   ({ common: "R", rare: "SR", legendary: "SSR", cursed: "UR" })[r];
 const percent = (n) => `${Math.round(n * 1000) / 10}%`;
@@ -451,30 +457,18 @@ function randomEventText(s) {
       );
     case "treasure_room": {
       const reward = {
-        red: `+5 ${E.attack} Vật lý, +5 ${E.magic} Phép.`,
-        blue: `+6 ${E.defense} DEF, +5 ${E.res} RES.`,
+        red: `${E.attack} **Vật lý** +5${STAT_SEPARATOR}${E.magic} **Phép** +5.`,
+        blue: `${E.defense} **DEF** +6${STAT_SEPARATOR}${E.res} **RES** +5%.`,
         gold: `Bonus +50% cược${STAT_SEPARATOR}${attr("luck", 1)}.`,
       };
       return show(
         e.name,
-        "Một trong ba hòm là Mimic. Có thể soi đúng một màu trước khi mở.",
+        "Chọn mở một trong ba rương; không được soi hoặc bỏ qua. Mỗi rương có 1/3 khả năng gặp Mimic, 2/3 nhận thưởng bên dưới.",
         [
           ...Object.entries(reward).map(([color, text]) => {
-            const chance = !e.inspected
-              ? 1 / 3
-              : e.inspected === e.mimicColor
-                ? color === e.inspected
-                  ? 1
-                  : 0
-                : color === e.inspected
-                  ? 0
-                  : 0.5;
             return option(
-              `Mở hòm ${{ red: "đỏ", blue: "xanh", gold: "vàng" }[color]}`,
-              [
-                [percent(1 - chance), text],
-                [percent(chance), "Chiến đấu Mimic."],
-              ].filter(([p]) => p !== "0%"),
+              `${treasureChestIcon(color)} Mở rương ${{ red: "đỏ", blue: "xanh", gold: "vàng" }[color]}`,
+              [[null, text]],
             );
           }),
         ],
@@ -652,7 +646,7 @@ function encounterSummary(s) {
         ancient_mimic: "Ancient Mimic",
       }[e.rank] || e.rank;
     const preview = core.incomingPreview(s);
-    return `${["boss", "final_boss"].includes(e.rank) ? eventIcon("boss") : "👹"} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} Sát thương ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Bạn đánh vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} HP** · ${E.evasion} Quái trúng bạn **${percent(preview.chance)}** *(chưa Crit/Phòng thủ)*${e.rank === "ancient_mimic" ? `\n${E.chest} **Hạ quái nhận 1 đồ:** SR 50% · SSR 30% · UR 20%.` : e.rank === "mimic" && e.name === "Blood Mimic" ? `\n${E.chest} **Hạ quái nhận 1 đồ:** SR 60% · SSR 40%.` : ""}`;
+    return `${["boss", "final_boss"].includes(e.rank) ? eventIcon("boss") : "👹"} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} Sát thương ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Bạn đánh vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} HP** · ${E.evasion} **${percent(preview.chance)}** trúng bạn *(chưa Crit/Phòng thủ)*${e.rank === "ancient_mimic" ? `\n${E.chest} **Hạ quái nhận 1 đồ:** SR 50% · SSR 30% · UR 20%.` : e.rank === "mimic" && e.name === "Blood Mimic" ? `\n${E.chest} **Hạ quái nhận 1 đồ:** SR 60% · SSR 40%.` : ""}`;
   }
   if (e.type === "shrine") return encounterText(s);
   if (e.type === "empty")
@@ -1164,28 +1158,32 @@ function rows(sessionId, state, disabled = false) {
             ? ButtonStyle.Success
             : ButtonStyle.Secondary,
       a.disabled,
-      a.action.startsWith("boss_")
-        ? eventIcon("boss_chest")
-        : a.action === "skill"
-          ? SKILL_ICONS[state.classKey]
-          : a.action.startsWith("forge_")
-            ? E[
-                a.action === "forge_main"
-                  ? stats.mainStat(state)
-                  : a.action === "forge_guard"
-                    ? state.encounter.forgeStat || "str"
-                    : a.action === "forge_vit"
-                      ? "vit"
-                      : "ticket"
-              ]
-            : state.encounter.kind === "merchant" && a.action.startsWith("buy_")
-              ? merchantOffer(state.encounter.offers[Number(a.action.slice(4))])
-                  .icon
-              : /^(event_|buy_|forge_|contract_|door_|duel_|hand_)/.test(
-                    a.action,
-                  )
-                ? eventIcon(state.encounter.kind || state.encounter.type)
-                : null,
+      a.action.startsWith("chest_") && state.encounter.kind === "treasure_room"
+        ? treasureChestIcon(a.action.slice(6))
+        : a.action.startsWith("boss_")
+          ? eventIcon("boss_chest")
+          : a.action === "skill"
+            ? SKILL_ICONS[state.classKey]
+            : a.action.startsWith("forge_")
+              ? E[
+                  a.action === "forge_main"
+                    ? stats.mainStat(state)
+                    : a.action === "forge_guard"
+                      ? state.encounter.forgeStat || "str"
+                      : a.action === "forge_vit"
+                        ? "vit"
+                        : "ticket"
+                ]
+              : state.encounter.kind === "merchant" &&
+                  a.action.startsWith("buy_")
+                ? merchantOffer(
+                    state.encounter.offers[Number(a.action.slice(4))],
+                  ).icon
+                : /^(event_|buy_|forge_|contract_|door_|duel_|hand_)/.test(
+                      a.action,
+                    )
+                  ? eventIcon(state.encounter.kind || state.encounter.type)
+                  : null,
     ),
   );
   if (state.encounter.type !== "rngesus" && state.phase !== "boss_chest")
@@ -1478,6 +1476,10 @@ function ratesFields(category) {
         name: "Các sự kiện đặc biệt",
         value:
           "Healer · Treasure Goblin · Blacksmith · Purifier · Sacrificial Altar · Cursed Gambler · Lost Adventurer · Fountain · Horadric Forge · Rift Merchant · Mirror · Treasure Room · Contract · Class Shrine · Strange Doors · Duelist · Payout Shop · Blood Shop · Diamond Shop.\n\nChỉ những event đủ điều kiện mới được chọn. Các lựa chọn có thể đổi HP, thuộc tính, trang bị, payout hoặc tạo hiệu ứng tạm thời. Không phải event nào cũng miễn phí hoặc an toàn; đọc giá, tỷ lệ và điều kiện trên bảng trước khi xác nhận.",
+      },
+      {
+        name: `${eventIcon("treasure_room")} Treasure Room`,
+        value: `Chọn mở **một** rương, không soi hoặc bỏ qua. Đúng một trong ba rương là Mimic: mỗi màu có **1/3** gặp Mimic, **2/3** nhận thưởng.\n- ${treasureChestIcon("red")} **Đỏ:** ${E.attack} Vật lý +5 • ${E.magic} Phép +5.\n- ${treasureChestIcon("blue")} **Xanh:** ${E.defense} DEF +6 • ${E.res} RES +5%.\n- ${treasureChestIcon("gold")} **Vàng:** bonus +50% cược • ${E.luck} LUCK +1.\nNếu chọn trúng Mimic, phải chiến đấu thay vì nhận thưởng của màu đó.`,
       },
       {
         name: `${eventIcon("memory")} The Tower Remembers`,
