@@ -625,8 +625,8 @@ function viewTabs(s) {
 function viewLabel(tab, s) {
   return {
     stats: "Chỉ số",
-    items: `Vật phẩm (${s.items.length})`,
-    effects: `Rift & hiệu ứng (${Object.values(s.modifiers || {}).filter((stacks) => stacks > 0).length})`,
+    items: `Túi (${s.items.length})`,
+    effects: `Rift (${Object.values(s.modifiers || {}).filter((stacks) => stacks > 0).length})`,
     encounter: "Chi tiết",
   }[tab];
 }
