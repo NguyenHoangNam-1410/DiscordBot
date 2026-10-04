@@ -619,28 +619,76 @@ function chaosLabel(s) {
   const p = s.lastChaosChance || 0;
   return `${icon(p < 0.01 ? "large_green_circle" : p < 0.03 ? "large_yellow_circle" : "red_circle", p < 0.01 ? "🟢" : p < 0.03 ? "🟡" : "🔴")} Chaos: **${percent(p)}**`;
 }
-function addTextFields(embed, name, text) {
+function turnText(state) {
+  const details = [];
+  if (state.lastUpgrade)
+    details.push(
+      `**Tăng điểm checkpoint:**\n- ${statTransitions(state.lastUpgrade.before, state.lastUpgrade.after).split(" · ").join("\n- ")}`,
+    );
+  if (state.lastEventResult) {
+    const receipt = state.lastEventResult;
+    const names = {
+      chest: "Rương",
+      shrine: "Shrine",
+      surprise: "Sự kiện",
+      trap: "Bẫy",
+      rngesus: "RNGesus",
+      echo: "Grave Echo",
+      memory: "The Tower Remembers",
+    };
+    details.push(
+      `**Do ${receipt.name || names[receipt.type] || "sự kiện"}:**\n- ${statTransitions(receipt.before, receipt.after, true).split(" · ").join("\n- ")}`,
+    );
+  }
+  for (const item of state.lastReceivedItems || [])
+    details.push(
+      `🎒 **${item.name} [${rarityLabel(item.rarity)}] · Lv.${item.level}**\n${effectText(item.definition.effects, item.levels)}${item.definition.curse && item.curseLevels ? `\n☣️ Curse: ${effectText(item.definition.curse.effects, item.curseLevels)}` : ""}`,
+    );
+  const lines = (state.lastLog || "Run bắt đầu.").split("\n");
+  const milestone = lines.findIndex(
+    (line) => line.includes("Đạt tầng ") || line.startsWith("🩸 Lời nguyền"),
+  );
+  if (details.length)
+    lines.splice(
+      milestone < 0 ? lines.length : milestone,
+      0,
+      details.join("\n"),
+    );
+  return lines.join("\n");
+}
+function addTextFields(embed, name, text, inline = false, large = false) {
+  const header = large && name !== "\u200b" ? `### ${name}\n` : "";
+  const limit = 1024 - header.length;
   let chunk = "";
   let first = true;
   const lines = text.split("\n").flatMap((line) => {
     const parts = [];
-    while (line.length > 1024) {
-      const space = line.lastIndexOf(" ", 1024);
-      const end = space > 0 ? space : 1024;
+    while (line.length > limit) {
+      const space = line.lastIndexOf(" ", limit);
+      const end = space > 0 ? space : limit;
       parts.push(line.slice(0, end));
       line = line.slice(end).trimStart();
     }
     return [...parts, line];
   });
   for (const line of lines) {
-    if (chunk.length + line.length + 1 > 1024 && chunk) {
-      embed.addFields({ name: first ? name : "\u200b", value: chunk });
+    if (chunk.length + line.length + 1 > limit && chunk) {
+      embed.addFields({
+        name: large ? "\u200b" : first ? name : "\u200b",
+        value: `${first ? header : ""}${chunk}`,
+        inline,
+      });
       first = false;
       chunk = "";
     }
     chunk += `${chunk ? "\n" : ""}${line}`;
   }
-  if (chunk) embed.addFields({ name: first ? name : "\u200b", value: chunk });
+  if (chunk)
+    embed.addFields({
+      name: large ? "\u200b" : first ? name : "\u200b",
+      value: `${first ? header : ""}${chunk}`,
+      inline,
+    });
 }
 function embed(state, userId, result = null, sessionId = null) {
   const c = stats.CLASSES[state.classKey];
@@ -673,56 +721,15 @@ function embed(state, userId, result = null, sessionId = null) {
     });
   addTextFields(
     e,
-    state.encounter.type === "combat" ? "Đối thủ" : "Tình huống",
+    state.encounter.type === "combat" ? `${E.attack} Đối thủ` : "⚠️ Tình huống",
     encounterSummary(state),
   );
-  for (const item of state.lastReceivedItems || [])
-    addTextFields(
-      e,
-      `🎒 Đã nhận · ${item.name} [${rarityLabel(item.rarity)}] · Lv.${item.level}`,
-      `**Công dụng ${item.levels} cấp vừa nhận:**\n${effectText(item.definition.effects, item.levels)}${item.definition.curse && item.curseLevels ? `\n☣️ Curse: ${effectText(item.definition.curse.effects, item.curseLevels)}` : ""}\nChỉ số thực tế sau giới hạn được thể hiện ở bảng kết quả.`,
-    );
   if (!result && state.phase === "upgrade")
     for (const key of stats.ATTRIBUTES)
       e.addFields({
         name: `${E[key]} +5 ${key.toUpperCase()}`,
         value: checkpointPreview(state, key),
       });
-  if (!result && state.lastUpgrade)
-    e.addFields({
-      name: `${E[state.lastUpgrade.key]} Đã tăng +5 ${state.lastUpgrade.key.toUpperCase()}`,
-      value: statTransitions(state.lastUpgrade.before, state.lastUpgrade.after),
-    });
-  if (state.lastEventResult) {
-    const receipt = state.lastEventResult;
-    const names = {
-      chest: "Rương",
-      shrine: "Shrine",
-      surprise: "Sự kiện",
-      trap: "Bẫy",
-      rngesus: "RNGesus",
-      echo: "Grave Echo",
-      memory: "The Tower Remembers",
-    };
-    const chunks = [""];
-    for (const change of statTransitions(
-      receipt.before,
-      receipt.after,
-      true,
-    ).split(" · ")) {
-      const index = chunks.length - 1;
-      if (chunks[index].length + change.length + 1 > 1024) chunks.push(change);
-      else chunks[index] += `${chunks[index] ? "\n" : ""}${change}`;
-    }
-    for (const [index, value] of chunks.entries())
-      e.addFields({
-        name:
-          index === 0
-            ? `🎁 Kết quả · ${receipt.name || names[receipt.type] || "Sự kiện"}`
-            : "Kết quả chỉ số",
-        value,
-      });
-  }
   const activeRifts = Object.entries(state.modifiers || {}).filter(
     ([, n]) => n > 0,
   );
@@ -768,11 +775,8 @@ function embed(state, userId, result = null, sessionId = null) {
           ? `\nHợp đồng: không ${{ potion: "bình", skill: "skill", defend: "thủ" }[state.contract.kind]} · ${state.contract.remaining} tầng`
           : ""),
     },
-    {
-      name: `${icon("scroll", "📜")} Lượt vừa rồi`,
-      value: (state.lastLog || "Run bắt đầu.").slice(0, 1024),
-    },
   );
+  addTextFields(e, `${icon("scroll", "📜")} Lượt vừa rồi`, turnText(state));
   if (result) {
     const won = ["cashout", "summit"].includes(result.reason);
     e.addFields(
@@ -807,6 +811,10 @@ function embed(state, userId, result = null, sessionId = null) {
         .join(" · ")
         .slice(0, 1024),
     });
+  const fields = [...(e.data.fields || [])];
+  e.setFields([]);
+  for (const field of fields)
+    addTextFields(e, field.name, field.value, field.inline, true);
   return e.setFooter({
     text: `${sessionId ? `Mã ván: ${sessionId} • ` : ""}Lượt ${state.turn} • Cược ${money(state.stake)} xu • /sinhton tieptuc`,
   });

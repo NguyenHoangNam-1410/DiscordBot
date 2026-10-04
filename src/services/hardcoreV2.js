@@ -282,20 +282,27 @@ function completeFloor(state, session, rng, reward = 1) {
   if (state.floorHpLoss) {
     const lost = hurt(state, Math.max(1, state.maxHp * state.floorHpLoss));
     state.lastLog += `\n🩸 Lời nguyền: −${lost} ${E.hp} HP.`;
-    if (!alive(state)) return;
+    if (!alive(state)) {
+      state.lastDeathCause =
+        "Lời nguyền trang bị rút HP cuối tầng khiến HP về 0.";
+      return;
+    }
   }
   if (floor % 5 === 0) {
+    const hpBefore = state.hp,
+      potionsBefore = state.potions;
     heal(state, state.maxHp);
     state.potions = Math.min(5, state.potions + 2);
     state.pendingMilestones.push("upgrade");
-    state.lastLog += `\n🏕️ Checkpoint: hồi đầy ${E.hp} HP, +2 ${E.potion} bình máu (tối đa 5); chọn +5 thuộc tính.`;
+    state.lastLog += `\n🏕️ Đạt tầng ${floor} · Checkpoint: ${E.hp} HP ${hpBefore}→**${state.hp}**, ${E.potion} bình máu ${potionsBefore}→**${state.potions}** (tối đa 5); chọn +5 thuộc tính.`;
   }
   if (floor % 10 === 0) {
     const keys = Object.keys(world.RIFT_MODIFIERS),
       missing = keys.filter((key) => !state.modifiers[key]);
     const key = pick(missing.length ? missing : keys, rng);
-    state.modifiers[key] = (state.modifiers[key] || 0) + 1;
-    state.lastLog += `\n${RIFT_ICONS[key] || E.rift} ${world.RIFT_MODIFIERS[key].name} ×${state.modifiers[key]}.`;
+    const previous = state.modifiers[key] || 0;
+    state.modifiers[key] = previous + 1;
+    state.lastLog += `\nĐạt tầng ${floor}: **${RIFT_ICONS[key] || E.rift} ${previous ? `×${previous}→×${state.modifiers[key]}` : "+1"}** Rift modifier.`;
   }
   if (state.paradox && floor >= state.paradox.until) state.paradox = null;
   if (floor % 25 === 0 && floor < 999) state.pendingMilestones.push("paradox");
@@ -787,6 +794,8 @@ function enemyTurn(state, rng, defend = false, dodge = false) {
     defend,
   });
   const actual = hurt(state, hit.damage);
+  if (!alive(state))
+    state.lastDeathCause = `${enemy.name} gây ${actual} DMG ${enemy.nextDamageType === "magic" ? "phép" : "vật lý"}, khiến HP về 0.`;
   if (hit.hit && enemy.drainCharges > 0) {
     state.mana = Math.max(0, state.mana - 1);
     enemy.drainCharges--;
@@ -1468,6 +1477,7 @@ function act(state, session, action, rng) {
     ].map((key) => [key, state[key]]),
   );
   state.lastLog = "";
+  delete state.lastDeathCause;
   state.lastReceivedItems = [];
   delete state.lastUpgrade;
   delete state.lastEventResult;
@@ -1582,7 +1592,11 @@ function act(state, session, action, rng) {
         if (e.kind === "experience")
           state.bonus += Math.floor(state.stake * 0.25);
         if (e.kind === "corrupted") addSource(state, { str: 12, vit: -8 });
-        if (e.kind === "fake") hurt(state, Math.max(10, state.maxHp * 0.3));
+        if (e.kind === "fake") {
+          const lost = hurt(state, Math.max(10, state.maxHp * 0.3));
+          if (!alive(state))
+            state.lastDeathCause = `Shrine Fake gây ${lost} sát thương, khiến HP về 0.`;
+        }
         state.lastLog = `${E.shrine} Shrine ${e.kind}.`;
       } else state.lastLog = `Bỏ qua ${E.shrine} Shrine.`;
       if (alive(state)) completeFloor(state, session, rng, 0);
@@ -1593,8 +1607,11 @@ function act(state, session, action, rng) {
           penalty(state, 0.15);
           state.lastLog = "Thuế: mất 15% payout.";
         } else {
-          state.potions = Math.max(0, state.potions - 1);
-          state.lastLog = `Mất 1 ${E.potion} bình máu nếu đang có.`;
+          const stolen = Math.min(1, state.potions);
+          state.potions -= stolen;
+          state.lastLog = stolen
+            ? `Potion Thief đã cướp ${stolen} ${E.potion} bình máu.`
+            : `Potion Thief không cướp được gì vì bạn có 0 ${E.potion} bình máu.`;
         }
         completeFloor(state, session, rng, 0);
       } else if (e.good) {
@@ -1621,13 +1638,26 @@ function act(state, session, action, rng) {
         state.lastLog = `Wrong Portal: ${{ blood: `mất 15% Max ${E.hp} HP (giữ ≥1)`, mana: `${E.mana} MP về 0`, supply: `mất tối đa 2 ${E.potion} bình máu`, payout: "mất 10% payout", curse: `${E.str} STR −5, ${E.ene} ENE −5` }[e.badEffect]}. Elite đánh phủ đầu.\n${enemyTurn(state, rng)}`;
       }
     } else if (e.type === "rngesus") {
-      if (action === "fight") return "rngesus";
+      const die = (cause) => {
+        state.lastDeathCause = cause;
+        state.lastLog = `☠️ Tử trận: ${cause}`;
+        delete state.pendingEventResult;
+        return "rngesus";
+      };
+      if (action === "fight")
+        return die("Bạn chọn đánh RNGesus, đối thủ không thể đánh bại.");
       if (action === "flee") {
         if (!e.fleeSuccess) {
-          if (state.escapeTokens) state.escapeTokens--;
-          else return "rngesus";
-        }
-        state.lastLog = "Thoát RNGesus.";
+          if (state.escapeTokens) {
+            state.escapeTokens--;
+            state.lastLog = `RNGesus: bỏ chạy thất bại (nhánh 25%); tự dùng 1 ${E.ticket} vé thoát hiểm để sống sót.`;
+          } else
+            return die(
+              "Bỏ chạy khỏi RNGesus thất bại (nhánh 25%) và không có vé thoát hiểm để cứu.",
+            );
+        } else
+          state.lastLog =
+            "RNGesus: bỏ chạy thành công (nhánh 75%), thoát an toàn.";
       }
       if (action === "bribe") {
         penalty(state, 0.4);
@@ -1635,7 +1665,8 @@ function act(state, session, action, rng) {
         remember(state, "bribe_rngesus", rng);
       }
       if (action === "pray") {
-        if (!e.prayerSuccess) return "rngesus";
+        if (!e.prayerSuccess)
+          return die("Cầu nguyện RNGesus thất bại (nhánh 70%).");
         receiveItem(state, e.prayerItem);
         state.lastLog = `Cầu nguyện thành công: ${e.prayerItem.name}.`;
         remember(state, "pray_rngesus", rng);
@@ -1689,6 +1720,8 @@ function act(state, session, action, rng) {
   if (state.discardedTicketsThisTurn)
     state.lastLog += `\n${E.ticket} Bỏ ${state.discardedTicketsThisTurn} vé nhận thêm; chỉ giữ tối đa 1.`;
   delete state.discardedTicketsThisTurn;
+  if (!alive(state))
+    state.lastLog += `\n☠️ Tử trận: ${state.lastDeathCause || "HP về 0 sau hiệu ứng của lượt này."}`;
   state.lastStatChanges = Object.fromEntries(
     Object.entries(before)
       .map(([key, value]) => [key, +(state[key] - value).toFixed(8)])
