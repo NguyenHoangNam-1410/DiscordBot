@@ -987,7 +987,7 @@ function rows(sessionId, state, disabled = false) {
     button(
       prefix + a.action,
       {
-        potion: `Bình máu (${state.potions})`,
+        potion: `${state.potions}`,
         open: "Mở hòm",
         inspect: "Kiểm tra",
         sell: "Bán hòm",
