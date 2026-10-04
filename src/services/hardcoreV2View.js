@@ -656,9 +656,8 @@ function turnText(state) {
     );
   return lines.join("\n");
 }
-function addTextFields(embed, name, text, inline = false, large = false) {
-  const header = large && name !== "\u200b" ? `### ${name}\n` : "";
-  const limit = 1024 - header.length;
+function addTextFields(embed, name, text, inline = false) {
+  const limit = 1024;
   let chunk = "";
   let first = true;
   const lines = text.split("\n").flatMap((line) => {
@@ -674,8 +673,8 @@ function addTextFields(embed, name, text, inline = false, large = false) {
   for (const line of lines) {
     if (chunk.length + line.length + 1 > limit && chunk) {
       embed.addFields({
-        name: large ? "\u200b" : first ? name : "\u200b",
-        value: `${first ? header : ""}${chunk}`,
+        name: first ? name : "\u200b",
+        value: chunk,
         inline,
       });
       first = false;
@@ -685,8 +684,8 @@ function addTextFields(embed, name, text, inline = false, large = false) {
   }
   if (chunk)
     embed.addFields({
-      name: large ? "\u200b" : first ? name : "\u200b",
-      value: `${first ? header : ""}${chunk}`,
+      name: first ? name : "\u200b",
+      value: chunk,
       inline,
     });
 }
@@ -811,10 +810,6 @@ function embed(state, userId, result = null, sessionId = null) {
         .join(" · ")
         .slice(0, 1024),
     });
-  const fields = [...(e.data.fields || [])];
-  e.setFields([]);
-  for (const field of fields)
-    addTextFields(e, field.name, field.value, field.inline, true);
   return e.setFooter({
     text: `${sessionId ? `Mã ván: ${sessionId} • ` : ""}Lượt ${state.turn} • Cược ${money(state.stake)} xu • /sinhton tieptuc`,
   });
