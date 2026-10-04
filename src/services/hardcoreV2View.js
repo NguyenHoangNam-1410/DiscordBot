@@ -264,7 +264,7 @@ function randomEventText(s) {
         ["30%", "Sống và nhận đồ: SSR 85% / UR 15% trong nhánh thành công."],
         ["70%", "Chết."],
       ]),
-      "**Hối lộ:** mất 40% payout để thoát. **Đánh:** chết.",
+      "**Hối lộ:** cần payout ≥1.000 xu, mất 40% payout để thoát. **Đánh:** chết.",
     ]);
   if (e.type === "echo")
     return show(
@@ -1235,7 +1235,7 @@ function ratesFields(category) {
       {
         name: "RNGesus",
         value:
-          "Chaos hiện bằng % trên bảng chơi. Chạy 75%, thất bại tự dùng vé; cầu nguyện 30%, thưởng SSR 85%/UR 15%; đánh chết; hối lộ −40% payout.",
+          "Chaos hiện bằng % trên bảng chơi. Chạy 75%, thất bại tự dùng vé; cầu nguyện 30%, thưởng SSR 85%/UR 15%; đánh chết; hối lộ cần payout ≥1.000 xu, −40% payout.",
       },
     ],
     combat: [

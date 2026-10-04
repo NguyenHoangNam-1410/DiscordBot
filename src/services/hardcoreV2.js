@@ -1226,7 +1226,11 @@ function actions(state) {
     return [
       { action: "fight", label: "Đánh (chết)" },
       { action: "flee", label: "Chạy · 75%" },
-      { action: "bribe", label: "Hối lộ · 40% payout" },
+      {
+        action: "bribe",
+        label: "Hối lộ · 40% payout",
+        disabled: payout(state) < 1000,
+      },
       { action: "pray", label: "Cầu nguyện · 30%" },
     ];
   if (e.type === "echo")
