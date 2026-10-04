@@ -1401,6 +1401,11 @@ function ratesFields(category) {
           "- Catalog có **100 món:** R 32, SR 28, SSR 24, UR 16. Đồ chỉ tồn tại trong run; trùng tên tăng level và cộng hiệu ứng. **UR có cả buff và lời nguyền**. Lời nguyền rút HP cuối tầng luôn chừa ít nhất **1 HP**.\n- Sau **5 hòm đã mở không nhận SR trở lên**, hòm kế bảo đảm SR+ và không có Mimic.\n- Sau **10 hòm không nhận SSR**, tỷ lệ SSR được cộng 2 điểm % mỗi lần tiếp theo; nhận SSR thì đặt lại bộ đếm. Luck cũng tăng tỷ lệ SSR, tổng tối đa 35% ở hòm thường.\n- Bảo hiểm này áp dụng hòm, không phải mọi nguồn nhận đồ.",
       },
       {
+        name: `${E.hp} Lời nguyền rút HP`,
+        value:
+          "Trang bị có lời nguyền rút HP áp dụng **sau khi vượt tầng**, dựa trên Max HP và số level chưa giải nguyền. Tổng lượng rút luôn chừa ít nhất **1 HP**; đang có 1 HP thì không mất thêm.\nĐiều này chỉ bảo vệ trước hiệu ứng rút HP của trang bị và Shrine Fake. Quái hoặc các event có nhánh tử trận vẫn có thể giết bạn. Giải nguyền hoặc chuyển hóa level bị nguyền có thể gỡ hiệu ứng theo công dụng dịch vụ.",
+      },
+      {
         name: `${E.chest} Phần thưởng Ancient Mimic`,
         value:
           "Hạ Ancient Mimic nhận ngay **1 trang bị**: **50% SR · 30% SSR · 20% UR**. UR kèm lời nguyền; đồ trùng tăng level. Trang bị được cộng ngay trong run và hiển thị ở **Lượt vừa rồi**. Tỷ lệ cố định, không chịu Luck/pity; phần thưởng này không làm thay đổi bộ đếm bảo hiểm hòm. Mimic thường không có phần thưởng này.",
@@ -1423,9 +1428,16 @@ function ratesFields(category) {
           "- Pool thường: quái thường 53%, Elite 12%, hòm 10%, Shrine 8%, kho báu 5%, bẫy 6%, sự kiện đặc biệt 4%, phòng trống 2%. Đây là tỷ lệ gốc; điều kiện tầng/Rift có thể thay đổi lựa chọn hợp lệ.\n- Boss mỗi 50 tầng và boss cuối 999 được ưu tiên; tiếp theo là RNGesus, Tower Remembers và Grave Echo trước khi chọn pool thường. Sự kiện đặc biệt cách nhau ít nhất 2 tầng.\n- Mỗi event ghi tên, lựa chọn, tỷ lệ và hậu quả trên bảng; kết quả thực tế nằm ở **Lượt vừa rồi**. Event trả tiền hoặc thu thuế không xuất hiện ở tầng 1.",
       },
       {
-        name: `${E.shrine} Shrine, bẫy và Lucky Break`,
-        value:
-          "- Shrine có 6 loại, cơ hội bằng nhau. Armor tăng +5 vào STR/DEX/VIT/ENE (mỗi chỉ số 25%). Blood tăng +8 chỉ số sát thương chính của class, giảm 5 VIT; Corrupted tăng +12, giảm 8 VIT. Sorceress/Necromancer nhận ENE, Amazon/Assassin nhận DEX, các class khác nhận STR. Chạm nhận hiệu ứng, bỏ qua đi tiếp. Bẫy Shrine Fake rút HP nhưng luôn chừa ít nhất **1 HP**. Đọc bảng chính trước khi chọn.\n- Thu thuế hoặc trộm bình có thể được tránh bằng **Lucky Break**: mỗi Luck cho 1,5 điểm %, tối đa 30%; tỷ lệ hiện tại ghi trên event.\n- **Wrong Portal:** 50% tốt / 50% xấu; Luck không thay đổi tỷ lệ. Nhánh xấu gọi Elite đánh phủ đầu; phải hạ Elite mới vượt tầng.\n- Phòng trống cho phép đi tiếp hoặc rút thưởng.",
+        name: `${E.shrine} Shrine · chọn Chạm hoặc Bỏ qua`,
+        value: `**6 loại có tỷ lệ bằng nhau (mỗi loại ≈16,7%)**; kết quả được giữ cố định khi mở lại bảng.\n- **Healing:** hồi đầy ${E.hp} HP.\n- **Armor:** +5 vào một thuộc tính ${E.str} STR / ${E.dex} DEX / ${E.vit} VIT / ${E.ene} ENE; trong nhánh Armor, mỗi chỉ số 25%.\n- **Blood:** +8 thuộc tính sát thương phù hợp class, −5 ${E.vit} VIT.\n- **Corrupted:** +12 thuộc tính sát thương phù hợp class, −8 ${E.vit} VIT.\n- **Experience:** bonus bằng 25% tiền cược.\n- **Fake:** rút 30% Max ${E.hp} HP, mức bẫy tối thiểu 10; chỉ trừ đến khi còn **1 HP**.\n**Bỏ qua** giữ nguyên chỉ số và đi tiếp.`,
+      },
+      {
+        name: `${E.shrine} Thuộc tính nhận từ Blood / Corrupted`,
+        value: `${E.dex} **DEX:** Amazon, Assassin.\n${E.ene} **ENE:** Sorceress, Necromancer.\n${E.str} **STR:** Barbarian, Druid, Paladin.\nMức tăng vẫn là +8 / +12 theo loại Shrine; cả hai đều giảm ${E.vit} VIT.`,
+      },
+      {
+        name: `${E.luck} Bẫy và Lucky Break`,
+        value: `- **Thu thuế:** giảm payout 15%. **Trộm bình:** lấy 1 ${E.potion} bình nếu còn. Lucky Break có thể tránh hai hậu quả này: mỗi Luck cho 1,5 điểm %, tối đa 30%.\n- **Wrong Portal:** 50% tốt / 50% xấu, không chịu Luck. Nhánh xấu gọi Elite đánh phủ đầu; phải hạ Elite mới vượt tầng.\n- Phòng trống cho phép đi tiếp hoặc rút thưởng.`,
       },
       {
         name: "Các sự kiện đặc biệt",
@@ -1445,9 +1457,14 @@ function ratesFields(category) {
     ],
     rngesus: [
       {
-        name: `${eventIcon("rngesus")} RNGesus: chọn để sống sót`,
+        name: `${eventIcon("rngesus")} RNGesus · không được rút thưởng`,
         value:
-          "- **Không thể đánh bại; không được rút thưởng tại đây.** Chaos trên bảng là tỷ lệ gặp RNGesus.\n- **Đánh:** chết ngay, mất cược và thưởng tạm giữ.\n- **Chạy:** trong mỗi run, các lần chọn chạy có tỷ lệ **100% → 95% → 90% → 85% → 80% → 75%**, sau đó giữ 75%. Mỗi lần chọn chạy (kể cả thất bại và được vé cứu) giảm 5 điểm % cho lần sau; hành động khác không làm giảm hoặc đặt lại tỷ lệ. Thất bại tự dùng 1 vé nếu có, hết vé thì chết. Thành công không tiêu vé.\n- **Hối lộ:** chỉ dùng khi payout hiển thị **từ 1.000 xu**. Thoát an toàn, giảm hệ số payout 40%; thưởng tích lũy về sau cũng chịu hệ số đã giảm. Ghi nhận Tower Remembers.\n- **Cầu nguyện:** 30% sống và nhận chắc chắn **1 trang bị UR kèm lời nguyền**; 70% chết. Thành công ghi nhận Tower Remembers.\n- Vé chỉ cứu khi chạy thất bại; không cứu lựa chọn Đánh hoặc cầu nguyện thất bại. Giữ tối đa 1 vé.",
+          "Chaos trên bảng là tỷ lệ gặp RNGesus. RNGesus không thể bị đánh bại.\n- **Đánh:** chết ngay, mất cược/thưởng tạm giữ.\n- **Hối lộ:** cần payout hiển thị **≥1.000 xu**, đúng 1.000 vẫn được. Thoát an toàn, giảm hệ số payout 40%; thưởng tích lũy về sau cũng chịu hệ số đã giảm.\n- **Cầu nguyện:** **30%** thành công và nhận chắc chắn **1 trang bị UR kèm lời nguyền**; **70%** thất bại và chết.\nHối lộ hoặc cầu nguyện thành công ghi nhận The Tower Remembers.",
+      },
+      {
+        name: `${E.ticket} Bỏ chạy và vé thoát hiểm`,
+        value:
+          "- Tỷ lệ cho các lần **chọn Bỏ chạy trong cùng run:** **100% → 95% → 90% → 85% → 80% → 75%**, các lần sau giữ 75%. Lần đầu chắc chắn thoát.\n- Mỗi lần chọn chạy giảm 5 điểm % cho lần sau, kể cả chạy thất bại được vé cứu. Chọn hối lộ/cầu nguyện không giảm và không đặt lại tỷ lệ.\n- **Run mới reset về 100%.** Mở lại UI hoặc restart bot giữ nguyên tỷ lệ của run đang chơi.\n- Chạy thành công không mất vé. Chạy thất bại tự dùng 1 vé nếu có; hết vé thì chết. Giữ tối đa 1 vé.\n- Vé không cứu lựa chọn Đánh hoặc cầu nguyện thất bại; không có nút dùng vé riêng tại RNGesus.",
       },
     ],
     rewards: [
@@ -1455,6 +1472,10 @@ function ratesFields(category) {
         name: "Dịch vụ: giá và điều kiện",
         value:
           "- **Rèn:** trả 12% payout gốc, tăng một level gồm buff và curse còn lại. **Giải nguyền:** trả 20%, gỡ toàn bộ curse, giữ buff/level và chuyển đồ thành SSR.\n- **Horadric Forge:** tiêu hao 1 level trang bị, giữ nguyên hiệu ứng có lợi của level đó trong run và xóa lời nguyền tương ứng; chọn thêm một phần thưởng. Không nhận lại bình/vé/HP hồi khi nhặt đồ.\n- **Payout Shop:** R/SR/SSR giá 5%/12%/25% payout gốc, tối đa 5 lần mua/run. **Blood Shop:** SR/SSR/UR giá 12%/25%/40% Max HP, tối đa 3 lần; phải còn ít nhất 1 HP.\n- **Diamond Shop:** từ tầng 101, giá 200/600/1.600 kim cương, tối đa 2 lần; trừ ngay từ tài khoản, không hoàn khi chết.\n- Mỗi loại shop cách nhau ít nhất 50 tầng; mỗi lần gặp mua tối đa một món. Giá cụ thể và công dụng ghi trên bảng/Chi tiết.",
+      },
+      {
+        name: `${eventIcon("horadric")} Horadric Forge · chuyển hóa trang bị`,
+        value: `Không tốn xu. Tiêu hao **1 level** của món chỉ định: level 1 thì món rời trang bị. **Giữ nguyên** hiệu ứng có lợi của level đã dùng trong run, không cộng lại lần nữa; xóa lời nguyền tương ứng. Không nhận lại ${E.potion} bình, ${E.ticket} vé hoặc ${E.hp} HP hồi khi nhặt món đó.\nChọn **một** phần thưởng thêm: +6 thuộc tính sát thương phù hợp class; hoặc +7 STR/VIT đã ghi trên nút; hoặc +4 ${E.vit} VIT. Món SSR/UR còn có lựa chọn nhận 1 ${E.ticket} vé (giữ tối đa 1). Bỏ qua thì giữ trang bị và không nhận phần thưởng.`,
       },
       {
         name: "Rút thưởng và mất thưởng",

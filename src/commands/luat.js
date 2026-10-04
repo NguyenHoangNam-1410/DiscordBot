@@ -52,6 +52,14 @@ const RULES = {
 function survivalRules() {
   if (require("../services/hardcoreVersion").useV2()) {
     const view = require("../services/hardcoreV2View");
+    const { E } = require("../services/hardcoreIcons");
+    const sections = {
+      combat: "CHIẾN ĐẤU",
+      loot: "TRANG BỊ & PHẦN THƯỞNG",
+      encounters: "SHRINE & SỰ KIỆN",
+      rngesus: "RNGESUS",
+      rewards: "DỊCH VỤ & RÚT THƯỞNG",
+    };
     return [
       new EmbedBuilder()
         .setColor(0x9b59b6)
@@ -67,15 +75,19 @@ function survivalRules() {
           },
           {
             name: "Bốn thuộc tính",
+            value: `${E.str} **STR:** tăng vật lý và DEF.\n${E.dex} **DEX:** tăng ACC/EVA/CRIT; hướng sát thương chính của Amazon/Assassin.\n${E.vit} **VIT:** tăng Max HP và hiệu lực bình.\n${E.ene} **ENE:** tăng phép, RES và Max MP.\n${E.mana} **MP** dùng skill, không phải ENE. ${E.luck} **LUCK** đến từ trang bị/event.\nƯu tiên DEX cho Amazon/Assassin, ENE cho Sorceress/Necromancer, STR cho Barbarian/Druid/Paladin; thêm VIT để tăng chống chịu.`,
+          },
+          {
+            name: "Đọc kết quả trên bảng chơi",
             value:
-              "- **STR:** tăng sát thương vật lý và DEF.\n- **DEX:** tăng ACC (đánh trúng), EVA (né), CRIT; là hướng sát thương chính của Amazon/Assassin.\n- **VIT:** tăng Max HP và hiệu lực bình máu.\n- **ENE:** tăng sát thương phép, RES và Max MP.\n- **MP** là tài nguyên dùng skill, không phải ENE. **LUCK** đến từ trang bị/event.\nƯu tiên **DEX** cho Amazon/Assassin, **ENE** cho Sorceress/Necromancer, **STR** cho Barbarian/Druid/Paladin; thêm VIT khi cần sống lâu hơn.",
+              "- **Lượt vừa rồi:** thay đổi trực tiếp ghi cạnh tên event hoặc **Item [độ hiếm] · Lv.** theo dạng `trước → sau`; kết quả sau được in đậm.\n- **Do <event>:** các thay đổi kéo theo từ công thức, như DEX làm tăng ACC/EVA. Đây là phần giải thích cùng một lần nhận hiệu ứng, không phải được tăng thêm lần nữa.\n- Đồ trùng tên tăng level; hiệu ứng áp dụng ngay trong run. Nút **Chỉ số** xem đầy đủ, **Trang bị** xem công dụng đồ, **Rift** xem hiệu ứng đang có.",
           },
         ),
       ...["combat", "loot", "encounters", "rngesus", "rewards"].map(
         (category) =>
           new EmbedBuilder()
             .setColor(0x9b59b6)
-            .setTitle("📖 SINH TỒN v2.0.1 · LUẬT CHI TIẾT")
+            .setTitle(`📖 SINH TỒN v2.0.1 · ${sections[category]}`)
             .addFields(view.ratesFields(category)),
       ),
     ];
