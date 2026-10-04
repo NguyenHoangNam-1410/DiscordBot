@@ -535,6 +535,8 @@ function encounterText(s) {
   const k = e.kind;
   if (k.endsWith("_shop"))
     return `${eventIcon(e.kind)} **${e.name}** · mua tối đa **một món**. Giá và offer đã khóa.\n${e.offers.map((offer, i) => `**${i + 1}. ${offer.item.name} [${rarityLabel(offer.item.rarity)}] · ${money(offer.price)} ${shopCurrency(k)}**\n${itemText(offer.item)}`).join("\n")}\n${k === "blood_shop" ? "Phải còn ít nhất 1 HP sau mua." : k === "diamond_shop" ? "Kim cương bị trừ ngay khi mua, kể cả run sau đó tử trận." : "Chi phí lấy từ payout gốc; không dùng bonus Paradox để mua."}`;
+  if (k === "merchant")
+    return `${eventIcon(k)} **${e.name}**\nMua tối đa **một món** bằng xu payout:\n${e.offers.map((o) => `- **${merchantOffer(o).name}** · **${money(o.price)} ${icon("coin", "🪙")}**`).join("\n")}\nXem **Chi tiết** để đọc công dụng và điều kiện mua.`;
   const target = s.items.find((x) => x.definition.id === e.targetId);
   const descriptions = {
     healer: `**Hồi phục:** hồi ${E.hp} HP bằng 30% Max HP, ít nhất 20; +1 ${E.potion} bình máu (tối đa 5). Miễn phí.`,
@@ -544,7 +546,6 @@ function encounterText(s) {
     horadric: `Nghiền **một cấp ${target?.name} [${rarityLabel(target?.rarity)}]**: hấp thụ buff trong run, gỡ curse của cấp đó. Bình/vé/hồi HP không phát lại.\n\n**Chọn thêm một bonus:**\n- Sức mạnh: +6 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\n- Phòng thủ: 50% +7 ${E.str} STR / 50% +7 ${E.vit} VIT.\n- Sinh lực: +4 ${E.vit} VIT.\n- Vé: nhận 1 ${E.ticket} vé thoát hiểm (giữ tối đa 1).`,
     contract: `Trong 3 tầng, chọn một điều kiện:\n- **Không dùng ${E.potion} bình:** nhận đồ [SSR].\n- **Không dùng skill:** bonus +50% cược.\n- **Không phòng thủ:** +10 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\nVi phạm chỉ hủy thưởng.`,
     class_shrine: `Hiệu lực ba tầng tiếp theo: ${SHRINES[s.classKey]}`,
-    merchant: `Mua tối đa **một món** bằng xu payout:\n${e.offers.map((o) => `- **${merchantOffer(o).name}** · **${money(o.price)} ${icon("coin", "🪙")}**`).join("\n")}\nXem **Chi tiết** để đọc công dụng và điều kiện mua.`,
   };
   return `${eventIcon(e.kind)} **${e.name}**\n${descriptions[k] || "Chọn một hành động."}`;
 }
