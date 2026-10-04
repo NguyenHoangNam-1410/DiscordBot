@@ -6,7 +6,59 @@ const echoes = require("./hardcoreEchoRepository");
 const { ITEMS } = require("../hardcore/item");
 const { spendDiamonds } = require("./playerLevelService");
 const { runDiamondReward, baseMultiplier } = require("./hardcoreRewards");
-const { clamp, recompute, addSource, mainStat } = stats;
+const { clamp, recompute, addSource: applySource, mainStat } = stats;
+const RESULT_STATS = [
+  "str",
+  "dex",
+  "vit",
+  "ene",
+  "maxHp",
+  "hp",
+  "damageMin",
+  "damageMax",
+  "spellMin",
+  "spellMax",
+  "defense",
+  "accuracy",
+  "evasion",
+  "resistance",
+  "critChance",
+  "mana",
+  "maxMana",
+  "luck",
+  "potions",
+  "escapeTokens",
+  "potionRate",
+];
+const statSnapshot = (state) =>
+  Object.fromEntries(RESULT_STATS.map((key) => [key, state[key]]));
+function effectStatKeys(effects) {
+  const aliases = {
+    physical: ["damageMin", "damageMax"],
+    spell: ["spellMin", "spellMax"],
+    maxMana: ["maxMana"],
+    potionPower: ["potionRate"],
+    heal: ["hp"],
+    defenseSet: ["defense"],
+  };
+  return [
+    ...new Set(
+      Object.keys(effects || {}).flatMap(
+        (key) => aliases[key] || (RESULT_STATS.includes(key) ? [key] : []),
+      ),
+    ),
+  ];
+}
+function markDirect(state, keys) {
+  if (state.pendingEventResult)
+    state.pendingEventResult.directKeys = [
+      ...new Set([...(state.pendingEventResult.directKeys || []), ...keys]),
+    ];
+}
+function addSource(state, effects, source = "event") {
+  markDirect(state, effectStatKeys(effects));
+  return applySource(state, effects, source);
+}
 const EVENTS = [
   "healer",
   "goblin",
@@ -131,6 +183,7 @@ function payout(state) {
   );
 }
 function heal(state, amount, { checkpoint = false } = {}) {
+  if (!checkpoint) markDirect(state, ["hp"]);
   const actual = Math.max(
     0,
     Math.min(state.maxHp - state.hp, Math.floor(amount)),
@@ -145,6 +198,7 @@ function heal(state, amount, { checkpoint = false } = {}) {
   return actual;
 }
 function hurt(state, amount, hostile = true, nonlethal = false) {
+  markDirect(state, ["hp"]);
   const actual = Math.max(
     0,
     Math.min(state.hp - (nonlethal ? 1 : 0), Math.floor(amount)),
@@ -175,6 +229,7 @@ function receiveItem(state, definition, levels = 1, cleansedLevels = 0) {
     levels < 1
   )
     throw new Error("INVALID_HARDCORE_ITEM");
+  const before = statSnapshot(state);
   let item = state.items.find((x) => x.definition.id === definition.id);
   if (!item) {
     item = {
@@ -211,6 +266,15 @@ function receiveItem(state, definition, levels = 1, cleansedLevels = 0) {
       levels,
       definition: structuredClone(definition),
       curseLevels: Math.max(0, levels - cleansedLevels),
+      before,
+      after: statSnapshot(state),
+      directKeys: effectStatKeys({
+        ...definition.effects,
+        ...(levels > cleansedLevels ? definition.curse?.effects : {}),
+      }),
+      sourceName:
+        state.pendingEventResult?.name || state.encounter?.name || "trang bị",
+      inEventResult: Boolean(state.pendingEventResult),
     });
   return item;
 }
@@ -225,12 +289,15 @@ function receiveSnapshot(state, snapshot) {
 function cleanse(state, item) {
   if (!item || item.level <= (item.cleansedLevels || 0))
     throw new Error("NO_CURSE");
+  markDirect(state, effectStatKeys(item.definition.curse?.effects));
   item.cleansedLevels = item.level;
   item.rarity = "legendary";
   recompute(state);
 }
 function grind(state, item) {
   if (!item) throw new Error("NO_FORGE_ITEM");
+  if (item.level > (item.cleansedLevels || 0))
+    markDirect(state, effectStatKeys(item.definition.curse?.effects));
   const effects = { ...item.definition.effects };
   for (const key of [
     "heal",
@@ -284,6 +351,14 @@ function finishEventResult(state) {
   const after = Object.fromEntries(
     Object.keys(pending.before).map((key) => [key, state[key]]),
   );
+  pending.directKeys = [
+    ...new Set([
+      ...(pending.directKeys || []),
+      ...["potions", "escapeTokens", "mana"].filter(
+        (key) => after[key] !== pending.before[key],
+      ),
+    ]),
+  ];
   if (Object.keys(after).some((key) => after[key] !== pending.before[key]))
     state.lastEventResult = { ...pending, after };
   delete state.pendingEventResult;
@@ -727,7 +802,8 @@ function generateEncounter(state, session, rng) {
         ["healing", "armor", "blood", "experience", "corrupted", "fake"],
         rng,
       ),
-      armorStat: rng() < 0.5 ? "str" : "vit",
+      armorStat: pick(stats.ATTRIBUTES, rng),
+      powerStat: mainStat(state),
     };
   if (roll < 0.88) return makeChest(state, rng, true);
   if (roll < 0.94) {
@@ -1569,31 +1645,7 @@ function act(state, session, action, rng) {
     )
   )
     throw new Error("INVALID_ACTION");
-  const before = Object.fromEntries(
-    [
-      "str",
-      "dex",
-      "vit",
-      "ene",
-      "maxHp",
-      "hp",
-      "damageMin",
-      "damageMax",
-      "spellMin",
-      "spellMax",
-      "defense",
-      "accuracy",
-      "evasion",
-      "resistance",
-      "critChance",
-      "mana",
-      "maxMana",
-      "luck",
-      "potions",
-      "escapeTokens",
-      "potionRate",
-    ].map((key) => [key, state[key]]),
-  );
+  const before = statSnapshot(state);
   state.lastLog = "";
   delete state.lastDeathCause;
   state.lastReceivedItems = [];
@@ -1609,6 +1661,7 @@ function act(state, session, action, rng) {
       type: state.encounter.type,
       kind: state.encounter.kind,
       before,
+      directKeys: [],
     };
   state.discardedTicketsThisTurn = 0;
   if (state.phase === "boss_chest") {
@@ -1751,22 +1804,26 @@ function act(state, session, action, rng) {
       if (action === "touch") {
         if (e.kind === "healing") heal(state, state.maxHp);
         if (e.kind === "armor") addSource(state, { [e.armorStat]: 5 });
-        if (e.kind === "blood") addSource(state, { str: 8, vit: -5 });
+        if (e.kind === "blood")
+          addSource(state, { [e.powerStat || mainStat(state)]: 8, vit: -5 });
         if (e.kind === "experience")
           state.bonus += Math.floor(state.stake * 0.25);
-        if (e.kind === "corrupted") addSource(state, { str: 12, vit: -8 });
+        if (e.kind === "corrupted")
+          addSource(state, { [e.powerStat || mainStat(state)]: 12, vit: -8 });
         if (e.kind === "fake") {
           hurt(state, Math.max(10, state.maxHp * 0.3), true, true);
         }
         const outcomes = {
           healing: "Healing: hồi phục HP",
           armor: `Armor: tăng ${E[e.armorStat]} ${e.armorStat?.toUpperCase()}`,
-          blood: `Blood: tăng ${E.str} STR, giảm ${E.vit} VIT`,
+          blood: `Blood: tăng ${E[e.powerStat || mainStat(state)]} ${(e.powerStat || mainStat(state)).toUpperCase()}, giảm ${E.vit} VIT`,
           experience: `Experience: bonus +25% cược (${Math.floor(state.stake * 0.25).toLocaleString("vi-VN")} xu), cộng vào thưởng của run`,
-          corrupted: `Corrupted: tăng ${E.str} STR, giảm ${E.vit} VIT`,
+          corrupted: `Corrupted: tăng ${E[e.powerStat || mainStat(state)]} ${(e.powerStat || mainStat(state)).toUpperCase()}, giảm ${E.vit} VIT`,
           fake: `Fake: bẫy gây mất ${E.hp} HP, luôn chừa ít nhất **1 HP**`,
         };
         state.lastLog = `${E.shrine} Shrine ${outcomes[e.kind]}.`;
+        if (state.pendingEventResult)
+          state.pendingEventResult.name = `Shrine ${e.kind[0].toUpperCase()}${e.kind.slice(1)}`;
       } else state.lastLog = `Bỏ qua ${E.shrine} Shrine.`;
       if (alive(state)) completeFloor(state, session, rng, 0);
     } else if (e.type === "trap") {
@@ -1934,5 +1991,6 @@ module.exports = {
   physicalRange,
   attackDamage,
   legendaryChance,
+  effectStatKeys,
   serviceCost,
 };

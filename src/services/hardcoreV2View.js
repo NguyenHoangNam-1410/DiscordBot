@@ -244,11 +244,17 @@ function randomEventText(s) {
           [null, `**Healing:** hồi đầy ${E.hp} HP.`],
           [
             null,
-            `**Armor:** ${attr("str", 5)} hoặc ${attr("vit", 5)} (50/50).`,
+            `**Armor:** +5 vào một thuộc tính: ${stats.ATTRIBUTES.map((key) => `${E[key]} ${key.toUpperCase()}`).join(" / ")} (mỗi chỉ số 25%).`,
           ],
-          [null, `**Blood:** ${attr("str", 8)}, ${attr("vit", -5)}.`],
+          [
+            null,
+            `**Blood:** ${attr(e.powerStat || stats.mainStat(s), 8)}, ${attr("vit", -5)}.`,
+          ],
           [null, "**Experience:** bonus +25% cược."],
-          [null, `**Corrupted:** ${attr("str", 12)}, ${attr("vit", -8)}.`],
+          [
+            null,
+            `**Corrupted:** ${attr(e.powerStat || stats.mainStat(s), 12)}, ${attr("vit", -8)}.`,
+          ],
           [
             null,
             `**Fake:** bẫy gây sát thương bằng 30% Max ${E.hp} HP (mức bẫy tối thiểu 10), nhưng luôn chừa ít nhất **1 HP**.`,
@@ -472,9 +478,17 @@ function checkpointPreview(s, key) {
   const p = stats.preview(s, key);
   return statTransitions(s, p);
 }
-function statTransitions(before, after, includeResources = false) {
+function statTransitions(
+  before,
+  after,
+  includeResources = false,
+  options = {},
+) {
   const parts = [];
   const add = (name, keys, format) => {
+    if (options.only && !keys.some((key) => options.only.includes(key))) return;
+    if (options.exclude && keys.some((key) => options.exclude.includes(key)))
+      return;
     if (keys.some((key) => before[key] !== after[key]))
       parts.push(`${name} ${format(before)}→**${format(after)}**`);
   };
@@ -511,7 +525,10 @@ function statTransitions(before, after, includeResources = false) {
     ])
       add(label, [key], (s) => s[key]);
   }
-  return parts.join(" · ") || "Không thay đổi chỉ số chiến đấu.";
+  return (
+    parts.join(" · ") ||
+    (options.empty ? "" : "Không thay đổi chỉ số chiến đấu.")
+  );
 }
 function encounterText(s) {
   if (s.phase === "boss_chest")
@@ -719,33 +736,98 @@ function turnText(state) {
     details.push(
       `${E.checkpoint} **Tăng điểm checkpoint:**\n- ${statTransitions(state.lastUpgrade.before, state.lastUpgrade.after).split(" · ").join("\n- ")}`,
     );
-  if (state.lastEventResult) {
-    const receipt = state.lastEventResult;
-    const names = {
-      chest: "Rương",
-      shrine: "Shrine",
-      surprise: "Sự kiện",
-      trap: "Bẫy",
-      rngesus: "RNGesus",
-      echo: "Grave Echo",
-      memory: "The Tower Remembers",
-    };
-    const heading = `${eventIcon(["surprise", "trap"].includes(receipt.type) ? receipt.kind || Object.keys(core.EVENT_NAMES).find((key) => core.EVENT_NAMES[key] === receipt.name) || receipt.type : receipt.type)} **${received.length ? "Nhận đồ từ" : "Do"} ${receipt.name || names[receipt.type] || "sự kiện"}:**`;
-    details.push(
-      [
-        heading,
-        ...receivedTitles,
-        ...(received.length ? ["**Thay đổi chỉ số:**"] : []),
-        `- ${statTransitions(receipt.before, receipt.after, true).split(" · ").join("\n- ")}`,
-      ].join("\n"),
+  const receipt = state.lastEventResult;
+  const itemDirectKeys = [
+    ...new Set(
+      received
+        .filter((item) => item.inEventResult !== false)
+        .flatMap(
+          (item) =>
+            item.directKeys ||
+            core.effectStatKeys({
+              ...item.definition.effects,
+              ...(item.curseLevels ? item.definition.curse?.effects : {}),
+            }),
+        ),
+    ),
+  ];
+  const directKeys = receipt?.directKeys || [
+    ...stats.ATTRIBUTES,
+    "hp",
+    "mana",
+    "potions",
+    "escapeTokens",
+    "luck",
+  ];
+  const eventDirect = receipt
+    ? statTransitions(receipt.before, receipt.after, true, {
+        only: directKeys,
+        exclude: itemDirectKeys,
+        empty: true,
+      })
+    : "";
+  if (receipt) {
+    const sourceIcon = eventIcon(
+      ["surprise", "trap"].includes(receipt.type)
+        ? receipt.kind ||
+            Object.keys(core.EVENT_NAMES).find(
+              (key) => core.EVENT_NAMES[key] === receipt.name,
+            ) ||
+            receipt.type
+        : receipt.type,
     );
-  }
-  if (!state.lastEventResult)
-    received.forEach((item, index) =>
+    if (eventDirect)
       details.push(
-        `${receivedTitles[index]}\n${effectText(item.definition.effects, item.levels)}${item.definition.curse && item.curseLevels ? `\n☣️ Curse: ${effectText(item.definition.curse.effects, item.curseLevels)}` : ""}`,
+        `${sourceIcon} **${receipt.name || "Sự kiện"}:** ${eventDirect}`,
+      );
+  }
+  received.forEach((item, index) => {
+    if (!item.before || !item.after) {
+      details.push(
+        `${receivedTitles[index]}: ${effectText(item.definition.effects, item.levels)}${item.definition.curse && item.curseLevels ? `\n☣️ Lời nguyền: ${effectText(item.definition.curse.effects, item.curseLevels)}` : ""}`,
+      );
+      return;
+    }
+    const keys =
+      item.directKeys || core.effectStatKeys(item.definition.effects);
+    const direct = statTransitions(item.before, item.after, true, {
+      only: keys,
+      empty: true,
+    });
+    const extraEffects = Object.fromEntries(
+      Object.entries(item.definition.effects).filter(
+        ([key]) => !core.effectStatKeys({ [key]: 1 }).length,
       ),
     );
+    const extraCurse = Object.fromEntries(
+      Object.entries(item.definition.curse?.effects || {}).filter(
+        ([key]) => !core.effectStatKeys({ [key]: 1 }).length,
+      ),
+    );
+    details.push(
+      `${receivedTitles[index]}${direct ? `: ${direct}` : ""}${Object.keys(extraEffects).length ? `\n${effectText(extraEffects, item.levels)}` : ""}${item.curseLevels && Object.keys(extraCurse).length ? `\n☣️ Lời nguyền: ${effectText(extraCurse, item.curseLevels)}` : ""}`,
+    );
+    if (!receipt || item.inEventResult === false) {
+      const secondary = statTransitions(item.before, item.after, true, {
+        exclude: keys,
+        empty: true,
+      });
+      if (secondary)
+        details.push(
+          `**Do ${item.sourceName || item.name}:**\n- ${secondary.split(" · ").join("\n- ")}`,
+        );
+    }
+  });
+  if (receipt) {
+    const secondary = statTransitions(receipt.before, receipt.after, true, {
+      exclude: [...directKeys, ...itemDirectKeys],
+      empty: true,
+    });
+    if (secondary)
+      details.push(
+        `${eventIcon(receipt.kind || receipt.type)} **Do ${receipt.name || "sự kiện"}:**\n- ${secondary.split(" · ").join("\n- ")}`,
+      );
+  }
   const lines = (state.lastLog || "Run bắt đầu.").split("\n").filter((line) => {
     // Older sessions still carry the simple item receipt in lastLog.
     const plain = line
@@ -759,14 +841,21 @@ function turnText(state) {
       ].includes(plain),
     );
   });
+  if (
+    eventDirect &&
+    receipt?.type === "shrine" &&
+    lines.length &&
+    !state.lastDeathCause &&
+    !received.length
+  )
+    lines.shift();
   // Old sessions can still contain the numeric summaries written before this UI change.
   for (let i = 0; i < lines.length; i++)
     if (lines[i].endsWith("Shrine experience."))
       lines[i] =
         `${E.shrine} Shrine Experience: bonus +25% cược (${money(Math.floor(state.stake * 0.25))} xu), cộng vào thưởng của run.`;
   if (state.lastUpgrade) lines[0] = "Đã phân bổ điểm checkpoint.";
-  if (state.lastEventResult?.name === "Potion Thief")
-    lines[0] = "Potion Thief đã cướp bình máu.";
+
   const milestone = lines.findIndex(
     (line) => line.includes("Đạt tầng ") || line.startsWith("🩸 Lời nguyền"),
   );
@@ -1334,7 +1423,7 @@ function ratesFields(category) {
       {
         name: `${E.shrine} Shrine, bẫy và Lucky Break`,
         value:
-          "- Shrine có 6 loại, cơ hội bằng nhau; có cả lợi và hại. Chạm nhận hiệu ứng, bỏ qua đi tiếp. Bẫy Shrine Fake rút HP nhưng luôn chừa ít nhất **1 HP**. Đọc bảng chính trước khi chọn.\n- Thu thuế hoặc trộm bình có thể được tránh bằng **Lucky Break**: mỗi Luck cho 1,5 điểm %, tối đa 30%; tỷ lệ hiện tại ghi trên event.\n- **Wrong Portal:** 50% tốt / 50% xấu; Luck không thay đổi tỷ lệ. Nhánh xấu gọi Elite đánh phủ đầu; phải hạ Elite mới vượt tầng.\n- Phòng trống cho phép đi tiếp hoặc rút thưởng.",
+          "- Shrine có 6 loại, cơ hội bằng nhau. Armor tăng +5 vào STR/DEX/VIT/ENE (mỗi chỉ số 25%). Blood tăng +8 chỉ số sát thương chính của class, giảm 5 VIT; Corrupted tăng +12, giảm 8 VIT. Sorceress/Necromancer nhận ENE, Amazon/Assassin nhận DEX, các class khác nhận STR. Chạm nhận hiệu ứng, bỏ qua đi tiếp. Bẫy Shrine Fake rút HP nhưng luôn chừa ít nhất **1 HP**. Đọc bảng chính trước khi chọn.\n- Thu thuế hoặc trộm bình có thể được tránh bằng **Lucky Break**: mỗi Luck cho 1,5 điểm %, tối đa 30%; tỷ lệ hiện tại ghi trên event.\n- **Wrong Portal:** 50% tốt / 50% xấu; Luck không thay đổi tỷ lệ. Nhánh xấu gọi Elite đánh phủ đầu; phải hạ Elite mới vượt tầng.\n- Phòng trống cho phép đi tiếp hoặc rút thưởng.",
       },
       {
         name: "Các sự kiện đặc biệt",
