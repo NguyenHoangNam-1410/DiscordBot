@@ -673,6 +673,11 @@ function chaosLabel(s) {
 }
 function turnText(state) {
   const details = [];
+  const received = state.lastReceivedItems || [];
+  const receivedTitles = received.map(
+    (item) =>
+      `${E.backpack} **${item.name} [${rarityLabel(item.rarity)}] · Lv.${item.level}**`,
+  );
   if (state.lastUpgrade)
     details.push(
       `${E.checkpoint} **Tăng điểm checkpoint:**\n- ${statTransitions(state.lastUpgrade.before, state.lastUpgrade.after).split(" · ").join("\n- ")}`,
@@ -688,15 +693,35 @@ function turnText(state) {
       echo: "Grave Echo",
       memory: "The Tower Remembers",
     };
+    const heading = `${eventIcon(["surprise", "trap"].includes(receipt.type) ? receipt.kind || Object.keys(core.EVENT_NAMES).find((key) => core.EVENT_NAMES[key] === receipt.name) || receipt.type : receipt.type)} **${received.length ? "Nhận đồ từ" : "Do"} ${receipt.name || names[receipt.type] || "sự kiện"}:**`;
     details.push(
-      `${eventIcon(["surprise", "trap"].includes(receipt.type) ? receipt.kind || Object.keys(core.EVENT_NAMES).find((key) => core.EVENT_NAMES[key] === receipt.name) || receipt.type : receipt.type)} **Do ${receipt.name || names[receipt.type] || "sự kiện"}:**\n- ${statTransitions(receipt.before, receipt.after, true).split(" · ").join("\n- ")}`,
+      [
+        heading,
+        ...receivedTitles,
+        ...(received.length ? ["**Thay đổi chỉ số:**"] : []),
+        `- ${statTransitions(receipt.before, receipt.after, true).split(" · ").join("\n- ")}`,
+      ].join("\n"),
     );
   }
-  for (const item of state.lastReceivedItems || [])
-    details.push(
-      `${E.backpack} **${item.name} [${rarityLabel(item.rarity)}] · Lv.${item.level}**${state.lastEventResult ? "" : `\n${effectText(item.definition.effects, item.levels)}${item.definition.curse && item.curseLevels ? `\n☣️ Curse: ${effectText(item.definition.curse.effects, item.curseLevels)}` : ""}`}`,
+  if (!state.lastEventResult)
+    received.forEach((item, index) =>
+      details.push(
+        `${receivedTitles[index]}\n${effectText(item.definition.effects, item.levels)}${item.definition.curse && item.curseLevels ? `\n☣️ Curse: ${effectText(item.definition.curse.effects, item.curseLevels)}` : ""}`,
+      ),
     );
-  const lines = (state.lastLog || "Run bắt đầu.").split("\n");
+  const lines = (state.lastLog || "Run bắt đầu.").split("\n").filter((line) => {
+    // Older sessions still carry the simple item receipt in lastLog.
+    const plain = line
+      .replace(/<a?:\w+:\d+>/g, "")
+      .trim()
+      .replace(/^\p{Extended_Pictographic}\uFE0F?\s*/u, "");
+    return !received.some((item) =>
+      [
+        `${item.name} Lv.${item.level}.`,
+        `Nhận ${item.name} Lv.${item.level}.`,
+      ].includes(plain),
+    );
+  });
   // Old sessions can still contain the numeric summaries written before this UI change.
   if (state.lastUpgrade) lines[0] = "Đã phân bổ điểm checkpoint.";
   if (state.lastEventResult?.name === "Potion Thief")
