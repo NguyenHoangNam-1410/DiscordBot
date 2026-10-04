@@ -1194,7 +1194,7 @@ function actions(state) {
       { action: "defend", label: "+1 MP" },
       {
         action: "skill",
-        label: `${stats.CLASSES[state.classKey].skill} (${skillManaCost(state) === 0 ? "0 MP" : "−2 MP"})`,
+        label: `${skillManaCost(state) === 0 ? "0 MP" : "−2 MP"}`,
         disabled: state.mana < skillManaCost(state),
       },
       {
