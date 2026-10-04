@@ -10,6 +10,7 @@ const E = {
   res: icon("RES", icon("crystal_ball", "🔮")),
   shrine: icon("event_shrine", "🗿"),
   chest: icon("event_chest", "📦"),
+  rift: icon("rift", "🌀"),
   luck: icon("LUCK", "🍀"),
   crit: icon("boom", "💥"),
   potion: icon("potion", "🧪"),
@@ -30,4 +31,16 @@ const SKILL_ICONS = Object.fromEntries(
     paladin: "skill_devineshield",
   }).map(([key, name]) => [key, icon(name, "✨")]),
 );
-module.exports = { E, SKILL_ICONS };
+const RIFT_ICONS = Object.fromEntries(
+  [
+    "stone_skin",
+    "elemental_dominion",
+    "bloodlust",
+    "unstable_rift",
+    "fortified",
+    "swift_horror",
+    "soul_drain",
+    "cursed_ground",
+  ].map((key) => [key, icon(`rift_${key}`, "🌀")]),
+);
+module.exports = { E, SKILL_ICONS, RIFT_ICONS };

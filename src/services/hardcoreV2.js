@@ -1,6 +1,6 @@
 "use strict";
 const stats = require("./hardcoreStats");
-const { E, SKILL_ICONS } = require("./hardcoreIcons");
+const { E, SKILL_ICONS, RIFT_ICONS } = require("./hardcoreIcons");
 const world = require("./hardcoreWorld");
 const echoes = require("./hardcoreEchoRepository");
 const { ITEMS } = require("../hardcore/item");
@@ -286,7 +286,7 @@ function completeFloor(state, session, rng, reward = 1) {
       missing = keys.filter((key) => !state.modifiers[key]);
     const key = pick(missing.length ? missing : keys, rng);
     state.modifiers[key] = (state.modifiers[key] || 0) + 1;
-    state.lastLog += `\n🌀 ${world.RIFT_MODIFIERS[key].name} ×${state.modifiers[key]}.`;
+    state.lastLog += `\n${RIFT_ICONS[key] || E.rift} ${world.RIFT_MODIFIERS[key].name} ×${state.modifiers[key]}.`;
   }
   if (state.paradox && floor >= state.paradox.until) state.paradox = null;
   if (floor % 25 === 0 && floor < 999) state.pendingMilestones.push("paradox");
@@ -888,7 +888,7 @@ function playerAttack(state, action, rng) {
     return {
       defend: true,
       dodge: false,
-      log: `${E.defense} Phòng thủ và hồi 1 ${E.mana} Mana.`,
+      log: `${E.defense} Phòng thủ và hồi 1 ${E.mana} MP.`,
     };
   }
   if (action === "potion") {
@@ -1127,11 +1127,11 @@ function actions(state) {
   const e = state.encounter;
   if (e.type === "combat")
     return [
-      { action: "attack", label: `Tấn công (+${attackManaGain(state)} Mana)` },
-      { action: "defend", label: "Phòng thủ (+1 Mana)" },
+      { action: "attack", label: `Tấn công (+${attackManaGain(state)} MP)` },
+      { action: "defend", label: "Phòng thủ (+1 MP)" },
       {
         action: "skill",
-        label: `${stats.CLASSES[state.classKey].skill} (${skillManaCost(state) === 0 ? "0 Mana" : "−2 Mana"})`,
+        label: `${stats.CLASSES[state.classKey].skill} (${skillManaCost(state) === 0 ? "0 MP" : "−2 MP"})`,
         disabled: state.mana < skillManaCost(state),
       },
       {

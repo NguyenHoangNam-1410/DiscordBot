@@ -203,7 +203,7 @@ const ITEMS = {
         ene: 2,
         maxMana: 1,
       },
-      text: "+2 ENE · +1 Max Mana",
+      text: "+2 ENE · +1 Max MP",
       curse: null,
     },
     {
@@ -602,7 +602,7 @@ const ITEMS = {
         ene: 10,
         maxMana: 1,
       },
-      text: "+10 ENE · +1 Max Mana",
+      text: "+10 ENE · +1 Max MP",
       curse: null,
     },
     {
@@ -804,7 +804,7 @@ const ITEMS = {
         ene: 10,
         maxMana: 1,
       },
-      text: "+10 ENE · +1 Max Mana",
+      text: "+10 ENE · +1 Max MP",
       curse: null,
     },
     {
@@ -1060,7 +1060,7 @@ const ITEMS = {
         ene: 18,
         maxMana: 2,
       },
-      text: "+6 VIT, +18 ENE · +2 Max Mana",
+      text: "+6 VIT, +18 ENE · +2 Max MP",
       curse: null,
     },
     {
@@ -1401,7 +1401,7 @@ const ITEMS = {
         ene: 40,
         maxMana: 2,
       },
-      text: "+10 VIT, +40 ENE · +2 Max Mana",
+      text: "+10 VIT, +40 ENE · +2 Max MP",
       curse: {
         id: "hollow_crown_curse",
         effects: {
@@ -1448,7 +1448,7 @@ const ITEMS = {
         effects: {
           maxMana: -2,
         },
-        text: "-2 Max Mana",
+        text: "-2 Max MP",
       },
     },
     {

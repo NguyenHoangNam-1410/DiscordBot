@@ -14,7 +14,7 @@ const { runDiamondReward } = require("./hardcoreRewards");
 const emoji = require("../discordEmojiMap");
 const { resultBlock } = require("../utils/rewardText");
 const icon = (key, fallback) => emoji[`:${key}:`] || fallback;
-const { E, SKILL_ICONS } = require("./hardcoreIcons");
+const { E, SKILL_ICONS, RIFT_ICONS } = require("./hardcoreIcons");
 const rarityLabel = (r) =>
   ({ common: "R", rare: "SR", legendary: "SSR", cursed: "UR" })[r];
 const percent = (n) => `${Math.round(n * 1000) / 10}%`;
@@ -61,7 +61,7 @@ function statLine(s, changes = false, compact = false) {
   const lines = [
     `${healthBar(s.hp, s.maxHp)}${d("hp")}${d("maxHp", " MAX")}`,
     `${E.str} STR **${s.str}**${d("str")} · ${E.dex} DEX **${s.dex}**${d("dex")} · ${E.vit} VIT **${s.vit}**${d("vit")} · ${E.ene} ENE **${s.ene}**${d("ene")}`,
-    `${E.mana} Mana **${s.mana}/${s.maxMana}**${d("mana")}${d("maxMana", " MAX")} · ${E.potion} Bình ${s.potions}${d("potions")} · ${E.ticket} Vé ${s.escapeTokens}${d("escapeTokens")}`,
+    `${E.mana} MP **${s.mana}/${s.maxMana}**${d("mana")}${d("maxMana", " MAX")} · ${E.potion} Bình ${s.potions}${d("potions")} · ${E.ticket} Vé ${s.escapeTokens}${d("escapeTokens")}`,
     `${E.attack} Vật lý **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")} · ${E.magic} Phép **${s.spellMin}–${s.spellMax}**${d("spellMin")}`,
     `${E.defense} DEF **${defense}**${inverse ? " (Paradox)" : d("defense")} · ${E.res} RES **${s.resistance}%**${d("resistance")} · ${E.luck} LUCK **${s.luck}**${d("luck")}`,
   ];
@@ -85,7 +85,7 @@ function battleStats(s) {
     necromancer: "Phép luôn trúng, không Crit; chặn phản công.",
     paladin: "Vật lý, có thể trượt/Crit; tự Phòng thủ.",
   }[s.classKey];
-  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} Mana **${s.mana}/${s.maxMana}** · ${E.potion} Bình **${s.potions}** · ${E.ticket} Vé **${s.escapeTokens}**\n${E.attack} Vật lý **${range[0]}–${range[1]}** · ${E.defense} DEF **${defense}** · ${E.res} RES **${s.resistance}%**\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} Mana): ${skill.low}–${skill.high} DMG**\n${detail}\n*Dự báo lên quái hiện tại${skill.magic ? "" : ` nếu ${skill.shots === 2 ? "cả hai phát " : ""}trúng, chưa Crit`}.*`;
+  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} MP **${s.mana}/${s.maxMana}** · ${E.potion} Bình **${s.potions}** · ${E.ticket} Vé **${s.escapeTokens}**\n${E.attack} Vật lý **${range[0]}–${range[1]}** · ${E.defense} DEF **${defense}** · ${E.res} RES **${s.resistance}%**\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP): ${skill.low}–${skill.high} DMG**\n${detail}\n*Dự báo lên quái hiện tại${skill.magic ? "" : ` nếu ${skill.shots === 2 ? "cả hai phát " : ""}trúng, chưa Crit`}.*`;
 }
 function effectText(effects, level = 1) {
   const names = {
@@ -95,7 +95,7 @@ function effectText(effects, level = 1) {
     ene: `${E.ene} ENE`,
     luck: `${E.luck} Luck`,
     maxHp: `${E.hp} Max HP`,
-    maxMana: `${E.mana} Max Mana`,
+    maxMana: `${E.mana} Max MP`,
     physical: `${E.attack} Vật lý`,
     spell: `${E.magic} Phép`,
     defense: `${E.defense} DEF`,
@@ -171,7 +171,7 @@ function statTransitions(before, after, includeResources = false) {
     ["defense", `${E.defense} DEF`],
     ["accuracy", "ACC"],
     ["evasion", "EVA"],
-    ["maxMana", `${E.mana} Max Mana`],
+    ["maxMana", `${E.mana} Max MP`],
   ])
     add(label, [key], (s) => s[key]);
   add("Crit", ["critChance"], (s) => percent(s.critChance));
@@ -180,7 +180,7 @@ function statTransitions(before, after, includeResources = false) {
   if (includeResources) {
     for (const [key, label] of [
       ["hp", `${E.hp} HP`],
-      ["mana", `${E.mana} Mana`],
+      ["mana", `${E.mana} MP`],
       ["luck", `${E.luck} Luck`],
       ["potions", `${E.potion} Bình máu`],
       ["escapeTokens", `${E.ticket} Vé thoát hiểm`],
@@ -211,9 +211,9 @@ function encounterText(s) {
     return (
       `**${e.name}** · ${e.rank}\n${E.hp} ${e.hp}/${e.maxHp} · ${E.attack} ${e.damageMin}–${e.damageMax} · ${E.defense} ${e.defense} · ${E.res} RES ${e.resistance}%\n` +
       `Đòn quái kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}** · Dự báo nhận **${p.low}–${p.high} HP** · Quái đánh trúng bạn **${percent(p.chance)}** *(chưa Crit/chưa Thủ)*\n` +
-      `Bạn đánh vật lý trúng quái **${percent(world.hitChance(s.accuracy, e.evasion))}**; trượt gây 0 DMG nhưng vẫn hồi Mana khi đánh thường. Skill phép luôn trúng.\n` +
+      `Bạn đánh vật lý trúng quái **${percent(world.hitChance(s.accuracy, e.evasion))}**; trượt gây 0 DMG nhưng vẫn hồi MP khi đánh thường. Skill phép luôn trúng.\n` +
       (e.mechanic ? `Cơ chế: ${mechanisms[e.mechanic]}\n` : "") +
-      `**Tấn công:** vật lý, hồi ${core.attackManaGain(s)} Mana (tối đa Max Mana). **Thủ:** DEF ×2 hoặc +15 RES, giảm thêm 15% DMG, miễn Crit, +1 Mana.\n**${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} Mana):** ${SKILLS[s.classKey]} **Bình:** hồi ${percent(s.potionRate)} Max HP, ít nhất 20; quái còn sống phản công.`
+      `**Tấn công:** vật lý, hồi ${core.attackManaGain(s)} MP (tối đa Max MP). **Thủ:** DEF ×2 hoặc +15 RES, giảm thêm 15% DMG, miễn Crit, +1 MP.\n**${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP):** ${SKILLS[s.classKey]} **Bình:** hồi ${percent(s.potionRate)} Max HP, ít nhất 20; quái còn sống phản công.`
     );
   }
   if (e.type === "rngesus")
@@ -228,7 +228,7 @@ function encounterText(s) {
     return "**The Tower Remembers.** Hành động trong quá khứ được tháp ghi nhớ. Bấm Đi tiếp để nhận hậu quả; kết quả đã được khóa từ lúc lựa chọn ban đầu.";
   if (e.type === "trap")
     return e.kind === "portal"
-      ? "**Wrong Portal: 50% tốt / 50% xấu.** Lucky Break không áp dụng.\nTốt: hồi đầy/+10 Max HP/+1 bình, bonus 50% cược, hoặc +6 STR/+6 ENE/+1 Luck. Xấu: mất 15% Max HP (giữ ≥1), Mana về 0, mất 2 bình, payout −10%, hoặc −5 STR/ENE; sau đó Elite đánh phủ đầu."
+      ? "**Wrong Portal: 50% tốt / 50% xấu.** Lucky Break không áp dụng.\nTốt: hồi đầy/+10 Max HP/+1 bình, bonus 50% cược, hoặc +6 STR/+6 ENE/+1 Luck. Xấu: mất 15% Max HP (giữ ≥1), MP về 0, mất 2 bình, payout −10%, hoặc −5 STR/ENE; sau đó Elite đánh phủ đầu."
       : `**${e.name}**\n${E.luck} Luck **${s.luck}** · Lucky Break **${percent(Math.min(0.3, s.luck * 0.015))}** để tránh bẫy.\n${e.kind === "tax" ? "Mất 15% payout nếu không né được." : "Mất 1 bình nếu đang có và không né được."}`;
   if (e.type === "empty") return "Phòng trống. Đi tiếp hoặc rút thưởng.";
   const k = e.kind;
@@ -358,7 +358,7 @@ function encounterDetails(s) {
         deimoss:
           "Abyssal Spires giảm **25% sát thương bạn gây ra**, áp dụng mọi đòn. Dự báo skill trên bảng chính đã tính giảm trừ này.",
       }[e.mechanic] || "Boss này không có chu kỳ kích hoạt riêng.";
-    return `**${e.name} · Cơ chế đặc biệt**\n${mechanism}${e.drainCharges > 0 ? `\nSoul Drain: còn **${e.drainCharges}** lần; phản công trúng sẽ hút 1 Mana.` : ""}`;
+    return `**${e.name} · Cơ chế đặc biệt**\n${mechanism}${e.drainCharges > 0 ? `\nSoul Drain: còn **${e.drainCharges}** lần; phản công trúng sẽ hút 1 MP.` : ""}`;
   }
   if (e.type === "chest") {
     const names = {
@@ -465,9 +465,12 @@ function embed(state, userId, result = null, sessionId = null) {
         value,
       });
   }
+  const activeRifts = Object.entries(state.modifiers || {}).filter(
+    ([, n]) => n > 0,
+  );
   const mods =
-    Object.entries(state.modifiers)
-      .map(([key, n]) => `${world.RIFT_MODIFIERS[key].name} ×${n}`)
+    activeRifts
+      .map(([key, n]) => `${RIFT_ICONS[key] || E.rift} ×${n}`)
       .join(" · ") || "Chưa có";
   e.addFields(
     {
@@ -475,7 +478,7 @@ function embed(state, userId, result = null, sessionId = null) {
       value: `Đã vượt ${state.cleared} · Boss ${state.bosses} · Modifier ${Object.values(state.modifiers || {}).reduce((sum, n) => sum + n, 0)}\n${chaosLabel(state)}`,
     },
     {
-      name: `${icon("cyclone", "🌀")} Rift modifier`,
+      name: `${E.rift} Rift modifier (${activeRifts.length})`,
       value:
         `${mods}${state.paradox ? `\nParadox: ${state.paradox.kind === "blood" ? `Máu là tiền ${percent(state.paradox.bloodFactor)}` : "Ngược đời"} · hết tầng ${state.paradox.until}` : ""}`.slice(
           0,
@@ -586,7 +589,7 @@ function button(
     symbol = {
       stats: ["bar_chart", "📊"],
       items: ["school_satchel", "🎒"],
-      effects: ["cyclone", "🌀"],
+      effects: ["rift", "🌀"],
       encounter: ["information_source", "ℹ️"],
     }[action.split("_")[1]];
   if (action.startsWith("page_"))
@@ -719,7 +722,7 @@ function privatePayload(
       {
         name: "Bốn thuộc tính",
         value:
-          "STR: vật lý và DEF. DEX: trúng/né/Crit; damage chính Amazon/Assassin. VIT: Max HP và bình máu. ENE: phép/RES/Max Mana. ENE là thuộc tính; Mana là tài nguyên dùng skill.",
+          "STR: vật lý và DEF. DEX: trúng/né/Crit; damage chính Amazon/Assassin. VIT: Max HP và bình máu. ENE: phép/RES/Max MP. ENE là thuộc tính; MP là tài nguyên dùng skill.",
       },
       {
         name: `${SKILL_ICONS[state.classKey]} ${stats.CLASSES[state.classKey].skill}`,
@@ -727,16 +730,16 @@ function privatePayload(
       },
       {
         name: `${E.attack} Tấn công`,
-        value: `Một đòn vật lý, có thể trượt/Crit ×1,75. Hồi **${core.attackManaGain(state)} Mana** (tối đa Max Mana), kể cả đánh trượt. Quái còn sống sẽ phản công.`,
+        value: `Một đòn vật lý, có thể trượt/Crit ×1,75. Hồi **${core.attackManaGain(state)} MP** (tối đa Max MP), kể cả đánh trượt. Quái còn sống sẽ phản công.`,
       },
       {
         name: `${E.defense} Phòng thủ`,
         value:
-          "Không gây sát thương, hồi **1 Mana**. Lần phản công này: DEF ×2 khi nhận vật lý, +15 RES khi nhận phép, giảm thêm 15% sát thương, miễn Crit. Hết hiệu lực sau phản công.",
+          "Không gây sát thương, hồi **1 MP**. Lần phản công này: DEF ×2 khi nhận vật lý, +15 RES khi nhận phép, giảm thêm 15% sát thương, miễn Crit. Hết hiệu lực sau phản công.",
       },
       {
         name: "Sở trường class",
-        value: `Sức mạnh ×${balance.power(state)}. Áp dụng vào sức mạnh vật lý và phép từ thuộc tính/trang bị; dải sát thương đang hiển thị đã tính hệ số. HP, DEF, RES và chi phí Mana giữ theo thuộc tính.`,
+        value: `Sức mạnh ×${balance.power(state)}. Áp dụng vào sức mạnh vật lý và phép từ thuộc tính/trang bị; dải sát thương đang hiển thị đã tính hệ số. HP, DEF, RES và chi phí MP giữ theo thuộc tính.`,
       },
     );
     if (state.phase === "upgrade")
@@ -746,9 +749,11 @@ function privatePayload(
           value: checkpointPreview(state, key),
         });
   } else if (tab === "effects") {
-    for (const [key, n] of Object.entries(state.modifiers))
+    for (const [key, n] of Object.entries(state.modifiers).filter(
+      ([, n]) => n > 0,
+    ))
       e.addFields({
-        name: `${world.RIFT_MODIFIERS[key].name} ×${n}`,
+        name: `${RIFT_ICONS[key] || E.rift} ${world.RIFT_MODIFIERS[key].name} ×${n}`,
         value: `${world.RIFT_MODIFIERS[key].text} Stack hiệu dụng: ${world.effectiveStacks(n)}.`,
       });
     e.addFields({
@@ -811,15 +816,15 @@ function setupPreview(classKey) {
     amazon:
       "Ưu tiên DEX cho sát thương, trúng/né và Crit; thêm VIT khi thiếu HP. Trang bị vật lý, ACC và Crit hợp với hai phát Barrage.",
     barbarian:
-      "Ưu tiên STR cho sát thương và DEF; thêm VIT để tăng HP. Chọn trang bị vật lý và chống chịu, dùng Iron Will khi đủ Mana.",
+      "Ưu tiên STR cho sát thương và DEF; thêm VIT để tăng HP. Chọn trang bị vật lý và chống chịu, dùng Iron Will khi đủ MP.",
     assassin:
-      "Ưu tiên DEX cho sát thương, né và Crit; thêm VIT để tránh chết nhanh. Luân phiên đánh thường lấy Mana và Shadow Step để né phản công.",
+      "Ưu tiên DEX cho sát thương, né và Crit; thêm VIT để tránh chết nhanh. Luân phiên đánh thường lấy MP và Shadow Step để né phản công.",
     sorceress:
-      "Ưu tiên ENE cho skill phép, RES và Max Mana; thêm VIT cho HP. Chọn trang bị phép, đánh thường hồi Mana rồi dùng Arcane Burst.",
+      "Ưu tiên ENE cho skill phép, RES và Max MP; thêm VIT cho HP. Chọn trang bị phép, đánh thường hồi MP rồi dùng Arcane Burst.",
     druid:
       "Ưu tiên STR cho sát thương vật lý; thêm VIT cho HP và lượng hồi từ skill. Chọn trang bị vật lý/chống chịu, dùng Wild Regeneration khi đã mất HP.",
     necromancer:
-      "Ưu tiên ENE cho skill phép, RES và Max Mana; thêm VIT cho HP. Đánh thường hồi Mana, dùng Totem Ward để vừa gây phép vừa chặn phản công.",
+      "Ưu tiên ENE cho skill phép, RES và Max MP; thêm VIT cho HP. Đánh thường hồi MP, dùng Totem Ward để vừa gây phép vừa chặn phản công.",
     paladin:
       "Ưu tiên STR cho sát thương và DEF; thêm VIT cho HP. Chọn trang bị vật lý/chống chịu, dùng Divine Shield để gây sát thương rồi thủ.",
   };
@@ -829,12 +834,12 @@ function setupPreview(classKey) {
     skillIcon: SKILL_ICONS[classKey],
     role: `Build ${main} · ${{ amazon: "Hai phát vật lý", barbarian: "Vật lý và chống chịu", assassin: "Crit và né phản công", sorceress: "Skill phép mạnh", druid: "Vật lý và hồi phục", necromancer: "Phép và chặn phản công", paladin: "Vật lý và phòng thủ" }[classKey]}`,
     attributes: `${E.str} STR **${state.str}** · ${E.dex} DEX **${state.dex}** · ${E.vit} VIT **${state.vit}** · ${E.ene} ENE **${state.ene}**`,
-    stats: `${E.str} STR **${state.str}** · ${E.dex} DEX **${state.dex}** · ${E.vit} VIT **${state.vit}** · ${E.ene} ENE **${state.ene}**\n${E.hp} HP **${state.hp}** · ${E.mana} Mana **${state.mana}** · ${E.defense} DEF **${state.defense}** · ${E.potion} Bình **${state.potions}**\n${E.attack} Vật lý **${state.damageMin}–${state.damageMax}** · ${E.magic} Phép **${state.spellMin}–${state.spellMax}** · ${E.res} RES **${state.resistance}%** · Crit **${percent(state.critChance)}**`,
+    stats: `${E.str} STR **${state.str}** · ${E.dex} DEX **${state.dex}** · ${E.vit} VIT **${state.vit}** · ${E.ene} ENE **${state.ene}**\n${E.hp} HP **${state.hp}** · ${E.mana} MP **${state.mana}** · ${E.defense} DEF **${state.defense}** · ${E.potion} Bình **${state.potions}**\n${E.attack} Vật lý **${state.damageMin}–${state.damageMax}** · ${E.magic} Phép **${state.spellMin}–${state.spellMax}** · ${E.res} RES **${state.resistance}%** · Crit **${percent(state.critChance)}**`,
     build: builds[classKey],
-    attack: `Một đòn **vật lý ${state.damageMin}–${state.damageMax}** trước giảm trừ; có thể trượt, có thể Crit ×1,75. Hồi **${manaGain} Mana** ở chỉ số ban đầu (40% Max Mana; class phép 70%, làm tròn xuống, tối thiểu 1). Quái còn sống sẽ phản công.`,
+    attack: `Một đòn **vật lý ${state.damageMin}–${state.damageMax}** trước giảm trừ; có thể trượt, có thể Crit ×1,75. Hồi **${manaGain} MP** ở chỉ số ban đầu (40% Max MP; class phép 70%, làm tròn xuống, tối thiểu 1). Quái còn sống sẽ phản công.`,
     defend:
-      "Không gây sát thương; hồi **1 Mana**. Trong lần phản công này: **DEF ×2** khi nhận vật lý, **+15 RES** khi nhận phép, giảm thêm **15% sát thương** và miễn Crit. Không duy trì sang lượt sau.",
-    skill: `${SKILLS[classKey]} Tốn **2 Mana**, không hồi Mana như đánh thường. ${["sorceress", "necromancer"].includes(classKey) ? "Sát thương phép chịu RES của quái, không Crit." : "Mỗi đòn vật lý có thể trượt/Crit, chịu DEF của quái."} ${["assassin", "necromancer"].includes(classKey) ? "Chặn phản công của lượt này kể cả skill không gây sát thương." : classKey === "paladin" ? "Nếu quái sống, nhận phản công với hiệu quả Phòng thủ; skill không cộng 1 Mana." : "Nếu quái sống, nhận phản công bình thường."}`,
+      "Không gây sát thương; hồi **1 MP**. Trong lần phản công này: **DEF ×2** khi nhận vật lý, **+15 RES** khi nhận phép, giảm thêm **15% sát thương** và miễn Crit. Không duy trì sang lượt sau.",
+    skill: `${SKILLS[classKey]} Tốn **2 MP**, không hồi MP như đánh thường. ${["sorceress", "necromancer"].includes(classKey) ? "Sát thương phép chịu RES của quái, không Crit." : "Mỗi đòn vật lý có thể trượt/Crit, chịu DEF của quái."} ${["assassin", "necromancer"].includes(classKey) ? "Chặn phản công của lượt này kể cả skill không gây sát thương." : classKey === "paladin" ? "Nếu quái sống, nhận phản công với hiệu quả Phòng thủ; skill không cộng 1 MP." : "Nếu quái sống, nhận phản công bình thường."}`,
     passive: `Đặc tính thường trực: vật lý lấy **${Math.round(c.strWeight * 100)}% STR + ${Math.round((1 - c.strWeight) * 100)}% DEX**; Crit nền **${percent(c.baseCrit)}**, RES nền **${c.baseRes}%**, cộng thêm từ thuộc tính/trang bị. Hiệu ứng né/chặn/hồi HP của skill chỉ kích hoạt khi dùng skill.`,
     shrine: `Chỉ có khi nhận **Class Shrine**, tối đa 3 tầng: ${SHRINES[classKey]}`,
     power: balance.power(state),
@@ -887,7 +892,7 @@ function ratesFields(category) {
       {
         name: "Chỉ số và chiến đấu v2",
         value:
-          "STR/DEX/VIT/ENE tạo chỉ số; Mana riêng. Skill tốn 2 Mana. Tấn công hồi 70% Max Mana cho Sorceress/Necromancer, 40% cho class khác, tối thiểu 1. Thủ: DEF ×2/+15 RES, giảm thêm 15%, miễn Crit, +1 Mana. Bình hồi 35% + min(15%,VIT×0,05%) + item, cap 10–75%.",
+          "STR/DEX/VIT/ENE tạo chỉ số; MP riêng. Skill tốn 2 MP. Tấn công hồi 70% Max MP cho Sorceress/Necromancer, 40% cho class khác, tối thiểu 1. Thủ: DEF ×2/+15 RES, giảm thêm 15%, miễn Crit, +1 MP. Bình hồi 35% + min(15%,VIT×0,05%) + item, cap 10–75%.",
       },
       {
         name: "Checkpoint và Rift",

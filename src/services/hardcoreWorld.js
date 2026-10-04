@@ -77,7 +77,7 @@ const RIFT_MODIFIERS = {
   },
   soul_drain: {
     name: "Soul Drain",
-    text: "ceil(stack/4) đòn trúng rút 1 Mana mỗi combat, tối đa 3.",
+    text: "ceil(stack/4) đòn trúng rút 1 MP mỗi combat, tối đa 3.",
   },
   cursed_ground: {
     name: "Cursed Ground",
