@@ -428,7 +428,7 @@ function completeFloor(state, session, rng, reward = 1) {
   if (state.floorHpLoss) {
     const hpBefore = state.hp;
     hurt(state, Math.max(1, state.maxHp * state.floorHpLoss), true, true);
-    state.lastLog += `\n🩸 Lời nguyền trang bị: ${E.hp} HP ${hpBefore}→**${state.hp}**, luôn chừa ít nhất **1 HP**.`;
+    state.lastLog += `\n🩸 Lời nguyền trang bị: ${E.hp} **HP:** ${hpBefore} → **${state.hp}**, luôn chừa ít nhất **1 HP**.`;
   }
   if (floor % 5 === 0) {
     const hpBefore = state.hp,
@@ -436,7 +436,7 @@ function completeFloor(state, session, rng, reward = 1) {
     heal(state, state.maxHp, { checkpoint: true });
     state.potions = Math.min(5, state.potions + 2);
     state.pendingMilestones.push("upgrade");
-    state.lastLog += `\n${E.checkpoint} Đạt tầng ${floor} · Checkpoint: ${E.hp} HP ${hpBefore}→**${state.hp}**, ${E.potion} bình máu ${potionsBefore}→**${state.potions}** (tối đa 5); chọn +5 thuộc tính.`;
+    state.lastLog += `\n${E.checkpoint} Đạt tầng ${floor} · Checkpoint: ${E.hp} **HP:** ${hpBefore} → **${state.hp}**  •  ${E.potion} **Bình máu:** ${potionsBefore} → **${state.potions}** (tối đa 5); chọn +5 thuộc tính.`;
   }
   if (floor % 10 === 0) {
     const keys = Object.keys(world.RIFT_MODIFIERS),

@@ -20,6 +20,13 @@ const rarityLabel = (r) =>
   ({ common: "R", rare: "SR", legendary: "SSR", cursed: "UR" })[r];
 const percent = (n) => `${Math.round(n * 1000) / 10}%`;
 const money = (n) => Math.floor(n).toLocaleString("vi-VN");
+const STAT_SEPARATOR = "  •  ";
+function highlightStat(label) {
+  const match = label.match(
+    /^(<a?:\w+:\d+>|\p{Extended_Pictographic}\uFE0F?)\s+(.+)$/u,
+  );
+  return match ? `${match[1]} **${match[2]}**` : `**${label}**`;
+}
 const SKILLS = {
   amazon: "Hai phát vật lý ×0,85, tính trúng/Crit riêng.",
   barbarian: "Vật lý ×1,65.",
@@ -52,7 +59,7 @@ function healthBar(hp, maxHp) {
       : ratio > 0
         ? Math.max(1, Math.min(9, Math.round(ratio * 10)))
         : 0;
-  return `${E.hp} HP \`${"█".repeat(filled)}${"░".repeat(10 - filled)}\` **${money(hp)}/${money(maxHp)}**`;
+  return `${E.hp} **HP** \`${"█".repeat(filled)}${"░".repeat(10 - filled)}\` **${money(hp)}/${money(maxHp)}**`;
 }
 function statLine(s, changes = false, compact = false) {
   const d = (key, suffix) => (changes ? delta(s, key, suffix) : "");
@@ -61,14 +68,14 @@ function statLine(s, changes = false, compact = false) {
   const defense = inverse ? (s.damageMin + s.damageMax) / 2 : s.defense;
   const lines = [
     `${healthBar(s.hp, s.maxHp)}${d("hp")}${d("maxHp", " MAX")}`,
-    `${E.str} STR **${s.str}**${d("str")} · ${E.dex} DEX **${s.dex}**${d("dex")} · ${E.vit} VIT **${s.vit}**${d("vit")} · ${E.ene} ENE **${s.ene}**${d("ene")}`,
-    `${E.mana} MP **${s.mana}/${s.maxMana}**${d("mana")}${d("maxMana", " MAX")} · ${E.potion} Bình ${s.potions}${d("potions")} · ${E.ticket} Vé ${s.escapeTokens}${d("escapeTokens")}`,
-    `${E.attack} Vật lý **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")} · ${E.magic} Phép **${s.spellMin}–${s.spellMax}**${d("spellMin")}`,
-    `${E.defense} DEF **${defense}**${inverse ? " (Paradox)" : d("defense")} · ${E.res} RES **${s.resistance}%**${d("resistance")} · ${E.luck} LUCK **${s.luck}**${d("luck")}`,
+    `${E.str} **STR** **${s.str}**${d("str")}${STAT_SEPARATOR}${E.dex} **DEX** **${s.dex}**${d("dex")}${STAT_SEPARATOR}${E.vit} **VIT** **${s.vit}**${d("vit")}${STAT_SEPARATOR}${E.ene} **ENE** **${s.ene}**${d("ene")}`,
+    `${E.mana} **MP** **${s.mana}/${s.maxMana}**${d("mana")}${d("maxMana", " MAX")}${STAT_SEPARATOR}${E.potion} **Bình** ${s.potions}${d("potions")}${STAT_SEPARATOR}${E.ticket} **Vé** ${s.escapeTokens}${d("escapeTokens")}`,
+    `${E.attack} **Vật lý** **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")}${STAT_SEPARATOR}${E.magic} **Phép** **${s.spellMin}–${s.spellMax}**${d("spellMin")}`,
+    `${E.defense} **DEF** **${defense}**${inverse ? " (Paradox)" : d("defense")}${STAT_SEPARATOR}${E.res} **RES** **${s.resistance}%**${d("resistance")}${STAT_SEPARATOR}${E.luck} **LUCK** **${s.luck}**${d("luck")}`,
   ];
   if (!compact)
     lines.push(
-      `${E.accuracy} ACC **${s.accuracy}**${d("accuracy")} · ${E.evasion} EVA **${s.evasion}**${d("evasion")} · ${E.crit} CRIT **${percent(s.critChance)}**${d("critChance", "%")}\nBình **${percent(s.potionRate)}** Max HP`,
+      `${E.accuracy} **ACC** **${s.accuracy}**${d("accuracy")}${STAT_SEPARATOR}${E.evasion} **EVA** **${s.evasion}**${d("evasion")}${STAT_SEPARATOR}${E.crit} **CRIT** **${percent(s.critChance)}**${d("critChance", "%")}\nBình **${percent(s.potionRate)}** Max HP`,
     );
   return lines.join("\n");
 }
@@ -86,7 +93,7 @@ function battleStats(s) {
     necromancer: "Phép luôn trúng, không Crit; chặn phản công.",
     paladin: "Vật lý, có thể trượt/Crit; tự Phòng thủ.",
   }[s.classKey];
-  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} MP **${s.mana}/${s.maxMana}** · ${E.potion} Bình **${s.potions}** · ${E.ticket} Vé **${s.escapeTokens}**\n${E.attack} Tấn công **${attack.low}–${attack.high} DMG** · ${E.defense} DEF **${defense}** · ${E.res} RES **${s.resistance}%**\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP): ${skill.low}–${skill.high} DMG**\n${detail}\n*DMG đã tính phòng thủ/kháng của quái hiện tại; vật lý giả định trúng, chưa Crit.*`;
+  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${s.maxMana}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé** **${s.escapeTokens}**\n${E.attack} **Tấn công** **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${s.resistance}%**\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP): ${skill.low}–${skill.high} DMG**\n${detail}\n*DMG đã tính phòng thủ/kháng của quái hiện tại; vật lý giả định trúng, chưa Crit.*`;
 }
 function effectText(effects, level = 1) {
   const names = {
@@ -94,7 +101,7 @@ function effectText(effects, level = 1) {
     dex: `${E.dex} DEX`,
     vit: `${E.vit} VIT`,
     ene: `${E.ene} ENE`,
-    luck: `${E.luck} Luck`,
+    luck: `${E.luck} LUCK`,
     maxHp: `${E.hp} Max HP`,
     maxMana: `${E.mana} Max MP`,
     physical: `${E.attack} Vật lý`,
@@ -105,14 +112,14 @@ function effectText(effects, level = 1) {
     resistance: `${E.res} RES`,
     critChance: `${E.crit} CRIT`,
     potionPower: `${E.potion} Hiệu lực bình`,
-    bossDamage: "DMG Boss",
-    eliteDamage: "DMG Elite",
-    mimicDetection: "Phát hiện Mimic",
-    goblinChance: "Bắt Goblin",
-    legendaryFind: "Tìm SSR",
+    bossDamage: `${E.attack} DMG Boss`,
+    eliteDamage: `${E.attack} DMG Elite`,
+    mimicDetection: `${E.accuracy} Phát hiện Mimic`,
+    goblinChance: `${E.luck} Bắt Goblin`,
+    legendaryFind: `${E.chest} Tìm SSR`,
     floorHpLoss: `${E.hp} HP mất/tầng`,
-    mimicChance: "Mimic",
-    damageTaken: "DMG nhận",
+    mimicChance: `${E.chest} Mimic`,
+    damageTaken: `${E.defense} DMG nhận`,
   };
   const percentages = [
     "critChance",
@@ -129,20 +136,21 @@ function effectText(effects, level = 1) {
   return (
     Object.entries(effects)
       .map(([key, value]) => {
-        if (key === "defenseSet") return `${E.defense} DEF = 0`;
+        if (key === "defenseSet") return `${E.defense} **DEF** = 0`;
         if (key === "bonusPenalty")
-          return `Payout ×${(1 - value).toFixed(2)} mỗi cấp chưa giải`;
+          return `**Payout** ×${(1 - value).toFixed(2)} mỗi cấp chưa giải`;
         if (key === "potions")
-          return `+${value} ${E.potion} bình máu khi nhận mỗi cấp`;
+          return `${E.potion} **Bình máu** +${value} khi nhận mỗi cấp`;
         if (key === "escapeTokens")
-          return `+${value} ${E.ticket} vé khi nhận mỗi cấp (giữ tối đa 1)`;
-        if (key === "heal") return `Hồi ${value} ${E.hp} HP khi nhận mỗi cấp`;
+          return `${E.ticket} **Vé** +${value} khi nhận mỗi cấp (giữ tối đa 1)`;
+        if (key === "heal")
+          return `${E.hp} **HP** +${value} (hồi khi nhận mỗi cấp)`;
         const n = value * level;
         if (key === "floorHpLoss")
-          return `Mất ${percent(n)} Max ${E.hp} HP cuối tầng (luôn chừa ít nhất 1 HP)`;
-        return `${n > 0 ? "+" : ""}${percentages.includes(key) ? percent(n) : Math.round(n * 100) / 100} ${names[key] || key}`;
+          return `${E.hp} **HP cuối tầng** −${percent(n)} Max HP (luôn chừa ít nhất 1 HP)`;
+        return `${highlightStat(names[key] || key)} ${n > 0 ? "+" : ""}${percentages.includes(key) ? percent(n) : Math.round(n * 100) / 100}`;
       })
-      .join(" · ") || "Không có"
+      .join(STAT_SEPARATOR) || "Không có"
   );
 }
 function itemText(item, level = 1) {
@@ -232,7 +240,7 @@ function randomEventText(s) {
   const show = (name, intro, options) =>
     [heading(name, intro), ...options].join("\n\n");
   const attr = (key, n) =>
-    `${n > 0 ? "+" : ""}${n} ${E[key]} ${key.toUpperCase()}`;
+    `${E[key]} **${key.toUpperCase()}** ${n > 0 ? "+" : ""}${n}`;
   if (e.type === "chest") {
     const labels = {
       ancient_mimic: "Chiến đấu Ancient Mimic.",
@@ -344,7 +352,7 @@ function randomEventText(s) {
             ["16,7%", "Bonus +50% cược."],
             [
               "16,7%",
-              `${attr("str", 6)}, ${attr("ene", 6)}, +1 ${E.luck} Luck.`,
+              `${attr("str", 6)}${STAT_SEPARATOR}${attr("ene", 6)}${STAT_SEPARATOR}${attr("luck", 1)}.`,
             ],
           ]),
           option("Đi tiếp · kết quả xấu (Elite đánh phủ đầu sau đó)", [
@@ -416,9 +424,9 @@ function randomEventText(s) {
     case "mirror":
       return show(e.name, "Nhận sức mạnh hoặc phá gương để thử vận may.", [
         `**Sức mạnh:** ${attr(main, 10)}.`,
-        `**Phòng thủ:** ${attr("vit", 8)}; +5 ${E.str} STR hoặc ${E.dex} DEX (50/50).`,
+        `**Phòng thủ:** ${attr("vit", 8)}; ${attr("str", 5)} hoặc ${attr("dex", 5)} (50/50).`,
         option("Đập gương", [
-          ["20%", `+2 ${E.luck} Luck.`],
+          ["20%", `${attr("luck", 2)}.`],
           ["80%", "Chiến đấu Mirror Clone dùng chỉ số của bạn."],
         ]),
       ]);
@@ -445,7 +453,7 @@ function randomEventText(s) {
       const reward = {
         red: `+5 ${E.attack} Vật lý, +5 ${E.magic} Phép.`,
         blue: `+6 ${E.defense} DEF, +5 ${E.res} RES.`,
-        gold: `Bonus +50% cược, +1 ${E.luck} Luck.`,
+        gold: `Bonus +50% cược${STAT_SEPARATOR}${attr("luck", 1)}.`,
       };
       return show(
         e.name,
@@ -518,7 +526,9 @@ function statTransitions(
     if (options.exclude && keys.some((key) => options.exclude.includes(key)))
       return;
     if (keys.some((key) => before[key] !== after[key]))
-      parts.push(`${name} ${format(before)}→**${format(after)}**`);
+      parts.push(
+        `${highlightStat(name)}: ${format(before)} → **${format(after)}**`,
+      );
   };
   for (const key of stats.ATTRIBUTES)
     add(`${E[key]} ${key.toUpperCase()}`, [key], (s) => s[key]);
@@ -547,14 +557,14 @@ function statTransitions(
     for (const [key, label] of [
       ["hp", `${E.hp} HP`],
       ["mana", `${E.mana} MP`],
-      ["luck", `${E.luck} Luck`],
+      ["luck", `${E.luck} LUCK`],
       ["potions", `${E.potion} Bình máu`],
       ["escapeTokens", `${E.ticket} Vé thoát hiểm`],
     ])
       add(label, [key], (s) => s[key]);
   }
   return (
-    parts.join(" · ") ||
+    parts.join(STAT_SEPARATOR) ||
     (options.empty ? "" : "Không thay đổi chỉ số chiến đấu.")
   );
 }
@@ -762,7 +772,7 @@ function turnText(state) {
   );
   if (state.lastUpgrade)
     details.push(
-      `${E.checkpoint} **Tăng điểm checkpoint:**\n- ${statTransitions(state.lastUpgrade.before, state.lastUpgrade.after).split(" · ").join("\n- ")}`,
+      `${E.checkpoint} **Tăng điểm checkpoint:**\n- ${statTransitions(state.lastUpgrade.before, state.lastUpgrade.after).split(STAT_SEPARATOR).join("\n- ")}`,
     );
   const receipt = state.lastEventResult;
   const itemDirectKeys = [
@@ -842,7 +852,7 @@ function turnText(state) {
       });
       if (secondary)
         details.push(
-          `**Do ${item.sourceName || item.name}:**\n- ${secondary.split(" · ").join("\n- ")}`,
+          `**Do ${item.sourceName || item.name}:**\n- ${secondary.split(STAT_SEPARATOR).join("\n- ")}`,
         );
     }
   });
@@ -853,7 +863,7 @@ function turnText(state) {
     });
     if (secondary)
       details.push(
-        `${eventIcon(receipt.kind || receipt.type)} **Do ${receipt.name || "sự kiện"}:**\n- ${secondary.split(" · ").join("\n- ")}`,
+        `${eventIcon(receipt.kind || receipt.type)} **Do ${receipt.name || "sự kiện"}:**\n- ${secondary.split(STAT_SEPARATOR).join("\n- ")}`,
       );
   }
   const lines = (state.lastLog || "Run bắt đầu.").split("\n").filter((line) => {
@@ -991,9 +1001,9 @@ function embed(state, userId, result = null, sessionId = null) {
     {
       name: `${icon("moneybag", "💰")} Rút thưởng`,
       value: result
-        ? `Đã nhận **${money(result.payout)} ${icon("coin", "🪙")}** - **${money(result.diamonds || 0)} ${icon("gem", "💎")}**`
+        ? `Đã nhận **${money(result.payout)} ${icon("coin", "🪙")}** ${STAT_SEPARATOR} **${money(result.diamonds || 0)} ${icon("gem", "💎")}**`
         : state.cleared
-          ? `**${money(core.payout(state))} ${icon("coin", "🪙")}** - **${money(runDiamondReward(state))} ${icon("gem", "💎")}**`
+          ? `**${money(core.payout(state))} ${icon("coin", "🪙")}** ${STAT_SEPARATOR} **${money(runDiamondReward(state))} ${icon("gem", "💎")}**`
           : "Chưa thể rút",
       inline: true,
     },
@@ -1356,9 +1366,9 @@ function setupPreview(classKey) {
   return {
     name: `${c.emoji} ${c.name}`,
     skillIcon: SKILL_ICONS[classKey],
-    role: `Build ${main} · ${{ amazon: "Hai phát vật lý", barbarian: "Vật lý và chống chịu", assassin: "Crit và né phản công", sorceress: "Skill phép mạnh", druid: "Vật lý và hồi phục", necromancer: "Phép và chặn phản công", paladin: "Vật lý và phòng thủ" }[classKey]}`,
-    attributes: `${E.str} STR **${state.str}** · ${E.dex} DEX **${state.dex}** · ${E.vit} VIT **${state.vit}** · ${E.ene} ENE **${state.ene}**`,
-    stats: `${E.str} STR **${state.str}** · ${E.dex} DEX **${state.dex}** · ${E.vit} VIT **${state.vit}** · ${E.ene} ENE **${state.ene}**\n${E.hp} HP **${state.hp}** · ${E.mana} MP **${state.mana}** · ${E.defense} DEF **${state.defense}** · ${E.potion} Bình **${state.potions}**\n${E.attack} Vật lý **${state.damageMin}–${state.damageMax}** · ${E.magic} Phép **${state.spellMin}–${state.spellMax}** · ${E.res} RES **${state.resistance}%** · ${E.crit} CRIT **${percent(state.critChance)}**`,
+    role: `Build ${main}${STAT_SEPARATOR}${{ amazon: "Hai phát vật lý", barbarian: "Vật lý và chống chịu", assassin: "Crit và né phản công", sorceress: "Skill phép mạnh", druid: "Vật lý và hồi phục", necromancer: "Phép và chặn phản công", paladin: "Vật lý và phòng thủ" }[classKey]}`,
+    attributes: `${E.str} **STR** **${state.str}**${STAT_SEPARATOR}${E.dex} **DEX** **${state.dex}**${STAT_SEPARATOR}${E.vit} **VIT** **${state.vit}**${STAT_SEPARATOR}${E.ene} **ENE** **${state.ene}**`,
+    stats: `${E.str} **STR** **${state.str}**${STAT_SEPARATOR}${E.dex} **DEX** **${state.dex}**${STAT_SEPARATOR}${E.vit} **VIT** **${state.vit}**${STAT_SEPARATOR}${E.ene} **ENE** **${state.ene}**\n${E.hp} **HP** **${state.hp}**${STAT_SEPARATOR}${E.mana} **MP** **${state.mana}**${STAT_SEPARATOR}${E.defense} **DEF** **${state.defense}**${STAT_SEPARATOR}${E.potion} **Bình** **${state.potions}**\n${E.attack} **Vật lý** **${state.damageMin}–${state.damageMax}**${STAT_SEPARATOR}${E.magic} **Phép** **${state.spellMin}–${state.spellMax}**${STAT_SEPARATOR}${E.res} **RES** **${state.resistance}%**${STAT_SEPARATOR}${E.crit} **CRIT** **${percent(state.critChance)}**`,
     build: builds[classKey],
     attack: `Một đòn **vật lý ${state.damageMin}–${state.damageMax}** trước giảm trừ; có thể trượt, có thể Crit ×1,75. Hồi **${manaGain} MP** ở chỉ số ban đầu (40% Max MP; class phép 70%, làm tròn xuống, tối thiểu 1). Quái còn sống sẽ phản công.`,
     defend:
