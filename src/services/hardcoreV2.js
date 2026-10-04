@@ -1134,16 +1134,19 @@ function surpriseActions(state) {
       ],
       fountain: [{ action: "event_drink", label: "Uống" }],
       horadric: [
-        { action: "forge_main", label: "Nghiền · +6 stat chính" },
+        {
+          action: "forge_main",
+          label: `Chuyển hóa · +6 ${mainStat(state).toUpperCase()}`,
+        },
         {
           action: "forge_guard",
-          label: `Nghiền · +7 ${(e.forgeStat || "str").toUpperCase()}`,
+          label: `Chuyển hóa · +7 ${(e.forgeStat || "str").toUpperCase()}`,
         },
-        { action: "forge_vit", label: "Nghiền · +4 VIT" },
+        { action: "forge_vit", label: "Chuyển hóa · +4 VIT" },
         ...(["legendary", "cursed"].includes(
           state.items.find((x) => x.definition.id === e.targetId)?.rarity,
         )
-          ? [{ action: "forge_ticket", label: "Nghiền · Vé Thoát Hiểm" }]
+          ? [{ action: "forge_ticket", label: "Chuyển hóa · Nhận vé" }]
           : []),
       ],
       mirror: [
@@ -1426,12 +1429,25 @@ function actSurprise(state, session, action, rng) {
     } else combat(e.enemy, "Blood Mimic xuất hiện!");
   } else if (k === "horadric") {
     const target = itemById(e.targetId);
+    const previousLevel = target.level;
+    const removedCurse =
+      target.definition.curse && previousLevel > (target.cleansedLevels || 0);
     grind(state, target);
     if (action === "forge_main") addSource(state, { [mainStat(state)]: 6 });
     else if (action === "forge_guard") addSource(state, { [e.forgeStat]: 7 });
     else if (action === "forge_vit") addSource(state, { vit: 4 });
     else state.escapeTokens = 1;
-    done(`⚒️ Hấp thụ buff một cấp ${target.name}; nhận bonus đã chọn.`);
+    const rewardKey =
+      action === "forge_main"
+        ? mainStat(state)
+        : action === "forge_guard"
+          ? e.forgeStat
+          : action === "forge_vit"
+            ? "vit"
+            : "ticket";
+    done(
+      `${eventIcon("horadric")} Horadric Forge: chuyển hóa ${E.backpack} **${target.name}** ${previousLevel === 1 ? "(đã hết level, rời trang bị)" : `Lv.${previousLevel}→**${target.level}**`}. Giữ hiệu ứng có lợi của level đã dùng trong run${removedCurse ? "; gỡ lời nguyền của level đó" : ""}.\nPhần thưởng đã chọn: ${E[rewardKey]} **${rewardKey === "ticket" ? "Vé thoát hiểm" : rewardKey.toUpperCase()}**.`,
+    );
   } else if (k === "mirror") {
     if (action === "event_mirror_power") {
       addSource(state, { [mainStat(state)]: 10 });

@@ -551,12 +551,30 @@ function encounterText(s) {
   if (k === "merchant")
     return `${eventIcon(k)} **${e.name}**\nMua tối đa **một món** bằng xu payout:\n${e.offers.map((o) => `- **${merchantOffer(o).name}** · **${money(o.price)} ${icon("coin", "🪙")}**`).join("\n")}\nXem **Chi tiết** để đọc công dụng và điều kiện mua.`;
   const target = s.items.find((x) => x.definition.id === e.targetId);
+  if (k === "horadric" && target) {
+    const retained = Object.fromEntries(
+      Object.entries(target.definition.effects).filter(
+        ([key]) =>
+          ![
+            "heal",
+            "potions",
+            "escapeTokens",
+            "bonusPenalty",
+            "defenseSet",
+          ].includes(key),
+      ),
+    );
+    const main = stats.mainStat(s);
+    const guard = e.forgeStat || "str";
+    const hasCurse =
+      target.level > (target.cleansedLevels || 0) && target.definition.curse;
+    return `${eventIcon(k)} **HORADRIC FORGE · LÒ CHUYỂN HÓA**\nTiêu hao **1 level trang bị** để giữ hiệu ứng có lợi trong run và chọn thêm một phần thưởng. Không tốn xu.\n\n**${E.backpack} Trang bị dùng để chuyển hóa**\n${E.backpack} **${target.name} [${rarityLabel(target.rarity)}] · Lv.${target.level}**\n- Sau khi dùng: ${target.level === 1 ? "món này biến mất khỏi trang bị" : `level **${target.level}→${target.level - 1}**`}.\n- **Giữ nguyên hiệu ứng của level đã tiêu hao:** ${effectText(retained)}. Đây là hiệu ứng được giữ lại, không cộng thêm lần nữa.\n${hasCurse ? `- **Xóa lời nguyền của 1 level:** ${effectText(target.definition.curse.effects)}.\n` : ""}- Không nhận lại ${E.potion} bình máu, ${E.ticket} vé hoặc ${E.hp} HP hồi khi nhặt đồ.\n\n**Chọn một phần thưởng thêm**\n- ${E[main]} **${main.toUpperCase()} +6**.\n- ${E[guard]} **${guard.toUpperCase()} +7**.\n- ${E.vit} **VIT +4**.${["legendary", "cursed"].includes(target.rarity) ? `\n- ${E.ticket} **Nhận 1 vé thoát hiểm** (giữ tối đa 1).` : ""}\n\n**Bỏ qua:** giữ nguyên trang bị, không nhận phần thưởng.`;
+  }
   const descriptions = {
     healer: `**Hồi phục:** hồi ${E.hp} HP bằng 30% Max HP, ít nhất 20; +1 ${E.potion} bình máu (tối đa 5). Miễn phí.`,
     blacksmith: `Trả 12% payout để tăng một cấp **${target?.name}**. Cộng buff mới; UR chưa giải nguyền cộng cả curse. Đồ đã giải hết nguyền giữ trạng thái sạch khi rèn.`,
     purifier: `Trả 20% payout: gỡ **toàn bộ curse** của **${target?.name}**, giữ buff/level, chuyển thành SSR.`,
     sacrifice: `**Hiến HP:** mất tối đa 20% Max ${E.hp} HP (giữ ≥1) → +6 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\n**Hiến payout:** trả 10% payout → +6 ${E.vit} VIT. Hiến HP không cộng bonus Blood Paradox.`,
-    horadric: `Nghiền **một cấp ${target?.name} [${rarityLabel(target?.rarity)}]**: hấp thụ buff trong run, gỡ curse của cấp đó. Bình/vé/hồi HP không phát lại.\n\n**Chọn thêm một bonus:**\n- Sức mạnh: +6 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\n- Phòng thủ: 50% +7 ${E.str} STR / 50% +7 ${E.vit} VIT.\n- Sinh lực: +4 ${E.vit} VIT.\n- Vé: nhận 1 ${E.ticket} vé thoát hiểm (giữ tối đa 1).`,
     contract: `Trong 3 tầng, chọn một điều kiện:\n- **Không dùng ${E.potion} bình:** nhận đồ [SSR].\n- **Không dùng skill:** bonus +50% cược.\n- **Không phòng thủ:** +10 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\nVi phạm chỉ hủy thưởng.`,
     class_shrine: `Hiệu lực ba tầng tiếp theo: ${SHRINES[s.classKey]}`,
   };
@@ -1021,12 +1039,24 @@ function rows(sessionId, state, disabled = false) {
         ? eventIcon("boss_chest")
         : a.action === "skill"
           ? SKILL_ICONS[state.classKey]
-          : state.encounter.kind === "merchant" && a.action.startsWith("buy_")
-            ? merchantOffer(state.encounter.offers[Number(a.action.slice(4))])
-                .icon
-            : /^(event_|buy_|forge_|contract_|door_|duel_|hand_)/.test(a.action)
-              ? eventIcon(state.encounter.kind || state.encounter.type)
-              : null,
+          : a.action.startsWith("forge_")
+            ? E[
+                a.action === "forge_main"
+                  ? stats.mainStat(state)
+                  : a.action === "forge_guard"
+                    ? state.encounter.forgeStat || "str"
+                    : a.action === "forge_vit"
+                      ? "vit"
+                      : "ticket"
+              ]
+            : state.encounter.kind === "merchant" && a.action.startsWith("buy_")
+              ? merchantOffer(state.encounter.offers[Number(a.action.slice(4))])
+                  .icon
+              : /^(event_|buy_|forge_|contract_|door_|duel_|hand_)/.test(
+                    a.action,
+                  )
+                ? eventIcon(state.encounter.kind || state.encounter.type)
+                : null,
     ),
   );
   if (state.encounter.type !== "rngesus" && state.phase !== "boss_chest")
@@ -1320,7 +1350,7 @@ function ratesFields(category) {
       {
         name: "Dịch vụ: giá và điều kiện",
         value:
-          "- **Rèn:** trả 12% payout gốc, tăng một level gồm buff và curse còn lại. **Giải nguyền:** trả 20%, gỡ toàn bộ curse, giữ buff/level và chuyển đồ thành SSR.\n- **Horadric Forge:** nghiền một level đồ, giữ buff của level đó trong run, gỡ curse tương ứng rồi chọn bonus; hiệu ứng bình/vé/hồi HP không phát lại.\n- **Payout Shop:** R/SR/SSR giá 5%/12%/25% payout gốc, tối đa 5 lần mua/run. **Blood Shop:** SR/SSR/UR giá 12%/25%/40% Max HP, tối đa 3 lần; phải còn ít nhất 1 HP.\n- **Diamond Shop:** từ tầng 101, giá 200/600/1.600 kim cương, tối đa 2 lần; trừ ngay từ tài khoản, không hoàn khi chết.\n- Mỗi loại shop cách nhau ít nhất 50 tầng; mỗi lần gặp mua tối đa một món. Giá cụ thể và công dụng ghi trên bảng/Chi tiết.",
+          "- **Rèn:** trả 12% payout gốc, tăng một level gồm buff và curse còn lại. **Giải nguyền:** trả 20%, gỡ toàn bộ curse, giữ buff/level và chuyển đồ thành SSR.\n- **Horadric Forge:** tiêu hao 1 level trang bị, giữ nguyên hiệu ứng có lợi của level đó trong run và xóa lời nguyền tương ứng; chọn thêm một phần thưởng. Không nhận lại bình/vé/HP hồi khi nhặt đồ.\n- **Payout Shop:** R/SR/SSR giá 5%/12%/25% payout gốc, tối đa 5 lần mua/run. **Blood Shop:** SR/SSR/UR giá 12%/25%/40% Max HP, tối đa 3 lần; phải còn ít nhất 1 HP.\n- **Diamond Shop:** từ tầng 101, giá 200/600/1.600 kim cương, tối đa 2 lần; trừ ngay từ tài khoản, không hoàn khi chết.\n- Mỗi loại shop cách nhau ít nhất 50 tầng; mỗi lần gặp mua tối đa một món. Giá cụ thể và công dụng ghi trên bảng/Chi tiết.",
       },
       {
         name: "Rút thưởng và mất thưởng",
