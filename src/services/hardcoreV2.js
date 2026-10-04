@@ -28,6 +28,18 @@ const EVENTS = [
   "blood_shop",
   "diamond_shop",
 ];
+const PAID_EVENTS = new Set([
+  "blacksmith",
+  "purifier",
+  "sacrifice",
+  "gambler",
+  "adventurer",
+  "horadric",
+  "merchant",
+  "payout_shop",
+  "blood_shop",
+  "diamond_shop",
+]);
 const EVENT_NAMES = {
   healer: "Wandering Healer",
   goblin: "Treasure Goblin",
@@ -423,6 +435,7 @@ function serviceCost(state, fraction) {
 }
 function makeSurprise(state, rng, kind = null) {
   const eligible = EVENTS.filter((key) => {
+    if (state.floor === 1 && PAID_EVENTS.has(key)) return false;
     if (["blacksmith", "horadric"].includes(key) && !state.items.length)
       return false;
     if (
@@ -446,6 +459,7 @@ function makeSurprise(state, rng, kind = null) {
     }
     return true;
   });
+  if (state.floor === 1 && PAID_EVENTS.has(kind)) kind = null;
   kind = kind || pick(eligible, rng);
   const e = {
     type: "surprise",
@@ -632,7 +646,10 @@ function generateEncounter(state, session, rng) {
       prayerSuccess: rng() < 0.3,
       prayerItem: randomItem(rng() < 0.85 ? "legendary" : "cursed", rng),
     };
-  const due = state.debts.findIndex((debt) => debt.due <= state.floor);
+  const due = state.debts.findIndex(
+    (debt) =>
+      debt.due <= state.floor && (state.floor > 1 || debt.kind !== "tax"),
+  );
   if (due >= 0) {
     const debt = state.debts.splice(due, 1)[0];
     return {
@@ -678,7 +695,12 @@ function generateEncounter(state, session, rng) {
     };
   if (roll < 0.88) return makeChest(state, rng, true);
   if (roll < 0.94) {
-    const kind = pick(["tax", "potion_thief", "portal"], rng);
+    const kind = pick(
+      state.floor === 1
+        ? ["potion_thief", "portal"]
+        : ["tax", "potion_thief", "portal"],
+      rng,
+    );
     return {
       type: "trap",
       name:
@@ -694,7 +716,12 @@ function generateEncounter(state, session, rng) {
         kind === "portal"
           ? pick(["healing", "treasure", "blessing"], rng)
           : null,
-      badEffect: pick(["blood", "mana", "supply", "payout", "curse"], rng),
+      badEffect: pick(
+        state.floor === 1
+          ? ["blood", "mana", "supply", "curse"]
+          : ["blood", "mana", "supply", "payout", "curse"],
+        rng,
+      ),
       enemy: world.makeEnemy(state, "elite", "Rift Ambusher", rng),
     };
   }
