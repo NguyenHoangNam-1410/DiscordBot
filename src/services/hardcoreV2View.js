@@ -249,7 +249,10 @@ function randomEventText(s) {
           [null, `**Blood:** ${attr("str", 8)}, ${attr("vit", -5)}.`],
           [null, "**Experience:** bonus +25% cược."],
           [null, `**Corrupted:** ${attr("str", 12)}, ${attr("vit", -8)}.`],
-          [null, `**Fake:** mất 30% Max ${E.hp} HP, tối thiểu 10.`],
+          [
+            null,
+            `**Fake:** bẫy gây sát thương bằng 30% Max ${E.hp} HP (mức bẫy tối thiểu 10), nhưng luôn chừa ít nhất **1 HP**.`,
+          ],
         ]),
         "**Bỏ qua:** đi tiếp, không nhận hiệu ứng.",
       ],
@@ -1331,7 +1334,7 @@ function ratesFields(category) {
       {
         name: `${E.shrine} Shrine, bẫy và Lucky Break`,
         value:
-          "- Shrine có 6 loại, cơ hội bằng nhau; có cả lợi và hại. Chạm nhận hiệu ứng, bỏ qua đi tiếp. Đọc bảng chính trước khi chọn.\n- Thu thuế hoặc trộm bình có thể được tránh bằng **Lucky Break**: mỗi Luck cho 1,5 điểm %, tối đa 30%; tỷ lệ hiện tại ghi trên event.\n- **Wrong Portal:** 50% tốt / 50% xấu; Luck không thay đổi tỷ lệ. Nhánh xấu gọi Elite đánh phủ đầu; phải hạ Elite mới vượt tầng.\n- Phòng trống cho phép đi tiếp hoặc rút thưởng.",
+          "- Shrine có 6 loại, cơ hội bằng nhau; có cả lợi và hại. Chạm nhận hiệu ứng, bỏ qua đi tiếp. Bẫy Shrine Fake rút HP nhưng luôn chừa ít nhất **1 HP**. Đọc bảng chính trước khi chọn.\n- Thu thuế hoặc trộm bình có thể được tránh bằng **Lucky Break**: mỗi Luck cho 1,5 điểm %, tối đa 30%; tỷ lệ hiện tại ghi trên event.\n- **Wrong Portal:** 50% tốt / 50% xấu; Luck không thay đổi tỷ lệ. Nhánh xấu gọi Elite đánh phủ đầu; phải hạ Elite mới vượt tầng.\n- Phòng trống cho phép đi tiếp hoặc rút thưởng.",
       },
       {
         name: "Các sự kiện đặc biệt",

@@ -1741,9 +1741,7 @@ function act(state, session, action, rng) {
           state.bonus += Math.floor(state.stake * 0.25);
         if (e.kind === "corrupted") addSource(state, { str: 12, vit: -8 });
         if (e.kind === "fake") {
-          const lost = hurt(state, Math.max(10, state.maxHp * 0.3));
-          if (!alive(state))
-            state.lastDeathCause = `Shrine Fake gây ${lost} sát thương, khiến HP về 0.`;
+          hurt(state, Math.max(10, state.maxHp * 0.3), true, true);
         }
         const outcomes = {
           healing: "Healing: hồi phục HP",
@@ -1751,7 +1749,7 @@ function act(state, session, action, rng) {
           blood: `Blood: tăng ${E.str} STR, giảm ${E.vit} VIT`,
           experience: `Experience: bonus +25% cược (${Math.floor(state.stake * 0.25).toLocaleString("vi-VN")} xu), cộng vào thưởng của run`,
           corrupted: `Corrupted: tăng ${E.str} STR, giảm ${E.vit} VIT`,
-          fake: `Fake: bẫy gây mất ${E.hp} HP`,
+          fake: `Fake: bẫy gây mất ${E.hp} HP, luôn chừa ít nhất **1 HP**`,
         };
         state.lastLog = `${E.shrine} Shrine ${outcomes[e.kind]}.`;
       } else state.lastLog = `Bỏ qua ${E.shrine} Shrine.`;
