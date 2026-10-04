@@ -98,13 +98,13 @@ function payout(state) {
     ) - (state.payoutSpent || 0),
   );
 }
-function heal(state, amount) {
+function heal(state, amount, { checkpoint = false } = {}) {
   const actual = Math.max(
     0,
     Math.min(state.maxHp - state.hp, Math.floor(amount)),
   );
   state.hp += actual;
-  if (state.paradox?.kind === "blood")
+  if (!checkpoint && state.paradox?.kind === "blood")
     state.paradox.bloodFactor = clamp(
       state.paradox.bloodFactor - actual / state.maxHp,
       -0.5,
@@ -303,7 +303,7 @@ function completeFloor(state, session, rng, reward = 1) {
   if (floor % 5 === 0) {
     const hpBefore = state.hp,
       potionsBefore = state.potions;
-    heal(state, state.maxHp);
+    heal(state, state.maxHp, { checkpoint: true });
     state.potions = Math.min(5, state.potions + 2);
     state.pendingMilestones.push("upgrade");
     state.lastLog += `\n${E.checkpoint} Đạt tầng ${floor} · Checkpoint: ${E.hp} HP ${hpBefore}→**${state.hp}**, ${E.potion} bình máu ${potionsBefore}→**${state.potions}** (tối đa 5); chọn +5 thuộc tính.`;
@@ -1562,7 +1562,7 @@ function act(state, session, action, rng) {
       until: state.floor + 4,
       bloodFactor: 0,
     };
-    state.lastLog = `${eventIcon("paradox")} Rift Paradox · tầng ${state.paradox.from}–${state.paradox.until}: ${state.paradox.kind === "blood" ? "Máu là tiền: mất HP do nguồn thù địch tăng payout, hồi HP giảm payout (biên ±50%); chi phí tự nguyện không tăng thưởng" : `Ngược đời: dùng ${E.defense} DEF làm sức mạnh vật lý, dùng trung bình sát thương vật lý làm DEF chống vật lý`}.`;
+    state.lastLog = `${eventIcon("paradox")} Rift Paradox · tầng ${state.paradox.from}–${state.paradox.until}: ${state.paradox.kind === "blood" ? "Máu là tiền: mất HP do nguồn thù địch tăng payout, hồi HP từ bình/skill/event giảm payout (biên ±50%); hồi HP tại checkpoint không giảm hệ số thưởng; chi phí tự nguyện không tăng thưởng" : `Ngược đời: dùng ${E.defense} DEF làm sức mạnh vật lý, dùng trung bình sát thương vật lý làm DEF chống vật lý`}.`;
     nextMilestone(state, session, rng);
   } else if (state.phase === "severance") {
     const key = action.slice(6);
