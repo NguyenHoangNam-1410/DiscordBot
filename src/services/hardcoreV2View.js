@@ -1027,29 +1027,28 @@ function embed(state, userId, result = null, sessionId = null) {
   addTextFields(e, `${icon("scroll", "📜")} Lượt vừa rồi`, turnText(state));
   if (result) {
     const won = ["cashout", "summit"].includes(result.reason);
-    e.addFields(
-      {
-        name: `${icon("checkered_flag", "🏁")} KẾT QUẢ`,
-        value: resultBlock({
-          userId,
-          outcome: result.outcome,
-          stake: state.stake,
-          payout: result.payout,
-          result,
-          reason: won
-            ? `rút thưởng tầng ${state.floor}`
-            : result.reason === "forfeit"
-              ? "bỏ run"
-              : `tử trận tầng ${state.floor}`,
-        }).slice(0, 1024),
-      },
-      {
+    e.addFields({
+      name: `${icon("checkered_flag", "🏁")} KẾT QUẢ`,
+      value: resultBlock({
+        userId,
+        outcome: result.outcome,
+        stake: state.stake,
+        payout: result.payout,
+        result,
+        reason: won
+          ? `rút thưởng tầng ${state.floor}`
+          : result.reason === "forfeit"
+            ? "bỏ run"
+            : `tử trận tầng ${state.floor}`,
+      }).slice(0, 1024),
+    });
+    if ((won ? result.diamonds : result.diamondsLost) > 0)
+      e.addFields({
         name: `${icon("gem", "💎")} Kim cương Sinh tồn`,
         value: won
           ? `Đã cộng **${money(result.diamonds || 0)}** kim cương vào tài khoản.`
           : `Mất **${money(result.diamondsLost || 0)}** kim cương tạm giữ.`,
-      },
-    );
+      });
   }
   if (result?.achievements?.length)
     e.addFields({

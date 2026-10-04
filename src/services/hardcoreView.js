@@ -1007,12 +1007,13 @@ function hardcoreEmbed(
         reason,
       }),
     });
-    embed.addFields({
-      name: `${icon("gem")} Kim cương Sinh tồn`,
-      value: won
-        ? `Đã cộng **${formatCoins(result.diamonds || 0)}** kim cương vào tài khoản.`
-        : `Mất **${formatCoins(result.diamondsLost || 0)}** kim cương tạm giữ.`,
-    });
+    if ((won ? result.diamonds : result.diamondsLost) > 0)
+      embed.addFields({
+        name: `${icon("gem")} Kim cương Sinh tồn`,
+        value: won
+          ? `Đã cộng **${formatCoins(result.diamonds || 0)}** kim cương vào tài khoản.`
+          : `Mất **${formatCoins(result.diamondsLost || 0)}** kim cương tạm giữ.`,
+      });
     if (result.achievements?.length)
       embed.addFields({
         name: `${icon("sports_medal")} Thành tựu mới`,
