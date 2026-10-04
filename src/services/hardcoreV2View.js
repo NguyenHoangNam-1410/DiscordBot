@@ -12,8 +12,9 @@ const { RELEASE } = require("./hardcoreVersion");
 const balance = require("./hardcoreBalance");
 const { runDiamondReward } = require("./hardcoreRewards");
 const emoji = require("../discordEmojiMap");
+const { appEmoji } = require("../utils/appEmoji");
 const { resultBlock } = require("../utils/rewardText");
-const icon = (key, fallback) => emoji[`:${key}:`] || fallback;
+const icon = (key, fallback) => appEmoji(key, emoji[`:${key}:`] || fallback);
 const { E, SKILL_ICONS, RIFT_ICONS } = require("./hardcoreIcons");
 const rarityLabel = (r) =>
   ({ common: "R", rare: "SR", legendary: "SSR", cursed: "UR" })[r];
@@ -67,7 +68,7 @@ function statLine(s, changes = false, compact = false) {
   ];
   if (!compact)
     lines.push(
-      `${icon("dart", "🎯")} ACC **${s.accuracy}**${d("accuracy")} · ${icon("dash", "💨")} EVA **${s.evasion}**${d("evasion")} · ${E.crit} CRIT **${percent(s.critChance)}**${d("critChance", "%")}\nBình **${percent(s.potionRate)}** Max HP`,
+      `${E.accuracy} ACC **${s.accuracy}**${d("accuracy")} · ${E.evasion} EVA **${s.evasion}**${d("evasion")} · ${E.crit} CRIT **${percent(s.critChance)}**${d("critChance", "%")}\nBình **${percent(s.potionRate)}** Max HP`,
     );
   return lines.join("\n");
 }
@@ -99,10 +100,10 @@ function effectText(effects, level = 1) {
     physical: `${E.attack} Vật lý`,
     spell: `${E.magic} Phép`,
     defense: `${E.defense} DEF`,
-    accuracy: "ACC",
-    evasion: "EVA",
+    accuracy: `${E.accuracy} ACC`,
+    evasion: `${E.evasion} EVA`,
     resistance: `${E.res} RES`,
-    critChance: "Crit",
+    critChance: `${E.crit} CRIT`,
     potionPower: `${E.potion} Hiệu lực bình`,
     bossDamage: "DMG Boss",
     eliteDamage: "DMG Elite",
@@ -426,12 +427,12 @@ function statTransitions(before, after, includeResources = false) {
   );
   for (const [key, label] of [
     ["defense", `${E.defense} DEF`],
-    ["accuracy", "ACC"],
-    ["evasion", "EVA"],
+    ["accuracy", `${E.accuracy} ACC`],
+    ["evasion", `${E.evasion} EVA`],
     ["maxMana", `${E.mana} Max MP`],
   ])
     add(label, [key], (s) => s[key]);
-  add("Crit", ["critChance"], (s) => percent(s.critChance));
+  add(`${E.crit} CRIT`, ["critChance"], (s) => percent(s.critChance));
   add(`${E.res} RES`, ["resistance"], (s) => `${s.resistance}%`);
   add(`${E.potion} Bình`, ["potionRate"], (s) => percent(s.potionRate));
   if (includeResources) {
@@ -448,7 +449,7 @@ function statTransitions(before, after, includeResources = false) {
 }
 function encounterText(s) {
   if (s.phase === "upgrade")
-    return `🎁 **CHECKPOINT** · Đã hồi đầy ${E.hp} HP và nhận thêm 2 ${E.potion} bình máu.\nChọn **+5 STR, DEX, VIT hoặc ENE**; dự báo thay đổi ở ngay bên dưới.`;
+    return `${E.checkpoint} **CHECKPOINT** · Đã hồi đầy ${E.hp} HP và nhận thêm 2 ${E.potion} bình máu.\nChọn **+5 STR, DEX, VIT hoặc ENE**; dự báo thay đổi ở ngay bên dưới.`;
   if (s.phase === "paradox")
     return "**Máu là tiền:** mất HP do nguồn thù địch tăng payout, hồi HP giảm payout; biên ±50%. Chi phí tự nguyện không tăng thưởng.\n**Ngược đời:** vật lý dùng DEF làm sức tấn công; DEF chống vật lý lấy trung bình sát thương vật lý.\nCả hai chỉ có hiệu lực trong đúng 5 tầng tiếp theo.";
   if (s.phase === "severance")
@@ -508,7 +509,7 @@ function encounterSummary(s) {
         ancient_mimic: "Ancient Mimic",
       }[e.rank] || e.rank;
     const preview = core.incomingPreview(s);
-    return `👹 **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} Sát thương ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\nBạn đánh vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} HP** · Quái trúng bạn **${percent(preview.chance)}** *(chưa Crit/Phòng thủ)*`;
+    return `👹 **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} Sát thương ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Bạn đánh vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} HP** · ${E.evasion} Quái trúng bạn **${percent(preview.chance)}** *(chưa Crit/Phòng thủ)*`;
   }
   if (e.type === "shrine") return encounterText(s);
   if (e.type === "empty")
@@ -582,7 +583,7 @@ function encounterDetails(s) {
       {
         butcher: `Frenzy: mỗi lần phản công tăng 8% sát thương, tối đa 5 stack. Hiện **${e.frenzy}/5**; phản công kế dùng **${Math.min(5, e.frenzy + 1)}/5** stack.`,
         riftwalker: `Miễn sát thương ở nhịp đầu mỗi chu kỳ 3 lần bạn tấn công/dùng skill. Nhịp kế **${(e.combatTurn % 3) + 1}/3**: **${e.combatTurn % 3 === 0 ? "miễn sát thương" : "có thể gây sát thương"}**. Phòng thủ/uống bình không đẩy nhịp này.`,
-        assur: `EVA **${e.evasion}**, Crit **${percent(e.critChance)}**. Phòng thủ miễn Crit của lần phản công đó.`,
+        assur: `${E.evasion} EVA **${e.evasion}**, ${E.crit} CRIT **${percent(e.critChance)}**. Phòng thủ miễn Crit của lần phản công đó.`,
         lucion:
           "Hồi HP bằng **35% sát thương thực tế gây lên bạn** sau mỗi phản công, tối đa Max HP. Né/chặn phản công ngăn hồi HP.",
         deimoss:
@@ -623,7 +624,7 @@ function turnText(state) {
   const details = [];
   if (state.lastUpgrade)
     details.push(
-      `**Tăng điểm checkpoint:**\n- ${statTransitions(state.lastUpgrade.before, state.lastUpgrade.after).split(" · ").join("\n- ")}`,
+      `${E.checkpoint} **Tăng điểm checkpoint:**\n- ${statTransitions(state.lastUpgrade.before, state.lastUpgrade.after).split(" · ").join("\n- ")}`,
     );
   if (state.lastEventResult) {
     const receipt = state.lastEventResult;
@@ -642,7 +643,7 @@ function turnText(state) {
   }
   for (const item of state.lastReceivedItems || [])
     details.push(
-      `🎒 **${item.name} [${rarityLabel(item.rarity)}] · Lv.${item.level}**${state.lastEventResult ? "" : `\n${effectText(item.definition.effects, item.levels)}${item.definition.curse && item.curseLevels ? `\n☣️ Curse: ${effectText(item.definition.curse.effects, item.curseLevels)}` : ""}`}`,
+      `${E.backpack} **${item.name} [${rarityLabel(item.rarity)}] · Lv.${item.level}**${state.lastEventResult ? "" : `\n${effectText(item.definition.effects, item.levels)}${item.definition.curse && item.curseLevels ? `\n☣️ Curse: ${effectText(item.definition.curse.effects, item.curseLevels)}` : ""}`}`,
     );
   const lines = (state.lastLog || "Run bắt đầu.").split("\n");
   // Old sessions can still contain the numeric summaries written before this UI change.
@@ -763,7 +764,7 @@ function embed(state, userId, result = null, sessionId = null) {
       inline: true,
     },
     {
-      name: `🎒 Trang bị (${state.items.length})`,
+      name: `${E.backpack} Trang bị (${state.items.length})`,
       value:
         equipmentSummary(state) +
         (state.payoutFactor < 1
@@ -844,7 +845,7 @@ function button(
     flee: ["runner", "🏃"],
     bribe: ["moneybag", "💰"],
     pray: ["pray", "🙏"],
-    ticket: ["ticket", "🎫"],
+    ticket: ["ticket_rngesus", "🎫"],
     event_smith: ["hammer", "🔨"],
     event_cleanse: ["sparkles", "✨"],
     event_heal: ["HP", "❤️"],
@@ -853,7 +854,7 @@ function button(
   if (action.startsWith("view_"))
     symbol = {
       stats: ["bar_chart", "📊"],
-      items: ["school_satchel", "🎒"],
+      items: ["backpack", "🎒"],
       effects: ["rift", "🌀"],
       encounter: ["information_source", "ℹ️"],
     }[action.split("_")[1]];
@@ -975,7 +976,7 @@ function privatePayload(
           ),
       });
     if (!state.items.length)
-      e.addFields({ name: "Trang bị", value: "Chưa có." });
+      e.addFields({ name: `${E.backpack} Trang bị`, value: "Chưa có." });
     e.addFields({
       name: "Cách đọc",
       value:
@@ -1099,7 +1100,7 @@ function setupPreview(classKey) {
     skillIcon: SKILL_ICONS[classKey],
     role: `Build ${main} · ${{ amazon: "Hai phát vật lý", barbarian: "Vật lý và chống chịu", assassin: "Crit và né phản công", sorceress: "Skill phép mạnh", druid: "Vật lý và hồi phục", necromancer: "Phép và chặn phản công", paladin: "Vật lý và phòng thủ" }[classKey]}`,
     attributes: `${E.str} STR **${state.str}** · ${E.dex} DEX **${state.dex}** · ${E.vit} VIT **${state.vit}** · ${E.ene} ENE **${state.ene}**`,
-    stats: `${E.str} STR **${state.str}** · ${E.dex} DEX **${state.dex}** · ${E.vit} VIT **${state.vit}** · ${E.ene} ENE **${state.ene}**\n${E.hp} HP **${state.hp}** · ${E.mana} MP **${state.mana}** · ${E.defense} DEF **${state.defense}** · ${E.potion} Bình **${state.potions}**\n${E.attack} Vật lý **${state.damageMin}–${state.damageMax}** · ${E.magic} Phép **${state.spellMin}–${state.spellMax}** · ${E.res} RES **${state.resistance}%** · Crit **${percent(state.critChance)}**`,
+    stats: `${E.str} STR **${state.str}** · ${E.dex} DEX **${state.dex}** · ${E.vit} VIT **${state.vit}** · ${E.ene} ENE **${state.ene}**\n${E.hp} HP **${state.hp}** · ${E.mana} MP **${state.mana}** · ${E.defense} DEF **${state.defense}** · ${E.potion} Bình **${state.potions}**\n${E.attack} Vật lý **${state.damageMin}–${state.damageMax}** · ${E.magic} Phép **${state.spellMin}–${state.spellMax}** · ${E.res} RES **${state.resistance}%** · ${E.crit} CRIT **${percent(state.critChance)}**`,
     build: builds[classKey],
     attack: `Một đòn **vật lý ${state.damageMin}–${state.damageMax}** trước giảm trừ; có thể trượt, có thể Crit ×1,75. Hồi **${manaGain} MP** ở chỉ số ban đầu (40% Max MP; class phép 70%, làm tròn xuống, tối thiểu 1). Quái còn sống sẽ phản công.`,
     defend:
@@ -1160,7 +1161,7 @@ function ratesFields(category) {
           "STR/DEX/VIT/ENE tạo chỉ số; MP riêng. Skill tốn 2 MP. Tấn công hồi 70% Max MP cho Sorceress/Necromancer, 40% cho class khác, tối thiểu 1. Thủ: DEF ×2/+15 RES, giảm thêm 15%, miễn Crit, +1 MP. Bình hồi 35% + min(15%,VIT×0,05%) + item, cap 10–75%.",
       },
       {
-        name: "Checkpoint và Rift",
+        name: `${E.checkpoint} Checkpoint và Rift`,
         value:
           "Mỗi 5 tầng: đầy HP, +2 bình, chọn +5 thuộc tính. Mỗi 10: modifier. Mỗi 25: Paradox 5 tầng. Sau 199/399/699/899: xóa một modifier (trừ Unstable). Stack 1–3 100%, 4–8 50%, sau đó 25%; cap 8 hiệu dụng. Soul Drain ceil(stack/4) charge mỗi combat, cap 3.",
       },

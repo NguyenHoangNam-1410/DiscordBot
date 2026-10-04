@@ -294,7 +294,7 @@ function completeFloor(state, session, rng, reward = 1) {
     heal(state, state.maxHp);
     state.potions = Math.min(5, state.potions + 2);
     state.pendingMilestones.push("upgrade");
-    state.lastLog += `\n🏕️ Đạt tầng ${floor} · Checkpoint: ${E.hp} HP ${hpBefore}→**${state.hp}**, ${E.potion} bình máu ${potionsBefore}→**${state.potions}** (tối đa 5); chọn +5 thuộc tính.`;
+    state.lastLog += `\n${E.checkpoint} Đạt tầng ${floor} · Checkpoint: ${E.hp} HP ${hpBefore}→**${state.hp}**, ${E.potion} bình máu ${potionsBefore}→**${state.potions}** (tối đa 5); chọn +5 thuộc tính.`;
   }
   if (floor % 10 === 0) {
     const keys = Object.keys(world.RIFT_MODIFIERS),
@@ -774,7 +774,7 @@ function attackDamage(
 }
 function enemyTurn(state, rng, defend = false, dodge = false) {
   const enemy = state.encounter;
-  if (dodge) return "💨 Bạn chặn/né hoàn toàn phản công.";
+  if (dodge) return `${E.evasion} Bạn chặn/né hoàn toàn phản công.`;
   if (
     shrineActive(state) &&
     ["assassin", "necromancer"].includes(state.classKey)
@@ -812,7 +812,7 @@ function enemyTurn(state, rng, defend = false, dodge = false) {
       : enemy.damageType;
   return hit.hit
     ? `${hit.crit ? `${E.crit} Critical! ` : ""}Bạn nhận ${actual} DMG${defend ? " (đã phòng thủ)" : ""}.`
-    : "💨 Quái đánh trượt.";
+    : `${E.evasion} Quái đánh trượt.`;
 }
 function incomingPreview(state) {
   const e = state.encounter;
@@ -993,7 +993,7 @@ function playerAttack(state, action, rng) {
     ? "Đánh trượt — 0 DMG."
     : immune
       ? "Riftwalker miễn sát thương lượt này — 0 DMG."
-      : `${damage} DMG${hits.some((h) => h.crit) ? " · Critical" : ""}.`;
+      : `${damage} DMG${hits.some((h) => h.crit) ? ` · ${E.crit} Critical` : ""}.`;
   const shots = hits.length > 1 ? ` Trúng ${landed}/${hits.length} phát.` : "";
   return {
     defend,
@@ -1236,7 +1236,7 @@ function actSurprise(state, session, action, rng) {
     else charge(state, offer.price);
     if (offer.item) {
       const item = receiveItem(state, offer.item);
-      done(`🎒 Nhận ${item.name} Lv.${item.level}.`);
+      done(`${E.backpack} Nhận ${item.name} Lv.${item.level}.`);
     } else {
       if (offer.key === "potion")
         state.potions = Math.min(5, state.potions + 1);
@@ -1585,7 +1585,7 @@ function act(state, session, action, rng) {
           rarity === "legendary" ? 0 : state.pityLegendary + 1;
         if (rarity) {
           const item = receiveItem(state, e.item);
-          state.lastLog = `🎒 ${item.name} Lv.${item.level}.`;
+          state.lastLog = `${E.backpack} ${item.name} Lv.${item.level}.`;
         } else
           state.lastLog =
             e.kind === "fake" ? "SSR giả: không có hiệu ứng." : "Hòm rỗng.";

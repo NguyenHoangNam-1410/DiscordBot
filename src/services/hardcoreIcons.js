@@ -1,6 +1,7 @@
 "use strict";
 const emoji = require("../discordEmojiMap");
-const icon = (key, fallback) => emoji[`:${key}:`] || fallback;
+const { appEmoji } = require("../utils/appEmoji");
+const icon = (key, fallback) => appEmoji(key, emoji[`:${key}:`] || fallback);
 const E = {
   hp: icon("HP", "❤️"),
   attack: icon("PHYS", "⚔️"),
@@ -12,9 +13,26 @@ const E = {
   chest: icon("event_chest", "📦"),
   rift: icon("rift", "🌀"),
   luck: icon("LUCK", "🍀"),
-  crit: icon("boom", "💥"),
+  // Resolve new application emojis at render time, after startup loads their IDs.
+  get crit() {
+    return icon("CRIT", "💥");
+  },
+  get accuracy() {
+    return icon("ACC", "🎯");
+  },
+  get evasion() {
+    return icon("EVA", "💨");
+  },
+  get backpack() {
+    return icon("backpack", "🎒");
+  },
+  get checkpoint() {
+    return icon("checkpoint", "🏕️");
+  },
   potion: icon("potion", "🧪"),
-  ticket: icon("ticket", "🎫"),
+  get ticket() {
+    return icon("ticket_rngesus", "🎫");
+  },
   str: icon("STR", "💪"),
   dex: icon("DEX", "🗡️"),
   vit: icon("VIT", "❤️"),
