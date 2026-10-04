@@ -211,6 +211,18 @@ function shopCurrency(kind) {
       ? `${icon("gem", "💎")} kim cương`
       : `${icon("coin", "🪙")} xu payout`;
 }
+function chestPityText(state, chest, detailed = false) {
+  const guaranteed = chest.guaranteed;
+  const rare = guaranteed
+    ? "**Hòm này bảo đảm SR trở lên, không có Mimic.**"
+    : `Đã mở **${state.pityRare || 0} hòm** liên tiếp chưa nhận SR trở lên; sau 5 lần trượt, **hòm kế tiếp** bảo đảm SR+.`;
+  if (!detailed) return `**Bảo hiểm hòm:** ${rare}`;
+  const ssr =
+    chest.name === "Treasure Chest"
+      ? "Kho báu dùng tỷ lệ SSR riêng, không nhận bonus tăng tỷ lệ SSR từ pity."
+      : `Đã mở **${state.pityLegendary || 0} hòm** liên tiếp chưa nhận SSR. Từ 10 lần trượt, tỷ lệ SSR tăng dần, **không bảo đảm ra SSR ở hòm thứ 10**; xem tỷ lệ hiện tại ở trên.`;
+  return `**Bảo hiểm SR+:** ${rare}\n**SSR:** ${ssr}\nBộ đếm tính kết quả mở hòm; đồ từ quái/event khác không đặt lại bộ đếm này.`;
+}
 function randomEventText(s) {
   const e = s.encounter;
   const heading = (name, intro) =>
@@ -247,7 +259,7 @@ function randomEventText(s) {
                 .filter(([, p]) => p > 0)
                 .map(([key, p]) => [percent(p), labels[key]]),
         ),
-        `**Kiểm tra:** ${percent(e.detectionChance)} phát hiện nếu có Mimic; không phát hiện chưa chắc an toàn.\n**Bán:** bonus +15% cược.\n**Pity:** SR+ ${s.pityRare}/5 · SSR ${s.pityLegendary}/10.${e.guaranteed ? " Đảm bảo SR+, không Mimic." : ""}`,
+        `**Kiểm tra:** ${percent(e.detectionChance)} phát hiện nếu có Mimic; không phát hiện chưa chắc an toàn.\n**Bán:** bonus +15% cược.\n${chestPityText(s, e)}`,
       ],
     );
   }
@@ -729,7 +741,7 @@ function encounterDetails(s) {
       .map(([key, n]) => `${names[key]}: **${percent(n)}**`)
       .join(
         "\n",
-      )}\n\n**Kiểm tra:** ${percent(e.detectionChance)} phát hiện nếu có Mimic; không phát hiện chưa chắc an toàn.\n**Pity:** SR+ ${s.pityRare}/5 · SSR ${s.pityLegendary}/10.${e.guaranteed ? " Hòm này đảm bảo SR+, không Mimic." : ""}\n**Bán:** bonus +15% tiền cược. Đồ nhận chỉ dùng trong run; trùng tên tăng level. UR có curse.`;
+      )}\n\n**Kiểm tra:** ${percent(e.detectionChance)} phát hiện nếu có Mimic; không phát hiện chưa chắc an toàn.\n${chestPityText(s, e, true)}\n**Bán:** bonus +15% tiền cược. Đồ nhận chỉ dùng trong run; trùng tên tăng level. UR có curse.`;
   }
   if (e.type === "surprise" && e.kind.endsWith("_shop"))
     return `${eventIcon(e.kind)} **Công dụng các món đang bán**\n${e.offers.map((offer, i) => `${i + 1}. **${E.backpack} ${offer.item.name} [${rarityLabel(offer.item.rarity)}]**\n${itemText(offer.item)}`).join("\n\n")}\n\nMua tối đa **một món** trong lần gặp. ${e.kind === "blood_shop" ? "Trả bằng HP, phải còn ít nhất 1 HP sau mua." : e.kind === "diamond_shop" ? "Kim cương trừ ngay khi mua, không hoàn lại khi run kết thúc." : "Trả từ payout gốc; bonus Blood Paradox không dùng để mua."}`;
@@ -1412,7 +1424,7 @@ function ratesFields(category) {
       {
         name: `${E.backpack} Trang bị và bảo hiểm hòm`,
         value:
-          "- Catalog có **100 món:** R 32, SR 28, SSR 24, UR 16. Đồ chỉ tồn tại trong run; trùng tên tăng level và cộng hiệu ứng. **UR có cả buff và lời nguyền**. Lời nguyền rút HP cuối tầng luôn chừa ít nhất **1 HP**.\n- Sau **5 hòm đã mở không nhận SR trở lên**, hòm kế bảo đảm SR+ và không có Mimic.\n- Sau **10 hòm không nhận SSR**, tỷ lệ SSR được cộng 2 điểm % mỗi lần tiếp theo; nhận SSR thì đặt lại bộ đếm. Luck cũng tăng tỷ lệ SSR, tổng tối đa 35% ở hòm thường.\n- Bảo hiểm này áp dụng hòm, không phải mọi nguồn nhận đồ.",
+          "- Catalog có **100 món:** R 32, SR 28, SSR 24, UR 16. Đồ chỉ tồn tại trong run; trùng tên tăng level và cộng hiệu ứng. **UR có cả buff và lời nguyền**. Lời nguyền rút HP cuối tầng luôn chừa ít nhất **1 HP**.\n- Sau **5 hòm đã mở không nhận SR trở lên**, hòm kế bảo đảm SR+ và không có Mimic.\n- Sau **10 hòm không nhận SSR**, tỷ lệ SSR được cộng 2 điểm % mỗi lần tiếp theo; nhận SSR thì đặt lại bộ đếm. Luck cũng tăng tỷ lệ SSR, tổng tối đa 35% ở hòm thường.\n- Mốc 10 là lúc bắt đầu tăng xác suất, không phải bảo đảm SSR. Đồ từ Ancient Mimic/Blood Mimic, rương boss, shop hoặc event khác không đặt lại bộ đếm hòm thường/kho báu; rương thường mua ở Rift Merchant vẫn tính.",
       },
       {
         name: `${E.hp} Lời nguyền rút HP`,
