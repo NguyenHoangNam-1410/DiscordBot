@@ -1,6 +1,6 @@
 "use strict";
 const stats = require("./hardcoreStats");
-const { E, SKILL_ICONS, RIFT_ICONS } = require("./hardcoreIcons");
+const { E, SKILL_ICONS, RIFT_ICONS, eventIcon } = require("./hardcoreIcons");
 const world = require("./hardcoreWorld");
 const echoes = require("./hardcoreEchoRepository");
 const { ITEMS } = require("../hardcore/item");
@@ -280,7 +280,7 @@ function completeFloor(state, session, rng, reward = 1) {
       else if (contract.kind === "skill")
         state.bonus += Math.floor(state.stake * 0.5);
       else addSource(state, { [mainStat(state)]: 10 });
-      state.lastLog += "\n📜 Hoàn thành Rift Contract.";
+      state.lastLog += `\n${eventIcon("contract")} Hoàn thành Rift Contract: ${contract.kind === "potion" ? "nhận trang bị SSR" : contract.kind === "skill" ? `bonus +50% cược (${Math.floor(state.stake * 0.5).toLocaleString("vi-VN")} xu)` : `+10 ${E[mainStat(state)]} ${mainStat(state).toUpperCase()}`}.`;
     }
   }
   if (
@@ -1367,7 +1367,9 @@ function actSurprise(state, session, action, rng) {
     );
     charge(state, amount);
     if (e.roll < 0.5) state.bonus += amount * 2;
-    done(`🎲 ${e.roll < 0.5 ? "Thắng" : "Thua"} cược ${amount} xu.`);
+    done(
+      `${eventIcon("gambler")} ${e.roll < 0.5 ? "Thắng" : "Thua"}: đã trả ${amount.toLocaleString("vi-VN")} xu payout; ${e.roll < 0.5 ? `nhận bonus ${(amount * 2).toLocaleString("vi-VN")} xu, lãi ròng ${amount.toLocaleString("vi-VN")} xu` : "không nhận bonus"}.`,
+    );
   } else if (k === "adventurer") {
     if (action === "event_rescue") {
       if (state.potions < 1) throw new Error("NO_RESCUE_POTIONS");
@@ -1431,7 +1433,9 @@ function actSurprise(state, session, action, rng) {
         state.bonus += Math.floor(state.stake * 0.5);
         addSource(state, { luck: 1 });
       }
-      done(`🎁 Nhận thưởng hòm ${color}.`);
+      done(
+        `${E.chest} Nhận thưởng hòm ${{ red: "đỏ", blue: "xanh", gold: "vàng" }[color]}${color === "gold" ? `: bonus +50% cược (${Math.floor(state.stake * 0.5).toLocaleString("vi-VN")} xu)` : ""}.`,
+      );
     }
   } else if (k === "contract") {
     state.contract = {
@@ -1441,7 +1445,9 @@ function actSurprise(state, session, action, rng) {
       remaining: 3,
       item: e.item,
     };
-    done("📜 Hợp đồng cho 3 tầng tiếp theo.");
+    done(
+      `${eventIcon("contract")} Rift Contract · tầng ${state.contract.from}–${state.contract.until}: ${state.contract.kind === "potion" ? `không dùng ${E.potion} bình máu → nhận SSR` : state.contract.kind === "skill" ? "không dùng skill → bonus +50% cược" : `không phòng thủ → +10 ${E[mainStat(state)]} ${mainStat(state).toUpperCase()}`}. Vi phạm hủy thưởng.`,
+    );
   } else if (k === "class_shrine") {
     state.classShrine = {
       classKey: state.classKey,
@@ -1449,7 +1455,18 @@ function actSurprise(state, session, action, rng) {
       until: state.floor + 3,
       consumed: false,
     };
-    done("✨ Phúc class cho 3 tầng tiếp theo.");
+    const effects = {
+      amazon: `${SKILL_ICONS.amazon} Barrage: 20% thêm phát thứ ba`,
+      barbarian: `${E.defense} DEF +8 khi ${E.hp} HP ≤30%`,
+      assassin: `${E.evasion} chặn một phản công, tiêu hao khi kích hoạt`,
+      sorceress: `${SKILL_ICONS.sorceress} một skill miễn phí ${E.mana} MP, tiêu hao khi dùng`,
+      druid: `${E.hp} hồi 5% Max HP mỗi tầng`,
+      necromancer: `${E.evasion} chặn một phản công, tiêu hao khi kích hoạt`,
+      paladin: `${E.res} RES +10 khi nhận phép`,
+    };
+    done(
+      `${E.shrine} Class Shrine · tầng ${state.classShrine.from}–${state.classShrine.until}: ${effects[state.classKey]}.`,
+    );
   } else if (k === "doors") {
     const door = action.slice(5);
     if (e.doors[door]) {
@@ -1459,7 +1476,9 @@ function actSurprise(state, session, action, rng) {
       }
       if (door === "gold") state.bonus += Math.floor(state.stake * 0.5);
       if (door === "dark") receiveItem(state, e.item);
-      done(`🚪 Cửa ${door}: nhận thưởng.`);
+      done(
+        `${eventIcon("doors")} Cửa ${{ light: "sáng", gold: "vàng", dark: "tối" }[door]}: ${door === "light" ? `hồi đầy ${E.hp} HP và tiếp tế ${E.potion} bình máu` : door === "gold" ? `bonus +50% cược (${Math.floor(state.stake * 0.5).toLocaleString("vi-VN")} xu)` : "nhận trang bị SSR"}.`,
+      );
     } else if (door === "light") {
       hurt(state, state.maxHp * 0.2, true, true);
       done("🚪 Cửa sáng: gặp bẫy gây mất HP, giữ ít nhất 1.");
@@ -1543,11 +1562,13 @@ function act(state, session, action, rng) {
       until: state.floor + 4,
       bloodFactor: 0,
     };
-    state.lastLog = `Rift Paradox: ${state.paradox.kind === "blood" ? "Máu là tiền" : "Ngược đời"}, 5 tầng.`;
+    state.lastLog = `${eventIcon("paradox")} Rift Paradox · tầng ${state.paradox.from}–${state.paradox.until}: ${state.paradox.kind === "blood" ? "Máu là tiền: mất HP do nguồn thù địch tăng payout, hồi HP giảm payout (biên ±50%); chi phí tự nguyện không tăng thưởng" : `Ngược đời: dùng ${E.defense} DEF làm sức mạnh vật lý, dùng trung bình sát thương vật lý làm DEF chống vật lý`}.`;
     nextMilestone(state, session, rng);
   } else if (state.phase === "severance") {
-    if (action !== "sever_none") delete state.modifiers[action.slice(6)];
-    state.lastLog = "Rift Severance hoàn thành.";
+    const key = action.slice(6);
+    const removed = state.modifiers[key] || 0;
+    if (action !== "sever_none") delete state.modifiers[key];
+    state.lastLog = `${eventIcon("severance")} Rift Severance: ${action === "sever_none" ? "không có modifier phù hợp để xóa" : `đã xóa ${RIFT_ICONS[key] || E.rift} ×${removed}, hiệu ứng của loại Rift này không còn áp dụng`}.`;
     nextMilestone(state, session, rng);
   } else {
     const e = state.encounter;
@@ -1632,7 +1653,15 @@ function act(state, session, action, rng) {
           if (!alive(state))
             state.lastDeathCause = `Shrine Fake gây ${lost} sát thương, khiến HP về 0.`;
         }
-        state.lastLog = `${E.shrine} Shrine ${e.kind}.`;
+        const outcomes = {
+          healing: "Healing: hồi phục HP",
+          armor: `Armor: tăng ${E[e.armorStat]} ${e.armorStat?.toUpperCase()}`,
+          blood: `Blood: tăng ${E.str} STR, giảm ${E.vit} VIT`,
+          experience: `Experience: bonus +25% cược (${Math.floor(state.stake * 0.25).toLocaleString("vi-VN")} xu), cộng vào thưởng của run`,
+          corrupted: `Corrupted: tăng ${E.str} STR, giảm ${E.vit} VIT`,
+          fake: `Fake: bẫy gây mất ${E.hp} HP`,
+        };
+        state.lastLog = `${E.shrine} Shrine ${outcomes[e.kind]}.`;
       } else state.lastLog = `Bỏ qua ${E.shrine} Shrine.`;
       if (alive(state)) completeFloor(state, session, rng, 0);
     } else if (e.type === "trap") {
@@ -1735,7 +1764,7 @@ function act(state, session, action, rng) {
       if (e.debt.good) {
         heal(state, state.maxHp * e.debt.healRate);
         state.bonus += Math.floor(state.stake * e.debt.bonusRate);
-        state.lastLog = "The Tower Remembers: nhận hồi máu và bonus.";
+        state.lastLog = `${eventIcon("memory")} The Tower Remembers: hồi phục ${E.hp} HP; bonus +${Math.floor(state.stake * e.debt.bonusRate).toLocaleString("vi-VN")} xu vào thưởng của run.`;
         completeFloor(state, session, rng, 0);
       } else if (e.debt.kind === "tax") {
         penalty(state, 0.1);

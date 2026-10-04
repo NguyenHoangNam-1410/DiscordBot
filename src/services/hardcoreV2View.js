@@ -723,6 +723,10 @@ function turnText(state) {
     );
   });
   // Old sessions can still contain the numeric summaries written before this UI change.
+  for (let i = 0; i < lines.length; i++)
+    if (lines[i].endsWith("Shrine experience."))
+      lines[i] =
+        `${E.shrine} Shrine Experience: bonus +25% cược (${money(Math.floor(state.stake * 0.25))} xu), cộng vào thưởng của run.`;
   if (state.lastUpgrade) lines[0] = "Đã phân bổ điểm checkpoint.";
   if (state.lastEventResult?.name === "Potion Thief")
     lines[0] = "Potion Thief đã cướp bình máu.";
