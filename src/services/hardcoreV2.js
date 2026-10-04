@@ -86,6 +86,8 @@ const EVENTS = [
   "blood_shop",
   "diamond_shop",
 ];
+const PURIFIER_COST_RATE = 0.1;
+const PURIFIER_EVENT_WEIGHT = 3;
 const PAID_EVENTS = new Set([
   "blacksmith",
   "purifier",
@@ -597,7 +599,10 @@ function makeSurprise(state, rng, kind = null) {
     return true;
   });
   if (state.floor === 1 && PAID_EVENTS.has(kind)) kind = null;
-  kind = kind || pick(eligible, rng);
+  const eventPool = eligible.flatMap((key) =>
+    Array(key === "purifier" ? PURIFIER_EVENT_WEIGHT : 1).fill(key),
+  );
+  kind = kind || pick(eventPool, rng);
   const e = {
     type: "surprise",
     kind,
@@ -1214,7 +1219,7 @@ function surpriseActions(state) {
       purifier: [
         {
           action: "event_cleanse",
-          label: `Giải toàn bộ · ${serviceCost(state, 0.2)} xu`,
+          label: `Giải toàn bộ · ${serviceCost(state, PURIFIER_COST_RATE)} xu`,
           disabled: rawPayout(state) < 1,
         },
       ],
@@ -1521,7 +1526,7 @@ function actSurprise(state, session, action, rng) {
     );
     done(`🔨 ${item.name} Lv.${item.level}.`);
   } else if (k === "purifier") {
-    charge(state, serviceCost(state, 0.2));
+    charge(state, serviceCost(state, PURIFIER_COST_RATE));
     const target = itemById(e.targetId);
     cleanse(state, target);
     done(
@@ -1994,6 +1999,8 @@ module.exports = {
   ITEMS,
   EVENTS,
   EVENT_NAMES,
+  PURIFIER_COST_RATE,
+  PURIFIER_EVENT_WEIGHT,
   initialize,
   normalize,
   rngesusFleeChance,
