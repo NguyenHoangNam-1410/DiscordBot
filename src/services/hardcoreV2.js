@@ -85,6 +85,21 @@ function normalize(state) {
     state.encounter.fleeChance = rngesusFleeChance(state);
     if (state.encounter.fleeChance === 1) state.encounter.fleeSuccess = true;
   }
+  if (
+    state.encounter?.type === "rngesus" &&
+    state.encounter.prayerItem?.rarity !== "cursed"
+  ) {
+    // Upgrade a pending old reward deterministically so reopening cannot reroll it.
+    const index = Math.max(
+      0,
+      ITEMS.legendary.findIndex(
+        (item) => item.id === state.encounter.prayerItem?.id,
+      ),
+    );
+    state.encounter.prayerItem = structuredClone(
+      ITEMS.cursed[index % ITEMS.cursed.length],
+    );
+  }
   state.runDiamonds = runDiamondReward(state);
   return state;
 }
@@ -665,7 +680,7 @@ function generateEncounter(state, session, rng) {
       fleeChance: rngesusFleeChance(state),
       fleeSuccess: rng() < rngesusFleeChance(state),
       prayerSuccess: rng() < 0.3,
-      prayerItem: randomItem(rng() < 0.85 ? "legendary" : "cursed", rng),
+      prayerItem: randomItem("cursed", rng),
     };
   const due = state.debts.findIndex(
     (debt) =>
@@ -1825,7 +1840,7 @@ function act(state, session, action, rng) {
         if (!e.prayerSuccess)
           return die("Cầu nguyện RNGesus thất bại (nhánh 70%).");
         receiveItem(state, e.prayerItem);
-        state.lastLog = `Cầu nguyện thành công: ${e.prayerItem.name}.`;
+        state.lastLog = `${eventIcon("rngesus")} RNGesus: cầu nguyện thành công, đã nhận **trang bị UR** kèm lời nguyền.`;
         remember(state, "pray_rngesus", rng);
       }
       completeFloor(state, session, rng, 0);

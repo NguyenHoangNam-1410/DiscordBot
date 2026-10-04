@@ -275,7 +275,7 @@ function randomEventText(s) {
             : []),
         ]),
         option("Cầu nguyện", [
-          ["30%", "Sống và nhận đồ: SSR 85% / UR 15% trong nhánh thành công."],
+          ["30%", "Sống và nhận **1 trang bị UR**, kèm lời nguyền."],
           ["70%", "Chết."],
         ]),
         "**Hối lộ:** cần payout ≥1.000 xu, mất 40% payout để thoát. **Đánh:** chết.",
@@ -1356,7 +1356,7 @@ function ratesFields(category) {
       {
         name: `${eventIcon("rngesus")} RNGesus: chọn để sống sót`,
         value:
-          "- **Không thể đánh bại; không được rút thưởng tại đây.** Chaos trên bảng là tỷ lệ gặp RNGesus.\n- **Đánh:** chết ngay, mất cược và thưởng tạm giữ.\n- **Chạy:** trong mỗi run, các lần chọn chạy có tỷ lệ **100% → 95% → 90% → 85% → 80% → 75%**, sau đó giữ 75%. Mỗi lần chọn chạy (kể cả thất bại và được vé cứu) giảm 5 điểm % cho lần sau; hành động khác không làm giảm hoặc đặt lại tỷ lệ. Thất bại tự dùng 1 vé nếu có, hết vé thì chết. Thành công không tiêu vé.\n- **Hối lộ:** chỉ dùng khi payout hiển thị **từ 1.000 xu**. Thoát an toàn, giảm hệ số payout 40%; thưởng tích lũy về sau cũng chịu hệ số đã giảm. Ghi nhận Tower Remembers.\n- **Cầu nguyện:** 30% sống và nhận đồ (trong nhánh thành công: SSR 85%, UR 15%); 70% chết. Thành công ghi nhận Tower Remembers.\n- Vé chỉ cứu khi chạy thất bại; không cứu lựa chọn Đánh hoặc cầu nguyện thất bại. Giữ tối đa 1 vé.",
+          "- **Không thể đánh bại; không được rút thưởng tại đây.** Chaos trên bảng là tỷ lệ gặp RNGesus.\n- **Đánh:** chết ngay, mất cược và thưởng tạm giữ.\n- **Chạy:** trong mỗi run, các lần chọn chạy có tỷ lệ **100% → 95% → 90% → 85% → 80% → 75%**, sau đó giữ 75%. Mỗi lần chọn chạy (kể cả thất bại và được vé cứu) giảm 5 điểm % cho lần sau; hành động khác không làm giảm hoặc đặt lại tỷ lệ. Thất bại tự dùng 1 vé nếu có, hết vé thì chết. Thành công không tiêu vé.\n- **Hối lộ:** chỉ dùng khi payout hiển thị **từ 1.000 xu**. Thoát an toàn, giảm hệ số payout 40%; thưởng tích lũy về sau cũng chịu hệ số đã giảm. Ghi nhận Tower Remembers.\n- **Cầu nguyện:** 30% sống và nhận chắc chắn **1 trang bị UR kèm lời nguyền**; 70% chết. Thành công ghi nhận Tower Remembers.\n- Vé chỉ cứu khi chạy thất bại; không cứu lựa chọn Đánh hoặc cầu nguyện thất bại. Giữ tối đa 1 vé.",
       },
     ],
     rewards: [
