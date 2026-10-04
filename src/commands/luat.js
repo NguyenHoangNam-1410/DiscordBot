@@ -9,43 +9,43 @@ const {
 const RULES = {
   baucua: [
     "Bầu cua",
-    "Chọn linh vật trước khi khóa cược. Xuất hiện 1/2/3 lần trả tổng cộng x2/x3/x4. Vật phẩm không có tác dụng trong ván nhiều người. Cược dưới 1.000 xu không nhận EXP, nhiệm vụ hay thưởng phụ; thưởng phụ chỉ rơi xu.",
+    "**Cách chơi**\n- Đặt cược vào linh vật trước khi bàn khóa cược. Bot tung 3 mặt; đếm số lần linh vật bạn chọn xuất hiện.\n\n**Kết quả**\n- Không xuất hiện: mất khoản cược cửa đó.\n- Xuất hiện 1 / 2 / 3 lần: tổng tiền nhận lần lượt bằng **2 / 3 / 4 lần cược**, đã gồm tiền cược ban đầu.\n\n**Vật phẩm và thưởng phụ**\n- Vật phẩm không tác động ván nhiều người.\n- Cược dưới 1.000 xu không nhận EXP, tiến độ nhiệm vụ hoặc thưởng phụ; thưởng phụ của game này chỉ là xu.",
   ],
   taixiu: [
     "Tài xỉu",
-    "Tài 11–17, Xỉu 4–10; bộ ba làm Tài/Xỉu và Chẵn/Lẻ thua. Tài/Xỉu/Chẵn/Lẻ trả x2 mặc định (admin chỉnh được bằng `/quantri hesothang`, hệ số được khóa khi mở ván). Mỗi người chỉ chọn một cửa trong một ván, có thể cộng thêm cược cùng cửa. Vật phẩm không có tác dụng trong ván nhiều người. Cược dưới 1.000 xu không nhận EXP, nhiệm vụ hay thưởng phụ; thưởng phụ chỉ rơi xu.",
+    "**Cách chơi**\n- Bot tung 3 xúc xắc. Mỗi người chọn **một cửa mỗi ván**; được cộng cược vào cùng cửa trước khi khóa.\n\n**Các cửa**\n- **Tài:** tổng 11–17. **Xỉu:** tổng 4–10.\n- **Chẵn / Lẻ:** xét tổng điểm. Nếu cả 3 viên giống nhau, **Tài, Xỉu, Chẵn và Lẻ đều thua**.\n- **Bộ ba bất kỳ:** thắng khi cả 3 viên giống nhau; tổng nhận **35 lần cược**.\n- **Tổng cụ thể:** chọn tổng 4–17, phải trúng đúng tổng; bộ ba vẫn được tính cho cửa này. Hệ số tổng nhận: 4/17 → ×70; 5/16 → ×35; 6/15 → ×21; 7/14 → ×14; 8/13 → ×10; 9/10/11/12 → ×8.\n\n**Trả thưởng**\n- Tài/Xỉu/Chẵn/Lẻ thắng mặc định nhận **2 lần cược**; admin có thể đổi hệ số, khóa theo lúc mở bàn. Thua mất cược. Các hệ số đều đã gồm vốn.\n- Vật phẩm không tác động ván nhiều người. Cược dưới 1.000 xu không nhận EXP, tiến độ nhiệm vụ hoặc thưởng phụ; thưởng phụ chỉ là xu.",
   ],
   chinchiro: [
     "Chinchiro",
-    "Nhà cái lắc trước. Khi thắng bằng điểm thường, lãi 80% cược (hệ số mặc định x1,8; admin chỉnh được bằng `/quantri hesothang`); Shigoro lãi x1, Bão x2, Pin-Zoro x3. Hifumi 1-2-3 mất cược và bị phạt thêm x1. Bot giữ trước một khoản ký quỹ bằng tiền cược để bảo đảm phạt Hifumi, rồi hoàn lại khi không bị phạt.",
+    "**Bắt đầu**\n- Bot giữ **2 lần cược**: một phần để chơi, một phần ký quỹ cho phạt Hifumi. Ký quỹ được hoàn nếu không bị phạt.\n- Nhà cái lắc trước; mỗi lượt tối đa 3 lần để ra bộ hợp lệ. Hai viên giống nhau thì viên còn lại là điểm.\n\n**Nhà cái quyết định ngay**\n- Hifumi 1-2-3, vô tướng hoặc điểm 1: bạn thắng thường.\n- Shigoro 4-5-6, ba viên giống nhau hoặc điểm 6: bạn thua. Các điểm 2–5 mới cho bạn lắc để so.\n\n**Khi bạn lắc**\n- Điểm cao hơn thắng, bằng hòa, thấp hơn thua. Vô tướng hoặc rớt xúc xắc thua.\n- Shigoro: lãi **1 lần cược**; Bão 2-2-2 đến 6-6-6: lãi **2 lần**; Pin-Zoro 1-1-1: lãi **3 lần**.\n- Hifumi: mất cược **và** mất thêm khoản ký quỹ bằng cược.\n\n**Thắng thường / hòa**\n- Thắng thường: tổng nhận mặc định **1,8 lần cược** (lãi 80%); admin có thể đổi hệ số trước ván. Hòa: hoàn cược. Các mức trên là luật cơ bản; vật phẩm có thể thay đổi kết quả theo công dụng của nó.",
   ],
   blackjack: [
     "Xì dách",
-    "Chọn `chedochoi`: **nhà cái bot** (chơi một mình, có tách bài; thắng thường nhận 2× cược, mặc định; admin chỉnh được bằng `/quantri hesothang`) hoặc **người chơi khác**. **Mọi chế độ:** chỉ được **Dừng khi có ít nhất 16 điểm** (nút Dừng bị khóa nếu dưới 16); khi quắc mọi nút bị khóa; **cả hai cùng quắc thì hòa** và hoàn cược; Ở chế độ người chơi: Một người mở bàn làm nhà cái; tối đa 3 người chơi có 30 giây để vào. Nhà cái chọn ante, không quá 25% số dư của mình. Người chơi lần lượt rút hoặc dừng; bài của mỗi người được giữ kín, dùng nút **Xem bài của tôi** để xem và thao tác trong bảng riêng, bài chỉ lộ khi kết thúc; nhà cái rút đến khi có ít nhất 15 điểm. Ngũ linh (đủ 5 lá, không quắc) mạnh hơn Xì dách; nếu cả hai cùng Ngũ linh thì tay có tổng điểm nhỏ hơn thắng. Người quắc thua, nhưng nếu nhà cái cũng quắc thì **hòa** và hoàn ante. Thắng nhận lại 2× ante, hòa nhận lại ante. Người tham gia bị khóa khỏi cược game khác đến khi ván kết thúc.",
+    "**Điểm bài**\n- Lá 2–10 tính theo số; J/Q/K = 10; A = 11 hoặc 1 để tránh quắc. Tổng trên 21 là **quắc**. Chỉ được **Dừng từ 16 điểm**; nhà cái rút đến ít nhất 15.\n- **Ngũ linh** (5 lá, không quắc) mạnh hơn **Xì dách** (2 lá, tổng 21), rồi đến điểm thường. Cùng Ngũ linh: tổng nhỏ hơn thắng. Cùng điểm thường hoặc cùng Xì dách: hòa. Cả hai quắc: hòa.\n\n**Chơi với bot**\n- Rút hoặc Dừng để so với nhà cái. Hai lá đầu cùng hạng được **Tách** một lần: trả thêm khoản bằng cược để chơi hai tay riêng. Tách A chỉ nhận thêm một lá mỗi tay.\n- Thắng thường: tổng nhận mặc định **2 lần cược**; Xì dách tự nhiên thắng nhận **2,5 lần**. Admin có thể chỉnh hệ số thường; Xì dách tự nhiên cộng thêm 0,5. Hòa hoàn cược; thua mất cược.\n\n**Bàn người chơi**\n- Người mở làm nhà cái, chọn ante không quá 25% số dư; tối đa 3 người vào trong 30 giây. Mỗi người đấu riêng với nhà cái.\n- Bài giữ kín đến kết thúc; dùng **Xem bài của tôi** để rút/dừng. Thắng nhận **2 lần ante**, hòa hoàn ante, thua mất ante. Người tham gia phải kết thúc bàn trước khi cược game khác.",
   ],
   poker: [
     "Poker",
-    "Chọn đấu với hai bot hoặc mời một người chơi. Theo, tố hoặc bỏ; xem bài tẩy bằng nút riêng tư. Main Pot và Side Pot được chia tự động.",
+    "**Bắt đầu và hành động**\n- Chọn biến thể, đấu hai bot hoặc mời một người. Mỗi bên đóng **ante** (cược bắt buộc ban đầu).\n- **Theo:** trả phần còn thiếu để bằng mức cược hiện tại. **Tố:** nâng mức cược và trả thêm xu. **Bỏ:** mất quyền tranh pot, tiền đã cược không được hoàn theo luật cơ bản.\n- Xem bài tẩy bằng nút riêng tư. Còn một người chưa bỏ thì người đó thắng; nếu còn nhiều người ở cuối ván, so bộ bài.\n\n**Biến thể**\n- **Texas:** 2 lá tẩy, chọn 5 lá tốt nhất từ bài tẩy và bài chung.\n- **6+:** bài 6–A; Thùng mạnh hơn Cù lũ; A-6-7-8-9 được tính sảnh.\n- **Crazy Pineapple:** 3 lá tẩy, bỏ 1 lá sau vòng cược Flop.\n- **Omaha 5 lá:** bắt buộc dùng đúng 2 lá tẩy và 3 lá chung.\n\n**Xếp hạng thông thường, mạnh → yếu**\nThùng phá sảnh → Tứ quý → Cù lũ → Thùng → Sảnh → Bộ ba → Hai đôi → Một đôi → Mậu thầu. Cùng loại so các lá quyết định; bằng nhau chia pot.\n\n**Tiền thưởng**\n- Nhận phần pot thắng được, không có hệ số ×2 cố định. Khi all-in, Main Pot/Side Pot chia riêng; bạn chỉ tranh pot tương ứng khoản mình góp.",
   ],
   duangua: [
     "Đua ngựa",
-    "Chọn một trong sáu ngựa. Hệ số khóa khi mở bàn; debuff chỉ lộ sau khi khóa cược.",
+    "**Cách chơi**\n- Chọn ngựa trong danh sách 6 ngựa của bàn và cược trước khi khóa. Hệ số trả thưởng của từng ngựa được khóa khi mở bàn.\n- Sau khi khóa cược mới công bố sự cố/debuff. Sự cố có thể đổi khả năng thắng của ngựa; không đổi hệ số đã khóa.\n\n**Kết quả**\n- Ngựa về nhất: tổng nhận = **cược vào ngựa đó × hệ số của nó**, đã gồm vốn. Các khoản cược vào ngựa khác bị mất.\n- Không có ngựa chắc thắng; hệ số cao không đồng nghĩa cơ hội thắng cao.",
   ],
   mines: [
     "Mines",
-    "Chọn 2–7 mìn trên bàn 20 ô, mở ô an toàn để tăng hệ số rồi rút. Trúng mìn mất cược; ô sao tăng thêm x1,5. Giáp Chống Nổ chỉ vô hiệu hóa một quả mìn duy nhất trên mỗi bản đồ.",
+    "**Bắt đầu**\n- Bàn có **20 ô**, chọn **2–7 mìn** và đặt cược. Vị trí mìn và ô sao được giữ cố định trong ván.\n\n**Mở ô / rút thưởng**\n- Mở ô an toàn để tăng hệ số. Sau ít nhất một ô đã mở, bấm **Rút thưởng** để nhận số xu đang hiển thị.\n- Trúng mìn: mất cược và kết thúc. Mở hết ô còn an toàn: tự chốt thưởng. Bỏ ván: mất cược.\n- Ô sao nằm ở ô an toàn, nhân thêm **1,5** vào hệ số; hệ số trên bảng đã tính bonus này.\n\n**Giáp Chống Nổ**\n- Nếu có hiệu ứng đang hoạt động, vô hiệu hóa **một quả mìn trong ván** rồi hết tác dụng. Các quả mìn khác vẫn gây thua.",
   ],
   coquay: [
     "Cò quay Nga",
-    "Đấu súng với Bot, mỗi bên **3 ❤️**. Cược một lần từ đầu (`/coquay cuoc:<xu>`); thắng nhận **x2** tiền cược, gục hoặc bỏ cuộc mất cược. Bạn cầm súng trước.\n\n**🔫 Lượt bắn**\n• **Tự bắn** đạn lép: an toàn và **giữ lượt** (loại bớt đạn lép, tăng cơ hội bắn trúng Bot ở phát sau).\n• **Tự bắn** đạn thật: mất 1 ❤️, súng sang tay Bot.\n• **Bắn Bot**: thật hay lép, bắn xong súng luôn sang tay đối phương.\n\n**🔄 Nạp đạn** — số đạn thật 🔴/lép ⚪ của mỗi đợt được công khai, thứ tự bị xáo trộn; mỗi đợt luôn có ít nhất 1 thật và 1 lép. Hết đạn thì nạp đợt mới, người đang cầm súng giữ lượt.\n• Đợt 1 (Khởi động): 2–3 viên\n• Đợt 2 (Căng thẳng): 4–5 viên\n• Đợt 3 trở đi (Khô máu): 6–8 viên\n\n**🤖 Bot** chỉ biết số đạn còn lại như bạn, không nhìn trộm nòng, tính nước tối ưu và chiến đến giọt máu cuối.\n\n**🧰 Vật phẩm** (từ Gacha, bấm nút trong ván, mỗi loại tối đa 1 lần/ván, chỉ dùng trong lượt của bạn)\n• 🔍 **Kính Lúp Soi Nòng** (SR): lén xem viên đang lên nòng là thật hay lép.\n• 🪖 **Bia Đỡ Đạn** (SR): đỡ 1 sát thương khi Bot bắn đạn thật vào bạn.\n• 🪚 **Cưa Cầm Tay** (SSR): viên kế tiếp nếu là đạn thật gây 2 sát thương (kể cả khi tự bắn).\n• ⛓️ **Còng Số 8** (UR): lần tới súng chuyển sang Bot, Bot mất lượt và súng quay lại tay bạn.\n\nBỏ ván quá 10 phút không thao tác sẽ bị xử thua.",
+    "**Mục tiêu và cược**\n- Bạn đấu Bot, mỗi bên **3 HP**; bạn cầm súng trước. Cược một lần khi bắt đầu. Hạ Bot: tổng nhận **2 lần cược**. Hết HP, bỏ cuộc hoặc không thao tác 10 phút: mất cược.\n\n**Lượt bắn**\n- **Tự bắn + đạn lép:** không mất HP, giữ lượt.\n- **Tự bắn + đạn thật:** mất 1 HP, chuyển súng sang Bot.\n- **Bắn Bot:** đạn thật gây 1 sát thương; đạn lép không gây sát thương. Sau phát bắn, luôn chuyển súng sang Bot.\n\n**Nạp đạn**\n- Công khai số đạn thật/lép, giấu thứ tự; luôn có ít nhất một viên mỗi loại. Đợt 1 có 2–3 viên, đợt 2 có 4–5, đợt 3 trở đi có 6–8. Hết đạn thì nạp mới; người đang cầm súng giữ lượt. Bot chỉ biết số đạn như bạn.\n\n**Vật phẩm Gacha: mỗi loại tối đa 1 lần/ván, dùng trong lượt bạn**\n- **Kính Lúp (SR):** xem riêng viên kế tiếp.\n- **Bia Đỡ Đạn (SR):** đỡ 1 sát thương khi Bot bắn vào bạn.\n- **Cưa (SSR):** nếu viên kế tiếp là thật, gây 2 sát thương, kể cả tự bắn.\n- **Còng (UR):** lần tiếp theo súng sang Bot, Bot mất lượt và trả súng cho bạn.",
   ],
   hardcore: [
     "Sinh tồn",
-    "Vượt tầng và quyết định lúc rút. Chết mất payout tạm giữ; tầng 100 là mốc hoàn thành.",
+    "Chọn class, vượt tầng và rút thưởng trước khi chết. Xem các trang tiếp theo để đọc luật đầy đủ.",
   ],
   vuatiengviet: [
     "Vua tiếng Việt",
-    "Sắp xếp chữ thành từ đúng và trả lời trực tiếp trong kênh game.",
+    "**Cách chơi**\n- Admin mở bằng `/vtv batdau`. Sắp xếp chữ thành từ/cụm từ và gửi đáp án trực tiếp trong kênh game.\n- Đáp án phải đúng dấu tiếng Việt; không phân biệt chữ hoa/thường. Người trả lời đúng trước nhận thưởng, rồi chuyển câu mới.\n\n**Câu thường**\n- Không giới hạn thời gian; thưởng xu theo cấu hình server. Có thể bấm Bỏ qua: giới hạn lượt/ngày theo server (tối đa 5), mỗi người hồi chiêu 5 phút.\n\n**Câu khó**\n- Phải trả lời trong thời gian trên bảng; không được bỏ qua. Trả lời đúng nhận **10 lần thưởng xu cơ bản và 10 kim cương**.",
   ],
 };
 
@@ -57,18 +57,18 @@ function survivalRules() {
         .setColor(0x9b59b6)
         .setTitle("📖 SINH TỒN v2.0.1 · CÁCH CHƠI")
         .setDescription(
-          "Chọn class, đặt cược và vượt từng tầng. Đọc tình huống rồi chọn hành động; rút thưởng để chốt xu và kim cương. Chết/bỏ run mất cược và thưởng tạm giữ. Run cũ giữ luật legacy.",
+          "Chọn nhân vật, đặt cược rồi xử lý từng tầng. Mục tiêu là sống sót và quyết định lúc **Rút thưởng**. Xu và kim cương trên bảng là **thưởng tạm giữ**; chỉ được cộng vào tài khoản khi rút. Chết, bỏ run hoặc hết hạn mất cược và toàn bộ thưởng tạm giữ.",
         )
         .addFields(
           {
             name: "Bắt đầu và tiếp tục",
             value:
-              "/sinhton batdau → chọn một trong 7 class → nhập 10–100.000 xu → Bắt đầu. Bảng chuẩn bị hết hạn sau 5 phút; chỉ giữ cược khi xác nhận. Mỗi người một run/server. /sinhton tieptuc dựng lại UI từ state đã lưu. Run không hoạt động 7 ngày bị forfeit.",
+              "- `/sinhton batdau` → chọn một trong 7 class → nhập **10–100.000 xu**, trong giới hạn server → **Bắt đầu**. Chỉ trừ cược khi xác nhận; bảng chuẩn bị hết hạn sau 5 phút.\n- Mỗi người một run/server. `/sinhton tieptuc` mở lại bảng của run đã lưu; không đổi kết quả ngẫu nhiên đã khóa.\n- Không thao tác **7 ngày**: run hết hạn và mất cược/thưởng.\n- Vượt tầng 100 là mốc hoàn thành; vẫn có thể chơi tiếp đến 999. Phải hạ boss tầng 999 để công nhận mốc cuối.",
           },
           {
             name: "Bốn thuộc tính",
             value:
-              "STR: vật lý/DEF. DEX: ACC/EVA/Crit và damage chính Amazon/Assassin. VIT: Max HP/hiệu lực bình. ENE: phép/RES/Max Mana. Mana là tài nguyên riêng; skill dùng 2 Mana. Luck đến từ item/event.",
+              "- **STR:** tăng sát thương vật lý và DEF.\n- **DEX:** tăng ACC (đánh trúng), EVA (né), CRIT; là hướng sát thương chính của Amazon/Assassin.\n- **VIT:** tăng Max HP và hiệu lực bình máu.\n- **ENE:** tăng sát thương phép, RES và Max MP.\n- **MP** là tài nguyên dùng skill, không phải ENE. **LUCK** đến từ trang bị/event.\nƯu tiên **DEX** cho Amazon/Assassin, **ENE** cho Sorceress/Necromancer, **STR** cho Barbarian/Druid/Paladin; thêm VIT khi cần sống lâu hơn.",
           },
         ),
       ...["combat", "loot", "encounters", "rngesus", "rewards"].map(

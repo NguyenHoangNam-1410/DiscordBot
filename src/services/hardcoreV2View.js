@@ -1208,69 +1208,116 @@ function setupPreview(classKey) {
 }
 function ratesFields(category) {
   const fields = {
-    encounters: [
+    combat: [
       {
-        name: "Encounter & sự kiện",
+        name: `${E.attack} Tấn công và sát thương`,
         value:
-          "Boss mỗi 50 tầng, final boss 999 → RNGesus → Tower Remembers → Grave Echo → pool thường. Pool: quái 53%, Elite 12%, hòm 10%, Shrine 8%, kho báu 5%, trap 6%, surprise 4%, trống 2%. Surprise cách nhau ≥2 tầng. Event: Healer, Goblin, Smith, Purifier, Sacrifice, Gambler, Adventurer, Fountain, Forge, Merchant, Mirror, Treasure Room, Contract, Class Shrine, Doors, Duelist, ba Item Shop.",
+          "- Đánh thường gây **vật lý**: có thể trượt (0 DMG) hoặc Crit ×1,75; DEF của quái giảm sát thương.\n- Sát thương **phép luôn trúng, không Crit**; chịu giảm trừ từ RES.\n- Dải DMG trên bảng giao tranh đã tính phòng thủ của quái hiện tại, chưa tính Crit và giả định đòn vật lý trúng. Chỉ số đầy đủ hiển thị sức mạnh trước giảm trừ.\n- Đánh thường hồi MP ngay cả khi trượt: Sorceress/Necromancer hồi 70% Max MP, class khác 40%; làm tròn xuống, ít nhất 1, không vượt Max MP.\n- Quái còn sống sẽ phản công sau hành động, trừ khi skill chặn/né đòn đó.",
       },
       {
-        name: "Wrong Portal",
+        name: `${E.defense} Phòng thủ và ${E.potion} bình máu`,
         value:
-          "50% tốt/50% xấu; Luck không tác động. Nhánh xấu gọi Elite đánh phủ đầu.",
+          "- **Phòng thủ:** không gây DMG; hồi 1 MP. Trong lần phản công này, DEF ×2 khi nhận vật lý hoặc +15 RES khi nhận phép; giảm thêm 15% DMG và miễn Crit. Hết lượt thì hết hiệu lực.\n- **Bình máu:** tiêu thụ 1 bình để hồi HP theo tỷ lệ ghi trên bảng, ít nhất 20 HP, không vượt Max HP. Hiệu lực tăng theo VIT/trang bị, giới hạn 10–75% Max HP. Quái còn sống vẫn phản công. Không dùng bình khi HP đã đầy.",
       },
       {
-        name: "Grave Echo và Tower Remembers",
+        name: "Kỹ năng vật lý · 2 MP mỗi lần dùng",
         value:
-          "Echo từ tầng 101: 1% mỗi encounter hợp lệ, tối đa một/dải 100 tầng, không gặp chính mình; claim 30 phút, server tối đa 10, hết hạn 7 ngày. Tower giữ tối đa 8 món nợ, pre-roll 50/50 tốt/xấu, kích hoạt sau 10–30 tầng.",
+          ["amazon", "barbarian", "assassin", "druid", "paladin"]
+            .map(
+              (key) =>
+                `${SKILL_ICONS[key]} **${stats.CLASSES[key].name} — ${stats.CLASSES[key].skill}:** ${SKILLS[key]}`,
+            )
+            .join("\n") +
+          "\nMỗi phát tính trúng/Crit riêng, chịu DEF của quái. Skill không hồi MP như đánh thường; các hệ số áp dụng trước phòng thủ của quái.",
+      },
+      {
+        name: "Kỹ năng phép · 2 MP mỗi lần dùng",
+        value:
+          ["sorceress", "necromancer"]
+            .map(
+              (key) =>
+                `${SKILL_ICONS[key]} **${stats.CLASSES[key].name} — ${stats.CLASSES[key].skill}:** ${SKILLS[key]}`,
+            )
+            .join("\n") +
+          "\nSkill không hồi MP như đánh thường. Class Shrine của Sorceress cho một lần dùng miễn phí. Quái có cơ chế miễn sát thương vẫn có thể nhận 0 DMG dù phép luôn trúng.",
+      },
+      {
+        name: `${eventIcon("boss")} Cơ chế boss`,
+        value:
+          "- **The Butcher:** mỗi lần ra đòn tăng 8% DMG, tối đa 5 stack.\n- **Ascendant Riftwalker:** miễn sát thương ở lượt đầu của mỗi chu kỳ 3 lượt giao tranh.\n- **Assur:** EVA và Crit cao.\n- **Lucion:** hồi HP bằng 35% sát thương thực sự gây ra.\n- **Deimoss:** Abyssal Spires giảm 25% sát thương nhận; tầng 999 là phiên bản boss cuối.\nNút **Chi tiết** cho biết cơ chế và trạng thái của boss đang gặp.",
+      },
+      {
+        name: `${E.checkpoint} Checkpoint và ${E.rift} Rift`,
+        value:
+          "- Sau mỗi **5 tầng:** hồi đầy HP, +2 bình (tối đa 5), chọn **+5 STR/DEX/VIT/ENE**. Bảng hiển thị chỉ số hiện tại và dự báo từng lựa chọn.\n- Sau mỗi **10 tầng:** thêm 1 stack Rift; nhận đủ 8 loại trước khi lặp. Icon ×N là số stack của từng loại; nút Rift giải thích hiệu ứng.\n- Sau mỗi **25 tầng:** chọn Paradox có hiệu lực 5 tầng. **Máu là tiền:** mất HP do quái/bẫy tăng thưởng, hồi HP giảm thưởng; hồi tại checkpoint được miễn. **Ngược đời:** đổi vai trò sức mạnh vật lý và DEF.\n- Sau tầng **199/399/699/899:** xóa toàn bộ stack một Rift có hại, trừ Unstable Rift.",
       },
     ],
     loot: [
       {
-        name: "Hòm, item và Luck",
+        name: `${E.chest} Hòm thường: mở, kiểm tra hoặc bán`,
         value:
-          "Catalog v2: R 32/SR 28/SSR 24/UR 16. Trùng tên tăng level. Mimic: 3% Ancient +12% thường trước modifier. Hòm an toàn: SSR 10%, UR 3%, SR 22%, R 40%, rỗng 20%, giả 5%; bonus SSR thay bớt nhánh rỗng/giả. Sau 5 hòm không SR+, hòm kế đảm bảo SR+; sau 10 hòm không SSR, mỗi trượt thêm +2 điểm %. Luck +0,2 điểm % SSR/điểm, SSR cap 35%; inspect min(95%,25%+Luck×3%+item).",
+          "- **Kiểm tra:** thử phát hiện Mimic một lần; tỷ lệ tăng theo Luck/trang bị. Phát hiện được mới có nút tránh Mimic. Kiểm tra không đổi nội dung hòm.\n- **Mở:** có thể nhận đồ, gặp hòm rỗng/giả hoặc phải đánh Mimic. Tỷ lệ cơ bản: Ancient Mimic 3%, Mimic thường 12%.\n- **Nếu không phải Mimic:** SSR 10%, UR 3%, SR 22%, R 40%, rỗng 20%, giả 5%. Đây là tỷ lệ trong nhánh an toàn, không phải tỷ lệ tổng của mọi hòm. Luck/Rift/trang bị/pity có thể đổi tỷ lệ; xem **Chi tiết** để biết tỷ lệ của hòm hiện tại.\n- **Bán:** cộng bonus bằng 15% cược, không mở hòm. Kho báu có bảng tỷ lệ riêng.",
+      },
+      {
+        name: `${E.backpack} Trang bị và bảo hiểm hòm`,
+        value:
+          "- Catalog có **100 món:** R 32, SR 28, SSR 24, UR 16. Đồ chỉ tồn tại trong run; trùng tên tăng level và cộng hiệu ứng. **UR có cả buff và lời nguyền**.\n- Sau **5 hòm đã mở không nhận SR trở lên**, hòm kế bảo đảm SR+ và không có Mimic.\n- Sau **10 hòm không nhận SSR**, tỷ lệ SSR được cộng 2 điểm % mỗi lần tiếp theo; nhận SSR thì đặt lại bộ đếm. Luck cũng tăng tỷ lệ SSR, tổng tối đa 35% ở hòm thường.\n- Bảo hiểm này áp dụng hòm, không phải mọi nguồn nhận đồ.",
+      },
+      {
+        name: `${eventIcon("boss_chest")} Rương boss cuối khu vực`,
+        value:
+          "- Hạ boss tầng **100/200/300/400/500/700/900**: lập tức nhận một rương boss bắt buộc xử lý. Boss 50 tầng khác và boss 999 không cho rương này.\n- **Mở:** 70% nhận SSR, 30% nhận UR có lời nguyền. Tỷ lệ cố định, không chịu Luck hoặc pity. Đồ trùng tăng level.\n- **Bán:** cộng bonus bằng **50% payout gốc hiện tại**; số xu cụ thể ghi trên bảng.\n- Không được bỏ qua hoặc rút thưởng khi rương chưa xử lý. Mở/bán không tính thêm một tầng.",
+      },
+    ],
+    encounters: [
+      {
+        name: "Các tình huống có thể gặp",
+        value:
+          "- Pool thường: quái thường 53%, Elite 12%, hòm 10%, Shrine 8%, kho báu 5%, bẫy 6%, sự kiện đặc biệt 4%, phòng trống 2%. Đây là tỷ lệ gốc; điều kiện tầng/Rift có thể thay đổi lựa chọn hợp lệ.\n- Boss mỗi 50 tầng và boss cuối 999 được ưu tiên; tiếp theo là RNGesus, Tower Remembers và Grave Echo trước khi chọn pool thường. Sự kiện đặc biệt cách nhau ít nhất 2 tầng.\n- Mỗi event ghi tên, lựa chọn, tỷ lệ và hậu quả trên bảng; kết quả thực tế nằm ở **Lượt vừa rồi**. Event trả tiền hoặc thu thuế không xuất hiện ở tầng 1.",
+      },
+      {
+        name: `${E.shrine} Shrine, bẫy và Lucky Break`,
+        value:
+          "- Shrine có 6 loại, cơ hội bằng nhau; có cả lợi và hại. Chạm nhận hiệu ứng, bỏ qua đi tiếp. Đọc bảng chính trước khi chọn.\n- Thu thuế hoặc trộm bình có thể được tránh bằng **Lucky Break**: mỗi Luck cho 1,5 điểm %, tối đa 30%; tỷ lệ hiện tại ghi trên event.\n- **Wrong Portal:** 50% tốt / 50% xấu; Luck không thay đổi tỷ lệ. Nhánh xấu gọi Elite đánh phủ đầu; phải hạ Elite mới vượt tầng.\n- Phòng trống cho phép đi tiếp hoặc rút thưởng.",
+      },
+      {
+        name: "Các sự kiện đặc biệt",
+        value:
+          "Healer · Treasure Goblin · Blacksmith · Purifier · Sacrificial Altar · Cursed Gambler · Lost Adventurer · Fountain · Horadric Forge · Rift Merchant · Mirror · Treasure Room · Contract · Class Shrine · Strange Doors · Duelist · Payout Shop · Blood Shop · Diamond Shop.\n\nChỉ những event đủ điều kiện mới được chọn. Các lựa chọn có thể đổi HP, thuộc tính, trang bị, payout hoặc tạo hiệu ứng tạm thời. Không phải event nào cũng miễn phí hoặc an toàn; đọc giá, tỷ lệ và điều kiện trên bảng trước khi xác nhận.",
+      },
+      {
+        name: `${eventIcon("memory")} The Tower Remembers`,
+        value:
+          "- Dòng **The Tower will remember this** nghĩa là hành động vừa rồi tạo một hậu quả hẹn sau **10–30 tầng**, tối đa 8 hậu quả đang chờ.\n- Có thể đến từ bỏ qua event, hiến tế, cứu/cướp nhà thám hiểm, đập gương, bán hòm, hối lộ hoặc cầu nguyện RNGesus thành công.\n- Khi đến hạn: **50%** hồi 10–20% Max HP và bonus 10–30% cược; **25%** mất 10% payout; **25%** phải đánh Bounty Hunter. Kết quả đã khóa lúc ghi nhận, không đổi khi mở lại bảng. Boss/RNGesus có thể làm hậu quả xuất hiện muộn hơn.",
+      },
+      {
+        name: `${eventIcon("echo")} Grave Echo`,
+        value:
+          "- Từ tầng 101, có 1% cơ hội ở tình huống hợp lệ; tối đa một lần trong mỗi dải 100 tầng, không gặp mộ của chính mình.\n- Có thể cầu nguyện hồi HP, bỏ đi, cướp hoặc khiêu chiến. Cướp có thể đánh thức Echo; khiêu chiến tạo đối thủ mạnh hơn. Đọc tỷ lệ và phần thưởng trên bảng trước khi chọn.",
       },
     ],
     rngesus: [
       {
-        name: "RNGesus",
+        name: `${eventIcon("rngesus")} RNGesus: chọn để sống sót`,
         value:
-          "Chaos hiện bằng % trên bảng chơi. Chạy 75%, thất bại tự dùng vé; cầu nguyện 30%, thưởng SSR 85%/UR 15%; đánh chết; hối lộ cần payout ≥1.000 xu, −40% payout.",
-      },
-    ],
-    combat: [
-      {
-        name: "Cân bằng class",
-        value: `Run mới v${RELEASE.version}: ${Object.entries(balance.PROFILES)
-          .map(
-            ([key, profile]) => `${stats.CLASSES[key].name} ×${profile.power}`,
-          )
-          .join(
-            " · ",
-          )}. Hệ số áp dụng vào sức mạnh vật lý/phép trước khi tạo dải sát thương. Kỹ năng vẫn giữ cơ chế riêng; run đã bắt đầu giữ hệ số đã lưu.`,
-      },
-      {
-        name: "Chỉ số và chiến đấu v2",
-        value:
-          "STR/DEX/VIT/ENE tạo chỉ số; MP riêng. Skill tốn 2 MP. Tấn công hồi 70% Max MP cho Sorceress/Necromancer, 40% cho class khác, tối thiểu 1. Thủ: DEF ×2/+15 RES, giảm thêm 15%, miễn Crit, +1 MP. Bình hồi 35% + min(15%,VIT×0,05%) + item, cap 10–75%.",
-      },
-      {
-        name: `${E.checkpoint} Checkpoint và Rift`,
-        value:
-          "Mỗi 5 tầng: đầy HP, +2 bình, chọn +5 thuộc tính. Mỗi 10: modifier. Mỗi 25: Paradox 5 tầng. Sau 199/399/699/899: xóa một modifier (trừ Unstable). Stack 1–3 100%, 4–8 50%, sau đó 25%; cap 8 hiệu dụng. Soul Drain ceil(stack/4) charge mỗi combat, cap 3.",
+          "- **Không thể đánh bại; không được rút thưởng tại đây.** Chaos trên bảng là tỷ lệ gặp RNGesus.\n- **Đánh:** chết ngay, mất cược và thưởng tạm giữ.\n- **Chạy:** 75% sống; 25% thất bại. Khi thất bại, tự dùng 1 vé nếu có; không có vé thì chết. Chạy thành công không tiêu vé.\n- **Hối lộ:** chỉ dùng khi payout hiển thị **từ 1.000 xu**. Thoát an toàn, giảm hệ số payout 40%; thưởng tích lũy về sau cũng chịu hệ số đã giảm. Ghi nhận Tower Remembers.\n- **Cầu nguyện:** 30% sống và nhận đồ (trong nhánh thành công: SSR 85%, UR 15%); 70% chết. Thành công ghi nhận Tower Remembers.\n- Vé chỉ cứu khi chạy thất bại; không cứu lựa chọn Đánh hoặc cầu nguyện thất bại. Giữ tối đa 1 vé.",
       },
     ],
     rewards: [
       {
-        name: "Dịch vụ và phần thưởng",
+        name: "Dịch vụ: giá và điều kiện",
         value:
-          "Rèn 12% payout tăng một cấp. Purifier 20% giải toàn bộ curse, giữ buff/cấp và chuyển SSR. Forge hấp thụ buff một cấp rồi chọn bonus. Payout Shop: 5%/12%/25% theo R/SR/SSR, tối đa 5/run. Blood Shop: 12%/25%/40% Max HP theo SR/SSR/UR, tối đa 3/run, giữ ≥1 HP. Diamond Shop từ tầng 101: 200/600/1.600 gem, tối đa 2/run. Mỗi loại cách ≥50 tầng.",
+          "- **Rèn:** trả 12% payout gốc, tăng một level gồm buff và curse còn lại. **Giải nguyền:** trả 20%, gỡ toàn bộ curse, giữ buff/level và chuyển đồ thành SSR.\n- **Horadric Forge:** nghiền một level đồ, giữ buff của level đó trong run, gỡ curse tương ứng rồi chọn bonus; hiệu ứng bình/vé/hồi HP không phát lại.\n- **Payout Shop:** R/SR/SSR giá 5%/12%/25% payout gốc, tối đa 5 lần mua/run. **Blood Shop:** SR/SSR/UR giá 12%/25%/40% Max HP, tối đa 3 lần; phải còn ít nhất 1 HP.\n- **Diamond Shop:** từ tầng 101, giá 200/600/1.600 kim cương, tối đa 2 lần; trừ ngay từ tài khoản, không hoàn khi chết.\n- Mỗi loại shop cách nhau ít nhất 50 tầng; mỗi lần gặp mua tối đa một món. Giá cụ thể và công dụng ghi trên bảng/Chi tiết.",
       },
       {
-        name: "Payout và phiên bản",
+        name: "Rút thưởng và mất thưởng",
         value:
-          "Thưởng tầng dừng tăng tại 100, event bonus vẫn tăng; cap 10 triệu xu. Rút thưởng/Summit mới nhận xu và gem tạm giữ, chết/bỏ/hết hạn mất toàn bộ. Kim cương mốc 100–900: 100/200/400/800/1.600/3.200/6.400/12.800/25.600, hạ 999: 51.200. Run cũ giữ luật legacy; run mới v2.0.1. Mỗi run lưu phiên bản và lịch sử để đối chiếu.",
+          "- Sau khi vượt ít nhất một tầng, **Rút thưởng** kết thúc run và nhận thưởng theo bảng. Rút trước tầng đầu là bỏ run, mất cược. RNGesus và rương boss chưa xử lý không cho rút.\n- Payout là **tổng thưởng xu**, không phải tiền lãi. Hệ số từ vượt tầng dừng tăng sau 100; bonus từ event vẫn có thể tăng. Giới hạn 10 triệu xu. Các khoản mua đồ/dịch vụ trong run làm giảm payout theo giá đã xác nhận.\n- Chết, bỏ run hoặc hết hạn: mất cược và toàn bộ xu/kim cương tạm giữ. Trang bị trong run cũng không chuyển vào túi Gacha.\n- Run mới dùng v2.0.1; run cũ tiếp tục theo phiên bản đã lưu.",
+      },
+      {
+        name: "Kim cương theo mốc",
+        value:
+          "**Tổng kim cương tạm giữ**, không cộng dồn từng mốc:\n100 → **100**; 200 → **200**; 300 → **400**; 400 → **800**; 500 → **1.600**; 600 → **3.200**; 700 → **6.400**; 800 → **12.800**; 900 → **25.600**; hạ boss 999 → **51.200**.\nChỉ rút thưởng mới nhận vào tài khoản. Ví dụ vượt tầng 300 rồi rút: nhận 400 kim cương, không phải 100 + 200 + 400.",
       },
     ],
   };
