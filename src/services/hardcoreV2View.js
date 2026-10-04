@@ -30,12 +30,12 @@ const SKILLS = {
 };
 const SHRINES = {
   amazon: "20% thêm phát thứ ba khi dùng Barrage.",
-  barbarian: "+8 DEF khi HP ≤30%.",
+  barbarian: `${E.defense} DEF +8 khi ${E.hp} HP ≤30%.`,
   assassin: "Chắc chắn né một phản công.",
   sorceress: "Một skill miễn phí.",
   druid: "Hồi 5% Max HP mỗi tầng trong ba tầng kế tiếp.",
   necromancer: "Chặn một đòn phản công.",
-  paladin: "+10 RES khi nhận phép.",
+  paladin: `${E.res} RES +10 khi nhận phép.`,
 };
 const delta = (state, key, suffix = "") => {
   const n = state.lastStatChanges?.[key] || 0;
@@ -103,13 +103,13 @@ function effectText(effects, level = 1) {
     evasion: "EVA",
     resistance: `${E.res} RES`,
     critChance: "Crit",
-    potionPower: "Hiệu lực bình",
+    potionPower: `${E.potion} Hiệu lực bình`,
     bossDamage: "DMG Boss",
     eliteDamage: "DMG Elite",
     mimicDetection: "Phát hiện Mimic",
     goblinChance: "Bắt Goblin",
     legendaryFind: "Tìm SSR",
-    floorHpLoss: "HP mất/tầng",
+    floorHpLoss: `${E.hp} HP mất/tầng`,
     mimicChance: "Mimic",
     damageTaken: "DMG nhận",
   };
@@ -128,7 +128,7 @@ function effectText(effects, level = 1) {
   return (
     Object.entries(effects)
       .map(([key, value]) => {
-        if (key === "defenseSet") return "DEF = 0";
+        if (key === "defenseSet") return `${E.defense} DEF = 0`;
         if (key === "bonusPenalty")
           return `Payout ×${(1 - value).toFixed(2)} mỗi cấp chưa giải`;
         if (key === "potions")
