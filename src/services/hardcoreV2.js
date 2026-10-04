@@ -1671,6 +1671,10 @@ function act(state, session, action, rng) {
             roll < 0.5 ? "rare" : roll < 0.8 ? "legendary" : "cursed";
           receiveItem(state, randomItem(rarity, rng));
           state.lastLog += `\n${E.chest} Phần thưởng hạ Ancient Mimic: đã nhận trang bị.`;
+        } else if (e.rank === "mimic" && e.name === "Blood Mimic") {
+          const rarity = rng() < 0.6 ? "rare" : "legendary";
+          receiveItem(state, randomItem(rarity, rng));
+          state.lastLog += `\n${E.chest} Phần thưởng hạ Blood Mimic: đã nhận trang bị.`;
         }
         if (
           e.rank === "boss" &&
