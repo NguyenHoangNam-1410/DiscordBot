@@ -159,6 +159,15 @@ function receiveItem(state, definition, levels = 1, cleansedLevels = 0) {
           (state.discardedTicketsThisTurn || 0) + discarded;
     }
   }
+  if (state.lastReceivedItems)
+    state.lastReceivedItems.push({
+      name: item.name,
+      rarity: item.rarity,
+      level: item.level,
+      levels,
+      definition: structuredClone(definition),
+      curseLevels: Math.max(0, levels - cleansedLevels),
+    });
   return item;
 }
 function receiveSnapshot(state, snapshot) {
@@ -1454,6 +1463,7 @@ function act(state, session, action, rng) {
     ].map((key) => [key, state[key]]),
   );
   state.lastLog = "";
+  state.lastReceivedItems = [];
   delete state.lastUpgrade;
   delete state.lastEventResult;
   delete state.pendingEventResult;
