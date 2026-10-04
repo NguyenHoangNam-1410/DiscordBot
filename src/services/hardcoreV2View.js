@@ -542,10 +542,11 @@ function equipmentSummary(state) {
       ([key, value]) => key === "defenseSet" || value !== 0,
     ),
   );
-  return `${state.items.length} món${Object.keys(active).length ? ` · ${effectText(active)}` : ""}`.slice(
-    0,
-    700,
-  );
+  return (
+    Object.keys(active).length
+      ? effectText(active)
+      : "Không có chỉ số cộng thêm."
+  ).slice(0, 700);
 }
 function hasEncounterDetails(s) {
   if (s.phase !== "encounter") return false;
@@ -752,7 +753,7 @@ function embed(state, userId, result = null, sessionId = null) {
       inline: true,
     },
     {
-      name: "🎒 Trang bị",
+      name: `🎒 Trang bị (${state.items.length})`,
       value:
         equipmentSummary(state) +
         (state.payoutFactor < 1
