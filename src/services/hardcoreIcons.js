@@ -71,6 +71,9 @@ function eventIcon(key) {
     summit: "event_boss",
     final_boss: "event_boss",
   };
-  return icon(aliases[key] || `event_${key}`, "⚠️");
+  return icon(
+    aliases[key] || `event_${key}`,
+    key === "boss_chest" ? E.chest : "⚠️",
+  );
 }
 module.exports = { E, SKILL_ICONS, RIFT_ICONS, eventIcon };

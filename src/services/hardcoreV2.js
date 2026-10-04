@@ -232,7 +232,9 @@ function nextMilestone(state, session, rng) {
   const phase = state.pendingMilestones.shift();
   if (phase) {
     state.phase = phase;
-    state.encounter = { type: phase };
+    state.encounter =
+      phase === "boss_chest" ? state.pendingBossChest : { type: phase };
+    if (phase === "boss_chest") delete state.pendingBossChest;
     return;
   }
   if (state.finalBossDefeated && state.cleared === 999) {
@@ -323,6 +325,7 @@ function completeFloor(state, session, rng, reward = 1) {
   if (floor >= 100) state.completed = true;
   state.runDiamonds = runDiamondReward(state);
   state.floor = Math.min(999, floor + 1);
+  if (state.pendingBossChest) state.pendingMilestones.unshift("boss_chest");
   nextMilestone(state, session, rng);
 }
 function legendaryChance(state) {
@@ -1157,6 +1160,11 @@ function surpriseActions(state) {
   );
 }
 function actions(state) {
+  if (state.phase === "boss_chest")
+    return [
+      { action: "boss_open", label: "Mở rương · SSR 70% / UR 30%" },
+      { action: "boss_sell", label: "Bán rương · +50% payout" },
+    ];
   if (state.phase === "upgrade")
     return stats.ATTRIBUTES.map((key) => ({
       action: `upgrade_${key}`,
@@ -1491,7 +1499,8 @@ function actSurprise(state, session, action, rng) {
 }
 function act(state, session, action, rng) {
   if (action === "retreat") {
-    if (state.encounter.type === "rngesus") throw new Error("CANNOT_RETREAT");
+    if (state.encounter.type === "rngesus" || state.phase === "boss_chest")
+      throw new Error("CANNOT_RETREAT");
     return state.phase === "summit"
       ? "summit"
       : state.cleared
@@ -1535,7 +1544,10 @@ function act(state, session, action, rng) {
   delete state.lastUpgrade;
   delete state.lastEventResult;
   delete state.pendingEventResult;
-  if (state.phase === "encounter" && state.encounter.type !== "combat")
+  if (
+    (state.phase === "encounter" && state.encounter.type !== "combat") ||
+    state.phase === "boss_chest"
+  )
     state.pendingEventResult = {
       name: state.encounter.name,
       type: state.encounter.type,
@@ -1543,7 +1555,19 @@ function act(state, session, action, rng) {
       before,
     };
   state.discardedTicketsThisTurn = 0;
-  if (state.phase === "upgrade") {
+  if (state.phase === "boss_chest") {
+    if (action === "boss_open") {
+      receiveItem(state, state.encounter.item);
+      state.lastLog = `${eventIcon("boss_chest")} Đã mở rương boss tầng ${state.encounter.bossFloor}.`;
+    } else {
+      const amount = Math.floor(rawPayout(state) * 0.5);
+      state.bonus +=
+        state.payoutFactor > 0 ? Math.ceil(amount / state.payoutFactor) : 0;
+      state.lastLog = `${eventIcon("boss_chest")} Bán rương boss: +50% payout gốc (${amount.toLocaleString("vi-VN")} xu), cộng vào thưởng của run.`;
+    }
+    finishEventResult(state);
+    nextMilestone(state, session, rng);
+  } else if (state.phase === "upgrade") {
     const key = action.slice(8);
     addSource(state, { [key]: 5 }, "checkpoint");
     state.lastUpgrade = {
@@ -1600,6 +1624,22 @@ function act(state, session, action, rng) {
           echoes.consume(session, e.echoId);
         }
         state.lastLog += `\n🏆 Hạ ${e.name}.`;
+        if (
+          e.rank === "boss" &&
+          !e.echoId &&
+          world.REGIONS.some(
+            (region) => region.start === state.floor && region.start > 1,
+          )
+        ) {
+          const rarity = rng() < 0.7 ? "legendary" : "cursed";
+          state.pendingBossChest = {
+            type: "boss_chest",
+            name: "Rương boss",
+            bossFloor: state.floor,
+            item: randomItem(rarity, rng),
+          };
+          state.lastLog += `\n${eventIcon("boss_chest")} Nhận rương boss: mở hoặc bán để tiếp tục.`;
+        }
         completeFloor(state, session, rng, e.rewardMultiplier);
       } else
         state.lastLog += `\n${enemyTurn(state, rng, acted.defend, acted.dodge)}`;

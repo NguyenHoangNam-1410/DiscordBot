@@ -498,6 +498,8 @@ function statTransitions(before, after, includeResources = false) {
   return parts.join(" · ") || "Không thay đổi chỉ số chiến đấu.";
 }
 function encounterText(s) {
+  if (s.phase === "boss_chest")
+    return `${eventIcon("boss_chest")} **RƯƠNG BOSS · TẦNG ${s.encounter.bossFloor}**\nPhần thưởng sau boss cuối khu vực. Chọn **mở hoặc bán** để tiếp tục.\n\n**Mở rương**\n- **70%:** nhận trang bị **SSR**.\n- **30%:** nhận trang bị **UR**, kèm lời nguyền.\nĐồ trùng tên tăng level. Tỷ lệ cố định, không bị Luck/pity thay đổi.\n\n**Bán rương**\n- Cộng **50% payout gốc hiện tại (${money(Math.floor(core.rawPayout(s) * 0.5))} xu)** vào thưởng của run.\nPhải xử lý rương trước khi rút thưởng hoặc đi tiếp.`;
   if (s.phase === "upgrade")
     return `${E.checkpoint} **CHECKPOINT** · Đã hồi đầy ${E.hp} HP và nhận thêm 2 ${E.potion} bình máu.\nChọn **+5 STR, DEX, VIT hoặc ENE**; dự báo thay đổi ở ngay bên dưới.`;
   if (s.phase === "paradox")
@@ -1001,17 +1003,19 @@ function rows(sessionId, state, disabled = false) {
             ? ButtonStyle.Success
             : ButtonStyle.Secondary,
       a.disabled,
-      a.action === "skill"
-        ? SKILL_ICONS[state.classKey]
-        : state.encounter.kind === "merchant" && a.action.startsWith("buy_")
-          ? merchantOffer(state.encounter.offers[Number(a.action.slice(4))])
-              .icon
-          : /^(event_|buy_|forge_|contract_|door_|duel_|hand_)/.test(a.action)
-            ? eventIcon(state.encounter.kind || state.encounter.type)
-            : null,
+      a.action.startsWith("boss_")
+        ? eventIcon("boss_chest")
+        : a.action === "skill"
+          ? SKILL_ICONS[state.classKey]
+          : state.encounter.kind === "merchant" && a.action.startsWith("buy_")
+            ? merchantOffer(state.encounter.offers[Number(a.action.slice(4))])
+                .icon
+            : /^(event_|buy_|forge_|contract_|door_|duel_|hand_)/.test(a.action)
+              ? eventIcon(state.encounter.kind || state.encounter.type)
+              : null,
     ),
   );
-  if (state.encounter.type !== "rngesus")
+  if (state.encounter.type !== "rngesus" && state.phase !== "boss_chest")
     buttons.push(
       button(
         prefix + "retreat",
