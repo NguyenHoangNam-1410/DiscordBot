@@ -1520,6 +1520,7 @@ function act(state, session, action, rng) {
     state.pendingEventResult = {
       name: state.encounter.name,
       type: state.encounter.type,
+      kind: state.encounter.kind,
       before,
     };
   state.discardedTicketsThisTurn = 0;

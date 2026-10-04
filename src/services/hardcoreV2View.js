@@ -15,7 +15,7 @@ const emoji = require("../discordEmojiMap");
 const { appEmoji } = require("../utils/appEmoji");
 const { resultBlock } = require("../utils/rewardText");
 const icon = (key, fallback) => appEmoji(key, emoji[`:${key}:`] || fallback);
-const { E, SKILL_ICONS, RIFT_ICONS } = require("./hardcoreIcons");
+const { E, SKILL_ICONS, RIFT_ICONS, eventIcon } = require("./hardcoreIcons");
 const rarityLabel = (r) =>
   ({ common: "R", rare: "SR", legendary: "SSR", cursed: "UR" })[r];
 const percent = (n) => `${Math.round(n * 1000) / 10}%`;
@@ -148,7 +148,8 @@ function itemText(item, level = 1) {
 }
 function randomEventText(s) {
   const e = s.encounter;
-  const heading = (name, intro) => `**${name}:** (${intro})`;
+  const heading = (name, intro) =>
+    `${eventIcon(["surprise", "trap"].includes(e.type) ? e.kind : e.type)} **${name}:** (${intro})`;
   const option = (name, outcomes) =>
     `**${name}**\n${outcomes.map(([chance, text]) => `- ${chance ? `**${chance}:** ` : ""}${text}`).join("\n")}`;
   const show = (name, intro, options) =>
@@ -168,7 +169,7 @@ function randomEventText(s) {
     };
     const odds = e.odds || core.chestOdds(s, e.name === "Treasure Chest");
     return show(
-      `${E.chest} ${e.name}`,
+      e.name,
       e.revealed
         ? "Đã phát hiện Mimic."
         : "Mở để nhận đồ hoặc gặp nguy hiểm; trùng tên tăng level.",
@@ -187,7 +188,7 @@ function randomEventText(s) {
   }
   if (e.type === "shrine")
     return show(
-      `${E.shrine} Shrine`,
+      "Shrine",
       "Chạm để nhận một hiệu ứng; 6 loại có tỷ lệ bằng nhau, mỗi loại 1/6 ≈ 16,7%.",
       [
         option("Chạm Shrine", [
@@ -451,11 +452,11 @@ function encounterText(s) {
   if (s.phase === "upgrade")
     return `${E.checkpoint} **CHECKPOINT** · Đã hồi đầy ${E.hp} HP và nhận thêm 2 ${E.potion} bình máu.\nChọn **+5 STR, DEX, VIT hoặc ENE**; dự báo thay đổi ở ngay bên dưới.`;
   if (s.phase === "paradox")
-    return "**Máu là tiền:** mất HP do nguồn thù địch tăng payout, hồi HP giảm payout; biên ±50%. Chi phí tự nguyện không tăng thưởng.\n**Ngược đời:** vật lý dùng DEF làm sức tấn công; DEF chống vật lý lấy trung bình sát thương vật lý.\nCả hai chỉ có hiệu lực trong đúng 5 tầng tiếp theo.";
+    return `${eventIcon("paradox")} **Máu là tiền:** mất HP do nguồn thù địch tăng payout, hồi HP giảm payout; biên ±50%. Chi phí tự nguyện không tăng thưởng.\n**Ngược đời:** vật lý dùng DEF làm sức tấn công; DEF chống vật lý lấy trung bình sát thương vật lý.\nCả hai chỉ có hiệu lực trong đúng 5 tầng tiếp theo.`;
   if (s.phase === "severance")
-    return "Xóa **toàn bộ stack** của một modifier có hại. Unstable Rift được giữ. Chọn một nút để tiếp tục.";
+    return `${eventIcon("severance")} Xóa **toàn bộ stack** của một modifier có hại. Unstable Rift được giữ. Chọn một nút để tiếp tục.`;
   if (s.phase === "summit")
-    return "🏔️ Đã hạ Deimoss tầng 999. Bấm **Rút thưởng** để chốt chiến thắng và phần thưởng.";
+    return `${eventIcon("boss")} Đã hạ Deimoss tầng 999. Bấm **Rút thưởng** để chốt chiến thắng và phần thưởng.`;
   const e = s.encounter;
   const formatted = randomEventText(s);
   if (formatted) return formatted;
@@ -477,11 +478,12 @@ function encounterText(s) {
     );
   }
   if (e.type === "memory")
-    return "**The Tower Remembers:** (Hành động trước đó để lại hậu quả.)\n\n**Đi tiếp:** nhận hiệu ứng đã được khóa từ trước.";
-  if (e.type === "empty") return "Phòng trống. Đi tiếp hoặc rút thưởng.";
+    return `${eventIcon("memory")} **The Tower Remembers:** (Hành động trước đó để lại hậu quả.)\n\n**Đi tiếp:** nhận hiệu ứng đã được khóa từ trước.`;
+  if (e.type === "empty")
+    return `${eventIcon("empty")} Phòng trống. Đi tiếp hoặc rút thưởng.`;
   const k = e.kind;
   if (k.endsWith("_shop"))
-    return `**${e.name}** · mua tối đa **một món**. Giá và offer đã khóa.\n${e.offers.map((offer, i) => `**${i + 1}. ${offer.item.name} [${rarityLabel(offer.item.rarity)}] · ${money(offer.price)} ${k === "blood_shop" ? "HP" : k === "diamond_shop" ? "kim cương" : "xu payout"}**\n${itemText(offer.item)}`).join("\n")}\n${k === "blood_shop" ? "Phải còn ít nhất 1 HP sau mua." : k === "diamond_shop" ? "Kim cương bị trừ ngay khi mua, kể cả run sau đó tử trận." : "Chi phí lấy từ payout gốc; không dùng bonus Paradox để mua."}`;
+    return `${eventIcon(e.kind)} **${e.name}** · mua tối đa **một món**. Giá và offer đã khóa.\n${e.offers.map((offer, i) => `**${i + 1}. ${offer.item.name} [${rarityLabel(offer.item.rarity)}] · ${money(offer.price)} ${k === "blood_shop" ? "HP" : k === "diamond_shop" ? "kim cương" : "xu payout"}**\n${itemText(offer.item)}`).join("\n")}\n${k === "blood_shop" ? "Phải còn ít nhất 1 HP sau mua." : k === "diamond_shop" ? "Kim cương bị trừ ngay khi mua, kể cả run sau đó tử trận." : "Chi phí lấy từ payout gốc; không dùng bonus Paradox để mua."}`;
   const target = s.items.find((x) => x.definition.id === e.targetId);
   const descriptions = {
     healer: `**Hồi phục:** hồi ${E.hp} HP bằng 30% Max HP, ít nhất 20; +1 ${E.potion} bình máu (tối đa 5). Miễn phí.`,
@@ -493,7 +495,7 @@ function encounterText(s) {
     class_shrine: `Hiệu lực ba tầng tiếp theo: ${SHRINES[s.classKey]}`,
     merchant: `Mua một offer bằng payout:\n${e.offers?.map((o) => `${o.key}: ${o.price} xu`).join(" · ")}`,
   };
-  return `**${e.name}**\n${descriptions[k] || "Chọn một hành động."}`;
+  return `${eventIcon(e.kind)} **${e.name}**\n${descriptions[k] || "Chọn một hành động."}`;
 }
 function encounterSummary(s) {
   if (s.phase !== "encounter") return encounterText(s);
@@ -509,13 +511,13 @@ function encounterSummary(s) {
         ancient_mimic: "Ancient Mimic",
       }[e.rank] || e.rank;
     const preview = core.incomingPreview(s);
-    return `👹 **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} Sát thương ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Bạn đánh vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} HP** · ${E.evasion} Quái trúng bạn **${percent(preview.chance)}** *(chưa Crit/Phòng thủ)*`;
+    return `${["boss", "final_boss"].includes(e.rank) ? eventIcon("boss") : "👹"} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} Sát thương ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Bạn đánh vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} HP** · ${E.evasion} Quái trúng bạn **${percent(preview.chance)}** *(chưa Crit/Phòng thủ)*`;
   }
   if (e.type === "shrine") return encounterText(s);
   if (e.type === "empty")
-    return "🕳️ **PHÒNG TRỐNG**\nĐi tiếp để vượt tầng hoặc rút thưởng.";
+    return `${eventIcon("empty")} **PHÒNG TRỐNG**\nĐi tiếp để vượt tầng hoặc rút thưởng.`;
   if (e.type === "surprise" && e.kind.endsWith("_shop"))
-    return `🛒 **${e.name}** · mua một món\n${e.offers.map((o, i) => `${i + 1}. **${o.item.name} [${rarityLabel(o.item.rarity)}]** · ${money(o.price)} ${e.kind === "blood_shop" ? "HP" : e.kind === "diamond_shop" ? "kim cương" : "xu payout"}`).join("\n")}\nXem Chi tiết để đọc công dụng và điều kiện mua.`;
+    return `${eventIcon(e.kind)} **${e.name}** · mua một món\n${e.offers.map((o, i) => `${i + 1}. **${o.item.name} [${rarityLabel(o.item.rarity)}]** · ${money(o.price)} ${e.kind === "blood_shop" ? "HP" : e.kind === "diamond_shop" ? "kim cương" : "xu payout"}`).join("\n")}\nXem Chi tiết để đọc công dụng và điều kiện mua.`;
   return encounterText(s);
 }
 function equipmentSummary(state) {
@@ -589,7 +591,7 @@ function encounterDetails(s) {
         deimoss:
           "Abyssal Spires giảm **25% sát thương bạn gây ra**, áp dụng mọi đòn. Dự báo skill trên bảng chính đã tính giảm trừ này.",
       }[e.mechanic] || "Boss này không có chu kỳ kích hoạt riêng.";
-    return `**${e.name} · Cơ chế đặc biệt**\n${mechanism}${e.drainCharges > 0 ? `\nSoul Drain: còn **${e.drainCharges}** lần; phản công trúng sẽ hút 1 MP.` : ""}`;
+    return `${eventIcon("boss")} **${e.name} · Cơ chế đặc biệt**\n${mechanism}${e.drainCharges > 0 ? `\nSoul Drain: còn **${e.drainCharges}** lần; phản công trúng sẽ hút 1 MP.` : ""}`;
   }
   if (e.type === "chest") {
     const names = {
@@ -638,7 +640,7 @@ function turnText(state) {
       memory: "The Tower Remembers",
     };
     details.push(
-      `**Do ${receipt.name || names[receipt.type] || "sự kiện"}:**\n- ${statTransitions(receipt.before, receipt.after, true).split(" · ").join("\n- ")}`,
+      `${eventIcon(["surprise", "trap"].includes(receipt.type) ? receipt.kind || Object.keys(core.EVENT_NAMES).find((key) => core.EVENT_NAMES[key] === receipt.name) || receipt.type : receipt.type)} **Do ${receipt.name || names[receipt.type] || "sự kiện"}:**\n- ${statTransitions(receipt.before, receipt.after, true).split(" · ").join("\n- ")}`,
     );
   }
   for (const item of state.lastReceivedItems || [])
@@ -749,7 +751,7 @@ function embed(state, userId, result = null, sessionId = null) {
     {
       name: `${E.rift} Rift modifier (${activeRifts.length})`,
       value:
-        `${mods}${state.paradox ? `\nParadox: ${state.paradox.kind === "blood" ? `Máu là tiền ${percent(state.paradox.bloodFactor)}` : "Ngược đời"} · hết tầng ${state.paradox.until}` : ""}`.slice(
+        `${mods}${state.paradox ? `\n${eventIcon("paradox")} Paradox: ${state.paradox.kind === "blood" ? `Máu là tiền ${percent(state.paradox.bloodFactor)}` : "Ngược đời"} · hết tầng ${state.paradox.until}` : ""}`.slice(
           0,
           1024,
         ),
@@ -773,10 +775,10 @@ function embed(state, userId, result = null, sessionId = null) {
         (state.classShrine &&
         state.floor >= state.classShrine.from &&
         state.floor <= state.classShrine.until
-          ? `\nClass Shrine · hết sau tầng ${state.classShrine.until}`
+          ? `\n${E.shrine} Class Shrine · hết sau tầng ${state.classShrine.until}`
           : "") +
         (state.contract
-          ? `\nHợp đồng: không ${{ potion: "bình", skill: "skill", defend: "thủ" }[state.contract.kind]} · ${state.contract.remaining} tầng`
+          ? `\n${eventIcon("contract")} Hợp đồng: không ${{ potion: "bình", skill: "skill", defend: "thủ" }[state.contract.kind]} · ${state.contract.remaining} tầng`
           : ""),
     },
   );
@@ -918,7 +920,11 @@ function rows(sessionId, state, disabled = false) {
             ? ButtonStyle.Success
             : ButtonStyle.Secondary,
       a.disabled,
-      a.action === "skill" ? SKILL_ICONS[state.classKey] : null,
+      a.action === "skill"
+        ? SKILL_ICONS[state.classKey]
+        : /^(event_|buy_|forge_|contract_|door_|duel_|hand_)/.test(a.action)
+          ? eventIcon(state.encounter.kind || state.encounter.type)
+          : null,
     ),
   );
   if (state.encounter.type !== "rngesus")

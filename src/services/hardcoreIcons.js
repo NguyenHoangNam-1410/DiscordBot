@@ -61,4 +61,16 @@ const RIFT_ICONS = Object.fromEntries(
     "cursed_ground",
   ].map((key) => [key, icon(`rift_${key}`, "🌀")]),
 );
-module.exports = { E, SKILL_ICONS, RIFT_ICONS };
+function eventIcon(key) {
+  const aliases = {
+    shrine: "event_shrine",
+    class_shrine: "event_shrine",
+    chest: "event_chest",
+    treasure_room: "event_chest",
+    upgrade: "checkpoint",
+    summit: "event_boss",
+    final_boss: "event_boss",
+  };
+  return icon(aliases[key] || `event_${key}`, "⚠️");
+}
+module.exports = { E, SKILL_ICONS, RIFT_ICONS, eventIcon };
