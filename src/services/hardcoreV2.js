@@ -1190,8 +1190,8 @@ function actions(state) {
   const e = state.encounter;
   if (e.type === "combat")
     return [
-      { action: "attack", label: `Tấn công (+${attackManaGain(state)} MP)` },
-      { action: "defend", label: "Phòng thủ (+1 MP)" },
+      { action: "attack", label: `+${attackManaGain(state)} MP` },
+      { action: "defend", label: "+1 MP" },
       {
         action: "skill",
         label: `${stats.CLASSES[state.classKey].skill} (${skillManaCost(state) === 0 ? "0 MP" : "−2 MP"})`,
