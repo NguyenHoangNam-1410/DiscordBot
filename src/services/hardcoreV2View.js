@@ -70,7 +70,7 @@ function statLine(s, changes = false, compact = false) {
     `${healthBar(s.hp, s.maxHp)}${d("hp")}${d("maxHp", " MAX")}`,
     `${E.str} **STR** **${s.str}**${d("str")}${STAT_SEPARATOR}${E.dex} **DEX** **${s.dex}**${d("dex")}${STAT_SEPARATOR}${E.vit} **VIT** **${s.vit}**${d("vit")}${STAT_SEPARATOR}${E.ene} **ENE** **${s.ene}**${d("ene")}`,
     `${E.mana} **MP** **${s.mana}/${s.maxMana}**${d("mana")}${d("maxMana", " MAX")}${STAT_SEPARATOR}${E.potion} **Bình** ${s.potions}${d("potions")}${STAT_SEPARATOR}${E.ticket} **Vé** ${s.escapeTokens}${d("escapeTokens")}`,
-    `${E.attack} **Vật lý** **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")}${STAT_SEPARATOR}${E.magic} **Phép** **${s.spellMin}–${s.spellMax}**${d("spellMin")}`,
+    `${E.attack} **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")}${STAT_SEPARATOR}${E.magic} **Phép** **${s.spellMin}–${s.spellMax}**${d("spellMin")}`,
     `${E.defense} **DEF** **${defense}**${inverse ? " (Paradox)" : d("defense")}${STAT_SEPARATOR}${E.res} **RES** **${s.resistance}%**${d("resistance")}${STAT_SEPARATOR}${E.luck} **LUCK** **${s.luck}**${d("luck")}`,
   ];
   if (!compact)
@@ -93,7 +93,7 @@ function battleStats(s) {
     necromancer: "Phép luôn trúng, không Crit; chặn phản công.",
     paladin: "Vật lý, có thể trượt/Crit; tự Phòng thủ.",
   }[s.classKey];
-  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${s.maxMana}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé** **${s.escapeTokens}**\n${E.attack} **Tấn công** **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${s.resistance}%**\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP): ${skill.low}–${skill.high} DMG**\n${detail}\n*DMG đã tính phòng thủ/kháng của quái hiện tại; vật lý giả định trúng, chưa Crit.*`;
+  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${s.maxMana}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé** **${s.escapeTokens}**\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${s.resistance}%**\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP): ${skill.low}–${skill.high} DMG**\n${detail}\n*DMG đã tính phòng thủ/kháng của quái hiện tại; vật lý giả định trúng, chưa Crit.*`;
 }
 function effectText(effects, level = 1) {
   const names = {
