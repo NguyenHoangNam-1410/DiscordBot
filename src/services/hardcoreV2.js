@@ -116,6 +116,15 @@ const EVENT_NAMES = {
 const pick = (pool, rng) => pool[Math.floor(rng() * pool.length)];
 const int = (lo, hi, rng) => lo + Math.floor(rng() * (hi - lo + 1));
 const randomItem = (rarity, rng) => structuredClone(pick(ITEMS[rarity], rng));
+const MERCHANT_PRICES = {
+  potion: 0.025,
+  heal: 0.04,
+  luck: 0.05,
+  item: 0.075,
+  ticket: 0.125,
+  chest: 0.075,
+};
+const DIAMOND_PRICES = { rare: 100, legendary: 300, cursed: 480 };
 function rngesusFleeChance(state) {
   const count = Number.isSafeInteger(state.rngesusFleeCount)
     ? Math.max(0, state.rngesusFleeCount)
@@ -126,6 +135,22 @@ function normalize(state) {
   if (!["2.0.0", "2.0.1"].includes(state.releaseVersion))
     throw new Error("UNSUPPORTED_HARDCORE_VERSION");
   recompute(state);
+  const current = state.encounter;
+  if (
+    current?.type === "surprise" &&
+    ["merchant", "diamond_shop"].includes(current.kind) &&
+    current.priceVersion !== 2
+  ) {
+    for (const offer of current.offers || []) {
+      if (current.kind === "diamond_shop")
+        offer.price = DIAMOND_PRICES[offer.item.rarity];
+      else {
+        offer.price = Math.max(1, Math.ceil(offer.price * 0.5));
+        offer.fraction = MERCHANT_PRICES[offer.key];
+      }
+    }
+    current.priceVersion = 2;
+  }
   state.rngesusFleeCount = Number.isSafeInteger(state.rngesusFleeCount)
     ? Math.max(0, state.rngesusFleeCount)
     : 0;
@@ -661,20 +686,18 @@ function makeSurprise(state, rng, kind = null) {
                   maxHp * { rare: 0.12, legendary: 0.25, cursed: 0.4 }[rarity],
                 ),
               )
-            : { rare: 200, legendary: 600, cursed: 1600 }[rarity];
+            : DIAMOND_PRICES[rarity];
       return { item: randomItem(rarity, rng), price };
     });
     state.shopCounts[kind] = (state.shopCounts[kind] || 0) + 1;
     state.shopLast[kind] = state.floor;
+    if (kind === "diamond_shop") e.priceVersion = 2;
   }
   if (kind === "merchant") {
-    const pool = [
-      { key: "potion", fraction: 0.05 },
-      { key: "heal", fraction: 0.08 },
-      { key: "luck", fraction: 0.1 },
-      { key: "item", fraction: 0.15 },
-      { key: "ticket", fraction: 0.25 },
-    ];
+    const pool = Object.entries(MERCHANT_PRICES).map(([key, fraction]) => ({
+      key,
+      fraction,
+    }));
     e.offers = [];
     while (e.offers.length < 3) {
       const index = int(0, pool.length - 1, rng);
@@ -683,8 +706,10 @@ function makeSurprise(state, rng, kind = null) {
         ...offer,
         price: serviceCost(state, offer.fraction),
         item: offer.key === "item" ? randomItem("rare", rng) : null,
+        ...(offer.key === "chest" ? { chest: makeChest(state, rng) } : {}),
       });
     }
+    e.priceVersion = 2;
   }
   return e;
 }
@@ -1150,7 +1175,7 @@ function surpriseActions(state) {
   if (k === "merchant")
     return e.offers.map((offer, i) => ({
       action: `buy_${i}`,
-      label: `${{ potion: "Bình", heal: "Hồi đầy", luck: "Luck +1", item: "Item SR", ticket: "Vé" }[offer.key]} · ${offer.price} xu`,
+      label: `${{ potion: "Bình", heal: "Hồi đầy", luck: "Luck +1", item: "Item SR", ticket: "Vé", chest: "Rương · mở ngay" }[offer.key]} · ${offer.price} xu`,
       disabled: rawPayout(state) < offer.price,
     }));
   if (k === "duelist") {
@@ -1353,6 +1378,27 @@ function actions(state) {
     ];
   return [{ action: "next", label: "Đi tiếp" }];
 }
+function openChest(state, session, chest, rng, prefix = "") {
+  if (["mimic", "ancient_mimic"].includes(chest.kind)) {
+    state.pityRare++;
+    state.pityLegendary++;
+    state.encounter = chest.mimic;
+    state.lastLog = `${prefix}${chest.kind === "ancient_mimic" ? "Ancient Mimic" : "Mimic"} xuất hiện!`;
+    finishEventResult(state);
+    return;
+  }
+  const rarity = chest.kind === "safe" ? chest.rarity : null;
+  state.pityRare = ["rare", "legendary", "cursed"].includes(rarity)
+    ? 0
+    : state.pityRare + 1;
+  state.pityLegendary = rarity === "legendary" ? 0 : state.pityLegendary + 1;
+  if (rarity) {
+    receiveItem(state, chest.item);
+    state.lastLog = `${prefix}${E.chest} Đã mở rương và nhận trang bị.`;
+  } else
+    state.lastLog = `${prefix}${chest.kind === "fake" ? "SSR giả: không có hiệu ứng." : "Hòm rỗng."}`;
+  completeFloor(state, session, rng, 0);
+}
 function actSurprise(state, session, action, rng) {
   const e = state.encounter,
     k = e.kind;
@@ -1384,6 +1430,16 @@ function actSurprise(state, session, action, rng) {
         operationId: `hardcore-shop:${session.id}:${state.turn}`,
       });
     else charge(state, offer.price);
+    if (k === "merchant" && offer.key === "chest") {
+      openChest(
+        state,
+        session,
+        offer.chest,
+        rng,
+        `${eventIcon("merchant")} Đã mua ${E.chest} rương giá **${offer.price.toLocaleString("vi-VN")} xu** và mở ngay.\n`,
+      );
+      return;
+    }
     if (offer.item) {
       const item = receiveItem(state, offer.item);
       done(`${E.backpack} Nhận ${item.name} Lv.${item.level}.`);
@@ -1776,26 +1832,7 @@ function act(state, session, action, rng) {
       } else if (action === "leave") {
         state.lastLog = "Tránh Mimic.";
         completeFloor(state, session, rng, 0);
-      } else if (["mimic", "ancient_mimic"].includes(e.kind)) {
-        state.pityRare++;
-        state.pityLegendary++;
-        state.encounter = e.mimic;
-        state.lastLog = "Mimic xuất hiện!";
-      } else {
-        const rarity = e.kind === "safe" ? e.rarity : null;
-        state.pityRare = ["rare", "legendary", "cursed"].includes(rarity)
-          ? 0
-          : state.pityRare + 1;
-        state.pityLegendary =
-          rarity === "legendary" ? 0 : state.pityLegendary + 1;
-        if (rarity) {
-          const item = receiveItem(state, e.item);
-          state.lastLog = `${E.backpack} ${item.name} Lv.${item.level}.`;
-        } else
-          state.lastLog =
-            e.kind === "fake" ? "SSR giả: không có hiệu ứng." : "Hòm rỗng.";
-        completeFloor(state, session, rng, 0);
-      }
+      } else openChest(state, session, e, rng);
     } else if (e.type === "shrine") {
       if (action === "touch") {
         if (e.kind === "healing") heal(state, state.maxHp);

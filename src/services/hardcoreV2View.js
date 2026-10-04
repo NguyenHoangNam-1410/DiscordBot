@@ -182,6 +182,20 @@ function merchantOffer(offer) {
         button: "Vé RNGesus",
         icon: E.ticket,
       },
+      chest: {
+        name: `${E.chest} Rương thường`,
+        detail: `Mua sẽ mở ngay. Tỷ lệ và bảo hiểm như hòm thường; có thể rỗng, giả hoặc gặp Mimic.\n${Object.entries(
+          offer.chest?.odds || {},
+        )
+          .filter(([, chance]) => chance > 0)
+          .map(
+            ([key, chance]) =>
+              `- **${percent(chance)}:** ${{ ancient_mimic: "Ancient Mimic", mimic: "Mimic", legendary: "SSR", cursed: "UR kèm lời nguyền", rare: "SR", common: "R", empty: "Rỗng", fake: "Đồ giả" }[key]}`,
+          )
+          .join("\n")}`,
+        button: "Rương · mở ngay",
+        icon: E.chest,
+      },
     }[offer.key] || {
       name: `${E.backpack} Vật phẩm`,
       detail: "",
@@ -1471,7 +1485,15 @@ function ratesFields(category) {
       {
         name: "Dịch vụ: giá và điều kiện",
         value:
-          "- **Rèn:** trả 12% payout gốc, tăng một level gồm buff và curse còn lại. **Giải nguyền:** trả 20%, gỡ toàn bộ curse, giữ buff/level và chuyển đồ thành SSR.\n- **Horadric Forge:** tiêu hao 1 level trang bị, giữ nguyên hiệu ứng có lợi của level đó trong run và xóa lời nguyền tương ứng; chọn thêm một phần thưởng. Không nhận lại bình/vé/HP hồi khi nhặt đồ.\n- **Payout Shop:** R/SR/SSR giá 5%/12%/25% payout gốc, tối đa 5 lần mua/run. **Blood Shop:** SR/SSR/UR giá 12%/25%/40% Max HP, tối đa 3 lần; phải còn ít nhất 1 HP.\n- **Diamond Shop:** từ tầng 101, giá 200/600/1.600 kim cương, tối đa 2 lần; trừ ngay từ tài khoản, không hoàn khi chết.\n- Mỗi loại shop cách nhau ít nhất 50 tầng; mỗi lần gặp mua tối đa một món. Giá cụ thể và công dụng ghi trên bảng/Chi tiết.",
+          "- **Rèn:** trả 12% payout gốc, tăng một level gồm buff và curse còn lại. **Giải nguyền:** trả 20%, gỡ toàn bộ curse, giữ buff/level và chuyển đồ thành SSR.\n- **Horadric Forge:** tiêu hao 1 level trang bị, giữ nguyên hiệu ứng có lợi của level đó trong run và xóa lời nguyền tương ứng; chọn thêm một phần thưởng. Không nhận lại bình/vé/HP hồi khi nhặt đồ.\n- **Payout Shop:** R/SR/SSR giá 5%/12%/25% payout gốc, tối đa 5 lần gặp/run. **Blood Shop:** SR/SSR/UR giá 12%/25%/40% Max HP, tối đa 3 lần gặp/run; phải còn ít nhất 1 HP.\n- **Diamond Shop:** từ tầng 101, giá SR 100 / SSR 300 / UR 480 kim cương, tối đa 2 lần gặp/run; trừ ngay từ tài khoản, không hoàn khi chết.\n- Mỗi loại shop cách nhau ít nhất 50 tầng; mỗi lần gặp mua tối đa một món. Giá cụ thể và công dụng ghi trên bảng/Chi tiết.",
+      },
+      {
+        name: `${eventIcon("merchant")} Rift Merchant · giá theo payout gốc`,
+        value: `Mỗi lần gặp có **3 loại hàng khác nhau**, chọn từ 6 loại; mua tối đa **1 món**. Giá được khóa khi gặp, làm tròn lên, tối thiểu 1 xu.\n- ${E.potion} +1 bình (tối đa 5): **2,5%** payout gốc.\n- ${E.hp} Hồi đầy HP: **4%**.\n- ${E.luck} +1 LUCK trong run: **5%**.\n- ${E.backpack} 1 trang bị SR: **7,5%**.\n- ${E.ticket} Vé thoát hiểm (tối đa 1): **12,5%**.\n- ${E.chest} Rương thường: **7,5%**, **mở ngay khi mua**; tỷ lệ và pity như hòm thường, có thể gặp Mimic hoặc rỗng/giả. Chi tiết liệt kê tỷ lệ của rương đang bán.\nTrả bằng payout của run; bonus Blood Paradox không dùng để mua.`,
+      },
+      {
+        name: `${eventIcon("diamond_shop")} Diamond Merchant`,
+        value: `Từ tầng **101**; tối đa **2 lần gặp/run**, cách ít nhất 50 tầng. Bỏ qua vẫn tính một lần gặp.\nMỗi lần có **3 món ngẫu nhiên**, độ hiếm của từng món độc lập: **40% SR / 40% SSR / 20% UR**.\nGiá: **SR 100 / SSR 300 / UR 480** ${icon("gem", "💎")}. Mua tối đa **1 món/lần gặp**. Kim cương trừ từ tài khoản ngay khi mua, không hoàn khi chết. UR kèm lời nguyền; đồ chỉ dùng trong run.`,
       },
       {
         name: `${eventIcon("horadric")} Horadric Forge · chuyển hóa trang bị`,
