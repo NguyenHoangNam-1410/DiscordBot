@@ -1665,6 +1665,13 @@ function act(state, session, action, rng) {
           echoes.consume(session, e.echoId);
         }
         state.lastLog += `\n🏆 Hạ ${e.name}.`;
+        if (e.rank === "ancient_mimic") {
+          const roll = rng();
+          const rarity =
+            roll < 0.5 ? "rare" : roll < 0.8 ? "legendary" : "cursed";
+          receiveItem(state, randomItem(rarity, rng));
+          state.lastLog += `\n${E.chest} Phần thưởng hạ Ancient Mimic: đã nhận trang bị.`;
+        }
         if (
           e.rank === "boss" &&
           !e.echoId &&
