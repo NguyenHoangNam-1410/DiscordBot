@@ -401,13 +401,9 @@ function completeFloor(state, session, rng, reward = 1) {
   if (state.classShrine && floor >= state.classShrine.until)
     state.classShrine = null;
   if (state.floorHpLoss) {
-    const lost = hurt(state, Math.max(1, state.maxHp * state.floorHpLoss));
-    state.lastLog += `\n🩸 Lời nguyền: −${lost} ${E.hp} HP.`;
-    if (!alive(state)) {
-      state.lastDeathCause =
-        "Lời nguyền trang bị rút HP cuối tầng khiến HP về 0.";
-      return;
-    }
+    const hpBefore = state.hp;
+    hurt(state, Math.max(1, state.maxHp * state.floorHpLoss), true, true);
+    state.lastLog += `\n🩸 Lời nguyền trang bị: ${E.hp} HP ${hpBefore}→**${state.hp}**, luôn chừa ít nhất **1 HP**.`;
   }
   if (floor % 5 === 0) {
     const hpBefore = state.hp,

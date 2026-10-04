@@ -138,6 +138,8 @@ function effectText(effects, level = 1) {
           return `+${value} ${E.ticket} vé khi nhận mỗi cấp (giữ tối đa 1)`;
         if (key === "heal") return `Hồi ${value} ${E.hp} HP khi nhận mỗi cấp`;
         const n = value * level;
+        if (key === "floorHpLoss")
+          return `Mất ${percent(n)} Max ${E.hp} HP cuối tầng (luôn chừa ít nhất 1 HP)`;
         return `${n > 0 ? "+" : ""}${percentages.includes(key) ? percent(n) : Math.round(n * 100) / 100} ${names[key] || key}`;
       })
       .join(" · ") || "Không có"
@@ -1396,7 +1398,7 @@ function ratesFields(category) {
       {
         name: `${E.backpack} Trang bị và bảo hiểm hòm`,
         value:
-          "- Catalog có **100 món:** R 32, SR 28, SSR 24, UR 16. Đồ chỉ tồn tại trong run; trùng tên tăng level và cộng hiệu ứng. **UR có cả buff và lời nguyền**.\n- Sau **5 hòm đã mở không nhận SR trở lên**, hòm kế bảo đảm SR+ và không có Mimic.\n- Sau **10 hòm không nhận SSR**, tỷ lệ SSR được cộng 2 điểm % mỗi lần tiếp theo; nhận SSR thì đặt lại bộ đếm. Luck cũng tăng tỷ lệ SSR, tổng tối đa 35% ở hòm thường.\n- Bảo hiểm này áp dụng hòm, không phải mọi nguồn nhận đồ.",
+          "- Catalog có **100 món:** R 32, SR 28, SSR 24, UR 16. Đồ chỉ tồn tại trong run; trùng tên tăng level và cộng hiệu ứng. **UR có cả buff và lời nguyền**. Lời nguyền rút HP cuối tầng luôn chừa ít nhất **1 HP**.\n- Sau **5 hòm đã mở không nhận SR trở lên**, hòm kế bảo đảm SR+ và không có Mimic.\n- Sau **10 hòm không nhận SSR**, tỷ lệ SSR được cộng 2 điểm % mỗi lần tiếp theo; nhận SSR thì đặt lại bộ đếm. Luck cũng tăng tỷ lệ SSR, tổng tối đa 35% ở hòm thường.\n- Bảo hiểm này áp dụng hòm, không phải mọi nguồn nhận đồ.",
       },
       {
         name: `${E.chest} Phần thưởng Ancient Mimic`,
