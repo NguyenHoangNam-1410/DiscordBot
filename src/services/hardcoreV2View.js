@@ -146,6 +146,55 @@ function effectText(effects, level = 1) {
 function itemText(item, level = 1) {
   return `${effectText(item.effects, level)}${item.curse ? `\n☣️ Curse: ${effectText(item.curse.effects, level)}` : ""}`;
 }
+function merchantOffer(offer) {
+  if (offer.item)
+    return {
+      name: `${E.backpack} ${offer.item.name} [${rarityLabel(offer.item.rarity)}]`,
+      detail: itemText(offer.item),
+      button: offer.item.name,
+      icon: E.backpack,
+    };
+  return (
+    {
+      potion: {
+        name: `${E.potion} Bình máu`,
+        detail: `+1 ${E.potion} bình máu (tối đa 5).`,
+        button: "Bình máu",
+        icon: E.potion,
+      },
+      heal: {
+        name: `${E.hp} Hồi đầy HP`,
+        detail: `Hồi đầy ${E.hp} HP.`,
+        button: "Hồi đầy HP",
+        icon: E.hp,
+      },
+      luck: {
+        name: `${E.luck} +1 LUCK`,
+        detail: `+1 ${E.luck} LUCK.`,
+        button: "+1 LUCK",
+        icon: E.luck,
+      },
+      ticket: {
+        name: `${E.ticket} Vé RNGesus`,
+        detail: `+1 ${E.ticket} vé (giữ tối đa 1); tự cứu khi bỏ chạy RNGesus thất bại.`,
+        button: "Vé RNGesus",
+        icon: E.ticket,
+      },
+    }[offer.key] || {
+      name: `${E.backpack} Vật phẩm`,
+      detail: "",
+      button: "Vật phẩm",
+      icon: E.backpack,
+    }
+  );
+}
+function shopCurrency(kind) {
+  return kind === "blood_shop"
+    ? `${E.hp} HP`
+    : kind === "diamond_shop"
+      ? `${icon("gem", "💎")} kim cương`
+      : `${icon("coin", "🪙")} xu payout`;
+}
 function randomEventText(s) {
   const e = s.encounter;
   const heading = (name, intro) =>
@@ -483,7 +532,7 @@ function encounterText(s) {
     return `${eventIcon("empty")} Phòng trống. Đi tiếp hoặc rút thưởng.`;
   const k = e.kind;
   if (k.endsWith("_shop"))
-    return `${eventIcon(e.kind)} **${e.name}** · mua tối đa **một món**. Giá và offer đã khóa.\n${e.offers.map((offer, i) => `**${i + 1}. ${offer.item.name} [${rarityLabel(offer.item.rarity)}] · ${money(offer.price)} ${k === "blood_shop" ? "HP" : k === "diamond_shop" ? "kim cương" : "xu payout"}**\n${itemText(offer.item)}`).join("\n")}\n${k === "blood_shop" ? "Phải còn ít nhất 1 HP sau mua." : k === "diamond_shop" ? "Kim cương bị trừ ngay khi mua, kể cả run sau đó tử trận." : "Chi phí lấy từ payout gốc; không dùng bonus Paradox để mua."}`;
+    return `${eventIcon(e.kind)} **${e.name}** · mua tối đa **một món**. Giá và offer đã khóa.\n${e.offers.map((offer, i) => `**${i + 1}. ${offer.item.name} [${rarityLabel(offer.item.rarity)}] · ${money(offer.price)} ${shopCurrency(k)}**\n${itemText(offer.item)}`).join("\n")}\n${k === "blood_shop" ? "Phải còn ít nhất 1 HP sau mua." : k === "diamond_shop" ? "Kim cương bị trừ ngay khi mua, kể cả run sau đó tử trận." : "Chi phí lấy từ payout gốc; không dùng bonus Paradox để mua."}`;
   const target = s.items.find((x) => x.definition.id === e.targetId);
   const descriptions = {
     healer: `**Hồi phục:** hồi ${E.hp} HP bằng 30% Max HP, ít nhất 20; +1 ${E.potion} bình máu (tối đa 5). Miễn phí.`,
@@ -493,7 +542,7 @@ function encounterText(s) {
     horadric: `Nghiền **một cấp ${target?.name} [${rarityLabel(target?.rarity)}]**: hấp thụ buff trong run, gỡ curse của cấp đó. Bình/vé/hồi HP không phát lại.\n\n**Chọn thêm một bonus:**\n- Sức mạnh: +6 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\n- Phòng thủ: 50% +7 ${E.str} STR / 50% +7 ${E.vit} VIT.\n- Sinh lực: +4 ${E.vit} VIT.\n- Vé: nhận 1 ${E.ticket} vé thoát hiểm (giữ tối đa 1).`,
     contract: `Trong 3 tầng, chọn một điều kiện:\n- **Không dùng ${E.potion} bình:** nhận đồ [SSR].\n- **Không dùng skill:** bonus +50% cược.\n- **Không phòng thủ:** +10 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\nVi phạm chỉ hủy thưởng.`,
     class_shrine: `Hiệu lực ba tầng tiếp theo: ${SHRINES[s.classKey]}`,
-    merchant: `Mua một offer bằng payout:\n${e.offers?.map((o) => `${o.key}: ${o.price} xu`).join(" · ")}`,
+    merchant: `Mua tối đa **một món** bằng xu payout:\n${e.offers.map((o) => `- **${merchantOffer(o).name}** · **${money(o.price)} ${icon("coin", "🪙")}**`).join("\n")}\nXem **Chi tiết** để đọc công dụng và điều kiện mua.`,
   };
   return `${eventIcon(e.kind)} **${e.name}**\n${descriptions[k] || "Chọn một hành động."}`;
 }
@@ -517,7 +566,7 @@ function encounterSummary(s) {
   if (e.type === "empty")
     return `${eventIcon("empty")} **PHÒNG TRỐNG**\nĐi tiếp để vượt tầng hoặc rút thưởng.`;
   if (e.type === "surprise" && e.kind.endsWith("_shop"))
-    return `${eventIcon(e.kind)} **${e.name}** · mua một món\n${e.offers.map((o, i) => `${i + 1}. **${o.item.name} [${rarityLabel(o.item.rarity)}]** · ${money(o.price)} ${e.kind === "blood_shop" ? "HP" : e.kind === "diamond_shop" ? "kim cương" : "xu payout"}`).join("\n")}\nXem Chi tiết để đọc công dụng và điều kiện mua.`;
+    return `${eventIcon(e.kind)} **${e.name}** · mua một món\n${e.offers.map((o, i) => `${i + 1}. **${E.backpack} ${o.item.name} [${rarityLabel(o.item.rarity)}]** · ${money(o.price)} ${shopCurrency(e.kind)}`).join("\n")}\nXem Chi tiết để đọc công dụng và điều kiện mua.`;
   return encounterText(s);
 }
 function equipmentSummary(state) {
@@ -605,7 +654,7 @@ function encounterDetails(s) {
       fake: "SSR giả (không công dụng)",
     };
     const odds = e.odds || core.chestOdds(s, e.name === "Treasure Chest");
-    return `**Tỷ lệ mở hòm**\n${Object.entries(odds)
+    return `${E.chest} **Tỷ lệ mở hòm**\n${Object.entries(odds)
       .filter(([, n]) => n > 0)
       .map(([key, n]) => `${names[key]}: **${percent(n)}**`)
       .join(
@@ -613,9 +662,9 @@ function encounterDetails(s) {
       )}\n\n**Kiểm tra:** ${percent(e.detectionChance)} phát hiện nếu có Mimic; không phát hiện chưa chắc an toàn.\n**Pity:** SR+ ${s.pityRare}/5 · SSR ${s.pityLegendary}/10.${e.guaranteed ? " Hòm này đảm bảo SR+, không Mimic." : ""}\n**Bán:** bonus +15% tiền cược. Đồ nhận chỉ dùng trong run; trùng tên tăng level. UR có curse.`;
   }
   if (e.type === "surprise" && e.kind.endsWith("_shop"))
-    return `**Công dụng các món đang bán**\n${e.offers.map((offer, i) => `${i + 1}. **${offer.item.name} [${rarityLabel(offer.item.rarity)}]**\n${itemText(offer.item)}`).join("\n\n")}\n\nMua tối đa **một món** trong lần gặp. ${e.kind === "blood_shop" ? "Trả bằng HP, phải còn ít nhất 1 HP sau mua." : e.kind === "diamond_shop" ? "Kim cương trừ ngay khi mua, không hoàn lại khi run kết thúc." : "Trả từ payout gốc; bonus Blood Paradox không dùng để mua."}`;
+    return `${eventIcon(e.kind)} **Công dụng các món đang bán**\n${e.offers.map((offer, i) => `${i + 1}. **${E.backpack} ${offer.item.name} [${rarityLabel(offer.item.rarity)}]**\n${itemText(offer.item)}`).join("\n\n")}\n\nMua tối đa **một món** trong lần gặp. ${e.kind === "blood_shop" ? "Trả bằng HP, phải còn ít nhất 1 HP sau mua." : e.kind === "diamond_shop" ? "Kim cương trừ ngay khi mua, không hoàn lại khi run kết thúc." : "Trả từ payout gốc; bonus Blood Paradox không dùng để mua."}`;
   if (e.type === "surprise" && e.kind === "merchant")
-    return `**Công dụng hàng hóa**\n${e.offers.map((o) => (o.item ? `**${o.item.name} [SR]**: ${itemText(o.item)}` : { potion: "Bình: thêm 1 bình (giới hạn 5).", heal: "Hồi đầy HP.", luck: "Luck: +1 Luck.", ticket: "Vé thoát: giữ tối đa 1, dùng ở RNGesus." }[o.key] || o.key)).join("\n")}\nChỉ mua một offer; trả từ payout gốc.`;
+    return `${eventIcon("merchant")} **Công dụng hàng hóa**\n${e.offers.map((o) => `**${merchantOffer(o).name}**\n${merchantOffer(o).detail}`).join("\n\n")}\nChỉ mua một món; trả từ payout gốc. Cần đủ payout để mua.`;
   return "Không có thông tin bổ sung; xem bảng chơi chính.";
 }
 function chaosLabel(s) {
@@ -911,7 +960,10 @@ function rows(sessionId, state, disabled = false) {
         inspect: "Kiểm tra",
         sell: "Bán hòm",
         leave: "Tránh Mimic",
-      }[a.action] || a.label,
+      }[a.action] ||
+        (state.encounter.kind === "merchant" && a.action.startsWith("buy_")
+          ? `${merchantOffer(state.encounter.offers[Number(a.action.slice(4))]).button} · ${money(state.encounter.offers[Number(a.action.slice(4))].price)} xu`
+          : a.label),
       a.action === "fight"
         ? ButtonStyle.Danger
         : ["attack", "open", "next", "flee"].includes(a.action)
@@ -922,9 +974,12 @@ function rows(sessionId, state, disabled = false) {
       a.disabled,
       a.action === "skill"
         ? SKILL_ICONS[state.classKey]
-        : /^(event_|buy_|forge_|contract_|door_|duel_|hand_)/.test(a.action)
-          ? eventIcon(state.encounter.kind || state.encounter.type)
-          : null,
+        : state.encounter.kind === "merchant" && a.action.startsWith("buy_")
+          ? merchantOffer(state.encounter.offers[Number(a.action.slice(4))])
+              .icon
+          : /^(event_|buy_|forge_|contract_|door_|duel_|hand_)/.test(a.action)
+            ? eventIcon(state.encounter.kind || state.encounter.type)
+            : null,
     ),
   );
   if (state.encounter.type !== "rngesus")
