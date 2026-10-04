@@ -64,10 +64,27 @@ const EVENT_NAMES = {
 const pick = (pool, rng) => pool[Math.floor(rng() * pool.length)];
 const int = (lo, hi, rng) => lo + Math.floor(rng() * (hi - lo + 1));
 const randomItem = (rarity, rng) => structuredClone(pick(ITEMS[rarity], rng));
+function rngesusFleeChance(state) {
+  const count = Number.isSafeInteger(state.rngesusFleeCount)
+    ? Math.max(0, state.rngesusFleeCount)
+    : 0;
+  return (100 - Math.min(5, count) * 5) / 100;
+}
 function normalize(state) {
   if (!["2.0.0", "2.0.1"].includes(state.releaseVersion))
     throw new Error("UNSUPPORTED_HARDCORE_VERSION");
   recompute(state);
+  state.rngesusFleeCount = Number.isSafeInteger(state.rngesusFleeCount)
+    ? Math.max(0, state.rngesusFleeCount)
+    : 0;
+  // Existing runs did not record flee attempts; start their new counter at zero.
+  if (
+    state.encounter?.type === "rngesus" &&
+    state.encounter.fleeChance == null
+  ) {
+    state.encounter.fleeChance = rngesusFleeChance(state);
+    if (state.encounter.fleeChance === 1) state.encounter.fleeSuccess = true;
+  }
   state.runDiamonds = runDiamondReward(state);
   return state;
 }
@@ -645,7 +662,8 @@ function generateEncounter(state, session, rng) {
     return {
       type: "rngesus",
       name: "RNGesus",
-      fleeSuccess: rng() < 0.75,
+      fleeChance: rngesusFleeChance(state),
+      fleeSuccess: rng() < rngesusFleeChance(state),
       prayerSuccess: rng() < 0.3,
       prayerItem: randomItem(rng() < 0.85 ? "legendary" : "cursed", rng),
     };
@@ -1225,7 +1243,10 @@ function actions(state) {
   if (e.type === "rngesus")
     return [
       { action: "fight", label: "Đánh (chết)" },
-      { action: "flee", label: "Chạy · 75%" },
+      {
+        action: "flee",
+        label: `Chạy · ${Math.round((e.fleeChance ?? rngesusFleeChance(state)) * 100)}%`,
+      },
       {
         action: "bribe",
         label: "Hối lộ · 40% payout",
@@ -1755,17 +1776,20 @@ function act(state, session, action, rng) {
       if (action === "fight")
         return die("Bạn chọn đánh RNGesus, đối thủ không thể đánh bại.");
       if (action === "flee") {
-        if (!e.fleeSuccess) {
+        const chance = e.fleeChance ?? rngesusFleeChance(state);
+        state.rngesusFleeCount = (state.rngesusFleeCount || 0) + 1;
+        const nextChance = Math.round(rngesusFleeChance(state) * 100);
+        const failureChance = Math.round((1 - chance) * 100);
+        if (chance < 1 && !e.fleeSuccess) {
           if (state.escapeTokens) {
             state.escapeTokens--;
-            state.lastLog = `RNGesus: bỏ chạy thất bại (nhánh 25%); tự dùng 1 ${E.ticket} vé thoát hiểm để sống sót.`;
+            state.lastLog = `RNGesus: bỏ chạy thất bại (nhánh ${failureChance}%); tự dùng 1 ${E.ticket} vé thoát hiểm để sống sót. Tỷ lệ chạy lần sau: **${nextChance}%**.`;
           } else
             return die(
-              "Bỏ chạy khỏi RNGesus thất bại (nhánh 25%) và không có vé thoát hiểm để cứu.",
+              `Bỏ chạy khỏi RNGesus thất bại (nhánh ${failureChance}%) và không có vé thoát hiểm để cứu.`,
             );
         } else
-          state.lastLog =
-            "RNGesus: bỏ chạy thành công (nhánh 75%), thoát an toàn.";
+          state.lastLog = `RNGesus: bỏ chạy thành công (tỷ lệ ${Math.round(chance * 100)}%), thoát an toàn. Tỷ lệ chạy lần sau: **${nextChance}%**.`;
       }
       if (action === "bribe") {
         penalty(state, 0.4);
@@ -1843,6 +1867,7 @@ module.exports = {
   EVENT_NAMES,
   initialize,
   normalize,
+  rngesusFleeChance,
   payout,
   rawPayout,
   heal,
