@@ -72,7 +72,7 @@ function statLine(s, changes = false, compact = false) {
   return lines.join("\n");
 }
 function battleStats(s) {
-  const range = core.physicalRange(s);
+  const attack = core.attackDamagePreview(s);
   const defense =
     s.paradox?.kind === "inverse" ? (s.damageMin + s.damageMax) / 2 : s.defense;
   const skill = core.skillDamagePreview(s);
@@ -85,7 +85,7 @@ function battleStats(s) {
     necromancer: "Phép luôn trúng, không Crit; chặn phản công.",
     paladin: "Vật lý, có thể trượt/Crit; tự Phòng thủ.",
   }[s.classKey];
-  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} MP **${s.mana}/${s.maxMana}** · ${E.potion} Bình **${s.potions}** · ${E.ticket} Vé **${s.escapeTokens}**\n${E.attack} Vật lý **${range[0]}–${range[1]}** · ${E.defense} DEF **${defense}** · ${E.res} RES **${s.resistance}%**\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP): ${skill.low}–${skill.high} DMG**\n${detail}\n*Dự báo lên quái hiện tại${skill.magic ? "" : ` nếu ${skill.shots === 2 ? "cả hai phát " : ""}trúng, chưa Crit`}.*`;
+  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} MP **${s.mana}/${s.maxMana}** · ${E.potion} Bình **${s.potions}** · ${E.ticket} Vé **${s.escapeTokens}**\n${E.attack} Tấn công **${attack.low}–${attack.high} DMG** · ${E.defense} DEF **${defense}** · ${E.res} RES **${s.resistance}%**\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP): ${skill.low}–${skill.high} DMG**\n${detail}\n*DMG đã tính phòng thủ/kháng của quái hiện tại; vật lý giả định trúng, chưa Crit.*`;
 }
 function effectText(effects, level = 1) {
   const names = {

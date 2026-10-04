@@ -855,19 +855,22 @@ function attackManaGain(state) {
 function skillManaCost(state) {
   return state.classKey === "sorceress" && shrineActive(state) ? 0 : 2;
 }
-function skillDamagePreview(state) {
+function outgoingDamagePreview(state, action) {
   const e = state.encounter;
-  const magic = ["sorceress", "necromancer"].includes(state.classKey);
-  const multiplier = {
-    amazon: 0.85,
-    barbarian: 1.65,
-    assassin: 1.3,
-    sorceress: 2.1,
-    druid: 1.35,
-    necromancer: 1.55,
-    paladin: 1.4,
-  }[state.classKey];
-  const shots = state.classKey === "amazon" ? 2 : 1;
+  const skill = action === "skill";
+  const magic = skill && ["sorceress", "necromancer"].includes(state.classKey);
+  const multiplier = skill
+    ? {
+        amazon: 0.85,
+        barbarian: 1.65,
+        assassin: 1.3,
+        sorceress: 2.1,
+        druid: 1.35,
+        necromancer: 1.55,
+        paladin: 1.4,
+      }[state.classKey]
+    : 1;
+  const shots = skill && state.classKey === "amazon" ? 2 : 1;
   const range = magic ? [state.spellMin, state.spellMax] : physicalRange(state);
   const bonus = ["boss", "final_boss"].includes(e.rank)
     ? state.bossDamage
@@ -893,8 +896,15 @@ function skillDamagePreview(state) {
     high: damage(range[1]),
     magic,
     shots,
-    extraShot: state.classKey === "amazon" && Boolean(shrineActive(state)),
+    extraShot:
+      skill && state.classKey === "amazon" && Boolean(shrineActive(state)),
   };
+}
+function skillDamagePreview(state) {
+  return outgoingDamagePreview(state, "skill");
+}
+function attackDamagePreview(state) {
+  return outgoingDamagePreview(state, "attack");
 }
 function playerAttack(state, action, rng) {
   const e = state.encounter;
@@ -1752,6 +1762,7 @@ module.exports = {
   attackManaGain,
   skillManaCost,
   skillDamagePreview,
+  attackDamagePreview,
   enemyTurn,
   incomingPreview,
   physicalRange,
