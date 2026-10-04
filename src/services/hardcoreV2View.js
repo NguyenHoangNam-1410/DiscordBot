@@ -642,9 +642,13 @@ function turnText(state) {
   }
   for (const item of state.lastReceivedItems || [])
     details.push(
-      `🎒 **${item.name} [${rarityLabel(item.rarity)}] · Lv.${item.level}**\n${effectText(item.definition.effects, item.levels)}${item.definition.curse && item.curseLevels ? `\n☣️ Curse: ${effectText(item.definition.curse.effects, item.curseLevels)}` : ""}`,
+      `🎒 **${item.name} [${rarityLabel(item.rarity)}] · Lv.${item.level}**${state.lastEventResult ? "" : `\n${effectText(item.definition.effects, item.levels)}${item.definition.curse && item.curseLevels ? `\n☣️ Curse: ${effectText(item.definition.curse.effects, item.curseLevels)}` : ""}`}`,
     );
   const lines = (state.lastLog || "Run bắt đầu.").split("\n");
+  // Old sessions can still contain the numeric summaries written before this UI change.
+  if (state.lastUpgrade) lines[0] = "Đã phân bổ điểm checkpoint.";
+  if (state.lastEventResult?.name === "Potion Thief")
+    lines[0] = "Potion Thief đã cướp bình máu.";
   const milestone = lines.findIndex(
     (line) => line.includes("Đạt tầng ") || line.startsWith("🩸 Lời nguyền"),
   );

@@ -1282,9 +1282,9 @@ function actSurprise(state, session, action, rng) {
     return;
   }
   if (k === "healer") {
-    const hp = heal(state, Math.max(20, state.maxHp * 0.3));
+    heal(state, Math.max(20, state.maxHp * 0.3));
     state.potions = Math.min(5, state.potions + 1);
-    done(`${E.hp} Hồi ${hp} HP, +1 ${E.potion} bình máu.`);
+    done("Wandering Healer đã hồi phục và tiếp tế cho bạn.");
   } else if (k === "goblin") {
     if (e.roll < Math.min(0.9, 0.6 + state.luck * 0.01 + state.goblinChance)) {
       state.bonus += Math.floor(state.stake * 0.25);
@@ -1346,11 +1346,11 @@ function actSurprise(state, session, action, rng) {
   } else if (k === "fountain") {
     if (e.roll < 0.6) {
       heal(state, state.maxHp);
-      done(`🩸 Hồi đầy ${E.hp} HP.`);
+      done("🩸 Blood Fountain đã hồi phục cho bạn.");
     } else if (e.roll < 0.85) {
       addSource(state, { maxHp: 15 });
       heal(state, 15);
-      done(`🩸 +15 ${E.hp} Max HP, hồi 15 ${E.hp} HP.`);
+      done("🩸 Blood Fountain đã tăng sinh lực cho bạn.");
     } else combat(e.enemy, "Blood Mimic xuất hiện!");
   } else if (k === "horadric") {
     const target = itemById(e.targetId);
@@ -1363,13 +1363,10 @@ function actSurprise(state, session, action, rng) {
   } else if (k === "mirror") {
     if (action === "event_mirror_power") {
       addSource(state, { [mainStat(state)]: 10 });
-      const key = mainStat(state);
-      done(`🪞 ${E[key]} ${key.toUpperCase()} +10.`);
+      done("🪞 Mirror of Fate: đã chọn sức mạnh.");
     } else if (action === "event_mirror_guard") {
       addSource(state, { vit: 8, [e.defenseStat]: 5 });
-      done(
-        `🪞 ${E.vit} VIT +8, ${E[e.defenseStat]} ${e.defenseStat.toUpperCase()} +5.`,
-      );
+      done("🪞 Mirror of Fate: đã chọn phòng thủ.");
     } else {
       state.lastLog = "🪞 Đập gương.";
       remember(state, "mirror_break", rng);
@@ -1428,7 +1425,7 @@ function actSurprise(state, session, action, rng) {
       done(`🚪 Cửa ${door}: nhận thưởng.`);
     } else if (door === "light") {
       hurt(state, state.maxHp * 0.2, true, true);
-      done(`🚪 Mất 20% Max ${E.hp} HP, giữ ít nhất 1.`);
+      done("🚪 Cửa sáng: gặp bẫy gây mất HP, giữ ít nhất 1.");
     } else
       combat(
         door === "gold" ? e.mimic : e.boss,
@@ -1499,7 +1496,7 @@ function act(state, session, action, rng) {
         Object.keys(before).map((name) => [name, state[name]]),
       ),
     };
-    state.lastLog = `${E[key]} ${key.toUpperCase()} +5.`;
+    state.lastLog = "Đã phân bổ điểm checkpoint.";
     nextMilestone(state, session, rng);
   } else if (state.phase === "paradox") {
     state.paradox = {
@@ -1610,7 +1607,7 @@ function act(state, session, action, rng) {
           const stolen = Math.min(1, state.potions);
           state.potions -= stolen;
           state.lastLog = stolen
-            ? `Potion Thief đã cướp ${stolen} ${E.potion} bình máu.`
+            ? "Potion Thief đã cướp bình máu."
             : `Potion Thief không cướp được gì vì bạn có 0 ${E.potion} bình máu.`;
         }
         completeFloor(state, session, rng, 0);
@@ -1624,7 +1621,7 @@ function act(state, session, action, rng) {
           state.bonus += Math.floor(state.stake * 0.5);
         if (e.effect === "blessing")
           addSource(state, { str: 6, ene: 6, luck: 1 });
-        state.lastLog = `Wrong Portal: ${{ healing: `+10 ${E.hp} Max HP, hồi đầy ${E.hp} HP, +1 ${E.potion} bình máu`, treasure: "bonus +50% cược", blessing: `${E.str} STR +6, ${E.ene} ENE +6, ${E.luck} Luck +1` }[e.effect]}.`;
+        state.lastLog = `Wrong Portal: ${{ healing: "nhận hồi phục và tiếp tế", treasure: "bonus +50% cược", blessing: "nhận phúc tăng thuộc tính" }[e.effect]}.`;
         completeFloor(state, session, rng, 0);
       } else {
         if (e.badEffect === "blood")
@@ -1635,7 +1632,7 @@ function act(state, session, action, rng) {
         if (e.badEffect === "payout") penalty(state, 0.1);
         if (e.badEffect === "curse") addSource(state, { str: -5, ene: -5 });
         state.encounter = e.enemy;
-        state.lastLog = `Wrong Portal: ${{ blood: `mất 15% Max ${E.hp} HP (giữ ≥1)`, mana: `${E.mana} MP về 0`, supply: `mất tối đa 2 ${E.potion} bình máu`, payout: "mất 10% payout", curse: `${E.str} STR −5, ${E.ene} ENE −5` }[e.badEffect]}. Elite đánh phủ đầu.\n${enemyTurn(state, rng)}`;
+        state.lastLog = `Wrong Portal: ${{ blood: "bẫy gây mất HP (giữ ≥1)", mana: "bị rút cạn MP", supply: "bị cướp bình máu", payout: "mất 10% payout", curse: "lời nguyền giảm thuộc tính" }[e.badEffect]}. Elite đánh phủ đầu.\n${enemyTurn(state, rng)}`;
       }
     } else if (e.type === "rngesus") {
       const die = (cause) => {
