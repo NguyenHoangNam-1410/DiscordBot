@@ -1,6 +1,14 @@
 const crypto = require("node:crypto");
 const { AsyncLocalStorage } = require("node:async_hooks");
-const { MessageFlags } = require("discord.js");
+const {
+  MessageFlags,
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+} = require("discord.js");
+const emoji = require("../discordEmojiMap");
+const { appEmoji } = require("../utils/appEmoji");
+const icon = (key, fallback) => appEmoji(key, emoji[`:${key}:`] || fallback);
 const { formatCoins } = require("../utils/economy");
 const { db } = require("../db");
 const {
@@ -2863,12 +2871,17 @@ async function handleHardcoreButton(interaction, logger) {
   const detailAction =
     /^(?:view|page)_(stats|items|effects|encounter)_(\d{1,4})$/.exec(action);
   const openingDetails = Boolean(detailAction && !originMessageId);
+  const retreatPrompt = action === "retreat";
+  const retreatResponse = ["retreat_confirm", "retreat_cancel"].includes(
+    action,
+  );
+  const privateRetreat = retreatPrompt || retreatResponse;
   // Opening a private panel has its own reply; navigation acknowledges that panel.
-  if (openingDetails)
+  if (openingDetails || retreatPrompt)
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   else await interaction.deferUpdate();
   const respond = (content) =>
-    openingDetails
+    openingDetails || privateRetreat
       ? interaction.editReply({ content, embeds: [], components: [] })
       : interaction.followUp({ content, flags: MessageFlags.Ephemeral });
   return withHardcoreSession(sessionId, async () => {
@@ -2886,13 +2899,67 @@ async function handleHardcoreButton(interaction, logger) {
       if (session.user_id !== interaction.user.id) {
         return await respond("Đây là lượt Sinh tồn của người chơi khác.");
       }
-      const sourceMessageId = detailAction
-        ? originMessageId || interaction.message?.id
-        : interaction.message?.id;
+      const sourceMessageId =
+        detailAction || retreatResponse
+          ? originMessageId || interaction.message?.id
+          : interaction.message?.id;
       if (session.message_id && session.message_id !== sourceMessageId) {
         return await respond(
           "Bảng Sinh tồn này đã cũ. Dùng `/sinhton tieptuc` để mở bảng hiện tại.",
         );
+      }
+      if (privateRetreat) {
+        const state = parseState(session);
+        if (state.turn !== Number(rawTurn))
+          return respond(
+            "Lượt chơi đã thay đổi. Hãy bấm Rút thưởng trên bảng hiện tại để xem lại phần thưởng.",
+          );
+        if (action === "retreat_cancel")
+          return respond("Đã hủy rút thưởng. Bạn có thể tiếp tục Sinh tồn.");
+        if (
+          state.encounter.type === "rngesus" ||
+          (isV2(state) && state.phase === "boss_chest")
+        )
+          return respond(
+            "Bạn phải xử lý tình huống hiện tại trước khi rút thưởng.",
+          );
+        if (retreatPrompt) {
+          const canCashout = state.phase === "summit" || state.cleared > 0;
+          const coins = canCashout
+            ? isV2(state)
+              ? hardcoreV2.payout(state)
+              : potentialPayout(state)
+            : 0;
+          const diamonds = canCashout ? runDiamondReward(state) : 0;
+          const prefix = `hardcore:${sessionId}:${state.turn}:`;
+          hardcoreRepository.touchSession(sessionId);
+          return interaction.editReply({
+            content:
+              `**${canCashout ? "Xác nhận rút thưởng" : "Xác nhận bỏ run"}**\n` +
+              `Kết thúc Sinh tồn tại tầng **${state.floor}**. Bạn sẽ nhận:\n` +
+              `- ${icon("coin", "🪙")} **${formatCoins(coins)} xu**\n` +
+              `- ${icon("gem", "💎")} **${formatCoins(diamonds)} kim cương**\n\n` +
+              (canCashout
+                ? "Xu trên là tổng tiền được cộng vào tài khoản, không phải tiền lãi; tiền cược không được cộng thêm lần nữa. Trang bị trong run không được giữ lại."
+                : `Chưa vượt tầng nào: mất **${formatCoins(state.stake)} xu** tiền cược.`),
+            embeds: [],
+            components: [
+              new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                  .setCustomId(`${prefix}retreat_confirm:${sourceMessageId}`)
+                  .setLabel(
+                    canCashout ? "Xác nhận rút thưởng" : "Xác nhận bỏ run",
+                  )
+                  .setStyle(ButtonStyle.Danger),
+                new ButtonBuilder()
+                  .setCustomId(`${prefix}retreat_cancel:${sourceMessageId}`)
+                  .setLabel("Tiếp tục chơi")
+                  .setStyle(ButtonStyle.Secondary),
+              ),
+            ],
+            allowedMentions: { parse: [] },
+          });
+        }
       }
       if (detailAction) {
         const state = parseState(session);
@@ -2917,14 +2984,27 @@ async function handleHardcoreButton(interaction, logger) {
         hardcoreRepository.touchSession(sessionId);
         return reply;
       }
+      const publicMessage = retreatResponse
+        ? await interaction.channel.messages.fetch(sourceMessageId)
+        : null;
       const played = playHardcore({
         sessionId,
         userId: interaction.user.id,
         expectedTurn: Number(rawTurn),
-        action,
+        action: retreatResponse ? "retreat" : action,
       });
+      if (retreatResponse)
+        await respond(
+          `Đã kết thúc Sinh tồn. Nhận **${formatCoins(played.result.payout)} xu** và **${formatCoins(played.result.diamonds)} kim cương**.`,
+        );
       return await showHardcoreTurn(
-        interaction,
+        publicMessage
+          ? {
+              user: interaction.user,
+              editReply: (payload) => publicMessage.edit(payload),
+              followUp: (payload) => interaction.followUp(payload),
+            }
+          : interaction,
         sessionId,
         played.state,
         played.result,
@@ -2939,6 +3019,10 @@ async function handleHardcoreButton(interaction, logger) {
       if (detailAction)
         return respond(
           "Không thể mở bảng chi tiết Sinh tồn. Hãy thử lại hoặc dùng `/sinhton tieptuc` để mở UI mới. Run và vật phẩm của bạn vẫn được giữ nguyên.",
+        );
+      if (privateRetreat)
+        return respond(
+          "Không thể thực hiện xác nhận này. Hãy mở bảng Sinh tồn hiện tại bằng `/sinhton tieptuc` để xem trạng thái và tiếp tục.",
         );
       if (error.message === "STALE_ACTION") {
         const currentSession = getSession(sessionId);
