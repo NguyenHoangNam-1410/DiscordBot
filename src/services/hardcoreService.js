@@ -1,4 +1,9 @@
 const crypto = require("node:crypto");
+const {
+  rngesusChance,
+  rngesusEncounterChance,
+  resetRngesusEncounter,
+} = require("./hardcoreRngesus");
 const { AsyncLocalStorage } = require("node:async_hooks");
 const {
   MessageFlags,
@@ -541,15 +546,8 @@ function makeChest(state, treasure = false) {
   };
 }
 
-function rngesusChance(floor) {
-  if (floor < 5) return 0;
-  if (floor < 10) return 0.003;
-  if (floor < 20) return 0.006;
-  return 0.01;
-}
-
 function rollRngesus(state, rolls = {}) {
-  const base = rngesusChance(state.floor);
+  const base = rngesusEncounterChance(state);
   if (!base) {
     state.lastChaosChance = 0;
     state.lastChaosSpike = false;
@@ -954,6 +952,7 @@ function completeFloor(state, log, rewardMultiplier = 1) {
   const clearedFloor = state.floor;
   if (clearedFloor === MAX_FLOOR && !state.finalBossDefeated)
     throw new Error("FINAL_BOSS_REQUIRED");
+  if (state.encounter?.type === "rngesus") resetRngesusEncounter(state);
   state.cleared = Math.max(state.cleared, clearedFloor);
   const previousDiamonds = state.runDiamonds || 0;
   state.runDiamonds = runDiamondReward(state);
@@ -1364,6 +1363,7 @@ const startTx = db.transaction(
       phase: "encounter",
       lastLog: "Run bắt đầu.",
       rngesusDry: 0,
+      rngesusResetFloor: 0,
       lastChaosChance: 0,
       lastChaosSpike: false,
       fair: createFairness(),

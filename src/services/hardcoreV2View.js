@@ -1520,6 +1520,10 @@ function ratesFields(category) {
     ],
     rngesus: [
       {
+        name: "📊 Chu kỳ gặp RNGesus",
+        value: "Đầu run: tầng 1–4 không gặp; nền 0,3% ở tầng 5–9, 0,6% ở tầng 10–19, 1% từ tầng 20. Sau khi vượt RNGesus (kể cả được vé hoặc Lost Adventurer cứu), Chaos và bộ đếm không gặp reset. Tầng ngay sau đó: **0%**, không roll volatility/spike. Từ tầng kế nữa: nền **0,3% trong 5 tầng → 0,6% trong 10 tầng → 1%**. Nhịp tăng tính từ lần vượt gần nhất; biến động và mức tăng theo chuỗi không gặp giữ như đầu run.",
+      },
+      {
         name: `${eventIcon("rngesus")} RNGesus · không được rút thưởng`,
         value:
           "Chaos trên bảng là tỷ lệ gặp RNGesus. RNGesus không thể bị đánh bại.\n- **Đánh:** chết ngay, mất cược/thưởng tạm giữ.\n- **Hối lộ:** cần payout hiển thị **≥1.000 xu**, đúng 1.000 vẫn được. Thoát an toàn, giảm hệ số payout 40%; thưởng tích lũy về sau cũng chịu hệ số đã giảm.\n- **Cầu nguyện:** **30%** thành công và nhận chắc chắn **1 trang bị UR kèm lời nguyền**; **70%** thất bại và tử trận. Mang vé cầu nguyện từ túi Sinh tồn: **60%** thành công, **40%** thất bại, áp dụng toàn run. Lost Adventurer hoặc vé hồi sinh cứu khi tử trận nếu còn.\nHối lộ hoặc cầu nguyện thành công ghi nhận The Tower Remembers.",

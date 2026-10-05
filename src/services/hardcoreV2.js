@@ -1,5 +1,9 @@
 "use strict";
 const stats = require("./hardcoreStats");
+const {
+  rngesusEncounterChance,
+  resetRngesusEncounter,
+} = require("./hardcoreRngesus");
 const paradox = require("./hardcoreParadoxService");
 function prepareParadoxCombat(state, rng) {
   paradox.prepareCombat(
@@ -468,6 +472,7 @@ function completeFloor(state, session, rng, reward = 1) {
   const floor = state.floor;
   if (floor === 999 && !state.finalBossDefeated)
     throw new Error("FINAL_BOSS_REQUIRED");
+  if (state.encounter?.type === "rngesus") resetRngesusEncounter(state);
   // Record the event effect before floor regeneration and checkpoint rewards.
   finishEventResult(state);
   state.cleared = floor;
@@ -800,16 +805,10 @@ function makeSurprise(state, rng, kind = null) {
   return e;
 }
 function rollRngesus(state, rng) {
-  const base =
-    state.floor < 5
-      ? 0
-      : state.floor < 10
-        ? 0.003
-        : state.floor < 20
-          ? 0.006
-          : 0.01;
+  const base = rngesusEncounterChance(state);
   if (!base) {
     state.lastChaosChance = 0;
+    state.lastChaosSpike = false;
     return false;
   }
   const volatility = 0.25 + rng() * 2.75,
@@ -2179,6 +2178,7 @@ module.exports = {
   normalize,
   rngesusFleeChance,
   rngesusPrayerChance,
+  rollRngesus,
   reviveAfterDeath,
   payout,
   rawPayout,

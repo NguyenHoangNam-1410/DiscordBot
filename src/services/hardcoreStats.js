@@ -233,6 +233,7 @@ function createState(classKey, stake) {
     payoutSpent: 0,
     modifiers: {},
     rngesusDry: 0,
+    rngesusResetFloor: 0,
     rngesusFleeCount: 0,
     lastChaosChance: 0,
     lastChaosSpike: false,
