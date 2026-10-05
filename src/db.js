@@ -1137,4 +1137,11 @@ runMigration(
   },
 );
 
+runMigration(36, "hardcore event and chain achievement stats", () => {
+  db.exec(`CREATE TABLE IF NOT EXISTS hardcore_event_stats (
+    guild_id TEXT NOT NULL,user_id TEXT NOT NULL,events INTEGER NOT NULL DEFAULT 0,
+    chains INTEGER NOT NULL DEFAULT 0,kinds_json TEXT NOT NULL DEFAULT '[]',
+    updated_at INTEGER NOT NULL,PRIMARY KEY(guild_id,user_id))`);
+});
+
 module.exports = { db, dbPath, runMigration };

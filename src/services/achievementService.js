@@ -2,7 +2,7 @@ const { db } = require("../db");
 const { getAccount, creditCoins } = require("./economyService");
 const { addDiamonds } = require("./playerLevelService");
 
-const ACHIEVEMENTS = Object.freeze([
+const BASE_ACHIEVEMENTS = [
   {
     id: "first_game",
     name: "Bước chân đầu tiên",
@@ -1281,10 +1281,53 @@ const ACHIEVEMENTS = Object.freeze([
     diamonds: 400,
     metric: "baucuaBigPayout",
   },
+];
+
+// Sinh tồn: mốc tầng theo từng class (tối đa tầng 500) và sự kiện đặc biệt / chuỗi kích hoạt.
+const HARDCORE_CLASSES = Object.freeze({
+  amazon: "Amazon",
+  barbarian: "Barbarian",
+  assassin: "Assassin",
+  sorceress: "Sorceress",
+  druid: "Druid",
+  necromancer: "Necromancer",
+  paladin: "Paladin",
+});
+const CLASS_FLOOR_TIERS = Object.freeze([
+  { floor: 50, tag: "50", title: "Tân binh", reward: 20_000, diamonds: 60 },
+  { floor: 150, tag: "150", title: "Chiến binh", reward: 80_000, diamonds: 200 },
+  { floor: 300, tag: "300", title: "Huyền thoại", reward: 200_000, diamonds: 500 },
+  { floor: 500, tag: "500", title: "Bất tử", reward: 500_000, diamonds: 1000 },
 ]);
+const classFloorAchievements = Object.entries(HARDCORE_CLASSES).flatMap(([key, name]) =>
+  CLASS_FLOOR_TIERS.map((tier) => ({
+    id: `hc_class_${key}_${tier.tag}`,
+    name: `${name} ${tier.title}`,
+    description: `Đạt tầng ${tier.floor} Sinh tồn bằng ${name}`,
+    target: tier.floor,
+    reward: tier.reward,
+    diamonds: tier.diamonds,
+    metric: `hcClass_${key}`,
+  })),
+);
+const eventAchievements = [
+  ["hc_event_5", "Người ưa bất ngờ", "Gặp 5 sự kiện đặc biệt trong Sinh tồn", 5, 10_000, 30, "hardcoreEvents"],
+  ["hc_event_25", "Kẻ săn sự kiện", "Gặp 25 sự kiện đặc biệt trong Sinh tồn", 25, 40_000, 120, "hardcoreEvents"],
+  ["hc_event_100", "Con cưng của vận may", "Gặp 100 sự kiện đặc biệt trong Sinh tồn", 100, 150_000, 400, "hardcoreEvents"],
+  ["hc_chain_3", "Phản ứng dây chuyền", "Kích hoạt 3 chuỗi sự kiện (sự kiện dẫn tới trận chiến)", 3, 15_000, 40, "hardcoreChains"],
+  ["hc_chain_15", "Domino chết chóc", "Kích hoạt 15 chuỗi sự kiện", 15, 60_000, 150, "hardcoreChains"],
+  ["hc_chain_50", "Bậc thầy chuỗi", "Kích hoạt 50 chuỗi sự kiện", 50, 200_000, 500, "hardcoreChains"],
+  ["hc_kinds_5", "Nhà thám hiểm", "Gặp 5 loại sự kiện đặc biệt khác nhau", 5, 15_000, 40, "hardcoreEventKinds"],
+  ["hc_kinds_10", "Nhà sưu tầm biến cố", "Gặp 10 loại sự kiện đặc biệt khác nhau", 10, 60_000, 150, "hardcoreEventKinds"],
+  ["hc_kinds_16", "Đã thấy tất cả", "Gặp đủ 16 loại sự kiện đặc biệt", 16, 250_000, 600, "hardcoreEventKinds"],
+].map(([id, name, description, target, reward, diamonds, metric]) => ({ id, name, description, target, reward, diamonds, metric }));
+const ACHIEVEMENTS = Object.freeze([...BASE_ACHIEVEMENTS, ...classFloorAchievements, ...eventAchievements]);
 
 // Nhóm bộ lọc ở /kiemtra (Discord giới hạn 25 mục chọn): các chỉ số cùng chủ đề gộp thành một mục lọc.
 const CATEGORY_GROUPS = Object.freeze({
+  hardcoreEvents: "hardcoreEvents",
+  hardcoreChains: "hardcoreEvents",
+  hardcoreEventKinds: "hardcoreEvents",
   hardcoreRuns: "hardcoreJourney",
   hardcoreEscapes: "hardcoreJourney",
   hardcoreCompletions: "hardcoreJourney",
@@ -1321,7 +1364,8 @@ const CATEGORY_GROUPS = Object.freeze({
   pokerBigPot: "pokerFeats",
   pokerHandRank: "pokerHands",
 });
-const achievementCategory = (item) => CATEGORY_GROUPS[item.metric] || item.metric;
+const achievementCategory = (item) =>
+  item.metric.startsWith("hcClass_") ? "hardcoreClass" : CATEGORY_GROUPS[item.metric] || item.metric;
 
 const BETTING_GAMES = Object.freeze(["baucua","taixiu","chinchiro","blackjack","poker","duangua","mines","coquay"]);
 const BETTING_SQL = BETTING_GAMES.map((game) => `'${game}'`).join(",");
@@ -1346,6 +1390,17 @@ function metrics(guildId, userId) {
       .prepare(
         "SELECT COALESCE(runs,0) runs, COALESCE(escapes,0) escapes, COALESCE(completions,0) completions FROM hardcore_records WHERE guild_id=? AND user_id=?",
       )
+      .get(guild, user) || {};
+  const classFloors = {};
+  for (const row of db
+    .prepare(
+      "SELECT class_key, MAX(cleared) best FROM hardcore_run_archive WHERE guild_id=? AND user_id=? GROUP BY class_key",
+    )
+    .all(guild, user))
+    classFloors[`hcClass_${row.class_key}`] = row.best || 0;
+  const eventRow =
+    db
+      .prepare("SELECT events, chains, kinds_json FROM hardcore_event_stats WHERE guild_id=? AND user_id=?")
       .get(guild, user) || {};
   const betting = db
     .prepare(
@@ -1490,6 +1545,10 @@ function metrics(guildId, userId) {
     balance: account.balance,
     gameTypes,
     hardcoreFloor,
+    ...classFloors,
+    hardcoreEvents: eventRow.events || 0,
+    hardcoreChains: eventRow.chains || 0,
+    hardcoreEventKinds: eventRow.kinds_json ? JSON.parse(eventRow.kinds_json).length : 0,
   };
 }
 

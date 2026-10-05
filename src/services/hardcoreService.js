@@ -1046,7 +1046,19 @@ function completeFloor(state, log, rewardMultiplier = 1) {
   setNextEncounter(state, log);
 }
 
+// Ghi nhận sự kiện đặc biệt/chuỗi kích hoạt của ván để tính thành tựu khi ván kết thúc.
+function noteEvent(state, kind, chained) {
+  state.evCount = (state.evCount || 0) + 1;
+  state.evKinds = Array.from(new Set([...(state.evKinds || []), kind]));
+  if (chained) state.chainCount = (state.chainCount || 0) + 1;
+}
+
 function recordRun(guildId, userId, state, reason) {
+  hardcoreRepository.addEventStats(guildId, userId, {
+    events: state.evCount || 0,
+    chains: state.chainCount || 0,
+    kinds: state.evKinds || [],
+  });
   const death = ["death", "rngesus"].includes(reason) ? 1 : 0;
   const escape = ["cashout", "summit"].includes(reason) ? 1 : 0;
   const completion = state.completed ? 1 : 0;
@@ -2731,11 +2743,15 @@ const actionTx = db.transaction(
               : "🚶 Bạn tránh lối đi bí ẩn và đi tiếp an toàn.",
             0,
           );
-        else if (SURPRISE_EVENTS[state.encounter.kind])
+        else if (SURPRISE_EVENTS[state.encounter.kind]) {
+          const kind = state.encounter.kind;
           resolveSurprise(state, action);
+          noteEvent(state, kind, state.encounter?.type === "combat");
+        }
         else if (action === "explore") {
           const event = state.encounter;
           if (event.kind === "ambush") {
+            noteEvent(state, "ambush", true);
             state.encounter = event.enemy;
             state.lastLog = `⚠️ **${state.encounter.name}** phục kích và ra đòn trước!\n${enemyTurn(state)}`;
             if (state.hp <= 0)
@@ -2810,6 +2826,7 @@ const actionTx = db.transaction(
           );
         } else if (kind === "wrong_portal") {
           resolveWrongPortal(state);
+          noteEvent(state, "wrong_portal", state.encounter?.type === "combat");
           if (state.hp <= 0)
             return {
               settled: true,
