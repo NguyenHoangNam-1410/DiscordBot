@@ -7,6 +7,7 @@ const {
 } = require("discord.js");
 const stats = require("./hardcoreStats");
 const core = require("./hardcoreV2");
+const paradox = require("./hardcoreParadoxService");
 const world = require("./hardcoreWorld");
 const { RELEASE } = require("./hardcoreVersion");
 const balance = require("./hardcoreBalance");
@@ -81,7 +82,7 @@ function statLine(s, changes = false, compact = false) {
   ];
   if (!compact)
     lines.push(
-      `${E.accuracy} **ACC** **${s.accuracy}**${d("accuracy")}${STAT_SEPARATOR}${E.evasion} **EVA** **${s.evasion}**${d("evasion")}${STAT_SEPARATOR}${E.crit} **CRIT** **${percent(s.critChance)}**${d("critChance", "%")}\nBình **${percent(s.potionRate)}** Max HP`,
+      `${E.accuracy} **ACC** **${s.accuracy}**${d("accuracy")}${STAT_SEPARATOR}${E.evasion} **EVA** **${s.evasion}**${d("evasion")}${STAT_SEPARATOR}${E.crit} **CRIT** **${percent(s.critChance)}**${d("critChance", "%")}\nBình **${percent(paradox.potionRate(s))}** Max HP`,
     );
   return lines.join("\n");
 }
@@ -99,7 +100,7 @@ function battleStats(s) {
     necromancer: "Phép luôn trúng, không Crit; chặn phản công.",
     paladin: "Vật lý, có thể trượt/Crit; tự Phòng thủ.",
   }[s.classKey];
-  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${s.maxMana}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé** **${s.escapeTokens}**\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${s.resistance}%**\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP): ${skill.low}–${skill.high} DMG**\n${detail}\n*DMG đã tính phòng thủ/kháng của quái hiện tại; vật lý giả định trúng, chưa Crit.*`;
+  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${s.maxMana}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé** **${s.escapeTokens}**\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${core.effectiveResistance(s)}%**${core.effectiveResistance(s) !== s.resistance ? ` (gốc ${s.resistance}%)` : ""}\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} Mana${paradox.hpCost(s) ? `, −${paradox.hpCost(s)} HP` : ""}): ${skill.low}–${skill.high} DMG**\n${detail}\n*DMG đã tính phòng thủ/kháng của quái hiện tại; vật lý giả định trúng, chưa Crit.*`;
 }
 function effectText(effects, level = 1) {
   const names = {
@@ -557,7 +558,9 @@ function statTransitions(
     add(label, [key], (s) => s[key]);
   add(`${E.crit} CRIT`, ["critChance"], (s) => percent(s.critChance));
   add(`${E.res} RES`, ["resistance"], (s) => `${s.resistance}%`);
-  add(`${E.potion} Bình`, ["potionRate"], (s) => percent(s.potionRate));
+  add(`${E.potion} Bình`, ["potionRate"], (s) =>
+    percent(paradox.potionRate(s)),
+  );
   if (includeResources) {
     for (const [key, label] of [
       ["hp", `${E.hp} HP`],
@@ -578,6 +581,8 @@ function encounterText(s) {
     return `${eventIcon("boss_chest")} **RƯƠNG BOSS · TẦNG ${s.encounter.bossFloor}**\nPhần thưởng sau boss cuối khu vực. Chọn **mở hoặc bán** để tiếp tục.\n\n**Mở rương**\n- **70%:** nhận trang bị **SSR**.\n- **30%:** nhận trang bị **UR**, kèm lời nguyền.\nĐồ trùng tên tăng level. Tỷ lệ cố định, không bị Luck/pity thay đổi.\n\n**Bán rương**\n- Cộng **50% payout gốc hiện tại (${money(Math.floor(core.rawPayout(s) * 0.5))} xu)** vào thưởng của run.\nPhải xử lý rương trước khi rút thưởng hoặc đi tiếp.`;
   if (s.phase === "upgrade")
     return `${E.checkpoint} **CHECKPOINT** · Đã hồi đầy ${E.hp} HP và nhận thêm 2 ${E.potion} bình máu.\nChọn **+5 STR, DEX, VIT hoặc ENE**; dự báo thay đổi ở ngay bên dưới.`;
+  if (s.phase === "paradox" && s.encounter.version === 2)
+    return paradox.choicesText(s.encounter);
   if (s.phase === "paradox")
     return `${eventIcon("paradox")} **RIFT PARADOX**\nChọn **một** quy luật đặc biệt cho tầng **${s.floor}–${s.floor + 4}**. Hết hạn, cơ chế trở lại bình thường.\n\n**Máu là tiền · đổi HP lấy thưởng xu**\n- Mất HP do quái/bẫy: tăng hệ số thưởng xu; hồi HP từ bình/skill/event: giảm hệ số. Mỗi 10% Max HP tương ứng 10 điểm %.\n- Hệ số giới hạn từ **−50% đến +50%**, chỉ áp dụng khi hiệu ứng còn hoạt động. Không tác động kim cương.\n- Hồi đầy ${E.hp} HP tại ${E.checkpoint} checkpoint **không giảm hệ số thưởng**. HP dùng để mua đồ/hiến tế không tăng thưởng.\n\n**Ngược đời · ATK chuyển thành DEF và ngược lại**\n- ${E.attack} ATK: **${s.damageMin}–${s.damageMax} → ${Math.max(1, s.defense - 2)}–${Math.max(1, s.defense + 3)}** (paradox). \n- ${E.defense} DEF: **${s.defense} → ${(s.damageMin + s.damageMax) / 2}** (paradox).`;
   if (s.phase === "severance")
@@ -601,7 +606,7 @@ function encounterText(s) {
       `Đòn quái kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}** · Dự báo nhận **${p.low}–${p.high} HP** · Quái đánh trúng bạn **${percent(p.chance)}** *(chưa Crit/chưa Thủ)*\n` +
       `Bạn đánh vật lý trúng quái **${percent(world.hitChance(s.accuracy, e.evasion))}**; trượt gây 0 DMG nhưng vẫn hồi MP khi đánh thường. Skill phép luôn trúng.\n` +
       (e.mechanic ? `Cơ chế: ${mechanisms[e.mechanic]}\n` : "") +
-      `**Tấn công:** vật lý, hồi ${core.attackManaGain(s)} MP (tối đa Max MP). **Thủ:** DEF ×2 hoặc +15 RES, giảm thêm 15% DMG, miễn Crit, +1 MP.\n**${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP):** ${SKILLS[s.classKey]} **Bình:** hồi ${percent(s.potionRate)} Max HP, ít nhất 20; quái còn sống phản công.`
+      `**Tấn công:** vật lý, hồi ${core.attackManaGain(s)} MP (tối đa Max MP). **Thủ:** DEF ×2 hoặc +15 RES, giảm thêm 15% DMG, miễn Crit, +1 MP.\n**${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} Mana${paradox.hpCost(s) ? `, −${paradox.hpCost(s)} HP` : ""}):** ${SKILLS[s.classKey]} **Bình:** hồi ${percent(paradox.potionRate(s))} Max HP, ít nhất 20; quái còn sống phản công.`
     );
   }
   if (e.type === "memory")
@@ -1011,7 +1016,7 @@ function embed(state, userId, result = null, sessionId = null) {
     {
       name: `${E.rift} Rift modifier (${activeRifts.length})`,
       value:
-        `${mods}${state.paradox ? `\n${eventIcon("paradox")} Paradox: ${state.paradox.kind === "blood" ? `Máu là tiền ${percent(state.paradox.bloodFactor)}` : "Ngược đời"} · hết tầng ${state.paradox.until}` : ""}`.slice(
+        `${paradox.active(state) ? `${paradox.describe(state)}\n` : ""}${mods}${state.paradox ? `\n${eventIcon("paradox")} Paradox: ${state.paradox.kind === "blood" ? `Máu là tiền ${percent(state.paradox.bloodFactor)}` : "Ngược đời"} · hết tầng ${state.paradox.until}` : ""}`.slice(
           0,
           1024,
         ),
@@ -1253,7 +1258,7 @@ function privatePayload(
   if (tab === "items") {
     e.addFields({
       name: "Vật tư",
-      value: `${E.potion} ${state.potions} bình · hồi ${percent(state.potionRate)} Max HP, tối thiểu 20.\n${E.ticket} ${state.escapeTokens} vé thoát hiểm (tối đa 1); tự cứu khi bỏ chạy RNGesus thất bại.\n🎟️ Vé hồi sinh: ${state.reviveTickets || 0} · hồi 50% HP. 🙏 Cầu nguyện: ${percent(core.rngesusPrayerChance(state))}.${state.adventurerRescue ? `\n🤝 Lost Adventurer bảo hộ một lần đến tầng ${state.adventurerRescue.until}, dùng trước vé hồi sinh.` : ""}`,
+      value: `${E.potion} ${state.potions} bình · hồi ${percent(paradox.potionRate(state))} Max HP, tối thiểu 20.\n${E.ticket} ${state.escapeTokens} vé thoát hiểm (tối đa 1); tự cứu khi bỏ chạy RNGesus thất bại.\n🎟️ Vé hồi sinh: ${state.reviveTickets || 0} · hồi 50% HP. 🙏 Cầu nguyện: ${percent(core.rngesusPrayerChance(state))}.${state.adventurerRescue ? `\n🤝 Lost Adventurer bảo hộ một lần đến tầng ${state.adventurerRescue.until}, dùng trước vé hồi sinh.` : ""}`,
     });
     for (const item of state.items.slice(page * 5, page * 5 + 5))
       e.addFields({
@@ -1308,7 +1313,7 @@ function privatePayload(
       });
     e.addFields({
       name: "Hiệu ứng hiện hành",
-      value: `${eventIcon("paradox")} Rift Paradox: ${state.paradox ? `${state.paradox.kind === "blood" ? `Máu là tiền (hồi HP tại checkpoint không giảm hệ số) · hệ số thưởng xu ${state.paradox.bloodFactor >= 0 ? "+" : ""}${percent(state.paradox.bloodFactor)}` : "Ngược đời · vật lý lấy DEF, DEF lấy trung bình vật lý gốc"} · hết tầng ${state.paradox.until}` : "không"}\nClass Shrine: ${state.classShrine ? `${SHRINES[state.classKey]} Hết tầng ${state.classShrine.until}.` : "không"}\nHợp đồng: ${state.contract ? `không ${state.contract.kind}, còn ${state.contract.remaining} tầng` : "không"}\nPayout gốc ${money(core.rawPayout(state))} xu; bonus Blood Paradox không dùng mua đồ.`,
+      value: `${paradox.active(state) ? paradox.describe(state) : ""}${paradox.active(state) ? "" : `\n${eventIcon("paradox")} Rift Paradox: ${state.paradox ? `${state.paradox.kind === "blood" ? `Máu là tiền (hồi HP tại checkpoint không giảm hệ số) · hệ số thưởng xu ${state.paradox.bloodFactor >= 0 ? "+" : ""}${percent(state.paradox.bloodFactor)}` : "Ngược đời · vật lý lấy DEF, DEF lấy trung bình vật lý gốc"} · hết tầng ${state.paradox.until}` : "không"}`}\nClass Shrine: ${state.classShrine ? `${SHRINES[state.classKey]} Hết tầng ${state.classShrine.until}.` : "không"}\nHợp đồng: ${state.contract ? `không ${state.contract.kind}, còn ${state.contract.remaining} tầng` : "không"}\nPayout gốc ${money(core.rawPayout(state))} xu; bonus Blood Paradox không dùng mua đồ.`,
     });
   } else {
     e.setDescription(
@@ -1438,7 +1443,7 @@ function ratesFields(category) {
       {
         name: `${E.checkpoint} Checkpoint và ${E.rift} Rift`,
         value:
-          "- Sau mỗi **5 tầng:** hồi đầy HP, +2 bình (tối đa 5), chọn **+5 STR/DEX/VIT/ENE**. Bảng hiển thị chỉ số hiện tại và dự báo từng lựa chọn.\n- Sau mỗi **10 tầng:** thêm 1 stack Rift; nhận đủ 8 loại trước khi lặp. Icon ×N là số stack của từng loại; nút Rift giải thích hiệu ứng.\n- Sau mỗi **25 tầng:** chọn Paradox có hiệu lực 5 tầng. **Máu là tiền:** mất HP do quái/bẫy tăng thưởng, hồi HP giảm thưởng; hồi tại checkpoint được miễn. **Ngược đời:** đổi vai trò sức mạnh vật lý và DEF.\n- Sau tầng **199/399/699/899:** xóa toàn bộ stack một Rift có hại, trừ Unstable Rift.",
+          "- Sau mỗi **5 tầng:** hồi đầy HP, +2 bình (tối đa 5), chọn **+5 STR/DEX/VIT/ENE**. Bảng hiển thị chỉ số hiện tại và dự báo từng lựa chọn.\n- Sau mỗi **10 tầng:** thêm 1 stack Rift; nhận đủ 8 loại trước khi lặp. Icon ×N là số stack của từng loại; nút Rift giải thích hiệu ứng.\n- Sau mỗi **25 tầng:** chọn Paradox có hiệu lực 5 tầng. Paradox v2 chọn đều một trong **4 cặp cố định**, hiệu lực từ tầng mốc +1 đến hết +5, sau nâng thuộc tính. Không đổi payout hoặc stat gốc; mở UI không roll lại.\n- Sau tầng **199/399/699/899:** xóa toàn bộ stack một Rift có hại, trừ Unstable Rift.",
       },
     ],
     loot: [

@@ -134,3 +134,13 @@ Số xu là **thay đổi ròng** (tiền nhận về − tiền cược): thắ
 | Tài xỉu | x2 | Cửa Tài/Xỉu/Chẵn/Lẻ (ra bộ ba vẫn thua); Bộ ba và Tổng cụ thể giữ nguyên |
 
 Hệ số được khóa vào ván lúc bắt đầu (Tài xỉu: lúc mở ván), nên ván đang chơi không bị đổi giữa chừng. Bảng hiển thị RTP ước tính khi chơi tối ưu và không dùng vật phẩm, kèm cảnh báo ⚠️ nếu trên 100% (người chơi có lợi). Giá trị được lưu theo từng server và có nút **Khôi phục mặc định**. Chênh lệch nhỏ vì làm tròn xu xuống số nguyên.
+
+### Rift Paradox v2 và Tháp Định Mệnh (05/10/2026)
+
+Paradox mới xuất hiện sau checkpoint/nâng thuộc tính tại mốc 25–975: chọn một trong hai luật thuộc một cặp được khóa bằng Fair RNG (mỗi cặp 25%). Tám luật chỉ có hiệu lực trong năm tầng tiếp theo, không sửa stat gốc hoặc payout. Paradox cũ đang hoạt động và lựa chọn cũ đã lưu tiếp tục xử lý theo v1.
+
+`/choi sinhton thap` hoặc `/sinhton thap` mở/tiếp tục mode độc lập 15 tầng; có thể chơi đồng thời với Sinh tồn 999. Tuần đầu **Sổ Nợ Arcane** mở từ 00:00 ngày 05/10 đến 00:00 ngày 12/10 (UTC+7), không cược, không loadout, không RNG. Hoàn thành nhận **500.000 xu + 250 kim cương một lần mỗi guild/người/tuần**. Replay không trả thêm thưởng. Sau hết hạn có 24 giờ xem lại; không hành động hoặc nhận thưởng. UI có nút chơi lại và bảng xếp hạng tuần.
+
+Migration 35 tạo `hardcore_tower_sessions` và `hardcore_tower_results`, tự chạy khi bot khởi động. Sau pull bản mới: chạy `npm run register` trên server có env Discord rồi restart bot. Không cần upload asset/emoji mới.
+
+Chạy `npm run test:hardcore:paradox`, `npm run test:hardcore:tower`, `npm run solve:hardcore:tower`. Solver duyệt toàn bộ hành động hợp lệ và chỉ đăng ký challenge khi có đúng một lời giải, khớp chuỗi chuẩn và final state. Kịch bản nằm trong `src/hardcore/tower/`, catalog trong `src/hardcore/towerChallenges.js`; các tuần sau thêm dữ liệu mới, phiên bản/ID riêng và mốc `startsAt`/`endsAt` rõ timezone. `endsAt` hỗ trợ season hai tuần. Hiện chỉ đăng ký tuần 41; không tự tạo kịch bản khi sang tuần chưa có nội dung. History lưu fingerprint SHA-256 từng hành động; session không lưu chuỗi lời giải dạng plaintext.

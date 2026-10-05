@@ -86,7 +86,7 @@ const PAGES = Object.freeze({
       ["🏇 Thử thách khác", "`/duangua` · `/domin` · `/coquay`"],
       [
         "⚔️ Sinh tồn",
-        "`/sinhton batdau` — mở UI chọn nhân vật, xem chỉ số/kỹ năng, nhập cược → Tiếp → chọn đồ/vé → xem chỉ số → Bắt đầu. `cuahang` — mua vé và 5 món đổi lúc 00:00 Việt Nam; `tuido` — lọc vé/độ hiếm. Trong run dùng nút để đánh, dùng vật phẩm, xử lý sự kiện hoặc rút thưởng. `/luat trochoi: Sinh tồn` giải thích từng hành động; `hoso` — thành tích; `xephang` — top tầng; `tyle` — tỷ lệ sự kiện.",
+        "`/sinhton batdau` — mở UI chọn nhân vật, xem chỉ số/kỹ năng, nhập cược → Tiếp → chọn đồ/vé → xem chỉ số → Bắt đầu. `cuahang` — mua vé và 5 món đổi lúc 00:00 Việt Nam; `tuido` — lọc vé/độ hiếm. Trong run dùng nút để đánh, dùng vật phẩm, xử lý sự kiện hoặc rút thưởng. `/luat trochoi: Sinh tồn` giải thích từng hành động; `hoso` — thành tích; `xephang` — top tầng; `tyle` — tỷ lệ sự kiện. `/choi sinhton thap` (hoặc `/sinhton thap`) mở/tiếp tục Tháp Định Mệnh 15 tầng độc lập, không cược; thưởng tuần nhận một lần.",
       ],
       [
         "🔤 Vua tiếng Việt",

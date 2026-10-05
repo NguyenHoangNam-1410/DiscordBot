@@ -1,5 +1,13 @@
 "use strict";
 const stats = require("./hardcoreStats");
+const paradox = require("./hardcoreParadoxService");
+function prepareParadoxCombat(state, rng) {
+  paradox.prepareCombat(
+    state,
+    rng,
+    state.classKey === "sorceress" && shrineActive(state),
+  );
+}
 const {
   E,
   SKILL_ICONS,
@@ -420,7 +428,11 @@ function nextMilestone(state, session, rng) {
   if (phase) {
     state.phase = phase;
     state.encounter =
-      phase === "boss_chest" ? state.pendingBossChest : { type: phase };
+      phase === "boss_chest"
+        ? state.pendingBossChest
+        : phase === "paradox"
+          ? paradox.encounter(state.cleared, rng)
+          : { type: phase };
     if (phase === "boss_chest") delete state.pendingBossChest;
     return;
   }
@@ -431,6 +443,7 @@ function nextMilestone(state, session, rng) {
   }
   state.phase = "encounter";
   state.encounter = generateEncounter(state, session, rng);
+  prepareParadoxCombat(state, rng);
 }
 function finishEventResult(state) {
   const pending = state.pendingEventResult;
@@ -510,7 +523,13 @@ function completeFloor(state, session, rng, reward = 1) {
     state.lastLog += `\nĐạt tầng ${floor}: **${RIFT_ICONS[key] || E.rift} ${previous ? `×${previous}→×${state.modifiers[key]}` : "+1"}** Rift modifier.`;
   }
   if (state.paradox && floor >= state.paradox.until) state.paradox = null;
-  if (floor % 25 === 0 && floor < 999) state.pendingMilestones.push("paradox");
+  paradox.expire(state, floor);
+  if (
+    floor % 25 === 0 &&
+    floor < 999 &&
+    !(state.paradoxMilestonesClaimed || []).includes(floor)
+  )
+    state.pendingMilestones.push("paradox");
   if ([199, 399, 699, 899].includes(floor))
     state.pendingMilestones.push("severance");
   if (floor >= 100) state.completed = true;
@@ -950,6 +969,17 @@ function physicalRange(state) {
     return [state.damageMin, state.damageMax];
   return [Math.max(1, state.defense - 2), Math.max(1, state.defense + 3)];
 }
+function effectiveResistance(
+  state,
+  resistance = state.resistance,
+  defend = false,
+) {
+  let res =
+    resistance - world.effectiveStacks(state.modifiers.cursed_ground || 0) * 3;
+  if (shrineActive(state) && state.classKey === "paladin") res += 10;
+  if (defend) res += 15;
+  return paradox.effectiveRes(state, res);
+}
 function attackDamage(
   attacker,
   defender,
@@ -974,14 +1004,19 @@ function attackDamage(
     : [attacker.damageMin, attacker.damageMax];
   let damage = raw ?? int(...range, rng);
   damage *= multiplier * (crit ? 1.75 : 1);
+  if (player && paradox.active(state)) {
+    const bonus = ["boss", "final_boss"].includes(defender.rank)
+      ? state.bossDamage
+      : defender.rank === "elite"
+        ? state.eliteDamage
+        : 0;
+    damage *= (1 + bonus) * paradox.outgoing(state);
+  }
   if (magic) {
-    let res = defender.resistance;
-    if (!player) {
-      res -= world.effectiveStacks(state.modifiers.cursed_ground || 0) * 3;
-      if (shrineActive(state) && state.classKey === "paladin") res += 10;
-      if (defend) res += 15;
-    }
-    damage *= 1 - clamp(res, -50, 75) / 100;
+    const res = player
+      ? clamp(defender.resistance, -50, 75)
+      : effectiveResistance(state, defender.resistance, defend);
+    damage *= 1 - res / 100;
   } else {
     let defense = defender.defense;
     if (!player) {
@@ -997,7 +1032,15 @@ function attackDamage(
     damage *=
       1 - world.defenseReduction(defense * (defend ? 2 : 1), state.floor);
   }
-  if (!player) damage *= (defend ? 0.85 : 1) * (1 + state.damageTaken);
+  if (!player)
+    damage *=
+      paradox.incoming(state, magic) *
+      (1 + state.damageTaken) *
+      (defend ? 0.85 : 1);
+  if (player && paradox.active(state)) {
+    if (defender.mechanic === "deimoss") damage *= 0.75;
+    return { damage: Math.max(1, damage), hit: true, crit };
+  }
   return { damage: Math.max(1, Math.floor(damage)), hit: true, crit };
 }
 function enemyTurn(state, rng, defend = false, dodge = false) {
@@ -1072,6 +1115,7 @@ function incomingPreview(state) {
   };
 }
 function attackManaGain(state) {
+  if (paradox.is(state, "mana_fracture")) return 0;
   return Math.max(
     1,
     Math.floor(
@@ -1081,7 +1125,10 @@ function attackManaGain(state) {
   );
 }
 function skillManaCost(state) {
-  return state.classKey === "sorceress" && shrineActive(state) ? 0 : 2;
+  return paradox.manaCost(
+    state,
+    state.classKey === "sorceress" && shrineActive(state),
+  );
 }
 function outgoingDamagePreview(state, action) {
   const e = state.encounter;
@@ -1113,9 +1160,11 @@ function outgoingDamagePreview(state, action) {
       multiplier,
       critical: false,
     });
-    let n = Math.floor(hit.damage * shots * (1 + bonus));
+    let n = Math.floor(
+      hit.damage * shots * (paradox.active(state) ? 1 : 1 + bonus),
+    );
     if (e.mechanic === "riftwalker" && e.combatTurn % 3 === 0) n = 0;
-    if (e.mechanic === "deimoss" && n > 0)
+    if (!paradox.active(state) && e.mechanic === "deimoss" && n > 0)
       n = Math.max(1, Math.floor(n * 0.75));
     return n;
   };
@@ -1151,7 +1200,10 @@ function playerAttack(state, action, rng) {
     if (!state.potions) throw new Error("NO_POTION");
     if (state.hp >= state.maxHp) throw new Error("FULL_HP");
     state.potions--;
-    const gained = heal(state, Math.max(20, state.maxHp * state.potionRate));
+    const gained = heal(
+      state,
+      Math.max(20, state.maxHp * paradox.potionRate(state)),
+    );
     return {
       defend: false,
       dodge: false,
@@ -1161,8 +1213,12 @@ function playerAttack(state, action, rng) {
   if (action === "skill") {
     const cost = skillManaCost(state);
     if (state.mana < cost) throw new Error("NO_ENERGY");
-    if (cost === 0) state.classShrine.consumed = true;
-    else state.mana -= cost;
+    const hpCost = paradox.hpCost(state);
+    if (state.hp - hpCost < 1) throw new Error("INSUFFICIENT_SKILL_HP");
+    if (hpCost) hurt(state, hpCost, false);
+    if (cost === 0 && state.classKey === "sorceress" && shrineActive(state))
+      state.classShrine.consumed = true;
+    state.mana -= cost;
     if (["sorceress", "necromancer"].includes(state.classKey)) {
       hits = [
         attackDamage(state, e, state, rng, {
@@ -1204,11 +1260,12 @@ function playerAttack(state, action, rng) {
       ? state.eliteDamage
       : 0;
   let damage = Math.floor(
-    hits.reduce((sum, hit) => sum + hit.damage, 0) * (1 + bonus),
+    hits.reduce((sum, hit) => sum + hit.damage, 0) *
+      (paradox.active(state) ? 1 : 1 + bonus),
   );
   const immune = e.mechanic === "riftwalker" && e.combatTurn % 3 === 0;
   if (immune) damage = 0;
-  if (e.mechanic === "deimoss" && damage > 0)
+  if (!paradox.active(state) && e.mechanic === "deimoss" && damage > 0)
     damage = Math.max(1, Math.floor(damage * 0.75));
   e.combatTurn++;
   e.hp = Math.max(0, e.hp - damage);
@@ -1365,6 +1422,11 @@ function actions(state) {
       action: `upgrade_${key}`,
       label: `+5 ${key.toUpperCase()}`,
     }));
+  if (state.phase === "paradox" && state.encounter.version === 2)
+    return state.encounter.choices.map((id) => ({
+      action: "paradox_" + id,
+      label: paradox.CATALOG[id].name + " · 5 tầng",
+    }));
   if (state.phase === "paradox")
     return [
       { action: "paradox_blood", label: "Máu là tiền · 5 tầng" },
@@ -1385,17 +1447,29 @@ function actions(state) {
   const e = state.encounter;
   if (e.type === "combat")
     return [
-      { action: "attack", label: `+${attackManaGain(state)} MP` },
+      {
+        action: "attack",
+        label: paradox.active(state)
+          ? `Tấn công (+${attackManaGain(state)} Mana)`
+          : `+${attackManaGain(state)} MP`,
+      },
       { action: "defend", label: "+1 MP" },
       {
         action: "skill",
-        label: `${skillManaCost(state) === 0 ? "0 MP" : "−2 MP"}`,
-        disabled: state.mana < skillManaCost(state),
+        label: paradox.active(state)
+          ? `${stats.CLASSES[state.classKey].skill} (−${skillManaCost(state)} Mana${paradox.hpCost(state) ? `, −${paradox.hpCost(state)} HP` : ""})`
+          : `${skillManaCost(state) === 0 ? "0 MP" : "−2 MP"}`,
+        disabled:
+          state.mana < skillManaCost(state) ||
+          state.hp - paradox.hpCost(state) < 1,
       },
       {
         action: "potion",
         label: `Bình ×${state.potions}`,
-        disabled: !state.potions || state.hp === state.maxHp,
+        disabled:
+          !state.potions ||
+          state.hp === state.maxHp ||
+          paradox.potionLocked(state),
       },
     ];
   if (e.type === "surprise")
@@ -1806,7 +1880,16 @@ function act(state, session, action, rng) {
     };
     state.lastLog = "Đã phân bổ điểm checkpoint.";
     nextMilestone(state, session, rng);
+  } else if (state.phase === "paradox" && state.encounter.version === 2) {
+    paradox.choose(state, action.slice(8));
+    state.lastLog = paradox.describe(state);
+    nextMilestone(state, session, rng);
   } else if (state.phase === "paradox") {
+    state.paradoxMilestonesClaimed ||= [];
+    const milestone = state.floor - 1;
+    if (state.paradoxMilestonesClaimed.includes(milestone))
+      throw new Error("STALE_ACTION");
+    state.paradoxMilestonesClaimed.push(milestone);
     state.paradox = {
       kind: action.slice(8),
       from: state.floor,
@@ -1832,6 +1915,7 @@ function act(state, session, action, rng) {
           "Mộ đã hết thời gian claim; trận đấu tiếp tục, không còn loot từ mộ.\n";
       } else if (e.echoId) echoes.renew(session, e.echoId);
       const acted = playerAttack(state, action, rng);
+      paradox.afterAction(state, action);
       state.lastLog += acted.log;
       if (
         state.contract &&
@@ -1851,6 +1935,8 @@ function act(state, session, action, rng) {
           echoes.consume(session, e.echoId);
         }
         state.lastLog += `\n🏆 Hạ ${e.name}.`;
+        if (paradox.is(state, "hunger"))
+          state.lastLog += `\n🍖 Cơn Đói hồi ${heal(state, Math.max(1, Math.floor(state.maxHp * 0.12)))} HP.`;
         if (e.rank === "ancient_mimic") {
           const roll = rng();
           const rarity =
@@ -1879,8 +1965,14 @@ function act(state, session, action, rng) {
           state.lastLog += `\n${eventIcon("boss_chest")} Nhận rương boss: mở hoặc bán để tiếp tục.`;
         }
         completeFloor(state, session, rng, e.rewardMultiplier);
-      } else
+      } else {
+        const doubleCounter =
+          paradox.is(state, "time_debt") &&
+          state.activeParadox.combatActionCount === 3;
         state.lastLog += `\n${enemyTurn(state, rng, acted.defend, acted.dodge)}`;
+        if (doubleCounter && alive(state))
+          state.lastLog += `\n⏳ Phản công lần hai: ${enemyTurn(state, rng, acted.defend, acted.dodge)}`;
+      }
     } else if (e.type === "surprise") actSurprise(state, session, action, rng);
     else if (e.type === "chest") {
       if (action === "inspect") {
@@ -2046,6 +2138,7 @@ function act(state, session, action, rng) {
     }
   }
   recompute(state);
+  prepareParadoxCombat(state, rng);
   finishEventResult(state);
   if (state.discardedTicketsThisTurn)
     state.lastLog += `\n${E.ticket} Bỏ ${state.discardedTicketsThisTurn} vé nhận thêm; chỉ giữ tối đa 1.`;
@@ -2093,6 +2186,7 @@ module.exports = {
   attackDamagePreview,
   enemyTurn,
   incomingPreview,
+  effectiveResistance,
   physicalRange,
   attackDamage,
   legendaryChance,

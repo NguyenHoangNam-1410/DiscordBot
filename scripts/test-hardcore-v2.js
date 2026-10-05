@@ -229,6 +229,12 @@ async function main() {
   const upgraded = play(checkpoints, "upgrade_str");
   assert.equal(upgraded.state.str, 35);
   assert.equal(upgraded.state.phase, "paradox");
+  assert.equal(upgraded.state.encounter.version, 2);
+  assert.equal(upgraded.state.encounter.choices.length, 2);
+  // Simulate a v1 selection already persisted before this release.
+  save(checkpoints, (s) => {
+    s.encounter = { type: "paradox" };
+  });
   const paradox = play(checkpoints, "paradox_blood");
   assert.deepEqual(
     [paradox.state.paradox.from, paradox.state.paradox.until],

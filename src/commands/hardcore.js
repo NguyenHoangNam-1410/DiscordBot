@@ -219,6 +219,11 @@ module.exports = {
     .setDescription("Chơi Sinh tồn vượt tầng bằng xu")
     .addSubcommand((command) =>
       command
+        .setName("thap")
+        .setDescription("Mở hoặc tiếp tục Tháp Định Mệnh 15 tầng của tuần"),
+    )
+    .addSubcommand((command) =>
+      command
         .setName("batdau")
         .setDescription("Mở bảng chọn nhân vật và nhập xu cược"),
     )
@@ -269,6 +274,8 @@ module.exports = {
         flags: MessageFlags.Ephemeral,
       });
     const subcommand = interaction.options.getSubcommand();
+    if (subcommand === "thap")
+      return require("../services/hardcoreTowerService").openTower(interaction);
     if (["cuahang", "tuido"].includes(subcommand)) {
       const view = require("../services/hardcoreInventoryView");
       return interaction.reply({

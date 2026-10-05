@@ -1118,4 +1118,23 @@ runMigration(34, "hardcore daily shop and persistent inventory", () => {
   `);
 });
 
+runMigration(
+  35,
+  "independent deterministic tower sessions and weekly results",
+  () => {
+    db.exec(`CREATE TABLE IF NOT EXISTS hardcore_tower_sessions (
+    id TEXT PRIMARY KEY,guild_id TEXT NOT NULL,user_id TEXT NOT NULL,
+    challenge_id TEXT NOT NULL,content_version INTEGER NOT NULL,
+    channel_id TEXT NOT NULL,message_id TEXT,state_json TEXT NOT NULL,
+    created_at INTEGER NOT NULL,updated_at INTEGER NOT NULL,
+    UNIQUE(guild_id,user_id,challenge_id));
+    CREATE TABLE IF NOT EXISTS hardcore_tower_results (
+    guild_id TEXT NOT NULL,user_id TEXT NOT NULL,challenge_id TEXT NOT NULL,
+    attempts INTEGER NOT NULL DEFAULT 0,best_floor INTEGER NOT NULL DEFAULT 0,
+    completed_at INTEGER,reward_claimed_at INTEGER,solution_hash TEXT,
+    updated_at INTEGER NOT NULL,PRIMARY KEY(guild_id,user_id,challenge_id));
+    CREATE INDEX IF NOT EXISTS idx_tower_results_week ON hardcore_tower_results(guild_id,challenge_id);`);
+  },
+);
+
 module.exports = { db, dbPath, runMigration };

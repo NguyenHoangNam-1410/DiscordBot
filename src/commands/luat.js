@@ -74,6 +74,11 @@ function survivalRules() {
               "- `/sinhton batdau` → chọn một trong 7 class → nhập **10–100.000 xu**, trong giới hạn server → **Tiếp** → chọn tối đa 5 món khác nhau và mỗi loại vé một chiếc → xem chỉ số → **Bắt đầu**. Cược và đồ/vé được trừ cùng lúc khi xác nhận; không hoàn khi chết hoặc rút. Mua tại `/sinhton cuahang`, xem túi qua `/sinhton tuido`; bảng chuẩn bị hết hạn sau 5 phút.\n- Mỗi người một run/server. `/sinhton tieptuc` mở lại bảng của run đã lưu; không đổi kết quả ngẫu nhiên đã khóa.\n- Không thao tác **7 ngày**: run hết hạn và mất cược/thưởng.\n- Vượt tầng 100 là mốc hoàn thành; vẫn có thể chơi tiếp đến 999. Phải hạ boss tầng 999 để công nhận mốc cuối.",
           },
           {
+            name: "Tháp Định Mệnh · mode riêng",
+            value:
+              "`/choi sinhton thap` hoặc `/sinhton thap` mở/tiếp tục challenge 15 tầng. Không cược, không dùng loadout, item, bình hoặc vé từ Sinh tồn 999. Damage cố định, không Miss/Crit/RNG; đọc ý định từng pha. Có thể giữ đồng thời một run mỗi mode. Challenge đổi lúc 00:00 thứ Hai (UTC+7); hết hạn có 24 giờ chỉ xem kết quả. Tuần 41: hoàn thành lần đầu nhận 500.000 xu + 250 kim cương; chơi lại không nhận thêm. Nút bảng xếp hạng nằm trên UI Tháp.",
+          },
+          {
             name: "Bốn thuộc tính",
             value: `${E.str} **STR:** tăng vật lý và DEF.\n${E.dex} **DEX:** tăng ACC/EVA/CRIT; hướng sát thương chính của Amazon/Assassin.\n${E.vit} **VIT:** tăng Max HP và hiệu lực bình.\n${E.ene} **ENE:** tăng phép, RES và Max MP.\n${E.mana} **MP** dùng skill, không phải ENE. ${E.luck} **LUCK** đến từ trang bị/event.\nƯu tiên DEX cho Amazon/Assassin, ENE cho Sorceress/Necromancer, STR cho Barbarian/Druid/Paladin; thêm VIT để tăng chống chịu.`,
           },

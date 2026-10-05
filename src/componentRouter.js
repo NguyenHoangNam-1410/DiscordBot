@@ -50,6 +50,15 @@ const checklistCommand = require("./commands/kiemtra");
 
 const { handleStore, handleBag } = require("./services/hardcoreInventoryView");
 const ROUTES = Object.freeze([
+  {
+    kind: "button",
+    prefix: "hardcore-tower:",
+    handle: (interaction, logger) =>
+      require("./services/hardcoreTowerService").handleTowerButton(
+        interaction,
+        logger,
+      ),
+  },
   ...["button", "select", "modal"].map((kind) => ({
     kind,
     prefix: "hardcore-store:",
@@ -264,7 +273,7 @@ async function routeComponentInteraction(interaction, logger) {
   );
   if (!route) return false;
   const gameAction =
-    /^(replay:|chinchiro:|bjduel:|poker:|poker-private:|hardcore:|hardcore-setup:|hardcore-setup-modal:|mines:|coquay:|horserace:|blackjack:|gamebet:|gamebet-modal:|poker-modal:|poker-private-modal:|horserace-modal:)/.test(
+    /^(replay:|chinchiro:|bjduel:|poker:|poker-private:|hardcore-tower:|hardcore:|hardcore-setup:|hardcore-setup-modal:|mines:|coquay:|horserace:|blackjack:|gamebet:|gamebet-modal:|poker-modal:|poker-private-modal:|horserace-modal:)/.test(
       interaction.customId,
     );
   if (
