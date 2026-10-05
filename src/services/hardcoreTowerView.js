@@ -566,20 +566,6 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
       (result.attempts + (state.status === "playing" ? 1 : 0)) +
       "**",
   );
-  const upcoming = catalog.upcoming(now);
-  addTextFields(
-    embed,
-    "🌱 Seed commitment",
-    c.seedCommitment +
-      (upcoming
-        ? "\n**" +
-          upcoming.weekLabel +
-          " · " +
-          upcoming.character.name +
-          "** (sắp mở): " +
-          upcoming.seedCommitment
-        : ""),
-  );
   addTextFields(embed, "🏆 Phần thưởng", rewardText(state, c, result));
   if (state.lastLog)
     addTextFields(embed, "📜 Lượt vừa rồi", turnText(state, c));
