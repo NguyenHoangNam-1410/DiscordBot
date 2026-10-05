@@ -43,6 +43,9 @@ function recordEmbed(user, record) {
     );
 }
 
+const profileView = require("../services/hardcoreProfile");
+const overviewFor = (guildId) => (user) => recordEmbed(user, getHardcoreRecord(guildId, user.id));
+
 const RATE_CATEGORIES = Object.freeze([
   {
     id: "encounters",
@@ -258,6 +261,16 @@ module.exports = {
     ),
   recordEmbed,
   ratesEmbed,
+  handleProfileSelect: (interaction) =>
+    profileView.handleSelect(interaction, overviewFor(interaction.guildId), (id) =>
+      interaction.client.users.fetch(id),
+    ),
+  handleProfilePage: (interaction) =>
+    profileView.handlePage(interaction, overviewFor(interaction.guildId), (id) =>
+      interaction.client.users.fetch(id),
+    ),
+  handleTopSelect: (interaction) => profileView.handleTopSelect(interaction),
+  handleTopPage: (interaction) => profileView.handleTopPage(interaction),
   async handleRatesSelect(interaction) {
     const [, ownerId] = interaction.customId.split(":");
     if (interaction.user.id !== ownerId)
@@ -288,33 +301,22 @@ module.exports = {
     if (subcommand === "hoso") {
       const user = interaction.options.getUser?.("user") || interaction.user;
       return interaction.reply({
-        embeds: [
-          recordEmbed(user, getHardcoreRecord(interaction.guildId, user.id)),
-        ],
+        ...profileView.profilePayload(
+          interaction.guildId,
+          interaction.user.id,
+          user,
+          "overview",
+          0,
+          overviewFor(interaction.guildId)(user),
+        ),
         flags: MessageFlags.Ephemeral,
       });
     }
-    if (subcommand === "top") {
-      const rows = getHardcoreTop(interaction.guildId);
-      const description = rows.length
-        ? rows
-            .map(
-              (row, index) =>
-                `**${index + 1}.** <@${row.user_id}> — tầng **${row.best_floor}** · hoàn thành ${row.completions}`,
-            )
-            .join("\n")
-        : "Chưa có thành tích.";
+    if (subcommand === "top")
       return interaction.reply({
-        embeds: [
-          new EmbedBuilder()
-            .setColor(0xf1c40f)
-            .setTitle("🏆 SINH TỒN · TOP TẦNG")
-            .setDescription(description)
-            .setFooter({ text: "Xếp theo tầng đã vượt cao nhất" }),
-        ],
+        ...profileView.topPayload(interaction.guildId, interaction.user.id, "all", 0),
         flags: MessageFlags.Ephemeral,
       });
-    }
     if (subcommand === "rates")
       return interaction.reply({
         ...ratesPayload(interaction.user.id),

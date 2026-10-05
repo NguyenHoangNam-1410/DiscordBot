@@ -1144,4 +1144,19 @@ runMigration(36, "hardcore event and chain achievement stats", () => {
     updated_at INTEGER NOT NULL,PRIMARY KEY(guild_id,user_id))`);
 });
 
+runMigration(37, "hardcore profile statistics: kills, killers and boss tallies", () => {
+  db.exec(`
+    ALTER TABLE hardcore_run_archive ADD COLUMN killed_by TEXT;
+    ALTER TABLE hardcore_run_archive ADD COLUMN kills INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE hardcore_run_archive ADD COLUMN boss_kills INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE hardcore_run_archive ADD COLUMN events INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE hardcore_run_archive ADD COLUMN chains INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE hardcore_event_stats ADD COLUMN kills INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE hardcore_event_stats ADD COLUMN boss_kills INTEGER NOT NULL DEFAULT 0;
+    CREATE TABLE IF NOT EXISTS hardcore_boss_kills (
+      guild_id TEXT NOT NULL,user_id TEXT NOT NULL,boss TEXT NOT NULL,
+      count INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(guild_id,user_id,boss));
+  `);
+});
+
 module.exports = { db, dbPath, runMigration };

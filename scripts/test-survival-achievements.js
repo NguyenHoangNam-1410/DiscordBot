@@ -20,7 +20,7 @@ const G = "g", U = "u";
 const progress = (id) => getAchievements(G, U).find((a) => a.id === id);
 assert.equal(progress("hc_class_druid_50").progress, 0);
 
-const arch = db.prepare("INSERT INTO hardcore_run_archive VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
+const arch = db.prepare("INSERT INTO hardcore_run_archive (session_id,guild_id,user_id,gameplay_version,release_version,class_key,cleared,reason,stake,payout,diamonds,turns,created_at,ended_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)");
 const row = (id, cls, cleared) => arch.run(id, G, U, 2, "2.0.0", cls, cleared, "death", 1000, 0, 0, 10, 1, 2);
 row("a", "druid", 60); row("b", "druid", 160); row("c", "paladin", 40); row("d", "amazon", 500);
 assert(progress("hc_class_druid_50").complete && progress("hc_class_druid_150").complete);
