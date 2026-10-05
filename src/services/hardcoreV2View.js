@@ -731,7 +731,7 @@ function encounterDetails(s) {
         deimoss:
           "Abyssal Spires giảm **25% sát thương bạn gây ra**, áp dụng mọi đòn. Dự báo skill trên bảng chính đã tính giảm trừ này.",
       }[e.mechanic] || "Boss này không có chu kỳ kích hoạt riêng.";
-    return `${eventIcon("boss")} **${e.name} · Cơ chế đặc biệt**\n${mechanism}${e.drainCharges > 0 ? `\nSoul Drain: còn **${e.drainCharges}** lần; phản công trúng sẽ hút 1 MP.` : ""}`;
+    return `${eventIcon("boss")} **${e.name} · Cơ chế đặc biệt**\n${mechanism}${e.drainCharges > 0 ? `\nSoul Drain: **quái** còn **${e.drainCharges} lần hút**; mỗi phản công trúng rút **1** ${E.mana} **MP** của **bạn**.` : ""}`;
   }
   if (e.type === "chest") {
     const names = {
@@ -1193,6 +1193,47 @@ function rows(sessionId, state, disabled = false) {
   );
   return result;
 }
+function riftModifierText(key, count, state) {
+  const stacks = world.effectiveStacks(count);
+  const stat = (label, value) => `${highlightStat(label)} **${value}**`;
+  const amount = (n) => (Math.round(n * 1000) / 1000).toLocaleString("vi-VN");
+  const bonus = {
+    stone_skin: stat(`${E.defense} DEF`, `+${amount(stacks * 8)}%`),
+    elemental_dominion: `${stat(`${E.attack} DMG`, `+${amount(stacks * 3)}%`)}; ${E.magic} **Tỷ lệ đòn phép** **+${amount(stacks * 3)} điểm phần trăm** (quái đánh hỗn hợp)`,
+    bloodlust: stat(`${E.attack} DMG`, `+${amount(stacks * 6)}%`),
+    fortified: stat(`${E.hp} Max HP`, `+${amount(stacks * 8)}%`),
+    swift_horror: `${stat(`${E.accuracy} ACC`, `+${amount(stacks * 3)}`)}${STAT_SEPARATOR}${stat(`${E.evasion} EVA`, `+${amount(stacks * 1.5)}`)}`,
+    cursed_ground: stat(
+      `${E.res} RES`,
+      `−${amount(stacks * 3)} điểm phần trăm`,
+    ),
+  }[key];
+  const icons = {
+    "Max HP": E.hp,
+    HP: E.hp,
+    MP: E.mana,
+    DMG: E.attack,
+    DEF: E.defense,
+    ACC: E.accuracy,
+    EVA: E.evasion,
+    RES: E.res,
+  };
+  const text = world.RIFT_MODIFIERS[key].text.replace(
+    /\b(Max HP|HP|MP|DMG|DEF|ACC|EVA|RES)\b/g,
+    (label) => highlightStat(`${icons[label]} ${label}`),
+  );
+  if (key === "soul_drain") {
+    const charges = Math.min(3, Math.ceil(count / 4));
+    const remaining =
+      state.phase === "encounter" &&
+      state.encounter.type === "combat" &&
+      Number.isInteger(state.encounter.drainCharges)
+        ? ` Trận hiện tại: còn **${state.encounter.drainCharges} lần hút**.`
+        : "";
+    return `Hiện tại: **${charges} lần hút mỗi trận**.${remaining}\n${text}`;
+  }
+  return `${bonus ? `Mức tăng/giảm hiện tại: ${bonus}.\n` : ""}${text}`;
+}
 function privatePayload(
   state,
   sessionId,
@@ -1265,7 +1306,7 @@ function privatePayload(
     ))
       e.addFields({
         name: `${RIFT_ICONS[key] || E.rift} ${world.RIFT_MODIFIERS[key].name} ×${n}`,
-        value: `${world.RIFT_MODIFIERS[key].text} Stack hiệu dụng: ${world.effectiveStacks(n)}.`,
+        value: riftModifierText(key, n, state),
       });
     e.addFields({
       name: "Hiệu ứng hiện hành",

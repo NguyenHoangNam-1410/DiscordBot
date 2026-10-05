@@ -1,37 +1,37 @@
 "use strict";
-const { eventIcon } = require("./hardcoreIcons");
+const { E, eventIcon } = require("./hardcoreIcons");
 const CATALOG = Object.freeze({
   blood_pact: {
     name: "🩸 Huyết Ước",
-    text: "Damage ×1,30. Mỗi Skill mất max(1, floor(5% Max HP)) HP; cần còn ít nhất 1 HP sau chi phí.",
+    text: `**Bạn** gây ${E.attack} **DMG** **×1,30**. Mỗi Skill trừ ${E.hp} **HP** của **bạn** bằng **5%** ${E.hp} **Max HP**, làm tròn xuống và tối thiểu **1 HP**; cần còn ít nhất **1 HP** sau chi phí.`,
   },
   mana_fracture: {
     name: "🔷 Mana Vỡ Vụn",
-    text: "Skill 1 MP (Class Shrine miễn phí vẫn 0). Tấn công +0 MP; Phòng thủ +1 MP.",
+    text: `Skill của **bạn** tốn ${E.mana} **MP** **1**; Class Shrine miễn phí vẫn tốn **0 MP**. Tấn công hồi ${E.mana} **MP** **+0**; Phòng thủ hồi ${E.mana} **MP** **+1** cho **bạn**.`,
   },
   inverted_armor: {
     name: "🛡️ Giáp Nghịch Đảo",
-    text: "Damage vật lý nhận vào ×0,75 sau DEF. RES hiệu dụng −20 (giới hạn −50..75).",
+    text: `**Bạn** nhận ${E.attack} **DMG vật lý** **×0,75** sau ${E.defense} **DEF**. ${E.res} **RES** hiệu dụng của **bạn** giảm **20 điểm phần trăm**, giới hạn **−50% đến 75%**.`,
   },
   inverted_magic: {
     name: "🔮 Ma Pháp Nghịch Đảo",
-    text: "RES hiệu dụng +20 (tối đa 75). Damage vật lý nhận vào ×1,35 sau DEF.",
+    text: `${E.res} **RES** hiệu dụng của **bạn** tăng **20 điểm phần trăm**, tối đa **75%**. **Bạn** nhận ${E.attack} **DMG vật lý** **×1,35** sau ${E.defense} **DEF**.`,
   },
   hunger: {
     name: "🍖 Cơn Đói",
-    text: "Hạ quái hồi max(1, floor(12% Max HP)) HP. Hiệu lực bình ×0,50, giới hạn 10%..75%.",
+    text: `Khi hạ quái, **bạn** hồi ${E.hp} **HP** bằng **12%** ${E.hp} **Max HP**, làm tròn xuống và tối thiểu **1 HP**. Hiệu lực ${E.potion} **bình của bạn** giảm còn **×0,50**; tỷ lệ hồi cuối cùng giới hạn **10%–75%** ${E.hp} **Max HP**.`,
   },
   time_debt: {
     name: "⏳ Nợ Thời Gian",
-    text: "Hai Tấn công/Skill đầu mỗi combat: damage ×1,25. Đúng hành động thứ 3 (kể cả Thủ/Bình): quái còn sống phản công hai lần.",
+    text: `Hai lần Tấn công/Skill đầu mỗi trận của **bạn** gây ${E.attack} **DMG** **×1,25**. Đúng hành động thứ **3** của bạn, tính cả Phòng thủ/Bình: **quái** còn sống sẽ phản công **2 lần**.`,
   },
   blood_mirror: {
     name: "🪞 Gương Máu",
-    text: "HP ≤40% Max HP: damage ×1,40 và được dùng bình. HP >40%: khóa bình. Kiểm tra khi bấm nút.",
+    text: `Khi **bạn** còn ${E.hp} **HP** **≤40%** ${E.hp} **Max HP**: ${E.attack} **DMG** của bạn **×1,40** và được dùng bình. Khi HP của **bạn** **>40%** ${E.hp} **Max HP**: không dùng được ${E.potion} **bình**.`,
   },
   unstable_soul: {
     name: "👻 Linh Hồn Bất Ổn",
-    text: "Skill: 25% miễn MP · 15% thêm 1 MP · 60% bình thường. Chi phí khóa từng lượt; mở lại UI không roll lại.",
+    text: `Mỗi lượt, Skill của **bạn** có **25%** cơ hội tốn ${E.mana} **MP** **0**; **15%** tốn thêm **1 MP**; **60%** dùng chi phí bình thường. Class Shrine miễn phí vẫn tốn ${E.mana} **MP** **0**. Chi phí được chốt cho lượt hiện tại; mở lại UI không đổi kết quả.`,
   },
 });
 const PAIRS = Object.freeze({
@@ -173,7 +173,11 @@ function describe(s) {
         ")\n" +
         CATALOG[p.id].text +
         (p.id === "unstable_soul" && p.lockedSkillCost !== null
-          ? "\nSkill lượt này: " + p.lockedSkillCost + " MP."
+          ? "\nSkill của bạn lượt này: " +
+            E.mana +
+            " **MP** **" +
+            p.lockedSkillCost +
+            "**."
           : "")
     : "";
 }

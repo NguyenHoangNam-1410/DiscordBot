@@ -53,35 +53,35 @@ const REGIONS = [
 const RIFT_MODIFIERS = {
   stone_skin: {
     name: "Stone Skin",
-    text: "+8% DEF mỗi stack hiệu dụng, tối đa +64%.",
+    text: "**Quái** được tăng DEF khi xuất hiện, tối đa **+64%**.",
   },
   elemental_dominion: {
     name: "Elemental Dominion",
-    text: "+3% DMG và cơ hội phép mỗi stack hiệu dụng, tối đa +24%.",
+    text: "**Quái** được tăng DMG, tối đa **+24%**. Với quái dùng cả vật lý lẫn phép, tỷ lệ ra đòn phép cũng tăng, tối đa **24 điểm phần trăm**.",
   },
   bloodlust: {
     name: "Bloodlust",
-    text: "Dưới 50% HP: +6% DMG mỗi stack hiệu dụng, tối đa +48%.",
+    text: "Khi **quái** còn dưới **50%** Max HP, DMG phản công của **quái** tăng, tối đa **+48%**.",
   },
   unstable_rift: {
     name: "Unstable Rift",
-    text: "Thêm hòm, Mimic và SSR kho báu; không thể xóa.",
+    text: "**Bạn** dễ gặp hòm thường và kho báu hơn. Hòm dễ gặp Mimic/Ancient Mimic hơn; trong nhánh kho báu an toàn, tỷ lệ nhận SSR cao hơn. Không thể xóa bằng Rift Severance.",
   },
   fortified: {
     name: "Fortified",
-    text: "+8% HP mỗi stack hiệu dụng, tối đa +64%.",
+    text: "**Quái** được tăng Max HP khi xuất hiện, tối đa **+64%**.",
   },
   swift_horror: {
     name: "Swift Horror",
-    text: "+3 ACC, +1,5 EVA mỗi stack hiệu dụng.",
+    text: "**Quái** được tăng ACC và EVA khi xuất hiện: quái đánh bạn dễ trúng hơn và né đòn vật lý của bạn tốt hơn.",
   },
   soul_drain: {
     name: "Soul Drain",
-    text: "ceil(stack/4) đòn trúng rút 1 MP mỗi combat, tối đa 3.",
+    text: "**Quái** hút **1** MP của **bạn** mỗi khi phản công trúng; MP của bạn không xuống dưới **0**. Mỗi trận: **1–4** cộng dồn cho **1** lần hút, **5–8** cho **2** lần, từ **9** cho **3** lần. Trúng đòn vẫn tiêu hao lần hút khi bạn đang **0** MP. Đánh trượt hoặc bị chặn hoàn toàn không tiêu hao lần hút.",
   },
   cursed_ground: {
     name: "Cursed Ground",
-    text: "−3 RES khi nhận phép mỗi stack hiệu dụng, tối đa −24.",
+    text: "**Bạn** bị giảm RES hiệu dụng khi nhận sát thương phép, tối đa **24 điểm phần trăm**.",
   },
 };
 const BOSSES = [
