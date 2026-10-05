@@ -61,7 +61,7 @@ async function fetchAvatar(avatarUrl) {
   }
 }
 
-// Bảng màu pastel: nền sáng pha từ màu hồ sơ, chữ tối để dễ đọc; màu hồ sơ gốc chỉ dùng cho chi tiết nhấn.
+// Nền tối pha nhẹ màu hồ sơ; chữ sáng dịu và màu nhấn được cân độ tương phản.
 function parseHex(color) {
   const hex = String(color).replace("#", "");
   const full = hex.length === 3 ? [...hex].map((c) => c + c).join("") : hex.slice(0, 6);
@@ -83,17 +83,20 @@ function luminance(color) {
   });
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
 }
-// Màu nhấn đủ đậm để thấy rõ trên nền pastel (màu quá sáng như trắng được làm đậm dần).
+// Giữ màu nhấn dễ đọc trên nền tối, giảm chói với màu quá sáng và nâng màu quá tối.
 function strongAccent(accent) {
   let color = accent;
-  for (let i = 0; i < 12 && luminance(color) > 0.28; i += 1) color = mix(color, "#000000", 0.12);
+  for (let i = 0; i < 16 && luminance(color) < 0.3; i += 1)
+    color = mix(color, "#cbd5e1", 0.12);
+  for (let i = 0; i < 16 && luminance(color) > 0.65; i += 1)
+    color = mix(color, "#94a3b8", 0.12);
   return color;
 }
-const INK = "#1e293b";
-const INK_SOFT = "#64748b";
+const INK = "#e2e8f0";
+const INK_SOFT = "#94a3b8";
 
 function drawBackground(ctx, accent) {
-  ctx.fillStyle = mix(accent, "#ffffff", 0.82);
+  ctx.fillStyle = mix(accent, "#0b101b", 0.93);
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
   ctx.fillStyle = accent;
   ctx.fillRect(0, 0, WIDTH, 7);
@@ -101,11 +104,11 @@ function drawBackground(ctx, accent) {
 
 function drawPanel(ctx, x, y, width, height, radius, alpha) {
   ctx.save();
-  ctx.shadowColor = "rgba(30,41,59,.14)";
+  ctx.shadowColor = "rgba(0,0,0,.28)";
   ctx.shadowBlur = 16;
   ctx.shadowOffsetY = 4;
   roundedRect(ctx, x, y, width, height, radius);
-  ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+  ctx.fillStyle = `rgba(30,41,59,${alpha})`;
   ctx.fill();
   ctx.restore();
 }
@@ -122,7 +125,7 @@ async function drawAvatar(ctx, avatarUrl, displayName, accent) {
   if (avatar)
     ctx.drawImage(avatar, x - radius, y - radius, radius * 2, radius * 2);
   else {
-    ctx.fillStyle = mix(accent, "#ffffff", 0.35);
+    ctx.fillStyle = mix(accent, "#111827", 0.8);
     ctx.fillRect(x - radius, y - radius, radius * 2, radius * 2);
     ctx.fillStyle = strongAccent(accent);
     ctx.font = `700 58px ${FONT_FAMILY}`;
@@ -136,8 +139,8 @@ async function drawAvatar(ctx, avatarUrl, displayName, accent) {
   }
   ctx.restore();
   ctx.save();
-  ctx.strokeStyle = "#ffffff";
-  ctx.shadowColor = "rgba(30,41,59,.25)";
+  ctx.strokeStyle = mix(strongAccent(accent), "#64748b", 0.55);
+  ctx.shadowColor = "rgba(0,0,0,.35)";
   ctx.shadowBlur = 14;
   ctx.lineWidth = 8;
   ctx.beginPath();
@@ -278,9 +281,9 @@ async function renderProfileCard({
   ctx.font = `800 32px ${FONT_FAMILY}`;
   ctx.fillText(fitText(ctx, displayName, 430), 320, 111);
   roundedRect(ctx, 810, 58, 112, 38, 12);
-  ctx.fillStyle = "rgba(255,255,255,.8)";
+  ctx.fillStyle = "rgba(15,23,42,.85)";
   ctx.fill();
-  ctx.strokeStyle = mix(strongAccent(accent), "#ffffff", 0.35);
+  ctx.strokeStyle = mix(strongAccent(accent), "#475569", 0.45);
   ctx.lineWidth = 1.5;
   ctx.stroke();
   ctx.fillStyle = strongAccent(accent);
@@ -320,12 +323,12 @@ async function renderProfileCard({
   ctx.font = `600 13px ${FONT_FAMILY}`;
   ctx.fillText(`TIẾN ĐỘ CẤP ${level}`, 320, 258);
   roundedRect(ctx, 420, 246, 430, 16, 8);
-  ctx.fillStyle = "rgba(30,41,59,.1)";
+  ctx.fillStyle = "rgba(148,163,184,.16)";
   ctx.fill();
   const barWidth = (430 * expPercent) / 100;
   if (barWidth > 0) {
     roundedRect(ctx, 420, 246, barWidth, 16, 8);
-    ctx.fillStyle = mix(accent, "#000000", luminance(accent) > 0.5 ? 0.25 : 0);
+    ctx.fillStyle = strongAccent(accent);
     ctx.fill();
   }
   ctx.fillStyle = INK;

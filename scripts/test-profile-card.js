@@ -41,9 +41,9 @@ const borderPoints = (thickness) => { const points = [];
   }
   // Không có khung thì vẫn có vạch màu hồ sơ ở mép trên (đối chứng để chắc phép kiểm tra có tác dụng)
   assert(borderPoints(5).some(([x, y]) => isAccent(plain, x, y)), "không khung: vạch màu hồ sơ phải còn");
-  // Giao diện pastel: nền sáng (không còn tối), chữ tối, thanh nhấn vẫn đúng màu hồ sơ
+  // Giao diện dark: nền và panel tối để không chói, giữ màu hồ sơ làm điểm nhấn
   const lightness = ([r, g, b]) => (r + g + b) / 3;
-  for (const [x, y] of [[300, 20], [650, 320], [140, 330]]) assert(lightness(at(plain, x, y)) > 200, `nền thẻ phải sáng kiểu pastel tại (${x},${y})`);
+  for (const [x, y] of [[300, 20], [650, 320], [140, 330]]) assert(lightness(at(plain, x, y)) < 60, `nền thẻ phải tối tại (${x},${y})`);
   // Nền một màu phẳng, không gradient hay đường trang trí: các điểm trống ngoài panel giống hệt nhau
   const flat = at(plain, 300, 20);
   for (const [x, y] of [[990, 330], [10, 330], [650, 336], [6, 150], [995, 150], [500, 12], [10, 12]]) assert.deepEqual(at(plain, x, y), flat, `nền phải là một màu phẳng, điểm (${x},${y}) khác`);
