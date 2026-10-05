@@ -84,6 +84,10 @@ const ROUTES = Object.freeze([
     prefix: "hoso:",
     handle: (interaction) => profileCommand.handleSelect(interaction),
   },
+  { kind: "select", prefix: "hardcore-hoso:", handle: (i) => hardcoreCommand.handleProfileSelect(i) },
+  { kind: "button", prefix: "hardcore-hosopg:", handle: (i) => hardcoreCommand.handleProfilePage(i) },
+  { kind: "select", prefix: "hardcore-top:", handle: (i) => hardcoreCommand.handleTopSelect(i) },
+  { kind: "button", prefix: "hardcore-toppg:", handle: (i) => hardcoreCommand.handleTopPage(i) },
   {
     kind: "select",
     prefix: "hardcore-rates:",

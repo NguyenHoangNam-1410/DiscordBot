@@ -1046,18 +1046,16 @@ function completeFloor(state, log, rewardMultiplier = 1) {
   setNextEncounter(state, log);
 }
 
-// Ghi nhận sự kiện đặc biệt/chuỗi kích hoạt của ván để tính thành tựu khi ván kết thúc.
-function noteEvent(state, kind, chained) {
-  state.evCount = (state.evCount || 0) + 1;
-  state.evKinds = Array.from(new Set([...(state.evKinds || []), kind]));
-  if (chained) state.chainCount = (state.chainCount || 0) + 1;
-}
+const noteEvent = (...args) => hardcoreV2.noteEvent(...args);
 
 function recordRun(guildId, userId, state, reason) {
   hardcoreRepository.addEventStats(guildId, userId, {
     events: state.evCount || 0,
     chains: state.chainCount || 0,
     kinds: state.evKinds || [],
+    kills: state.kills || 0,
+    bossKills: state.bossKills || 0,
+    bosses: state.bossTally || {},
   });
   const death = ["death", "rngesus"].includes(reason) ? 1 : 0;
   const escape = ["cashout", "summit"].includes(reason) ? 1 : 0;
@@ -1834,7 +1832,23 @@ function getHardcoreRun(guildId, userId) {
   return session ? { session, state: parseState(session) } : null;
 }
 
+const TRAP_KILLERS = Object.freeze({
+  tax_collector: "Tax Collector",
+  tax: "Tax Collector",
+  portal: "Wrong Portal",
+  potion_thief: "Potion Thief",
+  wrong_portal: "Wrong Portal",
+});
+function killerName(state, reason) {
+  if (reason === "rngesus") return "RNGesus";
+  const e = state.encounter;
+  if (e?.type === "combat" && e.name) return e.name;
+  if (e?.type === "shrine") return "Fake Shrine";
+  return TRAP_KILLERS[e?.kind] || SURPRISE_EVENTS[e?.kind]?.name || "Lời nguyền / hiệu ứng";
+}
+
 function finishRun(session, state, reason) {
+  if (["death", "rngesus"].includes(reason)) state.killedBy = killerName(state, reason);
   const diamonds =
     reason === "cashout" || reason === "summit" ? runDiamondReward(state) : 0;
   let payout =
@@ -2622,6 +2636,14 @@ const actionTx = db.transaction(
         }
         if (state.encounter.hp <= 0) {
           const enemy = state.encounter;
+          state.kills = (state.kills || 0) + 1;
+          if (["boss", "final_boss"].includes(enemy.rank)) {
+            state.bossKills = (state.bossKills || 0) + 1;
+            state.bossTally = {
+              ...(state.bossTally || {}),
+              [enemy.name]: (state.bossTally?.[enemy.name] || 0) + 1,
+            };
+          }
           if (
             state.floor === MAX_FLOOR &&
             enemy.rank === "final_boss" &&

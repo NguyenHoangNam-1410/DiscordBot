@@ -1319,7 +1319,13 @@ const eventAchievements = [
   ["hc_chain_50", "Bậc thầy chuỗi", "Kích hoạt 50 chuỗi sự kiện", 50, 200_000, 500, "hardcoreChains"],
   ["hc_kinds_5", "Nhà thám hiểm", "Gặp 5 loại sự kiện đặc biệt khác nhau", 5, 15_000, 40, "hardcoreEventKinds"],
   ["hc_kinds_10", "Nhà sưu tầm biến cố", "Gặp 10 loại sự kiện đặc biệt khác nhau", 10, 60_000, 150, "hardcoreEventKinds"],
-  ["hc_kinds_16", "Đã thấy tất cả", "Gặp đủ 16 loại sự kiện đặc biệt", 16, 250_000, 600, "hardcoreEventKinds"],
+  ["hc_kinds_20", "Đã thấy tất cả", "Gặp đủ 20 loại sự kiện đặc biệt", 20, 250_000, 600, "hardcoreEventKinds"],
+  ["hc_kills_50", "Thợ săn quái", "Hạ 50 quái trong Sinh tồn", 50, 10_000, 30, "hardcoreKills"],
+  ["hc_kills_500", "Đồ tể hầm ngục", "Hạ 500 quái trong Sinh tồn", 500, 60_000, 150, "hardcoreKills"],
+  ["hc_kills_2500", "Lưỡi hái vực sâu", "Hạ 2.500 quái trong Sinh tồn", 2500, 250_000, 600, "hardcoreKills"],
+  ["hc_boss_1", "Kẻ diệt trùm", "Hạ 1 boss trong Sinh tồn", 1, 10_000, 30, "hardcoreBossKills"],
+  ["hc_boss_10", "Thợ săn trùm", "Hạ 10 boss trong Sinh tồn", 10, 60_000, 150, "hardcoreBossKills"],
+  ["hc_boss_50", "Bóng đen của trùm", "Hạ 50 boss trong Sinh tồn", 50, 250_000, 600, "hardcoreBossKills"],
 ].map(([id, name, description, target, reward, diamonds, metric]) => ({ id, name, description, target, reward, diamonds, metric }));
 const ACHIEVEMENTS = Object.freeze([...BASE_ACHIEVEMENTS, ...classFloorAchievements, ...eventAchievements]);
 
@@ -1328,6 +1334,8 @@ const CATEGORY_GROUPS = Object.freeze({
   hardcoreEvents: "hardcoreEvents",
   hardcoreChains: "hardcoreEvents",
   hardcoreEventKinds: "hardcoreEvents",
+  hardcoreKills: "hardcoreEvents",
+  hardcoreBossKills: "hardcoreEvents",
   hardcoreRuns: "hardcoreJourney",
   hardcoreEscapes: "hardcoreJourney",
   hardcoreCompletions: "hardcoreJourney",
@@ -1400,7 +1408,7 @@ function metrics(guildId, userId) {
     classFloors[`hcClass_${row.class_key}`] = row.best || 0;
   const eventRow =
     db
-      .prepare("SELECT events, chains, kinds_json FROM hardcore_event_stats WHERE guild_id=? AND user_id=?")
+      .prepare("SELECT events, chains, kills, boss_kills, kinds_json FROM hardcore_event_stats WHERE guild_id=? AND user_id=?")
       .get(guild, user) || {};
   const betting = db
     .prepare(
@@ -1548,6 +1556,8 @@ function metrics(guildId, userId) {
     ...classFloors,
     hardcoreEvents: eventRow.events || 0,
     hardcoreChains: eventRow.chains || 0,
+    hardcoreKills: eventRow.kills || 0,
+    hardcoreBossKills: eventRow.boss_kills || 0,
     hardcoreEventKinds: eventRow.kinds_json ? JSON.parse(eventRow.kinds_json).length : 0,
   };
 }

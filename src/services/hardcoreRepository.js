@@ -80,17 +80,29 @@ function upsertRecord(guildId, userId, values, now = Date.now()) {
     now,
   );
 }
-function addEventStats(guildId, userId, { events, chains, kinds }, now = Date.now()) {
-  if (!events && !chains) return;
+function addEventStats(
+  guildId,
+  userId,
+  { events = 0, chains = 0, kinds = [], kills = 0, bossKills = 0, bosses = {} },
+  now = Date.now(),
+) {
+  if (!events && !chains && !kills && !bossKills) return;
   const row = db
     .prepare("SELECT kinds_json FROM hardcore_event_stats WHERE guild_id=? AND user_id=?")
     .get(String(guildId), String(userId));
   const merged = Array.from(new Set([...(row ? JSON.parse(row.kinds_json) : []), ...kinds]));
   db.prepare(
-    `INSERT INTO hardcore_event_stats (guild_id,user_id,events,chains,kinds_json,updated_at) VALUES (?,?,?,?,?,?)
+    `INSERT INTO hardcore_event_stats (guild_id,user_id,events,chains,kinds_json,kills,boss_kills,updated_at) VALUES (?,?,?,?,?,?,?,?)
     ON CONFLICT(guild_id,user_id) DO UPDATE SET events=events+excluded.events,chains=chains+excluded.chains,
+    kills=kills+excluded.kills,boss_kills=boss_kills+excluded.boss_kills,
     kinds_json=excluded.kinds_json,updated_at=excluded.updated_at`,
-  ).run(String(guildId), String(userId), events, chains, JSON.stringify(merged), now);
+  ).run(String(guildId), String(userId), events, chains, JSON.stringify(merged), kills, bossKills, now);
+  const bump = db.prepare(
+    `INSERT INTO hardcore_boss_kills (guild_id,user_id,boss,count) VALUES (?,?,?,?)
+    ON CONFLICT(guild_id,user_id,boss) DO UPDATE SET count=count+excluded.count`,
+  );
+  for (const [boss, count] of Object.entries(bosses))
+    bump.run(String(guildId), String(userId), boss, count);
 }
 function getRecord(guildId, userId) {
   return (

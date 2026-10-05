@@ -4,7 +4,9 @@ const { db } = require("../db");
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 function archive(session, state, reason, payout = 0, diamonds = 0) {
   db.prepare(
-    `INSERT OR IGNORE INTO hardcore_run_archive VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    `INSERT OR IGNORE INTO hardcore_run_archive
+    (session_id,guild_id,user_id,gameplay_version,release_version,class_key,cleared,reason,stake,payout,diamonds,turns,created_at,ended_at,
+     killed_by,kills,boss_kills,events,chains) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
   ).run(
     session.id,
     session.guild_id,
@@ -20,6 +22,11 @@ function archive(session, state, reason, payout = 0, diamonds = 0) {
     state.turn,
     session.created_at,
     Date.now(),
+    state.killedBy || null,
+    state.kills || 0,
+    state.bossKills || 0,
+    state.evCount || 0,
+    state.chainCount || 0,
   );
 }
 function claim(session, state, now = Date.now()) {

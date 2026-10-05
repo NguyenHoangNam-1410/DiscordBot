@@ -1817,6 +1817,20 @@ function actSurprise(state, session, action, rng) {
       );
   } else throw new Error("INVALID_ACTION");
 }
+// Ghi nhận sự kiện đặc biệt/chuỗi kích hoạt của ván để tính thành tựu và thống kê khi ván kết thúc.
+function noteEvent(state, kind, chained) {
+  state.evCount = (state.evCount || 0) + 1;
+  state.evKinds = Array.from(new Set([...(state.evKinds || []), kind]));
+  if (chained) state.chainCount = (state.chainCount || 0) + 1;
+}
+function noteKill(state, enemy) {
+  state.kills = (state.kills || 0) + 1;
+  if (["boss", "final_boss"].includes(enemy.rank)) {
+    state.bossKills = (state.bossKills || 0) + 1;
+    state.bossTally = { ...(state.bossTally || {}), [enemy.name]: (state.bossTally?.[enemy.name] || 0) + 1 };
+  }
+}
+
 function act(state, session, action, rng) {
   if (action === "retreat") {
     if (state.encounter.type === "rngesus" || state.phase === "boss_chest")
@@ -1923,6 +1937,7 @@ function act(state, session, action, rng) {
         state.lastLog += "\n📜 Vi phạm hợp đồng: hủy phần thưởng.";
       }
       if (e.hp <= 0) {
+        noteKill(state, e);
         if (e.rank === "final_boss" && e.mechanic === "deimoss")
           state.finalBossDefeated = true;
         if (e.echoId) {
@@ -1969,7 +1984,11 @@ function act(state, session, action, rng) {
         if (doubleCounter && alive(state))
           state.lastLog += `\n⏳ Phản công lần hai: ${enemyTurn(state, rng, acted.defend, acted.dodge)}`;
       }
-    } else if (e.type === "surprise") actSurprise(state, session, action, rng);
+    } else if (e.type === "surprise") {
+      actSurprise(state, session, action, rng);
+      if (action !== "event_skip")
+        noteEvent(state, e.kind, state.encounter?.type === "combat");
+    }
     else if (e.type === "chest") {
       if (action === "inspect") {
         e.inspected = true;
@@ -2014,6 +2033,7 @@ function act(state, session, action, rng) {
       } else state.lastLog = `Bỏ qua ${E.shrine} Shrine.`;
       if (alive(state)) completeFloor(state, session, rng, 0);
     } else if (e.type === "trap") {
+      if (e.kind === "portal") noteEvent(state, "wrong_portal", !e.good);
       if (e.kind !== "portal") {
         if (e.lucky) state.lastLog = `${E.luck} Lucky Break: tránh bẫy.`;
         else if (e.kind === "tax") {
@@ -2149,6 +2169,7 @@ function act(state, session, action, rng) {
   return alive(state) ? null : "death";
 }
 module.exports = {
+  noteEvent,
   ITEMS,
   EVENTS,
   EVENT_NAMES,
