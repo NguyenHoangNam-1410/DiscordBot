@@ -327,15 +327,6 @@ function coquayEmbed(
         value: `**${formatCoins(payoutFor(state.stake, state.winMultiplier))} :coin:** (${formatMultiplier(state.winMultiplier ?? PAYOUT_MULTIPLIER)})`,
         inline: true,
       },
-      {
-        name: "🎯 LƯỢT",
-        value: result
-          ? "—"
-          : state.turn === "player"
-            ? "**Của bạn**"
-            : "**Bot**",
-        inline: true,
-      },
     );
   const status = [
     state.saw ? "🪚 Nòng đã cưa (viên kế tiếp x2 sát thương)" : null,
