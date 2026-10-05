@@ -41,7 +41,7 @@ function resources(state) {
 }
 function battleStats(state, c) {
   const cost = engine.costs(state, c);
-  return `${resources(state)}${SEP}${E.defense} **DEF** **${c.character.defense}**${SEP}${E.res} **RES** **${c.character.resistance}%**${SEP}${E.defense} **DEF** **${c.character.defense}**${SEP}${E.res} **RES** **${c.character.resistance}%**\n${E.attack} **Tấn công: ${engine.damage(state, c, "attack")} damage · +${engine.attackMana(state, c)} Mana**\n${SKILL_ICONS[c.character.classKey]} **Arcane Burst: ${engine.damage(state, c, "skill")} damage · −${cost.mana} Mana${cost.hp ? ` · −${cost.hp} HP` : ""}**\n${E.defense} **Phòng thủ: nhận ${engine.counter(state, c, "defend")} damage · +${c.combat.defendMana} Mana**\n*Damage đã tính giảm trừ và luật pha; không Crit, không Miss.*`;
+  return `${resources(state)}${SEP}${E.defense} **DEF** **${c.character.defense}**${SEP}${E.res} **RES** **${c.character.resistance}%**\n${E.attack} **Tấn công: ${engine.damage(state, c, "attack")} damage · +${engine.attackMana(state, c)} Mana**\n${SKILL_ICONS[c.character.classKey]} **Arcane Burst: ${engine.damage(state, c, "skill")} damage · −${cost.mana} Mana${cost.hp ? ` · −${cost.hp} HP` : ""}**\n${E.defense} **Phòng thủ: nhận ${engine.counter(state, c, "defend")} damage · +${c.combat.defendMana} Mana**\n*Damage đã tính giảm trừ và luật pha; không Crit, không Miss.*`;
 }
 function encounterText(state, c) {
   const { encounter: e, phase: p } = engine.current(state, c);
