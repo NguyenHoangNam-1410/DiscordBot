@@ -766,13 +766,15 @@ function pokerEmbed(state, userId, sessionId = null) {
   const pot = state.players.reduce((sum, player) => sum + player.committed, 0);
   const human = state.players[0];
   const complete = state.phase === "complete";
-  const exposedBots = state.players
-    .slice(1)
-    .map((bot) => {
-      const hidden = Math.max(0, bot.hole.length - 1);
-      return `### 🤖 ${bot.name}: ${cardFace(bot.revealedCard || bot.hole[0])}${hidden ? `　${hiddenCards(state, hidden, sessionId)}` : ""}`;
-    })
-    .join("\n");
+  const exposedBots = complete
+    ? ""
+    : state.players
+        .slice(1)
+        .map((bot) => {
+          const hidden = Math.max(0, bot.hole.length - 1);
+          return `### 🤖 ${bot.name}: ${cardFace(bot.revealedCard || bot.hole[0])}${hidden ? `　${hiddenCards(state, hidden, sessionId)}` : ""}`;
+        })
+        .join("\n");
   const embed = new EmbedBuilder()
     .setColor(
       complete
@@ -785,7 +787,7 @@ function pokerEmbed(state, userId, sessionId = null) {
     )
     .setTitle(`♠️ POKER · ${VARIANTS[state.variant].name.toUpperCase()}`)
     .setDescription(
-      `## 🃏 BÀI CHUNG\n### ${largeCardText(state.board)}${state.board.length < 5 ? `　${hiddenCards(state, 5 - state.board.length, sessionId)}` : ""}\n\n## 👤 BÀI CỦA <@${userId}>\n### ${largeCardText(human.hole)}\n**Set mạnh nhất hiện tại:** ${playerEval(state)}\n\n## 🤖 BÀI CỦA BOT\n${exposedBots}\n\n## 💰 POT: ${formatCoins(pot)} :coin:`,
+      `## 🃏 BÀI CHUNG\n### ${largeCardText(state.board)}${state.board.length < 5 ? `　${hiddenCards(state, 5 - state.board.length, sessionId)}` : ""}\n\n## 👤 BÀI CỦA <@${userId}>\n### ${largeCardText(human.hole)}\n**Set mạnh nhất hiện tại:** ${playerEval(state)}${complete ? "" : `\n\n## 🤖 BÀI CỦA BOT\n${exposedBots}`}\n\n## 💰 POT: ${formatCoins(pot)} :coin:`,
     )
     .addFields({
       name: "🎴 STACK VÀ TIỀN ĐÃ CƯỢC",
