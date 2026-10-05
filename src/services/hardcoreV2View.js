@@ -23,6 +23,7 @@ const {
   RIFT_ICONS,
   eventIcon,
   treasureChestIcon,
+  paradoxIcon,
 } = require("./hardcoreIcons");
 const rarityLabel = (r) =>
   ({ common: "R", rare: "SR", legendary: "SSR", cursed: "UR" })[r];
@@ -1144,32 +1145,35 @@ function rows(sessionId, state, disabled = false) {
             ? ButtonStyle.Success
             : ButtonStyle.Secondary,
       a.disabled,
-      a.action.startsWith("chest_") && state.encounter.kind === "treasure_room"
-        ? treasureChestIcon(a.action.slice(6))
-        : a.action.startsWith("boss_")
-          ? eventIcon("boss_chest")
-          : a.action === "skill"
-            ? SKILL_ICONS[state.classKey]
-            : a.action.startsWith("forge_")
-              ? E[
-                  a.action === "forge_main"
-                    ? stats.mainStat(state)
-                    : a.action === "forge_guard"
-                      ? state.encounter.forgeStat || "str"
-                      : a.action === "forge_vit"
-                        ? "vit"
-                        : "ticket"
-                ]
-              : state.encounter.kind === "merchant" &&
-                  a.action.startsWith("buy_")
-                ? merchantOffer(
-                    state.encounter.offers[Number(a.action.slice(4))],
-                  ).icon
-                : /^(event_|buy_|forge_|contract_|door_|duel_|hand_)/.test(
-                      a.action,
-                    )
-                  ? eventIcon(state.encounter.kind || state.encounter.type)
-                  : null,
+      a.action.startsWith("paradox_") && state.encounter.version === 2
+        ? paradoxIcon(a.action.slice(8))
+        : a.action.startsWith("chest_") &&
+            state.encounter.kind === "treasure_room"
+          ? treasureChestIcon(a.action.slice(6))
+          : a.action.startsWith("boss_")
+            ? eventIcon("boss_chest")
+            : a.action === "skill"
+              ? SKILL_ICONS[state.classKey]
+              : a.action.startsWith("forge_")
+                ? E[
+                    a.action === "forge_main"
+                      ? stats.mainStat(state)
+                      : a.action === "forge_guard"
+                        ? state.encounter.forgeStat || "str"
+                        : a.action === "forge_vit"
+                          ? "vit"
+                          : "ticket"
+                  ]
+                : state.encounter.kind === "merchant" &&
+                    a.action.startsWith("buy_")
+                  ? merchantOffer(
+                      state.encounter.offers[Number(a.action.slice(4))],
+                    ).icon
+                  : /^(event_|buy_|forge_|contract_|door_|duel_|hand_)/.test(
+                        a.action,
+                      )
+                    ? eventIcon(state.encounter.kind || state.encounter.type)
+                    : null,
     ),
   );
   if (state.encounter.type !== "rngesus" && state.phase !== "boss_chest")

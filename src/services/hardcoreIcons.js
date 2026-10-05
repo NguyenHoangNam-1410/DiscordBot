@@ -79,4 +79,24 @@ function eventIcon(key) {
 function treasureChestIcon(color) {
   return icon(`chest_${color}`, { red: "🟥", blue: "🟦", gold: "🟨" }[color]);
 }
-module.exports = { E, SKILL_ICONS, RIFT_ICONS, eventIcon, treasureChestIcon };
+function paradoxIcon(id) {
+  const fallback = {
+    blood_pact: "🩸",
+    mana_fracture: "🔷",
+    inverted_armor: "🛡️",
+    inverted_magic: "🔮",
+    hunger: "🍖",
+    time_debt: "⏳",
+    blood_mirror: "🪞",
+    unstable_soul: "👻",
+  };
+  return icon(`paradox_${id}`, fallback[id] || E.rift);
+}
+module.exports = {
+  E,
+  SKILL_ICONS,
+  RIFT_ICONS,
+  eventIcon,
+  treasureChestIcon,
+  paradoxIcon,
+};

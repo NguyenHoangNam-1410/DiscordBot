@@ -1,36 +1,36 @@
 "use strict";
-const { E, eventIcon } = require("./hardcoreIcons");
+const { E, eventIcon, paradoxIcon } = require("./hardcoreIcons");
 const CATALOG = Object.freeze({
   blood_pact: {
-    name: "🩸 Huyết Ước",
+    name: "Huyết Ước",
     text: `**Bạn** gây ${E.attack} **DMG** **×1,30**. Mỗi Skill trừ ${E.hp} **HP** của **bạn** bằng **5%** ${E.hp} **Max HP**, làm tròn xuống và tối thiểu **1 HP**; cần còn ít nhất **1 HP** sau chi phí.`,
   },
   mana_fracture: {
-    name: "🔷 Mana Vỡ Vụn",
+    name: "Mana Vỡ Vụn",
     text: `Skill của **bạn** tốn ${E.mana} **MP** **1**; Class Shrine miễn phí vẫn tốn **0 MP**. Tấn công hồi ${E.mana} **MP** **+0**; Phòng thủ hồi ${E.mana} **MP** **+1** cho **bạn**.`,
   },
   inverted_armor: {
-    name: "🛡️ Giáp Nghịch Đảo",
+    name: "Giáp Nghịch Đảo",
     text: `**Bạn** nhận ${E.attack} **DMG vật lý** **×0,75** sau ${E.defense} **DEF**. ${E.res} **RES** hiệu dụng của **bạn** giảm **20 điểm phần trăm**, giới hạn **−50% đến 75%**.`,
   },
   inverted_magic: {
-    name: "🔮 Ma Pháp Nghịch Đảo",
+    name: "Ma Pháp Nghịch Đảo",
     text: `${E.res} **RES** hiệu dụng của **bạn** tăng **20 điểm phần trăm**, tối đa **75%**. **Bạn** nhận ${E.attack} **DMG vật lý** **×1,35** sau ${E.defense} **DEF**.`,
   },
   hunger: {
-    name: "🍖 Cơn Đói",
+    name: "Cơn Đói",
     text: `Khi hạ quái, **bạn** hồi ${E.hp} **HP** bằng **12%** ${E.hp} **Max HP**, làm tròn xuống và tối thiểu **1 HP**. Hiệu lực ${E.potion} **bình của bạn** giảm còn **×0,50**; tỷ lệ hồi cuối cùng giới hạn **10%–75%** ${E.hp} **Max HP**.`,
   },
   time_debt: {
-    name: "⏳ Nợ Thời Gian",
+    name: "Nợ Thời Gian",
     text: `Hai lần Tấn công/Skill đầu mỗi trận của **bạn** gây ${E.attack} **DMG** **×1,25**. Đúng hành động thứ **3** của bạn, tính cả Phòng thủ/Bình: **quái** còn sống sẽ phản công **2 lần**.`,
   },
   blood_mirror: {
-    name: "🪞 Gương Máu",
+    name: "Gương Máu",
     text: `Khi **bạn** còn ${E.hp} **HP** **≤40%** ${E.hp} **Max HP**: ${E.attack} **DMG** của bạn **×1,40** và được dùng bình. Khi HP của **bạn** **>40%** ${E.hp} **Max HP**: không dùng được ${E.potion} **bình**.`,
   },
   unstable_soul: {
-    name: "👻 Linh Hồn Bất Ổn",
+    name: "Linh Hồn Bất Ổn",
     text: `Mỗi lượt, Skill của **bạn** có **25%** cơ hội tốn ${E.mana} **MP** **0**; **15%** tốn thêm **1 MP**; **60%** dùng chi phí bình thường. Class Shrine miễn phí vẫn tốn ${E.mana} **MP** **0**. Chi phí được chốt cho lượt hiện tại; mở lại UI không đổi kết quả.`,
   },
 });
@@ -163,7 +163,10 @@ function describe(s) {
   return p
     ? eventIcon("paradox") +
         " **Rift Paradox** · " +
+        paradoxIcon(p.id) +
+        " **" +
         CATALOG[p.id].name +
+        "**" +
         " · còn " +
         (p.endFloor - s.floor + 1) +
         " tầng (" +
@@ -190,7 +193,14 @@ function choicesText(e) {
     (e.milestone + 5) +
     ". Chọn một luật; không đổi payout.\n\n" +
     e.choices
-      .map((id) => "**" + CATALOG[id].name + "**\n" + CATALOG[id].text)
+      .map(
+        (id) =>
+          paradoxIcon(id) +
+          " **" +
+          CATALOG[id].name +
+          "**\n" +
+          CATALOG[id].text,
+      )
       .join("\n\n")
   );
 }
