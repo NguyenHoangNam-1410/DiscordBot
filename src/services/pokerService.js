@@ -787,7 +787,7 @@ function pokerEmbed(state, userId, sessionId = null) {
     )
     .setTitle(`♠️ POKER · ${VARIANTS[state.variant].name.toUpperCase()}`)
     .setDescription(
-      `## 🃏 BÀI CHUNG\n### ${largeCardText(state.board)}${state.board.length < 5 ? `　${hiddenCards(state, 5 - state.board.length, sessionId)}` : ""}\n\n## 👤 BÀI CỦA <@${userId}>\n### ${largeCardText(human.hole)}\n**Set mạnh nhất hiện tại:** ${playerEval(state)}${complete ? "" : `\n\n## 🤖 BÀI CỦA BOT\n${exposedBots}`}\n\n## 💰 POT: ${formatCoins(pot)} :coin:`,
+      `## 🃏 BÀI CHUNG\n### ${largeCardText(state.board)}${state.board.length < 5 ? `　${hiddenCards(state, 5 - state.board.length, sessionId)}` : ""}\n\n## 👤 BÀI CỦA <@${userId}>\n### ${largeCardText(human.hole)}\n**Set mạnh nhất hiện tại:** ${playerEval(state)}${complete ? "" : `\n## 🤖 BÀI CỦA BOT\n${exposedBots}`}\n\n## 💰 POT: ${formatCoins(pot)} :coin:`,
     )
     .addFields({
       name: "🎴 STACK VÀ TIỀN ĐÃ CƯỢC",
