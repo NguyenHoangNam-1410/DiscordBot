@@ -1,4 +1,8 @@
 const {
+  RNGESUS_CYCLE_RULES,
+  rngesusChaosRules,
+} = require("../services/hardcoreRngesus");
+const {
   SlashCommandBuilder,
   EmbedBuilder,
   MessageFlags,
@@ -192,9 +196,19 @@ function survivalRules() {
         inline: false,
       },
       {
+        name: "📊 Chu kỳ gặp RNGesus",
+        value: RNGESUS_CYCLE_RULES,
+        inline: false,
+      },
+      {
+        name: "🎲 Cách tính Chaos",
+        value: rngesusChaosRules(true),
+        inline: false,
+      },
+      {
         name: "☠️ Khi gặp RNGesus",
         value:
-          "RNGesus không thể bị đánh bại; **Chiến đấu** làm run kết thúc. **Bỏ chạy** có 75% thành công, giữ vé; thất bại tự dùng 1 Vé Thoát Hiểm nếu còn, hết vé thì chết. Vé chỉ được dùng tự động khi bỏ chạy thất bại (giữ tối đa 1 vé). **Hối lộ** nhân payout ×0,6. **Cầu nguyện**: 30% thành công, nhận 85% SSR/15% UR; thất bại là chết. Không có nút rút thưởng.",
+          "RNGesus không thể bị đánh bại; **Chiến đấu** làm run kết thúc. **Bỏ chạy** có 75% thành công, giữ vé; thất bại tự dùng 1 Vé Thoát Hiểm nếu còn, hết vé thì chết. **Dùng vé** tiêu 1 Vé Thoát Hiểm để vượt tầng an toàn (giữ tối đa 1 vé). **Hối lộ** nhân payout ×0,6. **Cầu nguyện**: 30% thành công, nhận 85% SSR/15% UR; thất bại là chết. Không có nút rút thưởng.",
         inline: false,
       },
       {

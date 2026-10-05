@@ -271,15 +271,22 @@ Mỗi loại shop cách lần xuất hiện trước của cùng loại ít nh�
 
 ## 9. RNGesus
 
-- Không xuất hiện trước tầng 5. Base: tầng 5–9 là 0,3%; 10–19 là 0,6%; từ 20 là 1%.
-- Mỗi tầng nhân ngẫu nhiên từ ×0,25 đến ×3; mỗi tầng khô cộng 0,05 điểm phần trăm; 2,5% có Chaos Spike cộng 4–10 điểm phần trăm. Xác suất cuối cap 12%.
-- **Đánh:** chết ngay vì boss không thể bị đánh bại.
-- **Bỏ chạy:** 75% thành công. Nếu thất bại, Vé Thoát Hiểm tự dùng; không có Vé thì chết.
-- **Hối lộ:** mất 40% payout hiện tại và đi tiếp.
-- **Cầu nguyện:** 10% sống và nhận item; trong phần thưởng đó 85% SSR, 15% UR. Thất bại chết.
-- **Dùng Vé:** tiêu một Vé và bỏ qua an toàn.
+Luật hiện hành v2.0.1, cập nhật ngày 2026-10-05:
 
-Trong giao diện, Chaos là mức cảnh báo xác suất gặp RNGesus ở lần roll gần nhất, không phải debuff và không làm giảm chỉ số. `Thấp` là dưới 1%, `Bất ổn` là từ 1% đến dưới 3%, `Nguy hiểm` là từ 3% trở lên. UI hiển thị trực tiếp phần trăm, chuỗi lượt chưa gặp và trạng thái Chaos Spike; xác suất cuối luôn cap 12%.
+- Đầu run không gặp ở tầng 1–4. Tỷ lệ nền: tầng 5–9 là 0,3%; 10–19 là 0,6%; từ 20 là 1%.
+- Sau khi vượt RNGesus tại tầng F, reset Chaos và bộ đếm không gặp. Áp dụng cả khi chạy thất bại được vé thoát hiểm cứu, hoặc tử trận được Lost Adventurer/vé hồi sinh cứu và sang tầng kế.
+- Tầng F+1 chắc chắn không có RNGesus (0%), không roll biến động hay spike. Không xuất hiện ở hai tầng liền nhau.
+- Tính lại nhịp tăng từ lần vượt gần nhất: F+2–F+6 có nền 0,3%; F+7–F+16 có nền 0,6%; từ F+17 có nền 1%. Ví dụ vượt RNGesus ở tầng 80: tầng 81 an toàn, tầng 82–86 nền 0,3%, 87–96 nền 0,6%, từ 97 nền 1%.
+- Boss mỗi 50 tầng và boss cuối 999 được ưu tiên. Tầng boss/tầng bị chặn không roll RNGesus và không tăng bộ đếm không gặp.
+- Ở tầng có roll: nền nhân ngẫu nhiên ×0,25–3; mỗi lần không gặp cộng 0,05 điểm phần trăm cho lần sau; mỗi roll có 2,5% cơ hội spike thêm 4–10 điểm phần trăm. Xác suất cuối tối đa 12%. Run legacy giới hạn phần cộng từ chuỗi không gặp ở 2,5 điểm %; V2 chỉ chặn tỷ lệ cuối ở 12%.
+- **Đánh:** gây tử trận ngay vì không thể thắng RNGesus. Lost Adventurer/vé hồi sinh có thể cứu nếu còn; không được cứu thì kết thúc run.
+- **Bỏ chạy (V2):** 100% → 95% → 90% → 85% → 80% → 75%, các lần sau giữ 75%. Mỗi lần chọn chạy tăng bộ đếm, kể cả thất bại được vé cứu. Chạy thành công giữ vé; thất bại tự dùng một vé thoát hiểm nếu có. Không có vé thoát hiểm thì tử trận và kiểm tra cơ chế hồi sinh.
+- **Hối lộ:** cần payout hiển thị ít nhất 1.000 xu; giảm hệ số payout 40% và vượt tầng.
+- **Cầu nguyện (V2):** 30% thành công, hoặc 60% nếu mang vé cầu nguyện; áp dụng cả run. Thành công nhận một trang bị UR có nguyền; thất bại tử trận và kiểm tra cơ chế hồi sinh.
+- **Vé thoát hiểm (V2):** chỉ tự cứu khi bỏ chạy thất bại, tối đa một vé trong run; không có nút dùng vé riêng. Vé thoát hiểm không cứu khi Đánh/cầu nguyện thất bại.
+- Reset tỷ lệ **gặp** không reset tỷ lệ **bỏ chạy** hay hiệu lực vé cầu nguyện. Mốc reset lưu trong run, tiếp tục/restart không đặt lại hoặc roll lại kết quả đã khóa.
+
+Chaos trên UI là tỷ lệ gặp của lần roll gần nhất, không phải debuff và không làm giảm chỉ số. Tỷ lệ nền và Chaos thực tế khác nhau do biến động, chuỗi không gặp và spike.
 
 ## 10. Grave Echo và Server Nemesis
 

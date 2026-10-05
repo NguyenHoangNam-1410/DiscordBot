@@ -1,4 +1,8 @@
 const {
+  RNGESUS_CYCLE_RULES,
+  rngesusChaosRules,
+} = require("../services/hardcoreRngesus");
+const {
   EmbedBuilder,
   MessageFlags,
   SlashCommandBuilder,
@@ -68,7 +72,7 @@ const RATE_CATEGORIES = Object.freeze([
     id: "rngesus",
     name: "RNGesus",
     emoji: "☠️",
-    fields: ["RNGesus", "📊 Xác suất RNGesus ước tính"],
+    fields: ["RNGesus", "📊 Chu kỳ gặp RNGesus", "🎲 Cách tính Chaos"],
   },
   {
     id: "combat",
@@ -139,12 +143,15 @@ function ratesEmbed(category = null) {
       {
         name: "RNGesus",
         value:
-          "Roll riêng trước encounter thường. Sau khi vượt RNGesus, reset Chaos và chuỗi không gặp; tầng ngay sau đó 0%. Từ tầng kế nữa, nền 0,3% trong 5 tầng, 0,6% trong 10 tầng, rồi 1%, tính lại từ lần vượt gần nhất. Volatility ×0,25–3; chuỗi không gặp tăng +0,05 điểm % mỗi lượt, tối đa +2,5 điểm %; 2,5% cơ hội spike thêm 4–10 điểm %. Xác suất cuối bị chặn ở 12%. Bảng bên dưới là trung bình ước tính, không phải tỷ lệ cố định từng tầng.",
+          "Boss tầng 50/100/… và 999 được ưu tiên. Các tầng còn lại roll RNGesus trước pool encounter thường. Vượt bằng bỏ chạy, vé hoặc hối lộ; cầu nguyện thành công cũng tính là vượt. RNGesus không thể bị đánh bại và không cho rút thưởng.",
       },
       {
-        name: "📊 Xác suất RNGesus ước tính",
-        value:
-          "Đầu run: tính theo tầng bên dưới. Sau khi vượt RNGesus: tầng liền sau 0%; từ tầng kế nữa bắt đầu lại nhịp nền 0,3% → 0,6% → 1%.\nTầng 1–4 · nền 0% · mọi chuỗi: **0%**\nTầng 5–9 · nền 0,3% · khô 0 lượt: **~0,66%** · khô 50 lượt: **~3,16%**\nTầng 10–19 · nền 0,6% · khô 0 lượt: **~1,15%** · khô 50 lượt: **~3,65%**\nTầng 20+ · nền 1% · khô 0 lượt: **~1,80%** · khô 50 lượt: **~4,29%**\nKhô lượt = số lần liên tiếp không gặp RNGesus ở các tầng có roll. Spike 4–10 điểm % được tính trung bình vào con số trên.",
+        name: "📊 Chu kỳ gặp RNGesus",
+        value: RNGESUS_CYCLE_RULES,
+      },
+      {
+        name: "🎲 Cách tính Chaos",
+        value: rngesusChaosRules(true),
       },
       {
         name: "Luck",
