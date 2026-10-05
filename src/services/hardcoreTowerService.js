@@ -24,6 +24,7 @@ async function withLock(key, fn) {
   }
 }
 const key = (guild, user, c) => guild + ":" + user + ":" + c;
+const lockKey = (guild, user) => key(guild, user, "tower");
 function challengeFor(row) {
   const c = catalog.get(row.challenge_id, row.content_version);
   if (!c) throw Error("UNKNOWN_CHALLENGE");
@@ -80,7 +81,6 @@ const actionTx = db.transaction(
     if (messageId != null && row.message_id !== String(messageId))
       throw Error("STALE_ACTION");
     const c = challengeFor(row);
-    if (!catalog.playable(c, now)) throw Error("CHALLENGE_EXPIRED");
     let state = JSON.parse(row.state_json);
     if (!Number.isSafeInteger(expectedTurn) || state.turn !== expectedTurn)
       throw Error("STALE_ACTION");
@@ -90,6 +90,39 @@ const actionTx = db.transaction(
         state.routeStep !== expectedRouteStep)
     )
       throw Error("STALE_ACTION");
+    if (action === "replay" && !catalog.playable(c, now)) {
+      if (state.status === "playing") throw Error("INVALID_ACTION");
+      const target = catalog.active(now);
+      if (!target) throw Error("NO_ACTIVE_TOWER");
+      const next = startTx({
+        guildId: row.guild_id,
+        userId: row.user_id,
+        channelId: row.channel_id,
+        challenge: target,
+        now,
+      });
+      if (next.channel_id !== row.channel_id) throw Error("WRONG_CHANNEL");
+      let nextState = JSON.parse(next.state_json);
+      if (nextState.status !== "playing") {
+        const turn = nextState.turn + 1;
+        nextState = engine.createState(target);
+        nextState.turn = turn;
+        repo.beginAttempt(next, now);
+        repo.save(next, nextState, now);
+      }
+      state.turn++;
+      state.replayedToSessionId = next.id;
+      repo.save(row, state, now);
+      if (messageId != null) repo.message(next.id, messageId);
+      if (!catalog.playable(target, clock())) throw Error("CHALLENGE_EXPIRED");
+      return {
+        session: repo.session(next.id),
+        state: nextState,
+        challenge: target,
+        result: repo.result(row.guild_id, row.user_id, target.challengeId),
+      };
+    }
+    if (!catalog.playable(c, now)) throw Error("CHALLENGE_EXPIRED");
     if (action === "replay") {
       if (state.status === "playing") throw Error("INVALID_ACTION");
       const turn = state.turn + 1;
@@ -162,6 +195,8 @@ const notice = {
     "Challenge đã hết hạn; không còn nhận hành động hoặc thưởng.",
   INVALID_ACTION: "Hành động không dùng được trong lượt này.",
   CHALLENGE_NOT_PUBLISHED: "Challenge chưa qua kiểm chứng hoặc chưa được mở.",
+  NO_ACTIVE_TOWER:
+    "Chưa có Tháp tuần hiện tại được mở. Dùng /choi sinhton thap để kiểm tra lại.",
   NO_TOWER_SESSION: "Không tìm thấy session Tháp.",
 };
 async function openTower(interaction) {
@@ -179,7 +214,7 @@ async function openTower(interaction) {
       content: "Chưa có challenge Tháp Định Mệnh đang mở.",
     });
   return withLock(
-    key(interaction.guildId, interaction.user.id, c.challengeId),
+    lockKey(interaction.guildId, interaction.user.id),
     async () => {
       try {
         let row = repo.byUser(
@@ -252,68 +287,66 @@ async function handleTowerButton(interaction, logger = console) {
   if (detailTab && !originMessageId)
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   else await interaction.deferUpdate();
-  return withLock(
-    key(row.guild_id, row.user_id, row.challenge_id),
-    async () => {
-      try {
-        const current = repo.session(id);
-        const c = challengeFor(current);
-        if (!catalog.readable(c)) throw Error("CHALLENGE_EXPIRED");
-        if (current.channel_id !== interaction.channelId)
-          throw Error("WRONG_CHANNEL");
-        if (
-          current.message_id !== sourceMessageId ||
-          (!detailTab && JSON.parse(current.state_json).turn !== Number(turn))
-        )
-          throw Error("STALE_ACTION");
-        const view = require("./hardcoreTowerView");
-        if (detailTab)
-          return await interaction.editReply(
-            view.privatePayload(
-              current,
-              JSON.parse(current.state_json),
-              c,
-              sourceMessageId,
-              detailTab,
-            ),
-          );
-        if (action === "top")
-          return interaction.followUp({
-            ...view.topPayload(repo.top(row.guild_id, c.challengeId), c),
-            flags: MessageFlags.Ephemeral,
-          });
-        const run = actionTx({
-          id,
-          guildId: interaction.guildId,
-          userId: interaction.user.id,
-          channelId: interaction.channelId,
-          messageId: interaction.message.id,
-          expectedTurn: Number(turn),
-          expectedRouteStep,
-          action,
-        });
+  return withLock(lockKey(row.guild_id, row.user_id), async () => {
+    try {
+      const current = repo.session(id);
+      const c = challengeFor(current);
+      if (!catalog.readable(c) && action !== "replay")
+        throw Error("CHALLENGE_EXPIRED");
+      if (current.channel_id !== interaction.channelId)
+        throw Error("WRONG_CHANNEL");
+      if (
+        current.message_id !== sourceMessageId ||
+        (!detailTab && JSON.parse(current.state_json).turn !== Number(turn))
+      )
+        throw Error("STALE_ACTION");
+      const view = require("./hardcoreTowerView");
+      if (detailTab)
         return await interaction.editReply(
-          view.payload(run.session, run.state, run.challenge, run.result),
+          view.privatePayload(
+            current,
+            JSON.parse(current.state_json),
+            c,
+            sourceMessageId,
+            detailTab,
+          ),
         );
-      } catch (error) {
-        if (!notice[error.message])
-          logger.error?.({ err: error }, "Tower action failed");
-        if (detailTab)
-          return interaction.editReply({
-            content:
-              notice[error.message] || "Không thể mở chi tiết Tháp lúc này.",
-            embeds: [],
-            components: [],
-          });
+      if (action === "top")
         return interaction.followUp({
-          content:
-            notice[error.message] ||
-            "Không thể cập nhật bảng Tháp. Dùng /choi sinhton thap để mở lại tiến trình đã lưu.",
+          ...view.topPayload(repo.top(row.guild_id, c.challengeId), c),
           flags: MessageFlags.Ephemeral,
         });
-      }
-    },
-  );
+      const run = actionTx({
+        id,
+        guildId: interaction.guildId,
+        userId: interaction.user.id,
+        channelId: interaction.channelId,
+        messageId: interaction.message.id,
+        expectedTurn: Number(turn),
+        expectedRouteStep,
+        action,
+      });
+      return await interaction.editReply(
+        view.payload(run.session, run.state, run.challenge, run.result),
+      );
+    } catch (error) {
+      if (!notice[error.message])
+        logger.error?.({ err: error }, "Tower action failed");
+      if (detailTab)
+        return interaction.editReply({
+          content:
+            notice[error.message] || "Không thể mở chi tiết Tháp lúc này.",
+          embeds: [],
+          components: [],
+        });
+      return interaction.followUp({
+        content:
+          notice[error.message] ||
+          "Không thể cập nhật bảng Tháp. Dùng /choi sinhton thap để mở lại tiến trình đã lưu.",
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+  });
 }
 module.exports = {
   startTx,

@@ -187,12 +187,14 @@ function payload(row, state, c, result, now = Date.now()) {
   if (c.generatorVersion === 3)
     return payloadGenerated(row, state, c, result, now);
   const live = catalog.playable(c, now);
+  const replayTarget =
+    state.status !== "playing" ? (live ? c : catalog.active(now)) : null;
   const e = engine.current(state, c).encounter;
   const embed = new EmbedBuilder()
     .setColor(color(state, c))
     .setTitle(`🗼 THÁP ĐỊNH MỆNH · TẦNG ${state.floor}/${c.floors.length}`)
     .setDescription(
-      `${row.user_id ? `👤 <@${row.user_id}>\n` : ""}**${c.name}** · ${c.weekLabel}${!live ? "\n⏰ **Challenge đã hết hạn. Chỉ xem kết quả; không còn hành động hoặc thưởng.**" : ""}`,
+      `${row.user_id ? `👤 <@${row.user_id}>\n` : ""}**${c.name}** · ${c.weekLabel}${!live ? (replayTarget ? "\n⏰ **Challenge này đã đóng. Bấm Chơi Tháp hiện tại để mở tuần đang hoạt động.**" : "\n⏰ **Challenge đã hết hạn. Chỉ xem kết quả; không còn hành động hoặc thưởng.**") : ""}`,
     )
     .setFooter(footer(state, c));
   addTextFields(
@@ -230,7 +232,12 @@ function payload(row, state, c, result, now = Date.now()) {
   const actions =
     state.status === "playing"
       ? engine.actions(state, c)
-      : [{ action: "replay", label: "Chơi lại" }];
+      : [
+          {
+            action: "replay",
+            label: live ? "Chơi lại từ tầng 1" : "Chơi Tháp hiện tại",
+          },
+        ];
   const cost = engine.costs(state, c);
   const labels =
     state.status === "playing" && e.type === "combat"
@@ -246,7 +253,7 @@ function payload(row, state, c, result, now = Date.now()) {
         prefix,
         x.action,
         labels[x.action] || x.label.replace(/\bMana\b(?! Vỡ Vụn)/g, "MP"),
-        !live || x.disabled,
+        x.action === "replay" ? !replayTarget : !live || x.disabled,
       ),
     ),
   );
@@ -492,6 +499,8 @@ function generatedRules(c) {
 }
 function payloadGenerated(row, state, c, result, now = Date.now()) {
   const live = catalog.playable(c, now),
+    replayTarget =
+      state.status !== "playing" ? (live ? c : catalog.active(now)) : null,
     e = engine.current(state, c).encounter;
   const embed = new EmbedBuilder()
     .setColor(color(state, c))
@@ -503,7 +512,11 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
         " · 15 tầng · " +
         c.stepCount +
         " bước**" +
-        (!live ? "\n⏰ Challenge đã hết hạn. Chỉ xem kết quả." : ""),
+        (!live
+          ? replayTarget
+            ? "\n⏰ Challenge này đã đóng. Bấm Chơi Tháp hiện tại để mở tuần đang hoạt động."
+            : "\n⏰ Challenge đã hết hạn. Chỉ xem kết quả."
+          : ""),
     )
     .setFooter(footer(state, c));
   addTextFields(
@@ -586,7 +599,12 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
   const opts =
     state.status === "playing"
       ? engine.actions(state, c)
-      : [{ action: "replay", label: "Chơi lại từ tầng 1" }];
+      : [
+          {
+            action: "replay",
+            label: live ? "Chơi lại từ tầng 1" : "Chơi Tháp hiện tại",
+          },
+        ];
   const labels =
     e.type === "combat"
       ? {
@@ -603,7 +621,7 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
         c,
         x.action,
         state.status === "playing" ? labels[x.action] || x.label : x.label,
-        !live || x.disabled,
+        x.action === "replay" ? !replayTarget : !live || x.disabled,
       ),
     ),
   );

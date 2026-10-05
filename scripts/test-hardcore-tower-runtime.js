@@ -80,6 +80,188 @@ function serialize(p) {
   );
   return json;
 }
+
+function replayButton(row, challenge, clock = now) {
+  const p = view.payload(
+    row,
+    JSON.parse(row.state_json),
+    challenge,
+    repo.result(row.guild_id, row.user_id, challenge.challengeId),
+    clock,
+  );
+  serialize(p);
+  return p.components
+    .flatMap((r) => r.toJSON().components)
+    .find((b) => b.custom_id.split(":")[3] === "replay");
+}
+async function pressReplay(row, challenge, { twice = false } = {}) {
+  const button = replayButton(repo.session(row.id), challenge);
+  assert.ok(button && !button.disabled, "replay must be enabled");
+  let updated = [],
+    errors = [];
+  const interaction = {
+    guildId: row.guild_id,
+    channelId: row.channel_id,
+    user: { id: row.user_id },
+    message: { id: repo.session(row.id).message_id },
+    customId: button.custom_id,
+    deferUpdate: async () => {},
+    editReply: async (p) => updated.push(p),
+    followUp: async (p) => errors.push(p),
+    reply: async (p) => errors.push(p),
+  };
+  const clock = Date.now;
+  Date.now = () => now;
+  try {
+    if (twice)
+      await Promise.all([
+        service.handleTowerButton(interaction, quiet),
+        service.handleTowerButton(interaction, quiet),
+      ]);
+    else await service.handleTowerButton(interaction, quiet);
+  } finally {
+    Date.now = clock;
+  }
+  assert.equal(updated.length, 1, JSON.stringify(errors));
+  serialize(updated[0]);
+  if (twice) assert.ok(errors.some((p) => p.content.includes("đã cũ")));
+  return updated[0];
+}
+function insertLegacy(userId, status) {
+  const original = require("../src/hardcore/towerChallenges").get(
+    "tower-2026-W41-v1",
+  );
+  const oldState = engine.createState(original);
+  if (status === "completed")
+    for (const a of original.canonicalSolution)
+      engine.act(oldState, original, a);
+  else engine.act(oldState, original, "defend");
+  assert.equal(oldState.status, status);
+  const row = {
+    id: "legacy-" + userId,
+    guild_id: "tower",
+    user_id: userId,
+    challenge_id: original.challengeId,
+    content_version: original.contentVersion,
+    channel_id: "channel",
+  };
+  repo.insert(row, oldState, now);
+  repo.attempt(row, now);
+  repo.progress(row, oldState, now);
+  if (status === "completed")
+    repo.reward(row, engine.solutionHash(original), now);
+  repo.message(row.id, "board-" + row.id);
+  return repo.session(row.id);
+}
+async function verifyReplayRegression(reward) {
+  const legacy = catalog.get("tower-2026-W41-v1");
+  for (const status of ["completed", "failed"]) {
+    const source = insertLegacy("old-" + status, status),
+      oldState = JSON.parse(source.state_json);
+    const board = replayButton(source, legacy);
+    assert.equal(board.label, "Chơi Tháp hiện tại");
+    let clocks = 0;
+    assert.throws(
+      () =>
+        service.actionTx({
+          id: source.id,
+          guildId: "tower",
+          userId: source.user_id,
+          channelId: "channel",
+          messageId: source.message_id,
+          expectedTurn: oldState.turn,
+          action: "replay",
+          clock: () => (++clocks === 1 ? now : c.endsAt),
+        }),
+      /CHALLENGE_EXPIRED/,
+    );
+    assert.equal(repo.session(source.id).state_json, source.state_json);
+    assert.equal(repo.byUser("tower", source.user_id, c.challengeId), null);
+    await pressReplay(source, legacy, { twice: true });
+    const current = repo.byUser("tower", source.user_id, c.challengeId),
+      fresh = state(current);
+    assert.equal(fresh.status, "playing");
+    assert.equal(fresh.floor, 1);
+    assert.equal(fresh.routeStep, 0);
+    assert.equal(fresh.hp, c.character.maxHp);
+    assert.equal(fresh.mana, c.initialState.mana);
+    assert.equal(current.message_id, source.message_id);
+    const kept = state(source);
+    for (const key of ["status", "hp", "mana", "actionHistory"])
+      assert.deepEqual(kept[key], oldState[key]);
+    assert.equal(kept.turn, oldState.turn + 1);
+    assert.equal(
+      repo.result("tower", source.user_id, legacy.challengeId).attempts,
+      1,
+    );
+    if (status === "completed") {
+      const coins = economy.getAccount("tower", source.user_id).balance;
+      runTo(current, c.stepCount);
+      assert.equal(state(current).rewardGranted, false);
+      assert.equal(economy.getAccount("tower", source.user_id).balance, coins);
+    }
+  }
+  const preserve = start("old-preserve");
+  play(preserve, c.transitions[0].expectedAction);
+  const activeJson = repo.session(preserve.id).state_json;
+  const source = insertLegacy("old-preserve", "failed");
+  await pressReplay(source, legacy);
+  assert.equal(
+    repo.session(preserve.id).state_json,
+    activeJson,
+    "opening from a legacy board must preserve an active chain",
+  );
+  // Actual Discord IDs from failed/completed v3 boards reset to floor 1.
+  const failed = start("button-failed");
+  play(
+    failed,
+    engine
+      .actions(state(failed), c)
+      .find((x) => !x.disabled && x.action !== c.transitions[0].expectedAction)
+      .action,
+  );
+  repo.message(failed.id, "board-failed");
+  await pressReplay(failed, c, { twice: true });
+  assert.equal(state(failed).routeStep, 0);
+  assert.equal(state(failed).status, "playing");
+  assert.equal(
+    repo.result("tower", "button-failed", c.challengeId).attempts,
+    1,
+  );
+  repo.message(reward.id, "board-completed");
+  await pressReplay(reward, c, { twice: true });
+  assert.equal(state(reward).routeStep, 0);
+  assert.equal(state(reward).status, "playing");
+  assert.equal(repo.result("tower", reward.user_id, c.challengeId).attempts, 2);
+  const missing = insertLegacy("no-current", "failed"),
+    missingState = state(missing),
+    at = c.endsAt + catalog.WEEK_MS;
+  assert.equal(replayButton(missing, legacy, at).disabled, true);
+  assert.throws(
+    () =>
+      service.actionTx({
+        id: missing.id,
+        guildId: "tower",
+        userId: missing.user_id,
+        channelId: "channel",
+        expectedTurn: missingState.turn,
+        action: "replay",
+        clock: () => at,
+      }),
+    /NO_ACTIVE_TOWER/,
+  );
+  assert.equal(repo.session(missing.id).state_json, missing.state_json);
+  const expired = start("replay-after-week");
+  play(
+    expired,
+    engine
+      .actions(state(expired), c)
+      .find((x) => !x.disabled && x.action !== c.transitions[0].expectedAction)
+      .action,
+  );
+  repo.message(expired.id, "board-expired");
+}
+
 async function main() {
   const unpublished = { ...c, challengeId: "forged" };
   assert.throws(() => start("forged", unpublished), /CHALLENGE_NOT_PUBLISHED/);
@@ -254,6 +436,7 @@ async function main() {
     repo.result("tower", "v1claim", c.challengeId).solution_hash,
     c.solutionHash,
   );
+  await verifyReplayRegression(reward);
   // Mode isolation: wrong tower actions do not change the simultaneous 999-floor run.
   const survival = require("../src/services/hardcoreService").startHardcore({
     guildId: "tower",
@@ -505,6 +688,18 @@ async function main() {
   } finally {
     Math.random = random;
   }
+
+  const oldFailed = repo.byUser(
+    "tower",
+    "replay-after-week",
+    "tower:2026:W41:sorceress:g3",
+  );
+  await pressReplay(oldFailed, catalog.get(oldFailed.challenge_id), {
+    twice: true,
+  });
+  const weekRun = repo.byUser("tower", "replay-after-week", c.challengeId);
+  assert.equal(state(weekRun).routeStep, 0);
+  assert.equal(state(weekRun).challengeId, c.challengeId);
   const old = catalog.get("tower:2026:W41:sorceress:g3");
   const oldRow = repo.byUser("tower", "owner", old.challengeId),
     oldJson = oldRow.state_json;
