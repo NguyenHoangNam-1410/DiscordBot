@@ -153,7 +153,7 @@ function effectText(effects, level = 1) {
           return `${E.hp} **HP** +${value} (hồi khi nhận mỗi cấp)`;
         const n = value * level;
         if (key === "floorHpLoss")
-          return `${E.hp} **HP cuối tầng** −${percent(n)} Max HP (luôn chừa ít nhất 1 HP)`;
+          return `${E.hp} **Cuối tầng:** giảm HP hiện tại một lượng bằng ${percent(n)} Max HP (luôn còn ít nhất 1 HP)`;
         return `${highlightStat(names[key] || key)} ${n > 0 ? "+" : ""}${percentages.includes(key) ? percent(n) : Math.round(n * 100) / 100}`;
       })
       .join(STAT_SEPARATOR) || "Không có"
