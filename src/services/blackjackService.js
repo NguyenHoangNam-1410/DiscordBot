@@ -1,5 +1,13 @@
 const crypto = require("node:crypto");
 const {
+  cardsText,
+  cardFace,
+  hiddenCards,
+  createCardBack,
+  cardButtonEmoji,
+} = require("../utils/cardDisplay");
+
+const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
@@ -21,7 +29,10 @@ const {
 } = require("./effectStateService");
 const { createFairness, fairShuffle } = require("./fairnessService");
 const { resultBlock, coins } = require("../utils/rewardText");
-const { getWinMultiplier, formatMultiplier } = require("./winMultiplierService");
+const {
+  getWinMultiplier,
+  formatMultiplier,
+} = require("./winMultiplierService");
 
 const TABLE_LOBBY_MS = 30_000;
 const TABLE_PLAY_MS = 3 * 60_000;
@@ -207,6 +218,7 @@ const startTx = db.transaction(
     ]);
     const firstAce = handEffect?.effect_id === "blackjack_first_ace";
     const state = {
+      cardBack: createCardBack(),
       deck: forcedDeck ? [...forcedDeck] : createShoe(6, fair.serverSeed),
       dealer: [],
       hands: [{ cards: [], bet: stake, status: "playing" }],
@@ -278,7 +290,12 @@ function startBlackjack(args) {
   return startTx(args);
 }
 
-function evaluateHand(cards, bet, dealerCards, winMultiplier = REGULAR_WIN_MULTIPLIER) {
+function evaluateHand(
+  cards,
+  bet,
+  dealerCards,
+  winMultiplier = REGULAR_WIN_MULTIPLIER,
+) {
   const score = handScore(cards).total;
   const dealer = handScore(dealerCards).total;
   const playerType = handType(cards);
@@ -502,10 +519,10 @@ function playAction(args) {
 }
 
 function cardText(cards) {
-  return cards.map((card) => `\`${card}\``).join(" ");
+  return cardsText(cards);
 }
 function largeCards(cards) {
-  return cards.map((card) => `**${card}**`).join("　");
+  return cardsText(cards);
 }
 function handText(hand, index, active, result = null) {
   const score = handScore(hand.cards).total;
@@ -521,7 +538,7 @@ function handText(hand, index, active, result = null) {
 function blackjackEmbed(state, userId, result = null, sessionId = null) {
   const dealerCards = result
     ? largeCards(state.dealer)
-    : `${largeCards([state.dealer[0]])}　**??**`;
+    : `${largeCards([state.dealer[0]])}　${hiddenCards(state, 1, sessionId)}`;
   const dealerScore = result
     ? ` · **${handScore(state.dealer).total} điểm**`
     : "";
@@ -639,7 +656,8 @@ function actionRows(sessionId, state, disabled = false) {
           ...hand.cards.slice(start, start + 5).map((card, offset) =>
             new ButtonBuilder()
               .setCustomId(`blackjack:${sessionId}:swap:${start + offset}`)
-              .setLabel(`Đổi ${card}`)
+              .setLabel(`Đổi lá ${start + offset + 1}`)
+              .setEmoji(cardButtonEmoji(card))
               .setStyle(ButtonStyle.Secondary),
           ),
         ),
@@ -977,6 +995,7 @@ function createBlackjackTable({
       tableId: id,
     });
     const state = {
+      cardBack: createCardBack(),
       phase: "lobby",
       players: [],
       dealer: [],
@@ -1114,8 +1133,8 @@ function blackjackTableEmbed(table, state = tableState(table)) {
     });
   else {
     const dealerCards = complete
-      ? state.dealer.map((card) => `**${card}**`).join("　")
-      : `**${state.dealer[0]}**　**??**`;
+      ? cardsText(state.dealer)
+      : `${cardFace(state.dealer[0])}　${hiddenCards(state, 1, table.id)}`;
     embed.addFields(
       {
         name: "🏦 Bài nhà cái",
@@ -1134,13 +1153,13 @@ function blackjackTableEmbed(table, state = tableState(table)) {
                 : player.status === "playing"
                   ? "⏳ Chờ lượt"
                   : "✅ Đã xong lượt";
-              return `<@${player.id}> · ${status} · 🂠 ×${player.cards.length}`;
+              return `<@${player.id}> · ${status} · ${hiddenCards(state, player.cards.length, table.id)}`;
             }
             const score = handScore(player.cards).total;
             const result = state.results?.find(
               (item) => item.userId === player.id,
             );
-            const cardsLineText = `${player.cards.map((card) => `**${card}**`).join("　")} · ${score} điểm${handType(player.cards) === "ngulinh" ? " · **NGŨ LINH**" : ""}${result ? ` · **${result.label}**` : ""}`;
+            const cardsLineText = `${cardsText(player.cards)} · ${score} điểm${handType(player.cards) === "ngulinh" ? " · **NGŨ LINH**" : ""}${result ? ` · **${result.label}**` : ""}`;
             return `<@${player.id}>${state.players[state.turn]?.id === player.id && !complete ? " · 👉 Đến lượt" : ""}\n${cardsLineText}${result ? `\n${resultBlock({ userId: player.id, outcome: result.outcome, stake: player.stake, payout: result.payout, result })}` : ""}`;
           })
           .join("\n\n"),
@@ -1220,7 +1239,7 @@ function tablePrivateText(table, state, userId) {
       ? "🏦 Bạn là nhà cái của bàn này; bài nhà cái được chia tự động và giữ kín cho đến khi kết thúc."
       : "Bạn không ngồi ở bàn này.";
   const score = handScore(player.cards).total;
-  const hand = `🃏 **Bài của bạn:** ${largeCards(player.cards)} — **${score} điểm**${handType(player.cards) === "ngulinh" ? " · **NGŨ LINH**" : ""}\n🏦 Nhà cái đang lộ: **${state.dealer[0]}**　**??**`;
+  const hand = `🃏 **Bài của bạn:** ${largeCards(player.cards)} — **${score} điểm**${handType(player.cards) === "ngulinh" ? " · **NGŨ LINH**" : ""}\n🏦 Nhà cái đang lộ: ${table.status === "completed" ? cardsText(state.dealer) : `${cardFace(state.dealer[0])}　${hiddenCards(state, 1, table.id)}`}`;
   const result = state.results?.find((item) => item.userId === player.id);
   if (result)
     return `${hand}\n\n🏆 **${result.label}**\n${resultBlock({ userId: player.id, outcome: result.outcome, stake: player.stake, payout: result.payout, result })}`;

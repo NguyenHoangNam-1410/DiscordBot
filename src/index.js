@@ -118,8 +118,8 @@ process.on("uncaughtException", (error) => {
     process.exitCode = 1;
   });
 });
-client.once(Events.ClientReady, () => {
-  loadApplicationEmojis(client, logger).catch(() => {});
+client.once(Events.ClientReady, async () => {
+  await loadApplicationEmojis(client, logger);
   const resumedRounds = resumeOpenRounds(client, logger);
   const resumedHorseRaces = resumeHorseRaces(client, logger);
   maintenanceTimers.push(startTimedChallengeMaintenance(client, logger));

@@ -1,5 +1,12 @@
 const crypto = require("node:crypto");
 const {
+  cardsText: displayCards,
+  hiddenCards,
+  createCardBack,
+  cardButtonEmoji,
+  renderCardText,
+} = require("../utils/cardDisplay");
+const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
@@ -152,6 +159,7 @@ function createPokerLobby({ guildId, channelId, userId, username, variant }) {
     const id = crypto.randomBytes(6).toString("hex");
     const fair = createFairness();
     const state = {
+      cardBack: createCardBack(),
       mode: "multiplayer",
       phase: "lobby",
       variant,
@@ -587,7 +595,7 @@ function discardCard(sessionId, userId, index) {
 }
 
 function cardsText(cards) {
-  return cards.map((card) => `\`${card}\``).join(" ");
+  return displayCards(cards);
 }
 function privateHandText(state, userId) {
   const player = playerById(state, userId);
@@ -602,7 +610,7 @@ function pokerTableEmbed(state, sessionId = null) {
   const complete = state.phase === "complete";
   const pot = state.players.reduce((sum, player) => sum + player.committed, 0);
   const board = state.board.length
-    ? state.board.map((card) => `**${card}**`).join("　")
+    ? displayCards(state.board)
     : "Đang chờ bắt đầu ván";
   const embed = new EmbedBuilder()
     .setColor(complete ? 0x2ecc71 : 0x8e44ad)
@@ -610,14 +618,14 @@ function pokerTableEmbed(state, sessionId = null) {
       `♠️ POKER · ${VARIANTS[state.variant].name.toUpperCase()} · ĐẤU ĐÔI`,
     )
     .setDescription(
-      `## 🃏 BÀI CHUNG\n### ${board}${state.phase === "betting" || state.phase === "discard" ? `　${"**??**　".repeat(5 - state.board.length)}` : ""}\n\n## 💰 POT: ${formatCoins(pot)} :coin:`,
+      `## 🃏 BÀI CHUNG\n### ${board}${state.phase === "betting" || state.phase === "discard" ? `　${hiddenCards(state, 5 - state.board.length, sessionId)}` : ""}\n\n## 💰 POT: ${formatCoins(pot)} :coin:`,
     )
     .addFields({
       name: state.phase === "lobby" ? "🪑 NGƯỜI CHƠI" : "🎴 STACK VÀ CƯỢC",
       value: state.players
         .map(
           (player) =>
-            `${player.folded ? "🏳️" : player.allIn ? "🔥" : "🎴"} <@${player.id}>\nCòn **${formatCoins(player.stack)} :coin:** · Đã cược **${formatCoins(player.committed)} :coin:**`,
+            `${player.folded ? "🏳️" : player.allIn ? "🔥" : "🎴"} <@${player.id}>\nCòn **${formatCoins(player.stack)} :coin:** · Đã cược **${formatCoins(player.committed)} :coin:**${state.phase === "betting" || state.phase === "discard" ? `\n${hiddenCards(state, player.hole.length, sessionId)}` : ""}`,
         )
         .join("\n\n"),
     });
@@ -644,7 +652,7 @@ function pokerTableEmbed(state, sessionId = null) {
         value:
           state.log
             .slice(-5)
-            .map((line) => `• ${line}`)
+            .map((line) => `• ${renderCardText(line)}`)
             .join("\n") || "—",
       },
     );
@@ -756,10 +764,11 @@ function pokerPrivateRows(session, state, userId) {
     return [
       new ActionRowBuilder().addComponents(
         view,
-        ...[0, 1, 2].map((index) =>
+        ...player.hole.map((card, index) =>
           new ButtonBuilder()
             .setCustomId(`poker-private:${session.id}:discard:${index}`)
             .setLabel(`Bỏ lá ${index + 1}`)
+            .setEmoji(cardButtonEmoji(card))
             .setStyle(ButtonStyle.Primary)
             .setDisabled(!canDiscard),
         ),

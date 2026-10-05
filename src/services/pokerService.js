@@ -1,5 +1,14 @@
 const crypto = require("node:crypto");
 const {
+  cardsText,
+  cardFace,
+  hiddenCards,
+  createCardBack,
+  cardButtonEmoji,
+  renderCardText,
+} = require("../utils/cardDisplay");
+
+const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
@@ -249,6 +258,7 @@ function startPoker({
     for (const bot of players.slice(1)) bot.revealedCard = bot.hole[0];
     for (const player of players) pay(player, ante);
     const state = {
+      cardBack: createCardBack(),
       variant,
       ante,
       startingStack: tableStack,
@@ -741,10 +751,10 @@ function discardCard(sessionId, userId, index) {
   })();
 }
 function cardText(cards) {
-  return cards.map((card) => `\`${card}\``).join(" ");
+  return cardsText(cards);
 }
 function largeCardText(cards) {
-  return cards.map((card) => `**${card}**`).join("　");
+  return cardsText(cards);
 }
 function playerEval(state) {
   const human = state.players[0];
@@ -760,7 +770,7 @@ function pokerEmbed(state, userId, sessionId = null) {
     .slice(1)
     .map((bot) => {
       const hidden = Math.max(0, bot.hole.length - 1);
-      return `### 🤖 ${bot.name}: **${bot.revealedCard || bot.hole[0]}**${hidden ? `　${"**??**　".repeat(hidden)}` : ""}`;
+      return `### 🤖 ${bot.name}: ${cardFace(bot.revealedCard || bot.hole[0])}${hidden ? `　${hiddenCards(state, hidden, sessionId)}` : ""}`;
     })
     .join("\n");
   const embed = new EmbedBuilder()
@@ -775,7 +785,7 @@ function pokerEmbed(state, userId, sessionId = null) {
     )
     .setTitle(`♠️ POKER · ${VARIANTS[state.variant].name.toUpperCase()}`)
     .setDescription(
-      `## 🃏 BÀI CHUNG\n### ${largeCardText(state.board)}${state.board.length < 5 ? `　${"**??**　".repeat(5 - state.board.length)}` : ""}\n\n## 👤 BÀI CỦA <@${userId}>\n### ${largeCardText(human.hole)}\n**Set mạnh nhất hiện tại:** ${playerEval(state)}\n\n## 🤖 BÀI CỦA BOT\n${exposedBots}\n\n## 💰 POT: ${formatCoins(pot)} :coin:`,
+      `## 🃏 BÀI CHUNG\n### ${largeCardText(state.board)}${state.board.length < 5 ? `　${hiddenCards(state, 5 - state.board.length, sessionId)}` : ""}\n\n## 👤 BÀI CỦA <@${userId}>\n### ${largeCardText(human.hole)}\n**Set mạnh nhất hiện tại:** ${playerEval(state)}\n\n## 🤖 BÀI CỦA BOT\n${exposedBots}\n\n## 💰 POT: ${formatCoins(pot)} :coin:`,
     )
     .addFields({
       name: "🎴 STACK VÀ TIỀN ĐÃ CƯỢC",
@@ -791,7 +801,7 @@ function pokerEmbed(state, userId, sessionId = null) {
       name: `🎯 LƯỢT ${state.street.toUpperCase()} · CẦN THEO ${formatCoins(Math.max(0, state.currentBet - human.streetBet))} :coin:`,
       value: state.log
         .slice(-4)
-        .map((line) => `• ${line}`)
+        .map((line) => `• ${renderCardText(line)}`)
         .join("\n"),
     });
   else {
@@ -864,7 +874,8 @@ function pokerRows(sessionId, state) {
         ...state.players[0].hole.map((card, index) =>
           new ButtonBuilder()
             .setCustomId(`poker:${sessionId}:discard:${index}`)
-            .setLabel(`Bỏ ${card}`)
+            .setLabel(`Bỏ lá ${index + 1}`)
+            .setEmoji(cardButtonEmoji(card))
             .setStyle(ButtonStyle.Secondary),
         ),
       ),

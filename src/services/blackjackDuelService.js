@@ -1,5 +1,10 @@
 const crypto = require("node:crypto");
 const {
+  cardsText: displayCards,
+  hiddenCards,
+  createCardBack,
+} = require("../utils/cardDisplay");
+const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
@@ -242,6 +247,7 @@ const acceptTx = db.transaction((id, actorId, now, forcedDeck) => {
   });
   const fair = duelState(duel)?.fair || createFairness();
   const state = {
+    cardBack: createCardBack(),
     deck: forcedDeck ? [...forcedDeck] : createShoe(6, fair.serverSeed),
     fair,
     players: {
@@ -350,7 +356,7 @@ const expireTx = db.transaction((id, now) => {
 });
 
 function cardsText(cards) {
-  return cards.map((card) => `\`${card}\``).join(" ");
+  return displayCards(cards);
 }
 function privateHandText(duel, userId) {
   const player = duelState(duel)?.players?.[String(userId)];
@@ -388,12 +394,12 @@ function blackjackDuelEmbed(duel) {
     embed.addFields(
       {
         name: "🔵 NGƯỜI THÁCH ĐẤU",
-        value: `<@${duel.challenger_id}>\n${statusText(duel.challenger_id)}`,
+        value: `<@${duel.challenger_id}>\n${statusText(duel.challenger_id)}\n${hiddenCards(state, state.players[duel.challenger_id].cards.length, duel.id)}`,
         inline: true,
       },
       {
         name: "🔴 ĐỐI THỦ",
-        value: `<@${duel.opponent_id}>\n${statusText(duel.opponent_id)}`,
+        value: `<@${duel.opponent_id}>\n${statusText(duel.opponent_id)}\n${hiddenCards(state, state.players[duel.opponent_id].cards.length, duel.id)}`,
         inline: true,
       },
       {

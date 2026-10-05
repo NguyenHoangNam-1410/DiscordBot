@@ -24,6 +24,8 @@ coverage/
 /output/stat-icons/
 /output/class-icons/
 /output/survival-ui-icons/
+/output/playing-cards/
+/assets/playing-cards/
 
 # OS
 .DS_Store
