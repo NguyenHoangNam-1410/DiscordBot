@@ -1449,16 +1449,12 @@ function actions(state) {
     return [
       {
         action: "attack",
-        label: paradox.active(state)
-          ? `Tấn công (+${attackManaGain(state)} Mana)`
-          : `+${attackManaGain(state)} MP`,
+        label: `+${attackManaGain(state)} MP`,
       },
       { action: "defend", label: "+1 MP" },
       {
         action: "skill",
-        label: paradox.active(state)
-          ? `${stats.CLASSES[state.classKey].skill} (−${skillManaCost(state)} Mana${paradox.hpCost(state) ? `, −${paradox.hpCost(state)} HP` : ""})`
-          : `${skillManaCost(state) === 0 ? "0 MP" : "−2 MP"}`,
+        label: `${skillManaCost(state) === 0 ? "" : "−"}${skillManaCost(state)} MP${paradox.hpCost(state) ? ` · −${paradox.hpCost(state)} HP` : ""}`,
         disabled:
           state.mana < skillManaCost(state) ||
           state.hp - paradox.hpCost(state) < 1,

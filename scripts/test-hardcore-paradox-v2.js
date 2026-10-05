@@ -114,7 +114,7 @@ try {
   const mana = state("mana_fracture", "sorceress");
   assert.equal(core.skillManaCost(mana), 1);
   assert.equal(core.attackManaGain(mana), 0);
-  assert(core.actions(mana)[0].label.includes("+0 Mana"));
+  assert.equal(core.actions(mana)[0].label, "+0 MP");
   mana.classShrine = {
     classKey: "sorceress",
     from: 26,

@@ -89,7 +89,7 @@ function battleStats(s) {
     necromancer: "Phép luôn trúng, không Crit; chặn phản công.",
     paladin: "Vật lý, có thể trượt/Crit; tự Phòng thủ.",
   }[s.classKey];
-  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${s.maxMana}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé** **${s.escapeTokens}**\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${core.effectiveResistance(s)}%**${core.effectiveResistance(s) !== s.resistance ? ` (gốc ${s.resistance}%)` : ""}\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} Mana${paradox.hpCost(s) ? `, −${paradox.hpCost(s)} HP` : ""}): ${skill.low}–${skill.high} DMG**\n${detail}\n*DMG đã tính phòng thủ/kháng của quái hiện tại; vật lý giả định trúng, chưa Crit.*`;
+  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${s.maxMana}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé** **${s.escapeTokens}**\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${core.effectiveResistance(s)}%**${core.effectiveResistance(s) !== s.resistance ? ` (gốc ${s.resistance}%)` : ""}\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP${paradox.hpCost(s) ? `, −${paradox.hpCost(s)} HP` : ""}): ${skill.low}–${skill.high} DMG**\n${detail}\n*DMG đã tính phòng thủ/kháng của quái hiện tại; vật lý giả định trúng, chưa Crit.*`;
 }
 function effectText(effects, level = 1) {
   const names = {
@@ -595,7 +595,7 @@ function encounterText(s) {
       `Đòn quái kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}** · Dự báo nhận **${p.low}–${p.high} HP** · Quái đánh trúng bạn **${percent(p.chance)}** *(chưa Crit/chưa Thủ)*\n` +
       `Bạn đánh vật lý trúng quái **${percent(world.hitChance(s.accuracy, e.evasion))}**; trượt gây 0 DMG nhưng vẫn hồi MP khi đánh thường. Skill phép luôn trúng.\n` +
       (e.mechanic ? `Cơ chế: ${mechanisms[e.mechanic]}\n` : "") +
-      `**Tấn công:** vật lý, hồi ${core.attackManaGain(s)} MP (tối đa Max MP). **Thủ:** DEF ×2 hoặc +15 RES, giảm thêm 15% DMG, miễn Crit, +1 MP.\n**${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} Mana${paradox.hpCost(s) ? `, −${paradox.hpCost(s)} HP` : ""}):** ${SKILLS[s.classKey]} **Bình:** hồi ${percent(paradox.potionRate(s))} Max HP, ít nhất 20; quái còn sống phản công.`
+      `**Tấn công:** vật lý, hồi ${core.attackManaGain(s)} MP (tối đa Max MP). **Thủ:** DEF ×2 hoặc +15 RES, giảm thêm 15% DMG, miễn Crit, +1 MP.\n**${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP${paradox.hpCost(s) ? `, −${paradox.hpCost(s)} HP` : ""}):** ${SKILLS[s.classKey]} **Bình:** hồi ${percent(paradox.potionRate(s))} Max HP, ít nhất 20; quái còn sống phản công.`
     );
   }
   if (e.type === "memory")

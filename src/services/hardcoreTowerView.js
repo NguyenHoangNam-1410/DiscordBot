@@ -41,12 +41,12 @@ function resources(state) {
 }
 function battleStats(state, c) {
   const cost = engine.costs(state, c);
-  return `${resources(state)}${SEP}${E.defense} **DEF** **${c.character.defense}**${SEP}${E.res} **RES** **${c.character.resistance}%**\n${E.attack} **Tấn công: ${engine.damage(state, c, "attack")} damage · +${engine.attackMana(state, c)} Mana**\n${SKILL_ICONS[c.character.classKey]} **Arcane Burst: ${engine.damage(state, c, "skill")} damage · −${cost.mana} Mana${cost.hp ? ` · −${cost.hp} HP` : ""}**\n${E.defense} **Phòng thủ: nhận ${engine.counter(state, c, "defend")} damage · +${c.combat.defendMana} Mana**\n*Damage đã tính giảm trừ và luật pha; không Crit, không Miss.*`;
+  return `${resources(state)}${SEP}${E.defense} **DEF** **${c.character.defense}**${SEP}${E.res} **RES** **${c.character.resistance}%**\n${E.attack} **Tấn công: ${engine.damage(state, c, "attack")} damage · +${engine.attackMana(state, c)} MP**\n${SKILL_ICONS[c.character.classKey]} **Arcane Burst: ${engine.damage(state, c, "skill")} damage · −${cost.mana} MP${cost.hp ? ` · −${cost.hp} HP` : ""}**\n${E.defense} **Phòng thủ: nhận ${engine.counter(state, c, "defend")} damage · +${c.combat.defendMana} MP**\n*Damage đã tính giảm trừ và luật pha; không Crit, không Miss.*`;
 }
 function encounterText(state, c) {
   const { encounter: e, phase: p } = engine.current(state, c);
   if (e.type !== "combat")
-    return `**${e.name}**\n${e.choices.map((x) => `• ${x.label}`).join("\n")}`;
+    return `**${e.name}**\n${e.choices.map((x) => `• ${x.label.replace(/\bMana\b(?! Vỡ Vụn)/g, "MP")}`).join("\n")}`;
   const immunity = {
     all: "Bất tử trong pha này",
     physical: "Miễn nhiễm vật lý",
@@ -73,7 +73,7 @@ function effectText(state, c) {
   const text =
     p.id === "blood_pact"
       ? `Damage ×1,30. Mỗi Arcane Burst mất **${cost.hp} HP** (5% Max HP, làm tròn xuống, tối thiểu 1); cần còn ít nhất 1 HP sau chi phí.`
-      : `Arcane Burst tốn **${cost.mana} Mana**. Tấn công **+${engine.attackMana(state, c)} Mana**; Phòng thủ **+${c.combat.defendMana} Mana**.`;
+      : `Arcane Burst tốn **${cost.mana} MP**. Tấn công **+${engine.attackMana(state, c)} MP**; Phòng thủ **+${c.combat.defendMana} MP**.`;
   return `**${CATALOG[p.id]?.name || p.id}**\n${text}\nHiệu lực: tầng **${p.startFloor}–${p.endFloor}**.`;
 }
 function turnText(state, c) {
@@ -102,7 +102,7 @@ function turnText(state, c) {
     lines.push(
       `**Pha**: ${prior.phases[before.step].name} → **${prior.phases[state.step].name}**`,
     );
-  return lines.join("\n");
+  return lines.join("\n").replace(/\bMana\b(?! Vỡ Vụn)/g, "MP");
 }
 function color(state, c) {
   if (state.status === "completed") return 0x2ecc71;
@@ -208,8 +208,24 @@ function payload(row, state, c, result, now = Date.now()) {
     state.status === "playing"
       ? engine.actions(state, c)
       : [{ action: "replay", label: "Chơi lại" }];
+  const cost = engine.costs(state, c);
+  const labels =
+    state.status === "playing" && e.type === "combat"
+      ? {
+          attack: `+${engine.attackMana(state, c)} MP`,
+          defend: `+${c.combat.defendMana} MP`,
+          skill: `${cost.mana === 0 ? "" : "−"}${cost.mana} MP${cost.hp ? ` · −${cost.hp} HP` : ""}`,
+        }
+      : {};
   const components = chunkRows(
-    actions.map((x) => button(prefix, x.action, x.label, !live || x.disabled)),
+    actions.map((x) =>
+      button(
+        prefix,
+        x.action,
+        labels[x.action] || x.label.replace(/\bMana\b(?! Vỡ Vụn)/g, "MP"),
+        !live || x.disabled,
+      ),
+    ),
   );
   components.push(
     new ActionRowBuilder().addComponents([
@@ -231,7 +247,7 @@ function statsText(state, c) {
 function rulesText(c) {
   const date = (value) =>
     new Date(value).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" });
-  return `• Vượt **${c.floors.length} tầng** với Sorceress cố định; không Crit, không Miss, không RNG.\n• Tấn công gây **${c.combat.attackDamage} damage**, nhận **${c.combat.attackMana} Mana**. Arcane Burst gây **${c.combat.skillDamage} damage**, tốn **${c.combat.skillCost} Mana**. Rift và luật pha có thể thay đổi các giá trị này.\n• Phòng thủ nhận **${c.combat.defendMana} Mana**; sát thương nhận vào theo pha hiện tại. Mana không vượt **${c.character.maxMana}**.\n• Kết liễu quái đúng luật pha không bị phản công. Phải tuân thủ hành động bắt buộc và giới hạn hành động của từng pha.\n• Không mang trang bị, vé hoặc bình vào Tháp.\n• Thưởng một lần mỗi người trong server cho challenge này. Chơi lại tăng số lần thử.\n• Mở: **${date(c.startsAt)}**; đóng: **${date(c.endsAt)}** (giờ Việt Nam). Sau khi đóng, chỉ xem kết quả trong 24 giờ.`;
+  return `• Vượt **${c.floors.length} tầng** với Sorceress cố định; không Crit, không Miss, không RNG.\n• Tấn công gây **${c.combat.attackDamage} damage**, nhận **${c.combat.attackMana} MP**. Arcane Burst gây **${c.combat.skillDamage} damage**, tốn **${c.combat.skillCost} MP**. Rift và luật pha có thể thay đổi các giá trị này.\n• Phòng thủ nhận **${c.combat.defendMana} MP**; sát thương nhận vào theo pha hiện tại. MP không vượt **${c.character.maxMana}**.\n• Kết liễu quái đúng luật pha không bị phản công. Phải tuân thủ hành động bắt buộc và giới hạn hành động của từng pha.\n• Không mang trang bị, vé hoặc bình vào Tháp.\n• Thưởng một lần mỗi người trong server cho challenge này. Chơi lại tăng số lần thử.\n• Mở: **${date(c.startsAt)}**; đóng: **${date(c.endsAt)}** (giờ Việt Nam). Sau khi đóng, chỉ xem kết quả trong 24 giờ.`;
 }
 function privatePayload(row, state, c, sourceMessageId, tab = "stats") {
   const embed = new EmbedBuilder()

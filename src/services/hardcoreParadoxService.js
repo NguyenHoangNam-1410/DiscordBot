@@ -7,7 +7,7 @@ const CATALOG = Object.freeze({
   },
   mana_fracture: {
     name: "🔷 Mana Vỡ Vụn",
-    text: "Skill 1 Mana (Class Shrine miễn phí vẫn 0). Tấn công +0 Mana; Phòng thủ +1 Mana.",
+    text: "Skill 1 MP (Class Shrine miễn phí vẫn 0). Tấn công +0 MP; Phòng thủ +1 MP.",
   },
   inverted_armor: {
     name: "🛡️ Giáp Nghịch Đảo",
@@ -31,7 +31,7 @@ const CATALOG = Object.freeze({
   },
   unstable_soul: {
     name: "👻 Linh Hồn Bất Ổn",
-    text: "Skill: 25% miễn Mana · 15% thêm 1 Mana · 60% bình thường. Chi phí khóa từng lượt; mở lại UI không roll lại.",
+    text: "Skill: 25% miễn MP · 15% thêm 1 MP · 60% bình thường. Chi phí khóa từng lượt; mở lại UI không roll lại.",
   },
 });
 const PAIRS = Object.freeze({
@@ -173,7 +173,7 @@ function describe(s) {
         ")\n" +
         CATALOG[p.id].text +
         (p.id === "unstable_soul" && p.lockedSkillCost !== null
-          ? "\nSkill lượt này: " + p.lockedSkillCost + " Mana."
+          ? "\nSkill lượt này: " + p.lockedSkillCost + " MP."
           : "")
     : "";
 }
