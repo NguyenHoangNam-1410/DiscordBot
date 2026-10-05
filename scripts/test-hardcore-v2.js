@@ -115,6 +115,57 @@ async function main() {
   );
   groups.push("catalog and repeat resume");
 
+  const inventory = stats.createState("barbarian", 10);
+  inventory.encounter = { type: "empty" };
+  inventory.phase = "encounter";
+  const drops = Object.values(core.ITEMS).flat().slice(0, 7);
+  for (const definition of drops) core.receiveItem(inventory, definition);
+  assert.deepEqual(
+    inventory.items.map((entry) => entry.definition.id),
+    drops.map((definition) => definition.id).reverse(),
+  );
+  const firstPage = view
+    .privatePayload(inventory, "recent", "public", "items", 0)
+    .embeds[0].toJSON();
+  const secondPage = view
+    .privatePayload(inventory, "recent", "public", "items", 1)
+    .embeds[0].toJSON();
+  assert.deepEqual(
+    firstPage.fields.slice(1).map((field) => field.name),
+    inventory.items
+      .slice(0, 5)
+      .map(
+        (entry) =>
+          `${entry.name} Lv.${entry.level} [${{ common: "R", rare: "SR", legendary: "SSR", cursed: "UR" }[entry.rarity]}]`,
+      ),
+  );
+  assert.equal(secondPage.fields[1].name, `${drops[1].name} Lv.1 [R]`);
+  const oldest = inventory.items.at(-1);
+  core.receiveItem(inventory, drops[0]);
+  assert.equal(inventory.items.length, drops.length);
+  assert.equal(inventory.items[0], oldest);
+  assert.equal(oldest.level, 2);
+  assert.deepEqual(
+    inventory.items.slice(1).map((entry) => entry.definition.id),
+    drops
+      .slice(1)
+      .map((definition) => definition.id)
+      .reverse(),
+  );
+  const resumedInventory = JSON.parse(JSON.stringify(inventory));
+  core.normalize(resumedInventory);
+  assert.deepEqual(
+    resumedInventory.items.map((entry) => entry.definition.id),
+    inventory.items.map((entry) => entry.definition.id),
+  );
+  assert(
+    view
+      .privatePayload(resumedInventory, "recent", "public", "items", 0)
+      .embeds[0].toJSON()
+      .fields[1].name.startsWith(oldest.name + " Lv.2"),
+  );
+  groups.push("newest received equipment first");
+
   const cursed = stats.createState("barbarian", 10);
   cursed.cleared = 10;
   core.receiveItem(cursed, item("glass_cannon"));

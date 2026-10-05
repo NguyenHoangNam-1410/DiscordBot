@@ -263,7 +263,8 @@ function receiveItem(state, definition, levels = 1, cleansedLevels = 0) {
   )
     throw new Error("INVALID_HARDCORE_ITEM");
   const before = statSnapshot(state);
-  let item = state.items.find((x) => x.definition.id === definition.id);
+  const index = state.items.findIndex((x) => x.definition.id === definition.id);
+  let item = state.items[index];
   if (!item) {
     item = {
       name: definition.name,
@@ -272,8 +273,11 @@ function receiveItem(state, definition, levels = 1, cleansedLevels = 0) {
       level: 0,
       cleansedLevels: 0,
     };
-    state.items.push(item);
+  } else {
+    state.items.splice(index, 1);
   }
+  // A new drop or another level of existing equipment is the most recent receipt.
+  state.items.unshift(item);
   item.level += levels;
   item.cleansedLevels += Math.min(levels, Math.max(0, cleansedLevels));
   if (definition.rarity === "cursed")
