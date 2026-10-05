@@ -1,4 +1,5 @@
 "use strict";
+const { eventIcon } = require("./hardcoreIcons");
 const CATALOG = Object.freeze({
   blood_pact: {
     name: "🩸 Huyết Ước",
@@ -160,7 +161,9 @@ function potionLocked(s) {
 function describe(s) {
   const p = active(s);
   return p
-    ? CATALOG[p.id].name +
+    ? eventIcon("paradox") +
+        " **Rift Paradox** · " +
+        CATALOG[p.id].name +
         " · còn " +
         (p.endFloor - s.floor + 1) +
         " tầng (" +
@@ -176,7 +179,8 @@ function describe(s) {
 }
 function choicesText(e) {
   return (
-    "🌀 **RIFT PARADOX — HIỆU LỰC 5 TẦNG**\nTầng " +
+    eventIcon("paradox") +
+    " **RIFT PARADOX — HIỆU LỰC 5 TẦNG**\nTầng " +
     (e.milestone + 1) +
     "–" +
     (e.milestone + 5) +
