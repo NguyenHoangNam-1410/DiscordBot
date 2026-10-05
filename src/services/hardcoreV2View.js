@@ -1242,11 +1242,6 @@ function privatePayload(
       });
     if (!state.items.length)
       e.addFields({ name: `${E.backpack} Trang bị`, value: "Chưa có." });
-    e.addFields({
-      name: "Cách đọc",
-      value:
-        "Buff cộng mỗi cấp. Bình/vé/hồi HP chỉ nhận lúc nhặt thêm cấp. Trang bị chỉ tồn tại trong run. Nhặt trùng tên tăng level; giới hạn chỉ số áp dụng sau khi tính tổng.",
-    });
   } else if (tab === "stats") {
     e.addFields(
       { name: "Chỉ số", value: statLine(state) },
