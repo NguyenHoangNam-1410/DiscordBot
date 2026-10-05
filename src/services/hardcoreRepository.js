@@ -80,6 +80,18 @@ function upsertRecord(guildId, userId, values, now = Date.now()) {
     now,
   );
 }
+function addEventStats(guildId, userId, { events, chains, kinds }, now = Date.now()) {
+  if (!events && !chains) return;
+  const row = db
+    .prepare("SELECT kinds_json FROM hardcore_event_stats WHERE guild_id=? AND user_id=?")
+    .get(String(guildId), String(userId));
+  const merged = Array.from(new Set([...(row ? JSON.parse(row.kinds_json) : []), ...kinds]));
+  db.prepare(
+    `INSERT INTO hardcore_event_stats (guild_id,user_id,events,chains,kinds_json,updated_at) VALUES (?,?,?,?,?,?)
+    ON CONFLICT(guild_id,user_id) DO UPDATE SET events=events+excluded.events,chains=chains+excluded.chains,
+    kinds_json=excluded.kinds_json,updated_at=excluded.updated_at`,
+  ).run(String(guildId), String(userId), events, chains, JSON.stringify(merged), now);
+}
 function getRecord(guildId, userId) {
   return (
     db
@@ -106,6 +118,7 @@ function getTop(guildId, limit) {
     .all(String(guildId), String(guildId), limit);
 }
 module.exports = {
+  addEventStats,
   getSession,
   getActiveSession,
   getByUser,

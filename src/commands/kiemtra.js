@@ -101,6 +101,8 @@ const ACHIEVEMENT_CATEGORIES = Object.freeze([
   { label: "Mốc xu", value: "balance" },
   { label: "Sinh tồn · tầng", value: "hardcoreFloor" },
   { label: "Sinh tồn · hành trình", value: "hardcoreJourney" },
+  { label: "Sinh tồn · tầng theo class", value: "hardcoreClass" },
+  { label: "Sinh tồn · sự kiện và chuỗi", value: "hardcoreEvents" },
   { label: "Game cược · số ván thắng", value: "betWins" },
   { label: "Game cược · khám phá", value: "betGames" },
   { label: "Game cược · tiền cược và thắng lớn", value: "betMoney" },
