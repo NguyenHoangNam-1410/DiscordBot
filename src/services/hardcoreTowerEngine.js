@@ -2,6 +2,7 @@
 const { createHash } = require("node:crypto");
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 function solutionHash(c, actions = c.canonicalSolution) {
+  if (c.generatorVersion === 3) return c.solutionHash;
   return sha(JSON.stringify([c.challengeId, c.contentVersion, actions]));
 }
 function enter(s, c) {
@@ -11,6 +12,7 @@ function enter(s, c) {
   s.enemyHp = e.hp || 0;
 }
 function createState(c) {
+  if (c.generatorVersion === 3) return createGeneratedState(c);
   const s = {
     mode: "tower15",
     challengeId: c.challengeId,
@@ -32,10 +34,13 @@ function createState(c) {
   return s;
 }
 function current(s, c) {
+  if (c.generatorVersion === 3) return currentGenerated(s, c);
   const encounter = c.floors[s.floor - 1];
   return { encounter, phase: encounter.phases?.[s.step] };
 }
 function costs(s, c) {
+  if (c.generatorVersion === 3)
+    return { mana: currentGenerated(s, c).transition.skillCost, hp: 0 };
   return {
     mana: s.paradox?.id === "mana_fracture" ? 1 : c.combat.skillCost,
     hp:
@@ -45,9 +50,12 @@ function costs(s, c) {
   };
 }
 function attackMana(s, c) {
+  if (c.generatorVersion === 3)
+    return currentGenerated(s, c).transition.attackMana;
   return s.paradox?.id === "mana_fracture" ? 0 : c.combat.attackMana;
 }
 function damage(s, c, action) {
+  if (c.generatorVersion === 3) return damageGenerated(s, c, action);
   const { encounter, phase } = current(s, c);
   if (encounter.type !== "combat" || !["attack", "skill"].includes(action))
     return 0;
@@ -64,12 +72,14 @@ function damage(s, c, action) {
   );
 }
 function counter(s, c, action) {
+  if (c.generatorVersion === 3) return counterGenerated(s, c, action);
   const { phase } = current(s, c);
   return action === "defend"
     ? (phase.defendCounter ?? phase.counterDamage ?? 0)
     : (phase.counterDamage ?? 0);
 }
 function actions(s, c) {
+  if (c.generatorVersion === 3) return actionsGenerated(s, c);
   if (s.status !== "playing") return [];
   const { encounter } = current(s, c);
   if (encounter.type === "event")
@@ -117,6 +127,7 @@ function advance(s, c) {
   enter(s, c);
 }
 function act(s, c, action) {
+  if (c.generatorVersion === 3) return actGenerated(s, c, action);
   if (s.challengeId !== c.challengeId || s.contentVersion !== c.contentVersion)
     throw Error("CHALLENGE_VERSION_MISMATCH");
   if (!actions(s, c).some((x) => x.action === action && !x.disabled))
@@ -214,6 +225,15 @@ function act(s, c, action) {
   return s;
 }
 function solve(c) {
+  if (c.generatorVersion === 3) {
+    const p = require("../hardcore/tower/solver").solve(c);
+    return {
+      winningPaths: p.winningPaths
+        ? [{ actions: p.canonicalSolution, state: p.finalState }]
+        : [],
+      visited: p.visited,
+    };
+  }
   const winningPaths = [];
   let visited = 0;
   function visit(s, path) {
@@ -234,6 +254,10 @@ function solve(c) {
   return { winningPaths, visited };
 }
 function verify(c) {
+  if (c.generatorVersion === 3) {
+    const p = require("../hardcore/tower/solver").validate(c);
+    return { ...solve(c), solutionHash: p.solutionHash, audit: p };
+  }
   const proof = solve(c);
   const win = proof.winningPaths[0];
   if (
@@ -257,3 +281,135 @@ module.exports = {
   verify,
   solutionHash,
 };
+
+function createGeneratedState(c) {
+  const s = require("../hardcore/tower/solver").initial(c);
+  Object.assign(s, {
+    mode: "tower15",
+    challengeId: c.challengeId,
+    contentVersion: c.contentVersion,
+    generatorVersion: 3,
+    maxHp: c.character.maxHp,
+    maxMana: c.character.maxMana,
+    cleared: 0,
+    step: 0,
+    turn: 0,
+    paradox: null,
+    actionHistory: [],
+  });
+  s.enemyHp = c.floors[0].hp;
+  return s;
+}
+function currentGenerated(s, c) {
+  const t = c.transitions[Math.min(s.routeStep, c.stepCount - 1)],
+    f = c.floors[s.floor - 1];
+  return {
+    encounter: {
+      ...f,
+      type: t.type,
+      choices: t.choices || [],
+      spellLocked: Boolean(t.spellLocked),
+    },
+    phase: { ...t, name: t.clueTemplate },
+    transition: t,
+  };
+}
+function actionsGenerated(s, c) {
+  if (s.status !== "playing") return [];
+  const t = c.transitions[s.routeStep];
+  if (t.type === "event")
+    return t.choices.map((x) => ({ ...x, disabled: false }));
+  return ["attack", "skill", "defend"].map((action) => ({
+    action,
+    label:
+      action === "skill"
+        ? c.combat.skillName
+        : action === "attack"
+          ? "Tấn công"
+          : "Phòng thủ",
+    disabled: action === "skill" && (s.mana < t.skillCost || t.spellLocked),
+  }));
+}
+function damageGenerated(s, c, action) {
+  const t = currentGenerated(s, c).transition,
+    p = require("../hardcore/tower/classProfiles").profile(c.classKey);
+  if (t.type !== "combat") return 0;
+  if (action === "attack")
+    return p.mechanic === "barrage" && t.shieldCharges > 0
+      ? 0
+      : Math.floor(
+          p.attackDamage *
+            (p.mechanic === "rage" && s.hp <= s.maxHp * 0.35 ? 1.5 : 1),
+        );
+  if (action === "skill")
+    return p.mechanic === "barrage"
+      ? Math.floor(p.skillDamage / 3) * (3 - t.shieldCharges)
+      : p.skillDamage + (p.mechanic === "dodge" ? 8 : 0);
+  return 0;
+}
+function counterGenerated(s, c, action) {
+  const t = currentGenerated(s, c).transition,
+    p = require("../hardcore/tower/classProfiles").profile(c.classKey);
+  if (t.type !== "combat") return 0;
+  if (
+    s.classCharges.ward > 0 ||
+    (action === "skill" && ["shield", "dodge"].includes(p.mechanic))
+  )
+    return 0;
+  return p.mechanic === "shield" && action === "defend"
+    ? Math.floor(t.intentDamage / 2)
+    : t.intentDamage;
+}
+function actGenerated(s, c, action) {
+  if (s.challengeId !== c.challengeId || s.contentVersion !== c.contentVersion)
+    throw Error("CHALLENGE_VERSION_MISMATCH");
+  if (!actionsGenerated(s, c).some((x) => x.action === action && !x.disabled))
+    throw Error("INVALID_ACTION");
+  const t = c.transitions[s.routeStep],
+    before = {
+      hp: s.hp,
+      mana: s.mana,
+      enemyHp: s.enemyHp,
+      floor: s.floor,
+      step: s.step,
+      routeStep: s.routeStep,
+    };
+  const next = require("../hardcore/tower/solver").apply(c, s, action);
+  s.actionHistory.push(sha(JSON.stringify([s.turn, action])));
+  s.turn++;
+  if (next.status === "failed") {
+    s.status = "failed";
+    s.failure = "Perfect Chain bị gãy. Tín hiệu của bước vừa chọn: " + t.clue;
+    s.lastLog = "Sai nhịp. Chơi lại từ tầng 1 để thử chuỗi mới.";
+    s.lastOutcome = { ...before, actionDamage: 0, counterDamage: 0 };
+    return s;
+  }
+  const turn = s.turn,
+    history = s.actionHistory,
+    oldEnemy = s.enemyHp;
+  Object.assign(s, next, {
+    turn,
+    actionHistory: history,
+    step: next.floorStep,
+  });
+  s.cleared = next.status === "completed" ? 15 : next.floor - 1;
+  s.enemyHp = Math.max(0, oldEnemy + t.enemyHpDelta);
+  if (s.floor !== before.floor) s.enemyHp = c.floors[s.floor - 1].hp;
+  if (s.flags.includes("mana_fracture"))
+    s.paradox = { id: "mana_fracture", startFloor: 5, endFloor: 15 };
+  const label =
+    t.choices?.find((x) => x.action === action)?.label ||
+    (action === "skill"
+      ? c.combat.skillName
+      : action === "attack"
+        ? "Tấn công"
+        : "Phòng thủ");
+  s.lastLog = label + ": đúng nhịp " + s.routeStep + "/" + c.stepCount + ".";
+  s.lastOutcome = {
+    ...before,
+    actionDamage: Math.abs(t.enemyHpDelta),
+    counterDamage: t.counterDamage,
+    heal: t.heal,
+  };
+  return s;
+}

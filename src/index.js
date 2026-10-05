@@ -128,6 +128,9 @@ client.once(Events.ClientReady, async () => {
   maintenanceTimers.push(startBlackjackTableMaintenance(client));
   maintenanceTimers.push(startPokerMaintenance(client, logger));
   maintenanceTimers.push(startStaleSessionMaintenance(client, logger));
+  maintenanceTimers.push(
+    require("./hardcore/tower/challengeCatalog").startWeeklyMaintenance(logger),
+  );
   backupManager = startDatabaseBackups(logger);
   logger.info(
     {

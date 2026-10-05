@@ -4,7 +4,7 @@ const { MessageFlags } = require("discord.js");
 const { db } = require("../db");
 const repo = require("./hardcoreTowerRepository");
 const engine = require("./hardcoreTowerEngine");
-const catalog = require("../hardcore/towerChallenges");
+const catalog = require("../hardcore/tower/challengeCatalog");
 const economy = require("./economyService");
 const diamonds = require("./playerLevelService");
 const { requireGameChannel } = require("../utils/gameChannel");
@@ -31,6 +31,11 @@ function challengeFor(row) {
 }
 const startTx = db.transaction(
   ({ guildId, userId, channelId, challenge, now = Date.now() }) => {
+    const stored =
+      challenge && catalog.get(challenge.challengeId, challenge.contentVersion);
+    if (!stored || stored.publicationStatus !== "published")
+      throw Error("CHALLENGE_NOT_PUBLISHED");
+    challenge = stored;
     if (!catalog.playable(challenge, now)) throw Error("CHALLENGE_EXPIRED");
     let row = repo.byUser(guildId, userId, challenge.challengeId);
     if (row) {
@@ -50,7 +55,7 @@ const startTx = db.transaction(
       channel_id: String(channelId),
     };
     repo.insert(row, engine.createState(challenge), now);
-    repo.attempt(row, now);
+    repo.beginAttempt(row, now);
     return repo.session(row.id);
   },
 );
@@ -62,6 +67,7 @@ const actionTx = db.transaction(
     channelId,
     messageId,
     expectedTurn,
+    expectedRouteStep,
     action,
     clock = Date.now,
   }) => {
@@ -78,15 +84,23 @@ const actionTx = db.transaction(
     let state = JSON.parse(row.state_json);
     if (!Number.isSafeInteger(expectedTurn) || state.turn !== expectedTurn)
       throw Error("STALE_ACTION");
+    if (
+      c.generatorVersion === 3 &&
+      (!Number.isSafeInteger(expectedRouteStep) ||
+        state.routeStep !== expectedRouteStep)
+    )
+      throw Error("STALE_ACTION");
     if (action === "replay") {
       if (state.status === "playing") throw Error("INVALID_ACTION");
       const turn = state.turn + 1;
       state = engine.createState(c);
       state.turn = turn;
-      repo.attempt(row, now);
+      repo.beginAttempt(row, now);
     } else {
       if (state.status !== "playing") throw Error("STALE_ACTION");
       engine.act(state, c, action);
+      if (c.generatorVersion === 3 && state.status !== "playing")
+        repo.attempt(row, now);
       repo.progress(row, state, now);
       if (state.status === "completed") {
         if (!catalog.playable(c, clock())) throw Error("CHALLENGE_EXPIRED");
@@ -98,6 +112,9 @@ const actionTx = db.transaction(
           ":" +
           c.challengeId;
         const hash = engine.solutionHash(c);
+        db.prepare(
+          "UPDATE hardcore_tower_results SET solution_hash=? WHERE guild_id=? AND user_id=? AND challenge_id=?",
+        ).run(hash, row.guild_id, row.user_id, c.challengeId);
         if (repo.reward(row, hash, now)) {
           economy.creditCoins({
             guildId: row.guild_id,
@@ -144,6 +161,7 @@ const notice = {
   CHALLENGE_EXPIRED:
     "Challenge đã hết hạn; không còn nhận hành động hoặc thưởng.",
   INVALID_ACTION: "Hành động không dùng được trong lượt này.",
+  CHALLENGE_NOT_PUBLISHED: "Challenge chưa qua kiểm chứng hoặc chưa được mở.",
   NO_TOWER_SESSION: "Không tìm thấy session Tháp.",
 };
 async function openTower(interaction) {
@@ -155,7 +173,7 @@ async function openTower(interaction) {
   if (!(await requireGameChannel(interaction, "hardcore"))) return;
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const now = Date.now(),
-    c = catalog.active(now) || catalog.recent(now);
+    c = catalog.ensureWeekly(now) || catalog.recent(now);
   if (!c)
     return interaction.editReply({
       content: "Chưa có challenge Tháp Định Mệnh đang mở.",
@@ -211,7 +229,12 @@ async function openTower(interaction) {
   );
 }
 async function handleTowerButton(interaction, logger = console) {
-  const [, id, turn, action, originMessageId] = interaction.customId.split(":");
+  const [, id, turn, action, routeTag, sourceTag] =
+    interaction.customId.split(":");
+  const expectedRouteStep = /^r\d+$/.test(routeTag || "")
+    ? Number(routeTag.slice(1))
+    : undefined;
+  const originMessageId = expectedRouteStep == null ? routeTag : sourceTag;
   const detailTab = /^view_(stats|effects|encounter|rules)$/.exec(action)?.[1];
   const sourceMessageId = detailTab
     ? originMessageId || interaction.message.id
@@ -266,6 +289,7 @@ async function handleTowerButton(interaction, logger = console) {
           channelId: interaction.channelId,
           messageId: interaction.message.id,
           expectedTurn: Number(turn),
+          expectedRouteStep,
           action,
         });
         return await interaction.editReply(

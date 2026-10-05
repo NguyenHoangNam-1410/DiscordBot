@@ -1193,4 +1193,56 @@ runMigration(38, "class floor 500 exclusive avatar rings", () => {
   }
 });
 
+
+runMigration(
+  39,
+  "immutable generated weekly tower snapshots and class rotation",
+  () => {
+    db.exec(`
+ CREATE TABLE IF NOT EXISTS hardcore_tower_challenges (
+ challenge_id TEXT PRIMARY KEY,iso_year INTEGER NOT NULL,iso_week INTEGER NOT NULL,
+ rotation_index INTEGER NOT NULL UNIQUE,class_key TEXT NOT NULL,generator_version INTEGER NOT NULL,
+ content_version INTEGER NOT NULL,seed_commitment TEXT NOT NULL,payload_json TEXT NOT NULL,
+ step_count INTEGER NOT NULL CHECK(step_count BETWEEN 72 AND 90),solution_hash TEXT NOT NULL,
+ difficulty_score INTEGER NOT NULL,audit_json TEXT NOT NULL,
+ status TEXT NOT NULL CHECK(status IN ('draft','validated','published','archived')),
+ starts_at INTEGER NOT NULL,ends_at INTEGER NOT NULL,generated_at INTEGER NOT NULL,published_at INTEGER,
+ UNIQUE(iso_year,iso_week),CHECK(ends_at>starts_at));
+ CREATE TABLE IF NOT EXISTS hardcore_tower_rotation (
+ id INTEGER PRIMARY KEY CHECK(id=1),next_index INTEGER NOT NULL DEFAULT 0);
+ INSERT OR IGNORE INTO hardcore_tower_rotation(id,next_index) VALUES(1,0);
+ CREATE TABLE IF NOT EXISTS hardcore_tower_generation_failures (
+ starts_at INTEGER PRIMARY KEY,reason TEXT NOT NULL,retry_at INTEGER NOT NULL);
+ CREATE INDEX IF NOT EXISTS idx_tower_challenge_window ON hardcore_tower_challenges(status,starts_at,ends_at);
+
+ CREATE TRIGGER IF NOT EXISTS tower_snapshot_no_delete BEFORE DELETE ON hardcore_tower_challenges
+ WHEN OLD.status IN ('published','archived')
+ BEGIN SELECT RAISE(ABORT,'IMMUTABLE_TOWER_SNAPSHOT'); END;
+ CREATE TRIGGER IF NOT EXISTS tower_snapshot_initial_status BEFORE INSERT ON hardcore_tower_challenges
+ WHEN NEW.status NOT IN ('draft','validated')
+ BEGIN SELECT RAISE(ABORT,'INVALID_TOWER_PUBLICATION'); END;
+ CREATE TRIGGER IF NOT EXISTS tower_snapshot_immutable BEFORE UPDATE ON hardcore_tower_challenges
+ WHEN OLD.status IN ('published','archived') AND (
+ NEW.payload_json<>OLD.payload_json OR NEW.challenge_id<>OLD.challenge_id OR
+ NEW.iso_year<>OLD.iso_year OR NEW.iso_week<>OLD.iso_week OR NEW.rotation_index<>OLD.rotation_index OR
+ NEW.class_key<>OLD.class_key OR NEW.generator_version<>OLD.generator_version OR
+ NEW.content_version<>OLD.content_version OR NEW.seed_commitment<>OLD.seed_commitment OR
+ NEW.step_count<>OLD.step_count OR NEW.solution_hash<>OLD.solution_hash OR
+ NEW.difficulty_score<>OLD.difficulty_score OR NEW.audit_json<>OLD.audit_json OR
+ NEW.starts_at<>OLD.starts_at OR NEW.ends_at<>OLD.ends_at OR NEW.generated_at<>OLD.generated_at OR
+ NEW.published_at IS NOT OLD.published_at)
+ BEGIN SELECT RAISE(ABORT,'IMMUTABLE_TOWER_SNAPSHOT'); END;
+ CREATE TRIGGER IF NOT EXISTS tower_publication_guard BEFORE UPDATE OF status ON hardcore_tower_challenges
+ WHEN NOT (
+ (OLD.status='draft' AND NEW.status='validated') OR
+ (OLD.status='validated' AND NEW.status='published' AND
+ json_extract(NEW.audit_json,'$.winningPaths')=1 AND json_extract(NEW.audit_json,'$.wrongBranchesRecoverable')=0 AND
+ json_extract(NEW.audit_json,'$.canonicalLength')=NEW.step_count AND json_extract(NEW.audit_json,'$.minimumHp')>=1 AND
+ json_extract(NEW.audit_json,'$.solutionHash')=NEW.solution_hash) OR
+ (OLD.status='published' AND NEW.status='archived') OR OLD.status=NEW.status)
+ BEGIN SELECT RAISE(ABORT,'INVALID_TOWER_PUBLICATION'); END;
+ `);
+  },
+);
+
 module.exports = { db, dbPath, runMigration };

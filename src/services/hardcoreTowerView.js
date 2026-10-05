@@ -6,7 +6,7 @@ const {
   ActionRowBuilder,
 } = require("discord.js");
 const engine = require("./hardcoreTowerEngine");
-const catalog = require("../hardcore/towerChallenges");
+const catalog = require("../hardcore/tower/challengeCatalog");
 const { E, SKILL_ICONS } = require("./hardcoreIcons");
 const { CATALOG } = require("./hardcoreParadoxService");
 const {
@@ -79,7 +79,13 @@ function effectText(state, c) {
 function turnText(state, c) {
   const before = state.lastOutcome;
   if (!before) return state.lastLog || "";
-  const prior = c.floors[before.floor - 1];
+  const prior =
+    c.generatorVersion === 3
+      ? {
+          ...c.floors[before.floor - 1],
+          type: c.transitions[before.routeStep].type,
+        }
+      : c.floors[before.floor - 1];
   const lines =
     prior.type === "combat"
       ? [
@@ -95,14 +101,22 @@ function turnText(state, c) {
       before.enemyHp,
       Math.max(0, before.enemyHp - before.actionDamage),
     );
+  if (before.heal) lines.push("Hồi phục cho bạn: **+" + before.heal + " HP**.");
   change(`${E.hp} HP`, before.hp, state.hp);
   change(`${E.mana} MP`, before.mana, state.mana);
   change("Tầng", before.floor, state.floor);
-  if (before.floor === state.floor && before.step !== state.step)
+  if (
+    state.status === "playing" &&
+    before.floor === state.floor &&
+    before.step !== state.step
+  )
     lines.push(
-      `**Pha**: ${prior.phases[before.step].name} → **${prior.phases[state.step].name}**`,
+      `**Pha**: ${prior.phases?.[before.step]?.name || "Nhịp " + (before.step + 1)} → **${prior.phases?.[state.step]?.name || "Nhịp " + (state.step + 1)}**`,
     );
-  return lines.join("\n").replace(/\bMana\b(?! Vỡ Vụn)/g, "MP");
+  const text = lines.join("\n");
+  return c.generatorVersion === 3
+    ? text
+    : text.replace(/\bMana\b(?! Vỡ Vụn)/g, "MP");
 }
 function color(state, c) {
   if (state.status === "completed") return 0x2ecc71;
@@ -125,10 +139,17 @@ function footer(state, c) {
     text: `Challenge ${c.challengeId} · v${c.contentVersion} · Lượt ${state.turn}`,
   };
 }
-function button(prefix, action, label, disabled = false, selected = false) {
+function button(
+  prefix,
+  action,
+  label,
+  disabled = false,
+  selected = false,
+  classKey = "sorceress",
+) {
   const symbols = {
     attack: E.attack,
-    skill: SKILL_ICONS.sorceress,
+    skill: SKILL_ICONS[classKey],
     defend: E.defense,
     replay: appEmoji("repeat", "🔁"),
     top: appEmoji("trophy", "🏆"),
@@ -147,9 +168,9 @@ function button(prefix, action, label, disabled = false, selected = false) {
     .setCustomId(prefix + action)
     .setLabel(label.slice(0, 80))
     .setStyle(
-      selected || action === "attack"
+      selected || action.split(":")[0] === "attack"
         ? ButtonStyle.Primary
-        : ["skill", "replay"].includes(action)
+        : ["skill", "replay"].includes(action.split(":")[0])
           ? ButtonStyle.Success
           : ButtonStyle.Secondary,
     )
@@ -163,6 +184,8 @@ function chunkRows(buttons) {
   return rows;
 }
 function payload(row, state, c, result, now = Date.now()) {
+  if (c.generatorVersion === 3)
+    return payloadGenerated(row, state, c, result, now);
   const live = catalog.playable(c, now);
   const e = engine.current(state, c).encounter;
   const embed = new EmbedBuilder()
@@ -250,6 +273,8 @@ function rulesText(c) {
   return `• Vượt **${c.floors.length} tầng** với Sorceress cố định; không Crit, không Miss, không RNG.\n• Tấn công gây **${c.combat.attackDamage} damage**, nhận **${c.combat.attackMana} MP**. Arcane Burst gây **${c.combat.skillDamage} damage**, tốn **${c.combat.skillCost} MP**. Rift và luật pha có thể thay đổi các giá trị này.\n• Phòng thủ nhận **${c.combat.defendMana} MP**; sát thương nhận vào theo pha hiện tại. MP không vượt **${c.character.maxMana}**.\n• Kết liễu quái đúng luật pha không bị phản công. Phải tuân thủ hành động bắt buộc và giới hạn hành động của từng pha.\n• Không mang trang bị, vé hoặc bình vào Tháp.\n• Thưởng một lần mỗi người trong server cho challenge này. Chơi lại tăng số lần thử.\n• Mở: **${date(c.startsAt)}**; đóng: **${date(c.endsAt)}** (giờ Việt Nam). Sau khi đóng, chỉ xem kết quả trong 24 giờ.`;
 }
 function privatePayload(row, state, c, sourceMessageId, tab = "stats") {
+  if (c.generatorVersion === 3)
+    return privateGenerated(row, state, c, sourceMessageId, tab);
   const embed = new EmbedBuilder()
     .setColor(color(state, c))
     .setTitle(`🗼 ${tabs[tab]} · THÁP ĐỊNH MỆNH`)
@@ -324,3 +349,323 @@ function topPayload(rows, c) {
 }
 
 module.exports = { payload, combatText, topPayload, privatePayload };
+
+function generatedPrefix(row, state) {
+  return "hardcore-tower:" + row.id + ":" + state.turn + ":";
+}
+function generatedButton(
+  row,
+  state,
+  c,
+  action,
+  label,
+  disabled = false,
+  selected = false,
+  source,
+) {
+  return button(
+    generatedPrefix(row, state),
+    action + ":r" + state.routeStep + (source ? ":" + source : ""),
+    label,
+    disabled,
+    selected,
+    c.classKey,
+  );
+}
+function generatedEncounter(state, c) {
+  const { encounter: e, transition: t } = engine.current(state, c);
+  let text =
+    "**" +
+    e.name +
+    "** · Nhịp **" +
+    (t.floorStep + 1) +
+    "/" +
+    e.stepCount +
+    "**\n";
+  if (t.type === "combat") text += healthBar(state.enemyHp, e.hp) + "\n";
+  text += "**Tín hiệu:** " + t.clue;
+  if (t.type === "event")
+    text += "\n" + t.choices.map((x) => "• " + x.label).join("\n");
+  else
+    text +=
+      "\nÝ định: **" +
+      t.intentDamage +
+      " damage " +
+      (t.counterType === "magic" ? "phép" : "vật lý") +
+      "**. Cơ chế class có thể chặn/giảm đòn; phản công áp dụng trước khi qua tầng.";
+  return text;
+}
+function generatedStats(state, c) {
+  const t = engine.current(state, c).transition;
+  return (
+    resources(state) +
+    SEP +
+    E.defense +
+    " **DEF " +
+    c.character.defense +
+    "**" +
+    SEP +
+    E.res +
+    " **RES " +
+    c.character.resistance +
+    "%**\n" +
+    E.attack +
+    " **Tấn công: " +
+    engine.damage(state, c, "attack") +
+    " damage · +" +
+    t.attackMana +
+    " MP**\n" +
+    SKILL_ICONS[c.classKey] +
+    " **" +
+    c.combat.skillName +
+    ": " +
+    engine.damage(state, c, "skill") +
+    " damage · −" +
+    t.skillCost +
+    " MP**\n" +
+    E.defense +
+    " **Phòng thủ: nhận " +
+    engine.counter(state, c, "defend") +
+    " damage · +" +
+    t.defendMana +
+    " MP**\n*Damage cố định, không Crit, không Miss. " +
+    c.classDescription +
+    "*"
+  );
+}
+function generatedEffects(state, c) {
+  const flags = {
+    debt_bound:
+      "Khế ước sinh lực: dấu nợ được giữ từ đầu run, cần tại cửa thu nợ tầng 12 trở đi.",
+    mana_fracture:
+      "Mana Fracture: skill giảm 1 MP (tối thiểu 1); đòn thường +0 MP, phòng thủ giữ mức MP của class.",
+    mirror_bound:
+      "Khế ước Gương: nhịp combat tầng 8 được giữ nguyên cho tầng 14.",
+    memory_1: "Nhịp tầng 1 đã niêm phong cho Gương tầng 12.",
+    memory_8: "Nhịp tầng 8 đã niêm phong cho Gương tầng 14.",
+  };
+  return (
+    c.classDescription +
+    (c.classKey === "necromancer"
+      ? "\n**Ward:** " + state.classCharges.ward + " charge."
+      : "") +
+    "\n" +
+    (state.flags.map((f) => "• " + (flags[f] || f)).join("\n") ||
+      "Chưa có hiệu ứng xuyên tầng.")
+  );
+}
+function generatedRules(c) {
+  const date = (v) =>
+    new Date(v).toLocaleString("vi-VN", { timeZone: "Asia/Bangkok" });
+  return (
+    "• **Perfect Chain:** " +
+    c.character.name +
+    " cố định · 15 tầng · " +
+    c.stepCount +
+    " bước. Sai một hành động làm attempt thất bại ngay; bấm **Chơi lại từ tầng 1** để thử lại.\n" +
+    "• HP, MP, hiệu ứng, Ward và lựa chọn event giữ xuyên tầng. Mỗi bước có tín hiệu riêng, kể cả thứ tự nhịp đã ghi ở tầng trước.\n" +
+    "• " +
+    c.classDescription +
+    "\n" +
+    "• MP và HP áp dụng theo delta cố định của challenge; phản công xảy ra trước khi chuyển tầng. Không Crit, Miss hoặc RNG trong run.\n" +
+    "• Không mang đồ, vé, bình, cược hoặc chỉ số từ Sinh tồn 999 vào Tháp. Hai mode tồn tại độc lập.\n" +
+    "• Thưởng " +
+    money(c.reward.coins) +
+    " " +
+    appEmoji("coin", "🪙") +
+    " + " +
+    money(c.reward.diamonds) +
+    " " +
+    appEmoji("gem", "💎") +
+    " một lần/challenge/người/server. Chơi lại không nhận thêm.\n" +
+    "• Đổi tuần lúc 00:00 thứ Hai (UTC+7), xoay đủ 7 class trước khi lặp. Mở " +
+    date(c.startsAt) +
+    "; đóng " +
+    date(c.endsAt) +
+    ".\n" +
+    "• Snapshot đã kiểm chứng được khóa suốt tuần. Seed commitment: **" +
+    c.seedCommitment +
+    "**. Hash lời giải: **" +
+    c.solutionHash +
+    "**. Seed thật chỉ được admin xuất sau khi hết tuần."
+  );
+}
+function payloadGenerated(row, state, c, result, now = Date.now()) {
+  const live = catalog.playable(c, now),
+    e = engine.current(state, c).encounter;
+  const embed = new EmbedBuilder()
+    .setColor(color(state, c))
+    .setTitle("🗼 THÁP ĐỊNH MỆNH · " + c.weekLabel)
+    .setDescription(
+      (row.user_id ? "👤 <@" + row.user_id + ">\n" : "") +
+        "**" +
+        c.character.name +
+        " · 15 tầng · " +
+        c.stepCount +
+        " bước**" +
+        (!live ? "\n⏰ Challenge đã hết hạn. Chỉ xem kết quả." : ""),
+    )
+    .setFooter(footer(state, c));
+  addTextFields(
+    embed,
+    "🔗 Perfect Chain",
+    "Tầng **" +
+      state.floor +
+      "/15** · Bước **" +
+      Math.min(state.routeStep + 1, c.stepCount) +
+      "/" +
+      c.stepCount +
+      "**\nChain chính xác: **" +
+      state.routeStep +
+      " hành động liên tiếp**.\nSai một hành động sẽ phải chơi lại từ tầng 1.",
+  );
+  addTextFields(
+    embed,
+    SKILL_ICONS[c.classKey] + " " + c.character.name,
+    state.status === "playing" && e.type === "combat"
+      ? generatedStats(state, c)
+      : resources(state),
+  );
+  if (state.status === "playing")
+    addTextFields(
+      embed,
+      encounterIcon(e) + " " + (e.type === "combat" ? "Đối thủ" : "Tình huống"),
+      generatedEncounter(state, c),
+    );
+  if (state.flags.length)
+    addTextFields(
+      embed,
+      E.rift + " Hiệu ứng xuyên tầng",
+      generatedEffects(state, c),
+    );
+  addTextFields(
+    embed,
+    "📍 Tiến trình tuần",
+    "Đã vượt: **" +
+      state.cleared +
+      "/15**" +
+      SEP +
+      "Cao nhất: **" +
+      result.best_floor +
+      "/15**" +
+      SEP +
+      "Lần thử: **" +
+      (result.attempts + (state.status === "playing" ? 1 : 0)) +
+      "**",
+  );
+  const upcoming = catalog.upcoming(now);
+  addTextFields(
+    embed,
+    "🌱 Seed commitment",
+    c.seedCommitment +
+      (upcoming
+        ? "\n**" +
+          upcoming.weekLabel +
+          " · " +
+          upcoming.character.name +
+          "** (sắp mở): " +
+          upcoming.seedCommitment
+        : ""),
+  );
+  addTextFields(embed, "🏆 Phần thưởng", rewardText(state, c, result));
+  if (state.lastLog)
+    addTextFields(embed, "📜 Lượt vừa rồi", turnText(state, c));
+  if (state.status !== "playing")
+    addTextFields(
+      embed,
+      "🏁 KẾT QUẢ",
+      state.status === "completed"
+        ? "🏆 **Hoàn thành Perfect Chain " +
+            c.stepCount +
+            "/" +
+            c.stepCount +
+            " bước!**"
+        : "❌ " + state.failure,
+    );
+  const t = engine.current(state, c).transition;
+  const opts =
+    state.status === "playing"
+      ? engine.actions(state, c)
+      : [{ action: "replay", label: "Chơi lại từ tầng 1" }];
+  const labels =
+    e.type === "combat"
+      ? {
+          attack: "+" + t.attackMana + " MP",
+          skill: "−" + t.skillCost + " MP",
+          defend: "+" + t.defendMana + " MP",
+        }
+      : {};
+  const components = chunkRows(
+    opts.map((x) =>
+      generatedButton(
+        row,
+        state,
+        c,
+        x.action,
+        state.status === "playing" ? labels[x.action] || x.label : x.label,
+        !live || x.disabled,
+      ),
+    ),
+  );
+  components.push(
+    new ActionRowBuilder().addComponents([
+      ...Object.entries(tabs).map(([tab, label]) =>
+        generatedButton(row, state, c, "view_" + tab, label),
+      ),
+      generatedButton(row, state, c, "top", "Bảng xếp hạng tuần"),
+    ]),
+  );
+  return { embeds: [embed], components, allowedMentions: { parse: [] } };
+}
+function privateGenerated(row, state, c, source, tab) {
+  const embed = new EmbedBuilder()
+    .setColor(color(state, c))
+    .setTitle("🗼 " + tabs[tab] + " · THÁP ĐỊNH MỆNH")
+    .setDescription(
+      "**" +
+        c.character.name +
+        "** · Tầng **" +
+        state.floor +
+        "/15** · Bước **" +
+        Math.min(c.stepCount, state.routeStep + 1) +
+        "/" +
+        c.stepCount +
+        "**",
+    )
+    .setFooter(footer(state, c));
+  const text =
+    tab === "stats"
+      ? statsText(state, c) + "\n" + c.classDescription
+      : tab === "effects"
+        ? generatedEffects(state, c)
+        : tab === "rules"
+          ? generatedRules(c)
+          : state.status === "playing"
+            ? generatedEncounter(state, c) +
+              (engine.current(state, c).encounter.type === "combat"
+                ? "\n" + generatedStats(state, c)
+                : "")
+            : state.status === "completed"
+              ? "🏆 Challenge đã hoàn thành."
+              : "❌ " + state.failure;
+  addTextFields(embed, tabs[tab], text);
+  return {
+    content: "",
+    embeds: [embed],
+    components: chunkRows(
+      Object.entries(tabs).map(([t, label]) =>
+        generatedButton(
+          row,
+          state,
+          c,
+          "view_" + t,
+          label,
+          t === tab,
+          t === tab,
+          source,
+        ),
+      ),
+    ),
+    allowedMentions: { parse: [] },
+  };
+}
