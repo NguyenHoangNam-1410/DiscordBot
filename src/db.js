@@ -1159,4 +1159,38 @@ runMigration(37, "hardcore profile statistics: kills, killers and boss tallies",
   `);
 });
 
+runMigration(38, "class floor 500 exclusive avatar rings", () => {
+  if (
+    !db
+      .prepare("PRAGMA table_info(profile_loadouts)")
+      .all()
+      .some((column) => column.name === "avatar_ring_id")
+  )
+    db.exec("ALTER TABLE profile_loadouts ADD COLUMN avatar_ring_id TEXT");
+  const { ringForAchievement } = require("./services/avatarRingCatalog");
+  // Previously claimed milestones receive only the new cosmetic, never currency again.
+  const claims = db
+    .prepare(
+      "SELECT * FROM achievement_claims WHERE achievement_id LIKE 'hc_class_%_500' ORDER BY claimed_at,achievement_id",
+    )
+    .all();
+  for (const claim of claims) {
+    const ring = ringForAchievement(claim.achievement_id);
+    if (!ring) continue;
+    const args = [claim.guild_id, claim.user_id, ring.id, claim.claimed_at];
+    db.prepare(
+      "INSERT OR IGNORE INTO profile_cosmetics(guild_id,user_id,cosmetic_id,acquired_at) VALUES(?,?,?,?)",
+    ).run(...args);
+    db.prepare(
+      "INSERT OR IGNORE INTO user_inventory(guild_id,user_id,item_id,quantity,acquired_at,updated_at) VALUES(?,?,?,1,?,?)",
+    ).run(...args, claim.claimed_at);
+    db.prepare(
+      "INSERT OR IGNORE INTO profile_loadouts(guild_id,user_id,color_id,updated_at) VALUES(?,?,'color_red',?)",
+    ).run(claim.guild_id, claim.user_id, claim.claimed_at);
+    db.prepare(
+      "UPDATE profile_loadouts SET avatar_ring_id=? WHERE guild_id=? AND user_id=? AND avatar_ring_id IS NULL",
+    ).run(ring.id, claim.guild_id, claim.user_id);
+  }
+});
+
 module.exports = { db, dbPath, runMigration };

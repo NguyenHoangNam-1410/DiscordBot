@@ -1,5 +1,6 @@
 const { db } = require("../db");
 const hardcoreRepository = require("./hardcoreRepository");
+const { AVATAR_RINGS } = require("./avatarRingCatalog");
 
 const SURVIVAL_FRAMES = Object.freeze([
   {
@@ -23,6 +24,7 @@ const SURVIVAL_FRAMES = Object.freeze([
 ]);
 
 const CATALOG = Object.freeze([
+  ...AVATAR_RINGS,
   {
     id: "color_black",
     type: "color",
@@ -181,9 +183,21 @@ function ownsCosmetic(guildId, userId, cosmeticId) {
 function getCosmetic(cosmeticId) {
   return BY_ID.get(String(cosmeticId)) || null;
 }
+function assertAchievementReward(guildId, userId, item) {
+  if (
+    item?.achievementOnly &&
+    !db
+      .prepare(
+        "SELECT 1 FROM achievement_claims WHERE guild_id=? AND user_id=? AND achievement_id=?",
+      )
+      .get(String(guildId), String(userId), item.achievementId)
+  )
+    throw new Error("ACHIEVEMENT_REQUIRED");
+}
 function grantCosmetic(guildId, userId, cosmeticId, now = Date.now()) {
   const item = getCosmetic(cosmeticId);
   if (!item) throw new Error("UNKNOWN_COSMETIC");
+  assertAchievementReward(guildId, userId, item);
   ensureProfile(guildId, userId, now);
   const result = grantStatement.run(
     String(guildId),
@@ -191,6 +205,14 @@ function grantCosmetic(guildId, userId, cosmeticId, now = Date.now()) {
     item.id,
     now,
   );
+  if (item.type === "avatar_ring") {
+    db.prepare(
+      "INSERT OR IGNORE INTO user_inventory(guild_id,user_id,item_id,quantity,acquired_at,updated_at) VALUES(?,?,?,1,?,?)",
+    ).run(String(guildId), String(userId), item.id, now, now);
+    db.prepare(
+      "UPDATE profile_loadouts SET avatar_ring_id=?,updated_at=? WHERE guild_id=? AND user_id=? AND avatar_ring_id IS NULL",
+    ).run(item.id, now, String(guildId), String(userId));
+  }
   return { item, newlyOwned: result.changes > 0 };
 }
 function equipCosmetic(guildId, userId, cosmeticId, now = Date.now()) {
@@ -199,8 +221,12 @@ function equipCosmetic(guildId, userId, cosmeticId, now = Date.now()) {
   ensureProfile(guildId, userId, now);
   if (!ownsCosmetic(guildId, userId, item.id))
     throw new Error("COSMETIC_NOT_OWNED");
+  assertAchievementReward(guildId, userId, item);
+  const column = item.type === "avatar_ring" ? "avatar_ring_id" : "color_id";
   db.prepare(
-    "UPDATE profile_loadouts SET color_id=?,updated_at=? WHERE guild_id=? AND user_id=?",
+    "UPDATE profile_loadouts SET " +
+      column +
+      "=?,updated_at=? WHERE guild_id=? AND user_id=?",
   ).run(item.id, now, String(guildId), String(userId));
   return getProfileAppearance(guildId, userId);
 }
@@ -226,10 +252,16 @@ function getProfileAppearance(guildId, userId) {
   const frame =
     [...SURVIVAL_FRAMES].reverse().find((item) => bestFloor >= item.floor) ||
     null;
+  const avatarRing = getCosmetic(row.avatar_ring_id);
   return {
     color: getCosmetic(row.color_id) || getCosmetic("color_red"),
     bestFloor,
     frame,
+    avatarRing:
+      avatarRing?.type === "avatar_ring" &&
+      ownsCosmetic(guildId, userId, avatarRing.id)
+        ? avatarRing
+        : null,
   };
 }
 module.exports = {
@@ -239,6 +271,7 @@ module.exports = {
   getProfileAppearance,
   getOwnedCosmetics,
   grantCosmetic,
+  assertAchievementReward,
   equipCosmetic,
   ownsCosmetic,
 };

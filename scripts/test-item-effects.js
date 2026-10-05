@@ -98,9 +98,9 @@ assert.equal(
   catalog.getCatalogItem("color_red").emoji || "🎨",
 );
 assert(
-  catalog.CATALOG.filter((item) => item.type !== "color").every(
-    (item) => !item.emoji,
-  ),
+  catalog.CATALOG.filter(
+    (item) => !["color", "avatar_ring"].includes(item.type),
+  ).every((item) => !item.emoji),
 );
 assert.equal(catalog.getCatalogItem(gacha.TICKETS[1]).tradeable, false);
 assert.equal(catalog.getCatalogItem(gacha.TICKETS[10]).tradeable, false);

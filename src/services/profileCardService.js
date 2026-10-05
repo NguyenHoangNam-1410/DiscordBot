@@ -1,3 +1,4 @@
+const { drawAvatarRing } = require("./profileAvatarRing");
 const path = require("node:path");
 const { createCanvas, loadImage, GlobalFonts } = require("@napi-rs/canvas");
 
@@ -64,12 +65,21 @@ async function fetchAvatar(avatarUrl) {
 // Nền tối pha nhẹ màu hồ sơ; chữ sáng dịu và màu nhấn được cân độ tương phản.
 function parseHex(color) {
   const hex = String(color).replace("#", "");
-  const full = hex.length === 3 ? [...hex].map((c) => c + c).join("") : hex.slice(0, 6);
+  const full =
+    hex.length === 3 ? [...hex].map((c) => c + c).join("") : hex.slice(0, 6);
   const value = Number.parseInt(full, 16);
-  return Number.isFinite(value) ? [(value >> 16) & 255, (value >> 8) & 255, value & 255] : [100, 116, 139];
+  return Number.isFinite(value)
+    ? [(value >> 16) & 255, (value >> 8) & 255, value & 255]
+    : [100, 116, 139];
 }
 function toHex(rgb) {
-  return `#${rgb.map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, "0")).join("")}`;
+  return `#${rgb
+    .map((v) =>
+      Math.round(Math.max(0, Math.min(255, v)))
+        .toString(16)
+        .padStart(2, "0"),
+    )
+    .join("")}`;
 }
 function mix(color, other, amount) {
   const from = parseHex(color);
@@ -113,7 +123,7 @@ function drawPanel(ctx, x, y, width, height, radius, alpha) {
   ctx.restore();
 }
 
-async function drawAvatar(ctx, avatarUrl, displayName, accent) {
+async function drawAvatar(ctx, avatarUrl, displayName, accent, avatarRing) {
   const x = 142;
   const y = 145;
   const radius = 82;
@@ -147,6 +157,7 @@ async function drawAvatar(ctx, avatarUrl, displayName, accent) {
   ctx.arc(x, y, radius + 7, 0, Math.PI * 2);
   ctx.stroke();
   ctx.restore();
+  if (avatarRing) drawAvatarRing(ctx, avatarRing, x, y);
 }
 
 function drawStat(ctx, x, y, label, value, accent) {
@@ -259,15 +270,23 @@ async function renderProfileCard({
   drawCardBackground(ctx, accent, appearance.frame);
   drawPanel(ctx, 34, 34, 220, 272, 18, 0.72);
   drawPanel(ctx, 282, 34, 684, 272, 18, 0.62);
-  await drawAvatar(ctx, avatarUrl, displayName, accent);
+  await drawAvatar(ctx, avatarUrl, displayName, accent, appearance.avatarRing);
 
   ctx.textAlign = "center";
   ctx.fillStyle = INK;
   ctx.font = `700 22px ${FONT_FAMILY}`;
-  ctx.fillText(fitText(ctx, displayName, 188), 144, 259);
+  ctx.fillText(
+    fitText(ctx, displayName, 188),
+    144,
+    appearance.avatarRing ? 265 : 259,
+  );
   ctx.fillStyle = INK_SOFT;
   ctx.font = `14px ${FONT_FAMILY}`;
-  ctx.fillText(fitText(ctx, `@${username}`, 180), 144, 283);
+  ctx.fillText(
+    fitText(ctx, `@${username}`, 180),
+    144,
+    appearance.avatarRing ? 289 : 283,
+  );
   ctx.textAlign = "left";
 
   ctx.fillStyle = INK_SOFT;

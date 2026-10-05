@@ -47,7 +47,7 @@ const EFFECT_GAMES = Object.freeze({
 });
 
 function itemGames(item) {
-  if (item?.type === "color") return [];
+  if (item?.type === "color" || item?.type === "avatar_ring") return [];
   const mapped = EFFECT_GAMES[item?.effect];
   if (mapped) return mapped;
   // Items without a game-specific effect are shared and remain visible in every filter.

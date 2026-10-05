@@ -20,6 +20,7 @@ const PAGE_SIZE = 10;
 
 const TYPE_LABELS = {
   color: "Màu hồ sơ",
+  avatar_ring: "Vòng avatar",
   chest: "Hộp quà",
   consumable: "Vật phẩm dùng",
 };

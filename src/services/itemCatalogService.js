@@ -452,17 +452,23 @@ const UTILITY_ITEMS = [
   },
 ];
 
-const COSMETICS = PROFILE_COSMETICS.map((item) => ({
-  ...item,
-  rarity: item.rarity || "rare",
-  price: shopPrice(10000),
-  shopEligible:
-    item.shopEligible === false ? false : !DEFAULT_PROFILE_ITEMS.has(item.id),
-  stackable: false,
-  tradeable: false,
-  effect: "profile_color",
-  description: "Đổi màu chủ đạo của thẻ /hoso.",
-}));
+const COSMETICS = PROFILE_COSMETICS.map((item) =>
+  item.type === "avatar_ring"
+    ? item
+    : {
+        ...item,
+        rarity: item.rarity || "rare",
+        price: shopPrice(10000),
+        shopEligible:
+          item.shopEligible === false
+            ? false
+            : !DEFAULT_PROFILE_ITEMS.has(item.id),
+        stackable: false,
+        tradeable: false,
+        effect: "profile_color",
+        description: "Đổi màu chủ đạo của thẻ /hoso.",
+      },
+);
 const RETIRED_SHARED_EFFECTS = new Set([
   "baucua_magnifier",
   "baucua_small_lens",

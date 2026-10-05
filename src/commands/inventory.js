@@ -11,6 +11,7 @@ const TYPE_NAMES = {
   consumable: "VẬT PHẨM DÙNG",
   chest: "HỘP QUÀ",
   color: "MÀU HỒ SƠ",
+  avatar_ring: "VÒNG AVATAR · THÀNH TỰU",
   gacha: "VÉ GACHA",
 };
 module.exports = {

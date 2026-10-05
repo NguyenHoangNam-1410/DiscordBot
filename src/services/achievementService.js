@@ -1,3 +1,5 @@
+const { ringForAchievement } = require("./avatarRingCatalog");
+const { grantCosmetic } = require("./profileCosmeticService");
 const { db } = require("../db");
 const { getAccount, creditCoins } = require("./economyService");
 const { addDiamonds } = require("./playerLevelService");
@@ -1307,6 +1309,7 @@ const classFloorAchievements = Object.entries(HARDCORE_CLASSES).flatMap(([key, n
     target: tier.floor,
     reward: tier.reward,
     diamonds: tier.diamonds,
+    cosmetic: ringForAchievement("hc_class_" + key + "_" + tier.tag)?.id || null,
     metric: `hcClass_${key}`,
   })),
 );
@@ -1602,6 +1605,7 @@ function claimAchievements(guildId, userId, now = Date.now()) {
           operationId: `achievement-diamonds:${guildId}:${userId}:${item.id}`,
           now,
         });
+      if (item.cosmetic) grantCosmetic(guildId, userId, item.cosmetic, now);
     }
     return available;
   })();

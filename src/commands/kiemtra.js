@@ -1,4 +1,8 @@
 const {
+  ringForAchievement,
+  avatarRingRewardText,
+} = require("../services/avatarRingCatalog");
+const {
   EmbedBuilder,
   MessageFlags,
   ActionRowBuilder,
@@ -71,6 +75,7 @@ function achievementLine(item) {
   const rewards = [
     item.reward ? `${formatCoins(item.reward)} :coin:` : null,
     item.diamonds ? `${item.diamonds} :gem:` : null,
+    ringForAchievement(item.id)?.name || null,
   ]
     .filter(Boolean)
     .join(" + ");
@@ -348,7 +353,8 @@ function build(guildId, user, key, member = null) {
     const rewards = claimAchievements(guildId, userId);
     return base("🏆 NHẬN THÀNH TỰU").setDescription(
       rewards.length
-        ? `Đã nhận **${rewards.length}** thành tựu: **${formatCoins(rewards.reduce((sum, item) => sum + item.reward, 0))} :coin:** + **${rewards.reduce((sum, item) => sum + (item.diamonds || 0), 0)} :gem:**.`
+        ? `Đã nhận **${rewards.length}** thành tựu: **${formatCoins(rewards.reduce((sum, item) => sum + item.reward, 0))} :coin:** + **${rewards.reduce((sum, item) => sum + (item.diamonds || 0), 0)} :gem:**.` +
+            avatarRingRewardText(rewards)
         : "Chưa có thành tựu mới để nhận.",
     );
   }

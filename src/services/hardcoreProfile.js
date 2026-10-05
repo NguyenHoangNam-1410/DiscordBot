@@ -11,6 +11,8 @@ const {
 const { db } = require("../db");
 const { CLASSES } = require("./hardcoreStats");
 const { formatCoins } = require("../utils/economy");
+const { AVATAR_RINGS } = require("./avatarRingCatalog");
+const { getProfileAppearance, ownsCosmetic } = require("./profileCosmeticService");
 
 const HISTORY_PAGE = 8;
 const TOP_PAGE = 10;
@@ -106,10 +108,43 @@ function tabEmbed(guildId, user, tab, page, overview) {
   const s = gatherStats(guildId, user.id);
   const t = s.totals;
   if (tab === "class") {
-    const lines = s.byClass.map(
-      (c) =>
-        `**${classLabel(c.class_key)}** — ${c.runs} ván · cao nhất tầng **${c.best}** · TB ${Math.round(c.avg)} · rút ${c.escapes} · chết ${c.deaths}`,
-    );
+    const equipped = getProfileAppearance(guildId, user.id).avatarRing;
+    const lines = s.byClass.map((c) => {
+      const ring = AVATAR_RINGS.find((item) => item.classKey === c.class_key);
+      const reward = ring
+        ? ownsCosmetic(guildId, user.id, ring.id)
+          ? ring.emoji +
+            " **" +
+            ring.name +
+            "** · " +
+            (equipped?.id === ring.id
+              ? "Đang trang bị"
+              : "Đã sở hữu · /vatpham sudung để trang bị")
+          : ring.emoji +
+            " **" +
+            ring.name +
+            "** · " +
+            (c.best >= 500
+              ? "Đủ điều kiện · nhận thưởng thành tựu để mở"
+              : "Mở qua thành tựu tầng 500")
+        : "";
+      return (
+        "**" +
+        classLabel(c.class_key) +
+        "** — " +
+        c.runs +
+        " ván · cao nhất tầng **" +
+        c.best +
+        "** · TB " +
+        Math.round(c.avg) +
+        " · rút " +
+        c.escapes +
+        " · chết " +
+        c.deaths +
+        (reward ? "\n↳ " + reward : "")
+      );
+    });
+
     return embed
       .setTitle("🧙 SINH TỒN · THEO CLASS")
       .setDescription(clip(`${head}\n\n${lines.join("\n") || "Chưa có ván nào được lưu (từ bản 2.0)."}`))

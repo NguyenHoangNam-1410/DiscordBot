@@ -1,4 +1,8 @@
 const {
+  ringForAchievement,
+  avatarRingRewardText,
+} = require("../services/avatarRingCatalog");
+const {
   SlashCommandBuilder,
   EmbedBuilder,
   MessageFlags,
@@ -11,7 +15,7 @@ const { formatCoins } = require("../utils/economy");
 
 function line(item) {
   const mark = item.claimed ? "✅" : item.complete ? "🎁" : "▫️";
-  return `${mark} **${item.name}** — ${item.progress}/${item.target}\n↳ ${item.description} · ${formatCoins(item.reward)} :coin:`;
+  return `${mark} **${item.name}** — ${item.progress}/${item.target}\n↳ ${item.description} · ${formatCoins(item.reward)} :coin: + ${item.diamonds || 0} :gem:${ringForAchievement(item.id) ? " + " + ringForAchievement(item.id).name : ""}`;
 }
 module.exports = {
   data: new SlashCommandBuilder()
@@ -42,7 +46,9 @@ module.exports = {
           flags: MessageFlags.Ephemeral,
         });
       return interaction.reply({
-        content: `🏅 Đã nhận **${rewards.length} thành tựu**, tổng cộng **${formatCoins(rewards.reduce((sum, item) => sum + item.reward, 0))} :coin:**.`,
+        content:
+          `🏅 Đã nhận **${rewards.length} thành tựu**, tổng cộng **${formatCoins(rewards.reduce((sum, item) => sum + item.reward, 0))} :coin:** + **${rewards.reduce((sum, item) => sum + (item.diamonds || 0), 0)} :gem:**.` +
+          avatarRingRewardText(rewards),
       });
     }
     const achievements = getAchievements(

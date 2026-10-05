@@ -1,3 +1,4 @@
+const { avatarRingRewardText } = require("../services/avatarRingCatalog");
 const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const { claimMissions, checkIn } = require("../services/progressionService");
 const { claimAchievements } = require("../services/achievementService");
@@ -54,7 +55,8 @@ function claimReply(interaction, type) {
     const rewards = claimAchievements(guildId, userId);
     if (rewards.length)
       lines.push(
-        `🏅 **Thành tựu** (${rewards.length}): **${formatCoins(rewards.reduce((sum, item) => sum + item.reward, 0))} :coin:** + **${rewards.reduce((sum, item) => sum + (item.diamonds || 0), 0)} :gem:**`,
+        `🏅 **Thành tựu** (${rewards.length}): **${formatCoins(rewards.reduce((sum, item) => sum + item.reward, 0))} :coin:** + **${rewards.reduce((sum, item) => sum + (item.diamonds || 0), 0)} :gem:**` +
+          avatarRingRewardText(rewards),
       );
     else empty.push("Chưa có thành tựu mới để nhận.");
   }

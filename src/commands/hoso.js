@@ -61,7 +61,15 @@ function overviewField(summary) {
 function survivalField(appearance) {
   return {
     name: "🏔️ Sinh tồn",
-    value: `Tầng cao nhất đã vượt: **${number(appearance.bestFloor || 0)}**\n${appearance.frame ? `🖼️ **${appearance.frame.name}** · Đã mở vĩnh viễn` : "Khung hồ sơ: Bạc 333 · Vàng 666 · Kim cương 999"}`,
+    value:
+      `Tầng cao nhất đã vượt: **${number(appearance.bestFloor || 0)}**\n${appearance.frame ? `🖼️ **${appearance.frame.name}** · Đã mở vĩnh viễn` : "Khung hồ sơ: Bạc 333 · Vàng 666 · Kim cương 999"}` +
+      (appearance.avatarRing
+        ? "\n" +
+          appearance.avatarRing.emoji +
+          " **" +
+          appearance.avatarRing.name +
+          "** · Vòng avatar thành tựu tầng 500"
+        : "\nVòng avatar: vượt tầng 500 bằng từng class để mở"),
     inline: false,
   };
 }

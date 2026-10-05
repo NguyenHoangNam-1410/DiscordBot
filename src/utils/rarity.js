@@ -14,7 +14,8 @@ const LEGACY_RARITY_ICON = Object.freeze({
 });
 
 function itemIcon(item) {
-  if (item?.type === "color") return item.emoji || "🎨";
+  if (item?.type === "color" || item?.type === "avatar_ring")
+    return item.emoji || "🎨";
   return RARITY_ICON[item?.rarity] || LEGACY_RARITY_ICON[item?.rarity] || "▫️";
 }
 

@@ -6,6 +6,7 @@ const {
   getProfileAppearance,
   grantCosmetic,
   equipCosmetic,
+  assertAchievementReward,
 } = require("./profileCosmeticService");
 const { getCatalogItem, listCatalog } = require("./itemCatalogService");
 const { compareItems } = require("./itemGameService");
@@ -364,6 +365,7 @@ function getInventoryQuantity(guildId, userId, itemId) {
 function addInventory(guildId, userId, itemId, quantity = 1, now = Date.now()) {
   const item = getCatalogItem(itemId);
   if (!item) throw new Error("UNKNOWN_ITEM");
+  assertAchievementReward(guildId, userId, item);
   const amount = integer(quantity, 1, 1_000_000);
   if (!item.stackable && getInventoryQuantity(guildId, userId, itemId) > 0)
     return { duplicate: true, quantity: 1 };
@@ -428,7 +430,8 @@ const purchaseTx = db.transaction(
       !listing ||
       !listing.active ||
       !listing.catalog ||
-      listing.catalog.retired
+      listing.catalog.retired ||
+      listing.catalog.achievementOnly
     )
       throw new Error("SHOP_ITEM_NOT_FOUND");
     getProfileAppearance(guildId, userId);
