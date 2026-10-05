@@ -445,6 +445,115 @@ async function run() {
   assert.equal(robber.adventurerRescue, undefined);
   assert.equal(robber.debts.length, 1);
 
+  // Robbing gives SSR/UR and exclusively harmful delayed consequences.
+  for (const [roll, rarity] of [
+    [0.249999, "cursed"],
+    [0.25, "legendary"],
+    [0.999999, "legendary"],
+  ]) {
+    const state = stats.createState("barbarian", 10);
+    state.floor = 6;
+    const values = [0.5, 0.5, 0.5, 0.5, roll, 0.5];
+    const event = core.makeSurprise(
+      state,
+      () => values.shift() ?? 0.5,
+      "adventurer",
+    );
+    assert.equal(event.robItem.rarity, rarity);
+    state.encounter = event;
+    core.act(state, session, "event_rob", () => 0.5);
+    assert.equal(state.items[0].rarity, rarity);
+    assert.equal(state.debts[0].good, false);
+  }
+  for (const [kindRoll, kind] of [
+    [0, "tax"],
+    [0.499999, "tax"],
+    [0.5, "hunter"],
+    [0.999999, "hunter"],
+  ]) {
+    const state = stats.createState("barbarian", 10);
+    state.floor = 6;
+    const values = [0.5, 0, kindRoll, 0.5, 0.5];
+    core.remember(state, "event_rob", () => values.shift() ?? 0.5);
+    assert.equal(state.debts[0].good, false);
+    assert.equal(state.debts[0].kind, kind);
+    assert.ok(state.debts[0].due >= 16 && state.debts[0].due <= 36);
+    state.floor = state.debts[0].due;
+    state.cleared = state.floor - 1;
+    // A sequence that misses RNGesus and then resolves the already locked debt.
+    const encounterRolls = [0.5, 0.5, 0.99];
+    state.encounter = core.generateEncounter(
+      state,
+      session,
+      () => encounterRolls.shift() ?? 0.5,
+    );
+    assert.equal(state.encounter.type, "memory");
+    state.hp = Math.floor(state.maxHp * 0.5);
+    const factor = state.eventPayoutFactor,
+      bonus = state.bonus,
+      floor = state.floor;
+    core.act(state, session, "next", () => 0.5);
+    assert.equal(state.bonus, bonus);
+    if (kind === "tax") {
+      assert.equal(state.eventPayoutFactor, factor * 0.9);
+      assert.equal(state.floor, floor + 1);
+    } else {
+      assert.equal(state.encounter.type, "combat");
+      assert.equal(state.encounter.rank, "elite");
+      assert.equal(state.encounter.name, "Bounty Hunter");
+      assert.equal(state.floor, floor);
+    }
+  }
+  const savedRob = stats.createState("barbarian", 10);
+  savedRob.floor = 6;
+  savedRob.encounter = {
+    type: "surprise",
+    kind: "adventurer",
+    robItem: structuredClone(core.ITEMS.common[0]),
+  };
+  savedRob.debts = [
+    { action: "event_rob", good: true, kind: "tax", due: 20 },
+    { action: "pray_rngesus", good: true, kind: "tax", due: 21 },
+  ];
+  core.normalize(savedRob);
+  assert.equal(savedRob.encounter.robItem.rarity, "legendary");
+  const fixedItem = savedRob.encounter.robItem.id;
+  core.normalize(savedRob);
+  assert.equal(savedRob.encounter.robItem.id, fixedItem);
+  assert.equal(savedRob.debts[0].good, false);
+  assert.equal(savedRob.debts[0].kind, "tax");
+  assert.equal(savedRob.debts[0].due, 20);
+  assert.equal(savedRob.debts[1].good, true);
+  savedRob.encounter = {
+    type: "memory",
+    debt: { action: "event_rob", good: true, kind: "hunter", due: 6 },
+  };
+  core.normalize(savedRob);
+  assert.equal(savedRob.encounter.debt.good, false);
+  const normalMemory = stats.createState("barbarian", 10);
+  core.remember(normalMemory, "pray_rngesus", () => 0);
+  assert.equal(normalMemory.debts[0].good, true);
+  const v2View = require("../src/services/hardcoreV2View");
+  assert.ok(v2View.encounterText(robber).length > 0);
+  const adventurerPreview = stats.createState("barbarian", 10);
+  adventurerPreview.floor = 6;
+  adventurerPreview.encounter = core.makeSurprise(
+    adventurerPreview,
+    () => 0.5,
+    "adventurer",
+  );
+  const adventurerText = v2View.encounterText(adventurerPreview);
+  assert.ok(adventurerText.includes("[SSR]"));
+  assert.ok(adventurerText.includes("50% mất 10% payout"));
+  assert.ok(
+    core
+      .actions(adventurerPreview)
+      .find((option) => option.action === "event_rob")
+      .label.includes("SSR/UR"),
+  );
+  for (const field of v2View.ratesFields("encounters"))
+    assert.ok(field.value.length <= 1024);
+
   serialize(ui.shopPayload(guildId, carrier));
   for (const filter of bag.FILTERS)
     serialize(ui.inventoryPayload(guildId, carrier, filter, 10));

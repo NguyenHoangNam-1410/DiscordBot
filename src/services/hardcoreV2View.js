@@ -424,9 +424,10 @@ function randomEventText(s) {
             ["30%", "Nhận đồ [SR]."],
           ]),
           option("Cướp", [
-            ["75%", "Nhận đồ [R]."],
+            ["75%", "Nhận đồ [SSR]."],
             ["25%", "Nhận đồ [UR], kèm curse."],
           ]),
+          "**Hậu quả của cướp sau 10–30 tầng:** 50% mất 10% payout; 50% gặp Bounty Hunter (Elite). Không có nhánh hồi máu hoặc bonus.",
         ],
       );
     case "fountain":
@@ -1502,7 +1503,12 @@ function ratesFields(category) {
       {
         name: `${eventIcon("memory")} The Tower Remembers`,
         value:
-          "- Dòng **The Tower will remember this** nghĩa là hành động vừa rồi tạo một hậu quả hẹn sau **10–30 tầng**, tối đa 8 hậu quả đang chờ.\n- Có thể đến từ bỏ qua event, hiến tế, cướp nhà thám hiểm, đập gương, bán hòm, hối lộ hoặc cầu nguyện RNGesus thành công.\n- Khi đến hạn: **50%** hồi 10–20% Max HP và bonus 10–30% cược; **25%** mất 10% payout; **25%** phải đánh Bounty Hunter. Kết quả đã khóa lúc ghi nhận, không đổi khi mở lại bảng. Boss/RNGesus có thể làm hậu quả xuất hiện muộn hơn.\n- **Cứu Lost Adventurer:** thay vì hậu quả ngẫu nhiên, nhận một lần hồi sinh 50% HP trong cùng khu vực. Chết bởi RNGesus → sang tầng kế; chết khi đánh quái → ở lại đánh tiếp. Dùng bảo hộ trước, không mất vé hồi sinh; hết hiệu lực khi sang khu vực khác.",
+          "- Dòng **The Tower will remember this** nghĩa là hành động vừa rồi tạo một hậu quả hẹn sau **10–30 tầng**, tối đa 8 hậu quả đang chờ.\n- Có thể đến từ bỏ qua event, hiến tế, đập gương, bán hòm, hối lộ hoặc cầu nguyện RNGesus thành công.\n- Khi đến hạn: **50%** hồi 10–20% Max HP và bonus 10–30% cược; **25%** mất 10% payout; **25%** phải đánh Bounty Hunter. Kết quả đã khóa lúc ghi nhận, không đổi khi mở lại bảng. Boss/RNGesus có thể làm hậu quả xuất hiện muộn hơn.\n- Lost Adventurer dùng cơ chế riêng bên dưới.",
+      },
+      {
+        name: `${eventIcon("adventurer")} Lost Adventurer · cứu / cướp`,
+        value:
+          "- **Cứu:** trả một bình, nhận R 70% / SR 30% và một lần bảo hộ trong cùng khu vực. Chết bởi RNGesus → hồi sinh 50% HP, sang tầng kế; chết khi đánh quái → hồi sinh 50% HP, ở lại đánh tiếp. Ưu tiên trước vé hồi sinh, hết hiệu lực khi dùng hoặc sang khu vực khác; không tạo hậu quả hẹn.\n- **Cướp:** nhận **SSR 75% / UR có nguyền 25%**. Sau **10–30 tầng**: **50% mất 10% payout**, **50% đánh Bounty Hunter (Elite)**. Không có nhánh hồi máu/bonus. Tối đa 8 hậu quả đang chờ; kết quả khóa khi ghi nhận.",
       },
       {
         name: `${eventIcon("echo")} Grave Echo`,

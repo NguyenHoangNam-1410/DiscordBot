@@ -177,6 +177,24 @@ function normalize(state) {
   state.reviveTickets = state.reviveTickets === 1 ? 1 : 0;
   expireAdventurer(state);
   const current = state.encounter;
+  // Apply the robbery rule to saved consequences without rerolling their locked kind.
+  for (const debt of state.debts || [])
+    if (debt.action === "event_rob") debt.good = false;
+  if (current?.type === "memory" && current.debt?.action === "event_rob")
+    current.debt.good = false;
+  if (
+    current?.type === "surprise" &&
+    current.kind === "adventurer" &&
+    current.robItem?.rarity === "common"
+  ) {
+    const index = Math.max(
+      0,
+      ITEMS.common.findIndex((item) => item.id === current.robItem.id),
+    );
+    current.robItem = structuredClone(
+      ITEMS.legendary[index % ITEMS.legendary.length],
+    );
+  }
   if (
     current?.type === "surprise" &&
     ["merchant", "diamond_shop"].includes(current.kind) &&
@@ -387,7 +405,7 @@ function remember(state, action, rng) {
   state.debts.push({
     action,
     due: state.floor + int(10, 30, rng),
-    good: rng() < 0.5,
+    good: rng() < 0.5 && action !== "event_rob",
     kind: rng() < 0.5 ? "tax" : "hunter",
     healRate: 0.1 + rng() * 0.1,
     bonusRate: 0.1 + rng() * 0.2,
@@ -659,7 +677,7 @@ function makeSurprise(state, rng, kind = null) {
   }
   if (kind === "adventurer") {
     e.rescueItem = randomItem(rng() < 0.3 ? "rare" : "common", rng);
-    e.robItem = randomItem(rng() < 0.25 ? "cursed" : "common", rng);
+    e.robItem = randomItem(rng() < 0.25 ? "cursed" : "legendary", rng);
   }
   if (kind === "fountain")
     e.enemy = world.makeEnemy(state, "mimic", "Blood Mimic", rng);
@@ -1292,7 +1310,7 @@ function surpriseActions(state) {
           label: "Cứu · 1 bình",
           disabled: state.potions < 1,
         },
-        { action: "event_rob", label: "Cướp · R/UR" },
+        { action: "event_rob", label: "Cướp · SSR/UR" },
       ],
       fountain: [{ action: "event_drink", label: "Uống" }],
       horadric: [
@@ -2009,7 +2027,7 @@ function act(state, session, action, rng) {
         }
       }
     } else if (e.type === "memory") {
-      if (e.debt.good) {
+      if (e.debt.good && e.debt.action !== "event_rob") {
         heal(state, state.maxHp * e.debt.healRate);
         state.bonus += Math.floor(state.stake * e.debt.bonusRate);
         state.lastLog = `${eventIcon("memory")} The Tower Remembers: hồi phục ${E.hp} HP; bonus +${Math.floor(state.stake * e.debt.bonusRate).toLocaleString("vi-VN")} xu vào thưởng của run.`;
