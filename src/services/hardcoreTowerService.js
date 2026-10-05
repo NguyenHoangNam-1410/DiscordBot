@@ -211,7 +211,11 @@ async function openTower(interaction) {
   );
 }
 async function handleTowerButton(interaction, logger = console) {
-  const [, id, turn, action] = interaction.customId.split(":");
+  const [, id, turn, action, originMessageId] = interaction.customId.split(":");
+  const detailTab = /^view_(stats|effects|encounter|rules)$/.exec(action)?.[1];
+  const sourceMessageId = detailTab
+    ? originMessageId || interaction.message.id
+    : interaction.message.id;
   const row = repo.session(id);
   if (
     !row ||
@@ -222,7 +226,9 @@ async function handleTowerButton(interaction, logger = console) {
       content: row ? notice.NOT_TOWER_OWNER : notice.NO_TOWER_SESSION,
       flags: MessageFlags.Ephemeral,
     });
-  await interaction.deferUpdate();
+  if (detailTab && !originMessageId)
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  else await interaction.deferUpdate();
   return withLock(
     key(row.guild_id, row.user_id, row.challenge_id),
     async () => {
@@ -233,11 +239,21 @@ async function handleTowerButton(interaction, logger = console) {
         if (current.channel_id !== interaction.channelId)
           throw Error("WRONG_CHANNEL");
         if (
-          current.message_id !== interaction.message.id ||
-          JSON.parse(current.state_json).turn !== Number(turn)
+          current.message_id !== sourceMessageId ||
+          (!detailTab && JSON.parse(current.state_json).turn !== Number(turn))
         )
           throw Error("STALE_ACTION");
         const view = require("./hardcoreTowerView");
+        if (detailTab)
+          return await interaction.editReply(
+            view.privatePayload(
+              current,
+              JSON.parse(current.state_json),
+              c,
+              sourceMessageId,
+              detailTab,
+            ),
+          );
         if (action === "top")
           return interaction.followUp({
             ...view.topPayload(repo.top(row.guild_id, c.challengeId), c),
@@ -258,6 +274,13 @@ async function handleTowerButton(interaction, logger = console) {
       } catch (error) {
         if (!notice[error.message])
           logger.error?.({ err: error }, "Tower action failed");
+        if (detailTab)
+          return interaction.editReply({
+            content:
+              notice[error.message] || "Không thể mở chi tiết Tháp lúc này.",
+            embeds: [],
+            components: [],
+          });
         return interaction.followUp({
           content:
             notice[error.message] ||

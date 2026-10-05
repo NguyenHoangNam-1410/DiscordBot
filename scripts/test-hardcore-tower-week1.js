@@ -61,11 +61,20 @@ function serialize(payload) {
       0,
     ) < 6000,
   );
-  for (const row of components)
+  for (const embed of embeds) {
+    assert((embed.fields || []).length <= 25);
+    for (const field of embed.fields || [])
+      assert(field.value.length > 0 && field.value.length <= 1024);
+  }
+  assert(components.length <= 5);
+  for (const row of components) {
+    assert(row.components.length <= 5);
     for (const button of row.components) {
       assert(button.label.length <= 80);
       assert(button.custom_id.length <= 100);
+      assert(button.emoji);
     }
+  }
   return JSON.stringify({ embeds, components });
 }
 async function main() {
@@ -86,6 +95,31 @@ async function main() {
       ],
       [15, 14, 0, 15],
     );
+    // Every reachable state, including failed branches, must render without changing the run.
+    function verifyUi(state) {
+      const before = JSON.stringify(state);
+      const row = { id: "a".repeat(32), user_id: "1234567890123456789" };
+      const result = {
+        attempts: 1,
+        best_floor: state.cleared,
+        reward_claimed_at: null,
+      };
+      serialize(view.payload(row, state, c, result, now));
+      for (const tab of ["stats", "effects", "encounter", "rules"])
+        serialize(
+          view.privatePayload(row, state, c, "1234567890123456789", tab),
+        );
+      assert.equal(JSON.stringify(state), before);
+      if (state.status === "playing")
+        for (const action of engine
+          .actions(state, c)
+          .filter((x) => !x.disabled)) {
+          const next = structuredClone(state);
+          engine.act(next, c, action.action);
+          verifyUi(next);
+        }
+    }
+    verifyUi(engine.createState(c));
     const expected = [
       [2, 100, 3],
       [3, 100, 1],
@@ -175,6 +209,36 @@ async function main() {
         if (correct === "skill")
           assert.equal(before.mana - state.mana, cost.mana);
       }
+      const afterUi = view
+        .payload(
+          { id: "test" },
+          state,
+          c,
+          { attempts: 1, best_floor: state.cleared, reward_claimed_at: null },
+          now,
+        )
+        .embeds[0].toJSON();
+      const log = afterUi.fields.find(
+        (x) => x.name === "📜 Lượt vừa rồi",
+      ).value;
+      if (before.hp !== state.hp)
+        assert(log.includes(before.hp + " → **" + state.hp + "**"));
+      if (before.mana !== state.mana)
+        assert(log.includes(before.mana + " → **" + state.mana + "**"));
+      if (i === 0) {
+        assert(log.includes("**HP quái**: 12 → **0**"));
+        assert(!log.includes("12 → **30**")); // The next enemy's HP is not the old enemy's result.
+      }
+      if (state.status === "completed") assert.equal(afterUi.color, 0x2ecc71);
+      else if (state.hp <= state.maxHp * 0.3)
+        assert.equal(afterUi.color, 0xe74c3c);
+      else
+        assert.equal(
+          afterUi.color,
+          engine.current(state, c).encounter.type === "combat"
+            ? 0xe67e22
+            : 0x3498db,
+        );
       assert.equal(state.actionHistory.length, i + 1);
       assert(state.actionHistory.every((x) => /^[0-9a-f]{64}$/.test(x)));
     }
@@ -425,6 +489,78 @@ async function main() {
     assert(oldLocked);
     assert.equal(repo.session(commandRow.id).message_id, "new-ui");
     assert.equal(repo.session(commandRow.id).state_json, commandRow.state_json);
+    // Opening and navigating ephemeral details cannot consume a turn, attempt, currency or reward.
+    let detailReply,
+      detailFlags,
+      detailUpdates = 0;
+    const panel = {
+      guildId: "t",
+      channelId: "c",
+      user: { id: "resume" },
+      message: { id: "new-ui" },
+      deferReply: async (p) => {
+        detailFlags = p.flags;
+      },
+      deferUpdate: async () => {
+        detailUpdates++;
+      },
+      editReply: async (p) => {
+        detailReply = p;
+        return p;
+      },
+      followUp: async () => {
+        throw Error("DETAIL_MUST_BE_PRIVATE");
+      },
+      reply: async (p) => {
+        detailReply = p;
+      },
+    };
+    const originalResult = JSON.stringify(
+      repo.result("t", "resume", c.challengeId),
+    );
+    const originalCoins = economy.getAccount("t", "resume").balance;
+    for (const tab of ["stats", "effects", "encounter", "rules"]) {
+      await service.handleTowerButton({
+        ...panel,
+        customId: "hardcore-tower:" + commandRow.id + ":0:view_" + tab,
+      });
+      assert.equal(detailFlags, 64);
+      serialize(detailReply);
+      assert(
+        detailReply.components[0]
+          .toJSON()
+          .components.every((x) => x.custom_id.endsWith(":new-ui")),
+      );
+      assert.equal(
+        repo.session(commandRow.id).state_json,
+        commandRow.state_json,
+      );
+      assert.equal(
+        JSON.stringify(repo.result("t", "resume", c.challengeId)),
+        originalResult,
+      );
+      assert.equal(economy.getAccount("t", "resume").balance, originalCoins);
+    }
+    const navigate = {
+      ...panel,
+      message: { id: "private-ui" },
+      customId: "hardcore-tower:" + commandRow.id + ":0:view_rules:new-ui",
+    };
+    await service.handleTowerButton(navigate);
+    assert.equal(detailUpdates, 1);
+    assert(serialize(detailReply).includes("Luật chơi"));
+    await service.handleTowerButton({ ...navigate, user: { id: "other" } });
+    assert.equal(detailReply.flags, 64);
+    assert(detailReply.content.includes("người chơi khác"));
+    await service.handleTowerButton({ ...navigate, channelId: "wrong" });
+    assert(detailReply.content.includes("kênh"));
+    assert.deepEqual(detailReply.components, []);
+    await service.handleTowerButton({
+      ...navigate,
+      customId: "hardcore-tower:" + commandRow.id + ":0:view_stats:old-ui",
+    });
+    assert(detailReply.content.includes("đã cũ"));
+    assert.equal(repo.session(commandRow.id).state_json, commandRow.state_json);
     const followups = [];
     const button = {
       guildId: "t",
@@ -466,6 +602,25 @@ async function main() {
       true,
     );
     assert.equal(JSON.parse(repo.session(commandRow.id).state_json).turn, 3);
+    // Like V2, old private tabs read the latest committed turn while their source board is still current.
+    const currentJson = repo.session(commandRow.id).state_json;
+    await service.handleTowerButton(navigate);
+    assert(detailReply.embeds[0].toJSON().footer.text.includes("Lượt 3"));
+    assert.equal(repo.session(commandRow.id).state_json, currentJson);
+    Date.now = () => end;
+    await service.handleTowerButton(navigate);
+    serialize(detailReply);
+    assert.equal(repo.session(commandRow.id).state_json, currentJson);
+    Date.now = () => end + 86400000;
+    await service.handleTowerButton(navigate);
+    assert(detailReply.content.includes("hết hạn"));
+    assert.deepEqual(detailReply.components, []);
+    assert.equal(repo.session(commandRow.id).state_json, currentJson);
+    Date.now = () => now;
+    repo.message(commandRow.id, "relocated-ui");
+    await service.handleTowerButton(navigate);
+    assert(detailReply.content.includes("đã cũ"));
+    assert.equal(repo.session(commandRow.id).state_json, currentJson);
   } finally {
     Date.now = originalClock;
   }
@@ -500,7 +655,7 @@ async function main() {
   assert(top[0].completed_at != null);
   assert(top.find((x) => x.user_id === reward.user_id).completed_at != null);
   console.log(
-    "Tower week 1: unique solution (201 states), wrong branches, exact UI damage, persistence, concurrent clicks, rollback, one-time reward, expiry, relocation and mode isolation passed.",
+    "Tower week 1: unique solution (201 states), wrong branches, V2 UI conventions, private read-only tabs, exact UI damage, persistence, concurrent clicks, rollback, one-time reward, expiry, relocation and mode isolation passed.",
   );
 }
 main()
