@@ -139,10 +139,43 @@ function rngesusFleeChance(state) {
     : 0;
   return (100 - Math.min(5, count) * 5) / 100;
 }
+function rngesusPrayerChance(state) {
+  return state.prayerBoost ? 0.6 : 0.3;
+}
+function expireAdventurer(state) {
+  const protector = state.adventurerRescue;
+  if (
+    protector &&
+    (state.floor < protector.from || state.floor > protector.until)
+  )
+    delete state.adventurerRescue;
+}
+function reviveAfterDeath(state, session, rng, reason) {
+  if (!["death", "rngesus"].includes(reason)) return false;
+  expireAdventurer(state);
+  const combat = state.encounter?.type === "combat";
+  const adventurer = state.adventurerRescue && (combat || reason === "rngesus");
+  if (!adventurer && !(state.reviveTickets > 0)) return false;
+  if (adventurer) delete state.adventurerRescue;
+  else state.reviveTickets--;
+  state.hp = Math.max(1, Math.ceil(state.maxHp * 0.5));
+  delete state.lastDeathCause;
+  state.lastLog += adventurer
+    ? "\n🤝 Lost Adventurer trở lại cứu bạn! The Tower remembered this. Hiệu lực cứu giúp đã dùng; giữ nguyên vé hồi sinh."
+    : "\n🎟️ Tự dùng 1 vé hồi sinh.";
+  if (!combat || reason === "rngesus") completeFloor(state, session, rng, 0);
+  // Set directly: checkpoint healing and regeneration must not alter the promised 50%.
+  state.hp = Math.max(1, Math.ceil(state.maxHp * 0.5));
+  state.lastLog += `\n❤️ Hồi sinh với **${state.hp}/${state.maxHp} HP**; ${combat ? "tiếp tục đánh quái tại tầng này" : "đi sang tầng kế tiếp"}.`;
+  return true;
+}
 function normalize(state) {
   if (!["2.0.0", "2.0.1"].includes(state.releaseVersion))
     throw new Error("UNSUPPORTED_HARDCORE_VERSION");
   recompute(state);
+  state.prayerBoost = Boolean(state.prayerBoost);
+  state.reviveTickets = state.reviveTickets === 1 ? 1 : 0;
+  expireAdventurer(state);
   const current = state.encounter;
   if (
     current?.type === "surprise" &&
@@ -465,6 +498,7 @@ function completeFloor(state, session, rng, reward = 1) {
   if (floor >= 100) state.completed = true;
   state.runDiamonds = runDiamondReward(state);
   state.floor = Math.min(999, floor + 1);
+  expireAdventurer(state);
   if (state.pendingBossChest) state.pendingMilestones.unshift("boss_chest");
   nextMilestone(state, session, rng);
 }
@@ -790,7 +824,8 @@ function generateEncounter(state, session, rng) {
       name: "RNGesus",
       fleeChance: rngesusFleeChance(state),
       fleeSuccess: rng() < rngesusFleeChance(state),
-      prayerSuccess: rng() < 0.3,
+      prayerChance: rngesusPrayerChance(state),
+      prayerSuccess: rng() < rngesusPrayerChance(state),
       prayerItem: randomItem("cursed", rng),
     };
   const due = state.debts.findIndex(
@@ -1376,7 +1411,10 @@ function actions(state) {
         label: "Hối lộ · 40% payout",
         disabled: payout(state) < 1000,
       },
-      { action: "pray", label: "Cầu nguyện · 30%" },
+      {
+        action: "pray",
+        label: `Cầu nguyện · ${Math.round((e.prayerChance ?? rngesusPrayerChance(state)) * 100)}%`,
+      },
     ];
   if (e.type === "echo")
     return [
@@ -1563,12 +1601,14 @@ function actSurprise(state, session, action, rng) {
       if (state.potions < 1) throw new Error("NO_RESCUE_POTIONS");
       state.potions--;
       receiveItem(state, e.rescueItem);
-      state.lastLog = `🤝 Cứu người: nhận ${e.rescueItem.name}.`;
+      const region = world.regionForFloor(state.floor);
+      state.adventurerRescue = { from: region.start, until: region.end };
+      state.lastLog = `🤝 Cứu người: nhận ${e.rescueItem.name}.\nThe Tower will remember this. Lost Adventurer sẽ cứu một lần trong ${region.name} (đến tầng ${region.end}), hồi sinh với 50% HP khi tử trận bởi RNGesus hoặc quái; không mất vé hồi sinh.`;
     } else {
       receiveItem(state, e.robItem);
       state.lastLog = `🗡️ Cướp: nhận ${e.robItem.name}.`;
+      remember(state, action, rng);
     }
-    remember(state, action, rng);
     completeFloor(state, session, rng, 0);
   } else if (k === "fountain") {
     if (e.roll < 0.6) {
@@ -1936,7 +1976,9 @@ function act(state, session, action, rng) {
       }
       if (action === "pray") {
         if (!e.prayerSuccess)
-          return die("Cầu nguyện RNGesus thất bại (nhánh 70%).");
+          return die(
+            `Cầu nguyện RNGesus thất bại (nhánh ${Math.round((1 - (e.prayerChance ?? rngesusPrayerChance(state))) * 100)}%).`,
+          );
         receiveItem(state, e.prayerItem);
         state.lastLog = `${eventIcon("rngesus")} RNGesus: cầu nguyện thành công, đã nhận **trang bị UR** kèm lời nguyền.`;
         remember(state, "pray_rngesus", rng);
@@ -2008,6 +2050,8 @@ module.exports = {
   initialize,
   normalize,
   rngesusFleeChance,
+  rngesusPrayerChance,
+  reviveAfterDeath,
   payout,
   rawPayout,
   heal,

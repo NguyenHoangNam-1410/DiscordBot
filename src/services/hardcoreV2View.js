@@ -323,8 +323,14 @@ function randomEventText(s) {
             : []),
         ]),
         option("Cầu nguyện", [
-          ["30%", "Sống và nhận **1 trang bị UR**, kèm lời nguyền."],
-          ["70%", "Chết."],
+          [
+            percent(e.prayerChance ?? core.rngesusPrayerChance(s)),
+            "Sống và nhận **1 trang bị UR**, kèm lời nguyền.",
+          ],
+          [
+            percent(1 - (e.prayerChance ?? core.rngesusPrayerChance(s))),
+            "Tử trận; Lost Adventurer hoặc vé hồi sinh cứu nếu còn.",
+          ],
         ]),
         "**Hối lộ:** cần payout ≥1.000 xu, mất 40% payout để thoát. **Đánh:** chết.",
       ],
@@ -409,16 +415,20 @@ function randomEventText(s) {
         ),
       ]);
     case "adventurer":
-      return show(e.name, "Chọn giúp đỡ hoặc cướp; đồ trùng tên tăng level.", [
-        option(`Cứu · trả 1 ${E.potion} bình máu`, [
-          ["70%", "Nhận đồ [R]."],
-          ["30%", "Nhận đồ [SR]."],
-        ]),
-        option("Cướp", [
-          ["75%", "Nhận đồ [R]."],
-          ["25%", "Nhận đồ [UR], kèm curse."],
-        ]),
-      ]);
+      return show(
+        e.name,
+        "Cứu người nhận một lần bảo hộ trong cùng khu vực: chết bởi RNGesus/quái thì hồi sinh 50% HP, ưu tiên trước vé hồi sinh. Đồ trùng tên tăng level.",
+        [
+          option(`Cứu · trả 1 ${E.potion} bình máu`, [
+            ["70%", "Nhận đồ [R]."],
+            ["30%", "Nhận đồ [SR]."],
+          ]),
+          option("Cướp", [
+            ["75%", "Nhận đồ [R]."],
+            ["25%", "Nhận đồ [UR], kèm curse."],
+          ]),
+        ],
+      );
     case "fountain":
       return show(e.name, "Uống để hồi phục hoặc gặp Blood Mimic.", [
         option("Uống", [
@@ -961,6 +971,19 @@ function embed(state, userId, result = null, sessionId = null) {
         : statLine(state, false, state.phase !== "upgrade")
       ).slice(0, 1024),
     });
+  const protections = [
+    ...(state.prayerBoost
+      ? ["🙏 Cầu nguyện RNGesus **60%** trong toàn run"]
+      : []),
+    ...(state.reviveTickets ? ["🎟️ **1** vé hồi sinh · 50% HP"] : []),
+    ...(state.adventurerRescue
+      ? [
+          `🤝 Lost Adventurer bảo hộ một lần đến tầng **${state.adventurerRescue.until}** · ưu tiên trước vé`,
+        ]
+      : []),
+  ];
+  if (protections.length)
+    e.addFields({ name: "Vé & bảo hộ", value: protections.join("\n") });
   addTextFields(
     e,
     state.encounter.type === "combat" ? `${E.attack} Đối thủ` : "⚠️ Tình huống",
@@ -1229,7 +1252,7 @@ function privatePayload(
   if (tab === "items") {
     e.addFields({
       name: "Vật tư",
-      value: `${E.potion} ${state.potions} bình · hồi ${percent(state.potionRate)} Max HP, tối thiểu 20.\n${E.ticket} ${state.escapeTokens} vé (tối đa 1); tự cứu khi bỏ chạy RNGesus thất bại.`,
+      value: `${E.potion} ${state.potions} bình · hồi ${percent(state.potionRate)} Max HP, tối thiểu 20.\n${E.ticket} ${state.escapeTokens} vé thoát hiểm (tối đa 1); tự cứu khi bỏ chạy RNGesus thất bại.\n🎟️ Vé hồi sinh: ${state.reviveTickets || 0} · hồi 50% HP. 🙏 Cầu nguyện: ${percent(core.rngesusPrayerChance(state))}.${state.adventurerRescue ? `\n🤝 Lost Adventurer bảo hộ một lần đến tầng ${state.adventurerRescue.until}, dùng trước vé hồi sinh.` : ""}`,
     });
     for (const item of state.items.slice(page * 5, page * 5 + 5))
       e.addFields({
@@ -1479,7 +1502,7 @@ function ratesFields(category) {
       {
         name: `${eventIcon("memory")} The Tower Remembers`,
         value:
-          "- Dòng **The Tower will remember this** nghĩa là hành động vừa rồi tạo một hậu quả hẹn sau **10–30 tầng**, tối đa 8 hậu quả đang chờ.\n- Có thể đến từ bỏ qua event, hiến tế, cứu/cướp nhà thám hiểm, đập gương, bán hòm, hối lộ hoặc cầu nguyện RNGesus thành công.\n- Khi đến hạn: **50%** hồi 10–20% Max HP và bonus 10–30% cược; **25%** mất 10% payout; **25%** phải đánh Bounty Hunter. Kết quả đã khóa lúc ghi nhận, không đổi khi mở lại bảng. Boss/RNGesus có thể làm hậu quả xuất hiện muộn hơn.",
+          "- Dòng **The Tower will remember this** nghĩa là hành động vừa rồi tạo một hậu quả hẹn sau **10–30 tầng**, tối đa 8 hậu quả đang chờ.\n- Có thể đến từ bỏ qua event, hiến tế, cướp nhà thám hiểm, đập gương, bán hòm, hối lộ hoặc cầu nguyện RNGesus thành công.\n- Khi đến hạn: **50%** hồi 10–20% Max HP và bonus 10–30% cược; **25%** mất 10% payout; **25%** phải đánh Bounty Hunter. Kết quả đã khóa lúc ghi nhận, không đổi khi mở lại bảng. Boss/RNGesus có thể làm hậu quả xuất hiện muộn hơn.\n- **Cứu Lost Adventurer:** thay vì hậu quả ngẫu nhiên, nhận một lần hồi sinh 50% HP trong cùng khu vực. Chết bởi RNGesus → sang tầng kế; chết khi đánh quái → ở lại đánh tiếp. Dùng bảo hộ trước, không mất vé hồi sinh; hết hiệu lực khi sang khu vực khác.",
       },
       {
         name: `${eventIcon("echo")} Grave Echo`,
@@ -1491,7 +1514,7 @@ function ratesFields(category) {
       {
         name: `${eventIcon("rngesus")} RNGesus · không được rút thưởng`,
         value:
-          "Chaos trên bảng là tỷ lệ gặp RNGesus. RNGesus không thể bị đánh bại.\n- **Đánh:** chết ngay, mất cược/thưởng tạm giữ.\n- **Hối lộ:** cần payout hiển thị **≥1.000 xu**, đúng 1.000 vẫn được. Thoát an toàn, giảm hệ số payout 40%; thưởng tích lũy về sau cũng chịu hệ số đã giảm.\n- **Cầu nguyện:** **30%** thành công và nhận chắc chắn **1 trang bị UR kèm lời nguyền**; **70%** thất bại và chết.\nHối lộ hoặc cầu nguyện thành công ghi nhận The Tower Remembers.",
+          "Chaos trên bảng là tỷ lệ gặp RNGesus. RNGesus không thể bị đánh bại.\n- **Đánh:** chết ngay, mất cược/thưởng tạm giữ.\n- **Hối lộ:** cần payout hiển thị **≥1.000 xu**, đúng 1.000 vẫn được. Thoát an toàn, giảm hệ số payout 40%; thưởng tích lũy về sau cũng chịu hệ số đã giảm.\n- **Cầu nguyện:** **30%** thành công và nhận chắc chắn **1 trang bị UR kèm lời nguyền**; **70%** thất bại và tử trận. Mang vé cầu nguyện từ túi Sinh tồn: **60%** thành công, **40%** thất bại, áp dụng toàn run. Lost Adventurer hoặc vé hồi sinh cứu khi tử trận nếu còn.\nHối lộ hoặc cầu nguyện thành công ghi nhận The Tower Remembers.",
       },
       {
         name: `${E.ticket} Bỏ chạy và vé thoát hiểm`,
@@ -1500,6 +1523,11 @@ function ratesFields(category) {
       },
     ],
     rewards: [
+      {
+        name: "Cửa hàng & túi Sinh tồn",
+        value:
+          "Dùng /sinhton cuahang và /sinhton tuido. Ba vé cố định: chạy RNGesus 100 💎, cầu nguyện ×2 100 💎, hồi sinh 300 💎. Năm trang bị chọn đều từ toàn bộ pool, đổi mỗi ngày lúc 00:00 Việt Nam: R 10.000 / SR 50.000 / SSR 100.000 / UR 200.000 xu. Mua không giới hạn lượt. Trước run chọn tối đa 5 món khác nhau (Lv.1), mỗi loại vé một chiếc; xem chỉ số rồi Bắt đầu. Không hoàn đồ/vé khi chết, rút, bỏ hoặc hết hạn run. Vé hồi sinh tự cứu một lần với 50% HP; ở lại đánh tiếp nếu chết khi đánh quái, sang tầng kế nếu chết bởi RNGesus.",
+      },
       {
         name: "Dịch vụ: giá và điều kiện",
         value:

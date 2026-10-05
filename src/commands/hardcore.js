@@ -231,6 +231,16 @@ module.exports = {
         ),
     )
     .addSubcommand((command) =>
+      command
+        .setName("cuahang")
+        .setDescription("Mua vé và 5 trang bị đổi mỗi ngày lúc 00:00 Việt Nam"),
+    )
+    .addSubcommand((command) =>
+      command
+        .setName("tuido")
+        .setDescription("Xem túi Sinh tồn và lọc theo độ hiếm hoặc vé"),
+    )
+    .addSubcommand((command) =>
       command.setName("top").setDescription("Xem bảng xếp hạng tầng cao nhất"),
     )
     .addSubcommand((command) =>
@@ -259,6 +269,15 @@ module.exports = {
         flags: MessageFlags.Ephemeral,
       });
     const subcommand = interaction.options.getSubcommand();
+    if (["cuahang", "tuido"].includes(subcommand)) {
+      const view = require("../services/hardcoreInventoryView");
+      return interaction.reply({
+        ...(subcommand === "cuahang"
+          ? view.shopPayload(interaction.guildId, interaction.user.id)
+          : view.inventoryPayload(interaction.guildId, interaction.user.id)),
+        flags: MessageFlags.Ephemeral,
+      });
+    }
     if (subcommand === "hoso") {
       const user = interaction.options.getUser?.("user") || interaction.user;
       return interaction.reply({

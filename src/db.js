@@ -1103,4 +1103,19 @@ db.prepare(`INSERT OR IGNORE INTO hardcore_releases VALUES (?,?,?,?,?)`).run(
   Date.now(),
 );
 
+runMigration(34, "hardcore daily shop and persistent inventory", () => {
+  db.exec(`CREATE TABLE IF NOT EXISTS hardcore_inventory (
+    guild_id TEXT NOT NULL,user_id TEXT NOT NULL,item_id TEXT NOT NULL,
+    quantity INTEGER NOT NULL CHECK(quantity >= 0),updated_at INTEGER NOT NULL,
+    PRIMARY KEY(guild_id,user_id,item_id));
+    CREATE TABLE IF NOT EXISTS hardcore_shop_rotations (
+      guild_id TEXT NOT NULL,day TEXT NOT NULL,items_json TEXT NOT NULL,created_at INTEGER NOT NULL,
+      PRIMARY KEY(guild_id,day));
+    CREATE TABLE IF NOT EXISTS hardcore_shop_purchases (
+      interaction_id TEXT PRIMARY KEY,guild_id TEXT NOT NULL,user_id TEXT NOT NULL,
+      day TEXT NOT NULL,item_id TEXT NOT NULL,quantity INTEGER NOT NULL,
+      currency TEXT NOT NULL,cost INTEGER NOT NULL,created_at INTEGER NOT NULL);
+  `);
+});
+
 module.exports = { db, dbPath, runMigration };

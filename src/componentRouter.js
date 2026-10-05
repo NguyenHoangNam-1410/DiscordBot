@@ -48,7 +48,18 @@ const {
 } = require("./commands/quantriPanels");
 const checklistCommand = require("./commands/kiemtra");
 
+const { handleStore, handleBag } = require("./services/hardcoreInventoryView");
 const ROUTES = Object.freeze([
+  ...["button", "select", "modal"].map((kind) => ({
+    kind,
+    prefix: "hardcore-store:",
+    handle: handleStore,
+  })),
+  ...["button", "select"].map((kind) => ({
+    kind,
+    prefix: "hardcore-bag:",
+    handle: handleBag,
+  })),
   {
     kind: "button",
     prefix: "luat:",

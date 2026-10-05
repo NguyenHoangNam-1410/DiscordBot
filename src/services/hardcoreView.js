@@ -178,7 +178,9 @@ function hardcoreSetupPayload(draft, classes, context) {
     .setColor(0x9b59b6)
     .setTitle("⚔️ SINH TỒN · CHUẨN BỊ RUN")
     .setDescription(
-      "**1. Chọn nhân vật** để xem chỉ số và kỹ năng.\n**2. Nhập xu** để đặt mức cược.\n**3. Bắt đầu** khi đã chọn xong; xu được giữ cho run lúc xác nhận.",
+      context.gameplayVersion === 2
+        ? "**1. Chọn nhân vật** để xem chỉ số và kỹ năng.\n**2. Nhập xu** để đặt mức cược.\n**3. Tiếp** để chọn đồ/vé, xem chỉ số rồi xác nhận Bắt đầu."
+        : "**1. Chọn nhân vật** để xem chỉ số và kỹ năng.\n**2. Nhập xu** để đặt mức cược.\n**3. Bắt đầu** khi đã chọn xong; xu được giữ cho run lúc xác nhận.",
     )
     .addFields(
       {
@@ -220,20 +222,18 @@ function hardcoreSetupPayload(draft, classes, context) {
             `✨ ${character.skill} · 2 ENE`,
           ].includes(field.name),
       );
-      embed
-        .setFields(fields)
-        .addFields(
-          { name: preview.name, value: preview.stats },
-          { name: "🧭 Hướng build", value: preview.build },
-          { name: `${icon("PHYS", "⚔️")} Tấn công`, value: preview.attack },
-          { name: `${icon("DEF", "🛡️")} Phòng thủ`, value: preview.defend },
-          {
-            name: `${preview.skillIcon} ${character.skill} · 2 Mana`,
-            value: preview.skill,
-          },
-          { name: "📖 Đặc tính / nội tại", value: preview.passive },
-          { name: "⛩️ Phước lành có điều kiện", value: preview.shrine },
-        );
+      embed.setFields(fields).addFields(
+        { name: preview.name, value: preview.stats },
+        { name: "🧭 Hướng build", value: preview.build },
+        { name: `${icon("PHYS", "⚔️")} Tấn công`, value: preview.attack },
+        { name: `${icon("DEF", "🛡️")} Phòng thủ`, value: preview.defend },
+        {
+          name: `${preview.skillIcon} ${character.skill} · 2 Mana`,
+          value: preview.skill,
+        },
+        { name: "📖 Đặc tính / nội tại", value: preview.passive },
+        { name: "⛩️ Phước lành có điều kiện", value: preview.shrine },
+      );
     }
   } else
     embed.addFields({
@@ -306,8 +306,10 @@ function hardcoreSetupPayload(draft, classes, context) {
           .setEmoji("💰")
           .setStyle(ButtonStyle.Primary),
         new ButtonBuilder()
-          .setCustomId(customId("start"))
-          .setLabel("Bắt đầu")
+          .setCustomId(
+            customId(context.gameplayVersion === 2 ? "next" : "start"),
+          )
+          .setLabel(context.gameplayVersion === 2 ? "Tiếp" : "Bắt đầu")
           .setEmoji("⚔️")
           .setStyle(ButtonStyle.Success)
           .setDisabled(!character || !validStake),

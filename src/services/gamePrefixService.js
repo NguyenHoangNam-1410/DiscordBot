@@ -143,7 +143,7 @@ function help(prefix, command) {
   if (command === "mines")
     return `Cách dùng: \`${prefix}domin <số xu> <số mìn 2–7>\``;
   if (command === "hardcore")
-    return `Cách dùng: \`${prefix}sinhton batdau\` để chọn nhân vật và nhập xu trên UI; hoặc \`${prefix}sinhton <hoso|xephang|tyle|tieptuc>\``;
+    return `Cách dùng: \`${prefix}sinhton batdau\` để chọn nhân vật và nhập xu trên UI; hoặc \`${prefix}sinhton <cuahang|tuido|hoso|xephang|tyle|tieptuc>\``;
   if (command === "vuatiengviet")
     return `Cách dùng: \`${prefix}vtv <batdau|boqua|ketthuc>\``;
   return `Cách dùng: \`${prefix}${command}\``;
@@ -322,6 +322,8 @@ async function handleGamePrefix(message) {
         "rates",
         "tyle",
         "tieptuc",
+        "cuahang",
+        "tuido",
       ].includes(first)
     ) {
       const subcommand =

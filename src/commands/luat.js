@@ -71,7 +71,7 @@ function survivalRules() {
           {
             name: "Bắt đầu và tiếp tục",
             value:
-              "- `/sinhton batdau` → chọn một trong 7 class → nhập **10–100.000 xu**, trong giới hạn server → **Bắt đầu**. Chỉ trừ cược khi xác nhận; bảng chuẩn bị hết hạn sau 5 phút.\n- Mỗi người một run/server. `/sinhton tieptuc` mở lại bảng của run đã lưu; không đổi kết quả ngẫu nhiên đã khóa.\n- Không thao tác **7 ngày**: run hết hạn và mất cược/thưởng.\n- Vượt tầng 100 là mốc hoàn thành; vẫn có thể chơi tiếp đến 999. Phải hạ boss tầng 999 để công nhận mốc cuối.",
+              "- `/sinhton batdau` → chọn một trong 7 class → nhập **10–100.000 xu**, trong giới hạn server → **Tiếp** → chọn tối đa 5 món khác nhau và mỗi loại vé một chiếc → xem chỉ số → **Bắt đầu**. Cược và đồ/vé được trừ cùng lúc khi xác nhận; không hoàn khi chết hoặc rút. Mua tại `/sinhton cuahang`, xem túi qua `/sinhton tuido`; bảng chuẩn bị hết hạn sau 5 phút.\n- Mỗi người một run/server. `/sinhton tieptuc` mở lại bảng của run đã lưu; không đổi kết quả ngẫu nhiên đã khóa.\n- Không thao tác **7 ngày**: run hết hạn và mất cược/thưởng.\n- Vượt tầng 100 là mốc hoàn thành; vẫn có thể chơi tiếp đến 999. Phải hạ boss tầng 999 để công nhận mốc cuối.",
           },
           {
             name: "Bốn thuộc tính",

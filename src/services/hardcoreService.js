@@ -24,6 +24,8 @@ const { createFairness, fairInt } = require("./fairnessService");
 const hardcoreRepository = require("./hardcoreRepository");
 const { addDiamonds } = require("./playerLevelService");
 const hardcoreView = require("./hardcoreView");
+const hardcoreInventory = require("./hardcoreInventoryService");
+const hardcoreInventoryView = require("./hardcoreInventoryView");
 const {
   rarityLabel,
   normalizeEquipment,
@@ -1291,6 +1293,7 @@ const startTx = db.transaction(
     stake,
     classKey,
     forcedEncounter = null,
+    loadout = {},
     playerName = String(userId),
   }) => {
     const template = CLASSES[classKey];
@@ -1365,6 +1368,10 @@ const startTx = db.transaction(
       state.fair = fair;
       state.fairCounter = 0;
       state.playerName = String(playerName).slice(0, 80);
+      hardcoreInventory.applyLoadout(
+        state,
+        hardcoreInventory.consume(guildId, userId, loadout),
+      );
     } else
       state.encounter =
         forcedEncounter ||
@@ -1405,6 +1412,13 @@ function setupContext(draft) {
     balance: getAccount(draft.guildId, draft.userId).balance,
     maxBet: Math.min(MAX_BET, getGameBetLimit(draft.guildId, "hardcore")),
   };
+}
+function setupPayload(draft) {
+  const context = setupContext(draft);
+  return context.gameplayVersion === 2 &&
+    ["loadout", "review"].includes(draft.stage)
+    ? hardcoreInventoryView.setupPayload(draft, context)
+    : hardcoreView.hardcoreSetupPayload(draft, CLASSES, context);
 }
 function closedSetup(content) {
   return {
@@ -1480,6 +1494,11 @@ async function openHardcoreSetup(interaction, initial = {}) {
       initial.stake <= MAX_BET
         ? initial.stake
         : null,
+    stage: "class",
+    itemIds: [],
+    ticketIds: [],
+    itemFilter: "all",
+    itemPage: 0,
     version: 0,
     busy: false,
     messageId: null,
@@ -1487,7 +1506,7 @@ async function openHardcoreSetup(interaction, initial = {}) {
   setupDrafts.set(draft.id, draft);
   try {
     const response = await interaction.reply({
-      ...hardcoreView.hardcoreSetupPayload(draft, CLASSES, setupContext(draft)),
+      ...setupPayload(draft),
       flags: MessageFlags.Ephemeral,
       withResponse: true,
     });
@@ -1515,9 +1534,7 @@ async function refreshSetup(interaction, draft, notice = null) {
   if (!interaction.deferred && !interaction.replied)
     await interaction.deferUpdate();
   draft.edit = (payload) => interaction.editReply(payload);
-  await draft.edit(
-    hardcoreView.hardcoreSetupPayload(draft, CLASSES, setupContext(draft)),
-  );
+  await draft.edit(setupPayload(draft));
   if (notice)
     await interaction.followUp({
       content: notice,
@@ -1525,6 +1542,10 @@ async function refreshSetup(interaction, draft, notice = null) {
     });
 }
 function setupError(error) {
+  if (
+    ["INVALID_LOADOUT", "INSUFFICIENT_HARDCORE_ITEMS"].includes(error.message)
+  )
+    return "Đồ hoặc vé đã chọn không còn đủ trong túi. Hãy quay lại chọn đồ.";
   return error.message === "ACTIVE_SESSION"
     ? "Bạn đang có một run chưa kết thúc. Dùng `/sinhton tieptuc`."
     : error.message === "BET_LIMIT"
@@ -1580,7 +1601,11 @@ async function handleHardcoreSetup(interaction, logger = console) {
       "Lựa chọn đã thay đổi. Hãy dùng các nút mới nhất.",
     );
 
-  if (prefix === "hardcore-setup-modal" && action === "bet") {
+  if (
+    prefix === "hardcore-setup-modal" &&
+    action === "bet" &&
+    draft.stage === "class"
+  ) {
     const raw = interaction.fields.getTextInputValue("amount").trim();
     const stake = Number(raw);
     const context = setupContext(draft);
@@ -1604,14 +1629,14 @@ async function handleHardcoreSetup(interaction, logger = console) {
     draft.stake = stake;
     return refreshSetup(interaction, draft);
   }
-  if (action === "class") {
+  if (action === "class" && draft.stage === "class") {
     const classKey = interaction.values?.[0];
     if (!Object.hasOwn(CLASSES, classKey))
       return refreshSetup(interaction, draft, "Nhân vật không hợp lệ.");
     draft.classKey = classKey;
     return refreshSetup(interaction, draft);
   }
-  if (action === "bet") {
+  if (action === "bet" && draft.stage === "class") {
     touchSetup(draft);
     return interaction.showModal(
       hardcoreView.hardcoreBetModal(draft, setupContext(draft).maxBet),
@@ -1620,6 +1645,89 @@ async function handleHardcoreSetup(interaction, logger = console) {
   if (action === "cancel") {
     closeSetup(draft);
     return interaction.update(closedSetup("Đã hủy chuẩn bị run."));
+  }
+  if (useV2()) {
+    if (action === "class_back" && draft.stage === "loadout") {
+      draft.stage = "class";
+      return refreshSetup(interaction, draft);
+    }
+    if (
+      (action === "next" && draft.stage === "class") ||
+      (action === "loadout_back" && draft.stage === "review")
+    ) {
+      if (!Object.hasOwn(CLASSES, draft.classKey) || draft.stake == null)
+        return refreshSetup(
+          interaction,
+          draft,
+          "Hãy chọn nhân vật và nhập xu trước.",
+        );
+      draft.stage = "loadout";
+      return refreshSetup(interaction, draft);
+    }
+    if (draft.stage === "loadout") {
+      const values = interaction.values || [];
+      if (action === "tickets") {
+        if (
+          values.length > 3 ||
+          new Set(values).size !== values.length ||
+          values.some(
+            (id) =>
+              !hardcoreInventory
+                .inventory(draft.guildId, draft.userId, "ticket")
+                .some((item) => item.id === id),
+          )
+        )
+          return refreshSetup(
+            interaction,
+            draft,
+            "Vé không hợp lệ hoặc không còn trong túi.",
+          );
+        draft.ticketIds = values;
+      } else if (action === "item_filter") {
+        if (!["all", "UR", "SSR", "SR", "R"].includes(values[0]))
+          return refreshSetup(interaction, draft, "Bộ lọc không hợp lệ.");
+        draft.itemFilter = values[0];
+        draft.itemPage = 0;
+      } else if (["items_prev", "items_next"].includes(action)) {
+        const page = hardcoreInventoryView.loadoutPage(draft);
+        draft.itemPage = Math.max(
+          0,
+          Math.min(
+            page.pages - 1,
+            page.page + (action === "items_next" ? 1 : -1),
+          ),
+        );
+      } else if (action === "items") {
+        const page = hardcoreInventoryView.loadoutPage(draft);
+        const ids = new Set(page.items.map((item) => item.id));
+        const next = [...draft.itemIds.filter((id) => !ids.has(id)), ...values];
+        if (
+          values.some((id) => !ids.has(id)) ||
+          new Set(next).size !== next.length ||
+          next.length > 5
+        )
+          return refreshSetup(
+            interaction,
+            draft,
+            "Chỉ mang tối đa 5 món khác nhau. Bỏ chọn món trước khi thêm.",
+          );
+        draft.itemIds = next;
+      } else if (action === "review") {
+        try {
+          hardcoreInventory.checkStock(draft.guildId, draft.userId, draft);
+        } catch (error) {
+          return refreshSetup(interaction, draft, setupError(error));
+        }
+        draft.stage = "review";
+      } else return refreshSetup(interaction, draft, "Lựa chọn không hợp lệ.");
+      return refreshSetup(interaction, draft);
+    }
+    if (action === "start" && draft.stage !== "review")
+      return refreshSetup(
+        interaction,
+        draft,
+        "Hãy chọn đồ và xem chỉ số trước khi bắt đầu.",
+      );
   }
   if (action !== "start")
     return refreshSetup(interaction, draft, "Lựa chọn không hợp lệ.");
@@ -1656,6 +1764,7 @@ async function handleHardcoreSetup(interaction, logger = console) {
       stake: draft.stake,
       classKey: draft.classKey,
       playerName: draft.playerName,
+      loadout: { itemIds: draft.itemIds, ticketIds: draft.ticketIds },
     });
   } catch (error) {
     draft.busy = false;
@@ -1684,7 +1793,7 @@ async function handleHardcoreSetup(interaction, logger = console) {
     return refreshSetup(
       interaction,
       draft,
-      "Không thể đăng bảng game; đã hoàn lại cược. Bạn có thể thử Bắt đầu lần nữa.",
+      "Không thể đăng bảng game; đã hoàn lại cược, đồ và vé. Bạn có thể thử Bắt đầu lần nữa.",
     );
   }
   closeSetup(draft);
@@ -1776,6 +1885,18 @@ function forceEndHardcoreSession(
         reason: `hardcore:${label}:${adminId}:${session.id}`,
         operationId: `refund:hardcore-admin:${session.id}:${session.user_id}`,
       });
+    if (
+      label === "setup-ui-failed" &&
+      !forfeit &&
+      state.turn === 0 &&
+      state.initialLoadout
+    ) {
+      for (const itemId of [
+        ...state.initialLoadout.itemIds,
+        ...state.initialLoadout.ticketIds,
+      ])
+        hardcoreInventory.grant(session.guild_id, session.user_id, itemId, 1);
+    }
     if (forfeit) recordRun(session.guild_id, session.user_id, state, "forfeit");
     hardcoreEchoes.archive(
       session,
@@ -2406,7 +2527,12 @@ const actionTx = db.transaction(
       if (state.turn !== expectedTurn) throw new Error("STALE_ACTION");
       if (isV2(state)) {
         state.turn += 1;
-        const reason = hardcoreV2.act(state, session, action, randomFloat);
+        let reason = hardcoreV2.act(state, session, action, randomFloat);
+        if (
+          ["death", "rngesus"].includes(reason) &&
+          hardcoreV2.reviveAfterDeath(state, session, randomFloat, reason)
+        )
+          reason = null;
         if (reason) {
           if (reason === "rngesus") state.hp = 0;
           return {
