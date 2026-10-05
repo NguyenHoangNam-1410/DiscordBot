@@ -14,6 +14,22 @@ const bag = require("./hardcoreInventoryService");
 const { getAccount } = require("./economyService");
 const { getPlayerProgression } = require("./playerLevelService");
 const v2View = require("./hardcoreV2View");
+const { E } = require("./hardcoreIcons");
+const { appEmoji, appEmojiObject } = require("../utils/appEmoji");
+const currencyIcon = (currency) =>
+  currency === "diamonds" ? appEmoji("gem", "💎") : appEmoji("coin", "🪙");
+function ticketIcon(item) {
+  if (item.id === "survival_escape") return E.ticket;
+  if (item.id === "survival_prayer") return "🙏";
+  return "🎟️";
+}
+function ticketOptionEmoji(item) {
+  return item.id === "survival_escape"
+    ? appEmojiObject("ticket_rngesus") || { name: "🎫" }
+    : { name: ticketIcon(item) };
+}
+const productName = (item) =>
+  item.typeCode === "ticket" ? `${ticketIcon(item)} ${item.name}` : item.name;
 const money = (n) => n.toLocaleString("vi-VN");
 const PAGE_SIZE = 5,
   SELECT_PAGE_SIZE = 20;
@@ -50,12 +66,11 @@ function shopPayload(guildId, userId) {
     .setColor(0xe67e22)
     .setTitle("🛒 SINH TỒN · CỬA HÀNG")
     .setDescription(
-      `Ngày **${today.day}** · đổi 5 trang bị lúc **00:00 giờ Việt Nam**.\nMua không giới hạn lượt; hàng vào túi Sinh tồn để chọn trước run.\nXu: **${money(getAccount(guildId, userId).balance)}** · 💎 **${money(getPlayerProgression(guildId, userId).diamonds)}**`,
-    )
-    .setFooter({ text: "R 10.000 · SR 50.000 · SSR 100.000 · UR 200.000 xu" });
+      `Ngày **${today.day}** · đổi 5 trang bị lúc **00:00 giờ Việt Nam**.\nMua không giới hạn lượt; hàng vào túi Sinh tồn để chọn trước run.\n${currencyIcon("coins")} **${money(getAccount(guildId, userId).balance)}** · ${currencyIcon("diamonds")} **${money(getPlayerProgression(guildId, userId).diamonds)}**\nGiá trang bị: R 10.000 · SR 50.000 · SSR 100.000 · UR 200.000 ${currencyIcon("coins")}`,
+    );
   today.products.forEach((item) =>
     embed.addFields({
-      name: `${item.name} [${item.typeCode === "ticket" ? "Vé" : item.typeCode}] · ${money(item.price)} ${item.currency === "diamonds" ? "💎" : "xu"}`,
+      name: `${productName(item)} [${item.typeCode === "ticket" ? "Vé" : item.typeCode}] · ${money(item.price)} ${currencyIcon(item.currency)}`,
       value: detail(item).slice(0, 1024) || "—",
     }),
   );
@@ -66,6 +81,9 @@ function shopPayload(guildId, userId) {
       today.products.map((item) => ({
         label: item.name,
         value: item.id,
+        ...(item.typeCode === "ticket"
+          ? { emoji: ticketOptionEmoji(item) }
+          : {}),
         description: `${money(item.price)} ${item.currency === "diamonds" ? "kim cương" : "xu"} / ${item.typeCode === "ticket" ? "vé" : item.typeCode}`,
       })),
     );
@@ -95,14 +113,12 @@ function inventoryPayload(guildId, userId, filter = "all", page = 0) {
     .setFooter({
       text: `Bộ lọc: ${filter} · Trang ${page + 1}/${pages} · ${items.length} loại`,
     });
-  items
-    .slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
-    .forEach((item) =>
-      embed.addFields({
-        name: `${item.name} [${item.typeCode === "ticket" ? "Vé" : item.typeCode}] ×${money(item.quantity)}`,
-        value: detail(item).slice(0, 1024) || "—",
-      }),
-    );
+  items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).forEach((item) =>
+    embed.addFields({
+      name: `${productName(item)} [${item.typeCode === "ticket" ? "Vé" : item.typeCode}] ×${money(item.quantity)}`,
+      value: detail(item).slice(0, 1024) || "—",
+    }),
+  );
   if (!items.length)
     embed.addFields({
       name: "Túi đồ",
@@ -178,7 +194,7 @@ async function handleStore(interaction) {
       day,
       operationId: interaction.id,
     });
-    notice = `${result.duplicate ? "Giao dịch đã xử lý:" : "Đã mua"} **${bag.product(itemId).name} ×${result.quantity}**, giá **${money(result.cost)} ${result.currency === "diamonds" ? "💎" : "xu"}**.`;
+    notice = `${result.duplicate ? "Giao dịch đã xử lý:" : "Đã mua"} **${productName(bag.product(itemId))} ×${result.quantity}**, giá **${money(result.cost)} ${currencyIcon(result.currency)}**.`;
   } catch (error) {
     const messages = {
       INVALID_QUANTITY:
@@ -246,7 +262,7 @@ function setupPayload(draft, context) {
         : "🎒 SINH TỒN · CHỌN ĐỒ MANG THEO",
     )
     .setDescription(
-      `Cược: **${money(draft.stake)} xu** · Trang bị **${loadout.itemIds.length}/5**\nChọn một bản mỗi món, không trùng lặp; một vé mỗi loại.\nTiền cược, đồ và vé chỉ trừ khi bấm **Bắt đầu** ở màn xác nhận; không hoàn khi tử trận hoặc rút thưởng.`,
+      `Cược: **${money(draft.stake)} ${currencyIcon("coins")}** · Trang bị **${loadout.itemIds.length}/5**\nChọn một bản mỗi món, không trùng lặp; một vé mỗi loại.\nTiền cược, đồ và vé chỉ trừ khi bấm **Bắt đầu** ở màn xác nhận; không hoàn khi tử trận hoặc rút thưởng.`,
     )
     .addFields(
       {
@@ -265,7 +281,7 @@ function setupPayload(draft, context) {
           loadout.ticketIds
             .map((itemId) => {
               const ticket = bag.product(itemId);
-              return `**${ticket.name}** · ${ticket.text}`;
+              return `**${productName(ticket)}** · ${ticket.text}`;
             })
             .join("\n")
             .slice(0, 1024) || "Không mang vé.",
@@ -314,6 +330,7 @@ function setupPayload(draft, context) {
         ? availableTickets.map((ticket) => ({
             label: `${ticket.name} ×${ticket.quantity}`,
             value: ticket.id,
+            emoji: ticketOptionEmoji(ticket),
             default: loadout.ticketIds.includes(ticket.id),
           }))
         : [{ label: "Chưa có vé", value: "none" }],
