@@ -40,7 +40,7 @@ const SKILLS = {
   barbarian: "Vật lý ×1,65.",
   assassin: "Vật lý ×1,30, né phản công.",
   sorceress: "Phép ×2,10, luôn trúng, không Crit.",
-  druid: "Vật lý ×1,35 và hồi 12% Max HP.",
+  druid: `Vật lý ×1,35; hồi ${E.hp} **HP** cho bạn bằng **12% Max HP**, không vượt Max HP.`,
   necromancer: "Phép ×1,55, luôn trúng, không Crit; chặn phản công.",
   paladin: "Vật lý ×1,40 rồi tự Phòng thủ.",
 };
@@ -49,7 +49,7 @@ const SHRINES = {
   barbarian: `${E.defense} DEF +8 khi ${E.hp} HP ≤30%.`,
   assassin: "Chắc chắn né một phản công.",
   sorceress: "Một skill miễn phí.",
-  druid: "Hồi 5% Max HP mỗi tầng trong ba tầng kế tiếp.",
+  druid: `Hồi ${E.hp} **HP** cho bạn bằng **5% Max HP** mỗi tầng trong ba tầng kế tiếp, không vượt Max HP.`,
   necromancer: "Chặn một đòn phản công.",
   paladin: `${E.res} RES +10 khi nhận phép.`,
 };
@@ -87,7 +87,7 @@ function battleStats(s) {
     barbarian: "Vật lý, có thể trượt/Crit.",
     assassin: "Vật lý, có thể trượt/Crit; né phản công.",
     sorceress: "Phép luôn trúng, không Crit.",
-    druid: `Vật lý, có thể trượt/Crit; hồi ${money(Math.floor(s.maxHp * 0.12))} HP (tối đa Max HP).`,
+    druid: `Vật lý, có thể trượt/Crit; hồi tối đa ${E.hp} **${money(Math.floor(s.maxHp * 0.12))} HP** cho bạn (**12% Max HP**).`,
     necromancer: "Phép luôn trúng, không Crit; chặn phản công.",
     paladin: "Vật lý, có thể trượt/Crit; tự Phòng thủ.",
   }[s.classKey];

@@ -554,8 +554,11 @@ function completeFloor(state, session, rng, reward = 1) {
     state.classShrine?.classKey === "druid" &&
     floor >= state.classShrine.from &&
     floor <= state.classShrine.until
-  )
-    heal(state, state.maxHp * 0.05);
+  ) {
+    const hpBefore = state.hp;
+    const gained = heal(state, state.maxHp * 0.05);
+    state.lastLog += `\n${E.shrine} Class Shrine · Druid: hồi ${E.hp} **${gained} HP** cho bạn: ${hpBefore} → **${state.hp}**.`;
+  }
   if (state.classShrine && floor >= state.classShrine.until)
     state.classShrine = null;
   if (state.floorHpLoss) {
@@ -1238,6 +1241,7 @@ function playerAttack(state, action, rng) {
   const e = state.encounter;
   let dodge = false,
     defend = false,
+    healingLog = "",
     hits = [];
   if (action === "defend") {
     state.mana = Math.min(state.maxMana, state.mana + 1);
@@ -1299,7 +1303,11 @@ function playerAttack(state, action, rng) {
       ];
       dodge = state.classKey === "assassin";
       defend = state.classKey === "paladin";
-      if (state.classKey === "druid") heal(state, state.maxHp * 0.12);
+      if (state.classKey === "druid") {
+        const hpBefore = state.hp;
+        const gained = heal(state, state.maxHp * 0.12);
+        healingLog = `\n${SKILL_ICONS.druid} Hồi ${E.hp} **${gained} HP** cho bạn: ${hpBefore} → **${state.hp}**.`;
+      }
     }
   } else if (action === "attack") {
     hits = [attackDamage(state, e, state, rng, { player: true })];
@@ -1334,7 +1342,7 @@ function playerAttack(state, action, rng) {
   return {
     defend,
     dodge,
-    log: `${actionName}: ${outcome}${shots}`,
+    log: `${actionName}: ${outcome}${shots}${healingLog}`,
   };
 }
 function surpriseActions(state) {
