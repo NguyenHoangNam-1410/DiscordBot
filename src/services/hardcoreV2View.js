@@ -1508,7 +1508,7 @@ function privatePayload(
         E.evasion +
         " Né vật lý: " +
         percent(state.evasionCap) +
-        ". Nội tại không tăng theo level; các món khác nhau cùng loại cộng đến trần.",
+        ". Nội tại không tăng theo level, các món khác nhau cùng loại cộng đến trần.",
     );
     addTextFields(
       e,
@@ -1527,11 +1527,6 @@ function privatePayload(
       `🙏 Cầu nguyện RNGesus: **${percent(core.rngesusPrayerChance(state))}**${state.adventurerRescue ? `\n🤝 Lost Adventurer bảo hộ một lần đến tầng ${state.adventurerRescue.until}; dùng trước vé hồi sinh.` : ""}`,
     );
     e.addFields(
-      {
-        name: "Bốn thuộc tính",
-        value:
-          "STR: vật lý và DEF. DEX: trúng/né/Crit; damage chính Amazon/Assassin. VIT: Max HP và bình máu. ENE: phép/RES/Max MP. ENE là thuộc tính; MP là tài nguyên dùng skill.",
-      },
       {
         name: `${SKILL_ICONS[state.classKey]} ${stats.CLASSES[state.classKey].skill}`,
         value: SKILLS[state.classKey],
