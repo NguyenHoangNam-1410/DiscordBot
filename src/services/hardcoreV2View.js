@@ -1060,7 +1060,7 @@ function embed(state, userId, result = null, sessionId = null) {
         .slice(0, 1024),
     });
   return e.setFooter({
-    text: `${sessionId ? `Mã ván: ${sessionId} • ` : ""}Lượt ${state.turn} • Cược ${money(state.stake)} xu • /sinhton tieptuc`,
+    text: `${sessionId ? `Mã ván: ${sessionId} • ` : ""}Lượt ${state.turn} • Cược ${money(state.stake)} xu`,
   });
 }
 function button(
