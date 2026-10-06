@@ -924,14 +924,10 @@ function coinPayoutDetails(state) {
   const lines = [];
   const factor = Math.max(0, Math.min(1, state.payoutFactor ?? 1));
   if (factor < 1)
-    lines.push(
-      "Giảm thưởng xu do event/lời nguyền: **" + percent(1 - factor) + "**.",
-    );
+    lines.push("**" + percent(1 - factor) + " xu** (event/nguyền)");
   if (state.payoutSpent > 0)
-    lines.push(
-      "Đã chi trong run: **" + money(state.payoutSpent) + " " + E.coin + "**.",
-    );
-  return lines.length ? "\n" + lines.join("\n") : "";
+    lines.push("**" + money(state.payoutSpent) + " " + E.coin + "** đã chi");
+  return lines.length ? "\nĐã trừ: " + lines.join(STAT_SEPARATOR) : "";
 }
 function embed(state, userId, result = null, sessionId = null) {
   const c = stats.CLASSES[state.classKey];
@@ -1003,7 +999,7 @@ function embed(state, userId, result = null, sessionId = null) {
       value: result
         ? `Đã nhận **${money(result.payout)} ${icon("coin", "🪙")}** ${STAT_SEPARATOR} **${money(result.diamonds || 0)} ${icon("gem", "💎")}**`
         : (state.cleared
-            ? `Xu có thể nhận: **${money(core.payout(state))} ${icon("coin", "🪙")}**\nKim cương tạm giữ: **${money(runDiamondReward(state))} ${icon("gem", "💎")}**`
+            ? `Thực nhận: **${money(core.payout(state))} ${E.coin}**${STAT_SEPARATOR}**${money(runDiamondReward(state))} ${icon("gem", "💎")}**`
             : "Chưa thể rút") + coinPayoutDetails(state),
       inline: false,
     },

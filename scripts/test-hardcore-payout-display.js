@@ -99,10 +99,14 @@ for (const [encounter, action, rate] of [
   );
   const f = fields(s);
   const withdrawal = f.find((x) => x.name.includes("Rút thưởng")).value;
-  assert.ok(withdrawal.includes("Xu có thể nhận"));
-  assert.ok(withdrawal.includes("Giảm thưởng xu"));
-  assert.ok(withdrawal.includes("**" + Math.round(rate * 100) + "%**"));
-  assert.equal(f.find((x) => x.name.includes("Trang bị")), undefined);
+  assert.ok(withdrawal.includes("Thực nhận: **" + money(core.payout(s))));
+  assert.ok(withdrawal.includes("Đã trừ:"));
+  assert.ok(withdrawal.includes("**" + Math.round(rate * 100) + "% xu**"));
+  assert.ok(withdrawal.split("\n").length <= 2);
+  assert.equal(
+    f.find((x) => x.name.includes("Trang bị")),
+    undefined,
+  );
 }
 // Wrong Portal does not clear the floor, and records the loss before fighting its Elite.
 {
@@ -185,7 +189,7 @@ for (const [encounter, action, rate] of [
   assert.ok(
     fields(s)
       .find((f) => f.name.includes("Rút thưởng"))
-      .value.includes("Đã chi trong run: **500"),
+      .value.includes("**500 🪙** đã chi"),
   );
 }
 {
@@ -265,7 +269,7 @@ for (const [encounter, action, rate] of [
   );
   play(s, "next");
   const withdrawal = fields(s).find((f) => f.name.includes("Rút thưởng")).value;
-  assert.ok(withdrawal.includes("Đã chi trong run: **164.759 " + coin + "**."));
+  assert.ok(withdrawal.includes("**164.759 " + coin + "** đã chi"));
   assert.ok(s.lastLog.includes(coin + " **Thưởng xu · "));
   const old = JSON.parse(JSON.stringify(s));
   old.lastLog = old.lastLog.replace(
