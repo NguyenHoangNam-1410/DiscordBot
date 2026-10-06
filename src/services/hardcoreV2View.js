@@ -642,6 +642,8 @@ function encounterText(s) {
   return `${eventIcon(e.kind)} **${e.name}**\n${descriptions[k] || "Chọn một hành động."}`;
 }
 function encounterSummary(s) {
+  if (s.phase === "upgrade")
+    return `${E.checkpoint} **CHECKPOINT**\nChọn +5 STR, DEX, VIT hoặc ENE. Xem **Chi tiết** để đọc dự báo chỉ số.`;
   if (s.phase === "boss_chest")
     return `${eventIcon("boss_chest")} **RƯƠNG BOSS · TẦNG ${s.encounter.bossFloor}**\nChọn mở hoặc bán rương trước khi đi tiếp hay rút thưởng.\nXem **Chi tiết** để đọc phần thưởng.`;
   if (s.phase === "paradox")
@@ -721,7 +723,7 @@ function equipmentSummary(state) {
     : "Không có chỉ số cộng thêm.";
 }
 function hasEncounterDetails(s) {
-  if (["boss_chest", "paradox"].includes(s.phase)) return true;
+  if (["upgrade", "boss_chest", "paradox"].includes(s.phase)) return true;
   if (s.phase !== "encounter") return false;
   const e = s.encounter;
   return (
@@ -976,12 +978,6 @@ function embed(state, userId, result = null, sessionId = null) {
     state.encounter.type === "combat" ? `${E.attack} Đối thủ` : "⚠️ Tình huống",
     encounterSummary(state),
   );
-  if (!result && state.phase === "upgrade")
-    for (const key of stats.ATTRIBUTES)
-      e.addFields({
-        name: `${E[key]} +5 ${key.toUpperCase()}`,
-        value: checkpointPreview(state, key),
-      });
   e.addFields({
     name: `${icon("moneybag", "💰")} Rút thưởng`,
     value: result
@@ -1316,12 +1312,6 @@ function privatePayload(
         value: `Sức mạnh ×${balance.power(state)}. Áp dụng vào sức mạnh vật lý và phép từ thuộc tính/trang bị; dải sát thương đang hiển thị đã tính hệ số. HP, DEF, RES và chi phí MP giữ theo thuộc tính.`,
       },
     );
-    if (state.phase === "upgrade")
-      for (const key of stats.ATTRIBUTES)
-        e.addFields({
-          name: `+5 ${key.toUpperCase()}`,
-          value: checkpointPreview(state, key),
-        });
   } else if (tab === "effects") {
     for (const [key, n] of Object.entries(state.modifiers).filter(
       ([, n]) => n > 0,
@@ -1342,6 +1332,13 @@ function privatePayload(
     const description = `${e.data.description}\n\n${detail}`;
     if (description.length <= 4096) e.setDescription(description);
     else addTextFields(e, "Chi tiết tình huống", detail);
+    if (state.phase === "upgrade")
+      for (const key of stats.ATTRIBUTES)
+        addTextFields(
+          e,
+          `${E[key]} +5 ${key.toUpperCase()}`,
+          checkpointPreview(state, key),
+        );
   }
   e.setFooter({
     text: `v${state.releaseVersion} · Lượt ${state.turn} · Trang ${page + 1}/${pages}`,
