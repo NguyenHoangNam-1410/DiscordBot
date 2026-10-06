@@ -1,6 +1,7 @@
 "use strict";
 const stats = require("./hardcoreStats");
 const itemPassives = require("../hardcore/itemPassives");
+const monsterLoot = require("../hardcore/monsterLoot");
 const {
   rngesusEncounterChance,
   resetRngesusEncounter,
@@ -1240,6 +1241,7 @@ function enemyTurn(
 function prepareItemCombat(state, rng) {
   const e = state.encounter;
   if (e?.type !== "combat") return;
+  monsterLoot.prepare(state, e);
   state.passiveCombatFloor = state.floor;
   if (e.passiveCombatStarted) return;
   e.passiveCombatStarted = true;
@@ -2106,6 +2108,7 @@ function noteKill(state, enemy) {
 }
 
 function defeatEnemy(state, session, rng, e) {
+  monsterLoot.prepare(state, e);
   noteKill(state, e);
   if (e.rank === "final_boss" && e.mechanic === "deimoss")
     state.finalBossDefeated = true;
@@ -2127,13 +2130,13 @@ function defeatEnemy(state, session, rng, e) {
     receiveItem(state, randomItem(rarity, rng));
     state.lastLog += `\n${E.chest} Phần thưởng hạ Blood Mimic: đã nhận trang bị.`;
   }
-  if (
-    e.rank === "boss" &&
-    !e.echoId &&
-    world.REGIONS.some(
-      (region) => region.start === state.floor && region.start > 1,
-    )
-  ) {
+  const dropRarity = monsterLoot.roll(state, e, rng);
+  if (dropRarity) {
+    const dropped = randomItem(dropRarity, rng);
+    receiveItem(state, dropped);
+    state.lastLog += `\n${E.backpack} Nhặt được trang bị từ ${e.name}.`;
+  }
+  if (monsterLoot.hasRegionBossChest(state, e)) {
     const rarity = rng() < 0.7 ? "legendary" : "cursed";
     state.pendingBossChest = {
       type: "boss_chest",

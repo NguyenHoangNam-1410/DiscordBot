@@ -1,5 +1,6 @@
 "use strict";
 const itemCurses = require("../hardcore/itemCurses");
+const monsterLoot = require("../hardcore/monsterLoot");
 const { RNGESUS_CYCLE_RULES, rngesusChaosRules } = require("./hardcoreRngesus");
 const {
   EmbedBuilder,
@@ -732,7 +733,7 @@ function encounterSummary(s) {
         ancient_mimic: "Ancient Mimic",
       }[world.mimicKind(e) ? "elite" : e.rank] || e.rank;
     const preview = core.incomingPreview(s);
-    return `${["boss", "final_boss"].includes(e.rank) ? eventIcon("boss") : "👹"} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Tỷ lệ vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} DMG** · ${E.evasion} **${percent(preview.chance)}** trúng bạn *(chưa Crit/DEF)*${world.mimicKind(e) === "ancient_mimic" ? `\n${E.chest} **Hạ quái nhận 1 đồ:** SR 50% · SSR 30% · UR 20%.` : world.mimicKind(e) === "blood_mimic" ? `\n${E.chest} **Hạ quái nhận 1 đồ:** SR 60% · SSR 40%.` : ""}`;
+    return `${["boss", "final_boss"].includes(e.rank) ? eventIcon("boss") : "👹"} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Tỷ lệ vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} DMG** · ${E.evasion} **${percent(preview.chance)}** trúng bạn *(chưa Crit/DEF)*`;
   }
 
   if (e.type === "empty")
@@ -800,9 +801,7 @@ function hasEncounterDetails(s) {
   return (
     ["chest", "shrine", "rngesus", "trap", "echo", "surprise"].includes(
       e.type,
-    ) ||
-    (e.type === "combat" &&
-      (e.mechanic || ["boss", "final_boss"].includes(e.rank)))
+    ) || e.type === "combat"
   );
 }
 function viewTabs(s) {
@@ -853,6 +852,23 @@ function encounterDetails(s) {
     discount
   );
 }
+function monsterLootDetails(state) {
+  const info = monsterLoot.odds(state);
+  if (!info) return "";
+  if (info.regionChest)
+    return `${E.backpack} **Rơi trang bị:** không roll thêm đồ; hạ boss cuối khu vực nhận rương boss.`;
+  const pool = info.rarities
+    .map((rarity, i) => `**${rarityLabel(rarity)} ${i === 0 ? 60 : 40}%**`)
+    .join(" · ");
+  const mimic = world.mimicKind(state.encounter);
+  const reward =
+    mimic === "ancient_mimic"
+      ? "SR 50% · SSR 30% · UR 20%"
+      : mimic === "blood_mimic"
+        ? "SR 60% · SSR 40%"
+        : "";
+  return `${E.backpack} **Rơi trang bị khi hạ quái:** **${percent(info.chance)}** · ${E.luck} **LUCK ${info.luck}** (chốt khi vào combat).\n**Khi có drop:** ${pool}. Tự nhặt 1 món vào run; đồ trùng tăng 1 level.\nTỷ lệ = 5% + LUCK × 0,5 điểm %, tối đa **20%**. Không chịu pity hòm hay hiệu ứng tìm SSR.${reward ? `\n**Thưởng riêng chắc chắn:** 1 món (${reward}), cộng thêm roll drop ở trên.` : ""}`;
+}
 function rawEncounterDetails(s) {
   if (s.phase !== "encounter") return encounterText(s);
   const e = s.encounter;
@@ -866,8 +882,8 @@ function rawEncounterDetails(s) {
           "Hồi HP bằng **35% sát thương thực tế gây lên bạn** sau mỗi phản công, tối đa Max HP. Né/chặn phản công ngăn hồi HP.",
         deimoss:
           "Abyssal Spires giảm **25% sát thương bạn gây ra**, áp dụng mọi đòn. Dự báo skill trên bảng chính đã tính giảm trừ này.",
-      }[e.mechanic] || "Boss này không có chu kỳ kích hoạt riêng.";
-    return `${eventIcon("boss")} **${e.name} · Cơ chế đặc biệt**\n${mechanism}${e.drainCharges > 0 ? `\nSoul Drain: **quái** còn **${e.drainCharges} lần hút**; mỗi phản công trúng rút **1** ${E.mana} **MP** của **bạn**.` : ""}`;
+      }[e.mechanic] || "Quái này không có chu kỳ kích hoạt riêng.";
+    return `${eventIcon("boss")} **${e.name} · Chi tiết chiến đấu**\n${mechanism}\n\n${monsterLootDetails(s)}${e.drainCharges > 0 ? `\nSoul Drain: **quái** còn **${e.drainCharges} lần hút**; mỗi phản công trúng rút **1** ${E.mana} **MP** của **bạn**.` : ""}`;
   }
   if (e.type === "chest")
     return encounterText(s).replace(
@@ -1731,9 +1747,14 @@ function ratesFields(category) {
           "- **Kiểm tra:** thử phát hiện Mimic một lần; tỷ lệ tăng theo Luck/trang bị. Phát hiện được mới có nút tránh Mimic. Kiểm tra không đổi nội dung hòm.\n- **Mở:** có thể nhận đồ, gặp hòm rỗng/giả hoặc phải đánh Mimic. Tỷ lệ cơ bản: Ancient Mimic 3%, Mimic thường 12%.\n- **Nếu không phải Mimic:** SSR 10%, UR 3%, SR 22%, R 40%, rỗng 20%, giả 5%. Đây là tỷ lệ trong nhánh an toàn, không phải tỷ lệ tổng của mọi hòm. Luck/Rift/trang bị/pity có thể đổi tỷ lệ; xem **Chi tiết** để biết tỷ lệ của hòm hiện tại.\n- **Bán:** cộng bonus bằng 15% cược, không mở hòm. Kho báu có bảng tỷ lệ riêng.",
       },
       {
+        name: `${E.backpack} Rơi trang bị từ quái`,
+        value:
+          "Khi hạ quái: tỷ lệ drop = 5% + LUCK × 0,5 điểm %, tối đa 20%; chốt LUCK khi vào combat. Mỗi lần thành công nhận 1 món. Quái thường/Mimic thường: R 60% · SR 40%; Tinh anh: SR 60% · SSR 40%; Boss: SSR 60% · UR 40%. Boss cuối khu vực có rương không roll thêm đồ. Ancient/Blood Mimic giữ thưởng riêng chắc chắn và roll thêm drop theo LUCK. Không đổi pity hòm, không chịu hiệu ứng tìm SSR. Xem tỷ lệ trận hiện tại ở Chi tiết; đồ nhận ghi ở Lượt vừa rồi.",
+      },
+      {
         name: `${E.backpack} Trang bị và bảo hiểm hòm`,
         value:
-          "- Catalog có **63 món:** R 10, SR 13, SSR 24, UR 16. Mỗi món R/SR chuyên một chỉ số hoặc tác dụng, không trùng vai trò trong cùng độ hiếm; SR cho mức cộng cao hơn R. Đồ chỉ tồn tại trong run; trùng tên tăng level và cộng hiệu ứng. **UR có cả buff và lời nguyền**. Lời nguyền rút HP cuối tầng luôn chừa ít nhất **1 HP**.\n- Sau **5 hòm đã mở không nhận SR trở lên**, hòm kế bảo đảm SR+ và không có Mimic.\n- Sau **10 hòm không nhận SSR**, tỷ lệ SSR được cộng 2 điểm % mỗi lần tiếp theo; nhận SSR thì đặt lại bộ đếm. Luck cũng tăng tỷ lệ SSR, tổng tối đa 35% ở hòm thường.\n- Mốc 10 là lúc bắt đầu tăng xác suất, không phải bảo đảm SSR. Đồ từ Ancient Mimic/Blood Mimic, rương boss, shop hoặc event khác không đặt lại bộ đếm hòm thường/kho báu; rương thường mua ở Rift Merchant vẫn tính.",
+          "- Catalog có **63 món:** R 10, SR 13, SSR 24, UR 16. Mỗi món R/SR chuyên một chỉ số hoặc tác dụng, không trùng vai trò trong cùng độ hiếm; SR cho mức cộng cao hơn R. Đồ chỉ tồn tại trong run; trùng tên tăng level và cộng hiệu ứng. **UR có cả buff và lời nguyền**. Lời nguyền rút HP cuối tầng luôn chừa ít nhất **1 HP**.\n- Sau **5 hòm đã mở không nhận SR trở lên**, hòm kế bảo đảm SR+ và không có Mimic.\n- Sau **10 hòm không nhận SSR**, tỷ lệ SSR được cộng 2 điểm % mỗi lần tiếp theo; nhận SSR thì đặt lại bộ đếm. Luck cũng tăng tỷ lệ SSR, tổng tối đa 35% ở hòm thường.\n- Mốc 10 là lúc bắt đầu tăng xác suất, không phải bảo đảm SSR. Đồ rơi từ quái, Ancient Mimic/Blood Mimic, rương boss, shop hoặc event khác không đặt lại bộ đếm hòm thường/kho báu; rương thường mua ở Rift Merchant vẫn tính.",
       },
       {
         name: `${E.hp} Lời nguyền rút HP`,
