@@ -29,6 +29,8 @@ const {
   treasureChestIcon,
   paradoxIcon,
   memoryIcon,
+  effectStatLabel,
+  passiveIcon,
 } = require("./hardcoreIcons");
 const rarityLabel = (r) =>
   ({ common: "R", rare: "SR", legendary: "SSR", cursed: "UR" })[r];
@@ -38,6 +40,7 @@ const {
   healthBar,
   addTextFields,
   highlightStat,
+  formatStatText,
   STAT_SEPARATOR,
 } = require("./hardcoreUi");
 const SKILLS = {
@@ -51,12 +54,18 @@ const SKILLS = {
 };
 const SHRINES = {
   amazon: "20% thêm phát thứ ba khi dùng Barrage.",
-  barbarian: `${E.defense} DEF +8 khi ${E.hp} HP ≤30%.`,
+  get barbarian() {
+    return `${E.defense} **DEF** +8 khi ${E.hp} **HP** ≤30%.`;
+  },
   assassin: "Chắc chắn né một phản công.",
   sorceress: "Một skill miễn phí.",
-  druid: `Hồi ${E.hp} **HP** cho bạn bằng **5% Max HP** mỗi tầng trong ba tầng kế tiếp, không vượt Max HP.`,
+  get druid() {
+    return `Hồi ${E.hp} **HP** cho bạn bằng **5% Max HP** mỗi tầng trong ba tầng kế tiếp, không vượt Max HP.`;
+  },
   necromancer: "Chặn một đòn phản công.",
-  paladin: `${E.res} RES +10 khi nhận phép.`,
+  get paladin() {
+    return `${E.res} **RES** +10 khi nhận phép.`;
+  },
 };
 const delta = (state, key, suffix = "") => {
   const n = state.lastStatChanges?.[key] || 0;
@@ -83,12 +92,12 @@ function statLine(s, changes = false, compact = false, options = {}) {
     `${healthBar(s.hp, s.maxHp)}${d("hp")}${d("maxHp", " MAX")}`,
     `${E.str} **STR** **${s.str}**${d("str")}${STAT_SEPARATOR}${E.dex} **DEX** **${s.dex}**${d("dex")}${STAT_SEPARATOR}${E.vit} **VIT** **${s.vit}**${d("vit")}${STAT_SEPARATOR}${E.ene} **ENE** **${s.ene}**${d("ene")}`,
     `${E.mana} **MP** **${s.mana}/${s.maxMana}**${d("mana")}${d("maxMana", " MAX")}${options.includeSupplies === false ? "" : `${STAT_SEPARATOR}${E.potion} **Bình** ${s.potions}${d("potions")}${STAT_SEPARATOR}${E.ticket} **Vé** ${s.escapeTokens}${d("escapeTokens")}`}`,
-    `${E.attack} **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")}${STAT_SEPARATOR}${E.magic} **Phép** **${s.spellMin}–${s.spellMax}**${d("spellMin")}`,
+    `${E.attack} **Vật lý** **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")}${STAT_SEPARATOR}${E.magic} **Phép** **${s.spellMin}–${s.spellMax}**${d("spellMin")}`,
     `${E.defense} **DEF** **${defense}**${inverse ? " (Paradox)" : d("defense")}${STAT_SEPARATOR}${E.res} **RES** **${resistance}%**${options.effective && resistance !== s.resistance ? ` (gốc ${s.resistance}%)` : d("resistance")}${STAT_SEPARATOR}${E.luck} **LUCK** **${s.luck}**${d("luck")}`,
   ];
   if (!compact)
     lines.push(
-      `${E.accuracy} **ACC** **${s.accuracy}**${d("accuracy")}${STAT_SEPARATOR}${E.evasion} **EVA** **${s.evasion}**${d("evasion")}${STAT_SEPARATOR}${E.crit} **CRIT** **${percent(s.critChance)}**${d("critChance", "%")}\nBình **${percent(paradox.potionRate(s) * (1 - (s.healingReduction || 0)))}** Max HP`,
+      `${E.accuracy} **ACC** **${s.accuracy}**${d("accuracy")}${STAT_SEPARATOR}${E.evasion} **EVA** **${s.evasion}**${d("evasion")}${STAT_SEPARATOR}${E.crit} **CRIT** **${percent(s.critChance)}**${d("critChance", "%")}\n${E.potion} **Hiệu lực bình** **${percent(paradox.potionRate(s) * (1 - (s.healingReduction || 0)))}** Max HP`,
     );
   return lines.join("\n");
 }
@@ -109,31 +118,6 @@ function battleStats(s) {
   return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${s.maxMana}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé** **${s.escapeTokens}**\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${core.effectiveResistance(s)}%**${core.effectiveResistance(s) !== s.resistance ? ` (gốc ${s.resistance}%)` : ""}\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""}): ${skill.low}–${skill.high} DMG**\n${detail}\n`;
 }
 function effectText(effects, level = 1, { compactCurses = false } = {}) {
-  const names = {
-    str: `${E.str} STR`,
-    dex: `${E.dex} DEX`,
-    vit: `${E.vit} VIT`,
-    ene: `${E.ene} ENE`,
-    luck: `${E.luck} LUCK`,
-    maxHp: `${E.hp} Max HP`,
-    maxMana: `${E.mana} Max MP`,
-    physical: `${E.attack} Vật lý`,
-    spell: `${E.magic} Phép`,
-    defense: `${E.defense} DEF`,
-    accuracy: `${E.accuracy} ACC`,
-    evasion: `${E.evasion} EVA`,
-    resistance: `${E.res} RES`,
-    critChance: `${E.crit} CRIT`,
-    potionPower: `${E.potion} Hiệu lực bình`,
-    bossDamage: `${E.attack} DMG Boss`,
-    eliteDamage: `${E.attack} DMG Elite`,
-    mimicDetection: `${E.accuracy} Phát hiện Mimic`,
-    goblinChance: `${E.luck} Bắt Goblin`,
-    legendaryFind: `${E.chest} Tìm SSR`,
-    floorHpLoss: `${E.hp} HP mất/tầng`,
-    mimicChance: `${E.chest} Mimic`,
-    damageTaken: `${E.defense} DMG nhận`,
-  };
   const percentages = [
     "critChance",
     "potionPower",
@@ -158,7 +142,7 @@ function effectText(effects, level = 1, { compactCurses = false } = {}) {
         if (curseText) return formatPassiveText(curseText);
         if (key === "defenseSet") return `${E.defense} **DEF** = 0`;
         if (key === "bonusPenalty")
-          return `**Payout** ×${(1 - value).toFixed(2)} mỗi cấp chưa giải`;
+          return `${highlightStat(effectStatLabel(key))} ×${(1 - value).toFixed(2)} mỗi cấp chưa giải`;
         if (key === "potions")
           return `${E.potion} **Bình máu** +${value} khi nhận mỗi cấp`;
         if (key === "escapeTokens")
@@ -168,28 +152,48 @@ function effectText(effects, level = 1, { compactCurses = false } = {}) {
         const n = value * level;
         if (key === "floorHpLoss")
           return `${E.hp} **Cuối tầng:** giảm HP hiện tại một lượng bằng ${percent(n)} Max HP (luôn còn ít nhất 1 HP)`;
-        return `${highlightStat(names[key] || key)} ${n > 0 ? "+" : ""}${percentages.includes(key) ? percent(n) : Math.round(n * 100) / 100}`;
+        return `${highlightStat(effectStatLabel(key))} ${n > 0 ? "+" : ""}${percentages.includes(key) ? percent(n) : Math.round(n * 100) / 100}`;
       })
       .join(STAT_SEPARATOR) || "Không có"
   );
 }
 function formatPassiveText(text) {
-  const icons = {
-    "Max HP": E.hp,
-    HP: E.hp,
-    MP: E.mana,
-    DEF: E.defense,
-    CRIT: E.crit,
-    EVA: E.evasion,
-    DMG: E.attack,
+  const names = {
+    "Cuồng chiến": "berserk",
+    "Hút MP": "mpLeech",
+    "Phản đòn": "guardReflect",
+    "Phản thủ": "guardReflect",
+    Gai: "thorns",
+    "Thương lượng": "shopDiscount",
+    "May mắn sự kiện": "eventLuck",
+    "May mắn event": "eventLuck",
+    "Túi bình": "potionCapacity",
+    "Trần chí mạng": "critCap",
+    "Trần CRIT": "critCap",
+    "Trần né": "evasionCap",
+    "Né phản kích": "dodgeCounter",
+    "Khởi động MP": "startMana",
+    "Nghỉ chân": "campHeal",
+    "Tiết kiệm bình": "potionSave",
+    "Chống bẫy": "trapResistance",
+    "Tiên tri": "foresight",
   };
-  return text.replace(/\b(Max HP|HP|MP|DEF|CRIT|EVA|DMG)\b/g, (label) =>
-    highlightStat(icons[label] + " " + label),
-  );
+  return text
+    .split("\n")
+    .map((line) => {
+      const name = Object.keys(names).find(
+        (name) =>
+          line.startsWith(name) && /^[ :·]/.test(line.slice(name.length)),
+      );
+      return name
+        ? `${passiveIcon(names[name])} **${name}**${formatStatText(line.slice(name.length))}`
+        : formatStatText(line);
+    })
+    .join("\n");
 }
 function passiveText(item) {
   const text = itemPassives.describe(itemPassives.forItem(item));
-  return text ? "\n✨ " + formatPassiveText(text) : "";
+  return text ? "\n" + formatPassiveText(text) : "";
 }
 function itemText(item, level = 1) {
   return `${effectText(item.effects, level)}${passiveText(item)}${item.curse ? `\n☣️ Curse: ${effectText(item.curse.effects, level)}` : ""}`;
@@ -217,8 +221,8 @@ function merchantOffer(offer) {
         icon: E.hp,
       },
       luck: {
-        name: `${E.luck} +1 LUCK`,
-        detail: `+1 ${E.luck} LUCK.`,
+        name: `${E.luck} LUCK +1`,
+        detail: `${E.luck} **LUCK** +1.`,
         button: "+1 LUCK",
         icon: E.luck,
       },

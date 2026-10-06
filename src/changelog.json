@@ -1,5 +1,16 @@
 [
   {
+    "id": "1f5f11c1-b407-4693-833e-4351db011376",
+    "updatedAt": "2026-10-06T13:55:15.549Z",
+    "auditedAt": "2026-10-06T13:55:15.549Z",
+    "title": "Chuẩn hóa icon chỉ số và buff Sinh tồn",
+    "changes": [
+      "Thống nhất icon và tên chỉ số trong buff trang bị, mô tả nội tại và lời nguyền; bổ sung icon cho Payout, sức chứa bình và hiệu lực bình.",
+      "Phân biệt icon sát thương vật lý và phép trong mô tả lời nguyền; các nội tại sử dụng icon theo tác dụng thay cho biểu tượng chung.",
+      "Đồng bộ cách trình bày icon, tên chỉ số in đậm và giá trị ở trang bị, túi đồ, Chỉ số và buff Class Shrine."
+    ]
+  },
+  {
     "id": "8ea6594d-6fb8-4194-8ee2-97a30ebfd3b5",
     "updatedAt": "2026-10-06T13:33:06.739Z",
     "auditedAt": "2026-10-06T13:33:06.739Z",

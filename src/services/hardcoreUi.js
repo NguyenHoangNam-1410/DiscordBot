@@ -8,6 +8,41 @@ function highlightStat(label) {
   );
   return match ? `${match[1]} **${match[2]}**` : `**${label}**`;
 }
+function formatStatText(text) {
+  const labels = {
+    "Max HP": E.hp,
+    "Max MP": E.mana,
+    "DMG vật lý": E.attack,
+    "DMG phép": E.magic,
+    "Sức chứa bình": E.potion,
+    HP: E.hp,
+    MP: E.mana,
+    STR: E.str,
+    DEX: E.dex,
+    VIT: E.vit,
+    ENE: E.ene,
+    DEF: E.defense,
+    RES: E.res,
+    ACC: E.accuracy,
+    EVA: E.evasion,
+    CRIT: E.crit,
+    LUCK: E.luck,
+    DMG: E.attack,
+    Payout: E.coin,
+  };
+  // Preserve existing emoji markup and emphasis; format only plain text.
+  return text
+    .split(/(<a?:\w+:\d+>|\*\*[^*]*\*\*|`[^`]*`)/g)
+    .map((part, index) =>
+      index % 2
+        ? part
+        : part.replace(
+            /(?<![\p{L}\p{N}_])(Sức chứa bình|Max HP|Max MP|DMG vật lý|DMG phép|HP|MP|STR|DEX|VIT|ENE|DEF|RES|ACC|EVA|CRIT|LUCK|DMG|Payout)(?![\p{L}\p{N}_])/gu,
+            (label) => highlightStat(`${labels[label]} ${label}`),
+          ),
+    )
+    .join("");
+}
 function healthBar(hp, maxHp) {
   const ratio = maxHp > 0 ? Math.max(0, Math.min(1, hp / maxHp)) : 0;
   const filled =
@@ -52,4 +87,10 @@ function addTextFields(embed, name, text, inline = false) {
     });
 }
 
-module.exports = { healthBar, addTextFields, highlightStat, STAT_SEPARATOR };
+module.exports = {
+  healthBar,
+  addTextFields,
+  highlightStat,
+  formatStatText,
+  STAT_SEPARATOR,
+};

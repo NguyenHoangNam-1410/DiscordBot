@@ -6,16 +6,36 @@ const E = {
   get coin() {
     return icon("coin", "🪙");
   },
-  hp: icon("HP", "❤️"),
-  attack: icon("PHYS", "⚔️"),
-  defense: icon("DEF", "🛡️"),
-  mana: icon("MANA", "💧"),
-  magic: icon("ELE", "🔮"),
-  res: icon("RES", icon("crystal_ball", "🔮")),
-  shrine: icon("event_shrine", "🗿"),
-  chest: icon("event_chest", "📦"),
-  rift: icon("rift", "🌀"),
-  luck: icon("LUCK", "🍀"),
+  get hp() {
+    return icon("HP", "❤️");
+  },
+  get attack() {
+    return icon("PHYS", "⚔️");
+  },
+  get defense() {
+    return icon("DEF", "🛡️");
+  },
+  get mana() {
+    return icon("MANA", "💧");
+  },
+  get magic() {
+    return icon("ELE", "🔮");
+  },
+  get res() {
+    return icon("RES", icon("crystal_ball", "🔮"));
+  },
+  get shrine() {
+    return icon("event_shrine", "🗿");
+  },
+  get chest() {
+    return icon("event_chest", "📦");
+  },
+  get rift() {
+    return icon("rift", "🌀");
+  },
+  get luck() {
+    return icon("LUCK", "🍀");
+  },
   // Resolve new application emojis at render time, after startup loads their IDs.
   get crit() {
     return icon("CRIT", "💥");
@@ -32,15 +52,78 @@ const E = {
   get checkpoint() {
     return icon("checkpoint", "🏕️");
   },
-  potion: icon("potion", "🧪"),
+  get potion() {
+    return icon("potion", "🧪");
+  },
   get ticket() {
     return icon("ticket_rngesus", "🎫");
   },
-  str: icon("STR", "💪"),
-  dex: icon("DEX", "🗡️"),
-  vit: icon("VIT", "❤️"),
-  ene: icon("ENE", "🔮"),
+  get str() {
+    return icon("STR", "💪");
+  },
+  get dex() {
+    return icon("DEX", "🗡️");
+  },
+  get vit() {
+    return icon("VIT", "❤️");
+  },
+  get ene() {
+    return icon("ENE", "🔮");
+  },
 };
+// Resolve effect labels when rendering, after the application emoji registry loads.
+function effectStatLabel(key) {
+  const names = {
+    str: ["str", "STR"],
+    dex: ["dex", "DEX"],
+    vit: ["vit", "VIT"],
+    ene: ["ene", "ENE"],
+    luck: ["luck", "LUCK"],
+    maxHp: ["hp", "Max HP"],
+    maxMana: ["mana", "Max MP"],
+    maxEnergy: ["mana", "Max MP"],
+    attack: ["attack", "ATK"],
+    physical: ["attack", "Vật lý"],
+    spell: ["magic", "Phép"],
+    defense: ["defense", "DEF"],
+    accuracy: ["accuracy", "ACC"],
+    evasion: ["evasion", "EVA"],
+    resistance: ["res", "RES"],
+    critChance: ["crit", "CRIT"],
+    potionPower: ["potion", "Hiệu lực bình"],
+    bossDamage: ["attack", "DMG Boss"],
+    eliteDamage: ["attack", "DMG Elite"],
+    mimicDetection: ["accuracy", "Phát hiện Mimic"],
+    goblinChance: ["luck", "Bắt Goblin"],
+    legendaryFind: ["chest", "Tìm SSR"],
+    floorHpLoss: ["hp", "HP mất/tầng"],
+    mimicChance: ["chest", "Mimic"],
+    damageTaken: ["defense", "DMG nhận"],
+    bonusPenalty: ["coin", "Payout"],
+  };
+  const [symbol, label] = names[key] || ["backpack", key];
+  return `${E[symbol]} ${label}`;
+}
+function passiveIcon(kind) {
+  const symbols = {
+    berserk: "attack",
+    mpLeech: "mana",
+    guardReflect: "defense",
+    thorns: "defense",
+    shopDiscount: "coin",
+    eventLuck: "luck",
+    potionCapacity: "potion",
+    critCap: "crit",
+    evasionCap: "evasion",
+    dodgeCounter: "evasion",
+    startMana: "mana",
+    campHeal: "hp",
+    potionSave: "potion",
+    trapResistance: "defense",
+    foresight: "accuracy",
+  };
+  return E[symbols[kind]] || E.backpack;
+}
 const SKILL_ICONS = Object.fromEntries(
   Object.entries({
     amazon: "skill_barrage",
@@ -110,6 +193,8 @@ function paradoxIcon(id) {
 }
 module.exports = {
   E,
+  effectStatLabel,
+  passiveIcon,
   SKILL_ICONS,
   RIFT_ICONS,
   eventIcon,
