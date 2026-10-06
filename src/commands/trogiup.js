@@ -69,6 +69,10 @@ const PAGES = Object.freeze({
         "`/hoso` — xem hồ sơ; `/xephang` — chọn bảng xếp hạng bằng menu.",
       ],
       [
+        "📋 Cập nhật",
+        "`/changelog` — xem cập nhật mới nhất, chuyển trang để xem lịch sử.",
+      ],
+      [
         "📖 Hướng dẫn cũ",
         "`/huongdan` và `/trochoi` vẫn dùng được; `/trogiup` là bảng tra cứu theo từng mục.",
       ],

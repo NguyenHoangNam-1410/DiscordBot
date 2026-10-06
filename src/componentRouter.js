@@ -52,6 +52,11 @@ const { handleStore, handleBag } = require("./services/hardcoreInventoryView");
 const ROUTES = Object.freeze([
   {
     kind: "button",
+    prefix: "changelog:",
+    handle: (interaction) => require("./commands/changelog").handleButton(interaction),
+  },
+  {
+    kind: "button",
     prefix: "hardcore-tower:",
     handle: (interaction, logger) =>
       require("./services/hardcoreTowerService").handleTowerButton(

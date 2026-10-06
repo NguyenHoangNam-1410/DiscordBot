@@ -32,7 +32,7 @@ function helpEmbed(prefix = process.env.COMMAND_PREFIX || "!") {
       },
       {
         name: "📖 Trợ giúp",
-        value: "`/batdau` · `/luat` · `/trogiup` · `/huongdan`",
+        value: "`/batdau` · `/luat` · `/trogiup` · `/huongdan` · `/changelog`",
       },
       {
         name: "⌨️ Prefix tùy chọn",

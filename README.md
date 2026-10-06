@@ -26,6 +26,20 @@ Phiên bản bot độc lập chỉ dành cho trò chơi và hệ thống xu. Kh
 
 Bot cần bật **Message Content Intent** trong Discord Developer Portal nếu muốn dùng prefix command và trả lời trực tiếp trong Vua tiếng Việt.
 
+## Lịch sử cập nhật
+
+Người chơi dùng `/changelog` để xem thời gian và nội dung cập nhật bằng tiếng Việt. Mỗi trang có 3 bản cập nhật, mới nhất ở trang 1, hiển thị giờ Việt Nam (UTC+7). Có nút Trước/Sau, Mới nhất/Cũ nhất và tùy chọn `/changelog trang:2`.
+
+Sau mỗi lần cập nhật, audit thay đổi rồi ghi lịch sử trước khi commit/push:
+
+```sh
+npm run changelog:add -- --title "Sinh tồn: cập nhật cân bằng" --change "Mô tả thay đổi cho người chơi" --change "Nội dung bổ sung"
+```
+
+Công cụ tự ghi thời gian cập nhật và audit. Khi bổ sung lịch sử cũ, thêm `--commit <SHA>` để lấy thời gian commit từ Git; không sửa nội dung lịch sử để phản ánh thay đổi mới. Dữ liệu ở `src/changelog.json`, không cần thêm bảng database. Chạy `npm run test:changelog` để kiểm tra dữ liệu và phân trang.
+
+Để lệnh mới xuất hiện trên Discord: sau khi pull, chạy `npm run register` trên server đã có env Discord rồi restart bot.
+
 ## Lệnh tin nhắn (prefix)
 
 Mọi lệnh slash đang đăng ký đều có bản prefix dùng chung handler, quyền quản trị, kiểm tra bảo trì và tham số với slash. Đặt `ENABLE_MESSAGE_COMMANDS=true` (hoặc `ENABLE_PREFIX_COMMANDS=true`) và bật Message Content Intent; `COMMAND_PREFIX` mặc định là `!`.

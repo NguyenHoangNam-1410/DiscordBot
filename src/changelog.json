@@ -1,0 +1,384 @@
+[
+  {
+    "id": "37347bb3-cfa9-45d1-b590-ad8ee4d4e5df",
+    "updatedAt": "2026-10-06T08:28:53.175Z",
+    "auditedAt": "2026-10-06T08:28:53.175Z",
+    "title": "Lịch sử cập nhật của bot",
+    "changes": [
+      "Thêm /changelog để xem thời gian và nội dung cập nhật; mới nhất ở trang đầu, có phân trang và chọn trang trực tiếp.",
+      "Bổ sung lịch sử các thay đổi gần đây; thời gian hiển thị theo giờ Việt Nam (UTC+7)."
+    ]
+  },
+  {
+    "id": "d08afd1",
+    "updatedAt": "2026-10-06T15:07:53+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "d08afd138546d48e1c1edacd0eb9b64b5ce26542",
+    "title": "Sinh tồn: giảm tỷ lệ rơi đồ cơ bản",
+    "changes": [
+      "Tỷ lệ rơi đồ từ quái: 1% + LUCK × 0,5 điểm %, tối đa 20% (thay mức cơ bản 5%)."
+    ]
+  },
+  {
+    "id": "1f0878e",
+    "updatedAt": "2026-10-06T15:05:16+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "1f0878e8c74e4a0ceb46c46ed27167961a5ce1a9",
+    "title": "Sinh tồn: giá của Blood Merchant",
+    "changes": [
+      "Mua SR/SSR/UR mất lần lượt 12%/25%/40% Max HP trong run, tính theo Max HP lúc gặp thương nhân.",
+      "HP hiện tại chỉ giảm nếu vượt Max HP mới; log ghi chỉ số trước → sau."
+    ]
+  },
+  {
+    "id": "7a1bf36",
+    "updatedAt": "2026-10-06T14:55:50+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "7a1bf36d2ba5b17e87da704fdc614eba78163ed6",
+    "title": "Sinh tồn: giải nguyền giữ nguyên UR",
+    "changes": [
+      "Giải nguyền giữ độ hiếm UR, cấp độ, chỉ số và nội tại; không hạ trang bị xuống SSR.",
+      "Khôi phục UR cho các món từng bị hạ xuống SSR sau giải nguyền."
+    ]
+  },
+  {
+    "id": "3cb961a",
+    "updatedAt": "2026-10-06T13:39:56+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "3cb961a643d081db4ca25c765d847c8a50e49f97",
+    "title": "Sinh tồn: quái có thể rơi trang bị",
+    "changes": [
+      "Quái thường rơi R/SR; tinh anh rơi SR/SSR; trùm rơi SSR/UR. Độ hiếm thấp/cao chia 60%/40%.",
+      "Trùm cuối khu vực có rương không roll thêm; Ancient/Blood Mimic giữ thưởng cũ và roll thêm theo LUCK.",
+      "Tỷ lệ nằm trong Chi tiết; nhặt được đồ ghi ở Lượt vừa rồi. Tỷ lệ cơ bản lúc ra mắt là 5%, đã chỉnh ở bản mới hơn."
+    ]
+  },
+  {
+    "id": "a7d0a36",
+    "updatedAt": "2026-10-06T13:22:27+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "a7d0a363039d897a31b85ef9cd9a67252691e669",
+    "title": "Sinh tồn: vai trò SSR/UR và lời nguyền",
+    "changes": [
+      "Phân định lại vai trò trang bị SSR/UR, bổ sung lựa chọn cho LUCK và ENE.",
+      "Đa dạng hóa lời nguyền UR: chi phí HP/MP, giảm hồi phục, giới hạn bình và tăng sát thương phải nhận; mô tả rõ đối tượng và giới hạn."
+    ]
+  },
+  {
+    "id": "ec99bb9",
+    "updatedAt": "2026-10-06T12:25:08+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "ec99bb96ae84c61363401b8d9d53cd6a7797fb1d",
+    "title": "Sinh tồn: nội tại trang bị",
+    "changes": [
+      "Trang bị có nội tại hỗ trợ khám phá và chiến đấu: dự báo sự kiện, phản sát thương, đổi sát thương thành MP, giảm giá và tăng giới hạn chỉ số.",
+      "Nội tại không tăng theo cấp item; các món khác nhau có cùng hiệu ứng cộng dồn theo giới hạn. Dự báo không tiết lộ kết quả cầu nguyện RNGesus."
+    ]
+  },
+  {
+    "id": "3132cde",
+    "updatedAt": "2026-10-06T11:15:12+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "3132cde0f91ac068574e113ca0d7acf91b48d676",
+    "title": "Sinh tồn: tinh gọn trang bị R/SR",
+    "changes": [
+      "Mỗi món R/SR có vai trò chỉ số rõ ràng, giảm các món cùng độ hiếm có công dụng tương tự.",
+      "Túi đồ cũ được chuyển sang danh mục mới."
+    ]
+  },
+  {
+    "id": "8a27425",
+    "updatedAt": "2026-10-06T10:24:55+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "8a27425b49b329f61588b16fa597cb4261badc5a",
+    "title": "Sinh tồn: phân bổ lại các bảng thông tin",
+    "changes": [
+      "Túi chỉ hiển thị vật phẩm; Rift hiển thị Rift, Paradox và Contract.",
+      "Chỉ số hiển thị nhân vật, tổng chỉ số item và các hiệu ứng ảnh hưởng đến chỉ số."
+    ]
+  },
+  {
+    "id": "aacf186",
+    "updatedAt": "2026-10-06T10:07:39+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "aacf186fd5e9907d4cbb7818dc22e690b70cdd21",
+    "title": "Sinh tồn: dự báo Checkpoint trong Chi tiết",
+    "changes": [
+      "Các lựa chọn tăng STR/DEX/VIT/ENE và dự báo chỉ số trước → sau tại Checkpoint chuyển vào nút Chi tiết."
+    ]
+  },
+  {
+    "id": "89c721c",
+    "updatedAt": "2026-10-06T10:01:34+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "89c721c08a0167c1a149f30af8ca5957b03cac52",
+    "title": "Sinh tồn: rút gọn giao diện chiến đấu",
+    "changes": [
+      "Bỏ mục Rift modifier trên giao diện chiến đấu; xem hiệu ứng bằng nút Rift."
+    ]
+  },
+  {
+    "id": "d70d986",
+    "updatedAt": "2026-10-06T09:56:33+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "d70d9867b026eecb712eb829fe026f2295271da6",
+    "title": "Sinh tồn: mục Rút thưởng gọn hơn",
+    "changes": [
+      "Rút gọn phần xu/kim cương có thể nhận và phần giảm thưởng để dễ đọc."
+    ]
+  },
+  {
+    "id": "4fc4d63",
+    "updatedAt": "2026-10-06T09:53:53+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "4fc4d63d8d0a019e0ed9e8262fc268dd5eb8fdce",
+    "title": "Sinh tồn: hiển thị tỷ lệ gặp RNGesus",
+    "changes": [
+      "Khi gặp RNGesus, tên hiển thị tỷ lệ đã dùng để roll lần gặp đó: RNGesus (X%).",
+      "Bỏ mục Tiến trình khỏi giao diện chiến đấu."
+    ]
+  },
+  {
+    "id": "d5758e9",
+    "updatedAt": "2026-10-06T09:49:57+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "d5758e9b34d159db664e3015833351fe47278586",
+    "title": "Sinh tồn: phân loại Mimic",
+    "changes": ["Ancient Mimic và Blood Mimic được phân loại là quái tinh anh."]
+  },
+  {
+    "id": "d95d1c0",
+    "updatedAt": "2026-10-06T09:44:47+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "d95d1c05530070822b90d4d962538dd72010cfb2",
+    "title": "Sinh tồn: tách mô tả sự kiện và trang bị",
+    "changes": [
+      "Bỏ trang bị/tổng chỉ số item khỏi giao diện chiến đấu.",
+      "Giải thích các nhánh kết quả của sự kiện chuyển vào nút Chi tiết."
+    ]
+  },
+  {
+    "id": "b4d47e0",
+    "updatedAt": "2026-10-06T09:38:08+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "b4d47e09118d61b950d8e502e937c1e085d9e87e",
+    "title": "Sinh tồn: chuyển Paradox/Contract vào Rift",
+    "changes": [
+      "Hiệu ứng Rift Paradox và Contract nằm trong nút Rift, giảm thông tin trên giao diện chiến đấu."
+    ]
+  },
+  {
+    "id": "23bafb8",
+    "updatedAt": "2026-10-06T09:21:29+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "23bafb8e21278794b9d16c2bf2267ea33538e858",
+    "title": "Sinh tồn: log hồi máu của Druid",
+    "changes": [
+      "Ghi hồi HP của Druid trong log lượt, gồm lượng hồi và HP trước → sau; chuẩn hóa icon HP."
+    ]
+  },
+  {
+    "id": "e30f4da",
+    "updatedAt": "2026-10-06T09:14:07+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "e30f4da50908321689954a1884ba9896d73b36d6",
+    "title": "Sinh tồn: mô tả Mana Vỡ Vụn",
+    "changes": [
+      "Bổ sung icon cho lựa chọn Paradox và làm rõ MP tiêu hao/hồi khi dùng kỹ năng, tấn công, phòng thủ."
+    ]
+  },
+  {
+    "id": "7fe144d",
+    "updatedAt": "2026-10-06T08:39:58+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "7fe144dfd9235388b999373e921c106a4d8998f4",
+    "title": "Sinh tồn: sửa icon xu",
+    "changes": [
+      "Sửa chỗ hiển thị undefined trong phần xu đã chi và chuẩn hóa icon xu ở giao diện/log."
+    ]
+  },
+  {
+    "id": "aafd356",
+    "updatedAt": "2026-10-06T08:30:37+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "aafd356316a88fd7a5251ff2e38112ba779fdab4",
+    "title": "Sinh tồn: minh bạch biến động tiền thưởng",
+    "changes": [
+      "Đưa số xu thực nhận sau phạt vào mục Rút thưởng.",
+      "Sự kiện cộng/trừ tiền thưởng và bán rương ghi biến động trước → sau trong log."
+    ]
+  },
+  {
+    "id": "9d2609e",
+    "updatedAt": "2026-10-05T19:01:24+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "9d2609eef3a0188926d4a8968e0c8716d639c3cd",
+    "title": "Sinh tồn: icon Paradox",
+    "changes": [
+      "Dùng các icon Paradox đã upload lên ứng dụng Discord trong giao diện sinh tồn."
+    ]
+  },
+  {
+    "id": "bbc2039",
+    "updatedAt": "2026-10-05T18:01:05+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "bbc2039c65d7b4a5006e614c240c00a24dc331b8",
+    "title": "Tháp Định Mệnh: sửa nút Chơi lại",
+    "changes": [
+      "Run thất bại, đã hoàn thành hoặc thuộc phiên bản cũ có thể chơi lại thử thách đang hoạt động."
+    ]
+  },
+  {
+    "id": "bb01b4e",
+    "updatedAt": "2026-10-05T17:14:42+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "bb01b4e39e6c27042b32cbff65a1c641b4674638",
+    "title": "Tháp Định Mệnh: bộ sinh thử thách tuần",
+    "changes": [
+      "Nâng cấp bộ sinh tháp tuần, kiểm tra chuỗi hoàn hảo cho cả 7 class trước khi đưa thử thách vào chơi."
+    ]
+  },
+  {
+    "id": "7b4dedd",
+    "updatedAt": "2026-10-05T15:38:26+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "7b4dedddec9b58925991ea3491cbd9974f8f3fe4",
+    "title": "Sinh tồn: chu kỳ xuất hiện RNGesus",
+    "changes": [
+      "Sau khi vượt qua RNGesus, tỷ lệ gặp được reset và tăng chậm lại từ đầu.",
+      "RNGesus không xuất hiện ở hai tầng liền kề."
+    ]
+  },
+  {
+    "id": "c72eb03",
+    "updatedAt": "2026-10-05T15:26:03+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "c72eb03a3d12305df68ca6014aa499cf8e047da0",
+    "title": "Hồ sơ: vòng avatar thành tựu class",
+    "changes": [
+      "Đạt tầng 500 với một class nhận vòng avatar riêng của class đó; vòng chỉ nhận qua thành tựu."
+    ]
+  },
+  {
+    "id": "384906b",
+    "updatedAt": "2026-10-05T14:07:45+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "384906b9437417bd15178c003ad0140e3a6bc774",
+    "title": "Sinh tồn: mô tả hiệu ứng rõ hơn",
+    "changes": [
+      "Làm rõ đối tượng chịu/nhận hiệu ứng Rift, chuẩn hóa cách hiển thị chỉ số và mô tả Soul Drain."
+    ]
+  },
+  {
+    "id": "a168a3c",
+    "updatedAt": "2026-10-05T13:51:50+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "a168a3c2f345cdb5328d125f8666d333aa73110b",
+    "title": "Sinh tồn V2: khôi phục cách hiển thị cũ",
+    "changes": ["Khôi phục nút chiến đấu gọn và nhãn MP trong Sinh tồn V2."]
+  },
+  {
+    "id": "c305df0",
+    "updatedAt": "2026-10-05T13:06:04+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "c305df09cdc528e07a1cab6394419721960005d7",
+    "title": "Tháp Định Mệnh: bỏ chỉ số bị lặp",
+    "changes": ["DEF và RES trên bảng nhân vật không còn hiển thị hai lần."]
+  },
+  {
+    "id": "579168c",
+    "updatedAt": "2026-10-05T13:01:38+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "579168cfe8e8a32b72e8d64a61724ca7eab85515",
+    "title": "Tháp Định Mệnh: đồng bộ giao diện",
+    "changes": [
+      "Áp dụng quy tắc hiển thị chỉ số và giao diện chiến đấu của Sinh tồn V2 cho tháp."
+    ]
+  },
+  {
+    "id": "eb66020",
+    "updatedAt": "2026-10-05T12:41:01+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "eb66020a0ca323bb062f1c03dd13073d49b623b2",
+    "title": "Rift Paradox V2 và Tháp Định Mệnh",
+    "changes": [
+      "Bổ sung Paradox V2 và thử thách Tháp Định Mệnh theo tuần, độc lập với run sinh tồn."
+    ]
+  },
+  {
+    "id": "1df259e",
+    "updatedAt": "2026-10-05T11:54:46+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "1df259eed83b7de93d44a8569f068a83f88f6b5f",
+    "title": "Hồ sơ: nền tối",
+    "changes": ["Đổi các mảng màu pastel sáng trên hồ sơ sang bảng màu tối."]
+  },
+  {
+    "id": "e80316e",
+    "updatedAt": "2026-10-05T11:46:32+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "e80316ef864635027053c5ed3a66c08cd60ac477",
+    "title": "Poker: giao diện kết thúc ván",
+    "changes": ["Ẩn mục Bài của bot sau khi ván poker đã kết thúc."]
+  },
+  {
+    "id": "8f329df",
+    "updatedAt": "2026-10-05T11:33:47+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "8f329df5839d842dab7e58f98a18cf831b4a9d12",
+    "title": "Sinh tồn: nhánh cướp Lost Adventurer",
+    "changes": [
+      "Cướp thành công nhận SSR (75%) hoặc UR (25%).",
+      "Hậu quả sau đó: 50% mất 10% payout, 50% phải đánh Bounty Hunter tinh anh."
+    ]
+  },
+  {
+    "id": "3fdf93f",
+    "updatedAt": "2026-10-05T11:18:02+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "3fdf93f5ca415d04e8180e472cca257fbeca2d3b",
+    "title": "Sinh tồn: cửa hàng, túi đồ và loadout",
+    "changes": [
+      "Thêm /sinhton cuahang và /sinhton tuido. Vé chạy RNGesus/tăng cầu nguyện/hồi sinh giá 100/100/300 kim cương.",
+      "Năm món ngẫu nhiên đổi lúc 00:00 Việt Nam; giá R/SR/SSR/UR là 10.000/50.000/100.000/200.000 xu, mua không giới hạn.",
+      "Trước khi bắt đầu chọn tối đa 5 món khác nhau và 1 vé mỗi loại, xem chỉ số rồi xác nhận. Đồ/vé đã mang vào run không hoàn trả.",
+      "Cứu Lost Adventurer cho bảo hộ hồi sinh 50% HP một lần trong cùng khu vực, ưu tiên trước vé hồi sinh."
+    ]
+  },
+  {
+    "id": "bcaef79",
+    "updatedAt": "2026-10-05T09:53:25+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "bcaef7957dbe1f07fd1c12cd300c8ff13442026f",
+    "title": "Sinh tồn: mô tả trừ HP theo Max HP",
+    "changes": [
+      "Làm rõ lời nguyền trừ HP hiện tại theo phần trăm Max HP, không phải giảm Max HP."
+    ]
+  },
+  {
+    "id": "62aca60",
+    "updatedAt": "2026-10-05T09:44:59+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "62aca60056d54fb12c86f316f9a0ba582a413a5e",
+    "title": "Sinh tồn: đồ nhận gần nhất ở đầu túi",
+    "changes": ["Các món vừa nhận được đẩy lên đầu danh sách túi đồ."]
+  },
+  {
+    "id": "db27a0a",
+    "updatedAt": "2026-10-05T09:23:35+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "db27a0abbe2c5e41f47581a0b5478d8d94e95a35",
+    "title": "Cò quay Nga: bỏ mục Lượt của bạn",
+    "changes": ["Bỏ nhãn lượt dư thừa khỏi giao diện Cò quay Nga."]
+  },
+  {
+    "id": "25a3b31",
+    "updatedAt": "2026-10-04T22:49:19+07:00",
+    "auditedAt": "2026-10-06T08:25:05.492Z",
+    "commit": "25a3b31a186c3b334ae3a00e6e81044e03e287ed",
+    "title": "Sinh tồn: xác nhận rút thưởng",
+    "changes": [
+      "Thêm xác nhận riêng tư, cho xem trước phần thưởng trước khi rút."
+    ]
+  }
+]
