@@ -102,11 +102,7 @@ for (const [encounter, action, rate] of [
   assert.ok(withdrawal.includes("Xu có thể nhận"));
   assert.ok(withdrawal.includes("Giảm thưởng xu"));
   assert.ok(withdrawal.includes("**" + Math.round(rate * 100) + "%**"));
-  assert.ok(
-    !f
-      .find((x) => x.name.includes("Trang bị"))
-      .value.includes("Payout sau phạt"),
-  );
+  assert.equal(f.find((x) => x.name.includes("Trang bị")), undefined);
 }
 // Wrong Portal does not clear the floor, and records the loss before fighting its Elite.
 {

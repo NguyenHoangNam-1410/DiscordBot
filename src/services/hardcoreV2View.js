@@ -636,6 +636,10 @@ function encounterText(s) {
   return `${eventIcon(e.kind)} **${e.name}**\n${descriptions[k] || "Chọn một hành động."}`;
 }
 function encounterSummary(s) {
+  if (s.phase === "boss_chest")
+    return `${eventIcon("boss_chest")} **RƯƠNG BOSS · TẦNG ${s.encounter.bossFloor}**\nChọn mở hoặc bán rương trước khi đi tiếp hay rút thưởng.\nXem **Chi tiết** để đọc phần thưởng.`;
+  if (s.phase === "paradox")
+    return `${eventIcon("paradox")} **RIFT PARADOX · HIỆU LỰC 5 TẦNG**\nTầng ${s.encounter.version === 2 ? s.encounter.milestone + 1 : s.floor}–${s.encounter.version === 2 ? s.encounter.milestone + 5 : s.floor + 4}. Chọn một luật bằng nút bên dưới.\nXem **Chi tiết** để đọc công dụng từng lựa chọn.`;
   if (s.phase !== "encounter") return encounterText(s);
   const e = s.encounter;
   if (e.type === "combat") {
@@ -651,11 +655,34 @@ function encounterSummary(s) {
     const preview = core.incomingPreview(s);
     return `${["boss", "final_boss"].includes(e.rank) ? eventIcon("boss") : "👹"} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} Sát thương ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Bạn đánh vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} DMG** · ${E.evasion} **${percent(preview.chance)}** trúng bạn *(chưa Crit/DEF)*${e.rank === "ancient_mimic" ? `\n${E.chest} **Hạ quái nhận 1 đồ:** SR 50% · SSR 30% · UR 20%.` : e.rank === "mimic" && e.name === "Blood Mimic" ? `\n${E.chest} **Hạ quái nhận 1 đồ:** SR 60% · SSR 40%.` : ""}`;
   }
-  if (e.type === "shrine") return encounterText(s);
+
   if (e.type === "empty")
     return `${eventIcon("empty")} **PHÒNG TRỐNG**\nĐi tiếp để vượt tầng hoặc rút thưởng.`;
   if (e.type === "surprise" && e.kind.endsWith("_shop"))
     return `${eventIcon(e.kind)} **${e.name}** · mua một món\n${e.offers.map((o, i) => `${i + 1}. **${E.backpack} ${o.item.name} [${rarityLabel(o.item.rarity)}]** · ${money(o.price)} ${shopCurrency(e.kind)}`).join("\n")}\nXem Chi tiết để đọc công dụng và điều kiện mua.`;
+  if (e.type === "surprise" && e.kind === "merchant") return encounterText(s);
+  if (hasEncounterDetails(s)) {
+    const notices = {
+      chest: e.revealed
+        ? "Đã phát hiện Mimic. Chọn mở hòm để chiến đấu hoặc tránh Mimic."
+        : "Chọn mở, kiểm tra hoặc bán hòm.",
+      shrine: "Chọn chạm Shrine hoặc bỏ qua.",
+      rngesus: "Không thể đánh bại hoặc rút thưởng tại đây. Chọn cách đối phó.",
+      trap: "Đi tiếp để xử lý tình huống.",
+      echo: "Chọn cách tương tác với mộ.",
+      surprise: "Chọn một hành động bằng nút bên dưới.",
+    };
+    const target = s.items.find((item) => item.definition.id === e.targetId);
+    const context =
+      e.kind === "duelist" && e.mode
+        ? `\nVán ${Math.min(5, e.round + 1)}/5 · đã thắng ${e.wins}.`
+        : e.kind === "treasure_room"
+          ? "\nPhải chọn một rương; không được soi hoặc bỏ qua."
+          : target
+            ? `\n${E.backpack} ${target.name} [${rarityLabel(target.rarity)}] · Lv.${target.level}`
+            : "";
+    return `${eventIcon(["surprise", "trap"].includes(e.type) ? e.kind : e.type)} **${e.name || e.type}**\n${notices[e.type] || "Chọn một hành động."}${context}\nXem **Chi tiết** để đọc tỷ lệ, kết quả và điều kiện.`;
+  }
   return encounterText(s);
 }
 function equipmentSummary(state) {
@@ -683,21 +710,20 @@ function equipmentSummary(state) {
       ([key, value]) => key === "defenseSet" || value !== 0,
     ),
   );
-  return (
-    Object.keys(active).length
-      ? effectText(active)
-      : "Không có chỉ số cộng thêm."
-  ).slice(0, 700);
+  return Object.keys(active).length
+    ? effectText(active)
+    : "Không có chỉ số cộng thêm.";
 }
 function hasEncounterDetails(s) {
+  if (["boss_chest", "paradox"].includes(s.phase)) return true;
   if (s.phase !== "encounter") return false;
   const e = s.encounter;
   return (
-    e.type === "chest" ||
+    ["chest", "shrine", "rngesus", "trap", "echo", "surprise"].includes(
+      e.type,
+    ) ||
     (e.type === "combat" &&
-      (e.mechanic || ["boss", "final_boss"].includes(e.rank))) ||
-    (e.type === "surprise" &&
-      (e.kind.endsWith("_shop") || e.kind === "merchant"))
+      (e.mechanic || ["boss", "final_boss"].includes(e.rank)))
   );
 }
 function viewTabs(s) {
@@ -717,6 +743,7 @@ function viewLabel(tab, s) {
   }[tab];
 }
 function encounterDetails(s) {
+  if (s.phase !== "encounter") return encounterText(s);
   const e = s.encounter;
   if (e.type === "combat") {
     const mechanism =
@@ -731,30 +758,16 @@ function encounterDetails(s) {
       }[e.mechanic] || "Boss này không có chu kỳ kích hoạt riêng.";
     return `${eventIcon("boss")} **${e.name} · Cơ chế đặc biệt**\n${mechanism}${e.drainCharges > 0 ? `\nSoul Drain: **quái** còn **${e.drainCharges} lần hút**; mỗi phản công trúng rút **1** ${E.mana} **MP** của **bạn**.` : ""}`;
   }
-  if (e.type === "chest") {
-    const names = {
-      ancient_mimic: "Ancient Mimic",
-      mimic: "Mimic",
-      legendary: "SSR",
-      cursed: "UR (kèm curse)",
-      rare: "SR",
-      common: "R",
-      empty: "Hòm trống",
-      fake: "SSR giả (không công dụng)",
-    };
-    const odds = e.odds || core.chestOdds(s, e.name === "Treasure Chest");
-    return `${E.chest} **Tỷ lệ mở hòm**\n${Object.entries(odds)
-      .filter(([, n]) => n > 0)
-      .map(([key, n]) => `${names[key]}: **${percent(n)}**`)
-      .join(
-        "\n",
-      )}\n\n**Kiểm tra:** ${percent(e.detectionChance)} phát hiện nếu có Mimic; không phát hiện chưa chắc an toàn.\n${chestPityText(s, e, true)}\n**Bán:** bonus +15% tiền cược. Đồ nhận chỉ dùng trong run; trùng tên tăng level. UR có curse.`;
-  }
+  if (e.type === "chest")
+    return encounterText(s).replace(
+      chestPityText(s, e),
+      chestPityText(s, e, true),
+    );
   if (e.type === "surprise" && e.kind.endsWith("_shop"))
     return `${eventIcon(e.kind)} **Công dụng các món đang bán**\n${e.offers.map((offer, i) => `${i + 1}. **${E.backpack} ${offer.item.name} [${rarityLabel(offer.item.rarity)}]**\n${itemText(offer.item)}`).join("\n\n")}\n\nMua tối đa **một món** trong lần gặp. ${e.kind === "blood_shop" ? "Trả bằng HP, phải còn ít nhất 1 HP sau mua." : e.kind === "diamond_shop" ? "Kim cương trừ ngay khi mua, không hoàn lại khi run kết thúc." : "Trả từ payout gốc; bonus Blood Paradox không dùng để mua."}`;
   if (e.type === "surprise" && e.kind === "merchant")
     return `${eventIcon("merchant")} **Công dụng hàng hóa**\n${e.offers.map((o) => `**${merchantOffer(o).name}**\n${merchantOffer(o).detail}`).join("\n\n")}\nChỉ mua một món; trả từ payout gốc. Cần đủ payout để mua.`;
-  return "Không có thông tin bổ sung; xem bảng chơi chính.";
+  return encounterText(s);
 }
 function chaosLabel(s) {
   const p = s.lastChaosChance || 0;
@@ -995,16 +1008,6 @@ function embed(state, userId, result = null, sessionId = null) {
             ? `Xu có thể nhận: **${money(core.payout(state))} ${icon("coin", "🪙")}**\nKim cương tạm giữ: **${money(runDiamondReward(state))} ${icon("gem", "💎")}**`
             : "Chưa thể rút") + coinPayoutDetails(state),
       inline: false,
-    },
-    {
-      name: `${E.backpack} Trang bị (${state.items.length})`,
-      value:
-        equipmentSummary(state) +
-        (state.classShrine &&
-        state.floor >= state.classShrine.from &&
-        state.floor <= state.classShrine.until
-          ? `\n${E.shrine} Class Shrine · hết sau tầng ${state.classShrine.until}`
-          : ""),
     },
   );
   addTextFields(e, `${icon("scroll", "📜")} Lượt vừa rồi`, turnText(state));
@@ -1281,6 +1284,16 @@ function privatePayload(
       `${stats.CLASSES[state.classKey].emoji} ${stats.CLASSES[state.classKey].name} · Tầng ${state.floor}`,
     );
   if (tab === "items") {
+    addTextFields(
+      e,
+      `${E.backpack} Tổng hợp trang bị (${state.items.length})`,
+      equipmentSummary(state) +
+        (state.classShrine &&
+        state.floor >= state.classShrine.from &&
+        state.floor <= state.classShrine.until
+          ? `\n${E.shrine} Class Shrine · hết sau tầng ${state.classShrine.until}`
+          : ""),
+    );
     e.addFields({
       name: "Vật tư",
       value: `${E.potion} ${state.potions} bình · hồi ${percent(paradox.potionRate(state))} Max HP, tối thiểu 20.\n${E.ticket} ${state.escapeTokens} vé thoát hiểm (tối đa 1); tự cứu khi bỏ chạy RNGesus thất bại.\n🎟️ Vé hồi sinh: ${state.reviveTickets || 0} · hồi 50% HP. 🙏 Cầu nguyện: ${percent(core.rngesusPrayerChance(state))}.${state.adventurerRescue ? `\n🤝 Lost Adventurer bảo hộ một lần đến tầng ${state.adventurerRescue.until}, dùng trước vé hồi sinh.` : ""}`,
@@ -1342,12 +1355,12 @@ function privatePayload(
       `${paradox.active(state) ? paradox.describe(state) : ""}${paradox.active(state) ? "" : `\n${eventIcon("paradox")} Rift Paradox: ${state.paradox ? `${state.paradox.kind === "blood" ? `Máu là tiền (hồi HP tại checkpoint không giảm hệ số) · hệ số thưởng xu ${state.paradox.bloodFactor >= 0 ? "+" : ""}${percent(state.paradox.bloodFactor)}` : "Ngược đời · vật lý lấy DEF, DEF lấy trung bình vật lý gốc"} · hết tầng ${state.paradox.until}` : "không"}`}\nClass Shrine: ${state.classShrine ? `${SHRINES[state.classKey]} Hết tầng ${state.classShrine.until}.` : "không"}\n${contractEffectText(state)}\nPayout gốc ${money(core.rawPayout(state))} ${E.coin}; bonus Blood Paradox không dùng mua đồ.`,
     );
   } else {
-    e.setDescription(
-      `${stats.CLASSES[state.classKey].emoji} ${stats.CLASSES[state.classKey].name} · Tầng ${state.floor}\n\n${hasEncounterDetails(state) ? encounterDetails(state) : "Không có thông tin bổ sung; xem bảng chơi chính."}`.slice(
-        0,
-        4096,
-      ),
-    );
+    const detail = hasEncounterDetails(state)
+      ? encounterDetails(state)
+      : "Không có thông tin bổ sung; xem bảng chơi chính.";
+    const description = `${e.data.description}\n\n${detail}`;
+    if (description.length <= 4096) e.setDescription(description);
+    else addTextFields(e, "Chi tiết tình huống", detail);
   }
   e.setFooter({
     text: `v${state.releaseVersion} · Lượt ${state.turn} · Trang ${page + 1}/${pages}`,
