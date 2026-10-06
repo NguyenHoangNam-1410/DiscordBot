@@ -189,6 +189,9 @@ function normalize(state) {
   state.reviveTickets = state.reviveTickets === 1 ? 1 : 0;
   expireAdventurer(state);
   const current = state.encounter;
+  // Reclassify saved special Mimics without rerolling stats, HP or event outcomes.
+  for (const enemy of [current, current?.mimic, current?.enemy])
+    world.normalizeMimicEnemy(enemy);
   // Apply the robbery rule to saved consequences without rerolling their locked kind.
   for (const debt of state.debts || [])
     if (debt.action === "event_rob") debt.good = false;
@@ -2011,13 +2014,13 @@ function act(state, session, action, rng) {
         state.lastLog += `\n🏆 Hạ ${e.name}.`;
         if (paradox.is(state, "hunger"))
           state.lastLog += `\n🍖 Cơn Đói hồi ${heal(state, Math.max(1, Math.floor(state.maxHp * 0.12)))} HP.`;
-        if (e.rank === "ancient_mimic") {
+        if (world.mimicKind(e) === "ancient_mimic") {
           const roll = rng();
           const rarity =
             roll < 0.5 ? "rare" : roll < 0.8 ? "legendary" : "cursed";
           receiveItem(state, randomItem(rarity, rng));
           state.lastLog += `\n${E.chest} Phần thưởng hạ Ancient Mimic: đã nhận trang bị.`;
-        } else if (e.rank === "mimic" && e.name === "Blood Mimic") {
+        } else if (world.mimicKind(e) === "blood_mimic") {
           const rarity = rng() < 0.6 ? "rare" : "legendary";
           receiveItem(state, randomItem(rarity, rng));
           state.lastLog += `\n${E.chest} Phần thưởng hạ Blood Mimic: đã nhận trang bị.`;

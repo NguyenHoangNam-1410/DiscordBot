@@ -108,6 +108,24 @@ function regionForFloor(floor) {
     REGIONS.find((r) => floor >= r.start && floor <= r.end) || REGIONS.at(-1)
   );
 }
+function mimicKind(enemy) {
+  if (!enemy) return null;
+  if (["ancient_mimic", "blood_mimic"].includes(enemy.mimicKind))
+    return enemy.mimicKind;
+  if (enemy.rank === "ancient_mimic") return "ancient_mimic";
+  if (["mimic", "elite"].includes(enemy.rank) && enemy.name === "Blood Mimic")
+    return "blood_mimic";
+  return null;
+}
+function normalizeMimicEnemy(enemy) {
+  const kind = mimicKind(enemy);
+  if (!kind) return enemy;
+  enemy.mimicKind = kind;
+  enemy.rank = "elite";
+  enemy.rewardMultiplier = 2;
+  if (kind === "ancient_mimic") enemy.name = "Ancient Mimic";
+  return enemy;
+}
 function makeEnemy(state, rank = "normal", name = null, rng = Math.random) {
   const floor = state.floor,
     mods = state.modifiers || {};
@@ -151,7 +169,7 @@ function makeEnemy(state, rank = "normal", name = null, rng = Math.random) {
   );
   const damageType = boss?.damageType || "mixed";
   const names = regionForFloor(floor).enemies;
-  return {
+  return normalizeMimicEnemy({
     type: "combat",
     rank,
     name: name || boss?.name || names[Math.floor(rng() * names.length)],
@@ -181,7 +199,7 @@ function makeEnemy(state, rank = "normal", name = null, rng = Math.random) {
     combatTurn: 0,
     drainCharges: Math.min(3, Math.ceil((mods.soul_drain || 0) / 4)),
     rewardMultiplier: rank === "normal" ? 1 : rank === "elite" ? 2 : 3,
-  };
+  });
 }
 function hitChance(accuracy, evasion) {
   return (
@@ -207,6 +225,8 @@ module.exports = {
   effectiveStacks,
   regionForFloor,
   makeEnemy,
+  mimicKind,
+  normalizeMimicEnemy,
   hitChance,
   defenseReduction,
 };

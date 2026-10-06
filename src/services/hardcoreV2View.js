@@ -241,7 +241,7 @@ function randomEventText(s) {
     `${E[key]} **${key.toUpperCase()}** ${n > 0 ? "+" : ""}${n}`;
   if (e.type === "chest") {
     const labels = {
-      ancient_mimic: "Chiến đấu Ancient Mimic.",
+      ancient_mimic: "Chiến đấu Ancient Mimic (Tinh anh).",
       mimic: "Chiến đấu Mimic.",
       legendary: "Nhận đồ [SSR].",
       cursed: "Nhận đồ [UR], kèm curse.",
@@ -423,7 +423,7 @@ function randomEventText(s) {
         option("Uống", [
           ["60%", `Hồi đầy ${E.hp} HP.`],
           ["25%", `+15 ${E.hp} Max HP và hồi 15 ${E.hp} HP.`],
-          ["15%", "Chiến đấu Blood Mimic."],
+          ["15%", "Chiến đấu Blood Mimic (Tinh anh)."],
         ]),
       ]);
     case "mirror":
@@ -651,9 +651,9 @@ function encounterSummary(s) {
         final_boss: "Trùm cuối",
         mimic: "Mimic",
         ancient_mimic: "Ancient Mimic",
-      }[e.rank] || e.rank;
+      }[world.mimicKind(e) ? "elite" : e.rank] || e.rank;
     const preview = core.incomingPreview(s);
-    return `${["boss", "final_boss"].includes(e.rank) ? eventIcon("boss") : "👹"} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} Sát thương ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Bạn đánh vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} DMG** · ${E.evasion} **${percent(preview.chance)}** trúng bạn *(chưa Crit/DEF)*${e.rank === "ancient_mimic" ? `\n${E.chest} **Hạ quái nhận 1 đồ:** SR 50% · SSR 30% · UR 20%.` : e.rank === "mimic" && e.name === "Blood Mimic" ? `\n${E.chest} **Hạ quái nhận 1 đồ:** SR 60% · SSR 40%.` : ""}`;
+    return `${["boss", "final_boss"].includes(e.rank) ? eventIcon("boss") : "👹"} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} Sát thương ${money(e.damageMin)}–${money(e.damageMax)} · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Bạn đánh vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} DMG** · ${E.evasion} **${percent(preview.chance)}** trúng bạn *(chưa Crit/DEF)*${world.mimicKind(e) === "ancient_mimic" ? `\n${E.chest} **Hạ quái nhận 1 đồ:** SR 50% · SSR 30% · UR 20%.` : world.mimicKind(e) === "blood_mimic" ? `\n${E.chest} **Hạ quái nhận 1 đồ:** SR 60% · SSR 40%.` : ""}`;
   }
 
   if (e.type === "empty")
@@ -1504,12 +1504,12 @@ function ratesFields(category) {
       {
         name: `${E.chest} Phần thưởng Ancient Mimic`,
         value:
-          "Hạ Ancient Mimic nhận ngay **1 trang bị**: **50% SR · 30% SSR · 20% UR**. UR kèm lời nguyền; đồ trùng tăng level. Trang bị được cộng ngay trong run và hiển thị ở **Lượt vừa rồi**. Tỷ lệ cố định, không chịu Luck/pity; phần thưởng này không làm thay đổi bộ đếm bảo hiểm hòm. Mimic thường không có phần thưởng này.",
+          "Ancient Mimic là **quái Tinh anh**, hưởng bonus sát thương lên Tinh anh. Hạ quái nhận ngay **1 trang bị**: **50% SR · 30% SSR · 20% UR**. UR kèm lời nguyền; đồ trùng tăng level. Trang bị được cộng ngay trong run và hiển thị ở **Lượt vừa rồi**. Tỷ lệ cố định, không chịu Luck/pity; phần thưởng này không làm thay đổi bộ đếm bảo hiểm hòm. Mimic thường không có phần thưởng này.",
       },
       {
         name: `${E.chest} Phần thưởng Blood Mimic`,
         value:
-          "Hạ Blood Mimic từ event Blood Fountain nhận ngay **1 trang bị**: **60% SR · 40% SSR**. Đồ trùng tăng level và áp dụng hiệu ứng ngay trong run. Tỷ lệ cố định, không chịu Luck/pity và không làm đổi bộ đếm bảo hiểm hòm. Vẫn nhận bonus xu khi vượt tầng; Mimic thường từ hòm không có phần thưởng trang bị này.",
+          "Blood Mimic từ event Blood Fountain là **quái Tinh anh**, hưởng bonus sát thương lên Tinh anh. Hạ quái nhận ngay **1 trang bị**: **60% SR · 40% SSR**. Đồ trùng tăng level và áp dụng hiệu ứng ngay trong run. Tỷ lệ cố định, không chịu Luck/pity và không làm đổi bộ đếm bảo hiểm hòm. Vẫn nhận bonus xu khi vượt tầng; Mimic thường từ hòm không có phần thưởng trang bị này.",
       },
       {
         name: `${eventIcon("boss_chest")} Rương boss cuối khu vực`,

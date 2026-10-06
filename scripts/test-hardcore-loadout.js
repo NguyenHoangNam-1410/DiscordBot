@@ -554,6 +554,131 @@ async function run() {
   for (const field of v2View.ratesFields("encounters"))
     assert.ok(field.value.length <= 1024);
 
+  // Special Mimics are Elites: damage bonuses apply while their locked stats and loot stay intact.
+  for (const kind of ["ancient_mimic", "blood_mimic"]) {
+    const state = stats.createState("barbarian", 10000);
+    state.floor = 9;
+    state.cleared = 8;
+    const enemy =
+      kind === "ancient_mimic"
+        ? core.makeChest(state, () => 0.01).mimic
+        : core.makeSurprise(state, () => 0.5, "fountain").enemy;
+    assert.equal(enemy.rank, "elite");
+    assert.equal(enemy.mimicKind, kind);
+    assert.equal(enemy.rewardMultiplier, 2);
+    state.encounter = enemy;
+    const battle = v2View.embed(state, "user").toJSON();
+    assert.ok(
+      battle.fields
+        .find((field) => field.name.includes("Đối thủ"))
+        .value.includes("Tinh anh"),
+    );
+    // Test real physical and magical damage, with and without a Paradox.
+    for (const classKey of ["barbarian", "sorceress"])
+      for (const active of [false, true]) {
+        const baseline = stats.createState(classKey, 10000);
+        baseline.floor = 9;
+        baseline.encounter = structuredClone(enemy);
+        baseline.encounter.hp = baseline.encounter.maxHp = 10000;
+        if (active)
+          baseline.activeParadox = {
+            version: 2,
+            id: "mana_fracture",
+            startFloor: 1,
+            endFloor: 10,
+            milestone: 0,
+            combatActionCount: 0,
+            attackActionCount: 0,
+          };
+        const boosted = structuredClone(baseline);
+        boosted.eliteDamage = 0.5;
+        assert.ok(
+          core.skillDamagePreview(boosted).low >
+            core.skillDamagePreview(baseline).low,
+        );
+        const before = baseline.encounter.hp;
+        core.playerAttack(baseline, "skill", () => 0.5);
+        core.playerAttack(boosted, "skill", () => 0.5);
+        assert.ok(
+          before - boosted.encounter.hp > before - baseline.encounter.hp,
+        );
+      }
+    // Migrate both an ongoing fight and pending event enemies without changing locked combat data.
+    for (const placement of ["combat", "chest", "fountain"]) {
+      const saved = stats.createState("barbarian", 10000);
+      saved.floor = 9;
+      const legacy = structuredClone(enemy);
+      legacy.rank = kind === "ancient_mimic" ? "ancient_mimic" : "mimic";
+      legacy.rewardMultiplier = 3;
+      delete legacy.mimicKind;
+      legacy.hp -= 7;
+      const combatData = [
+        legacy.hp,
+        legacy.maxHp,
+        legacy.damageMin,
+        legacy.damageMax,
+        legacy.nextDamageType,
+      ];
+      saved.encounter =
+        placement === "combat"
+          ? legacy
+          : placement === "chest"
+            ? { type: "chest", kind, roll: 0.17, mimic: legacy }
+            : { type: "surprise", kind: "fountain", roll: 0.91, enemy: legacy };
+      core.normalize(saved);
+      assert.equal(legacy.rank, "elite");
+      assert.equal(legacy.mimicKind, kind);
+      assert.deepEqual(
+        [
+          legacy.hp,
+          legacy.maxHp,
+          legacy.damageMin,
+          legacy.damageMax,
+          legacy.nextDamageType,
+        ],
+        combatData,
+      );
+      const once = JSON.stringify(saved);
+      core.normalize(saved);
+      assert.equal(JSON.stringify(saved), once);
+    }
+    // Verify all reward branches after an actual kill, without touching chest pity.
+    for (const [roll, rarity] of kind === "ancient_mimic"
+      ? [
+          [0.49, "rare"],
+          [0.5, "legendary"],
+          [0.8, "cursed"],
+        ]
+      : [
+          [0.59, "rare"],
+          [0.6, "legendary"],
+        ]) {
+      const won = stats.createState("barbarian", 10000);
+      Object.assign(won, {
+        floor: 9,
+        cleared: 8,
+        pityRare: 2,
+        pityLegendary: 3,
+      });
+      won.encounter = structuredClone(enemy);
+      won.encounter.hp = 1;
+      const rolls = [0.5, 0.5, 0.5, roll];
+      core.act(won, session, "attack", () => rolls.shift() ?? 0.5);
+      assert.equal(won.items.length, 1);
+      assert.equal(won.items[0].rarity, rarity);
+      assert.equal(won.pityRare, 2);
+      assert.equal(won.pityLegendary, 3);
+    }
+  }
+  const ordinaryMimic = world.makeEnemy(
+    stats.createState("barbarian", 10),
+    "mimic",
+    "Mimic",
+    () => 0.5,
+  );
+  assert.equal(ordinaryMimic.rank, "mimic");
+  assert.equal(world.mimicKind(ordinaryMimic), null);
+
   serialize(ui.shopPayload(guildId, carrier));
   for (const filter of bag.FILTERS)
     serialize(ui.inventoryPayload(guildId, carrier, filter, 10));
