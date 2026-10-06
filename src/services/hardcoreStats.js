@@ -125,11 +125,17 @@ function sumEffects(state) {
   }
   return { totals, curseFactor };
 }
+const itemPassives = require("../hardcore/itemPassives");
 function derive(state) {
   const c = CLASSES[state.classKey];
   if (!c) throw new Error("INVALID_CLASS");
   const { totals: t, curseFactor } = sumEffects(state);
-  const d = {};
+  const p = itemPassives.aggregate(state);
+  const d = {
+    maxPotions: 5 + p.potionCapacity,
+    critCap: 0.6 + p.critCap,
+    evasionCap: 0.45 + p.evasionCap,
+  };
   for (const key of ATTRIBUTES) d[key] = Math.max(1, c[key] + (t[key] || 0));
   d.maxHp = Math.max(1, c.baseHp + d.vit * 3 + (t.maxHp || 0));
   const power = balance.power(state);
@@ -154,7 +160,7 @@ function derive(state) {
   d.critChance = clamp(
     c.baseCrit + d.dex * 0.001 + (t.critChance || 0),
     0,
-    0.6,
+    d.critCap,
   );
   d.critDamage = 1.75;
   d.resistance = clamp(
@@ -193,6 +199,8 @@ function recompute(state) {
   if (typeof state.hp === "number") state.hp = clamp(state.hp, 0, state.maxHp);
   if (typeof state.mana === "number")
     state.mana = clamp(state.mana, 0, state.maxMana);
+  if (typeof state.potions === "number")
+    state.potions = clamp(state.potions, 0, state.maxPotions);
   return state;
 }
 function addSource(state, effects, source = "event") {

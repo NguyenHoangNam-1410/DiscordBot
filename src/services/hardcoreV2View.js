@@ -8,6 +8,7 @@ const {
 } = require("discord.js");
 const stats = require("./hardcoreStats");
 const core = require("./hardcoreV2");
+const itemPassives = require("../hardcore/itemPassives");
 const paradox = require("./hardcoreParadoxService");
 const world = require("./hardcoreWorld");
 const { RELEASE } = require("./hardcoreVersion");
@@ -161,8 +162,25 @@ function effectText(effects, level = 1) {
       .join(STAT_SEPARATOR) || "Không có"
   );
 }
+function formatPassiveText(text) {
+  const icons = {
+    "Max HP": E.hp,
+    HP: E.hp,
+    MP: E.mana,
+    DEF: E.defense,
+    CRIT: E.crit,
+    EVA: E.evasion,
+  };
+  return text.replace(/\b(Max HP|HP|MP|DEF|CRIT|EVA)\b/g, (label) =>
+    highlightStat(icons[label] + " " + label),
+  );
+}
+function passiveText(item) {
+  const text = itemPassives.describe(itemPassives.forItem(item));
+  return text ? "\n✨ " + formatPassiveText(text) : "";
+}
 function itemText(item, level = 1) {
-  return `${effectText(item.effects, level)}${item.curse ? `\n☣️ Curse: ${effectText(item.curse.effects, level)}` : ""}`;
+  return `${effectText(item.effects, level)}${passiveText(item)}${item.curse ? `\n☣️ Curse: ${effectText(item.curse.effects, level)}` : ""}`;
 }
 function merchantOffer(offer) {
   if (offer.item)
@@ -176,7 +194,7 @@ function merchantOffer(offer) {
     {
       potion: {
         name: `${E.potion} Bình máu`,
-        detail: `+1 ${E.potion} bình máu (tối đa 5).`,
+        detail: `+1 ${E.potion} bình máu (theo giới hạn bình của bạn).`,
         button: "Bình máu",
         icon: E.potion,
       },
@@ -362,25 +380,44 @@ function randomEventText(s) {
     if (e.kind === "portal")
       return show(
         "Wrong Portal",
-        "50% tốt / 50% xấu. Các kết quả trong mỗi nhóm có tỷ lệ bằng nhau; Lucky Break không áp dụng.",
+        percent(e.goodChance ?? 0.5) +
+          " tốt / " +
+          percent(1 - (e.goodChance ?? 0.5)) +
+          " xấu. Các kết quả trong mỗi nhóm có tỷ lệ bằng nhau; Lucky Break không áp dụng.",
         [
           option("Đi tiếp · kết quả tốt", [
             [
-              "16,7%",
+              percent((e.goodChance ?? 0.5) / 3),
               `+10 ${E.hp} Max HP, hồi đầy ${E.hp} HP, +1 ${E.potion} bình máu.`,
             ],
-            ["16,7%", "Bonus +50% cược."],
+            [percent((e.goodChance ?? 0.5) / 3), "Bonus +50% cược."],
             [
-              "16,7%",
+              percent((e.goodChance ?? 0.5) / 3),
               `${attr("str", 6)}${STAT_SEPARATOR}${attr("ene", 6)}${STAT_SEPARATOR}${attr("luck", 1)}.`,
             ],
           ]),
           option("Đi tiếp · kết quả xấu (Elite đánh phủ đầu sau đó)", [
-            ["10%", `Mất 15% Max ${E.hp} HP, giữ ít nhất 1.`],
-            ["10%", `${E.mana} MP về 0.`],
-            ["10%", `Mất tối đa 2 ${E.potion} bình máu.`],
-            ["10%", "Mất 10% payout."],
-            ["10%", `${attr("str", -5)}, ${attr("ene", -5)}.`],
+            [
+              percent((1 - (e.goodChance ?? 0.5)) / (s.floor === 1 ? 4 : 5)),
+              `Mất 15% Max ${E.hp} HP, giữ ít nhất 1.`,
+            ],
+            [
+              percent((1 - (e.goodChance ?? 0.5)) / (s.floor === 1 ? 4 : 5)),
+              `${E.mana} MP về 0.`,
+            ],
+            [
+              percent((1 - (e.goodChance ?? 0.5)) / (s.floor === 1 ? 4 : 5)),
+              `Mất tối đa 2 ${E.potion} bình máu.`,
+            ],
+            ...(s.floor === 1
+              ? []
+              : [
+                  [percent((1 - (e.goodChance ?? 0.5)) / 5), "Mất 10% payout."],
+                ]),
+            [
+              percent((1 - (e.goodChance ?? 0.5)) / (s.floor === 1 ? 4 : 5)),
+              `${attr("str", -5)}, ${attr("ene", -5)}.`,
+            ],
           ]),
         ],
       );
@@ -437,9 +474,15 @@ function randomEventText(s) {
     case "fountain":
       return show(e.name, "Uống để hồi phục hoặc gặp Blood Mimic.", [
         option("Uống", [
-          ["60%", `Hồi đầy ${E.hp} HP.`],
-          ["25%", `+15 ${E.hp} Max HP và hồi 15 ${E.hp} HP.`],
-          ["15%", "Chiến đấu Blood Mimic (Tinh anh)."],
+          [percent(e.healThreshold ?? 0.6), `Hồi đầy ${E.hp} HP.`],
+          [
+            percent((e.goodThreshold ?? 0.85) - (e.healThreshold ?? 0.6)),
+            `+15 ${E.hp} Max HP và hồi 15 ${E.hp} HP.`,
+          ],
+          [
+            percent(1 - (e.goodThreshold ?? 0.85)),
+            "Chiến đấu Blood Mimic (Tinh anh).",
+          ],
         ]),
       ]);
     case "mirror":
@@ -457,16 +500,25 @@ function randomEventText(s) {
         "Chọn một cửa; có thể nhận thưởng hoặc gặp nguy hiểm.",
         [
           option("Cửa sáng", [
-            ["70%", `Hồi đầy ${E.hp} HP, +1 ${E.potion} bình máu (tối đa 5).`],
-            ["30%", `Mất 20% Max ${E.hp} HP, giữ ít nhất 1.`],
+            [
+              percent(e.doorChances?.light ?? 0.7),
+              `Hồi đầy ${E.hp} HP, +1 ${E.potion} bình máu (tối đa ${s.maxPotions}).`,
+            ],
+            [
+              percent(1 - (e.doorChances?.light ?? 0.7)),
+              `Mất 20% Max ${E.hp} HP, giữ ít nhất 1.`,
+            ],
           ]),
           option("Cửa vàng", [
-            ["70%", "Bonus +50% cược."],
-            ["30%", "Chiến đấu Mimic."],
+            [percent(e.doorChances?.gold ?? 0.7), "Bonus +50% cược."],
+            [percent(1 - (e.doorChances?.gold ?? 0.7)), "Chiến đấu Mimic."],
           ]),
           option("Cửa tối", [
-            ["60%", "Nhận đồ [SSR]."],
-            ["40%", "Chiến đấu Premature Rift Boss."],
+            [percent(e.doorChances?.dark ?? 0.6), "Nhận đồ [SSR]."],
+            [
+              percent(1 - (e.doorChances?.dark ?? 0.6)),
+              "Chiến đấu Premature Rift Boss.",
+            ],
           ]),
         ],
       );
@@ -642,7 +694,7 @@ function encounterText(s) {
     return `${eventIcon(k)} **HORADRIC FORGE · LÒ CHUYỂN HÓA**\nTiêu hao **1 level trang bị** để giữ hiệu ứng có lợi trong run và chọn thêm một phần thưởng. Không tốn xu.\n\n**${E.backpack} Trang bị dùng để chuyển hóa**\n${E.backpack} **${target.name} [${rarityLabel(target.rarity)}] · Lv.${target.level}**\n- Sau khi dùng: ${target.level === 1 ? "món này biến mất khỏi trang bị" : `level **${target.level}→${target.level - 1}**`}.\n- **Giữ nguyên hiệu ứng của level đã tiêu hao:** ${effectText(retained)}. Đây là hiệu ứng được giữ lại, không cộng thêm lần nữa.\n${hasCurse ? `- **Xóa lời nguyền của 1 level:** ${effectText(target.definition.curse.effects)}.\n` : ""}- Không nhận lại ${E.potion} bình máu, ${E.ticket} vé hoặc ${E.hp} HP hồi khi nhặt đồ.\n\n**Chọn một phần thưởng thêm**\n- ${E[main]} **${main.toUpperCase()} +6**.\n- ${E[guard]} **${guard.toUpperCase()} +7**.\n- ${E.vit} **VIT +4**.${["legendary", "cursed"].includes(target.rarity) ? `\n- ${E.ticket} **Nhận 1 vé thoát hiểm** (giữ tối đa 1).` : ""}\n\n**Bỏ qua:** giữ nguyên trang bị, không nhận phần thưởng.`;
   }
   const descriptions = {
-    healer: `**Hồi phục:** hồi ${E.hp} HP bằng 30% Max HP, ít nhất 20; +1 ${E.potion} bình máu (tối đa 5). Miễn phí.`,
+    healer: `**Hồi phục:** hồi ${E.hp} HP bằng 30% Max HP, ít nhất 20; +1 ${E.potion} bình máu (theo giới hạn bình của bạn). Miễn phí.`,
     blacksmith: `Trả 12% payout để tăng một cấp **${target?.name}**. Cộng buff mới; UR chưa giải nguyền cộng cả curse. Đồ đã giải hết nguyền giữ trạng thái sạch khi rèn.`,
     purifier: `Trả **${percent(core.PURIFIER_COST_RATE)} payout gốc**: gỡ **toàn bộ lời nguyền** của **${target?.name}**, giữ buff/level, chuyển thành SSR.`,
     sacrifice: `**Hiến HP:** mất tối đa 20% Max ${E.hp} HP (giữ ≥1) → +6 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\n**Hiến payout:** trả 10% payout → +6 ${E.vit} VIT. Hiến HP không cộng bonus Blood Paradox.`,
@@ -761,6 +813,38 @@ function viewLabel(tab, s) {
   }[tab];
 }
 function encounterDetails(s) {
+  const detail = rawEncounterDetails(s);
+  const forecasts = s.encounter.passiveForecast || [];
+  const choices = core.actions(s);
+  const forecast = forecasts
+    .map(
+      (f) =>
+        "- **" +
+        (choices.find((a) => a.action === f.action)?.label || f.action) +
+        "**: " +
+        (f.safe ? "✓ An toàn" : "⚠ Nguy hiểm"),
+    )
+    .join("\n");
+  const offers = s.encounter.offers || [];
+  const discount = offers.some((o) => o.discount > 0)
+    ? "\n\n**Thương lượng:** giá xu đã giảm " +
+      percent(offers[0].discount) +
+      ", khóa khi gặp.\n" +
+      offers
+        .map((o) => money(o.basePrice) + " → **" + money(o.price) + " xu**")
+        .join("\n")
+    : "";
+  return (
+    detail +
+    (forecast
+      ? "\n\n**✨ Tiên tri** · kết quả tức thời đã khóa\n" +
+        forecast +
+        "\nKhông tiết lộ phần thưởng hoặc hậu quả hẹn về sau; không áp dụng RNGesus."
+      : "") +
+    discount
+  );
+}
+function rawEncounterDetails(s) {
   if (s.phase !== "encounter") return encounterText(s);
   const e = s.encounter;
   if (e.type === "combat") {
@@ -1119,16 +1203,19 @@ function rows(sessionId, state, disabled = false) {
   const buttons = actions.map((a) =>
     button(
       prefix + a.action,
-      {
-        potion: `${state.potions}`,
-        open: "Mở hòm",
-        inspect: "Kiểm tra",
-        sell: "Bán hòm",
-        leave: "Tránh Mimic",
-      }[a.action] ||
-        (state.encounter.kind === "merchant" && a.action.startsWith("buy_")
-          ? `${merchantOffer(state.encounter.offers[Number(a.action.slice(4))]).button} · ${money(state.encounter.offers[Number(a.action.slice(4))].price)} xu`
-          : a.label),
+      (itemPassives.forecastLabel(state.encounter, a.action)
+        ? itemPassives.forecastLabel(state.encounter, a.action) + " · "
+        : "") +
+        ({
+          potion: `${state.potions}`,
+          open: "Mở hòm",
+          inspect: "Kiểm tra",
+          sell: "Bán hòm",
+          leave: "Tránh Mimic",
+        }[a.action] ||
+          (state.encounter.kind === "merchant" && a.action.startsWith("buy_")
+            ? `${merchantOffer(state.encounter.offers[Number(a.action.slice(4))]).button} · ${money(state.encounter.offers[Number(a.action.slice(4))].price)} xu`
+            : a.label)),
       a.action === "fight"
         ? ButtonStyle.Danger
         : ["attack", "open", "next", "flee"].includes(a.action)
@@ -1375,13 +1462,13 @@ function privatePayload(
   if (tab === "items") {
     e.addFields({
       name: "Vật tư & vé",
-      value: `${E.potion} Bình máu: **${state.potions}**${STAT_SEPARATOR}${E.ticket} Vé thoát hiểm: **${state.escapeTokens}**\n🎟️ Vé hồi sinh: **${state.reviveTickets || 0}**`,
+      value: `${E.potion} Bình máu: **${state.potions}/${state.maxPotions}**${STAT_SEPARATOR}${E.ticket} Vé thoát hiểm: **${state.escapeTokens}**\n🎟️ Vé hồi sinh: **${state.reviveTickets || 0}**`,
     });
     for (const item of state.items.slice(page * 5, page * 5 + 5))
       e.addFields({
         name: `${item.name} Lv.${item.level} [${rarityLabel(item.rarity)}]`,
         value:
-          `${effectText(item.definition.effects, item.level)}${item.definition.curse ? `\n☣️ ${item.level > (item.cleansedLevels || 0) ? effectText(item.definition.curse.effects, item.level - (item.cleansedLevels || 0)) : "Đã giải toàn bộ curse"}` : ""}`.slice(
+          `${effectText(item.definition.effects, item.level)}${passiveText(item.definition)}${item.definition.curse ? `\n☣️ ${item.level > (item.cleansedLevels || 0) ? effectText(item.definition.curse.effects, item.level - (item.cleansedLevels || 0)) : "Đã giải toàn bộ curse"}` : ""}`.slice(
             0,
             1024,
           ),
@@ -1401,6 +1488,27 @@ function privatePayload(
       e,
       `${E.backpack} Tổng hợp trang bị (${state.items.length})`,
       equipmentSummary(state),
+    );
+    addTextFields(
+      e,
+      "✨ Nội tại trang bị · Bạn",
+      formatPassiveText(itemPassives.summary(state)) || "Chưa có nội tại.",
+    );
+    addTextFields(
+      e,
+      "Giới hạn của bạn",
+      E.potion +
+        " Bình: " +
+        state.maxPotions +
+        " · " +
+        E.crit +
+        " CRIT: " +
+        percent(state.critCap) +
+        " · " +
+        E.evasion +
+        " Né vật lý: " +
+        percent(state.evasionCap) +
+        ". Nội tại không tăng theo level; các món khác nhau cùng loại cộng đến trần.",
     );
     addTextFields(
       e,
@@ -1592,7 +1700,7 @@ function ratesFields(category) {
       {
         name: `${E.checkpoint} Checkpoint và ${E.rift} Rift`,
         value:
-          "- Sau mỗi **5 tầng:** hồi đầy HP, +2 bình (tối đa 5), chọn **+5 STR/DEX/VIT/ENE**. Bảng hiển thị chỉ số hiện tại và dự báo từng lựa chọn.\n- Sau mỗi **10 tầng:** thêm 1 stack Rift; nhận đủ 8 loại trước khi lặp. Icon ×N là số stack của từng loại; nút Rift giải thích hiệu ứng.\n- Sau mỗi **25 tầng:** chọn Paradox có hiệu lực 5 tầng. Paradox v2 chọn đều một trong **4 cặp cố định**, hiệu lực từ tầng mốc +1 đến hết +5, sau nâng thuộc tính. Không đổi payout hoặc stat gốc; mở UI không roll lại.\n- Sau tầng **199/399/699/899:** xóa toàn bộ stack một Rift có hại, trừ Unstable Rift.",
+          "- Sau mỗi **5 tầng:** hồi đầy HP, +2 bình (cơ bản 5, nội tại tăng tối đa 10), chọn **+5 STR/DEX/VIT/ENE**. Bảng hiển thị chỉ số hiện tại và dự báo từng lựa chọn.\n- Sau mỗi **10 tầng:** thêm 1 stack Rift; nhận đủ 8 loại trước khi lặp. Icon ×N là số stack của từng loại; nút Rift giải thích hiệu ứng.\n- Sau mỗi **25 tầng:** chọn Paradox có hiệu lực 5 tầng. Paradox v2 chọn đều một trong **4 cặp cố định**, hiệu lực từ tầng mốc +1 đến hết +5, sau nâng thuộc tính. Không đổi payout hoặc stat gốc; mở UI không roll lại.\n- Sau tầng **199/399/699/899:** xóa toàn bộ stack một Rift có hại, trừ Unstable Rift.",
       },
     ],
     loot: [
@@ -1692,6 +1800,11 @@ function ratesFields(category) {
     ],
     rewards: [
       {
+        name: "✨ Nội tại trang bị",
+        value:
+          "Mỗi món có một nội tại, không tăng theo level. Các món khác nhau cùng loại cộng rồi áp trần: cuồng chiến 40%, hút MP 35%, phản thủ 40%, gai 20%, phản khi né 50%, giá xu −20%, event tốt +10 điểm % (nhánh tốt ≤95%), thêm tối đa 5 bình (tổng 10), trần CRIT 75% và né vật lý 60%, khởi động MP 75%, nghỉ chân 5% Max HP, giữ bình 25%, chống bẫy 25%. Phản sát thương chung mỗi lượt ≤50% sát thương cơ bản trung bình của class, chịu DEF/miễn giảm quái; không crit/kích hoạt nội tại. Tiên tri tối đa 2 lựa chọn/event, khóa khi tạo, chỉ báo an toàn/nguy hiểm tức thời, không áp dụng RNGesus. Giải nguyền giữ nội tại; chuyển hóa level cuối làm mất nội tại, phần chỉ số giữ lại không mang nội tại.",
+      },
+      {
         name: "Cửa hàng & túi Sinh tồn",
         value:
           "Dùng /sinhton cuahang và /sinhton tuido. Ba vé cố định: chạy RNGesus 100 💎, cầu nguyện ×2 100 💎, hồi sinh 300 💎. Năm trang bị chọn đều từ toàn bộ pool, đổi mỗi ngày lúc 00:00 Việt Nam: R 10.000 / SR 50.000 / SSR 100.000 / UR 200.000 xu. Mua không giới hạn lượt. Trước run chọn tối đa 5 món khác nhau (Lv.1), mỗi loại vé một chiếc; xem chỉ số rồi Bắt đầu. Không hoàn đồ/vé khi chết, rút, bỏ hoặc hết hạn run. Vé hồi sinh tự cứu một lần với 50% HP; ở lại đánh tiếp nếu chết khi đánh quái, sang tầng kế nếu chết bởi RNGesus.",
@@ -1703,7 +1816,7 @@ function ratesFields(category) {
       },
       {
         name: `${eventIcon("merchant")} Rift Merchant · giá theo payout gốc`,
-        value: `Mỗi lần gặp có **3 loại hàng khác nhau**, chọn từ 6 loại; mua tối đa **1 món**. Giá được khóa khi gặp, làm tròn lên, tối thiểu 1 xu.\n- ${E.potion} +1 bình (tối đa 5): **2,5%** payout gốc.\n- ${E.hp} Hồi đầy HP: **4%**.\n- ${E.luck} +1 LUCK trong run: **5%**.\n- ${E.backpack} 1 trang bị SR: **7,5%**.\n- ${E.ticket} Vé thoát hiểm (tối đa 1): **12,5%**.\n- ${E.chest} Rương thường: **7,5%**, **mở ngay khi mua**; tỷ lệ và pity như hòm thường, có thể gặp Mimic hoặc rỗng/giả. Chi tiết liệt kê tỷ lệ của rương đang bán.\nTrả bằng payout của run; bonus Blood Paradox không dùng để mua.`,
+        value: `Mỗi lần gặp có **3 loại hàng khác nhau**, chọn từ 6 loại; mua tối đa **1 món**. Giá được khóa khi gặp, làm tròn lên, tối thiểu 1 xu.\n- ${E.potion} +1 bình (giới hạn cơ bản 5, nội tại tăng tối đa 10): **2,5%** payout gốc.\n- ${E.hp} Hồi đầy HP: **4%**.\n- ${E.luck} +1 LUCK trong run: **5%**.\n- ${E.backpack} 1 trang bị SR: **7,5%**.\n- ${E.ticket} Vé thoát hiểm (tối đa 1): **12,5%**.\n- ${E.chest} Rương thường: **7,5%**, **mở ngay khi mua**; tỷ lệ và pity như hòm thường, có thể gặp Mimic hoặc rỗng/giả. Chi tiết liệt kê tỷ lệ của rương đang bán.\nTrả bằng payout của run; bonus Blood Paradox không dùng để mua.`,
       },
       {
         name: `${eventIcon("purifier")} Purifier · giải lời nguyền`,
@@ -1740,6 +1853,7 @@ module.exports = {
   setupPreview,
   ratesFields,
   statLine,
+  passiveText,
   effectText,
   encounterText,
   checkpointPreview,

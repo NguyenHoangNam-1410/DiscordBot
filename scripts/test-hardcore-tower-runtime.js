@@ -643,7 +643,12 @@ async function main() {
           t = c.transitions[step];
         const board = serialize(view.payload(r, s, c, result, now));
         assert.ok(board.includes(c.character.name));
-        assert.ok(board.includes(c.seedCommitment));
+        // Commitment belongs to the readonly rules panel after the battle UI cleanup.
+        assert.ok(
+          serialize(
+            view.privatePayload(r, s, c, "1234567890123456789", "rules"),
+          ).includes(c.seedCommitment),
+        );
         for (const tab of ["stats", "effects", "encounter", "rules"])
           serialize(view.privatePayload(r, s, c, "1234567890123456789", tab));
         for (const option of engine

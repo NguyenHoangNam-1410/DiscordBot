@@ -201,13 +201,13 @@ function makeEnemy(state, rank = "normal", name = null, rng = Math.random) {
     rewardMultiplier: rank === "normal" ? 1 : rank === "elite" ? 2 : 3,
   });
 }
-function hitChance(accuracy, evasion) {
+function hitChance(accuracy, evasion, maxDodge = 0.45) {
   return (
     1 -
     clamp(
       Math.max(0, evasion) / (Math.max(1, accuracy) + Math.max(0, evasion)),
       0.05,
-      0.45,
+      maxDodge,
     )
   );
 }

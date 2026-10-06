@@ -1,5 +1,6 @@
 "use strict";
 // Sinh tồn 2.0.0 — generated from docs/releases/hardcore-2.0.0-spec.md.
+const passives = require("./itemPassives");
 const ITEMS = {
   common: [
     {
@@ -9,6 +10,10 @@ const ITEMS = {
       rarity: "common",
       typeCode: "R",
       catalogVersion: 2,
+      passive: {
+        kind: "berserk",
+        amount: 0.1,
+      },
       effects: {
         str: 5,
       },
@@ -22,6 +27,10 @@ const ITEMS = {
       rarity: "common",
       typeCode: "R",
       catalogVersion: 2,
+      passive: {
+        kind: "mpLeech",
+        amount: 0.08,
+      },
       effects: {
         ene: 5,
       },
@@ -35,6 +44,10 @@ const ITEMS = {
       rarity: "common",
       typeCode: "R",
       catalogVersion: 2,
+      passive: {
+        kind: "dodgeCounter",
+        amount: 0.1,
+      },
       effects: {
         dex: 5,
       },
@@ -48,6 +61,10 @@ const ITEMS = {
       rarity: "common",
       typeCode: "R",
       catalogVersion: 2,
+      passive: {
+        kind: "thorns",
+        amount: 0.05,
+      },
       effects: {
         vit: 5,
       },
@@ -61,6 +78,10 @@ const ITEMS = {
       rarity: "common",
       typeCode: "R",
       catalogVersion: 2,
+      passive: {
+        kind: "eventLuck",
+        amount: 0.02,
+      },
       effects: {
         luck: 1,
       },
@@ -74,6 +95,10 @@ const ITEMS = {
       rarity: "common",
       typeCode: "R",
       catalogVersion: 2,
+      passive: {
+        kind: "potionCapacity",
+        amount: 1,
+      },
       effects: {
         potions: 1,
       },
@@ -87,6 +112,10 @@ const ITEMS = {
       rarity: "common",
       typeCode: "R",
       catalogVersion: 2,
+      passive: {
+        kind: "startMana",
+        amount: 0.2,
+      },
       effects: {
         maxMana: 1,
       },
@@ -100,6 +129,10 @@ const ITEMS = {
       rarity: "common",
       typeCode: "R",
       catalogVersion: 2,
+      passive: {
+        kind: "campHeal",
+        amount: 0.01,
+      },
       effects: {
         heal: 10,
       },
@@ -113,6 +146,10 @@ const ITEMS = {
       rarity: "common",
       typeCode: "R",
       catalogVersion: 2,
+      passive: {
+        kind: "shopDiscount",
+        amount: 0.03,
+      },
       effects: {
         goblinChance: 0.02,
       },
@@ -126,6 +163,10 @@ const ITEMS = {
       rarity: "common",
       typeCode: "R",
       catalogVersion: 2,
+      passive: {
+        kind: "trapResistance",
+        amount: 0.05,
+      },
       effects: {
         mimicDetection: 0.03,
       },
@@ -141,6 +182,10 @@ const ITEMS = {
       rarity: "rare",
       typeCode: "SR",
       catalogVersion: 2,
+      passive: {
+        kind: "campHeal",
+        amount: 0.02,
+      },
       effects: {
         vit: 10,
       },
@@ -154,6 +199,10 @@ const ITEMS = {
       rarity: "rare",
       typeCode: "SR",
       catalogVersion: 2,
+      passive: {
+        kind: "eventLuck",
+        amount: 0.03,
+      },
       effects: {
         luck: 3,
       },
@@ -167,6 +216,10 @@ const ITEMS = {
       rarity: "rare",
       typeCode: "SR",
       catalogVersion: 2,
+      passive: {
+        kind: "guardReflect",
+        amount: 0.15,
+      },
       effects: {
         str: 10,
       },
@@ -180,6 +233,10 @@ const ITEMS = {
       rarity: "rare",
       typeCode: "SR",
       catalogVersion: 2,
+      passive: {
+        kind: "dodgeCounter",
+        amount: 0.15,
+      },
       effects: {
         dex: 10,
       },
@@ -193,6 +250,10 @@ const ITEMS = {
       rarity: "rare",
       typeCode: "SR",
       catalogVersion: 2,
+      passive: {
+        kind: "trapResistance",
+        amount: 0.1,
+      },
       effects: {
         mimicDetection: 0.08,
       },
@@ -206,6 +267,10 @@ const ITEMS = {
       rarity: "rare",
       typeCode: "SR",
       catalogVersion: 2,
+      passive: {
+        kind: "potionCapacity",
+        amount: 1,
+      },
       effects: {
         potions: 2,
       },
@@ -219,6 +284,10 @@ const ITEMS = {
       rarity: "rare",
       typeCode: "SR",
       catalogVersion: 2,
+      passive: {
+        kind: "mpLeech",
+        amount: 0.12,
+      },
       effects: {
         ene: 10,
       },
@@ -232,6 +301,10 @@ const ITEMS = {
       rarity: "rare",
       typeCode: "SR",
       catalogVersion: 2,
+      passive: {
+        kind: "shopDiscount",
+        amount: 0.05,
+      },
       effects: {
         goblinChance: 0.08,
       },
@@ -245,6 +318,10 @@ const ITEMS = {
       rarity: "rare",
       typeCode: "SR",
       catalogVersion: 2,
+      passive: {
+        kind: "critCap",
+        amount: 0.03,
+      },
       effects: {
         eliteDamage: 0.12,
       },
@@ -258,6 +335,10 @@ const ITEMS = {
       rarity: "rare",
       typeCode: "SR",
       catalogVersion: 2,
+      passive: {
+        kind: "berserk",
+        amount: 0.15,
+      },
       effects: {
         bossDamage: 0.12,
       },
@@ -271,6 +352,10 @@ const ITEMS = {
       rarity: "rare",
       typeCode: "SR",
       catalogVersion: 2,
+      passive: {
+        kind: "evasionCap",
+        amount: 0.03,
+      },
       effects: {
         legendaryFind: 0.03,
       },
@@ -284,6 +369,10 @@ const ITEMS = {
       rarity: "rare",
       typeCode: "SR",
       catalogVersion: 2,
+      passive: {
+        kind: "potionSave",
+        amount: 0.08,
+      },
       effects: {
         potionPower: 0.1,
       },
@@ -297,6 +386,10 @@ const ITEMS = {
       rarity: "rare",
       typeCode: "SR",
       catalogVersion: 2,
+      passive: {
+        kind: "startMana",
+        amount: 0.3,
+      },
       effects: {
         maxMana: 2,
       },
@@ -312,6 +405,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "potionSave",
+        amount: 0.12,
+      },
       effects: {
         vit: 12,
         escapeTokens: 1,
@@ -326,6 +423,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "berserk",
+        amount: 0.22,
+      },
       effects: {
         str: 12,
         dex: 12,
@@ -341,6 +442,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "guardReflect",
+        amount: 0.25,
+      },
       effects: {
         str: 10,
         vit: 8,
@@ -356,6 +461,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "foresight",
+        scopes: ["doors", "portal"],
+      },
       effects: {
         str: 5,
         dex: 5,
@@ -372,6 +481,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "campHeal",
+        amount: 0.03,
+      },
       effects: {
         vit: 16,
         ene: 8,
@@ -386,6 +499,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "thorns",
+        amount: 0.12,
+      },
       effects: {
         str: 12,
         dex: 8,
@@ -402,6 +519,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "thorns",
+        amount: 0.12,
+      },
       effects: {
         str: 10,
         vit: 16,
@@ -416,6 +537,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "foresight",
+        scopes: ["treasure_room", "fountain"],
+      },
       effects: {
         dex: 6,
         ene: 6,
@@ -433,6 +558,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "potionCapacity",
+        amount: 2,
+      },
       effects: {
         vit: 10,
         ene: 8,
@@ -449,6 +578,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "evasionCap",
+        amount: 0.05,
+      },
       effects: {
         dex: 20,
         luck: 2,
@@ -463,6 +596,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "guardReflect",
+        amount: 0.25,
+      },
       effects: {
         str: 10,
         vit: 6,
@@ -478,6 +615,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "critCap",
+        amount: 0.05,
+      },
       effects: {
         str: 14,
         dex: 12,
@@ -492,6 +633,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "campHeal",
+        amount: 0.03,
+      },
       effects: {
         str: 4,
         vit: 22,
@@ -506,6 +651,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "foresight",
+        scopes: ["mirror", "portal"],
+      },
       effects: {
         dex: 8,
         ene: 8,
@@ -522,6 +671,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "mpLeech",
+        amount: 0.18,
+      },
       effects: {
         vit: 6,
         ene: 18,
@@ -537,6 +690,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "dodgeCounter",
+        amount: 0.25,
+      },
       effects: {
         str: 6,
         dex: 14,
@@ -552,6 +709,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "berserk",
+        amount: 0.22,
+      },
       effects: {
         str: 14,
         vit: 6,
@@ -567,6 +728,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "shopDiscount",
+        amount: 0.08,
+      },
       effects: {
         dex: 6,
         vit: 6,
@@ -583,6 +748,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "trapResistance",
+        amount: 0.15,
+      },
       effects: {
         str: 6,
         dex: 8,
@@ -599,6 +768,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "thorns",
+        amount: 0.12,
+      },
       effects: {
         str: 14,
         vit: 12,
@@ -613,6 +786,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "foresight",
+        scopes: ["doors", "mirror"],
+      },
       effects: {
         dex: 12,
         ene: 10,
@@ -628,6 +805,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "eventLuck",
+        amount: 0.04,
+      },
       effects: {
         dex: 4,
         vit: 4,
@@ -644,6 +825,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "potionCapacity",
+        amount: 2,
+      },
       effects: {
         str: 6,
         vit: 22,
@@ -658,6 +843,10 @@ const ITEMS = {
       rarity: "legendary",
       typeCode: "SSR",
       catalogVersion: 2,
+      passive: {
+        kind: "startMana",
+        amount: 0.4,
+      },
       effects: {
         str: 7,
         dex: 7,
@@ -677,6 +866,10 @@ const ITEMS = {
       rarity: "cursed",
       typeCode: "UR",
       catalogVersion: 2,
+      passive: {
+        kind: "berserk",
+        amount: 0.3,
+      },
       effects: {
         str: 35,
         dex: 15,
@@ -697,6 +890,10 @@ const ITEMS = {
       rarity: "cursed",
       typeCode: "UR",
       catalogVersion: 2,
+      passive: {
+        kind: "guardReflect",
+        amount: 0.35,
+      },
       effects: {
         str: 20,
         vit: 30,
@@ -717,6 +914,10 @@ const ITEMS = {
       rarity: "cursed",
       typeCode: "UR",
       catalogVersion: 2,
+      passive: {
+        kind: "shopDiscount",
+        amount: 0.12,
+      },
       effects: {
         dex: 20,
         vit: 15,
@@ -739,6 +940,10 @@ const ITEMS = {
       rarity: "cursed",
       typeCode: "UR",
       catalogVersion: 2,
+      passive: {
+        kind: "eventLuck",
+        amount: 0.06,
+      },
       effects: {
         str: 20,
         vit: 15,
@@ -760,6 +965,10 @@ const ITEMS = {
       rarity: "cursed",
       typeCode: "UR",
       catalogVersion: 2,
+      passive: {
+        kind: "berserk",
+        amount: 0.3,
+      },
       effects: {
         str: 40,
         dex: 10,
@@ -780,6 +989,10 @@ const ITEMS = {
       rarity: "cursed",
       typeCode: "UR",
       catalogVersion: 2,
+      passive: {
+        kind: "campHeal",
+        amount: 0.04,
+      },
       effects: {
         vit: 35,
         ene: 20,
@@ -800,6 +1013,10 @@ const ITEMS = {
       rarity: "cursed",
       typeCode: "UR",
       catalogVersion: 2,
+      passive: {
+        kind: "dodgeCounter",
+        amount: 0.35,
+      },
       effects: {
         dex: 40,
         luck: 8,
@@ -820,6 +1037,10 @@ const ITEMS = {
       rarity: "cursed",
       typeCode: "UR",
       catalogVersion: 2,
+      passive: {
+        kind: "foresight",
+        scopes: ["treasure_room", "fountain", "doors"],
+      },
       effects: {
         dex: 20,
         ene: 15,
@@ -842,6 +1063,10 @@ const ITEMS = {
       rarity: "cursed",
       typeCode: "UR",
       catalogVersion: 2,
+      passive: {
+        kind: "thorns",
+        amount: 0.18,
+      },
       effects: {
         str: 40,
         dex: 10,
@@ -863,6 +1088,10 @@ const ITEMS = {
       rarity: "cursed",
       typeCode: "UR",
       catalogVersion: 2,
+      passive: {
+        kind: "mpLeech",
+        amount: 0.25,
+      },
       effects: {
         vit: 10,
         ene: 40,
@@ -884,6 +1113,10 @@ const ITEMS = {
       rarity: "cursed",
       typeCode: "UR",
       catalogVersion: 2,
+      passive: {
+        kind: "evasionCap",
+        amount: 0.08,
+      },
       effects: {
         dex: 40,
         ene: 10,
@@ -904,6 +1137,10 @@ const ITEMS = {
       rarity: "cursed",
       typeCode: "UR",
       catalogVersion: 2,
+      passive: {
+        kind: "startMana",
+        amount: 0.5,
+      },
       effects: {
         str: 20,
         ene: 25,
@@ -925,6 +1162,10 @@ const ITEMS = {
       rarity: "cursed",
       typeCode: "UR",
       catalogVersion: 2,
+      passive: {
+        kind: "critCap",
+        amount: 0.08,
+      },
       effects: {
         str: 20,
         dex: 30,
@@ -945,6 +1186,10 @@ const ITEMS = {
       rarity: "cursed",
       typeCode: "UR",
       catalogVersion: 2,
+      passive: {
+        kind: "trapResistance",
+        amount: 0.2,
+      },
       effects: {
         str: 20,
         vit: 15,
@@ -967,6 +1212,10 @@ const ITEMS = {
       rarity: "cursed",
       typeCode: "UR",
       catalogVersion: 2,
+      passive: {
+        kind: "foresight",
+        scopes: ["doors", "portal", "treasure_room", "fountain", "mirror"],
+      },
       effects: {
         dex: 10,
         ene: 30,
@@ -989,6 +1238,10 @@ const ITEMS = {
       rarity: "cursed",
       typeCode: "UR",
       catalogVersion: 2,
+      passive: {
+        kind: "critCap",
+        amount: 0.1,
+      },
       effects: {
         str: 25,
         dex: 15,
@@ -1048,6 +1301,7 @@ function validateItems(catalog = ITEMS) {
         ...item.curse?.effects,
       }))
         if (!Number.isFinite(value)) throw new Error("INVALID_HARDCORE_EFFECT");
+      passives.validate(item.passive);
       ids.add(item.id);
     }
   }
@@ -1107,6 +1361,8 @@ function resolveItemId(id) {
 for (const pool of Object.values(ITEMS)) {
   for (const item of pool) {
     Object.freeze(item.effects);
+    Object.freeze(item.passive.scopes);
+    Object.freeze(item.passive);
     if (item.curse) {
       Object.freeze(item.curse.effects);
       Object.freeze(item.curse);

@@ -1402,6 +1402,10 @@ const startTx = db.transaction(
         fairStateContext.run(state, () =>
           hardcoreV2.generateEncounter(state, session, randomFloat),
         );
+    if (isV2(state))
+      fairStateContext.run(state, () =>
+        hardcoreV2.prepareItemCombat(state, randomFloat),
+      );
     hardcoreRepository.insertSession(
       { ...session, created_at: now, updated_at: now },
       state,
@@ -1844,11 +1848,16 @@ function killerName(state, reason) {
   const e = state.encounter;
   if (e?.type === "combat" && e.name) return e.name;
   if (e?.type === "shrine") return "Fake Shrine";
-  return TRAP_KILLERS[e?.kind] || SURPRISE_EVENTS[e?.kind]?.name || "Lời nguyền / hiệu ứng";
+  return (
+    TRAP_KILLERS[e?.kind] ||
+    SURPRISE_EVENTS[e?.kind]?.name ||
+    "Lời nguyền / hiệu ứng"
+  );
 }
 
 function finishRun(session, state, reason) {
-  if (["death", "rngesus"].includes(reason)) state.killedBy = killerName(state, reason);
+  if (["death", "rngesus"].includes(reason))
+    state.killedBy = killerName(state, reason);
   const diamonds =
     reason === "cashout" || reason === "summit" ? runDiamondReward(state) : 0;
   let payout =
@@ -2769,8 +2778,7 @@ const actionTx = db.transaction(
           const kind = state.encounter.kind;
           resolveSurprise(state, action);
           noteEvent(state, kind, state.encounter?.type === "combat");
-        }
-        else if (action === "explore") {
+        } else if (action === "explore") {
           const event = state.encounter;
           if (event.kind === "ambush") {
             noteEvent(state, "ambush", true);

@@ -1,11 +1,13 @@
 "use strict";
 const stats = require("./hardcoreStats");
+const itemPassives = require("../hardcore/itemPassives");
 const {
   rngesusEncounterChance,
   resetRngesusEncounter,
 } = require("./hardcoreRngesus");
 const paradox = require("./hardcoreParadoxService");
 function prepareParadoxCombat(state, rng) {
+  prepareItemCombat(state, rng);
   paradox.prepareCombat(
     state,
     rng,
@@ -389,7 +391,8 @@ function receiveItem(state, definition, levels = 1, cleansedLevels = 0) {
   for (let i = 0; i < levels; i++) {
     const e = definition.effects;
     if (e.heal) heal(state, e.heal);
-    if (e.potions) state.potions = Math.min(5, state.potions + e.potions);
+    if (e.potions)
+      state.potions = Math.min(state.maxPotions, state.potions + e.potions);
     if (e.escapeTokens) {
       const discarded = Math.max(0, state.escapeTokens + e.escapeTokens - 1);
       state.escapeTokens = Math.min(1, state.escapeTokens + e.escapeTokens);
@@ -523,6 +526,8 @@ function finishEventResult(state) {
 }
 function completeFloor(state, session, rng, reward = 1) {
   const floor = state.floor;
+  const peaceful =
+    state.encounter?.type !== "combat" && state.passiveCombatFloor !== floor;
   if (floor === 999 && !state.finalBossDefeated)
     throw new Error("FINAL_BOSS_REQUIRED");
   if (state.encounter?.type === "rngesus") resetRngesusEncounter(state);
@@ -576,13 +581,31 @@ function completeFloor(state, session, rng, reward = 1) {
     hurt(state, Math.max(1, state.maxHp * state.floorHpLoss), true, true);
     state.lastLog += `\n🩸 Lời nguyền trang bị: ${E.hp} **HP:** ${hpBefore} → **${state.hp}**, luôn chừa ít nhất **1 HP**.`;
   }
+  if (peaceful && alive(state) && state.passiveRestFloor !== floor) {
+    state.passiveRestFloor = floor;
+    const rate = itemPassives.aggregate(state).campHeal;
+    if (rate > 0) {
+      const before = state.hp,
+        gained = heal(state, Math.max(1, Math.floor(state.maxHp * rate)));
+      state.lastLog +=
+        "\n" +
+        E.hp +
+        " Nghỉ chân: hồi " +
+        gained +
+        " HP cho bạn · " +
+        before +
+        " → " +
+        state.hp +
+        ".";
+    }
+  }
   if (floor % 5 === 0) {
     const hpBefore = state.hp,
       potionsBefore = state.potions;
     heal(state, state.maxHp, { checkpoint: true });
-    state.potions = Math.min(5, state.potions + 2);
+    state.potions = Math.min(state.maxPotions, state.potions + 2);
     state.pendingMilestones.push("upgrade");
-    state.lastLog += `\n${E.checkpoint} Đạt tầng ${floor} · Checkpoint: ${E.hp} **HP:** ${hpBefore} → **${state.hp}**  •  ${E.potion} **Bình máu:** ${potionsBefore} → **${state.potions}** (tối đa 5); chọn +5 thuộc tính.`;
+    state.lastLog += `\n${E.checkpoint} Đạt tầng ${floor} · Checkpoint: ${E.hp} **HP:** ${hpBefore} → **${state.hp}**  •  ${E.potion} **Bình máu:** ${potionsBefore} → **${state.potions}** (tối đa ${state.maxPotions}); chọn +5 thuộc tính.`;
   }
   if (floor % 10 === 0) {
     const keys = Object.keys(world.RIFT_MODIFIERS),
@@ -768,8 +791,11 @@ function makeSurprise(state, rng, kind = null) {
     e.rescueItem = randomItem(rng() < 0.3 ? "rare" : "common", rng);
     e.robItem = randomItem(rng() < 0.25 ? "cursed" : "legendary", rng);
   }
-  if (kind === "fountain")
+  if (kind === "fountain") {
+    e.goodThreshold = itemPassives.goodChance(state, 0.85);
+    e.healThreshold = (0.6 * e.goodThreshold) / 0.85;
     e.enemy = world.makeEnemy(state, "mimic", "Blood Mimic", rng);
+  }
   if (kind === "mirror") {
     e.defenseStat = pick(["str", "dex"], rng);
     e.enemy = world.makeEnemy(state, "elite", "Mirror Clone", rng);
@@ -792,7 +818,16 @@ function makeSurprise(state, rng, kind = null) {
   if (kind === "contract" || kind === "doors")
     e.item = randomItem("legendary", rng);
   if (kind === "doors") {
-    e.doors = { light: rng() < 0.7, gold: rng() < 0.7, dark: rng() < 0.6 };
+    e.doors = {
+      light: rng() < itemPassives.goodChance(state, 0.7),
+      gold: rng() < itemPassives.goodChance(state, 0.7),
+      dark: rng() < itemPassives.goodChance(state, 0.6),
+    };
+    e.doorChances = {
+      light: itemPassives.goodChance(state, 0.7),
+      gold: itemPassives.goodChance(state, 0.7),
+      dark: itemPassives.goodChance(state, 0.6),
+    };
     e.mimic = world.makeEnemy(state, "mimic", "Golden Door Mimic", rng);
     e.boss = world.makeEnemy(state, "boss", "Premature Rift Boss", rng);
   }
@@ -867,7 +902,8 @@ function makeSurprise(state, rng, kind = null) {
     }
     e.priceVersion = 2;
   }
-  return e;
+  itemPassives.discountOffers(state, e);
+  return itemPassives.prepareForecast(state, e, rng);
 }
 function rollRngesus(state, rng) {
   const base = rngesusEncounterChance(state);
@@ -916,6 +952,13 @@ function echoEnemy(state, echo, rng, challenge = false) {
   return enemy;
 }
 function generateEncounter(state, session, rng) {
+  return itemPassives.prepareForecast(
+    state,
+    generateRawEncounter(state, session, rng),
+    rng,
+  );
+}
+function generateRawEncounter(state, session, rng) {
   if (state.floor === 999)
     return world.makeEnemy(state, "final_boss", null, rng);
   if (state.floor % 50 === 0) return world.makeEnemy(state, "boss", null, rng);
@@ -996,7 +1039,9 @@ function generateEncounter(state, session, rng) {
             : "Potion Thief",
       kind,
       lucky: rng() < Math.min(0.3, state.luck * 0.015),
-      good: rng() < 0.5,
+      good:
+        rng() < (kind === "portal" ? itemPassives.goodChance(state, 0.5) : 0.5),
+      goodChance: kind === "portal" ? itemPassives.goodChance(state, 0.5) : 0.5,
       effect:
         kind === "portal"
           ? pick(["healing", "treasure", "blessing"], rng)
@@ -1019,6 +1064,7 @@ function generateEncounter(state, session, rng) {
 function initialize(classKey, stake, session, rng) {
   const state = stats.createState(classKey, stake);
   state.encounter = generateEncounter(state, session, rng);
+  prepareParadoxCombat(state, rng);
   return state;
 }
 function shrineActive(state) {
@@ -1060,7 +1106,13 @@ function attackDamage(
   } = {},
 ) {
   const hit =
-    magic || rng() < world.hitChance(attacker.accuracy, defender.evasion);
+    magic ||
+    rng() <
+      world.hitChance(
+        attacker.accuracy,
+        defender.evasion,
+        player ? 0.45 : (state.evasionCap ?? 0.45),
+      );
   if (!hit) return { damage: 0, hit: false, crit: false };
   const crit =
     !magic && !defend && (critical ?? rng() < (attacker.critChance || 0));
@@ -1069,6 +1121,9 @@ function attackDamage(
     : [attacker.damageMin, attacker.damageMax];
   let damage = raw ?? int(...range, rng);
   damage *= multiplier * (crit ? 1.75 : 1);
+  if (player)
+    damage *=
+      1 + itemPassives.aggregate(state).berserk * (1 - state.hp / state.maxHp);
   if (player && paradox.active(state)) {
     const bonus = ["boss", "final_boss"].includes(defender.rank)
       ? state.bossDamage
@@ -1108,8 +1163,16 @@ function attackDamage(
   }
   return { damage: Math.max(1, Math.floor(damage)), hit: true, crit };
 }
-function enemyTurn(state, rng, defend = false, dodge = false) {
+function enemyTurn(
+  state,
+  rng,
+  defend = false,
+  dodge = false,
+  reflectGuard = defend,
+) {
+  prepareItemCombat(state, rng);
   const enemy = state.encounter;
+  const physical = enemy.nextDamageType !== "magic";
   if (dodge) return `${E.evasion} Bạn chặn/né hoàn toàn phản công.`;
   if (
     shrineActive(state) &&
@@ -1146,10 +1209,92 @@ function enemyTurn(state, rng, defend = false, dodge = false) {
         ? "magic"
         : "physical"
       : enemy.damageType;
-  return hit.hit
-    ? `${hit.crit ? `${E.crit} Critical! ` : ""}Bạn nhận ${actual} DMG${defend ? " (đã phòng thủ)" : ""}.`
-    : `${E.evasion} Quái đánh trượt.`;
+  const reflected = passiveCounter(
+    state,
+    rng,
+    actual,
+    reflectGuard,
+    !hit.hit && physical,
+  );
+  return (
+    (hit.hit
+      ? `${hit.crit ? `${E.crit} Critical! ` : ""}Bạn nhận ${actual} DMG${defend ? " (đã phòng thủ)" : ""}.`
+      : `${E.evasion} Quái đánh trượt.`) + reflected
+  );
 }
+
+function prepareItemCombat(state, rng) {
+  const e = state.encounter;
+  if (e?.type !== "combat") return;
+  state.passiveCombatFloor = state.floor;
+  if (e.passiveCombatStarted) return;
+  e.passiveCombatStarted = true;
+  const p = itemPassives.aggregate(state);
+  if (
+    alive(state) &&
+    state.mana < state.maxMana &&
+    p.startMana > 0 &&
+    rng() < p.startMana
+  ) {
+    const before = state.mana;
+    state.mana = Math.min(state.maxMana, state.mana + 1);
+    state.lastLog =
+      (state.lastLog || "") +
+      "\n" +
+      E.mana +
+      " Khởi động MP: " +
+      before +
+      " → " +
+      state.mana +
+      " MP cho bạn.";
+  }
+}
+function passiveTrapDamage(state, amount) {
+  return Math.max(
+    1,
+    Math.floor(amount * (1 - itemPassives.aggregate(state).trapResistance)),
+  );
+}
+function passiveCounter(state, rng, actual, defend, naturalMiss) {
+  if (!alive(state) || state.encounter.hp <= 0) return "";
+  const p = itemPassives.aggregate(state),
+    e = state.encounter;
+  const basic = ["sorceress", "necromancer"].includes(state.classKey)
+    ? (state.spellMin + state.spellMax) / 2
+    : (state.damageMin + state.damageMax) / 2;
+  const budget = Math.floor(basic * 0.5);
+  let raw = actual * (p.thorns + (defend ? p.guardReflect : 0));
+  if (naturalMiss && p.dodgeCounter > 0 && rng() < p.dodgeCounter)
+    raw += basic * 0.5;
+  if (raw <= 0) return "";
+  let damage = Math.floor(
+    raw * (1 - world.defenseReduction(e.defense, state.floor)),
+  );
+  if (
+    e.mechanic === "riftwalker" &&
+    (state.passiveImmunityThisTurn ?? e.combatTurn % 3 === 0)
+  )
+    damage = 0;
+  if (e.mechanic === "deimoss") damage = Math.floor(damage * 0.75);
+  damage = Math.min(
+    Math.max(0, budget - (state.passiveCounterUsed || 0)),
+    damage,
+    e.hp,
+  );
+  if (damage <= 0) return "";
+  state.passiveCounterUsed = (state.passiveCounterUsed || 0) + damage;
+  e.hp -= damage;
+  return (
+    "\n" +
+    E.attack +
+    " Nội tại phản " +
+    damage +
+    " DMG vật lý lên " +
+    e.name +
+    "."
+  );
+}
+
 function incomingPreview(state) {
   const e = state.encounter;
   if (e.type !== "combat") return null;
@@ -1176,7 +1321,7 @@ function incomingPreview(state) {
     chance:
       e.nextDamageType === "magic"
         ? 1
-        : world.hitChance(e.accuracy, state.evasion),
+        : world.hitChance(e.accuracy, state.evasion, state.evasionCap ?? 0.45),
   };
 }
 function attackManaGain(state) {
@@ -1218,7 +1363,11 @@ function outgoingDamagePreview(state, action) {
       ? state.eliteDamage
       : 0;
   const damage = (raw) => {
-    const hit = attackDamage(state, e, state, () => 0, {
+    const previewState =
+      skill && paradox.hpCost(state)
+        ? { ...state, hp: Math.max(1, state.hp - paradox.hpCost(state)) }
+        : state;
+    const hit = attackDamage(previewState, e, previewState, () => 0, {
       player: true,
       magic,
       raw,
@@ -1249,7 +1398,10 @@ function attackDamagePreview(state) {
   return outgoingDamagePreview(state, "attack");
 }
 function playerAttack(state, action, rng) {
+  prepareItemCombat(state, rng);
   const e = state.encounter;
+  state.passiveImmunityThisTurn =
+    e.mechanic === "riftwalker" && e.combatTurn % 3 === 0;
   let dodge = false,
     defend = false,
     healingLog = "",
@@ -1265,7 +1417,10 @@ function playerAttack(state, action, rng) {
   if (action === "potion") {
     if (!state.potions) throw new Error("NO_POTION");
     if (state.hp >= state.maxHp) throw new Error("FULL_HP");
-    state.potions--;
+    if (paradox.potionLocked(state)) throw new Error("POTION_LOCKED");
+    const saveChance = itemPassives.aggregate(state).potionSave;
+    const saved = saveChance > 0 && rng() < saveChance;
+    if (!saved) state.potions--;
     const gained = heal(
       state,
       Math.max(20, state.maxHp * paradox.potionRate(state)),
@@ -1273,7 +1428,7 @@ function playerAttack(state, action, rng) {
     return {
       defend: false,
       dodge: false,
-      log: `${E.potion} Hồi ${gained} ${E.hp} HP; quái còn sống phản công.`,
+      log: `${E.potion} Hồi ${gained} ${E.hp} HP${saved ? " · nội tại giữ lại bình" : ""}; quái còn sống phản công.`,
     };
   }
   if (action === "skill") {
@@ -1338,7 +1493,21 @@ function playerAttack(state, action, rng) {
   if (!paradox.active(state) && e.mechanic === "deimoss" && damage > 0)
     damage = Math.max(1, Math.floor(damage * 0.75));
   e.combatTurn++;
+  const dealt = Math.min(e.hp, damage);
   e.hp = Math.max(0, e.hp - damage);
+  const leech = itemPassives.aggregate(state).mpLeech;
+  if (dealt > 0 && state.mana < state.maxMana && leech > 0 && rng() < leech) {
+    const before = state.mana;
+    state.mana = Math.min(state.maxMana, state.mana + 1);
+    healingLog +=
+      "\n" +
+      E.mana +
+      " Hút MP: " +
+      before +
+      " → " +
+      state.mana +
+      " MP cho bạn.";
+  }
   const landed = hits.filter((hit) => hit.hit).length;
   const actionName =
     action === "skill"
@@ -1650,7 +1819,7 @@ function actSurprise(state, session, action, rng) {
       done(`${E.backpack} Nhận ${item.name} Lv.${item.level}.`);
     } else {
       if (offer.key === "potion")
-        state.potions = Math.min(5, state.potions + 1);
+        state.potions = Math.min(state.maxPotions, state.potions + 1);
       if (offer.key === "heal") heal(state, state.maxHp);
       if (offer.key === "luck") addSource(state, { luck: 1 });
       if (offer.key === "ticket") state.escapeTokens = 1;
@@ -1704,7 +1873,7 @@ function actSurprise(state, session, action, rng) {
   }
   if (k === "healer") {
     heal(state, Math.max(20, state.maxHp * 0.3));
-    state.potions = Math.min(5, state.potions + 1);
+    state.potions = Math.min(state.maxPotions, state.potions + 1);
     done("Wandering Healer đã hồi phục và tiếp tế cho bạn.");
   } else if (k === "goblin") {
     if (e.roll < Math.min(0.9, 0.6 + state.luck * 0.01 + state.goblinChance)) {
@@ -1769,10 +1938,10 @@ function actSurprise(state, session, action, rng) {
     }
     completeFloor(state, session, rng, 0);
   } else if (k === "fountain") {
-    if (e.roll < 0.6) {
+    if (e.roll < (e.healThreshold ?? 0.6)) {
       heal(state, state.maxHp);
       done("🩸 Blood Fountain đã hồi phục cho bạn.");
-    } else if (e.roll < 0.85) {
+    } else if (e.roll < (e.goodThreshold ?? 0.85)) {
       addSource(state, { maxHp: 15 });
       heal(state, 15);
       done("🩸 Blood Fountain đã tăng sinh lực cho bạn.");
@@ -1870,7 +2039,7 @@ function actSurprise(state, session, action, rng) {
     if (e.doors[door]) {
       if (door === "light") {
         heal(state, state.maxHp);
-        state.potions = Math.min(5, state.potions + 1);
+        state.potions = Math.min(state.maxPotions, state.potions + 1);
       }
       if (door === "gold") state.bonus += Math.floor(state.stake * 0.5);
       if (door === "dark") receiveItem(state, e.item);
@@ -1904,6 +2073,46 @@ function noteKill(state, enemy) {
   }
 }
 
+function defeatEnemy(state, session, rng, e) {
+  noteKill(state, e);
+  if (e.rank === "final_boss" && e.mechanic === "deimoss")
+    state.finalBossDefeated = true;
+  if (e.echoId) {
+    if (e.echoItem) receiveSnapshot(state, e.echoItem);
+    state.bonus += Math.floor(state.stake * (0.25 + 0.1 * e.echo.kills));
+    echoes.consume(session, e.echoId);
+  }
+  state.lastLog += `\n🏆 Hạ ${e.name}.`;
+  if (paradox.is(state, "hunger"))
+    state.lastLog += `\n🍖 Cơn Đói hồi ${heal(state, Math.max(1, Math.floor(state.maxHp * 0.12)))} HP.`;
+  if (world.mimicKind(e) === "ancient_mimic") {
+    const roll = rng();
+    const rarity = roll < 0.5 ? "rare" : roll < 0.8 ? "legendary" : "cursed";
+    receiveItem(state, randomItem(rarity, rng));
+    state.lastLog += `\n${E.chest} Phần thưởng hạ Ancient Mimic: đã nhận trang bị.`;
+  } else if (world.mimicKind(e) === "blood_mimic") {
+    const rarity = rng() < 0.6 ? "rare" : "legendary";
+    receiveItem(state, randomItem(rarity, rng));
+    state.lastLog += `\n${E.chest} Phần thưởng hạ Blood Mimic: đã nhận trang bị.`;
+  }
+  if (
+    e.rank === "boss" &&
+    !e.echoId &&
+    world.REGIONS.some(
+      (region) => region.start === state.floor && region.start > 1,
+    )
+  ) {
+    const rarity = rng() < 0.7 ? "legendary" : "cursed";
+    state.pendingBossChest = {
+      type: "boss_chest",
+      name: "Rương boss",
+      bossFloor: state.floor,
+      item: randomItem(rarity, rng),
+    };
+    state.lastLog += `\n${eventIcon("boss_chest")} Nhận rương boss: mở hoặc bán để tiếp tục.`;
+  }
+  completeFloor(state, session, rng, e.rewardMultiplier);
+}
 function act(state, session, action, rng) {
   if (action === "retreat") {
     if (state.encounter.type === "rngesus" || state.phase === "boss_chest")
@@ -1921,6 +2130,8 @@ function act(state, session, action, rng) {
   )
     throw new Error("INVALID_ACTION");
   const before = statSnapshot(state);
+  state.passiveCounterUsed = 0;
+  delete state.passiveImmunityThisTurn;
   state.lastLog = "";
   delete state.lastDeathCause;
   state.lastReceivedItems = [];
@@ -1998,6 +2209,7 @@ function act(state, session, action, rng) {
         state.lastLog =
           "Mộ đã hết thời gian claim; trận đấu tiếp tục, không còn loot từ mộ.\n";
       } else if (e.echoId) echoes.renew(session, e.echoId);
+      prepareItemCombat(state, rng);
       const acted = playerAttack(state, action, rng);
       paradox.afterAction(state, action);
       state.lastLog += acted.log;
@@ -2011,52 +2223,15 @@ function act(state, session, action, rng) {
         state.lastLog += "\n📜 Vi phạm hợp đồng: hủy phần thưởng.";
       }
       if (e.hp <= 0) {
-        noteKill(state, e);
-        if (e.rank === "final_boss" && e.mechanic === "deimoss")
-          state.finalBossDefeated = true;
-        if (e.echoId) {
-          if (e.echoItem) receiveSnapshot(state, e.echoItem);
-          state.bonus += Math.floor(state.stake * (0.25 + 0.1 * e.echo.kills));
-          echoes.consume(session, e.echoId);
-        }
-        state.lastLog += `\n🏆 Hạ ${e.name}.`;
-        if (paradox.is(state, "hunger"))
-          state.lastLog += `\n🍖 Cơn Đói hồi ${heal(state, Math.max(1, Math.floor(state.maxHp * 0.12)))} HP.`;
-        if (world.mimicKind(e) === "ancient_mimic") {
-          const roll = rng();
-          const rarity =
-            roll < 0.5 ? "rare" : roll < 0.8 ? "legendary" : "cursed";
-          receiveItem(state, randomItem(rarity, rng));
-          state.lastLog += `\n${E.chest} Phần thưởng hạ Ancient Mimic: đã nhận trang bị.`;
-        } else if (world.mimicKind(e) === "blood_mimic") {
-          const rarity = rng() < 0.6 ? "rare" : "legendary";
-          receiveItem(state, randomItem(rarity, rng));
-          state.lastLog += `\n${E.chest} Phần thưởng hạ Blood Mimic: đã nhận trang bị.`;
-        }
-        if (
-          e.rank === "boss" &&
-          !e.echoId &&
-          world.REGIONS.some(
-            (region) => region.start === state.floor && region.start > 1,
-          )
-        ) {
-          const rarity = rng() < 0.7 ? "legendary" : "cursed";
-          state.pendingBossChest = {
-            type: "boss_chest",
-            name: "Rương boss",
-            bossFloor: state.floor,
-            item: randomItem(rarity, rng),
-          };
-          state.lastLog += `\n${eventIcon("boss_chest")} Nhận rương boss: mở hoặc bán để tiếp tục.`;
-        }
-        completeFloor(state, session, rng, e.rewardMultiplier);
+        defeatEnemy(state, session, rng, e);
       } else {
         const doubleCounter =
           paradox.is(state, "time_debt") &&
           state.activeParadox.combatActionCount === 3;
-        state.lastLog += `\n${enemyTurn(state, rng, acted.defend, acted.dodge)}`;
-        if (doubleCounter && alive(state))
-          state.lastLog += `\n⏳ Phản công lần hai: ${enemyTurn(state, rng, acted.defend, acted.dodge)}`;
+        state.lastLog += `\n${enemyTurn(state, rng, acted.defend, acted.dodge, action === "defend")}`;
+        if (doubleCounter && alive(state) && e.hp > 0)
+          state.lastLog += `\n⏳ Phản công lần hai: ${enemyTurn(state, rng, acted.defend, acted.dodge, action === "defend")}`;
+        if (e.hp <= 0 && alive(state)) defeatEnemy(state, session, rng, e);
       }
     } else if (e.type === "surprise") {
       actSurprise(state, session, action, rng);
@@ -2090,7 +2265,12 @@ function act(state, session, action, rng) {
         if (e.kind === "corrupted")
           addSource(state, { [e.powerStat || mainStat(state)]: 12, vit: -8 });
         if (e.kind === "fake") {
-          hurt(state, Math.max(10, state.maxHp * 0.3), true, true);
+          hurt(
+            state,
+            passiveTrapDamage(state, Math.max(10, state.maxHp * 0.3)),
+            true,
+            true,
+          );
         }
         const outcomes = {
           healing: "Healing: hồi phục HP",
@@ -2124,7 +2304,7 @@ function act(state, session, action, rng) {
         if (e.effect === "healing") {
           addSource(state, { maxHp: 10 });
           heal(state, state.maxHp);
-          state.potions = Math.min(5, state.potions + 1);
+          state.potions = Math.min(state.maxPotions, state.potions + 1);
         }
         if (e.effect === "treasure")
           state.bonus += Math.floor(state.stake * 0.5);
@@ -2134,14 +2314,16 @@ function act(state, session, action, rng) {
         completeFloor(state, session, rng, 0);
       } else {
         if (e.badEffect === "blood")
-          hurt(state, state.maxHp * 0.15, true, true);
+          hurt(state, passiveTrapDamage(state, state.maxHp * 0.15), true, true);
         if (e.badEffect === "mana") state.mana = 0;
         if (e.badEffect === "supply")
           state.potions = Math.max(0, state.potions - 2);
         if (e.badEffect === "payout") penalty(state, 0.1);
         if (e.badEffect === "curse") addSource(state, { str: -5, ene: -5 });
         state.encounter = e.enemy;
-        state.lastLog = `Wrong Portal: ${{ blood: "bẫy gây mất HP (giữ ≥1)", mana: "bị rút cạn MP", supply: "bị cướp bình máu", payout: "mất 10% payout", curse: "lời nguyền giảm thuộc tính" }[e.badEffect]}. Elite đánh phủ đầu.\n${enemyTurn(state, rng)}`;
+        state.lastLog = `Wrong Portal: ${{ blood: "bẫy gây mất HP (giữ ≥1)", mana: "bị rút cạn MP", supply: "bị cướp bình máu", payout: "mất 10% payout", curse: "lời nguyền giảm thuộc tính" }[e.badEffect]}. Elite đánh phủ đầu.`;
+        prepareItemCombat(state, rng);
+        state.lastLog += `\n${enemyTurn(state, rng)}`;
       }
     } else if (e.type === "rngesus") {
       const die = (cause) => {
@@ -2226,12 +2408,20 @@ function act(state, session, action, rng) {
       completeFloor(state, session, rng, 0);
     }
   }
+  if (
+    state.encounter?.type === "combat" &&
+    state.encounter.hp <= 0 &&
+    alive(state)
+  )
+    defeatEnemy(state, session, rng, state.encounter);
   recompute(state);
   prepareParadoxCombat(state, rng);
   finishEventResult(state);
   if (state.discardedTicketsThisTurn)
     state.lastLog += `\n${E.ticket} Bỏ ${state.discardedTicketsThisTurn} vé nhận thêm; chỉ giữ tối đa 1.`;
   delete state.discardedTicketsThisTurn;
+  delete state.passiveCounterUsed;
+  delete state.passiveImmunityThisTurn;
   if (!alive(state))
     state.lastLog += `\n☠️ Tử trận: ${state.lastDeathCause || "HP về 0 sau hiệu ứng của lượt này."}`;
   state.lastStatChanges = Object.fromEntries(
@@ -2242,6 +2432,7 @@ function act(state, session, action, rng) {
   return alive(state) ? null : "death";
 }
 module.exports = {
+  prepareItemCombat,
   noteEvent,
   ITEMS,
   EVENTS,

@@ -43,7 +43,7 @@ const button = (id, label, disabled = false, style = ButtonStyle.Secondary) =>
     .setDisabled(disabled);
 function detail(item) {
   if (item.typeCode === "ticket") return item.text;
-  return `${v2View.effectText(item.effects)}${item.curse ? `\n☣️ ${v2View.effectText(item.curse.effects)}` : ""}`;
+  return `${v2View.effectText(item.effects)}${v2View.passiveText(item)}${item.curse ? `\n☣️ ${v2View.effectText(item.curse.effects)}` : ""}`;
 }
 function filterMenu(id, selected = "all", includeTickets = true) {
   return new StringSelectMenuBuilder()
