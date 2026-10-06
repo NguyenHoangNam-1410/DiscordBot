@@ -407,21 +407,17 @@ function randomEventText(s) {
         ),
       ]);
     case "adventurer":
-      return show(
-        e.name,
-        "Nhận được bảo hộ",
-        [
-          option(`Cứu · trả 1 ${E.potion} bình máu`, [
-            ["70%", "Nhận đồ [R]."],
-            ["30%", "Nhận đồ [SR]."],
-          ]),
-          option("Cướp", [
-            ["75%", "Nhận đồ [SSR]."],
-            ["25%", "Nhận đồ [UR], kèm curse."],
-          ]),
-          "**Hậu quả của cướp sau 10–30 tầng:** 50% mất 10% payout; 50% gặp Bounty Hunter (Elite). Không có nhánh hồi máu hoặc bonus.",
-        ],
-      );
+      return show(e.name, "Nhận được bảo hộ", [
+        option(`Cứu · trả 1 ${E.potion} bình máu`, [
+          ["70%", "Nhận đồ [R]."],
+          ["30%", "Nhận đồ [SR]."],
+        ]),
+        option("Cướp", [
+          ["75%", "Nhận đồ [SSR]."],
+          ["25%", "Nhận đồ [UR], kèm curse."],
+        ]),
+        "**Hậu quả của cướp sau 10–30 tầng:** 50% mất 10% payout; 50% gặp Bounty Hunter (Elite). Không có nhánh hồi máu hoặc bonus.",
+      ]);
     case "fountain":
       return show(e.name, "Uống để hồi phục hoặc gặp Blood Mimic.", [
         option("Uống", [
@@ -906,6 +902,30 @@ function turnText(state) {
     );
   return lines.join("\n");
 }
+function coinPayoutDetails(state) {
+  const lines = [];
+  const factor = Math.max(0, Math.min(1, state.payoutFactor ?? 1));
+  if (factor < 1)
+    lines.push(
+      "Giảm thưởng xu do event/lời nguyền: **" +
+        percent(1 - factor) +
+        "** · còn **" +
+        percent(factor) +
+        "**.",
+    );
+  if (state.payoutSpent > 0)
+    lines.push(
+      "Đã chi trong run: **" + money(state.payoutSpent) + " " + E.coin + "**.",
+    );
+  if (state.paradox?.kind === "blood" && state.paradox.bloodFactor)
+    lines.push(
+      "Blood Paradox: **" +
+        (state.paradox.bloodFactor > 0 ? "+" : "−") +
+        percent(Math.abs(state.paradox.bloodFactor)) +
+        "** thưởng xu.",
+    );
+  return lines.length ? "\n" + lines.join("\n") : "";
+}
 function embed(state, userId, result = null, sessionId = null) {
   const c = stats.CLASSES[state.classKey];
   const e = new EmbedBuilder()
@@ -983,18 +1003,15 @@ function embed(state, userId, result = null, sessionId = null) {
       name: `${icon("moneybag", "💰")} Rút thưởng`,
       value: result
         ? `Đã nhận **${money(result.payout)} ${icon("coin", "🪙")}** ${STAT_SEPARATOR} **${money(result.diamonds || 0)} ${icon("gem", "💎")}**`
-        : state.cleared
-          ? `**${money(core.payout(state))} ${icon("coin", "🪙")}** ${STAT_SEPARATOR} **${money(runDiamondReward(state))} ${icon("gem", "💎")}**`
-          : "Chưa thể rút",
-      inline: true,
+        : (state.cleared
+            ? `Xu có thể nhận: **${money(core.payout(state))} ${icon("coin", "🪙")}**\nKim cương tạm giữ: **${money(runDiamondReward(state))} ${icon("gem", "💎")}**`
+            : "Chưa thể rút") + coinPayoutDetails(state),
+      inline: false,
     },
     {
       name: `${E.backpack} Trang bị (${state.items.length})`,
       value:
         equipmentSummary(state) +
-        (state.payoutFactor < 1
-          ? `\nPayout sau phạt ×${state.payoutFactor.toFixed(3)}`
-          : "") +
         (state.classShrine &&
         state.floor >= state.classShrine.from &&
         state.floor <= state.classShrine.until

@@ -278,6 +278,36 @@ function payout(state) {
     ) - (state.payoutSpent || 0),
   );
 }
+function payoutSnapshot(state) {
+  return {
+    coins: payout(state),
+    bonus: state.bonus,
+    factor: state.payoutFactor,
+    spent: state.payoutSpent || 0,
+    bloodFactor:
+      state.paradox?.kind === "blood" ? state.paradox.bloodFactor : 0,
+  };
+}
+function payoutChanged(before, after) {
+  return Object.keys(before).some((key) => before[key] !== after[key]);
+}
+function logPayoutChange(state, before, after, source) {
+  const delta = after.coins - before.coins;
+  const money = (n) => Math.abs(n).toLocaleString("vi-VN");
+  state.lastLog +=
+    "\n" +
+    E.coin +
+    " **Thưởng xu · " +
+    source +
+    ":** " +
+    money(before.coins) +
+    " → **" +
+    money(after.coins) +
+    "** (" +
+    (delta < 0 ? "−" : "+") +
+    money(delta) +
+    " xu).";
+}
 function heal(state, amount, { checkpoint = false } = {}) {
   if (!checkpoint) markDirect(state, ["hp"]);
   const actual = Math.max(
@@ -464,8 +494,21 @@ function finishEventResult(state) {
       ),
     ]),
   ];
-  if (Object.keys(after).some((key) => after[key] !== pending.before[key]))
-    state.lastEventResult = { ...pending, after };
+  const payoutAfter = payoutSnapshot(state);
+  const changedPayout =
+    pending.payoutBefore && payoutChanged(pending.payoutBefore, payoutAfter);
+  if (
+    Object.keys(after).some((key) => after[key] !== pending.before[key]) ||
+    changedPayout
+  )
+    state.lastEventResult = { ...pending, after, payoutAfter };
+  if (changedPayout)
+    logPayoutChange(
+      state,
+      pending.payoutBefore,
+      payoutAfter,
+      pending.name || "Sự kiện",
+    );
   delete state.pendingEventResult;
 }
 function completeFloor(state, session, rng, reward = 1) {
@@ -490,12 +533,21 @@ function completeFloor(state, session, rng, reward = 1) {
     state.contract.remaining--;
     if (!state.contract.remaining) {
       const contract = state.contract;
+      const payoutBefore = payoutSnapshot(state);
       state.contract = null;
       if (contract.kind === "potion") receiveItem(state, contract.item);
       else if (contract.kind === "skill")
         state.bonus += Math.floor(state.stake * 0.5);
       else addSource(state, { [mainStat(state)]: 10 });
       state.lastLog += `\n${eventIcon("contract")} Hoàn thành Rift Contract: ${contract.kind === "potion" ? "nhận trang bị SSR" : contract.kind === "skill" ? `bonus +50% cược (${Math.floor(state.stake * 0.5).toLocaleString("vi-VN")} xu)` : `+10 ${E[mainStat(state)]} ${mainStat(state).toUpperCase()}`}.`;
+      const payoutAfter = payoutSnapshot(state);
+      if (payoutChanged(payoutBefore, payoutAfter))
+        logPayoutChange(
+          state,
+          payoutBefore,
+          payoutAfter,
+          "Hoàn thành Rift Contract",
+        );
     }
   }
   if (
@@ -1826,7 +1878,10 @@ function noteKill(state, enemy) {
   state.kills = (state.kills || 0) + 1;
   if (["boss", "final_boss"].includes(enemy.rank)) {
     state.bossKills = (state.bossKills || 0) + 1;
-    state.bossTally = { ...(state.bossTally || {}), [enemy.name]: (state.bossTally?.[enemy.name] || 0) + 1 };
+    state.bossTally = {
+      ...(state.bossTally || {}),
+      [enemy.name]: (state.bossTally?.[enemy.name] || 0) + 1,
+    };
   }
 }
 
@@ -1862,6 +1917,7 @@ function act(state, session, action, rng) {
       type: state.encounter.type,
       kind: state.encounter.kind,
       before,
+      payoutBefore: payoutSnapshot(state),
       directKeys: [],
     };
   state.discardedTicketsThisTurn = 0;
@@ -1987,8 +2043,7 @@ function act(state, session, action, rng) {
       actSurprise(state, session, action, rng);
       if (action !== "event_skip")
         noteEvent(state, e.kind, state.encounter?.type === "combat");
-    }
-    else if (e.type === "chest") {
+    } else if (e.type === "chest") {
       if (action === "inspect") {
         e.inspected = true;
         e.revealed =
