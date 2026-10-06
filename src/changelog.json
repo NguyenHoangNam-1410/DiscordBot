@@ -1,5 +1,15 @@
 [
   {
+    "id": "72a9be73-c2d8-4443-a229-619cc23ecbfa",
+    "updatedAt": "2026-10-06T15:09:09.224Z",
+    "auditedAt": "2026-10-06T15:09:09.224Z",
+    "title": "Làm rõ Tấn công và Phòng thủ",
+    "changes": [
+      "Mô tả Tấn công và Phòng thủ bằng các dòng ngắn, dùng icon chuẩn cho Vật lý, MP, DEF, RES và CRIT.",
+      "Làm rõ Phòng thủ tăng RES 15 điểm phần trăm, giảm thêm 15% sát thương nhận và chống CRIT trong lượt hiện tại; đồng bộ mô tả trong Chỉ số và luật giao tranh."
+    ]
+  },
+  {
     "id": "4fec5081-5204-4b20-bd9e-f145282ad69f",
     "updatedAt": "2026-10-06T15:00:30.732Z",
     "auditedAt": "2026-10-06T15:00:30.732Z",

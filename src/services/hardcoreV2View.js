@@ -1512,6 +1512,9 @@ function riftStatSummary(state) {
     );
   return lines.join("\n") || "Không có ảnh hưởng chỉ số từ Rift/Paradox.";
 }
+function defenseDescription() {
+  return `Không tấn công; ${E.mana} **MP +1** (tối đa Max MP).\n**Khi quái đánh trả trong lượt này:**\n- ${E.attack} **Vật lý** → ${E.defense} **DEF ×2**.\n- ${E.magic} **Phép** → ${E.res} **RES +15 điểm %**.\n- ${E.damageTaken} Giảm thêm **15% DMG nhận**; ${E.crit} **không bị CRIT**.`;
+}
 function privatePayload(
   state,
   sessionId,
@@ -1600,12 +1603,11 @@ function privatePayload(
       },
       {
         name: `${E.attack} Tấn công`,
-        value: `Một đòn vật lý, có thể trượt/Crit ×1,75. Hồi **${core.attackManaGain(state)} MP** (tối đa Max MP), kể cả đánh trượt. Quái còn sống sẽ phản công.`,
+        value: `- ${E.attack} **Vật lý**: 1 đòn, có thể trượt hoặc ${E.crit} **CRIT ×1,75**.\n- ${E.mana} **MP +${core.attackManaGain(state)}**, kể cả trượt (tối đa Max MP).\nQuái còn sống sẽ đánh trả.`,
       },
       {
         name: `${E.defense} Phòng thủ`,
-        value:
-          "Không gây sát thương, hồi **1 MP**. Lần phản công này: DEF ×2 khi nhận vật lý, +15 RES khi nhận phép, giảm thêm 15% sát thương, miễn Crit. Hết hiệu lực sau phản công.",
+        value: defenseDescription(),
       },
     );
   } else if (tab === "effects") {
@@ -1747,8 +1749,7 @@ function ratesFields(category) {
       },
       {
         name: `${E.defense} Phòng thủ và ${E.potion} bình máu`,
-        value:
-          "- **Phòng thủ:** không gây DMG; hồi 1 MP. Trong lần phản công này, DEF ×2 khi nhận vật lý hoặc +15 RES khi nhận phép; giảm thêm 15% DMG và miễn Crit. Hết lượt thì hết hiệu lực.\n- **Bình máu:** tiêu thụ 1 bình để hồi HP theo tỷ lệ ghi trên bảng, ít nhất 20 HP, không vượt Max HP. Hiệu lực tăng theo VIT/trang bị, giới hạn 10–75% Max HP. Quái còn sống vẫn phản công. Không dùng bình khi HP đã đầy.",
+        value: `${defenseDescription()}\n\n**Bình máu:** tiêu thụ 1 bình để hồi HP theo tỷ lệ ghi trên bảng, ít nhất 20 HP, không vượt Max HP. Hiệu lực tăng theo VIT/trang bị, giới hạn 10–75% Max HP. Quái còn sống vẫn phản công. Không dùng bình khi HP đã đầy.`,
       },
       {
         name: "Kỹ năng vật lý · 2 MP mỗi lần dùng",
