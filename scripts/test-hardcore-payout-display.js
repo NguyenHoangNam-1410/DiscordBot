@@ -29,6 +29,10 @@ function fields(s) {
   const e = view.embed(s, "user").toJSON();
   assert.ok(e.fields.every((f) => f.value.length <= 1024));
   assert.ok(
+    !JSON.stringify(e).includes("undefined"),
+    "rendered UI must not leak undefined",
+  );
+  assert.ok(
     e.fields.reduce(
       (n, f) => n + f.name.length + f.value.length,
       e.title.length + e.description.length,
@@ -245,6 +249,39 @@ for (const [encounter, action, rate] of [
   delete json.lastEventResult.payoutBefore;
   delete json.lastEventResult.payoutAfter;
   fields(json);
+}
+// Application coin emojis load after modules; both the live UI and new logs must resolve them.
+{
+  const { E } = require("../src/services/hardcoreIcons");
+  const { setApplicationEmojisForTest } = require("../src/utils/appEmoji");
+  assert.equal(E.coin, "🪙");
+  setApplicationEmojisForTest([["coin", "123456789012345678"]]);
+  const coin = "<:coin:123456789012345678>";
+  assert.equal(E.coin, coin);
+  const s = create(
+    {
+      type: "trap",
+      name: "Thu thuế",
+      kind: "tax",
+      lucky: false,
+    },
+    { payoutSpent: 164759, bonus: 500000, eventPayoutFactor: 0.381 },
+  );
+  play(s, "next");
+  const withdrawal = fields(s).find((f) => f.name.includes("Rút thưởng")).value;
+  assert.ok(withdrawal.includes("Đã chi trong run: **164.759 " + coin + "**."));
+  assert.ok(s.lastLog.includes(coin + " **Thưởng xu · "));
+  const old = JSON.parse(JSON.stringify(s));
+  old.lastLog = old.lastLog.replace(
+    coin + " **Thưởng xu · ",
+    "undefined **Thưởng xu · ",
+  );
+  const log = fields(old).find((f) => f.name.includes("Lượt vừa rồi")).value;
+  assert.ok(log.includes(coin + " **Thưởng xu · "));
+  const detail = view.privatePayload(old, "payout-test", "message", "effects");
+  assert.ok(!JSON.stringify(detail).includes("undefined"));
+  assert.ok(JSON.stringify(detail).includes(coin));
+  setApplicationEmojisForTest([]);
 }
 db.close();
 console.log(

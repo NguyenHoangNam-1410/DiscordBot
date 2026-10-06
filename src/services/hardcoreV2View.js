@@ -889,6 +889,9 @@ function turnText(state) {
     if (lines[i].endsWith("Shrine experience."))
       lines[i] =
         `${E.shrine} Shrine Experience: bonus +25% cược (${money(Math.floor(state.stake * 0.25))} xu), cộng vào thưởng của run.`;
+  // Repair payout logs saved before the shared coin icon existed.
+  for (let i = 0; i < lines.length; i++)
+    lines[i] = lines[i].replace(/^undefined(?= \*\*Thưởng xu · )/, E.coin);
   if (state.lastUpgrade) lines[0] = "Đã phân bổ điểm checkpoint.";
 
   const milestone = lines.findIndex(

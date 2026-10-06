@@ -3,6 +3,9 @@ const emoji = require("../discordEmojiMap");
 const { appEmoji } = require("../utils/appEmoji");
 const icon = (key, fallback) => appEmoji(key, emoji[`:${key}:`] || fallback);
 const E = {
+  get coin() {
+    return icon("coin", "🪙");
+  },
   hp: icon("HP", "❤️"),
   attack: icon("PHYS", "⚔️"),
   defense: icon("DEF", "🛡️"),
