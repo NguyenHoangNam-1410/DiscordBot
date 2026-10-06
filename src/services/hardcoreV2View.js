@@ -909,13 +909,7 @@ function coinPayoutDetails(state) {
   const lines = [];
   const factor = Math.max(0, Math.min(1, state.payoutFactor ?? 1));
   if (factor < 1)
-    lines.push(
-      "Giảm thưởng xu do event/lời nguyền: **" +
-        percent(1 - factor) +
-        "** · còn **" +
-        percent(factor) +
-        "**.",
-    );
+    lines.push("Giảm thưởng xu do event/lời nguyền: **" + percent(1 - factor));
   if (state.payoutSpent > 0)
     lines.push(
       "Đã chi trong run: **" + money(state.payoutSpent) + " " + E.coin + "**.",
