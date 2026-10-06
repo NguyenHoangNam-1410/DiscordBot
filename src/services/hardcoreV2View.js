@@ -1,6 +1,7 @@
 "use strict";
 const itemCurses = require("../hardcore/itemCurses");
 const monsterLoot = require("../hardcore/monsterLoot");
+const memories = require("../hardcore/towerMemories");
 const { RNGESUS_CYCLE_RULES, rngesusChaosRules } = require("./hardcoreRngesus");
 const {
   EmbedBuilder,
@@ -27,6 +28,7 @@ const {
   eventIcon,
   treasureChestIcon,
   paradoxIcon,
+  memoryIcon,
 } = require("./hardcoreIcons");
 const rarityLabel = (r) =>
   ({ common: "R", rare: "SR", legendary: "SSR", cursed: "UR" })[r];
@@ -391,7 +393,7 @@ function randomEventText(s) {
         `**Cầu nguyện:** hồi 15% Max ${E.hp} HP, giữ mộ.`,
         option("Cướp mộ", [
           ["50%", "Nhận một món đồ, đi tiếp an toàn."],
-          ["50%", "Nhận một món đồ, Echo thức tỉnh và phải chiến đấu."],
+          ["50%", "Nhận một món đồ; xem **Rift** để đọc Oán niệm."],
         ]),
         "**Khiêu chiến:** quái mạnh hơn 25%; hạ mới nhận loot. **Bỏ đi:** giữ mộ.",
       ],
@@ -480,7 +482,7 @@ function randomEventText(s) {
         ),
       ]);
     case "adventurer":
-      return show(e.name, "Nhận được bảo hộ", [
+      return show(e.name, "Cứu hoặc cướp để nhận trang bị.", [
         option(`Cứu · trả 1 ${E.potion} bình máu`, [
           ["70%", "Nhận đồ [R]."],
           ["30%", "Nhận đồ [SR]."],
@@ -489,7 +491,7 @@ function randomEventText(s) {
           ["75%", "Nhận đồ [SSR]."],
           ["25%", "Nhận đồ [UR], kèm curse."],
         ]),
-        "**Hậu quả của cướp sau 10–30 tầng:** 50% mất 10% payout; 50% gặp Bounty Hunter (Elite). Không có nhánh hồi máu hoặc bonus.",
+        "Xem **Rift** để đọc Ân nghĩa và Truy nã.",
       ]);
     case "fountain":
       return show(e.name, "Uống để hồi phục hoặc gặp Blood Mimic.", [
@@ -509,10 +511,7 @@ function randomEventText(s) {
       return show(e.name, "Nhận sức mạnh hoặc phá gương để thử vận may.", [
         `**Sức mạnh:** ${attr(main, 10)}.`,
         `**Phòng thủ:** ${attr("vit", 8)}; ${attr("str", 5)} hoặc ${attr("dex", 5)} (50/50).`,
-        option("Đập gương", [
-          ["20%", `${attr("luck", 2)}.`],
-          ["80%", "Chiến đấu Mirror Clone dùng chỉ số của bạn."],
-        ]),
+        "**Đập gương:** xem **Rift** để đọc kết quả và Dư âm gương.",
       ]);
     case "doors":
       return show(
@@ -685,7 +684,7 @@ function encounterText(s) {
     );
   }
   if (e.type === "memory")
-    return `${eventIcon("memory")} **The Tower Remembers:** (Hành động trước đó để lại hậu quả.)\n\n**Đi tiếp:** nhận hiệu ứng đã được khóa từ trước.`;
+    return `**${memories.title(e.debt)}**\nChọn cách xử lý bằng nút bên dưới. Xem **Rift** để đọc nguyên nhân và hậu quả.`;
   if (e.type === "empty")
     return `${eventIcon("empty")} Phòng trống. Đi tiếp hoặc rút thưởng.`;
   const k = e.kind;
@@ -732,6 +731,7 @@ function encounterSummary(s) {
     return `${eventIcon("paradox")} **RIFT PARADOX · HIỆU LỰC 5 TẦNG**\nTầng ${s.encounter.version === 2 ? s.encounter.milestone + 1 : s.floor}–${s.encounter.version === 2 ? s.encounter.milestone + 5 : s.floor + 4}. Chọn một luật bằng nút bên dưới.\nXem **Chi tiết** để đọc công dụng từng lựa chọn.`;
   if (s.phase !== "encounter") return encounterText(s);
   const e = s.encounter;
+  if (e.type === "memory") return encounterText(s);
   if (e.type === "combat") {
     const rank =
       {
@@ -743,7 +743,7 @@ function encounterSummary(s) {
         ancient_mimic: "Ancient Mimic",
       }[world.mimicKind(e) ? "elite" : e.rank] || e.rank;
     const preview = core.incomingPreview(s);
-    return `${["boss", "final_boss"].includes(e.rank) ? eventIcon("boss") : "👹"} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Tỷ lệ vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} DMG** · ${E.evasion} **${percent(preview.chance)}** trúng bạn *(chưa Crit/DEF)*`;
+    return `${e.memoryFamily ? memoryIcon(e.memoryFamily) : ["boss", "final_boss"].includes(e.rank) ? eventIcon("boss") : "👹"} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Tỷ lệ vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} DMG** · ${E.evasion} **${percent(preview.chance)}** trúng bạn *(chưa Crit/DEF)*`;
   }
 
   if (e.type === "empty")
@@ -855,9 +855,9 @@ function encounterDetails(s) {
   return (
     detail +
     (forecast
-      ? "\n\n**✨ Tiên tri** · kết quả tức thời đã khóa\n" +
+      ? "\n\n**✨ Tiên tri** · nhánh lựa chọn đã khóa\n" +
         forecast +
-        "\nKhông tiết lộ phần thưởng hoặc hậu quả hẹn về sau; không áp dụng RNGesus."
+        "\nKhông tiết lộ thời điểm kích hoạt ký ức; không áp dụng RNGesus."
       : "") +
     discount
   );
@@ -1094,14 +1094,9 @@ function embed(state, userId, result = null, sessionId = null) {
       ? ["🙏 Cầu nguyện RNGesus **60%** trong toàn run"]
       : []),
     ...(state.reviveTickets ? ["🎟️ **1** vé hồi sinh · 50% HP"] : []),
-    ...(state.adventurerRescue
-      ? [
-          `🤝 Lost Adventurer bảo hộ một lần đến tầng **${state.adventurerRescue.until}** · ưu tiên trước vé`,
-        ]
-      : []),
   ];
   if (protections.length)
-    e.addFields({ name: "Vé & bảo hộ", value: protections.join("\n") });
+    e.addFields({ name: "Vé mang theo", value: protections.join("\n") });
   addTextFields(
     e,
     state.encounter.type === "combat" ? `${E.attack} Đối thủ` : "⚠️ Tình huống",
@@ -1259,7 +1254,9 @@ function rows(sessionId, state, disabled = false) {
             ? ButtonStyle.Success
             : ButtonStyle.Secondary,
       a.disabled,
-      a.action.startsWith("paradox_") && state.encounter.version === 2
+      state.encounter.type === "memory"
+        ? memoryIcon(memories.family(state.encounter.debt))
+        : a.action.startsWith("paradox_") && state.encounter.version === 2
         ? paradoxIcon(a.action.slice(8))
         : a.action.startsWith("chest_") &&
             state.encounter.kind === "treasure_room"
@@ -1558,8 +1555,8 @@ function privatePayload(
       );
     addTextFields(
       e,
-      "Cầu nguyện & bảo hộ",
-      `🙏 Cầu nguyện RNGesus: **${percent(core.rngesusPrayerChance(state))}**${state.adventurerRescue ? `\n🤝 Lost Adventurer bảo hộ một lần đến tầng ${state.adventurerRescue.until}; dùng trước vé hồi sinh.` : ""}`,
+      "Cầu nguyện",
+      `🙏 Cầu nguyện RNGesus: **${percent(core.rngesusPrayerChance(state))}**`,
     );
     e.addFields(
       {
@@ -1591,6 +1588,7 @@ function privatePayload(
       });
     addTextFields(e, "Rift Paradox", paradoxEffectText(state));
     addTextFields(e, "Rift Contract", contractEffectText(state));
+    for (const field of memories.fields(state)) addTextFields(e, field.name, field.value);
   } else {
     const detail = hasEncounterDetails(state)
       ? encounterDetails(state)
@@ -1817,17 +1815,17 @@ function ratesFields(category) {
       {
         name: `${eventIcon("memory")} The Tower Remembers`,
         value:
-          "- Dòng **The Tower will remember this** nghĩa là hành động vừa rồi tạo một hậu quả hẹn sau **10–30 tầng**, tối đa 8 hậu quả đang chờ.\n- Có thể đến từ bỏ qua event, hiến tế, đập gương, bán hòm, hối lộ hoặc cầu nguyện RNGesus thành công.\n- Khi đến hạn: **50%** hồi 10–20% Max HP và bonus 10–30% cược; **25%** mất 10% payout; **25%** phải đánh Bounty Hunter. Kết quả đã khóa lúc ghi nhận, không đổi khi mở lại bảng. Boss/RNGesus có thể làm hậu quả xuất hiện muộn hơn.\n- Lost Adventurer dùng cơ chế riêng bên dưới.",
+          "- Ký ức phân theo nguyên nhân: Ân nghĩa, Truy nã, Hiến tế máu/tài sản, Dư âm gương, Thử thách thần linh, Oán niệm. Xem nguồn gốc, hiệu lực, tầng đến hạn và lựa chọn trong nút **Rift**.\n- Hậu quả hẹn sau **10–30 tầng**, tối đa **8** đang chờ; boss/RNGesus được ưu tiên. Đầy hàng chờ thì không thể cướp, hiến tế hoặc đập gương; cầu nguyện RNGesus vẫn dùng được nhưng không thêm thử thách.\n- Bỏ qua event, bán hòm và hối lộ không tạo ký ức mới. Run cũ giữ nguyên các hậu quả đã khóa, không roll lại.",
       },
       {
         name: `${eventIcon("adventurer")} Lost Adventurer · cứu / cướp`,
         value:
-          "- **Cứu:** trả một bình, nhận R 70% / SR 30% và một lần bảo hộ trong cùng khu vực. Chết bởi RNGesus → hồi sinh 50% HP, sang tầng kế; chết khi đánh quái → hồi sinh 50% HP, ở lại đánh tiếp. Ưu tiên trước vé hồi sinh, hết hiệu lực khi dùng hoặc sang khu vực khác; không tạo hậu quả hẹn.\n- **Cướp:** nhận **SSR 75% / UR có nguyền 25%**. Sau **10–30 tầng**: **50% mất 10% payout**, **50% đánh Bounty Hunter (Elite)**. Không có nhánh hồi máu/bonus. Tối đa 8 hậu quả đang chờ; kết quả khóa khi ghi nhận.",
+          "- **Cứu:** trả một bình, nhận R 70% / SR 30% và một lần bảo hộ trong cùng khu vực. Chết bởi RNGesus → hồi sinh 50% HP, sang tầng kế; chết khi đánh quái → hồi sinh 50% HP, ở lại đánh tiếp. Ưu tiên trước vé hồi sinh, hết hiệu lực khi dùng hoặc sang khu vực khác; không tạo hậu quả hẹn.\n- **Cướp:** nhận **SSR 75% / UR có nguyền 25%**. Sau **10–30 tầng**: **50% mất 10% payout**, **50% gặp Bounty Hunter (Elite)**, có thể bồi thường 20% payout để tránh đánh. Không có nhánh hồi máu/bonus. Tối đa 8 hậu quả đang chờ; kết quả khóa khi ghi nhận.",
       },
       {
         name: `${eventIcon("echo")} Grave Echo`,
         value:
-          "- Từ tầng 101, có 1% cơ hội ở tình huống hợp lệ; tối đa một lần trong mỗi dải 100 tầng, không gặp mộ của chính mình.\n- Có thể cầu nguyện hồi HP, bỏ đi, cướp hoặc khiêu chiến. Cướp có thể đánh thức Echo; khiêu chiến tạo đối thủ mạnh hơn. Đọc tỷ lệ và phần thưởng trên bảng trước khi chọn.",
+          "- Từ tầng 101, có 1% cơ hội ở tình huống hợp lệ; tối đa một lần trong mỗi dải 100 tầng, không gặp mộ của chính mình.\n- Có thể cầu nguyện hồi HP, bỏ đi, cướp hoặc khiêu chiến. Cướp: 50% an toàn, 50% tạo Oán niệm sau 10–30 tầng, thay trận thức tỉnh tức thì; món đã cướp không nhận lại. Khiêu chiến vẫn đánh ngay với đối thủ mạnh hơn. Đọc tỷ lệ và phần thưởng trên bảng trước khi chọn.",
       },
     ],
     rngesus: [
@@ -1842,7 +1840,7 @@ function ratesFields(category) {
       {
         name: `${eventIcon("rngesus")} RNGesus · không được rút thưởng`,
         value:
-          "Chaos trên bảng là tỷ lệ gặp RNGesus. RNGesus không thể bị đánh bại.\n- **Đánh:** tử trận ngay; Lost Adventurer hoặc vé hồi sinh có thể cứu nếu còn. Không được cứu thì mất cược/thưởng tạm giữ.\n- **Hối lộ:** cần payout hiển thị **≥1.000 xu**, đúng 1.000 vẫn được. Thoát an toàn, giảm hệ số payout 40%; thưởng tích lũy về sau cũng chịu hệ số đã giảm.\n- **Cầu nguyện:** **30%** thành công và nhận chắc chắn **1 trang bị UR kèm lời nguyền**; **70%** thất bại và tử trận. Mang vé cầu nguyện từ túi Sinh tồn: **60%** thành công, **40%** thất bại, áp dụng toàn run. Lost Adventurer hoặc vé hồi sinh cứu khi tử trận nếu còn.\nHối lộ hoặc cầu nguyện thành công ghi nhận The Tower Remembers.",
+          "Chaos trên bảng là tỷ lệ gặp RNGesus. RNGesus không thể bị đánh bại.\n- **Đánh:** tử trận ngay; Lost Adventurer hoặc vé hồi sinh có thể cứu nếu còn. Không được cứu thì mất cược/thưởng tạm giữ.\n- **Hối lộ:** cần payout hiển thị **≥1.000 xu**, đúng 1.000 vẫn được. Thoát an toàn, giảm hệ số payout 40%; thưởng tích lũy về sau cũng chịu hệ số đã giảm.\n- **Cầu nguyện:** **30%** thành công và nhận chắc chắn **1 trang bị UR kèm lời nguyền**; **70%** thất bại và tử trận. Mang vé cầu nguyện từ túi Sinh tồn: **60%** thành công, **40%** thất bại, áp dụng toàn run. Lost Adventurer hoặc vé hồi sinh cứu khi tử trận nếu còn.\nChỉ cầu nguyện thành công có thể tạo Thử thách thần linh; hối lộ không tạo ký ức mới. Xem trong Rift.",
       },
       {
         name: `${E.ticket} Bỏ chạy và vé thoát hiểm`,

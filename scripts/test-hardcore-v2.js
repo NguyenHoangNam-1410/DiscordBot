@@ -398,7 +398,7 @@ async function main() {
 
   const memory = stats.createState("barbarian", 10);
   memory.encounter = { type: "empty" };
-  for (let i = 0; i < 20; i++) core.remember(memory, "sell_chest", rng);
+  for (let i = 0; i < 20; i++) core.remember(memory, "pray_rngesus", rng);
   assert.equal(memory.debts.length, 8);
   assert(memory.debts.every((d) => d.due >= 11 && d.due <= 31));
   const savedDebts = JSON.stringify(memory.debts);

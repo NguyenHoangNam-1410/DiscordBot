@@ -2,6 +2,7 @@
 const stats = require("./hardcoreStats");
 const itemPassives = require("../hardcore/itemPassives");
 const monsterLoot = require("../hardcore/monsterLoot");
+const memories = require("../hardcore/towerMemories");
 const {
   rngesusEncounterChance,
   resetRngesusEncounter,
@@ -20,6 +21,7 @@ const {
   SKILL_ICONS,
   RIFT_ICONS,
   eventIcon,
+  memoryIcon,
   treasureChestIcon,
 } = require("./hardcoreIcons");
 const world = require("./hardcoreWorld");
@@ -181,7 +183,9 @@ function reviveAfterDeath(state, session, rng, reason) {
   state.hp = Math.max(1, Math.ceil(state.maxHp * 0.5));
   delete state.lastDeathCause;
   state.lastLog += adventurer
-    ? "\n🤝 The Tower remembers: Lost Adventurer trở lại cứu bạn! Hiệu lực cứu giúp đã dùng, giữ nguyên vé hồi sinh."
+    ? "\n" +
+      memoryIcon("rescue") +
+      " Lost Adventurer trở lại cứu bạn! Đã dùng bảo hộ, giữ nguyên vé hồi sinh."
     : "\n🎟️ Tự dùng 1 vé hồi sinh.";
   if (!combat || reason === "rngesus") completeFloor(state, session, rng, 0);
   // Set directly: checkpoint healing and regeneration must not alter the promised 50%.
@@ -479,17 +483,8 @@ function grind(state, item) {
   if (item.level === 0) state.items = state.items.filter((x) => x !== item);
   addSource(state, effects, "absorbed");
 }
-function remember(state, action, rng) {
-  if (state.debts.length >= 8) return;
-  state.debts.push({
-    action,
-    due: state.floor + int(10, 30, rng),
-    good: rng() < 0.5 && action !== "event_rob",
-    kind: rng() < 0.5 ? "tax" : "hunter",
-    healRate: 0.1 + rng() * 0.1,
-    bonusRate: 0.1 + rng() * 0.2,
-  });
-  state.lastLog += "\nThe Tower will remember this.";
+function remember(state, action, rng, data = {}) {
+  return memories.queue(state, action, rng, data);
 }
 function alive(state) {
   return state.hp > 0;
@@ -998,15 +993,7 @@ function generateRawEncounter(state, session, rng) {
   );
   if (due >= 0) {
     const debt = state.debts.splice(due, 1)[0];
-    return {
-      type: "memory",
-      name: "The Tower Remembers",
-      debt,
-      enemy:
-        debt.kind === "hunter"
-          ? world.makeEnemy(state, "elite", "Bounty Hunter", rng)
-          : null,
-    };
+    return memories.makeEncounter(state, debt, rng);
   }
   const band = Math.floor((state.floor - 1) / 100);
   if (state.floor >= 101 && !state.echoBands.includes(band) && rng() < 0.01) {
@@ -1624,12 +1611,12 @@ function surpriseActions(state) {
         {
           action: "event_sacrifice_hp",
           label: "Hiến 20% HP · +6 stat chính",
-          disabled: state.hp <= 1,
+          disabled: state.hp <= 1 || !memories.canQueue(state),
         },
         {
           action: "event_sacrifice_payout",
           label: "10% payout · +6 VIT",
-          disabled: rawPayout(state) < 1,
+          disabled: rawPayout(state) < 1 || !memories.canQueue(state),
         },
       ],
       gambler: [
@@ -1650,7 +1637,11 @@ function surpriseActions(state) {
           label: "Cứu · 1 bình",
           disabled: state.potions < 1,
         },
-        { action: "event_rob", label: "Cướp · SSR/UR" },
+        {
+          action: "event_rob",
+          label: "Cướp · SSR/UR",
+          disabled: !memories.canQueue(state),
+        },
       ],
       fountain: [{ action: "event_drink", label: "Uống" }],
       horadric: [
@@ -1672,7 +1663,11 @@ function surpriseActions(state) {
       mirror: [
         { action: "event_mirror_power", label: "+10 stat chính" },
         { action: "event_mirror_guard", label: "+8 VIT, +5 phòng thủ" },
-        { action: "event_mirror_break", label: "Đập gương" },
+        {
+          action: "event_mirror_break",
+          label: "Đập gương",
+          disabled: !memories.canQueue(state),
+        },
       ],
       treasure_room: [
         ...["red", "blue", "gold"].map((color) => ({
@@ -1790,10 +1785,15 @@ function actions(state) {
   if (e.type === "echo")
     return [
       { action: "echo_pray", label: "Cầu nguyện · hồi 15% HP" },
-      { action: "echo_rob", label: "Cướp · 50% thức tỉnh" },
+      {
+        action: "echo_rob",
+        label: "Cướp · 50% oán niệm",
+        disabled: !memories.canQueue(state),
+      },
       { action: "echo_challenge", label: "Khiêu chiến · +25% sức mạnh" },
       { action: "echo_skip", label: "Bỏ đi" },
     ];
+  if (e.type === "memory") return memories.actions(state, payout(state));
   return [{ action: "next", label: "Đi tiếp" }];
 }
 function openChest(state, session, chest, rng, prefix = "") {
@@ -1832,7 +1832,6 @@ function actSurprise(state, session, action, rng) {
     state.items.find((item) => item.definition.id === id);
   if (action === "event_skip") {
     state.lastLog = `Bỏ qua ${e.name}.`;
-    remember(state, "skip_event", rng);
     completeFloor(state, session, rng, 0);
     return;
   }
@@ -1959,16 +1958,18 @@ function actSurprise(state, session, action, rng) {
       `✨ ${target.name}: giải toàn bộ lời nguyền; giữ UR, level, buff và nội tại.`,
     );
   } else if (k === "sacrifice") {
+    let paid = 0;
     if (action === "event_sacrifice_hp") {
       if (state.hp <= 1) throw new Error("INSUFFICIENT_HP");
       hurt(state, state.maxHp * 0.2, false, true);
       addSource(state, { [mainStat(state)]: 6 });
     } else {
-      charge(state, serviceCost(state, 0.1));
+      paid = serviceCost(state, 0.1);
+      charge(state, paid);
       addSource(state, { vit: 6 });
     }
     state.lastLog = "🩸 Hoàn thành hiến tế.";
-    remember(state, "sacrifice", rng);
+    remember(state, action, rng, { paid });
     completeFloor(state, session, rng, 0);
   } else if (k === "gambler") {
     const amount = serviceCost(
@@ -1987,7 +1988,7 @@ function actSurprise(state, session, action, rng) {
       receiveItem(state, e.rescueItem);
       const region = world.regionForFloor(state.floor);
       state.adventurerRescue = { from: region.start, until: region.end };
-      state.lastLog = `🤝 Cứu người: nhận ${e.rescueItem.name}.\nThe Tower will remember this. Lost Adventurer sẽ cứu một lần trong ${region.name} (đến tầng ${region.end}), hồi sinh với 50% HP khi tử trận bởi RNGesus hoặc quái; không mất vé hồi sinh.`;
+      state.lastLog = `${memoryIcon("rescue")} Cứu người: nhận ${e.rescueItem.name}.\nÂn nghĩa đã ghi nhận. Xem bảo hộ trong Rift.`;
     } else {
       receiveItem(state, e.robItem);
       state.lastLog = `🗡️ Cướp: nhận ${e.robItem.name}.`;
@@ -2033,13 +2034,12 @@ function actSurprise(state, session, action, rng) {
       done("🪞 Mirror of Fate: đã chọn phòng thủ.");
     } else {
       state.lastLog = "🪞 Đập gương.";
-      remember(state, "mirror_break", rng);
       if (e.roll < 0.2) {
         addSource(state, { luck: 2 });
         completeFloor(state, session, rng, 0);
       } else {
-        const log = state.lastLog;
-        combat(e.enemy, log + "\nMirror Clone xuất hiện!");
+        remember(state, "mirror_break", rng, { enemy: e.enemy });
+        completeFloor(state, session, rng, 0);
       }
     }
   } else if (k === "treasure_room") {
@@ -2153,6 +2153,19 @@ function defeatEnemy(state, session, rng, e) {
     receiveItem(state, randomItem(rarity, rng));
     state.lastLog += `\n${E.chest} Phần thưởng hạ Blood Mimic: đã nhận trang bị.`;
   }
+  if (e.memoryReward) {
+    const beforePayout = payoutSnapshot(state);
+    const reward = e.memoryReward;
+    delete e.memoryReward;
+    applyMemoryReward(state, reward);
+    if (payoutChanged(beforePayout, payoutSnapshot(state)))
+      logPayoutChange(
+        state,
+        beforePayout,
+        payoutSnapshot(state),
+        memories.title(reward.family),
+      );
+  }
   const dropRarity = monsterLoot.roll(state, e, rng);
   if (dropRarity) {
     const dropped = randomItem(dropRarity, rng);
@@ -2170,6 +2183,117 @@ function defeatEnemy(state, session, rng, e) {
     state.lastLog += `\n${eventIcon("boss_chest")} Nhận rương boss: mở hoặc bán để tiếp tục.`;
   }
   completeFloor(state, session, rng, e.rewardMultiplier);
+}
+function applyMemoryReward(state, reward) {
+  if (reward.family === "divine") {
+    const target = state.items.find(
+      (item) =>
+        item.definition.curse && item.level > (item.cleansedLevels || 0),
+    );
+    if (target) {
+      markDirect(state, effectStatKeys(target.definition.curse.effects));
+      target.cleansedLevels = (target.cleansedLevels || 0) + 1;
+      target.rarity = target.definition.rarity;
+      recompute(state);
+      state.lastLog +=
+        "\n" +
+        memoryIcon("divine") +
+        " Ân huệ: gỡ 1 level nguyền của " +
+        target.name +
+        "; giữ UR, level và nội tại.";
+    } else {
+      const restored = heal(state, state.maxHp * 0.2);
+      state.lastLog +=
+        "\n" +
+        memoryIcon("divine") +
+        " Không còn nguyền: hồi " +
+        restored +
+        " " +
+        E.hp +
+        " HP cho bạn.";
+    }
+  } else if (reward.coins > 0) {
+    state.bonus += reward.coins;
+    state.lastLog +=
+      "\n" +
+      memoryIcon(reward.family) +
+      " Bonus +" +
+      reward.coins.toLocaleString("vi-VN") +
+      " " +
+      E.coin +
+      ".";
+  }
+}
+function resolveMemory(state, session, action, rng) {
+  const e = state.encounter,
+    debt = e.debt,
+    key = memories.family(debt);
+  const done = (log) => {
+    state.lastLog = log;
+    completeFloor(state, session, rng, 0);
+  };
+  const startFight = () => {
+    state.encounter = e.enemy;
+    state.lastLog = memories.title(debt) + ": " + e.enemy.name + " xuất hiện!";
+  };
+  if (key === "legacy") {
+    if (debt.good && debt.action !== "event_rob") {
+      const restored = heal(state, state.maxHp * debt.healRate);
+      state.bonus += Math.floor(state.stake * debt.bonusRate);
+      done(
+        memoryIcon("legacy") +
+          " Ký ức cũ: hồi " +
+          restored +
+          " " +
+          E.hp +
+          " HP; bonus +" +
+          Math.floor(state.stake * debt.bonusRate).toLocaleString("vi-VN") +
+          " xu.",
+      );
+    } else if (debt.kind === "tax") {
+      penalty(state, 0.1);
+      done(memoryIcon("legacy") + " Ký ức cũ: mất 10% payout.");
+    } else startFight();
+  } else if (key === "bounty") {
+    if (debt.kind === "tax" || action === "memory_settle") {
+      const rate = debt.kind === "tax" ? 0.1 : 0.2;
+      penalty(state, rate);
+      done(
+        memoryIcon("bounty") +
+          " Đã bồi thường " +
+          Math.round(rate * 100) +
+          "% payout; kết thúc truy nã.",
+      );
+    } else startFight();
+  } else if (key === "blood") {
+    const restored = heal(state, state.maxHp * 0.2);
+    const previous = state.potions;
+    state.potions = Math.min(state.maxPotions, state.potions + 1);
+    done(
+      memoryIcon("blood") +
+        " Phúc lành hiến tế: hồi " +
+        restored +
+        " " +
+        E.hp +
+        " HP cho bạn; " +
+        E.potion +
+        " bình " +
+        previous +
+        " → " +
+        state.potions +
+        ".",
+    );
+  } else if (action === "memory_decline") {
+    done(
+      memories.title(debt) + ": đã từ chối, không nhận thưởng hoặc bị phạt.",
+    );
+  } else if (key === "divine" && action === "memory_offering") {
+    state.potions--;
+    state.lastLog =
+      memoryIcon("divine") + " Đã hiến 1 " + E.potion + " bình máu.";
+    applyMemoryReward(state, { family: "divine" });
+    completeFloor(state, session, rng, 0);
+  } else startFight();
 }
 function act(state, session, action, rng) {
   if (action === "retreat") {
@@ -2306,7 +2430,6 @@ function act(state, session, action, rng) {
       } else if (action === "sell") {
         state.bonus += Math.floor(state.stake * 0.15);
         state.lastLog = "Bán hòm: bonus +15% cược.";
-        remember(state, "sell_chest", rng);
         completeFloor(state, session, rng, 0);
       } else if (action === "leave") {
         state.lastLog = "Tránh Mimic.";
@@ -2411,7 +2534,6 @@ function act(state, session, action, rng) {
       if (action === "bribe") {
         penalty(state, 0.4);
         state.lastLog = "Hối lộ: mất 40% payout.";
-        remember(state, "bribe_rngesus", rng);
       }
       if (action === "pray") {
         if (!e.prayerSuccess)
@@ -2437,30 +2559,20 @@ function act(state, session, action, rng) {
         state.lastLog = "Khiêu chiến Grave Echo mạnh hơn 25%.";
       } else {
         if (e.item) receiveSnapshot(state, e.item);
-        if (e.awakens) {
-          e.enemy.echoItem = null;
-          state.encounter = e.enemy;
-          state.lastLog = "Cướp mộ: Echo thức tỉnh!";
-        } else {
-          echoes.consume(session, e.echo.id);
-          state.lastLog = "Cướp mộ an toàn.";
-          completeFloor(state, session, rng, 0);
-        }
+        // Claim the grave's loot once now; the later spirit has no live grave lease.
+        echoes.consume(session, e.echo.id);
+        state.lastLog = e.awakens
+          ? "Cướp mộ: người chết đã ghi nhớ."
+          : "Cướp mộ an toàn.";
+        if (e.awakens)
+          remember(state, "echo_rob", rng, {
+            enemy: e.enemy,
+            coins: Math.floor(state.stake * (0.25 + 0.1 * e.echo.kills)),
+          });
+        completeFloor(state, session, rng, 0);
       }
     } else if (e.type === "memory") {
-      if (e.debt.good && e.debt.action !== "event_rob") {
-        heal(state, state.maxHp * e.debt.healRate);
-        state.bonus += Math.floor(state.stake * e.debt.bonusRate);
-        state.lastLog = `${eventIcon("memory")} The Tower Remembers: hồi phục ${E.hp} HP; bonus +${Math.floor(state.stake * e.debt.bonusRate).toLocaleString("vi-VN")} xu vào thưởng của run.`;
-        completeFloor(state, session, rng, 0);
-      } else if (e.debt.kind === "tax") {
-        penalty(state, 0.1);
-        state.lastLog = "The Tower Remembers: mất 10% payout.";
-        completeFloor(state, session, rng, 0);
-      } else {
-        state.encounter = e.enemy;
-        state.lastLog = "The Tower Remembers: Bounty Hunter xuất hiện!";
-      }
+      resolveMemory(state, session, action, rng);
     } else {
       state.lastLog = "Phòng trống, đi tiếp.";
       completeFloor(state, session, rng, 0);

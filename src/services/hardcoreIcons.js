@@ -82,6 +82,19 @@ function eventIcon(key) {
 function treasureChestIcon(color) {
   return icon(`chest_${color}`, { red: "🟥", blue: "🟦", gold: "🟨" }[color]);
 }
+function memoryIcon(family) {
+  const fallback = {
+    rescue: "🤝",
+    bounty: "⚖️",
+    blood: "🩸",
+    wealth: "💰",
+    mirror: "🪞",
+    divine: "🙏",
+    vengeance: "👻",
+    legacy: "📜",
+  };
+  return icon("tower_remember_" + family, fallback[family] || "📜");
+}
 function paradoxIcon(id) {
   const fallback = {
     blood_pact: "🩸",
@@ -102,4 +115,5 @@ module.exports = {
   eventIcon,
   treasureChestIcon,
   paradoxIcon,
+  memoryIcon,
 };

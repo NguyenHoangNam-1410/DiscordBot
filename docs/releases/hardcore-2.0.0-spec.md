@@ -238,13 +238,13 @@ Khi gặp Shrine, giao diện thay phần chỉ số của lượt trước bằ
 | Treasure Goblin | Cơ hội bắt = min(90%, 60% + Luck*1% + bonus item). Thành công +25% tiền cược; thất bại mất 10% payout. |
 | Altar of Sacrifice | Hiến tối đa 20% Max HP nhưng giữ ít nhất 1 HP để nhận +6 stat damage chính; hoặc trả 10% payout để nhận +6 VIT. |
 | Cursed Gambler | Cược 10% hoặc 25% payout; 50% thắng. Thắng cộng gấp đôi khoản đặt vào bonus, thua mất khoản đã chi. |
-| Lost Adventurer | Cứu bằng 1 bình để nhận R/SR (30% SR); hoặc cướp ngay nhận R với 25% biến thành UR. |
+| Lost Adventurer | Cứu bằng 1 bình nhận R 70% / SR 30% và bảo hộ Ân nghĩa; cướp nhận SSR 75% / UR có nguyền 25% và Truy nã. |
 | Blood Fountain | 60% hồi đầy HP; 25% +15 Max HP/HP; 15% gọi Blood Mimic. |
 | Blacksmith | Trả 12% payout để tăng một cấp item ngẫu nhiên đang có. |
 | Purifier | Trả 20% payout để giải curse một UR ngẫu nhiên đang có. |
 | Horadric Forge | Nghiền một cấp item để chọn +6 stat damage chính, +7 STR/VIT đã pre-roll, +4 VIT; SSR/UR còn có thể đổi lấy một Vé Thoát Hiểm. |
 | Rift Merchant | Hiện ba món ngẫu nhiên: bình 5%, hồi đầy 8%, +1 Luck 10%, SR 15%, Vé 25% payout. Chỉ mua một món. |
-| Mirror of Fate | Chọn +10 stat damage chính; hoặc +8 VIT và +5 STR/DEX phòng thủ; hoặc đập gương: 20% +2 Luck, 80% đấu Mirror Clone dùng chỉ số của người chơi. |
+| Mirror of Fate | Chọn +10 stat damage chính; hoặc +8 VIT và +5 STR/DEX phòng thủ; hoặc đập gương: 20% +2 Luck, 80% tạo Dư âm gương, sau 10–30 tầng đấu Mirror Clone giữ chỉ số lúc đập. |
 | Treasure Room | Ba hòm đỏ/xanh/vàng, một hòm là Mimic. Được inspect một màu. Đỏ +5 damage trực tiếp; xanh +6 Defense/+5 RES; vàng +50% cược và +1 Luck. |
 | Rift Contract | Trong 3 tầng: không dùng bình → SSR; không dùng skill → +50% cược; không Defend → +10 stat damage chính. Vi phạm chỉ hủy thưởng. |
 | Class Shrine | Cường hóa class trong 3 tầng: Amazon có cơ hội phát thứ ba; Barbarian +8 Defense khi HP ≤30%; Assassin chắc chắn né một phản công; Sorceress dùng một skill miễn phí; Druid hồi 5% Max HP mỗi tầng sau tầng đầu; Necromancer chặn một đòn; Paladin +10 RES. |
@@ -300,7 +300,7 @@ Chaos trên UI là tỷ lệ gặp của lần roll gần nhất, không phải 
 | Lựa chọn | Kết quả |
 |---|---|
 | Cầu nguyện | Hồi 15% Max HP, thả claim; mộ vẫn tồn tại. |
-| Cướp mộ | Nhận một item snapshot; 50% đánh thức Echo. Nếu không thức, Echo bị xóa. |
+| Cướp mộ | Nhận một item snapshot một lần và xóa mộ; 50% tạo Oán niệm truy đuổi sau 10–30 tầng, thay trận thức tỉnh ngay. |
 | Khiêu chiến | Gọi Echo mạnh hơn 25%; chưa lấy trước item. |
 | Bỏ đi | Không nhận gì, thả claim; mộ vẫn tồn tại. |
 
@@ -308,12 +308,24 @@ Build DEX cho Echo +8 Evasion; VIT +12 Defense; STR +10% Crit; ENE khiến mọi
 
 ## 11. The Tower Remembers
 
-- Các hành động được ghi nhớ: cứu/cướp Lost Adventurer, hiến HP/payout, bỏ qua event, đập Mirror, bán hòm, hối lộ/cầu nguyện RNGesus.
-- State giữ tối đa 8 món nợ. Mỗi món kích hoạt ngẫu nhiên sau 10–30 tầng và chỉ một lần.
-- Khi ghi nhận, kết quả tốt/xấu được pre-roll 50/50 và được giữ nguyên qua restart/resume.
-- Hậu quả tốt hồi khoảng 10–20% Max HP và cộng khoảng 10–30% tiền cược vào payout.
-- Hậu quả xấu hoặc lấy 10% payout, hoặc gọi Bounty Hunter Elite.
-- Sau lựa chọn ban đầu bot chỉ báo `The Tower will remember this.` và không tiết lộ kết quả đã roll.
+Thông tin nguồn gốc, điều kiện, kết quả và tầng đến hạn nằm trong UI **Rift**. Battle UI chỉ hiển thị tên ký ức đang gặp và các nút xử lý. Mỗi loại dùng icon riêng; hiện dùng Unicode placeholder, tự thay bằng application emoji khi upload đúng tên.
+
+| Loại | Nguồn | Kết quả | Tên emoji |
+|---|---|---|---|
+| Ân nghĩa | Cứu Lost Adventurer | Hồi sinh một lần với 50% HP trong cùng khu vực; RNGesus → tầng kế, quái → tiếp tục trận; ưu tiên trước vé hồi sinh. | tower_remember_rescue |
+| Truy nã | Cướp Lost Adventurer | 50% thu 10% payout; 50% Bounty Hunter Elite, cho chọn đánh hoặc bồi thường 20% payout. | tower_remember_bounty |
+| Hiến tế máu | Hiến HP ở Altar | Đến hạn hồi 20% Max HP và +1 bình theo giới hạn hiện tại. Giữ phần thưởng +6 stat chính ban đầu. | tower_remember_blood |
+| Hiến tế tài sản | Hiến 10% payout ở Altar | Giữ +6 VIT ban đầu; sau đó chọn bỏ qua hoặc đánh Vault Guardian Elite. Thắng nhận bonus bằng 150% khoản đã hiến. Bonus chịu hệ số payout của run. | tower_remember_wealth |
+| Dư âm gương | Nhánh xấu khi đập Mirror | Giữ 20% +2 LUCK không có ký ức; 80% Mirror Clone Elite xuất hiện trễ, giữ chỉ số lúc đập gương. Không đánh Clone ngay rồi đánh lại. | tower_remember_mirror |
+| Thử thách thần linh | Cầu nguyện RNGesus thành công | Chọn từ chối, hiến 1 bình hoặc đánh Herald of Fate Elite. Hiến/thắng gỡ 1 level nguyền của một UR, giữ UR/level/buff/nội tại; nếu hết nguyền, hồi 20% Max HP. Không có phần thưởng khi từ chối/thua. | tower_remember_divine |
+| Oán niệm | Nhánh thức tỉnh khi cướp Grave Echo | 50% an toàn; 50% quái Echo truy đuổi trễ, thay trận thức tỉnh ngay. Món được cướp chỉ nhận một lần; giữ bonus hạ Echo và drop theo LUCK. | tower_remember_vengeance |
+
+- Tối đa 8 hậu quả hẹn, sau 10–30 tầng, mỗi hậu quả chỉ xử lý một lần. Ân nghĩa là bảo hộ riêng, không chiếm hàng chờ.
+- Boss/final boss và RNGesus được ưu tiên; hậu quả đến hạn sẽ chờ đến tầng phù hợp tiếp theo.
+- Khi hàng chờ đầy, cướp Lost Adventurer/Grave Echo, hiến tế và đập gương bị khóa để không bỏ qua rủi ro. Cầu nguyện RNGesus vẫn dùng được nhưng không thêm thử thách thần linh.
+- Bỏ qua event, bán hòm và hối lộ RNGesus không tạo ký ức mới. Mua đồ, rèn, giải nguyền và Rift Contract giữ cơ chế riêng.
+- Không roll lại thời gian, nhánh hoặc bản sao quái khi mở UI/restart/resume. Run cũ giữ nguyên hậu quả đã khóa dưới mục Ký ức từ run cũ (emoji tower_remember_legacy).
+- Khi cướp mộ, quyền nhận item và record mộ được giải quyết ngay một lần. Oán niệm lưu bản sao quái đã tách khỏi lease của mộ; không cần giữ claim suốt 10–30 tầng và không trao lại item của mộ.
 
 ## 12. Payout và kết thúc run
 

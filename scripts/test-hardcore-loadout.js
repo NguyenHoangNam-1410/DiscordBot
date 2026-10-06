@@ -696,7 +696,8 @@ async function run() {
   );
   const adventurerText = v2View.encounterText(adventurerPreview);
   assert.ok(adventurerText.includes("[SSR]"));
-  assert.ok(adventurerText.includes("50% mất 10% payout"));
+  assert.ok(adventurerText.includes("Rift"));
+  assert.ok(require("../src/hardcore/towerMemories").fields(adventurerPreview).some((field) => field.value.includes("50% bị thu 10% payout")));
   assert.ok(
     core
       .actions(adventurerPreview)
