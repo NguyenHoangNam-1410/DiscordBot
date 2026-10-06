@@ -982,28 +982,15 @@ function embed(state, userId, result = null, sessionId = null) {
         name: `${E[key]} +5 ${key.toUpperCase()}`,
         value: checkpointPreview(state, key),
       });
-  const activeRifts = Object.entries(state.modifiers || {}).filter(
-    ([, n]) => n > 0,
-  );
-  const mods =
-    activeRifts
-      .map(([key, n]) => `${RIFT_ICONS[key] || E.rift} ×${n}`)
-      .join(" · ") || "Chưa có";
-  e.addFields(
-    {
-      name: `${E.rift} Rift modifier (${activeRifts.length})`,
-      value: mods,
-    },
-    {
-      name: `${icon("moneybag", "💰")} Rút thưởng`,
-      value: result
-        ? `Đã nhận **${money(result.payout)} ${icon("coin", "🪙")}** ${STAT_SEPARATOR} **${money(result.diamonds || 0)} ${icon("gem", "💎")}**`
-        : (state.cleared
-            ? `Thực nhận: **${money(core.payout(state))} ${E.coin}**${STAT_SEPARATOR}**${money(runDiamondReward(state))} ${icon("gem", "💎")}**`
-            : "Chưa thể rút") + coinPayoutDetails(state),
-      inline: false,
-    },
-  );
+  e.addFields({
+    name: `${icon("moneybag", "💰")} Rút thưởng`,
+    value: result
+      ? `Đã nhận **${money(result.payout)} ${icon("coin", "🪙")}** ${STAT_SEPARATOR} **${money(result.diamonds || 0)} ${icon("gem", "💎")}**`
+      : (state.cleared
+          ? `Thực nhận: **${money(core.payout(state))} ${E.coin}**${STAT_SEPARATOR}**${money(runDiamondReward(state))} ${icon("gem", "💎")}**`
+          : "Chưa thể rút") + coinPayoutDetails(state),
+    inline: false,
+  });
   addTextFields(e, `${icon("scroll", "📜")} Lượt vừa rồi`, turnText(state));
   if (result) {
     const won = ["cashout", "summit"].includes(result.reason);
