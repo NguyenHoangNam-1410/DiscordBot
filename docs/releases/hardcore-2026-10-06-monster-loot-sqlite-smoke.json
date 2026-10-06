@@ -1,0 +1,485 @@
+{
+  "amazon": {
+    "runs": 10,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "2.0.1",
+    "balanceProfile": {
+      "power": 2.09
+    },
+    "revealedChestAction": "sell",
+    "backend": "sqlite",
+    "gameplayVersion": "2.0.1",
+    "simulationSeed": "survival-monster-loot-smoke-2026-10-06",
+    "stake": 100000,
+    "completedPercent": 0,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 50,
+        "count": 2
+      },
+      {
+        "floor": 100,
+        "count": 2
+      },
+      {
+        "floor": 302,
+        "count": 1
+      },
+      {
+        "floor": 410,
+        "count": 1
+      },
+      {
+        "floor": 503,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": 25.8866,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 10,
+    "passedFloor50": 8,
+    "passedFloor100": 6,
+    "reachedFinalBoss": 0,
+    "completed999": 0,
+    "runFloors": [
+      49,
+      99,
+      816,
+      937,
+      301,
+      996,
+      49,
+      99,
+      409,
+      502
+    ],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": null,
+    "finalBossMeans": null,
+    "estimatedCompletionPercent": null,
+    "maxFloor": 996,
+    "medianFloor": 409,
+    "meanFloor": 425.7
+  },
+  "barbarian": {
+    "runs": 10,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "2.0.1",
+    "balanceProfile": {
+      "power": 1.64
+    },
+    "revealedChestAction": "sell",
+    "backend": "sqlite",
+    "gameplayVersion": "2.0.1",
+    "simulationSeed": "survival-monster-loot-smoke-2026-10-06",
+    "stake": 100000,
+    "completedPercent": 0,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 100,
+        "count": 5
+      },
+      {
+        "floor": 50,
+        "count": 1
+      },
+      {
+        "floor": 545,
+        "count": 1
+      },
+      {
+        "floor": 561,
+        "count": 1
+      },
+      {
+        "floor": 688,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": 25.8866,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 10,
+    "passedFloor50": 9,
+    "passedFloor100": 4,
+    "reachedFinalBoss": 0,
+    "completed999": 0,
+    "runFloors": [
+      687,
+      560,
+      49,
+      768,
+      99,
+      544,
+      99,
+      99,
+      99,
+      99
+    ],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": null,
+    "finalBossMeans": null,
+    "estimatedCompletionPercent": null,
+    "maxFloor": 768,
+    "medianFloor": 99,
+    "meanFloor": 310.3
+  },
+  "assassin": {
+    "runs": 10,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "2.0.1",
+    "balanceProfile": {
+      "power": 1
+    },
+    "revealedChestAction": "sell",
+    "backend": "sqlite",
+    "gameplayVersion": "2.0.1",
+    "simulationSeed": "survival-monster-loot-smoke-2026-10-06",
+    "stake": 100000,
+    "completedPercent": 0,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 100,
+        "count": 3
+      },
+      {
+        "floor": 50,
+        "count": 2
+      },
+      {
+        "floor": 35,
+        "count": 1
+      },
+      {
+        "floor": 60,
+        "count": 1
+      },
+      {
+        "floor": 390,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": 25.8866,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 10,
+    "passedFloor50": 7,
+    "passedFloor100": 3,
+    "reachedFinalBoss": 0,
+    "completed999": 0,
+    "runFloors": [
+      422,
+      59,
+      99,
+      34,
+      49,
+      99,
+      99,
+      514,
+      389,
+      49
+    ],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": null,
+    "finalBossMeans": null,
+    "estimatedCompletionPercent": null,
+    "maxFloor": 514,
+    "medianFloor": 99,
+    "meanFloor": 181.3
+  },
+  "sorceress": {
+    "runs": 10,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "2.0.1",
+    "balanceProfile": {
+      "power": 1.57
+    },
+    "revealedChestAction": "sell",
+    "backend": "sqlite",
+    "gameplayVersion": "2.0.1",
+    "simulationSeed": "survival-monster-loot-smoke-2026-10-06",
+    "stake": 100000,
+    "completedPercent": 0,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 255,
+        "count": 1
+      },
+      {
+        "floor": 382,
+        "count": 1
+      },
+      {
+        "floor": 434,
+        "count": 1
+      },
+      {
+        "floor": 452,
+        "count": 1
+      },
+      {
+        "floor": 473,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": 25.8866,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 10,
+    "passedFloor50": 10,
+    "passedFloor100": 10,
+    "reachedFinalBoss": 0,
+    "completed999": 0,
+    "runFloors": [
+      789,
+      714,
+      472,
+      588,
+      254,
+      525,
+      433,
+      451,
+      381,
+      482
+    ],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": null,
+    "finalBossMeans": null,
+    "estimatedCompletionPercent": null,
+    "maxFloor": 789,
+    "medianFloor": 482,
+    "meanFloor": 508.9
+  },
+  "druid": {
+    "runs": 10,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "2.0.1",
+    "balanceProfile": {
+      "power": 1.12
+    },
+    "revealedChestAction": "sell",
+    "backend": "sqlite",
+    "gameplayVersion": "2.0.1",
+    "simulationSeed": "survival-monster-loot-smoke-2026-10-06",
+    "stake": 100000,
+    "completedPercent": 0,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 50,
+        "count": 6
+      },
+      {
+        "floor": 43,
+        "count": 1
+      },
+      {
+        "floor": 100,
+        "count": 1
+      },
+      {
+        "floor": 496,
+        "count": 1
+      },
+      {
+        "floor": 507,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": 25.8866,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 10,
+    "passedFloor50": 3,
+    "passedFloor100": 2,
+    "reachedFinalBoss": 0,
+    "completed999": 0,
+    "runFloors": [
+      49,
+      49,
+      49,
+      49,
+      495,
+      49,
+      506,
+      49,
+      42,
+      99
+    ],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": null,
+    "finalBossMeans": null,
+    "estimatedCompletionPercent": null,
+    "maxFloor": 506,
+    "medianFloor": 49,
+    "meanFloor": 143.6
+  },
+  "necromancer": {
+    "runs": 10,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "2.0.1",
+    "balanceProfile": {
+      "power": 0.54
+    },
+    "revealedChestAction": "sell",
+    "backend": "sqlite",
+    "gameplayVersion": "2.0.1",
+    "simulationSeed": "survival-monster-loot-smoke-2026-10-06",
+    "stake": 100000,
+    "completedPercent": 0,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 50,
+        "count": 3
+      },
+      {
+        "floor": 45,
+        "count": 1
+      },
+      {
+        "floor": 48,
+        "count": 1
+      },
+      {
+        "floor": 292,
+        "count": 1
+      },
+      {
+        "floor": 327,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": 25.8866,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 10,
+    "passedFloor50": 5,
+    "passedFloor100": 5,
+    "reachedFinalBoss": 0,
+    "completed999": 0,
+    "runFloors": [
+      752,
+      47,
+      49,
+      291,
+      49,
+      526,
+      326,
+      49,
+      44,
+      972
+    ],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": null,
+    "finalBossMeans": null,
+    "estimatedCompletionPercent": null,
+    "maxFloor": 972,
+    "medianFloor": 291,
+    "meanFloor": 310.5
+  },
+  "paladin": {
+    "runs": 10,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "2.0.1",
+    "balanceProfile": {
+      "power": 1.67
+    },
+    "revealedChestAction": "sell",
+    "backend": "sqlite",
+    "gameplayVersion": "2.0.1",
+    "simulationSeed": "survival-monster-loot-smoke-2026-10-06",
+    "stake": 100000,
+    "completedPercent": 0,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 100,
+        "count": 4
+      },
+      {
+        "floor": 50,
+        "count": 1
+      },
+      {
+        "floor": 280,
+        "count": 1
+      },
+      {
+        "floor": 432,
+        "count": 1
+      },
+      {
+        "floor": 555,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": 25.8866,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 10,
+    "passedFloor50": 9,
+    "passedFloor100": 5,
+    "reachedFinalBoss": 0,
+    "completed999": 0,
+    "runFloors": [
+      99,
+      554,
+      689,
+      99,
+      279,
+      431,
+      99,
+      49,
+      99,
+      662
+    ],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": null,
+    "finalBossMeans": null,
+    "estimatedCompletionPercent": null,
+    "maxFloor": 689,
+    "medianFloor": 279,
+    "meanFloor": 306
+  }
+}

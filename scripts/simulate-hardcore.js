@@ -365,7 +365,18 @@ function actionForV2(state, strategy) {
     const main = require("../src/services/hardcoreStats").mainStat(state);
     return `upgrade_${state.cleared % 10 === 0 ? "vit" : main}`;
   }
-  if (state.phase === "paradox") return "paradox_blood";
+  if (state.phase === "paradox") {
+    // Fixed public-choice policy for the current pairs; legacy runs keep their choice.
+    return (
+      [
+        "paradox_blood",
+        "paradox_blood_pact",
+        "paradox_inverted_armor",
+        "paradox_hunger",
+        "paradox_unstable_soul",
+      ].find(has) || candidates[0].action
+    );
+  }
   if (state.phase === "severance") {
     const priorities = [
       "soul_drain",
@@ -406,15 +417,18 @@ function actionForV2(state, strategy) {
         ? "inspect"
         : "open";
   if (e.type === "shrine") return "skip";
-  if (e.type === "rngesus") return state.escapeTokens ? "flee" : "bribe";
+  if (e.type === "rngesus")
+    return state.escapeTokens ||
+      v2.rngesusFleeChance(state) >= 1 ||
+      !has("bribe")
+      ? "flee"
+      : "bribe";
   if (e.type === "echo") return "echo_pray";
   if (e.type === "surprise") {
     if (e.kind === "diamond_shop") return "event_skip";
     if (e.kind === "duelist") return e.mode ? "hand_0" : "duel_stat";
-    if (e.kind === "treasure_room") {
-      if (!e.inspected) return "inspect_red";
-      return e.mimicColor === "red" ? "event_skip" : "chest_red";
-    }
+    // Treasure-room colors are hidden outcomes; pick the public red reward.
+    if (e.kind === "treasure_room") return "chest_red";
     const choices = {
       healer: "event_heal",
       goblin: "event_catch",
@@ -484,11 +498,30 @@ for (const classKey of classesToRun) {
         finalStates.push(structuredClone(state));
         captured = true;
       }
+      const action = actionFor(state, classPolicy);
+      if (
+        state.gameplayVersion === 2 &&
+        !hardcore.V2.actions(state).some(
+          (option) => option.action === action && !option.disabled,
+        )
+      )
+        throw new Error(
+          "SIM_INVALID_ACTION " +
+            JSON.stringify({
+              classKey,
+              run: i,
+              floor: state.floor,
+              phase: state.phase,
+              encounter: state.encounter.kind || state.encounter.type,
+              action,
+              options: hardcore.V2.actions(state),
+            }),
+        );
       const played = hardcore.playHardcore({
         sessionId: started.session.id,
         userId,
         expectedTurn: state.turn,
-        action: actionFor(state, classPolicy),
+        action,
       });
       state = played.state;
       if (played.settled) break;
