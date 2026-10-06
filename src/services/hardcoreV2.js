@@ -312,6 +312,9 @@ function payout(state) {
     ) - (state.payoutSpent || 0),
   );
 }
+function taxCost(state) {
+  return Math.ceil(payout(state) * 0.15);
+}
 function payoutSnapshot(state) {
   return {
     coins: payout(state),
@@ -2481,8 +2484,12 @@ function act(state, session, action, rng) {
       if (e.kind !== "portal") {
         if (e.lucky) state.lastLog = `${E.luck} Lucky Break: tránh bẫy.`;
         else if (e.kind === "tax") {
-          penalty(state, 0.15);
-          state.lastLog = "Thuế: mất 15% payout.";
+          const cost = taxCost(state);
+          state.payoutSpent = (state.payoutSpent || 0) + cost;
+          state.payoutTaxSpent = (state.payoutTaxSpent || 0) + cost;
+          state.lastLog = cost
+            ? `${eventIcon("tax")} Tax Collector: đã thu một lần 15% payout hiện tại.`
+            : `${eventIcon("tax")} Tax Collector: không có payout để thu thuế.`;
         } else {
           const stolen = Math.min(1, state.potions);
           state.potions -= stolen;
@@ -2628,6 +2635,7 @@ module.exports = {
   reviveAfterDeath,
   payout,
   rawPayout,
+  taxCost,
   heal,
   healingAmount,
   hurt,

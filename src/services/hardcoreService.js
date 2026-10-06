@@ -63,6 +63,7 @@ const {
   itemCurse,
   classShrineActive,
   payoutReductionCost,
+  taxCost,
   SURPRISE_EVENTS,
   SURPRISE_ODDS,
   PORTAL_GOOD_CHANCE,
@@ -2835,10 +2836,15 @@ const actionTx = db.transaction(
           if (luckyBreak(state, event))
             completeFloor(state, LUCKY_BREAK_LOG, 0);
           else {
-            const cost = chargeCurrentPayout(state, 0.15);
+            const before = potentialPayout(state);
+            const cost = taxCost(state);
+            state.payoutSpent = (state.payoutSpent || 0) + cost;
+            state.payoutTaxSpent = (state.payoutTaxSpent || 0) + cost;
             completeFloor(
               state,
-              `🧾 Tax Collector: hệ số payout ×0,85, giảm **${cost} xu** hiện tại.`,
+              cost
+                ? `🧾 Tax Collector: thu một lần 15% payout hiện tại. Thưởng xu: ${formatCoins(before)} → **${formatCoins(potentialPayout(state))}** (−${formatCoins(cost)} xu).`
+                : "🧾 Tax Collector: không có payout để thu thuế.",
               0,
             );
           }

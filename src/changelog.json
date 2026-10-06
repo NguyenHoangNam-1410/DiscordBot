@@ -1,5 +1,15 @@
 [
   {
+    "id": "49a6dc8d-6b2e-4346-a980-c6df42030036",
+    "updatedAt": "2026-10-06T14:30:51.702Z",
+    "auditedAt": "2026-10-06T14:30:51.702Z",
+    "title": "Thu thuế trừ trực tiếp payout",
+    "changes": [
+      "Tax Collector thu một lần 15% số xu hiện có thể rút (làm tròn lên 1 xu), thay vì giảm hệ số payout của cả ván.",
+      "Cập nhật mô tả và luật thu thuế; Lượt vừa rồi ghi rõ số xu trước và sau khi thu, phần payout phân biệt xu thuế với khoản đã chi."
+    ]
+  },
+  {
     "id": "0d1ddbb1-4a46-4793-8a21-d72122c3b788",
     "updatedAt": "2026-10-06T14:08:41.722Z",
     "auditedAt": "2026-10-06T14:08:41.722Z",

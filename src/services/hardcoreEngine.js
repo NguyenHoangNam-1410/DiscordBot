@@ -153,7 +153,7 @@ function potentialPayout(state) {
       ),
     ),
   );
-  // Service fees are already spent coins, so subsequent taxes cannot reduce them.
+  // Service fees and collected taxes are fixed coin deductions.
   return Math.max(0, gross - (state.payoutSpent || 0));
 }
 const BOSS_DAMAGE_TYPES = Object.freeze({
@@ -212,6 +212,9 @@ function classShrineActive(state) {
     state.floor >= state.classShrine.from &&
     state.floor <= state.classShrine.until,
   );
+}
+function taxCost(state) {
+  return Math.ceil(potentialPayout(state) * 0.15);
 }
 function payoutReductionCost(state, rate) {
   return (
@@ -619,11 +622,14 @@ const PORTAL_EFFECT_TEXT = Object.freeze({
 // Kết quả của bẫy khi bấm "Chấp nhận số phận".
 function trapOdds(state, event) {
   const lucky = luckyBreakChance(state);
-  const costText = (rate) => `${payoutReductionCost(state, rate).toLocaleString("vi-VN")} xu`;
   if (event.kind === "tax_collector")
     return [
       { tone: "good", chance: lucky, text: "Lucky Break: tránh được thuế" },
-      { tone: "bad", chance: 1 - lucky, text: `Mất thuế: payout ×0,85, giảm ${costText(0.15)} hiện tại` },
+      {
+        tone: "bad",
+        chance: 1 - lucky,
+        text: `Thuế một lần: trừ 15% payout hiện tại (${taxCost(state).toLocaleString("vi-VN")} xu, làm tròn lên); không đổi hệ số payout`,
+      },
     ];
   if (event.kind === "potion_thief")
     return state.potions > 0
@@ -675,6 +681,7 @@ module.exports = {
   itemCurse,
   classShrineActive,
   payoutReductionCost,
+  taxCost,
   SURPRISE_EVENTS,
   CLASS_SHRINE_TEXT,
   MERCHANT_OFFERS,

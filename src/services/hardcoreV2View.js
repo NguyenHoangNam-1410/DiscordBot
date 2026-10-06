@@ -454,7 +454,7 @@ function randomEventText(s) {
         [
           percent(1 - lucky),
           e.kind === "tax"
-            ? "Mất 15% payout."
+            ? `Trừ một lần **15% payout hiện tại** (${money(core.taxCost(s))} ${E.coin}); làm tròn lên 1 xu.`
             : `Mất 1 ${E.potion} bình máu nếu đang có.`,
         ],
       ]),
@@ -1066,8 +1066,12 @@ function coinPayoutDetails(state) {
   const factor = Math.max(0, Math.min(1, state.payoutFactor ?? 1));
   if (factor < 1)
     lines.push("**" + percent(1 - factor) + " xu** (event/nguyền)");
-  if (state.payoutSpent > 0)
-    lines.push("**" + money(state.payoutSpent) + " " + E.coin + "** đã chi");
+  const taxSpent = Math.min(state.payoutSpent || 0, state.payoutTaxSpent || 0);
+  const otherSpent = (state.payoutSpent || 0) - taxSpent;
+  if (taxSpent > 0)
+    lines.push("**" + money(taxSpent) + " " + E.coin + "** thuế");
+  if (otherSpent > 0)
+    lines.push("**" + money(otherSpent) + " " + E.coin + "** đã chi");
   return lines.length ? "\nĐã trừ: " + lines.join(STAT_SEPARATOR) : "";
 }
 function embed(state, userId, result = null, sessionId = null) {
@@ -1811,7 +1815,7 @@ function ratesFields(category) {
       },
       {
         name: `${E.luck} Bẫy và Lucky Break`,
-        value: `- **Thu thuế:** giảm payout 15%. **Trộm bình:** lấy 1 ${E.potion} bình nếu còn. Lucky Break có thể tránh hai hậu quả này: mỗi Luck cho 1,5 điểm %, tối đa 30%.\n- **Wrong Portal:** 50% tốt / 50% xấu, không chịu Luck. Nhánh xấu gọi Elite đánh phủ đầu; phải hạ Elite mới vượt tầng.\n- Phòng trống cho phép đi tiếp hoặc rút thưởng.`,
+        value: `- **Thu thuế:** trừ một lần 15% số xu có thể rút tại lúc xử lý event (làm tròn lên 1 xu); không đổi hệ số payout và không đánh thuế phần thưởng tăng thêm sau đó. **Trộm bình:** lấy 1 ${E.potion} bình nếu còn. Lucky Break có thể tránh hai hậu quả này: mỗi Luck cho 1,5 điểm %, tối đa 30%.\n- **Wrong Portal:** 50% tốt / 50% xấu, không chịu Luck. Nhánh xấu gọi Elite đánh phủ đầu; phải hạ Elite mới vượt tầng.\n- Phòng trống cho phép đi tiếp hoặc rút thưởng.`,
       },
       {
         name: "Các sự kiện đặc biệt",

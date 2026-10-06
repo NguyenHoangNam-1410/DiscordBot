@@ -22,6 +22,7 @@ const {
   itemCurse,
   classShrineActive,
   payoutReductionCost,
+  taxCost,
   SURPRISE_EVENTS,
   CLASS_SHRINE_TEXT,
   surpriseOptions,
@@ -629,7 +630,8 @@ function encounterSummary(state) {
   if (e.type === "trap")
     return (
       {
-        tax_collector: "🧾 **Tax Collector** · Có thể mất 15% payout hiện tại.",
+        tax_collector:
+          "🧾 **Tax Collector** · Có thể bị thu một lần 15% payout hiện tại (làm tròn lên 1 xu).",
         potion_thief: "🦹 **Kẻ trộm** · Có thể mất 1 🧪.",
         wrong_portal: `${icon("cyclone")} **Wrong Portal** · ${Math.round((e.portal?.goodChance ?? 0.5) * 100)}% tốt / ${Math.round((1 - (e.portal?.goodChance ?? 0.5)) * 100)}% xấu + Elite đánh phủ đầu.`,
       }[e.kind] || "⚠️ **Bẫy**"
@@ -840,7 +842,7 @@ function hardcorePrivatePayload(
     effectFields.push(
       {
         name: "💰 Payout",
-        value: `Có thể rút: **${formatCoins(potentialPayout(state))} xu**\n💎 Tạm giữ: **${formatCoins(runDiamondReward(state))}** kim cương. Vượt 100: 100; mỗi 100 tầng tiếp theo nhân đôi; hạ boss 999: 51.200. Rút thưởng mới nhận; chết mất hết.\nHệ số tầng/checkpoint ×${baseMultiplier(state).toFixed(2)} · hệ số phạt ×${Number(state.payoutFactor).toFixed(3)}\nUR còn nguyền: −${Math.round((1 - curseFactor) * 100)}% · Wrong Portal: −${Math.round((1 - (state.portalPayoutFactor || 1)) * 100)}%\nĐã chi từ payout: ${formatCoins(state.payoutSpent || 0)} xu. Thuế/hối lộ/Goblin nhân hệ số payout.\nMốc 5/50/100: ×1,45/×5,50/×12,00; hệ số dừng sau 100, bonus tiếp tục tăng. Trần 10.000.000 xu.`,
+        value: `Có thể rút: **${formatCoins(potentialPayout(state))} xu**\n💎 Tạm giữ: **${formatCoins(runDiamondReward(state))}** kim cương. Vượt 100: 100; mỗi 100 tầng tiếp theo nhân đôi; hạ boss 999: 51.200. Rút thưởng mới nhận; chết mất hết.\nHệ số tầng/checkpoint ×${baseMultiplier(state).toFixed(2)} · hệ số phạt ×${Number(state.payoutFactor).toFixed(3)}\nUR còn nguyền: −${Math.round((1 - curseFactor) * 100)}% · Wrong Portal: −${Math.round((1 - (state.portalPayoutFactor || 1)) * 100)}%\nĐã trừ từ payout: ${formatCoins(state.payoutSpent || 0)} xu, gồm ${formatCoins(state.payoutTaxSpent || 0)} xu thuế. Thuế trừ một lần vào số xu hiện tại; hối lộ/Goblin nhân hệ số payout.\nMốc 5/50/100: ×1,45/×5,50/×12,00; hệ số dừng sau 100, bonus tiếp tục tăng. Trần 10.000.000 xu.`,
       },
       {
         name: "🍀 Lucky Break",
@@ -1320,7 +1322,7 @@ function hardcoreActionRows(sessionId, state, disabled, classes) {
         "continue",
         type === "trap"
           ? state.encounter.kind === "tax_collector"
-            ? `Thuế · ${formatCoins(payoutReductionCost(state, 0.15))} xu`
+            ? `Thuế · ${formatCoins(taxCost(state))} xu`
             : "Chấp nhận số phận"
           : "Đi tiếp",
         "arrow_right",
