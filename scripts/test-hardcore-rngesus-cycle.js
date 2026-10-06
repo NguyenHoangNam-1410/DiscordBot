@@ -124,6 +124,69 @@ for (const version of ["v1", "v2"]) {
   );
 }
 
+// Show the exact encounter roll (including volatility, dry streak and spikes), not the base curve.
+{
+  const stats = require("../src/services/hardcoreStats");
+  const view = require("../src/services/hardcoreV2View");
+  for (const [draws, expected, label] of [
+    [[0.5, 0.5, 0], 0.003 * 1.625 + 0.001, "RNGesus (0,59%)"],
+    [[0.5, 0, 0.5, 0], 0.003 * 1.625 + 0.001 + 0.07, "RNGesus (7,59%)"],
+  ]) {
+    const state = stats.createState("barbarian", 10);
+    Object.assign(state, { floor: 6, cleared: 5, rngesusDry: 2 });
+    const rolls = [...draws];
+    state.encounter = core.generateEncounter(
+      state,
+      { guild_id: "ui", user_id: "ui" },
+      () => rolls.shift() ?? 0.5,
+    );
+    assert.equal(state.encounter.type, "rngesus");
+    assert.ok(Math.abs(state.encounter.encounterChance - expected) < 1e-12);
+    const restored = JSON.parse(JSON.stringify(state));
+    // Changing future policy counters or its last-roll field must not alter the locked label.
+    restored.lastChaosChance = 0;
+    restored.rngesusDry = 100;
+    core.normalize(restored);
+    assert.equal(
+      restored.encounter.encounterChance,
+      state.encounter.encounterChance,
+    );
+    const main = view.embed(restored, "ui").toJSON();
+    assert.ok(!main.fields.some((field) => field.name.includes("Tiến trình")));
+    const situation = main.fields.find((field) =>
+      field.name.includes("Tình huống"),
+    );
+    assert.ok(situation.value.includes(label), situation.value);
+    const detail = view
+      .privatePayload(restored, "ui", "message", "encounter")
+      .embeds[0].toJSON();
+    assert.ok(detail.description.includes(label));
+    assert.ok(main.fields.every((field) => field.value.length <= 1024));
+  }
+  const old = stats.createState("barbarian", 10);
+  Object.assign(old, {
+    floor: 6,
+    cleared: 5,
+    lastChaosChance: 0.12,
+    encounter: { type: "rngesus", name: "RNGesus" },
+  });
+  core.normalize(old);
+  assert.equal(old.encounter.encounterChance, 0.12);
+  assert.ok(
+    view
+      .embed(old, "ui")
+      .toJSON()
+      .fields.some((field) => field.value.includes("RNGesus (12%)")),
+  );
+  old.encounter = { type: "empty", name: "Phòng trống" };
+  assert.ok(
+    !view
+      .embed(old, "ui")
+      .toJSON()
+      .fields.some((field) => field.name.includes("Tiến trình")),
+  );
+}
+
 let n = 0;
 const guildId = "rngesus-cycle";
 function startCase(action, extra = {}, eventExtra = {}, floor = 197) {

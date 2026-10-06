@@ -229,6 +229,12 @@ function chestPityText(state, chest, detailed = false) {
       : `Đã mở **${state.pityLegendary || 0} hòm** liên tiếp chưa nhận SSR. Từ 10 lần trượt, tỷ lệ SSR tăng dần, **không bảo đảm ra SSR ở hòm thứ 10**; xem tỷ lệ hiện tại ở trên.`;
   return `**Bảo hiểm SR+:** ${rare}\n**SSR:** ${ssr}\nBộ đếm tính kết quả mở hòm; đồ từ quái/event khác không đặt lại bộ đếm này.`;
 }
+function rngesusLabel(state) {
+  const chance = state.encounter.encounterChance ?? state.lastChaosChance;
+  return Number.isFinite(chance) && chance > 0 && chance <= 1
+    ? `RNGesus (${(chance * 100).toLocaleString("vi-VN", { maximumFractionDigits: 2 })}%)`
+    : "RNGesus";
+}
 function randomEventText(s) {
   const e = s.encounter;
   const heading = (name, intro) =>
@@ -300,7 +306,7 @@ function randomEventText(s) {
   if (e.type === "rngesus") {
     const chance = e.fleeChance ?? core.rngesusFleeChance(s);
     return show(
-      "RNGesus",
+      rngesusLabel(s),
       "Không thể đánh bại hoặc rút thưởng tại đây. Mỗi lần chọn bỏ chạy giảm 5 điểm % cho lần sau, thấp nhất 75%; chọn hành động khác giữ nguyên tỷ lệ.",
       [
         option("Bỏ chạy", [
@@ -681,7 +687,7 @@ function encounterSummary(s) {
           : target
             ? `\n${E.backpack} ${target.name} [${rarityLabel(target.rarity)}] · Lv.${target.level}`
             : "";
-    return `${eventIcon(["surprise", "trap"].includes(e.type) ? e.kind : e.type)} **${e.name || e.type}**\n${notices[e.type] || "Chọn một hành động."}${context}\nXem **Chi tiết** để đọc tỷ lệ, kết quả và điều kiện.`;
+    return `${eventIcon(["surprise", "trap"].includes(e.type) ? e.kind : e.type)} **${e.type === "rngesus" ? rngesusLabel(s) : e.name || e.type}**\n${notices[e.type] || "Chọn một hành động."}${context}\nXem **Chi tiết** để đọc tỷ lệ, kết quả và điều kiện.`;
   }
   return encounterText(s);
 }
@@ -768,10 +774,6 @@ function encounterDetails(s) {
   if (e.type === "surprise" && e.kind === "merchant")
     return `${eventIcon("merchant")} **Công dụng hàng hóa**\n${e.offers.map((o) => `**${merchantOffer(o).name}**\n${merchantOffer(o).detail}`).join("\n\n")}\nChỉ mua một món; trả từ payout gốc. Cần đủ payout để mua.`;
   return encounterText(s);
-}
-function chaosLabel(s) {
-  const p = s.lastChaosChance || 0;
-  return `${icon(p < 0.01 ? "large_green_circle" : p < 0.03 ? "large_yellow_circle" : "red_circle", p < 0.01 ? "🟢" : p < 0.03 ? "🟡" : "🔴")} Chaos: **${percent(p)}**`;
 }
 function turnText(state) {
   const details = [];
@@ -992,10 +994,6 @@ function embed(state, userId, result = null, sessionId = null) {
       .map(([key, n]) => `${RIFT_ICONS[key] || E.rift} ×${n}`)
       .join(" · ") || "Chưa có";
   e.addFields(
-    {
-      name: `${icon("compass", "🧭")} Tiến trình`,
-      value: `Đã vượt ${state.cleared} · Boss ${state.bosses} · Modifier ${Object.values(state.modifiers || {}).reduce((sum, n) => sum + n, 0)}\n${chaosLabel(state)}`,
-    },
     {
       name: `${E.rift} Rift modifier (${activeRifts.length})`,
       value: mods,

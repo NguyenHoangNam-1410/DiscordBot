@@ -189,6 +189,13 @@ function normalize(state) {
   state.reviveTickets = state.reviveTickets === 1 ? 1 : 0;
   expireAdventurer(state);
   const current = state.encounter;
+  if (
+    current?.type === "rngesus" &&
+    current.encounterChance == null &&
+    Number.isFinite(state.lastChaosChance) &&
+    state.lastChaosChance > 0
+  )
+    current.encounterChance = state.lastChaosChance;
   // Reclassify saved special Mimics without rerolling stats, HP or event outcomes.
   for (const enemy of [current, current?.mimic, current?.enemy])
     world.normalizeMimicEnemy(enemy);
@@ -916,6 +923,7 @@ function generateEncounter(state, session, rng) {
     return {
       type: "rngesus",
       name: "RNGesus",
+      encounterChance: state.lastChaosChance,
       fleeChance: rngesusFleeChance(state),
       fleeSuccess: rng() < rngesusFleeChance(state),
       prayerChance: rngesusPrayerChance(state),
