@@ -1,5 +1,16 @@
 [
   {
+    "id": "0d1ddbb1-4a46-4793-8a21-d72122c3b788",
+    "updatedAt": "2026-10-06T14:08:41.722Z",
+    "auditedAt": "2026-10-06T14:08:41.722Z",
+    "title": "Icon riêng cho chỉ số phụ và nội tại Sinh tồn",
+    "changes": [
+      "Tách icon riêng cho DMG Boss, DMG Elite, hiệu lực bình, phát hiện Mimic, bắt Goblin, tìm SSR, DMG nhận, HP mất mỗi tầng, tỷ lệ Mimic và Payout.",
+      "Mỗi loại nội tại có tên icon riêng; cập nhật mô tả trang bị, giới hạn bình/CRIT/né, Tiên tri, Thương lượng và diễn biến nội tại trong lượt vừa rồi.",
+      "Diễn biến phản sát thương ghi rõ nội tại Gai, Phản đòn hoặc Né phản kích đã kích hoạt."
+    ]
+  },
+  {
     "id": "1f5f11c1-b407-4693-833e-4351db011376",
     "updatedAt": "2026-10-06T13:55:15.549Z",
     "auditedAt": "2026-10-06T13:55:15.549Z",

@@ -23,6 +23,7 @@ const {
   eventIcon,
   memoryIcon,
   treasureChestIcon,
+  passiveIcon,
 } = require("./hardcoreIcons");
 const world = require("./hardcoreWorld");
 const echoes = require("./hardcoreEchoRepository");
@@ -608,7 +609,7 @@ function completeFloor(state, session, rng, reward = 1) {
         gained = heal(state, Math.max(1, Math.floor(state.maxHp * rate)));
       state.lastLog +=
         "\n" +
-        E.hp +
+        passiveIcon("campHeal") +
         " Nghỉ chân: hồi " +
         gained +
         " HP cho bạn · " +
@@ -1261,7 +1262,7 @@ function prepareItemCombat(state, rng) {
     state.lastLog =
       (state.lastLog || "") +
       "\n" +
-      E.mana +
+      passiveIcon("startMana") +
       " Khởi động MP: " +
       before +
       " → " +
@@ -1284,8 +1285,15 @@ function passiveCounter(state, rng, actual, defend, naturalMiss) {
     : (state.damageMin + state.damageMax) / 2;
   const budget = Math.floor(basic * 0.5);
   let raw = actual * (p.thorns + (defend ? p.guardReflect : 0));
-  if (naturalMiss && p.dodgeCounter > 0 && rng() < p.dodgeCounter)
+  const triggered = [];
+  if (actual > 0 && p.thorns > 0)
+    triggered.push(`${passiveIcon("thorns")} **Gai**`);
+  if (actual > 0 && defend && p.guardReflect > 0)
+    triggered.push(`${passiveIcon("guardReflect")} **Phản đòn**`);
+  if (naturalMiss && p.dodgeCounter > 0 && rng() < p.dodgeCounter) {
     raw += basic * 0.5;
+    triggered.push(`${passiveIcon("dodgeCounter")} **Né phản kích**`);
+  }
   if (raw <= 0) return "";
   let damage = Math.floor(
     raw * (1 - world.defenseReduction(e.defense, state.floor)),
@@ -1306,10 +1314,12 @@ function passiveCounter(state, rng, actual, defend, naturalMiss) {
   e.hp -= damage;
   return (
     "\n" +
+    triggered.join(" + ") +
+    ": phản " +
     E.attack +
-    " Nội tại phản " +
+    " **DMG vật lý** " +
     damage +
-    " DMG vật lý lên " +
+    " lên " +
     e.name +
     "."
   );
@@ -1455,7 +1465,7 @@ function playerAttack(state, action, rng) {
     return {
       defend: false,
       dodge: false,
-      log: `${E.potion} Hồi ${gained} ${E.hp} HP${saved ? " · nội tại giữ lại bình" : ""}; quái còn sống phản công.`,
+      log: `${E.potion} Hồi ${gained} ${E.hp} HP${saved ? ` · ${passiveIcon("potionSave")} **Tiết kiệm bình:** giữ lại bình` : ""}; quái còn sống phản công.`,
     };
   }
   if (action === "skill") {
@@ -1532,7 +1542,7 @@ function playerAttack(state, action, rng) {
     state.mana = Math.min(state.maxMana, state.mana + 1);
     healingLog +=
       "\n" +
-      E.mana +
+      passiveIcon("mpLeech") +
       " Hút MP: " +
       before +
       " → " +

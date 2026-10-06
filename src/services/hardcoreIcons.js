@@ -2,6 +2,37 @@
 const emoji = require("../discordEmojiMap");
 const { appEmoji } = require("../utils/appEmoji");
 const icon = (key, fallback) => appEmoji(key, emoji[`:${key}:`] || fallback);
+const BUFF_ICON_NAMES = Object.freeze({
+  potionPower: ["stat_potion_power", "⚗️"],
+  bossDamage: ["stat_boss_damage", "👑"],
+  eliteDamage: ["stat_elite_damage", "🔱"],
+  mimicDetection: ["stat_mimic_detection", "👁️"],
+  goblinChance: ["stat_goblin_chance", "🪤"],
+  legendaryFind: ["stat_ssr_find", "🌟"],
+  damageTaken: ["stat_damage_taken", "💢"],
+  floorHpLoss: ["stat_floor_hp_loss", "🩸"],
+  mimicChance: ["stat_mimic_chance", "👹"],
+  payout: ["stat_payout", "💰"],
+  berserk: ["passive_berserk", "😡"],
+  mpLeech: ["passive_mp_leech", "🦇"],
+  guardReflect: ["passive_guard_reflect", "↩️"],
+  thorns: ["passive_thorns", "🌵"],
+  shopDiscount: ["passive_shop_discount", "🏷️"],
+  eventLuck: ["passive_event_luck", "🎲"],
+  potionCapacity: ["passive_potion_capacity", "🧰"],
+  critCap: ["passive_crit_cap", "📈"],
+  evasionCap: ["passive_evasion_cap", "🪽"],
+  dodgeCounter: ["passive_dodge_counter", "🥷"],
+  startMana: ["passive_start_mana", "⚡"],
+  campHeal: ["passive_camp_heal", "🛌"],
+  potionSave: ["passive_potion_save", "⏳"],
+  trapResistance: ["passive_trap_resistance", "🧱"],
+  foresight: ["passive_foresight", "🔭"],
+});
+function buffIcon(key) {
+  const definition = BUFF_ICON_NAMES[key];
+  return definition ? icon(...definition) : "✨";
+}
 const E = {
   get coin() {
     return icon("coin", "🪙");
@@ -71,6 +102,23 @@ const E = {
     return icon("ENE", "🔮");
   },
 };
+Object.defineProperties(
+  E,
+  Object.fromEntries(
+    [
+      "potionPower",
+      "bossDamage",
+      "eliteDamage",
+      "mimicDetection",
+      "goblinChance",
+      "legendaryFind",
+      "damageTaken",
+      "floorHpLoss",
+      "mimicChance",
+      "payout",
+    ].map((key) => [key, { enumerable: true, get: () => buffIcon(key) }]),
+  ),
+);
 // Resolve effect labels when rendering, after the application emoji registry loads.
 function effectStatLabel(key) {
   const names = {
@@ -90,39 +138,22 @@ function effectStatLabel(key) {
     evasion: ["evasion", "EVA"],
     resistance: ["res", "RES"],
     critChance: ["crit", "CRIT"],
-    potionPower: ["potion", "Hiệu lực bình"],
-    bossDamage: ["attack", "DMG Boss"],
-    eliteDamage: ["attack", "DMG Elite"],
-    mimicDetection: ["accuracy", "Phát hiện Mimic"],
-    goblinChance: ["luck", "Bắt Goblin"],
-    legendaryFind: ["chest", "Tìm SSR"],
-    floorHpLoss: ["hp", "HP mất/tầng"],
-    mimicChance: ["chest", "Mimic"],
-    damageTaken: ["defense", "DMG nhận"],
-    bonusPenalty: ["coin", "Payout"],
+    potionPower: ["potionPower", "Hiệu lực bình"],
+    bossDamage: ["bossDamage", "DMG Boss"],
+    eliteDamage: ["eliteDamage", "DMG Elite"],
+    mimicDetection: ["mimicDetection", "Phát hiện Mimic"],
+    goblinChance: ["goblinChance", "Bắt Goblin"],
+    legendaryFind: ["legendaryFind", "Tìm SSR"],
+    floorHpLoss: ["floorHpLoss", "HP mất/tầng"],
+    mimicChance: ["mimicChance", "Mimic"],
+    damageTaken: ["damageTaken", "DMG nhận"],
+    bonusPenalty: ["payout", "Payout"],
   };
   const [symbol, label] = names[key] || ["backpack", key];
   return `${E[symbol]} ${label}`;
 }
 function passiveIcon(kind) {
-  const symbols = {
-    berserk: "attack",
-    mpLeech: "mana",
-    guardReflect: "defense",
-    thorns: "defense",
-    shopDiscount: "coin",
-    eventLuck: "luck",
-    potionCapacity: "potion",
-    critCap: "crit",
-    evasionCap: "evasion",
-    dodgeCounter: "evasion",
-    startMana: "mana",
-    campHeal: "hp",
-    potionSave: "potion",
-    trapResistance: "defense",
-    foresight: "accuracy",
-  };
-  return E[symbols[kind]] || E.backpack;
+  return buffIcon(kind);
 }
 const SKILL_ICONS = Object.fromEntries(
   Object.entries({
@@ -193,6 +224,8 @@ function paradoxIcon(id) {
 }
 module.exports = {
   E,
+  BUFF_ICON_NAMES,
+  buffIcon,
   effectStatLabel,
   passiveIcon,
   SKILL_ICONS,

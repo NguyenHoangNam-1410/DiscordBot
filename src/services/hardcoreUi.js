@@ -1,5 +1,5 @@
 "use strict";
-const { E } = require("./hardcoreIcons");
+const { E, passiveIcon } = require("./hardcoreIcons");
 const money = (n) => Math.floor(n).toLocaleString("vi-VN");
 const STAT_SEPARATOR = "  •  ";
 function highlightStat(label) {
@@ -14,7 +14,7 @@ function formatStatText(text) {
     "Max MP": E.mana,
     "DMG vật lý": E.attack,
     "DMG phép": E.magic,
-    "Sức chứa bình": E.potion,
+    "Sức chứa bình": passiveIcon("potionCapacity"),
     HP: E.hp,
     MP: E.mana,
     STR: E.str,
@@ -28,7 +28,7 @@ function formatStatText(text) {
     CRIT: E.crit,
     LUCK: E.luck,
     DMG: E.attack,
-    Payout: E.coin,
+    Payout: E.payout,
   };
   // Preserve existing emoji markup and emphasis; format only plain text.
   return text

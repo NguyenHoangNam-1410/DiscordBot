@@ -16,7 +16,7 @@ const STAT_EMOJI = Object.freeze(
         luck: "luck",
         potions: "potion",
         tickets: "ticket",
-        payout: "coin",
+        payout: "payout",
       }).map(([key, symbol]) => [
         key,
         { enumerable: true, get: () => E[symbol] },

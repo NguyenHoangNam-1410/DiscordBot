@@ -97,7 +97,7 @@ function statLine(s, changes = false, compact = false, options = {}) {
   ];
   if (!compact)
     lines.push(
-      `${E.accuracy} **ACC** **${s.accuracy}**${d("accuracy")}${STAT_SEPARATOR}${E.evasion} **EVA** **${s.evasion}**${d("evasion")}${STAT_SEPARATOR}${E.crit} **CRIT** **${percent(s.critChance)}**${d("critChance", "%")}\n${E.potion} **Hiệu lực bình** **${percent(paradox.potionRate(s) * (1 - (s.healingReduction || 0)))}** Max HP`,
+      `${E.accuracy} **ACC** **${s.accuracy}**${d("accuracy")}${STAT_SEPARATOR}${E.evasion} **EVA** **${s.evasion}**${d("evasion")}${STAT_SEPARATOR}${E.crit} **CRIT** **${percent(s.critChance)}**${d("critChance", "%")}\n${E.potionPower} **Hiệu lực bình** **${percent(paradox.potionRate(s) * (1 - (s.healingReduction || 0)))}** Max HP`,
     );
   return lines.join("\n");
 }
@@ -151,7 +151,7 @@ function effectText(effects, level = 1, { compactCurses = false } = {}) {
           return `${E.hp} **HP** +${value} (hồi khi nhận mỗi cấp)`;
         const n = value * level;
         if (key === "floorHpLoss")
-          return `${E.hp} **Cuối tầng:** giảm HP hiện tại một lượng bằng ${percent(n)} Max HP (luôn còn ít nhất 1 HP)`;
+          return `${E.floorHpLoss} **HP mất/tầng:** cuối tầng giảm HP hiện tại một lượng bằng ${percent(n)} Max HP (luôn còn ít nhất 1 HP)`;
         return `${highlightStat(effectStatLabel(key))} ${n > 0 ? "+" : ""}${percentages.includes(key) ? percent(n) : Math.round(n * 100) / 100}`;
       })
       .join(STAT_SEPARATOR) || "Không có"
@@ -851,7 +851,9 @@ function encounterDetails(s) {
     .join("\n");
   const offers = s.encounter.offers || [];
   const discount = offers.some((o) => o.discount > 0)
-    ? "\n\n**Thương lượng:** giá xu đã giảm " +
+    ? "\n\n" +
+      passiveIcon("shopDiscount") +
+      " **Thương lượng:** giá xu đã giảm " +
       percent(offers[0].discount) +
       ", khóa khi gặp.\n" +
       offers
@@ -861,7 +863,9 @@ function encounterDetails(s) {
   return (
     detail +
     (forecast
-      ? "\n\n**✨ Tiên tri** · nhánh lựa chọn đã khóa\n" +
+      ? "\n\n" +
+        passiveIcon("foresight") +
+        " **Tiên tri** · nhánh lựa chọn đã khóa\n" +
         forecast +
         "\nKhông tiết lộ thời điểm kích hoạt ký ức; không áp dụng RNGesus."
       : "") +
@@ -1535,16 +1539,16 @@ function privatePayload(
     addTextFields(
       e,
       "Giới hạn của bạn",
-      E.potion +
-        " Bình: " +
+      passiveIcon("potionCapacity") +
+        " **Sức chứa bình:** " +
         state.maxPotions +
         " · " +
-        E.crit +
-        " CRIT: " +
+        passiveIcon("critCap") +
+        " **Trần CRIT:** " +
         percent(state.critCap) +
         " · " +
-        E.evasion +
-        " Né vật lý: " +
+        passiveIcon("evasionCap") +
+        " **Trần né vật lý:** " +
         percent(state.evasionCap) +
         ". Nội tại cộng giữa món khác nhau; không nhân level.",
     );
