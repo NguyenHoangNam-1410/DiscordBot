@@ -1530,7 +1530,7 @@ function privatePayload(
     .setDescription(
       `${stats.CLASSES[state.classKey].emoji} ${stats.CLASSES[state.classKey].name} · Tầng ${state.floor}`,
     );
-  if (["items", "stats"].includes(tab)) {
+  if (["items"].includes(tab)) {
     e.addFields({
       name: "Vật tư & vé",
       value: `${E.potion} **Bình**: **${state.potions}/${state.maxPotions}**\n${E.ticket} **Vé thoát**: **${state.escapeTokens}**\n${E.prayerTicket} **Vé cầu nguyện**: **${state.prayerBoost ? 1 : 0}** · RNGesus **${percent(core.rngesusPrayerChance(state))}**\n${E.reviveTicket} **Vé hồi sinh**: **${state.reviveTickets || 0}** · ${E.hp} **HP 50%**`,
@@ -1564,7 +1564,7 @@ function privatePayload(
     );
     addTextFields(
       e,
-      "✨ Nội tại trang bị · Bạn",
+      "✨ Nội tại trang bị",
       formatPassiveText(itemPassives.summary(state)) || "Chưa có nội tại.",
     );
     addTextFields(
@@ -1580,8 +1580,7 @@ function privatePayload(
         " · " +
         passiveIcon("evasionCap") +
         " **Trần né vật lý:** " +
-        percent(state.evasionCap) +
-        ". Nội tại cộng giữa món khác nhau; không nhân level.",
+        percent(state.evasionCap),
     );
     addTextFields(
       e,
@@ -1594,11 +1593,6 @@ function privatePayload(
         `${E.shrine} Class Shrine · Bạn`,
         `${SHRINES[state.classKey]} Hết tầng ${state.classShrine.until}.`,
       );
-    addTextFields(
-      e,
-      "Cầu nguyện",
-      `🙏 Cầu nguyện RNGesus: **${percent(core.rngesusPrayerChance(state))}**`,
-    );
     e.addFields(
       {
         name: `${SKILL_ICONS[state.classKey]} ${stats.CLASSES[state.classKey].skill}`,
