@@ -154,6 +154,15 @@ process.on("uncaughtException", (error) => {
 });
 client.once(Events.ClientReady, async () => {
   if (shuttingDown) return;
+  // DM delivery runs in the background; gameplay does not wait for backup uploads.
+  backupManager
+    .discordReady(client)
+    .catch((error) =>
+      logger.error(
+        { code: error.code || error.name },
+        "could not start Discord backup delivery",
+      ),
+    );
   await loadApplicationEmojis(client, logger);
   if (shuttingDown) return;
   const resumedRounds = resumeOpenRounds(client, logger);

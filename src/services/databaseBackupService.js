@@ -3,6 +3,7 @@ const path = require("node:path");
 const crypto = require("node:crypto");
 const Database = require("better-sqlite3");
 const { db, dbPath } = require("../db");
+const discordBackup = require("./discordBackupService");
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 function integerEnv(name, fallback, min, max) {
@@ -119,14 +120,41 @@ function runDatabaseBackup(now = new Date()) {
   });
   return activeBackup;
 }
-function startDatabaseBackups(logger = console) {
+function startDatabaseBackups(
+  logger = console,
+  { retryDelayMs = 5 * 60_000 } = {},
+) {
   let stopped = false,
     pending = null,
-    stopPromise = null;
+    stopPromise = null,
+    retryTimer = null;
+  const deliver = async (destination) => {
+    clearTimeout(retryTimer);
+    retryTimer = null;
+    try {
+      const result = await discordBackup.sendDiscordBackup(destination);
+      if (result.status === "sent")
+        logger.info?.(result, "database backup delivered to Discord DM");
+    } catch (error) {
+      logger.error?.(
+        { code: error.code || error.name },
+        "database backup Discord delivery failed",
+      );
+      if (!stopped) {
+        clearTimeout(retryTimer);
+        retryTimer = setTimeout(() => {
+          if (!stopped && backupStatus.lastDestination)
+            void deliver(backupStatus.lastDestination);
+        }, retryDelayMs);
+        retryTimer.unref?.();
+      }
+    }
+  };
   const report = (promise) =>
     promise
-      .then((result) => {
+      .then(async (result) => {
         logger.info?.(result, "database backup completed");
+        await deliver(result.destination);
         return result;
       })
       .catch((error) => {
@@ -143,12 +171,20 @@ function startDatabaseBackups(logger = console) {
   const timer = setInterval(run, BACKUP_INTERVAL_MINUTES * 60 * 1000);
   timer.unref?.();
   return {
+    discordReady: async (client) => {
+      discordBackup.setBackupDiscordClient(client);
+      if (pending) await pending;
+      else if (backupStatus.lastDestination)
+        await deliver(backupStatus.lastDestination);
+    },
     stop: ({ finalBackup = true } = {}) => {
       if (stopPromise) return stopPromise;
       stopped = true;
       clearInterval(timer);
+      clearTimeout(retryTimer);
       stopPromise = (async () => {
         await pending;
+        await discordBackup.waitForDiscordBackups();
         if (finalBackup) return report(runDatabaseBackup());
       })();
       return stopPromise;
@@ -162,7 +198,8 @@ function getBackupStatus() {
     retention: BACKUP_RETENTION,
     intervalHours: BACKUP_INTERVAL_HOURS,
     intervalMinutes: BACKUP_INTERVAL_MINUTES,
-    offsiteConfigured: false,
+    offsiteConfigured: discordBackup.getDiscordBackupStatus().configured,
+    discord: discordBackup.getDiscordBackupStatus(),
   };
 }
 module.exports = {

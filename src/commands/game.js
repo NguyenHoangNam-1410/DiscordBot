@@ -553,7 +553,9 @@ module.exports = {
           ? "Đang tạo bản sao đầu tiên"
           : "Chưa có trong phiên chạy này";
       const healthy =
-        health.database.check === "ok" && !health.backup.lastError;
+        health.database.check === "ok" &&
+        !health.backup.lastError &&
+        !health.backup.discord?.lastError;
       const embed = new EmbedBuilder()
         .setColor(healthy ? 0x2ecc71 : 0xe67e22)
         .setTitle(`${healthy ? "✅" : "⚠️"} TRẠNG THÁI VẬN HÀNH`)
@@ -580,7 +582,21 @@ module.exports = {
           {
             name: "Backup gần nhất",
             value: `${backupTime}\nLịch: mỗi ${health.backup.intervalMinutes} phút · giữ ${health.backup.retention} bản
-Chỉ lưu trên máy chủ; chưa có backup bên ngoài.${health.backup.lastError ? `\n⚠️ ${health.backup.lastError}` : ""}`,
+${
+  health.backup.discord?.configured
+    ? "DM Discord: " +
+      (health.backup.discord.lastSuccessAt
+        ? "<t:" +
+          Math.floor(
+            new Date(health.backup.discord.lastSuccessAt).getTime() / 1000,
+          ) +
+          ":R>"
+        : health.backup.discord.waitingForDiscord
+          ? "Chờ Discord kết nối"
+          : "Chưa gửi thành công")
+    : "Chỉ lưu trên máy chủ; chưa cấu hình DM Discord."
+}
+${health.backup.discord?.lastError ? "⚠️ " + health.backup.discord.lastError : ""}${health.backup.lastError ? `\n⚠️ ${health.backup.lastError}` : ""}`,
           },
         )
         .setTimestamp();

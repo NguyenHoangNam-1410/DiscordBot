@@ -129,7 +129,7 @@ Admin dùng `/quantri xoadulieu` để xóa xu, kim cương, EXP/cấp của m�
 - `npm run simulate:rtp -- 1000000`: mô phỏng RTP và làm CI thất bại khi vượt `RTP_MAX_PERCENT`. Các cửa cược xúc xắc được liệt kê chính xác toàn bộ kết quả để tránh cảnh báo sai do nhiễu Monte Carlo. Xì dách với nhà cái được mô phỏng bằng đúng luật của game (bộ bài 6 bộ không hoàn lại, quắc luôn thua, Ngũ linh, split, double; không tính vật phẩm) và có test đối chiếu từng ván với engine thật; RTP ước tính khoảng 91–95% tùy chiến thuật.
 - `/luat` mở luật ngắn theo từng game. Kết quả có nút chơi lại; thành tựu mới hiện ngay và huy hiệu xuất hiện trên `/hoso`.
 
-SQLite được tạo tự động tại `data/game-bot.sqlite`, dùng WAL và `synchronous=FULL` để đồng bộ mỗi commit trước khi báo thành công. Bot sao lưu nhất quán khi khởi động (không chờ Discord kết nối), sau mỗi 24 giờ và khi dừng bình thường vào `data/backups`, mặc định giữ 14 bản gần nhất. Mỗi bản được kiểm tra `integrity_check`, hoàn tất thành một file độc lập, fsync và xuất bản trước khi dọn bản cũ. Đây vẫn là backup tại chỗ, không bảo vệ khi mất ổ đĩa/toàn bộ máy chủ.
+SQLite được tạo tự động tại `data/game-bot.sqlite`, dùng WAL và `synchronous=FULL` để đồng bộ mỗi commit trước khi báo thành công. Bot sao lưu nhất quán khi khởi động (không chờ Discord kết nối), sau mỗi 24 giờ và khi dừng bình thường vào `data/backups`, mặc định giữ 14 bản gần nhất. Mỗi bản được kiểm tra `integrity_check`, hoàn tất thành một file độc lập, fsync và xuất bản trước khi dọn bản cũ. Snapshot tại chỗ được gửi thêm qua DM Discord nếu có cấu hình người nhận; chỉ bản DM đã gửi thành công bảo vệ khi mất ổ đĩa/toàn bộ máy chủ.
 `/quantri ketthucvan mavan:<mã>` buộc kết thúc và hoàn cược mọi loại ván có mã (Xì dách với bot và bàn nhiều người, Xì dách đấu người, Poker, Dò mìn, Cò quay Nga, Chinchiro, Sinh tồn, Bầu cua, Tài xỉu, Đua ngựa). Ván Xì dách với bot, Dò mìn, Cò quay Nga, Chinchiro và Sinh tồn không hoạt động quá `SOLO_SESSION_TTL_MINUTES` phút (mặc định 10; 2 phút nếu tin nhắn ván chưa gửi được) sẽ tự đóng và **người chơi mất tiền cược** (để không thể bỏ ván đang thua rồi đòi hoàn); riêng ván chưa có tin nhắn vì lỗi gửi thì hoàn cược. Với Xì dách đấu người, bàn Xì dách và bàn Poker hết hạn giữa chừng, người còn nợ một hành động mất cược, người đã hoàn tất lượt được hoàn; hết hạn ở lời mời hoặc sảnh chờ thì hoàn cho tất cả. Admin kết thúc ván bằng `ketthucvan` vẫn hoàn cược cho mọi người.
 
 Duel và bàn Xì dách đã kết thúc được giữ `GAME_RECORD_RETENTION_DAYS` ngày (mặc định 7) rồi tự xóa cùng dữ liệu bộ bài/tay bài. Lịch sử kim cương và gacha mặc định được giữ 180 ngày; điều chỉnh bằng `DIAMOND_LOG_RETENTION_DAYS` và `GACHA_HISTORY_RETENTION_DAYS`.
@@ -217,8 +217,36 @@ Khi cần phục hồi:
 3. Chạy `npm run db:restore -- "/duong-dan/backup.sqlite" "/duong-dan/game-bot-restored.sqlite"`. Thư mục đích phải tồn tại, file đích và các sidecar chưa được tồn tại. Công cụ kiểm tra source, tạo snapshot độc lập rồi xuất bản nguyên tử; không ghi đè database cũ và không tự chạy migration.
 4. Đặt `DB_PATH` tới file mới, khởi động bot và kiểm tra `/quantri trangthai`, xu/túi đồ/lượt chơi. Bot sẽ chạy migration bình thường nếu phiên bản code mới hơn bản backup.
 
-Phục hồi backup sẽ mất những thay đổi sau thời điểm snapshot. Nếu ổ đĩa còn nguyên, hãy ưu tiên phục hồi live SQLite cùng WAL của nó trước khi quay về bản backup cũ. Nếu mất hẳn server/ổ đĩa, cần một bản sao ngoài server; phần này chưa cấu hình vì đang chờ lựa chọn nơi lưu. Muốn giảm mất dữ liệu xuống gần 0 khi mất máy chủ cần cơ chế sao chép liên tục/commit sang một hệ thống độc lập, khác với snapshot định kỳ.
+Phục hồi backup sẽ mất những thay đổi sau thời điểm snapshot. Nếu ổ đĩa còn nguyên, hãy ưu tiên phục hồi live SQLite cùng WAL của nó trước khi quay về bản backup cũ. Nếu mất hẳn server/ổ đĩa, cần một bản sao ngoài server; bot đã hỗ trợ gửi file qua DM Discord như hướng dẫn bên dưới. Muốn giảm mất dữ liệu xuống gần 0 khi mất máy chủ cần cơ chế sao chép liên tục/commit sang một hệ thống độc lập, khác với snapshot định kỳ.
 
 Chạy `npm run test:db:recovery`: kiểm tra kill tiến trình giữa transaction, phục hồi xu/lượt chơi, bản backup độc lập, retention, lỗi backup, shutdown khi Discord chưa ready và chờ thao tác đang chạy. Kiểm tra SIGKILL không mô phỏng được mất điện thật hoặc lỗi phần cứng.
 
 Tham khảo: [SQLite WAL](https://www.sqlite.org/wal.html), [SQLite synchronous](https://www.sqlite.org/pragma.html#pragma_synchronous), [SQLite Backup API](https://www.sqlite.org/backup.html), [PM2 graceful shutdown](https://pm2.keymetrics.io/docs/usage/signals-clean-restart/).
+
+
+### Nhận backup qua DM Discord
+
+Bot này mặc định gửi backup tới User ID `697794640148955206`, theo cấu hình `src/discordBackupConfig.json`. Có thể đổi bằng `DB_BACKUP_DISCORD_USER_ID`; đặt biến này thành chuỗi rỗng để tắt gửi DM. Không suy ra người nhận từ danh sách admin và không gửi ra channel công khai. Cấu hình chỉ chứa User ID, không chứa token.
+
+Sau khi kết nối Discord, bot gửi bản snapshot mới nhất đã kiểm tra, rồi gửi các bản theo lịch backup và bản cuối lúc dừng bình thường. Gửi chạy nền, không giữ handler game phải chờ. Lịch mặc định vẫn 24 giờ; đặt `DB_BACKUP_INTERVAL_MINUTES=15` nếu muốn gửi mỗi 15 phút. `npm run db:backup` tạo snapshot tại chỗ, không tự đăng nhập Discord để gửi DM; scheduler trong bot mới thực hiện gửi.
+
+File được nén bằng gzip qua stream; mỗi phần upload tối đa 8 MiB để giữ RAM thấp, mỗi request chỉ gửi một phần. Một backup tối đa 100 phần; file quá lớn sẽ báo lỗi và vẫn giữ snapshot local. Với một phần, file `.sqlite.gz` và `.manifest.json` nằm trong cùng tin nhắn. Với nhiều phần, bot gửi `.gz.part001`, `.gz.part002`... và cuối cùng gửi manifest xác nhận hoàn tất. Không coi những phần chưa có manifest cuối là một backup hoàn chỉnh.
+
+Manifest chứa kích thước, thứ tự file và SHA-256 của từng phần, file nén và database gốc. Nén gzip không phải mã hóa. Đây là toàn bộ database của bot, chỉ gửi tới chủ bot đã chỉ định. `/quantri trangthai` hiển thị riêng backup local và DM thành công gần nhất, cùng lỗi gửi. Bot không tự xóa những DM backup cũ.
+
+Nếu DM bị chặn, lỗi mạng, file bị Discord từ chối hoặc timeout, local backup vẫn giữ nguyên; bot báo lỗi và thử gửi bản mới nhất sau 5 phút. Mỗi lần gửi có deadline mặc định 60 giây, đổi bằng `DB_BACKUP_DISCORD_TIMEOUT_SECONDS` (5–600); snapshot được ghi nhận đã gửi chỉ sau khi Discord chấp nhận toàn bộ file/manifest. Khi Discord chưa kết nối, bot vẫn backup local và chờ kết nối để gửi. Mất điện/SIGKILL không thể gửi bản cuối; phục hồi ngoài server chỉ đến bản DM đã hoàn tất gần nhất.
+
+Bật quyền nhận DM từ bot, cùng server với bot và không chặn bot. Sau khi pull/restart, kiểm tra DM đầu tiên và `/quantri trangthai`; kiểm tra giả lập không thay thế cho việc xác nhận nhận file thật. Với PM2 nên đặt `kill_timeout: 180000` cho cấu hình timeout mặc định để có thời gian chờ lượt chơi, upload đang chạy và upload snapshot cuối; tăng tương ứng nếu tăng deadline hoặc database lớn.
+
+Để phục hồi trên máy mới:
+
+1. Mở các tin nhắn DM backup và tải file nén/tất cả các phần cùng manifest, giữ nguyên tên file, đặt chung một thư mục. URL CDN đính kèm có hạn; mở lại tin nhắn để lấy link mới, không dùng một URL đã lưu lâu làm nơi lưu duy nhất.
+2. Dừng bot, giữ database cũ. Chạy `npm run db:restore:discord -- "/thu-muc/backup.manifest.json" "/thu-muc/game-bot-restored.sqlite"`. Thư mục đích phải tồn tại; file đích và sidecar chưa được tồn tại.
+3. Công cụ kiểm tra phần thiếu/hỏng và SHA-256, ghép/giải nén bằng stream rồi kiểm tra SQLite; file hỏng không được xuất bản và database cũ không bị ghi đè.
+4. Đặt `DB_PATH` tới database đã phục hồi, khởi động bot và kiểm tra dữ liệu.
+
+Có thể giải nén một file `.sqlite.gz` rồi dùng `db:restore` như trước; công cụ manifest giúp kiểm tra thêm hash. Dữ liệu sau thời điểm snapshot sẽ không có trong bản phục hồi. Giữ DM và nên tải thêm bản quan trọng về máy: Discord là một nơi nhận file độc lập với server bot, không phải cam kết lưu trữ database vĩnh viễn.
+
+Chạy `npm run test:db:discord` để kiểm tra recipient, gzip/chia file, checksum/phục hồi, lỗi DM, deadline, retry và gửi khi shutdown. Test dùng transport giả lập, không gửi dữ liệu thật.
+
+Tham khảo: [Discord Create DM](https://docs.discord.com/developers/resources/user#create-dm), [upload file](https://docs.discord.com/developers/reference#uploading-files), [URL đính kèm có thời hạn](https://docs.discord.com/developers/reference#signed-attachment-cdn-urls).

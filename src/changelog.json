@@ -1,5 +1,16 @@
 [
   {
+    "id": "eb82dda9-5114-4916-b481-6f53cbe43dba",
+    "updatedAt": "2026-10-06T10:59:59.000Z",
+    "auditedAt": "2026-10-06T10:59:59.000Z",
+    "title": "Backup database qua DM Discord",
+    "changes": [
+      "Chủ bot nhận snapshot database đã kiểm tra qua tin nhắn riêng, theo lịch backup và khi dừng bình thường.",
+      "File được nén và tự chia phần khi lớn, kèm SHA-256 và công cụ ghép/phục hồi.",
+      "Trạng thái vận hành tách backup local và DM; gửi lỗi sẽ giữ snapshot local và tự thử lại bản mới nhất."
+    ]
+  },
+  {
     "id": "0227a70d-e66e-4fa2-b16b-b00a5fe1d8f1",
     "updatedAt": "2026-10-06T10:44:35.781Z",
     "auditedAt": "2026-10-06T10:44:35.781Z",
