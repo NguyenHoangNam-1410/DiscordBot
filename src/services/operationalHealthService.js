@@ -31,6 +31,8 @@ function getOperationalHealth() {
   return {
     database: {
       check: db.pragma("quick_check", { simple: true }),
+      synchronous:
+        db.pragma("synchronous", { simple: true }) === 2 ? "FULL" : "OTHER",
       bytes: databaseBytes,
       migration,
     },

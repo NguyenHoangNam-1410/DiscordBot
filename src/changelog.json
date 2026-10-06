@@ -1,5 +1,16 @@
 [
   {
+    "id": "0227a70d-e66e-4fa2-b16b-b00a5fe1d8f1",
+    "updatedAt": "2026-10-06T10:44:35.781Z",
+    "auditedAt": "2026-10-06T10:44:35.781Z",
+    "title": "Củng cố lưu dữ liệu và backup",
+    "changes": [
+      "Database đồng bộ dữ liệu mỗi lần commit để tăng độ bền khi máy chủ mất điện hoặc reset cứng.",
+      "Backup được kiểm tra toàn vẹn; bot tạo thêm bản khi dừng bình thường và hỗ trợ cấu hình lịch theo phút.",
+      "Bổ sung công cụ backup/phục hồi và trạng thái vận hành. Backup hiện vẫn nằm trên máy chủ; nơi lưu bên ngoài chưa được cấu hình."
+    ]
+  },
+  {
     "id": "25ea2548-7d02-419b-bf62-dfd9b87b2d11",
     "updatedAt": "2026-10-06T10:17:19.566Z",
     "auditedAt": "2026-10-06T10:17:19.566Z",

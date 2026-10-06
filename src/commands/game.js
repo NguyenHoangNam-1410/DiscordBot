@@ -560,7 +560,7 @@ module.exports = {
         .addFields(
           {
             name: "Database",
-            value: `${health.database.check === "ok" ? "Toàn vẹn" : health.database.check} · ${sizeText(health.database.bytes)} · schema v${health.database.migration}`,
+            value: `${health.database.check === "ok" ? "Toàn vẹn" : health.database.check} · ${sizeText(health.database.bytes)} · schema v${health.database.migration} · ghi ${health.database.synchronous}`,
             inline: true,
           },
           {
@@ -579,7 +579,8 @@ module.exports = {
           },
           {
             name: "Backup gần nhất",
-            value: `${backupTime}\nLịch: mỗi ${health.backup.intervalHours} giờ · giữ ${health.backup.retention} bản${health.backup.lastError ? `\n⚠️ ${health.backup.lastError}` : ""}`,
+            value: `${backupTime}\nLịch: mỗi ${health.backup.intervalMinutes} phút · giữ ${health.backup.retention} bản
+Chỉ lưu trên máy chủ; chưa có backup bên ngoài.${health.backup.lastError ? `\n⚠️ ${health.backup.lastError}` : ""}`,
           },
         )
         .setTimestamp();

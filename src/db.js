@@ -8,6 +8,8 @@ const dbPath = path.resolve(process.env.DB_PATH || "./data/game-bot.sqlite");
 fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 const db = new Database(dbPath);
 db.pragma("journal_mode = WAL");
+// WAL defaults to NORMAL in better-sqlite3; commit must fsync before acknowledging rewards.
+db.pragma("synchronous = FULL");
 db.pragma("foreign_keys = ON");
 db.pragma("busy_timeout = 5000");
 

@@ -129,12 +129,12 @@ Admin dùng `/quantri xoadulieu` để xóa xu, kim cương, EXP/cấp của m�
 - `npm run simulate:rtp -- 1000000`: mô phỏng RTP và làm CI thất bại khi vượt `RTP_MAX_PERCENT`. Các cửa cược xúc xắc được liệt kê chính xác toàn bộ kết quả để tránh cảnh báo sai do nhiễu Monte Carlo. Xì dách với nhà cái được mô phỏng bằng đúng luật của game (bộ bài 6 bộ không hoàn lại, quắc luôn thua, Ngũ linh, split, double; không tính vật phẩm) và có test đối chiếu từng ván với engine thật; RTP ước tính khoảng 91–95% tùy chiến thuật.
 - `/luat` mở luật ngắn theo từng game. Kết quả có nút chơi lại; thành tựu mới hiện ngay và huy hiệu xuất hiện trên `/hoso`.
 
-SQLite được tạo tự động tại `data/game-bot.sqlite`. Bot sao lưu nhất quán khi khởi động và sau mỗi 24 giờ vào `data/backups`, mặc định giữ 14 bản gần nhất. Có thể đổi lịch và số bản giữ lại bằng `DB_BACKUP_INTERVAL_HOURS`, `DB_BACKUP_RETENTION` và `DB_BACKUP_DIR`.
+SQLite được tạo tự động tại `data/game-bot.sqlite`, dùng WAL và `synchronous=FULL` để đồng bộ mỗi commit trước khi báo thành công. Bot sao lưu nhất quán khi khởi động (không chờ Discord kết nối), sau mỗi 24 giờ và khi dừng bình thường vào `data/backups`, mặc định giữ 14 bản gần nhất. Mỗi bản được kiểm tra `integrity_check`, hoàn tất thành một file độc lập, fsync và xuất bản trước khi dọn bản cũ. Đây vẫn là backup tại chỗ, không bảo vệ khi mất ổ đĩa/toàn bộ máy chủ.
 `/quantri ketthucvan mavan:<mã>` buộc kết thúc và hoàn cược mọi loại ván có mã (Xì dách với bot và bàn nhiều người, Xì dách đấu người, Poker, Dò mìn, Cò quay Nga, Chinchiro, Sinh tồn, Bầu cua, Tài xỉu, Đua ngựa). Ván Xì dách với bot, Dò mìn, Cò quay Nga, Chinchiro và Sinh tồn không hoạt động quá `SOLO_SESSION_TTL_MINUTES` phút (mặc định 10; 2 phút nếu tin nhắn ván chưa gửi được) sẽ tự đóng và **người chơi mất tiền cược** (để không thể bỏ ván đang thua rồi đòi hoàn); riêng ván chưa có tin nhắn vì lỗi gửi thì hoàn cược. Với Xì dách đấu người, bàn Xì dách và bàn Poker hết hạn giữa chừng, người còn nợ một hành động mất cược, người đã hoàn tất lượt được hoàn; hết hạn ở lời mời hoặc sảnh chờ thì hoàn cho tất cả. Admin kết thúc ván bằng `ketthucvan` vẫn hoàn cược cho mọi người.
 
 Duel và bàn Xì dách đã kết thúc được giữ `GAME_RECORD_RETENTION_DAYS` ngày (mặc định 7) rồi tự xóa cùng dữ liệu bộ bài/tay bài. Lịch sử kim cương và gacha mặc định được giữ 180 ngày; điều chỉnh bằng `DIAMOND_LOG_RETENTION_DAYS` và `GACHA_HISTORY_RETENTION_DAYS`.
 
-Khi nhận `SIGINT` hoặc `SIGTERM`, bot dừng các tác vụ nền, chờ bản sao lưu đang chạy hoàn tất, đóng kết nối Discord và SQLite trước khi thoát.
+Khi nhận `SIGINT` hoặc `SIGTERM`, bot ngừng nhận thao tác mới, dừng timer, chờ tối đa 10 giây cho handler đang chạy, chờ backup đang thực hiện rồi tạo một backup mới trước khi đóng Discord/SQLite và kênh IPC. Nếu handler quá hạn, chỉ dữ liệu đã commit được bảo vệ. Khi có `uncaughtException`, bot chờ backup đang chạy và đóng database nhưng không tạo thêm bản mới từ tiến trình lỗi. Mất điện/`SIGKILL` không chạy được bước shutdown; SQLite phục hồi transaction đã commit từ WAL trên ổ đĩa còn nguyên.
 
 ## Emoji của ứng dụng (Developer Portal → Bot → Emojis)
 
@@ -192,3 +192,33 @@ Bot ghi `slow hardcore interaction` khi một tương tác mất từ 1 giây, �
 Log `discord REST rate limited` xác nhận thư viện đang chờ giới hạn API; có thời gian phải đợi, không ghi URL webhook/token. `discordMs` cao nhưng không có log rate limit có thể do mạng, Discord hoặc retry. `gameMs` cao cần kiểm tra CPU/SQLite/ổ đĩa trên server. Đây là các số đo để chẩn đoán, không phải cam kết về thời gian phản hồi.
 
 Chạy `npm run test:hardcore:latency` để kiểm tra Discord chậm, bấm trùng, thứ tự cập nhật, phục hồi lỗi và xác nhận rút thưởng. Script cũng báo thời gian xử lý lượt đơn giản/dựng battle trên SQLite trong RAM; số này không đo mạng hoặc ổ đĩa server.
+
+
+### Backup và phục hồi khi server lỗi
+
+Không copy riêng file `game-bot.sqlite` khi bot đang chạy: giao dịch mới có thể còn trong `-wal`. Dùng `npm run db:backup` để tạo snapshot nhất quán bằng SQLite Backup API; chạy từ thư mục bot với cùng `DB_PATH`/env. `/quantri trangthai` hiển thị lần backup thành công, lỗi, lịch sao lưu và chế độ ghi; trạng thái toàn vẹn không đồng nghĩa đã có backup ngoài server.
+
+Có thể cấu hình trên server:
+
+```dotenv
+DB_BACKUP_INTERVAL_MINUTES=15
+DB_BACKUP_RETENTION=14
+# DB_BACKUP_DIR=/duong-dan-luu-backup
+```
+
+`DB_BACKUP_INTERVAL_MINUTES` (1–10080) ưu tiên hơn `DB_BACKUP_INTERVAL_HOURS`; bỏ trống sẽ dùng cấu hình giờ cũ, mặc định 24 giờ. Retention là số bản, không phải số ngày: 14 bản mỗi 15 phút giữ khoảng 3,5 giờ, và restart/shutdown tạo thêm bản làm khoảng thời gian lưu ngắn hơn. Tăng retention (2–90) nếu ổ đĩa đủ dung lượng. Theo dõi dung lượng ổ đĩa vì mỗi snapshot là toàn bộ database, không phải bản tăng dần. Không ghi live SQLite lên filesystem mạng; chỉ chuyển file backup đã hoàn tất ra ngoài.
+
+Với PM2, đặt `kill_timeout: 120000` trong cấu hình ứng dụng hiện có để bot có thời gian drain và backup trước khi bị kill. Mặc định PM2 chỉ đợi khoảng 1,6 giây. Nếu chạy Docker, cấp `stop_grace_period` đủ dài tương ứng. Thời gian cần thực tế phụ thuộc kích thước database/ổ đĩa; không thể cam kết backup hoàn tất trước khi supervisor cưỡng bức dừng.
+
+Khi cần phục hồi:
+
+1. Dừng bot bằng PM2 và giữ bot dừng trong lúc phục hồi.
+2. Chọn một bản backup nguyên vẹn; giữ database cũ và các sidecar để có thể điều tra.
+3. Chạy `npm run db:restore -- "/duong-dan/backup.sqlite" "/duong-dan/game-bot-restored.sqlite"`. Thư mục đích phải tồn tại, file đích và các sidecar chưa được tồn tại. Công cụ kiểm tra source, tạo snapshot độc lập rồi xuất bản nguyên tử; không ghi đè database cũ và không tự chạy migration.
+4. Đặt `DB_PATH` tới file mới, khởi động bot và kiểm tra `/quantri trangthai`, xu/túi đồ/lượt chơi. Bot sẽ chạy migration bình thường nếu phiên bản code mới hơn bản backup.
+
+Phục hồi backup sẽ mất những thay đổi sau thời điểm snapshot. Nếu ổ đĩa còn nguyên, hãy ưu tiên phục hồi live SQLite cùng WAL của nó trước khi quay về bản backup cũ. Nếu mất hẳn server/ổ đĩa, cần một bản sao ngoài server; phần này chưa cấu hình vì đang chờ lựa chọn nơi lưu. Muốn giảm mất dữ liệu xuống gần 0 khi mất máy chủ cần cơ chế sao chép liên tục/commit sang một hệ thống độc lập, khác với snapshot định kỳ.
+
+Chạy `npm run test:db:recovery`: kiểm tra kill tiến trình giữa transaction, phục hồi xu/lượt chơi, bản backup độc lập, retention, lỗi backup, shutdown khi Discord chưa ready và chờ thao tác đang chạy. Kiểm tra SIGKILL không mô phỏng được mất điện thật hoặc lỗi phần cứng.
+
+Tham khảo: [SQLite WAL](https://www.sqlite.org/wal.html), [SQLite synchronous](https://www.sqlite.org/pragma.html#pragma_synchronous), [SQLite Backup API](https://www.sqlite.org/backup.html), [PM2 graceful shutdown](https://pm2.keymetrics.io/docs/usage/signals-clean-restart/).
