@@ -842,7 +842,7 @@ function hardcorePrivatePayload(
     effectFields.push(
       {
         name: "💰 Payout",
-        value: `Có thể rút: **${formatCoins(potentialPayout(state))} xu**\n💎 Tạm giữ: **${formatCoins(runDiamondReward(state))}** kim cương. Vượt 100: 100; mỗi 100 tầng tiếp theo nhân đôi; hạ boss 999: 51.200. Rút thưởng mới nhận; chết mất hết.\nHệ số tầng/checkpoint ×${baseMultiplier(state).toFixed(2)} · hệ số phạt ×${Number(state.payoutFactor).toFixed(3)}\nUR còn nguyền: −${Math.round((1 - curseFactor) * 100)}% · Wrong Portal: −${Math.round((1 - (state.portalPayoutFactor || 1)) * 100)}%\nĐã trừ từ payout: ${formatCoins(state.payoutSpent || 0)} xu, gồm ${formatCoins(state.payoutTaxSpent || 0)} xu thuế. Thuế trừ một lần vào số xu hiện tại; hối lộ/Goblin nhân hệ số payout.\nMốc 5/50/100: ×1,45/×5,50/×12,00; hệ số dừng sau 100, bonus tiếp tục tăng. Trần 10.000.000 xu.`,
+        value: `Có thể rút: **${formatCoins(potentialPayout(state))} xu**\n💎 Tạm giữ: **${formatCoins(runDiamondReward(state))}** kim cương. Vượt 100: 100; mỗi 100 tầng tiếp theo nhân đôi; hạ boss 999: 51.200. Rút thưởng mới nhận; chết mất hết.\nHệ số tầng/checkpoint ×${baseMultiplier(state).toFixed(2)} · hệ số phạt ×${Number(state.payoutFactor).toFixed(3)}\nUR còn nguyền: −${Math.round((1 - curseFactor) * 100)}% · Wrong Portal: −${Math.round((1 - (state.portalPayoutFactor || 1)) * 100)}%\nĐã trừ từ payout: ${formatCoins(state.payoutSpent || 0)} xu, gồm ${formatCoins(state.payoutTaxSpent || 0)} xu thuế. Thuế/Goblin trừ một lần vào số xu hiện tại; hối lộ nhân hệ số payout.\nMốc 5/50/100: ×1,45/×5,50/×12,00; hệ số dừng sau 100, bonus tiếp tục tăng. Trần 10.000.000 xu.`,
       },
       {
         name: "🍀 Lucky Break",

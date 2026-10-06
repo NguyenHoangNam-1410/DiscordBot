@@ -464,15 +464,30 @@ function randomEventText(s) {
   const main = stats.mainStat(s);
   switch (e.kind) {
     case "goblin": {
-      const chance = Math.min(0.9, 0.6 + s.luck * 0.01 + s.goblinChance);
+      const chance = core.goblinCatchChance(s);
       return show(
         e.name,
-        `Thử bắt để nhận thưởng; tỷ lệ đã tính ${E.luck} Luck và trang bị.`,
+        `Đuổi bắt để lấy xu và trang bị; tỷ lệ đã tính ${E.luck} LUCK và ${E.goblinChance} buff bắt Goblin.`,
         [
           option("Bắt", [
-            [percent(chance), "Bonus +25% cược."],
-            [percent(1 - chance), "Mất 10% payout."],
+            [
+              percent(chance),
+              `Bonus **+25% cược** và **1 ${E.backpack} trang bị**.`,
+            ],
+            [
+              percent(1 - chance),
+              `Goblin thoát: trừ một lần **5% payout hiện tại** (${money(core.goblinEscapeCost(s))} ${E.coin}, làm tròn lên 1 xu).`,
+            ],
           ]),
+          option(
+            "Độ hiếm khi bắt thành công",
+            Object.entries(core.GOBLIN_REWARDS.rarities).map(
+              ([rarity, odds]) => [
+                percent(odds),
+                `1 ${E.backpack} trang bị **[${rarityLabel(rarity)}]**${rarity === "cursed" ? ", kèm lời nguyền" : ""}.`,
+              ],
+            ),
+          ),
         ],
       );
     }
@@ -1067,9 +1082,15 @@ function coinPayoutDetails(state) {
   if (factor < 1)
     lines.push("**" + percent(1 - factor) + " xu** (event/nguyền)");
   const taxSpent = Math.min(state.payoutSpent || 0, state.payoutTaxSpent || 0);
-  const otherSpent = (state.payoutSpent || 0) - taxSpent;
+  const goblinSpent = Math.min(
+    (state.payoutSpent || 0) - taxSpent,
+    state.payoutGoblinSpent || 0,
+  );
+  const otherSpent = (state.payoutSpent || 0) - taxSpent - goblinSpent;
   if (taxSpent > 0)
     lines.push("**" + money(taxSpent) + " " + E.coin + "** thuế");
+  if (goblinSpent > 0)
+    lines.push("**" + money(goblinSpent) + " " + E.coin + "** do Goblin");
   if (otherSpent > 0)
     lines.push("**" + money(otherSpent) + " " + E.coin + "** đã chi");
   return lines.length ? "\nĐã trừ: " + lines.join(STAT_SEPARATOR) : "";
@@ -1822,6 +1843,10 @@ function ratesFields(category) {
       {
         name: `${E.luck} Bẫy và Lucky Break`,
         value: `- **Thu thuế:** trừ một lần 15% số xu có thể rút tại lúc xử lý event (làm tròn lên 1 xu); không đổi hệ số payout và không đánh thuế phần thưởng tăng thêm sau đó. **Trộm bình:** lấy 1 ${E.potion} bình nếu còn. Lucky Break có thể tránh hai hậu quả này: mỗi Luck cho 1,5 điểm %, tối đa 30%.\n- **Wrong Portal:** 50% tốt / 50% xấu, không chịu Luck. Nhánh xấu gọi Elite đánh phủ đầu; phải hạ Elite mới vượt tầng.\n- Phòng trống cho phép đi tiếp hoặc rút thưởng.`,
+      },
+      {
+        name: `${eventIcon("goblin")} Treasure Goblin`,
+        value: `Tỷ lệ bắt = **60% + LUCK ×1 điểm % + buff bắt Goblin**, tối đa **90%**.\n- **Bắt được:** bonus bằng **25% tiền cược** và **1 ${E.backpack} trang bị**. Độ hiếm khi bắt thành công: **60% SR / 35% SSR / 5% UR kèm lời nguyền**. Buff bắt chỉ tăng cơ hội bắt; tỷ lệ độ hiếm giữ nguyên, không dùng pity của hòm. Đồ trùng tăng 1 level.\n- **Goblin thoát:** trừ một lần **5% payout hiển thị hiện tại**, làm tròn lên 1 xu. Khoản này không giảm hệ số payout hoặc thưởng tăng thêm về sau.\n- Phần thưởng được khóa khi event xuất hiện; mở lại bảng không roll lại. Item và thay đổi chỉ số hiển thị ở **Lượt vừa rồi**.`,
       },
       {
         name: "Các sự kiện đặc biệt",

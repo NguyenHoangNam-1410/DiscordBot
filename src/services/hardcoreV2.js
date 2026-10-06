@@ -28,6 +28,7 @@ const {
 const world = require("./hardcoreWorld");
 const echoes = require("./hardcoreEchoRepository");
 const { ITEMS } = require("../hardcore/item");
+const { GOBLIN_REWARDS, goblinRewardRarity } = require("./hardcoreEngine");
 const { spendDiamonds } = require("./playerLevelService");
 const { runDiamondReward, baseMultiplier } = require("./hardcoreRewards");
 const { clamp, recompute, addSource: applySource, mainStat } = stats;
@@ -314,6 +315,16 @@ function payout(state) {
 }
 function taxCost(state) {
   return Math.ceil(payout(state) * 0.15);
+}
+function goblinCatchChance(state) {
+  return clamp(
+    0.6 + (state.luck || 0) * 0.01 + (state.goblinChance || 0),
+    0,
+    0.9,
+  );
+}
+function goblinEscapeCost(state) {
+  return Math.ceil(payout(state) * GOBLIN_REWARDS.lossRate);
 }
 function payoutSnapshot(state) {
   return {
@@ -801,6 +812,8 @@ function makeSurprise(state, rng, kind = null) {
     roll: rng(),
     roll2: rng(),
   };
+  if (kind === "goblin")
+    e.goblinItem = randomItem(goblinRewardRarity(e.roll2), rng);
   const itemPool = state.items.filter(
     (x) =>
       kind !== "purifier" ||
@@ -1603,7 +1616,7 @@ function surpriseActions(state) {
       goblin: [
         {
           action: "event_catch",
-          label: `Bắt · ${Math.round(Math.min(0.9, 0.6 + state.luck * 0.01 + state.goblinChance) * 100)}%`,
+          label: `Bắt · ${Math.round(goblinCatchChance(state) * 100)}%`,
         },
       ],
       blacksmith: [
@@ -1945,12 +1958,23 @@ function actSurprise(state, session, action, rng) {
     state.potions = Math.min(state.maxPotions, state.potions + 1);
     done("Wandering Healer đã hồi phục và tiếp tế cho bạn.");
   } else if (k === "goblin") {
-    if (e.roll < Math.min(0.9, 0.6 + state.luck * 0.01 + state.goblinChance)) {
-      state.bonus += Math.floor(state.stake * 0.25);
-      done("💰 Bắt được Goblin: bonus +25% cược.");
+    if (e.roll < goblinCatchChance(state)) {
+      state.bonus += Math.floor(state.stake * GOBLIN_REWARDS.bonusRate);
+      // Saved Goblins keep their catch roll and use the existing independent loot roll.
+      e.goblinItem ||= randomItem(goblinRewardRarity(e.roll2 ?? rng()), rng);
+      receiveItem(state, e.goblinItem);
+      done(
+        `${eventIcon("goblin")} Bắt được Treasure Goblin: bonus +25% cược và nhận trang bị.`,
+      );
     } else {
-      penalty(state, 0.1);
-      done("🏃 Goblin thoát: mất 10% payout.");
+      const cost = goblinEscapeCost(state);
+      state.payoutSpent = (state.payoutSpent || 0) + cost;
+      state.payoutGoblinSpent = (state.payoutGoblinSpent || 0) + cost;
+      done(
+        cost
+          ? `${eventIcon("goblin")} Treasure Goblin thoát: trừ một lần 5% payout hiện tại.`
+          : `${eventIcon("goblin")} Treasure Goblin thoát: không có payout để trừ.`,
+      );
     }
   } else if (k === "blacksmith") {
     charge(state, serviceCost(state, 0.12));
@@ -2636,6 +2660,9 @@ module.exports = {
   payout,
   rawPayout,
   taxCost,
+  GOBLIN_REWARDS,
+  goblinCatchChance,
+  goblinEscapeCost,
   heal,
   healingAmount,
   hurt,

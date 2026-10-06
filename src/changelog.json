@@ -1,5 +1,16 @@
 [
   {
+    "id": "4fec5081-5204-4b20-bd9e-f145282ad69f",
+    "updatedAt": "2026-10-06T15:00:30.732Z",
+    "auditedAt": "2026-10-06T15:00:30.732Z",
+    "title": "Treasure Goblin thưởng thêm trang bị",
+    "changes": [
+      "Bắt được Treasure Goblin nhận bonus 25% tiền cược và 1 trang bị: 60% SR, 35% SSR, 5% UR kèm lời nguyền. Buff bắt Goblin tiếp tục tăng tỷ lệ bắt, tối đa 90%.",
+      "Goblin thoát chỉ trừ một lần 5% payout hiện tại (làm tròn lên 1 xu), thay cho giảm 10% hệ số payout của cả ván.",
+      "Bảng event tách tỷ lệ bắt và độ hiếm khi thành công; Lượt vừa rồi ghi item, độ hiếm và thay đổi chỉ số. Phần thưởng của event mới được khóa khi xuất hiện, không dùng pity của hòm."
+    ]
+  },
+  {
     "id": "74be5799-7457-4a6e-998b-bc3eaadc1977",
     "updatedAt": "2026-10-06T14:45:13.165Z",
     "auditedAt": "2026-10-06T14:45:13.165Z",

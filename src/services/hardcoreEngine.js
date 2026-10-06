@@ -21,6 +21,20 @@ function goblinCatchChance(state) {
     0.9,
   );
 }
+const GOBLIN_REWARDS = Object.freeze({
+  bonusRate: 0.25,
+  lossRate: 0.05,
+  rarities: Object.freeze({ rare: 0.6, legendary: 0.35, cursed: 0.05 }),
+});
+function goblinRewardRarity(roll) {
+  if (roll < GOBLIN_REWARDS.rarities.rare) return "rare";
+  return roll < GOBLIN_REWARDS.rarities.rare + GOBLIN_REWARDS.rarities.legendary
+    ? "legendary"
+    : "cursed";
+}
+function goblinEscapeCost(state) {
+  return Math.ceil(potentialPayout(state) * GOBLIN_REWARDS.lossRate);
+}
 function hitChance(accuracy, evasion) {
   return clamp(0.75 + (accuracy - evasion) * 0.005, 0.2, 0.95);
 }
@@ -229,7 +243,7 @@ const SURPRISE_EVENTS = Object.freeze({
   },
   goblin: {
     name: "Treasure Goblin",
-    text: "Bắt thành công: +25% cược vào bonus. Trượt: payout ×0,9. LUCK và trang bị tăng cơ hội bắt.",
+    text: "Bắt thành công: bonus +25% cược và 1 trang bị (60% SR / 35% SSR / 5% UR có nguyền). Trượt: trừ một lần 5% payout hiện tại, làm tròn lên 1 xu. LUCK và trang bị tăng tỷ lệ bắt.",
   },
   blacksmith: {
     name: "Blacksmith",
@@ -525,9 +539,19 @@ function surpriseOdds(state, event) {
         pair(
           "Bắt Goblin",
           goblinCatchChance(state),
-          `Bắt được: bonus +${Math.floor(state.stake * 0.25)} xu (25% cược)`,
-          "Goblin trốn thoát: payout ×0,9",
+          `Bắt được: bonus +${Math.floor(state.stake * GOBLIN_REWARDS.bonusRate)} xu (25% cược) và 1 trang bị`,
+          `Goblin thoát: trừ một lần 5% payout hiện tại (${goblinEscapeCost(state).toLocaleString("vi-VN")} xu, làm tròn lên)`,
         ),
+        {
+          title: "Độ hiếm khi bắt thành công",
+          outcomes: Object.entries(GOBLIN_REWARDS.rarities).map(
+            ([rarity, chance]) => ({
+              tone: rarity === "cursed" ? "mixed" : "good",
+              chance,
+              text: `1 trang bị ${{ rare: "SR", legendary: "SSR", cursed: "UR có lời nguyền" }[rarity]}`,
+            }),
+          ),
+        },
       ];
     case "gambler":
       return [
@@ -661,6 +685,9 @@ module.exports = {
   clamp,
   luckyBreakChance,
   goblinCatchChance,
+  GOBLIN_REWARDS,
+  goblinRewardRarity,
+  goblinEscapeCost,
   hitChance,
   defenseReduction,
   physicalAfterDefense,

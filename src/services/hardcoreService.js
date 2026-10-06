@@ -14,7 +14,7 @@ const {
 } = require("discord.js");
 const emoji = require("../discordEmojiMap");
 const { appEmoji } = require("../utils/appEmoji");
-const { E } = require("./hardcoreIcons");
+const { E, eventIcon } = require("./hardcoreIcons");
 const icon = (key, fallback) => appEmoji(key, emoji[`:${key}:`] || fallback);
 const { formatCoins } = require("../utils/economy");
 const { db } = require("../db");
@@ -60,6 +60,9 @@ const {
   curseTarget,
   luckyBreakChance,
   goblinCatchChance,
+  GOBLIN_REWARDS,
+  goblinRewardRarity,
+  goblinEscapeCost,
   itemEffects,
   itemCurse,
   classShrineActive,
@@ -611,7 +614,10 @@ function makeSurprise(state, forcedKind = null) {
   );
   const kind = forcedKind || pick(pool);
   const event = { type: "surprise", kind };
-  if (kind === "goblin") event.successRoll = randomFloat();
+  if (kind === "goblin") {
+    event.successRoll = randomFloat();
+    event.goblinItem = pick(ITEMS[goblinRewardRarity(randomFloat())]);
+  }
   if (kind === "gambler") event.win = randomFloat() < SURPRISE_ODDS.gamblerWin;
   if (kind === "adventurer") {
     event.adventurerVersion = 3;
@@ -2325,13 +2331,23 @@ function resolveSurprise(state, action) {
   }
   if (event.kind === "goblin" && action === "event_catch") {
     if (event.successRoll < goblinCatchChance(state)) {
-      const bonus = Math.floor(state.stake * 0.25);
+      const bonus = Math.floor(state.stake * GOBLIN_REWARDS.bonusRate);
       state.bonus += bonus;
-      return done(`💰 Bắt được Treasure Goblin! Bonus **+${bonus} xu**.`);
+      event.goblinItem ||= pick(ITEMS[goblinRewardRarity(randomFloat())]);
+      const item = event.goblinItem;
+      const owned = applyItem(state, item, item.rarity);
+      return done(
+        `${eventIcon("goblin")} Bắt được Treasure Goblin: bonus **+${formatCoins(bonus)} ${E.coin}** (25% cược).\n${E.backpack} **${owned.name} [${rarityLabel(owned.rarity)}] · Lv.${owned.level}**: ${effectText(itemEffects(item))}${item.curse ? `\n☣️ Lời nguyền: ${effectText(itemCurse(item))}` : ""}`,
+      );
     }
-    const lost = chargeCurrentPayout(state, 0.1);
+    const before = potentialPayout(state);
+    const lost = goblinEscapeCost(state);
+    state.payoutSpent = (state.payoutSpent || 0) + lost;
+    state.payoutGoblinSpent = (state.payoutGoblinSpent || 0) + lost;
     return done(
-      `🏃 Treasure Goblin trốn thoát: payout ×0,9, mất **${lost} xu**.`,
+      lost
+        ? `${eventIcon("goblin")} Treasure Goblin thoát: trừ một lần 5% payout hiện tại.\n${E.coin} Thưởng xu: ${formatCoins(before)} → **${formatCoins(potentialPayout(state))}** (−${formatCoins(lost)} xu).`
+        : `${eventIcon("goblin")} Treasure Goblin thoát: không có payout để trừ.`,
     );
   }
   if (event.kind === "blacksmith" && action === "event_forge") {
