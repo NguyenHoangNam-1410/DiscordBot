@@ -1,4 +1,5 @@
 const { normalizeSearch } = require("../utils/text");
+const { handleSlashPrefix, messageInteraction } = require("./slashPrefixService");
 const baucua = require("../commands/baucua");
 const taixiu = require("../commands/taixiu");
 const chinchiro = require("../commands/chinchiro");
@@ -91,47 +92,6 @@ function isAdmin(message) {
   );
 }
 
-function messageInteraction(message, options = {}) {
-  const interaction = {
-    guildId: message.guildId,
-    channelId: message.channelId,
-    channel: message.channel,
-    guild: message.guild,
-    client: message.client,
-    user: message.author,
-    memberPermissions: message.member?.permissions,
-    replied: false,
-    deferred: false,
-    lastReply: null,
-    options: {
-      getSubcommand: () => options.subcommand,
-      getString: (name, required = false) =>
-        options.strings?.[name] ?? (required ? "" : null),
-      getInteger: (name, required = false) =>
-        options.integers?.[name] ?? (required ? 0 : null),
-      getUser: (name) => options.users?.[name] || null,
-    },
-    async reply(payload) {
-      const clean = { ...payload };
-      delete clean.flags;
-      delete clean.withResponse;
-      this.replied = true;
-      const sent = await message.reply(clean);
-      this.lastReply = sent;
-      return { resource: { message: sent } };
-    },
-    async fetchReply() {
-      return this.lastReply;
-    },
-    async followUp(payload) {
-      const clean = { ...payload };
-      delete clean.flags;
-      return message.reply(clean);
-    },
-  };
-  return interaction;
-}
-
 function help(prefix, command) {
   if (command === "blackjack")
     return `Cách dùng: \`${prefix}xidach <số xu> [bot|nguoichoi]\` — mặc định chơi với nhà cái bot; \`nguoichoi\` mở bàn làm nhà cái cho tối đa 3 người`;
@@ -151,6 +111,7 @@ function help(prefix, command) {
 
 async function handleGamePrefix(message) {
   if (!message.guildId || message.author?.bot) return false;
+  if (await handleSlashPrefix(message)) return true;
   const prefix = process.env.COMMAND_PREFIX || "!";
   const content = String(message.content || "").trim();
   if (!content.startsWith(prefix)) return false;

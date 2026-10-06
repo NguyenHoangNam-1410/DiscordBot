@@ -26,6 +26,21 @@ Phiên bản bot độc lập chỉ dành cho trò chơi và hệ thống xu. Kh
 
 Bot cần bật **Message Content Intent** trong Discord Developer Portal nếu muốn dùng prefix command và trả lời trực tiếp trong Vua tiếng Việt.
 
+## Lệnh tin nhắn (prefix)
+
+Mọi lệnh slash đang đăng ký đều có bản prefix dùng chung handler, quyền quản trị, kiểm tra bảo trì và tham số với slash. Đặt `ENABLE_MESSAGE_COMMANDS=true` (hoặc `ENABLE_PREFIX_COMMANDS=true`) và bật Message Content Intent; `COMMAND_PREFIX` mặc định là `!`.
+
+- Game: `!baucua`, `!taixiu`, `!chinchiro`, `!xidach`, `!poker`, `!duangua`, `!domin`, `!coquay`, `!sinhton`, `!vtv`.
+- Người chơi: `!batdau`, `!hoso`, `!xu`, `!vatpham`, `!nhiemvu`, `!xephang`, `!anxin`, `!gacha`.
+- Hướng dẫn/quản trị: `!trogiup`, `!huongdan`, `!luat`, `!quantri`.
+- Chức năng con giữ nguyên tên slash: `!sinhton batdau`, `!sinhton thap`, `!sinhton tieptuc`, `!nhiemvu diemdanh`, `!gacha lichsu`, `!quantri baotri`.
+- Tham số theo thứ tự trong slash: `!domin 1000 3`, `!gacha quay 10`, `!xu chuyen @nguoinhan 1000`, `!quantri datkenh sinhton #kenh`.
+- Có thể ghi tên tham số để bỏ qua tùy chọn: `!sinhton hoso nguoidung=@user`, `!quantri suavatpham vatpham=item_id gia=50000` hoặc `--gia 50000`. Cú pháp `ten:giá_trị` cũng được hỗ trợ.
+- Chuỗi nhiều từ đặt trong ngoặc kép: `!quantri suavatpham vatpham=item_id ten="Tên vật phẩm mới"`. Choice nhận giá trị hoặc tên lựa chọn; vật phẩm dùng ID đã hiển thị trong cửa hàng/túi đồ. Prefix không có autocomplete của Discord.
+- Khi thiếu chức năng/tham số hoặc giá trị ngoài giới hạn, bot trả cách dùng. Các tên gọi cũ như `!hc`, `!blackjack`, `!mines`, `!use`, `!addgem` vẫn được hỗ trợ.
+
+Tin trả lời prefix hiển thị trong kênh, kể cả bảng vốn là ephemeral của slash. Những nút mở bảng riêng tiếp tục dùng tương tác Discord và kiểm tra người sở hữu như trước.
+
 ## Bắt đầu và tiến độ
 
 - `/batdau`: hướng dẫn người mới và nhận một lần 500 xu cùng màu hồ sơ Xanh Băng.

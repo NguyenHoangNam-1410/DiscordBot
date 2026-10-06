@@ -409,7 +409,7 @@ function randomEventText(s) {
     case "adventurer":
       return show(
         e.name,
-        "Cứu người nhận một lần bảo hộ trong cùng khu vực: chết bởi RNGesus/quái thì hồi sinh 50% HP, ưu tiên trước vé hồi sinh. Đồ trùng tên tăng level.",
+        "Nhận được bảo hộ",
         [
           option(`Cứu · trả 1 ${E.potion} bình máu`, [
             ["70%", "Nhận đồ [R]."],

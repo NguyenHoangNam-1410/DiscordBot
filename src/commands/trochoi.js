@@ -36,7 +36,7 @@ function helpEmbed(prefix = process.env.COMMAND_PREFIX || "!") {
       },
       {
         name: "⌨️ Prefix tùy chọn",
-        value: `Nếu server bật lệnh tin nhắn, các lệnh cũ như \`${prefix}baucua\` vẫn dùng được để tương thích.`,
+        value: `Mọi lệnh slash đều có bản tin nhắn khi server bật prefix: \`/sinhton batdau\` → \`${prefix}sinhton batdau\`, \`${prefix}nhiemvu diemdanh\`, \`${prefix}gacha quay 10\`. Tham số theo thứ tự của slash hoặc \`ten=giá_trị\`; chuỗi nhiều từ dùng \`"..."\`. Prefix trả lời trong kênh; các nút mở chi tiết riêng vẫn hoạt động như slash.`,
       },
       {
         name: "🎁 Phần thưởng",

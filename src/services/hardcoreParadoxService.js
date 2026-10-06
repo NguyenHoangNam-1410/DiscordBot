@@ -191,17 +191,10 @@ function choicesText(e) {
     (e.milestone + 1) +
     "–" +
     (e.milestone + 5) +
-    ". Chọn một luật; không đổi payout.\n\n" +
+    ". Chọn một luật\n" +
     e.choices
-      .map(
-        (id) =>
-          paradoxIcon(id) +
-          " **" +
-          CATALOG[id].name +
-          "**\n" +
-          CATALOG[id].text,
-      )
-      .join("\n\n")
+      .map((id) => "**" + CATALOG[id].name + "**\n" + CATALOG[id].text)
+      .join("\n")
   );
 }
 module.exports = {

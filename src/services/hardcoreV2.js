@@ -173,7 +173,7 @@ function reviveAfterDeath(state, session, rng, reason) {
   state.hp = Math.max(1, Math.ceil(state.maxHp * 0.5));
   delete state.lastDeathCause;
   state.lastLog += adventurer
-    ? "\n🤝 Lost Adventurer trở lại cứu bạn! The Tower remembered this. Hiệu lực cứu giúp đã dùng; giữ nguyên vé hồi sinh."
+    ? "\n🤝 The Tower remembers: Lost Adventurer trở lại cứu bạn! Hiệu lực cứu giúp đã dùng, giữ nguyên vé hồi sinh."
     : "\n🎟️ Tự dùng 1 vé hồi sinh.";
   if (!combat || reason === "rngesus") completeFloor(state, session, rng, 0);
   // Set directly: checkpoint healing and regeneration must not alter the promised 50%.

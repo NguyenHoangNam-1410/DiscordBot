@@ -208,7 +208,7 @@ const PAGES = Object.freeze({
       ],
       [
         "⌨️ Lệnh prefix",
-        "`!addgem` — cộng kim cương cho người chơi (nếu server bật lệnh prefix).",
+        "Mọi lệnh slash có bản prefix khi server bật lệnh tin nhắn, ví dụ `!quantri baotri`, `!quantri datkenh sinhton #kenh`. Tham số có thể ghi `ten=giá_trị`; chuỗi nhiều từ đặt trong dấu ngoặc kép. Prefix trả lời trong kênh. `!addgem @user <số>` vẫn dùng để cộng kim cương.",
       ],
     ],
   },
