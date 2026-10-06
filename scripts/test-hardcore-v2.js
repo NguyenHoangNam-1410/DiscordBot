@@ -331,7 +331,7 @@ async function main() {
     s.floor = 11;
     s.cleared = 10;
     s.encounter = core.makeSurprise(s, rng, "blood_shop");
-    s.hp = s.encounter.offers[0].price;
+    stats.addSource(s, { maxHp: s.encounter.offers[0].price - s.maxHp });
   });
   const bloodSnapshot = repo.getSession(blood.session.id).state_json;
   assert.throws(() => play(blood, "buy_0"), /INVALID_ACTION/);

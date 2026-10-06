@@ -147,6 +147,11 @@ const MERCHANT_PRICES = {
   ticket: 0.125,
   chest: 0.075,
 };
+const BLOOD_PRICES = Object.freeze({
+  rare: 0.12,
+  legendary: 0.25,
+  cursed: 0.4,
+});
 const DIAMOND_PRICES = { rare: 100, legendary: 300, cursed: 480 };
 function rngesusFleeChance(state) {
   const count = Number.isSafeInteger(state.rngesusFleeCount)
@@ -890,12 +895,7 @@ function makeSurprise(state, rng, kind = null) {
               ),
             )
           : kind === "blood_shop"
-            ? Math.max(
-                1,
-                Math.ceil(
-                  maxHp * { rare: 0.12, legendary: 0.25, cursed: 0.4 }[rarity],
-                ),
-              )
+            ? Math.max(1, Math.ceil(maxHp * BLOOD_PRICES[rarity]))
             : DIAMOND_PRICES[rarity];
       return { item: randomItem(rarity, rng), price };
     });
@@ -1575,9 +1575,9 @@ function surpriseActions(state) {
   if (k.endsWith("_shop"))
     return e.offers.map((offer, i) => ({
       action: `buy_${i}`,
-      label: `${i + 1}. ${offer.item.name} · ${offer.price}${k === "blood_shop" ? " HP" : k === "diamond_shop" ? " 💎" : " xu"}`,
+      label: `${i + 1}. ${offer.item.name} · ${offer.price}${k === "blood_shop" ? " Max HP" : k === "diamond_shop" ? " 💎" : " xu"}`,
       disabled:
-        (k === "blood_shop" && state.hp <= offer.price) ||
+        (k === "blood_shop" && state.maxHp <= offer.price) ||
         (k === "payout_shop" && rawPayout(state) < offer.price),
     }));
   if (k === "merchant")
@@ -1839,9 +1839,22 @@ function actSurprise(state, session, action, rng) {
   if (k.endsWith("_shop") || k === "merchant") {
     const offer = e.offers[Number(action.slice(4))];
     if (!offer || !/^buy_\d$/.test(action)) throw new Error("INVALID_ACTION");
+    let paymentLog = "";
     if (k === "blood_shop") {
-      if (state.hp <= offer.price) throw new Error("INSUFFICIENT_HP");
-      hurt(state, offer.price, false);
+      if (state.maxHp <= offer.price) throw new Error("INSUFFICIENT_MAX_HP");
+      const before = state.maxHp;
+      const hpBefore = state.hp;
+      addSource(state, { maxHp: -offer.price });
+      if (state.hp !== hpBefore) markDirect(state, ["hp"]);
+      paymentLog =
+        E.hp +
+        " **Max HP của bạn:** " +
+        before +
+        " → **" +
+        state.maxHp +
+        "** (−" +
+        offer.price +
+        "; giảm trong suốt run).\n";
     } else if (k === "diamond_shop")
       spendDiamonds(session.guild_id, session.user_id, offer.price, {
         reason: "hardcore:v2:item-shop",
@@ -1860,7 +1873,7 @@ function actSurprise(state, session, action, rng) {
     }
     if (offer.item) {
       const item = receiveItem(state, offer.item);
-      done(`${E.backpack} Nhận ${item.name} Lv.${item.level}.`);
+      done(`${paymentLog}${E.backpack} Nhận ${item.name} Lv.${item.level}.`);
     } else {
       if (offer.key === "potion")
         state.potions = Math.min(state.maxPotions, state.potions + 1);
@@ -2482,6 +2495,7 @@ module.exports = {
   ITEMS,
   EVENTS,
   EVENT_NAMES,
+  BLOOD_PRICES,
   PURIFIER_COST_RATE,
   PURIFIER_EVENT_WEIGHT,
   initialize,

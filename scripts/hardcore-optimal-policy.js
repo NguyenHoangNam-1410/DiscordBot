@@ -143,12 +143,13 @@ function choose(s, build = "balanced") {
                     : 0.01;
         } else if (
           e.kind !== "blood_shop" ||
-          s.hp - offer.price > s.maxHp * 0.5
+          Math.min(s.hp, s.maxHp - offer.price) > s.maxHp * 0.5
         ) {
           const c = structuredClone(s);
+          if (e.kind === "blood_shop")
+            stats.addSource(c, { maxHp: -offer.price });
           v2.receiveItem(c, offer.item);
           score = utility(c, build) - base;
-          if (e.kind === "blood_shop") score -= (offer.price / s.maxHp) * 0.15;
         }
         return { action: a.action, score };
       })

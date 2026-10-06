@@ -267,7 +267,7 @@ Khi gặp Shrine, giao diện thay phần chỉ số của lượt trước bằ
 | Blood | 55% SR, 35% SSR, 10% UR | 12%/25%/40% Max HP lúc shop xuất hiện | Tối đa 3 lần/run |
 | Diamond | 40% SR, 40% SSR, 20% UR | 200/600/1.600 kim cương | Chỉ từ tầng 101, tối đa 2 lần/run |
 
-Mỗi loại shop cách lần xuất hiện trước của cùng loại ít nhất 50 tầng. Blood Shop yêu cầu HP hiện tại lớn hơn giá nên không thể tự sát để mua. Diamond Shop dùng operation ID idempotent để bấm lặp không trừ tiền hai lần.
+Mỗi loại shop cách lần xuất hiện trước của cùng loại ít nhất 50 tầng. Blood Shop thanh toán bằng cách giảm Max HP trong suốt run: SR/SSR/UR lần lượt 12%/25%/40% Max HP lúc gặp, làm tròn lên và tối thiểu 1; giá được khóa. Max HP trước mua phải lớn hơn giá, còn ít nhất 1 Max HP trước khi nhận item. HP hiện tại chỉ được giới hạn xuống Max HP mới, không trừ thêm HP. Hồi máu/checkpoint/giải nguyền không hoàn chi phí; buff Max HP/VIT của item được tính sau khi thanh toán. Shop đang mở từ bản cũ giữ nguyên offer/giá nhưng lần mua tiếp theo dùng cách trả Max HP. Diamond Shop dùng operation ID idempotent để bấm lặp không trừ tiền hai lần.
 
 ## 9. RNGesus
 
@@ -336,7 +336,7 @@ Thành tích toàn tài khoản hiện có các mốc Sinh tồn: tầng 10 thư
 - Toàn bộ mutation run, economy, shop và Grave Echo chạy trong SQLite transaction.
 - Giao dịch kim cương có operation ID idempotent.
 - Payout shop kiểm tra payout gốc sau các khoản đã chi; không dùng bonus Blood Paradox.
-- Blood Shop kiểm tra lại HP ngay lúc mua và giữ ít nhất 1 HP.
+- Blood Shop kiểm tra lại Max HP ngay lúc mua, giảm giới hạn HP trong suốt run và giữ ít nhất 1 Max HP trước khi nhận item.
 - Kết quả RNG/event, inventory shop, giá, tay Duelist và karma consequence được lưu trong state; resume không reroll.
 - Phiên không hoạt động quá 7 ngày bị tính là forfeit, payout bằng 0 và phiên bị xóa.
 - Item, thuộc tính và stat dẫn xuất được tính lại từ nguồn để tránh cộng chỉ số hai lần khi mở lại UI.

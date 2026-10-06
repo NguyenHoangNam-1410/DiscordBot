@@ -450,7 +450,7 @@ function actionForV2(state, strategy) {
           const offer = e.offers[Number(a.action.slice(4))];
           return (
             e.kind !== "blood_shop" ||
-            state.hp > offer.price + state.maxHp * 0.35
+            Math.min(state.hp, state.maxHp - offer.price) > state.maxHp * 0.35
           );
         });
       return affordable[0]?.action || "event_skip";
