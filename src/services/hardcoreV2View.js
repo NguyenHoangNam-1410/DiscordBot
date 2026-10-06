@@ -909,17 +909,12 @@ function coinPayoutDetails(state) {
   const lines = [];
   const factor = Math.max(0, Math.min(1, state.payoutFactor ?? 1));
   if (factor < 1)
-    lines.push("Giảm thưởng xu do event/lời nguyền: **" + percent(1 - factor));
+    lines.push(
+      "Giảm thưởng xu do event/lời nguyền: **" + percent(1 - factor) + "**.",
+    );
   if (state.payoutSpent > 0)
     lines.push(
       "Đã chi trong run: **" + money(state.payoutSpent) + " " + E.coin + "**.",
-    );
-  if (state.paradox?.kind === "blood" && state.paradox.bloodFactor)
-    lines.push(
-      "Blood Paradox: **" +
-        (state.paradox.bloodFactor > 0 ? "+" : "−") +
-        percent(Math.abs(state.paradox.bloodFactor)) +
-        "** thưởng xu.",
     );
   return lines.length ? "\n" + lines.join("\n") : "";
 }
@@ -990,11 +985,7 @@ function embed(state, userId, result = null, sessionId = null) {
     },
     {
       name: `${E.rift} Rift modifier (${activeRifts.length})`,
-      value:
-        `${paradox.active(state) ? `${paradox.describe(state)}\n` : ""}${mods}${state.paradox ? `\n${eventIcon("paradox")} Paradox: ${state.paradox.kind === "blood" ? `Máu là tiền ${percent(state.paradox.bloodFactor)}` : "Ngược đời"} · hết tầng ${state.paradox.until}` : ""}`.slice(
-          0,
-          1024,
-        ),
+      value: mods,
     },
     {
       name: `${icon("moneybag", "💰")} Rút thưởng`,
@@ -1013,9 +1004,6 @@ function embed(state, userId, result = null, sessionId = null) {
         state.floor >= state.classShrine.from &&
         state.floor <= state.classShrine.until
           ? `\n${E.shrine} Class Shrine · hết sau tầng ${state.classShrine.until}`
-          : "") +
-        (state.contract
-          ? `\n${eventIcon("contract")} Hợp đồng: không ${{ potion: "bình", skill: "skill", defend: "thủ" }[state.contract.kind]} · ${state.contract.remaining} tầng`
           : ""),
     },
   );
@@ -1253,6 +1241,27 @@ function riftModifierText(key, count, state) {
   }
   return `${bonus ? `Mức tăng/giảm hiện tại: ${bonus}.\n` : ""}${text}`;
 }
+function contractEffectText(state) {
+  const c = state.contract;
+  if (!c) return `${eventIcon("contract")} Rift Contract: không`;
+  const action = {
+    potion: `${E.potion} bình máu`,
+    skill: `${SKILL_ICONS[state.classKey]} skill`,
+    defend: `${E.defense} phòng thủ`,
+  }[c.kind];
+  const main = stats.mainStat(state);
+  const reward =
+    c.kind === "potion"
+      ? `1 trang bị SSR${c.item?.name ? " · " + c.item.name : ""}`
+      : c.kind === "skill"
+        ? `bonus bằng 50% cược (${money(Math.floor(state.stake * 0.5))} ${E.coin})`
+        : `+10 ${E[main]} ${main.toUpperCase()} cho bạn`;
+  const range =
+    Number.isFinite(c.from) && Number.isFinite(c.until)
+      ? ` (${c.from}–${c.until})`
+      : "";
+  return `${eventIcon("contract")} **Rift Contract** · còn **${c.remaining} tầng**${range}\n**Điều kiện:** không dùng ${action}.\n**Thưởng khi hoàn thành:** ${reward}. Vi phạm hủy thưởng.`;
+}
 function privatePayload(
   state,
   sessionId,
@@ -1327,10 +1336,11 @@ function privatePayload(
         name: `${RIFT_ICONS[key] || E.rift} ${world.RIFT_MODIFIERS[key].name} ×${n}`,
         value: riftModifierText(key, n, state),
       });
-    e.addFields({
-      name: "Hiệu ứng hiện hành",
-      value: `${paradox.active(state) ? paradox.describe(state) : ""}${paradox.active(state) ? "" : `\n${eventIcon("paradox")} Rift Paradox: ${state.paradox ? `${state.paradox.kind === "blood" ? `Máu là tiền (hồi HP tại checkpoint không giảm hệ số) · hệ số thưởng xu ${state.paradox.bloodFactor >= 0 ? "+" : ""}${percent(state.paradox.bloodFactor)}` : "Ngược đời · vật lý lấy DEF, DEF lấy trung bình vật lý gốc"} · hết tầng ${state.paradox.until}` : "không"}`}\nClass Shrine: ${state.classShrine ? `${SHRINES[state.classKey]} Hết tầng ${state.classShrine.until}.` : "không"}\nHợp đồng: ${state.contract ? `không ${state.contract.kind}, còn ${state.contract.remaining} tầng` : "không"}\nPayout gốc ${money(core.rawPayout(state))} ${E.coin}; bonus Blood Paradox không dùng mua đồ.`,
-    });
+    addTextFields(
+      e,
+      "Hiệu ứng hiện hành",
+      `${paradox.active(state) ? paradox.describe(state) : ""}${paradox.active(state) ? "" : `\n${eventIcon("paradox")} Rift Paradox: ${state.paradox ? `${state.paradox.kind === "blood" ? `Máu là tiền (hồi HP tại checkpoint không giảm hệ số) · hệ số thưởng xu ${state.paradox.bloodFactor >= 0 ? "+" : ""}${percent(state.paradox.bloodFactor)}` : "Ngược đời · vật lý lấy DEF, DEF lấy trung bình vật lý gốc"} · hết tầng ${state.paradox.until}` : "không"}`}\nClass Shrine: ${state.classShrine ? `${SHRINES[state.classKey]} Hết tầng ${state.classShrine.until}.` : "không"}\n${contractEffectText(state)}\nPayout gốc ${money(core.rawPayout(state))} ${E.coin}; bonus Blood Paradox không dùng mua đồ.`,
+    );
   } else {
     e.setDescription(
       `${stats.CLASSES[state.classKey].emoji} ${stats.CLASSES[state.classKey].name} · Tầng ${state.floor}\n\n${hasEncounterDetails(state) ? encounterDetails(state) : "Không có thông tin bổ sung; xem bảng chơi chính."}`.slice(

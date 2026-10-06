@@ -1833,7 +1833,7 @@ function actSurprise(state, session, action, rng) {
       item: e.item,
     };
     done(
-      `${eventIcon("contract")} Rift Contract · tầng ${state.contract.from}–${state.contract.until}: ${state.contract.kind === "potion" ? `không dùng ${E.potion} bình máu → nhận SSR` : state.contract.kind === "skill" ? "không dùng skill → bonus +50% cược" : `không phòng thủ → +10 ${E[mainStat(state)]} ${mainStat(state).toUpperCase()}`}. Vi phạm hủy thưởng.`,
+      `${eventIcon("contract")} Đã nhận Rift Contract · tầng ${state.contract.from}–${state.contract.until}. Xem điều kiện và phần thưởng trong **Rift**.`,
     );
   } else if (k === "class_shrine") {
     state.classShrine = {
@@ -1955,7 +1955,7 @@ function act(state, session, action, rng) {
     nextMilestone(state, session, rng);
   } else if (state.phase === "paradox" && state.encounter.version === 2) {
     paradox.choose(state, action.slice(8));
-    state.lastLog = paradox.describe(state);
+    state.lastLog = `${eventIcon("paradox")} Đã chọn **${paradox.CATALOG[state.activeParadox.id].name}** · tầng ${state.activeParadox.startFloor}–${state.activeParadox.endFloor}. Xem hiệu ứng trong **Rift**.`;
     nextMilestone(state, session, rng);
   } else if (state.phase === "paradox") {
     state.paradoxMilestonesClaimed ||= [];
@@ -1969,7 +1969,7 @@ function act(state, session, action, rng) {
       until: state.floor + 4,
       bloodFactor: 0,
     };
-    state.lastLog = `${eventIcon("paradox")} Rift Paradox · tầng ${state.paradox.from}–${state.paradox.until}: ${state.paradox.kind === "blood" ? "Máu là tiền: mất HP do nguồn thù địch tăng payout, hồi HP từ bình/skill/event giảm payout (biên ±50%); hồi HP tại checkpoint không giảm hệ số thưởng; chi phí tự nguyện không tăng thưởng" : `Ngược đời: dùng ${E.defense} DEF làm sức mạnh vật lý, dùng trung bình sát thương vật lý làm DEF chống vật lý`}.`;
+    state.lastLog = `${eventIcon("paradox")} Đã chọn **${state.paradox.kind === "blood" ? "Máu là tiền" : "Ngược đời"}** · tầng ${state.paradox.from}–${state.paradox.until}. Xem hiệu ứng trong **Rift**.`;
     nextMilestone(state, session, rng);
   } else if (state.phase === "severance") {
     const key = action.slice(6);
