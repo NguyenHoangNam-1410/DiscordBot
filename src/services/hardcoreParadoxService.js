@@ -7,7 +7,7 @@ const CATALOG = Object.freeze({
   },
   mana_fracture: {
     name: "Mana Vỡ Vụn",
-    text: `Skill của **bạn** tốn ${E.mana} **MP** **1**; Class Shrine miễn phí vẫn tốn **0 MP**. Tấn công hồi ${E.mana} **MP** **+0**; Phòng thủ hồi ${E.mana} **MP** **+1** cho **bạn**.`,
+    text: `- **Skill của bạn:** tốn ${E.mana} **1 MP/lần**, thay vì **2 MP**. Lượt được Class Shrine miễn phí vẫn tốn **0 MP**.\n- ${E.attack} **Tấn công thường:** không hồi MP cho bạn.\n- ${E.defense} **Phòng thủ:** hồi ${E.mana} **1 MP** cho bạn, tối đa Max MP.`,
   },
   inverted_armor: {
     name: "Giáp Nghịch Đảo",
@@ -193,8 +193,15 @@ function choicesText(e) {
     (e.milestone + 5) +
     ". Chọn một luật\n" +
     e.choices
-      .map((id) => "**" + CATALOG[id].name + "**\n" + CATALOG[id].text)
-      .join("\n")
+      .map(
+        (id) =>
+          paradoxIcon(id) +
+          " **" +
+          CATALOG[id].name +
+          "**\n" +
+          CATALOG[id].text,
+      )
+      .join("\n\n")
   );
 }
 module.exports = {
