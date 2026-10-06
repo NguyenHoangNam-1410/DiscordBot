@@ -201,11 +201,11 @@ async function main() {
     cleansedLevels: 2,
   });
   assert(cleanLoot.defense > 0);
-  assert.equal(cleanLoot.items[0].rarity, "legendary");
+  assert.equal(cleanLoot.items[0].rarity, "cursed");
   core.receiveItem(cleanLoot, cleanLoot.items[0].definition, 1, 1);
   assert(cleanLoot.defense > 0);
   assert.equal(cleanLoot.items[0].cleansedLevels, 3);
-  assert.equal(target.rarity, "legendary");
+  assert.equal(target.rarity, "cursed");
   assert.equal(target.cleansedLevels, 2);
   assert.equal(cursed.str, power);
   core.receiveItem(cursed, item("glass_cannon"));

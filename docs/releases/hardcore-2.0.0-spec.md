@@ -189,7 +189,7 @@ Hòm roll Mimic trước: 3% Ancient Mimic và 12% Mimic ở trạng thái khôn
 - Nhặt trùng đúng tên item tăng Level thay vì tạo dòng mới.
 - Mỗi cấp item cộng lại toàn bộ thuộc tính và hiệu ứng đặc biệt của item. Hiệu ứng một lần như bình, hồi HP hoặc Vé cũng kích hoạt khi nhận thêm cấp.
 - Thợ rèn trả 12% payout khả dụng để tăng một cấp. UR chưa giải nguyền cộng lại cả buff và curse.
-- Tu sĩ trả 20% payout khả dụng để giải toàn bộ curse, giữ buff/cấp hiện tại và đổi UR thành SSR.
+- Tu sĩ trả 10% payout gốc để giải toàn bộ lời nguyền, giữ nguyên độ hiếm UR, buff, cấp và nội tại. Trạng thái đã giải được giữ khi rèn; nhặt thêm cùng món UR chưa giải chỉ thêm lời nguyền của level mới. Run cũ từng bị đổi thành SSR được khôi phục nhãn UR khi resume, không đổi buff/cấp hoặc lớp nguyền đã giải.
 - Horadric Forge nghiền đúng một cấp item. Phần chỉ số của cấp bị nghiền được hấp thụ vĩnh viễn trong run, sau đó nhận thêm phần thưởng event.
 
 ## 8. Catalog event hiện hành

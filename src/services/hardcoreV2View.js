@@ -706,7 +706,7 @@ function encounterText(s) {
   const descriptions = {
     healer: `**Hồi phục:** hồi ${E.hp} HP bằng 30% Max HP, ít nhất 20; +1 ${E.potion} bình máu (theo giới hạn bình của bạn). Miễn phí.`,
     blacksmith: `Trả 12% payout để tăng một cấp **${target?.name}**. Cộng buff mới; UR chưa giải nguyền cộng cả curse. Đồ đã giải hết nguyền giữ trạng thái sạch khi rèn.`,
-    purifier: `Trả **${percent(core.PURIFIER_COST_RATE)} payout gốc**: gỡ **toàn bộ lời nguyền** của **${target?.name}**, giữ buff/level, chuyển thành SSR.`,
+    purifier: `Trả **${percent(core.PURIFIER_COST_RATE)} payout gốc**: gỡ **toàn bộ lời nguyền** của **${target?.name}**, giữ nguyên UR, buff, level và nội tại.`,
     sacrifice: `**Hiến HP:** mất tối đa 20% Max ${E.hp} HP (giữ ≥1) → +6 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\n**Hiến payout:** trả 10% payout → +6 ${E.vit} VIT. Hiến HP không cộng bonus Blood Paradox.`,
     contract: `Trong 3 tầng, chọn một điều kiện:\n- **Không dùng ${E.potion} bình:** nhận đồ [SSR].\n- **Không dùng skill:** bonus +50% cược.\n- **Không phòng thủ:** +10 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\nVi phạm chỉ hủy thưởng.`,
     class_shrine: `Hiệu lực ba tầng tiếp theo: ${SHRINES[s.classKey]}`,
@@ -1854,7 +1854,7 @@ function ratesFields(category) {
       {
         name: "Dịch vụ: giá và điều kiện",
         value:
-          "- **Rèn:** trả 12% payout gốc, tăng một level gồm buff và curse còn lại. **Giải nguyền:** trả 10% payout gốc, gỡ toàn bộ curse, giữ buff/level và chuyển đồ thành SSR.\n- **Horadric Forge:** tiêu hao 1 level trang bị, giữ nguyên hiệu ứng có lợi của level đó trong run và xóa lời nguyền tương ứng; chọn thêm một phần thưởng. Không nhận lại bình/vé/HP hồi khi nhặt đồ.\n- **Payout Shop:** R/SR/SSR giá 5%/12%/25% payout gốc, tối đa 5 lần gặp/run. **Blood Shop:** SR/SSR/UR giá 12%/25%/40% Max HP, tối đa 3 lần gặp/run; phải còn ít nhất 1 HP.\n- **Diamond Shop:** từ tầng 101, giá SR 100 / SSR 300 / UR 480 kim cương, tối đa 2 lần gặp/run; trừ ngay từ tài khoản, không hoàn khi chết.\n- Mỗi loại shop cách nhau ít nhất 50 tầng; mỗi lần gặp mua tối đa một món. Giá cụ thể và công dụng ghi trên bảng/Chi tiết.",
+          "- **Rèn:** trả 12% payout gốc, tăng một level gồm buff và curse còn lại. **Giải nguyền:** trả 10% payout gốc, gỡ toàn bộ curse, giữ nguyên UR, buff, level và nội tại.\n- **Horadric Forge:** tiêu hao 1 level trang bị, giữ nguyên hiệu ứng có lợi của level đó trong run và xóa lời nguyền tương ứng; chọn thêm một phần thưởng. Không nhận lại bình/vé/HP hồi khi nhặt đồ.\n- **Payout Shop:** R/SR/SSR giá 5%/12%/25% payout gốc, tối đa 5 lần gặp/run. **Blood Shop:** SR/SSR/UR giá 12%/25%/40% Max HP, tối đa 3 lần gặp/run; phải còn ít nhất 1 HP.\n- **Diamond Shop:** từ tầng 101, giá SR 100 / SSR 300 / UR 480 kim cương, tối đa 2 lần gặp/run; trừ ngay từ tài khoản, không hoàn khi chết.\n- Mỗi loại shop cách nhau ít nhất 50 tầng; mỗi lần gặp mua tối đa một món. Giá cụ thể và công dụng ghi trên bảng/Chi tiết.",
       },
       {
         name: `${eventIcon("merchant")} Rift Merchant · giá theo payout gốc`,
@@ -1862,7 +1862,7 @@ function ratesFields(category) {
       },
       {
         name: `${eventIcon("purifier")} Purifier · giải lời nguyền`,
-        value: `Chỉ xuất hiện khi có trang bị còn lời nguyền; không xuất hiện ở tầng 1. Trong nhóm event đặc biệt đủ điều kiện, Purifier có trọng số **gấp ${core.PURIFIER_EVENT_WEIGHT}** mỗi event khác. Đây không phải tỷ lệ cố định trên mỗi tầng.\nBấm **Giải toàn bộ**: trả **${percent(core.PURIFIER_COST_RATE)} payout gốc**, làm tròn lên và tối thiểu 1 xu; gỡ mọi level lời nguyền của món được chỉ định, giữ buff/level và chuyển thành SSR.`,
+        value: `Chỉ xuất hiện khi có trang bị còn lời nguyền; không xuất hiện ở tầng 1. Trong nhóm event đặc biệt đủ điều kiện, Purifier có trọng số **gấp ${core.PURIFIER_EVENT_WEIGHT}** mỗi event khác. Đây không phải tỷ lệ cố định trên mỗi tầng.\nBấm **Giải toàn bộ**: trả **${percent(core.PURIFIER_COST_RATE)} payout gốc**, làm tròn lên và tối thiểu 1 xu; gỡ mọi level lời nguyền của món được chỉ định, giữ nguyên UR, buff, level và nội tại.`,
       },
       {
         name: `${eventIcon("diamond_shop")} Diamond Merchant`,

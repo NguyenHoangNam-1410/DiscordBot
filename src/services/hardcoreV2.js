@@ -187,6 +187,17 @@ function reviveAfterDeath(state, session, rng, reason) {
 function normalize(state) {
   if (!["2.0.0", "2.0.1"].includes(state.releaseVersion))
     throw new Error("UNSUPPORTED_HARDCORE_VERSION");
+  // Older runs downgraded fully cleansed UR equipment; rarity belongs to its design.
+  for (const item of [
+    ...(state.items || []),
+    ...(state.lastReceivedItems || []),
+  ])
+    if (item.definition?.rarity === "cursed") item.rarity = "cursed";
+  if (typeof state.lastLog === "string")
+    state.lastLog = state.lastLog.replace(
+      "giải toàn bộ curse; giữ level và buff, chuyển SSR.",
+      "giải toàn bộ lời nguyền; giữ UR, level, buff và nội tại.",
+    );
   recompute(state);
   state.prayerBoost = Boolean(state.prayerBoost);
   state.reviveTickets = state.reviveTickets === 1 ? 1 : 0;
@@ -394,8 +405,7 @@ function receiveItem(state, definition, levels = 1, cleansedLevels = 0) {
   definition = item.definition;
   item.level += levels;
   item.cleansedLevels += Math.min(levels, Math.max(0, cleansedLevels));
-  if (definition.rarity === "cursed")
-    item.rarity = item.level > item.cleansedLevels ? "cursed" : "legendary";
+  item.rarity = definition.rarity;
   recompute(state);
   for (let i = 0; i < levels; i++) {
     const e = definition.effects;
@@ -443,7 +453,7 @@ function cleanse(state, item) {
     throw new Error("NO_CURSE");
   markDirect(state, effectStatKeys(item.definition.curse?.effects));
   item.cleansedLevels = item.level;
-  item.rarity = "legendary";
+  item.rarity = item.definition.rarity;
   recompute(state);
 }
 function grind(state, item) {
@@ -1933,7 +1943,7 @@ function actSurprise(state, session, action, rng) {
     const target = itemById(e.targetId);
     cleanse(state, target);
     done(
-      `✨ ${target.name}: giải toàn bộ curse; giữ level và buff, chuyển SSR.`,
+      `✨ ${target.name}: giải toàn bộ lời nguyền; giữ UR, level, buff và nội tại.`,
     );
   } else if (k === "sacrifice") {
     if (action === "event_sacrifice_hp") {

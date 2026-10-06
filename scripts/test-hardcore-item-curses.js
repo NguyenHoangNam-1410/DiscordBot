@@ -264,6 +264,8 @@ try {
     };
     const passive = passives.aggregate(s);
     core.cleanse(s, s.items[0]);
+    assert.equal(s.items[0].rarity, "cursed");
+    assert.equal(s.items[0].cleansedLevels, s.items[0].level);
     assert.deepEqual(
       { str: s.str, dex: s.dex, vit: s.vit, ene: s.ene, luck: s.luck },
       buffs,
@@ -317,6 +319,76 @@ try {
   assert.equal(resumed.vit, Math.max(1, stats.CLASSES.sorceress.vit - 30));
   groups.push(
     "saved pre-rework definitions and matching receipt log when adding another level",
+  );
+
+  const historical = state("glass_cannon", "barbarian", 2, 2);
+  historical.items[0].rarity = "legendary";
+  historical.lastReceivedItems = [structuredClone(historical.items[0])];
+  historical.lastLog =
+    "Glass Cannon: giải toàn bộ curse; giữ level và buff, chuyển SSR.";
+  const savedItem = structuredClone(historical.items[0]);
+  const migrated = core.normalize(JSON.parse(JSON.stringify(historical)));
+  assert.equal(migrated.items[0].rarity, "cursed");
+  assert.equal(migrated.lastReceivedItems[0].rarity, "cursed");
+  assert.equal(migrated.items[0].cleansedLevels, 2);
+  assert.equal(migrated.items[0].level, 2);
+  assert.deepEqual(migrated.items[0].definition, savedItem.definition);
+  assert(migrated.defense > 0);
+  assert.match(migrated.lastLog, /giữ UR/);
+  assert.doesNotMatch(migrated.lastLog, /chuyển SSR/);
+  const bag = view
+    .privatePayload(migrated, "p", "m", "items")
+    .embeds[0].toJSON();
+  assert(bag.fields.some((field) => field.name.includes("[UR]")));
+  assert(
+    bag.fields.some((field) => field.value.includes("Đã giải toàn bộ curse")),
+  );
+  migrated.encounter = core.makeSurprise(migrated, () => 0.5, "blacksmith");
+  const cleanSession = {
+    id: "clean-ur",
+    guild_id: "clean-ur",
+    user_id: "p",
+    channel_id: "c",
+  };
+  core.act(migrated, cleanSession, "event_smith", () => 0.5);
+  assert.equal(migrated.items[0].rarity, "cursed");
+  assert.equal(migrated.items[0].level, 3);
+  assert.equal(migrated.items[0].cleansedLevels, 3);
+  assert(migrated.defense > 0);
+  migrated.encounter = core.makeSurprise(migrated, () => 0.5, "duelist");
+  assert.equal(migrated.encounter.lossItemId, undefined);
+  Object.assign(migrated.encounter, {
+    mode: "items",
+    round: 4,
+    wins: 0,
+    hands: [2, 2, 2, 2, 2],
+    lossItemId: migrated.items[0].definition.id,
+  });
+  core.act(migrated, cleanSession, "hand_0", () => 0.5);
+  assert.equal(
+    migrated.items.length,
+    1,
+    "cleansed UR remains protected even in old Duelist event",
+  );
+  core.receiveItem(migrated, get("glass_cannon"));
+  assert.equal(migrated.items[0].rarity, "cursed");
+  assert.equal(migrated.items[0].level - migrated.items[0].cleansedLevels, 1);
+  assert.equal(migrated.defense, 0);
+  migrated.encounter = core.makeSurprise(migrated, () => 0.5, "purifier");
+  core.act(migrated, cleanSession, "event_cleanse", () => 0.5);
+  assert.equal(migrated.items[0].rarity, "cursed");
+  assert.equal(migrated.items[0].level, migrated.items[0].cleansedLevels);
+  assert(migrated.defense > 0);
+  assert.match(migrated.lastLog, /giữ UR/);
+  assert.doesNotMatch(migrated.lastLog, /chuyển SSR/);
+  const purifierRules = view
+    .ratesFields("rewards")
+    .find((field) => field.name.includes("Purifier"));
+  assert(purifierRules);
+  assert.match(purifierRules.value, /giữ nguyên UR/);
+  assert.doesNotMatch(purifierRules.value, /chuyển.*SSR/);
+  groups.push(
+    "UR rarity survives cleanse, old-run migration, receipt UI, smith, new drop and Duelist protection",
   );
 
   const ui = state(null);
