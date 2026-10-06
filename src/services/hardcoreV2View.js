@@ -683,8 +683,10 @@ function encounterText(s) {
       `**Tấn công:** vật lý, hồi ${core.attackManaGain(s)} MP (tối đa Max MP). **Thủ:** DEF ×2 hoặc +15 RES, giảm thêm 15% DMG, miễn Crit, +1 MP.\n**${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""}):** ${SKILLS[s.classKey]} **Bình:** hồi tối đa ${core.healingAmount(s, Math.max(20, s.maxHp * paradox.potionRate(s)))} HP cho bạn; quái còn sống phản công.`
     );
   }
-  if (e.type === "memory")
-    return `**${memories.title(e.debt)}**\nChọn cách xử lý bằng nút bên dưới. Xem **Rift** để đọc nguyên nhân và hậu quả.`;
+  if (e.type === "memory") {
+    const family = memories.family(e.debt);
+    return `${memoryIcon(family)} **${memories.CATALOG[family].name}**\nChọn cách xử lý bằng nút bên dưới. Xem **Rift** để đọc nguyên nhân và hậu quả.`;
+  }
   if (e.type === "empty")
     return `${eventIcon("empty")} Phòng trống. Đi tiếp hoặc rút thưởng.`;
   const k = e.kind;
@@ -1815,7 +1817,13 @@ function ratesFields(category) {
       {
         name: `${eventIcon("memory")} The Tower Remembers`,
         value:
-          "- Ký ức phân theo nguyên nhân: Ân nghĩa, Truy nã, Hiến tế máu/tài sản, Dư âm gương, Thử thách thần linh, Oán niệm. Xem nguồn gốc, hiệu lực, tầng đến hạn và lựa chọn trong nút **Rift**.\n- Hậu quả hẹn sau **10–30 tầng**, tối đa **8** đang chờ; boss/RNGesus được ưu tiên. Đầy hàng chờ thì không thể cướp, hiến tế hoặc đập gương; cầu nguyện RNGesus vẫn dùng được nhưng không thêm thử thách.\n- Bỏ qua event, bán hòm và hối lộ không tạo ký ức mới. Run cũ giữ nguyên các hậu quả đã khóa, không roll lại.",
+          Object.entries(memories.CATALOG)
+            .map(
+              ([family, entry]) =>
+                `- ${memoryIcon(family)} **${entry.name.split(" · ")[0]}**`,
+            )
+            .join("\n") +
+          "\nXem nguồn gốc, hiệu lực, tầng đến hạn và lựa chọn trong nút **Rift**.\n- Hậu quả hẹn sau **10–30 tầng**, tối đa **8** đang chờ; boss/RNGesus được ưu tiên. Đầy hàng chờ thì không thể cướp, hiến tế hoặc đập gương; cầu nguyện RNGesus vẫn dùng được nhưng không thêm thử thách.\n- Bỏ qua event, bán hòm và hối lộ không tạo ký ức mới. Run cũ giữ nguyên các hậu quả đã khóa, không roll lại.",
       },
       {
         name: `${eventIcon("adventurer")} Lost Adventurer · cứu / cướp`,

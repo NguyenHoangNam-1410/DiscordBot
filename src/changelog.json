@@ -1,5 +1,15 @@
 [
   {
+    "id": "8ea6594d-6fb8-4194-8ee2-97a30ebfd3b5",
+    "updatedAt": "2026-10-06T13:33:06.739Z",
+    "auditedAt": "2026-10-06T13:33:06.739Z",
+    "title": "Chuẩn hóa icon The Tower Remembers",
+    "changes": [
+      "Mỗi loại ký ức dùng một icon riêng trên tình huống, nút lựa chọn, quái truy đuổi và kết quả lượt.",
+      "Bảng tỷ lệ và luật chơi có chú giải 8 icon: Ân nghĩa, Truy nã, Hiến tế máu, Hiến tế tài sản, Dư âm gương, Thử thách thần linh, Oán niệm và Ký ức cũ."
+    ]
+  },
+  {
     "id": "eb82dda9-5114-4916-b481-6f53cbe43dba",
     "updatedAt": "2026-10-06T10:59:59.000Z",
     "auditedAt": "2026-10-06T10:59:59.000Z",
