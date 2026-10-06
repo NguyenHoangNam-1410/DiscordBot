@@ -877,7 +877,7 @@ function monsterLootDetails(state) {
       : mimic === "blood_mimic"
         ? "SR 60% · SSR 40%"
         : "";
-  return `${E.backpack} **Rơi trang bị khi hạ quái:** **${percent(info.chance)}** · ${E.luck} **LUCK ${info.luck}** (chốt khi vào combat).\n**Khi có drop:** ${pool}. Tự nhặt 1 món vào run; đồ trùng tăng 1 level.\nTỷ lệ = 5% + LUCK × 0,5 điểm %, tối đa **20%**. Không chịu pity hòm hay hiệu ứng tìm SSR.${reward ? `\n**Thưởng riêng chắc chắn:** 1 món (${reward}), cộng thêm roll drop ở trên.` : ""}`;
+  return `${E.backpack} **Rơi trang bị khi hạ quái:** **${percent(info.chance)}** · ${E.luck} **LUCK ${info.luck}** (chốt khi vào combat).\n**Khi có drop:** ${pool}. Tự nhặt 1 món vào run; đồ trùng tăng 1 level.\nTỷ lệ = 1% + LUCK × 0,5 điểm %, tối đa **20%**. Không chịu pity hòm hay hiệu ứng tìm SSR.${reward ? `\n**Thưởng riêng chắc chắn:** 1 món (${reward}), cộng thêm roll drop ở trên.` : ""}`;
 }
 function rawEncounterDetails(s) {
   if (s.phase !== "encounter") return encounterText(s);
@@ -1759,7 +1759,7 @@ function ratesFields(category) {
       {
         name: `${E.backpack} Rơi trang bị từ quái`,
         value:
-          "Khi hạ quái: tỷ lệ drop = 5% + LUCK × 0,5 điểm %, tối đa 20%; chốt LUCK khi vào combat. Mỗi lần thành công nhận 1 món. Quái thường/Mimic thường: R 60% · SR 40%; Tinh anh: SR 60% · SSR 40%; Boss: SSR 60% · UR 40%. Boss cuối khu vực có rương không roll thêm đồ. Ancient/Blood Mimic giữ thưởng riêng chắc chắn và roll thêm drop theo LUCK. Không đổi pity hòm, không chịu hiệu ứng tìm SSR. Xem tỷ lệ trận hiện tại ở Chi tiết; đồ nhận ghi ở Lượt vừa rồi.",
+          "Khi hạ quái: tỷ lệ drop = 1% + LUCK × 0,5 điểm %, tối đa 20%; chốt LUCK khi vào combat. Mỗi lần thành công nhận 1 món. Quái thường/Mimic thường: R 60% · SR 40%; Tinh anh: SR 60% · SSR 40%; Boss: SSR 60% · UR 40%. Boss cuối khu vực có rương không roll thêm đồ. Ancient/Blood Mimic giữ thưởng riêng chắc chắn và roll thêm drop theo LUCK. Không đổi pity hòm, không chịu hiệu ứng tìm SSR. Xem tỷ lệ trận hiện tại ở Chi tiết; đồ nhận ghi ở Lượt vừa rồi.",
       },
       {
         name: `${E.backpack} Trang bị và bảo hiểm hòm`,

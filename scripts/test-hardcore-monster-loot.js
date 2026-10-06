@@ -77,14 +77,16 @@ function bounds(payload) {
 }
 try {
   for (const [luck, expected] of [
-    [0, 0.05],
-    [1, 0.055],
-    [10, 0.1],
-    [29, 0.195],
-    [30, 0.2],
+    [0, 0.01],
+    [1, 0.015],
+    [10, 0.06],
+    [29, 0.155],
+    [30, 0.16],
+    [37, 0.195],
+    [38, 0.2],
     [100000, 0.2],
-    [-5, 0.05],
-    [NaN, 0.05],
+    [-5, 0.01],
+    [NaN, 0.01],
   ])
     assert(Math.abs(loot.chance(luck) - expected) < 1e-12);
   groups.push("LUCK formula, invalid/negative inputs and 20% cap");
@@ -103,7 +105,7 @@ try {
       [0.999999, rarities[1]],
     ]) {
       const s = state(rank);
-      s.luck = 30;
+      s.luck = 38;
       s.encounter.hp = 0;
       assert.deepEqual(loot.odds(s).rarities, rarities);
       const rng = sequence([0.199999, roll]);
@@ -116,7 +118,7 @@ try {
   groups.push("rank pools, 60/40 boundaries, one roll per defeated monster");
 
   const failed = state();
-  failed.luck = 30;
+  failed.luck = 38;
   failed.encounter.hp = 0;
   const missed = sequence([0.2]);
   assert.equal(loot.roll(failed, failed.encounter, missed), null);
@@ -191,15 +193,15 @@ try {
   const locked = state();
   locked.luck = 10;
   const untouched = JSON.stringify(locked);
-  assert.equal(loot.odds(locked).chance, 0.1);
+  assert(Math.abs(loot.odds(locked).chance - 0.06) < 1e-12);
   bounds(view.privatePayload(locked, "test", "public", "encounter"));
   assert.equal(JSON.stringify(locked), untouched);
   core.prepareItemCombat(locked, () => 0.5);
   assert.equal(loot.odds(locked).luck, 10);
   locked.luck = 100;
-  assert.equal(loot.odds(locked).chance, 0.1);
+  assert(Math.abs(loot.odds(locked).chance - 0.06) < 1e-12);
   const loaded = core.normalize(JSON.parse(JSON.stringify(locked)));
-  assert.equal(loot.odds(loaded).chance, 0.1);
+  assert(Math.abs(loot.odds(loaded).chance - 0.06) < 1e-12);
   loaded.encounter.hp = 0;
   assert.equal(loot.roll(loaded, loaded.encounter, sequence([0.15])), null);
   const settled = core.normalize(JSON.parse(JSON.stringify(loaded)));
@@ -356,7 +358,7 @@ try {
   isolated.pityLegendary = 100;
   isolated.legendaryFind = 1;
   isolated.modifiers.unstable_rift = 100;
-  assert.equal(loot.odds(isolated).chance, 0.05);
+  assert.equal(loot.odds(isolated).chance, 0.01);
   assert.equal(core.legendaryChance(isolated), 0.35);
   groups.push(
     "monster drop remains independent of chest pity, SSR-find and Rift bonuses",

@@ -1,6 +1,6 @@
 "use strict";
 const world = require("../services/hardcoreWorld");
-const BASE_CHANCE = 0.05;
+const BASE_CHANCE = 0.01;
 const LUCK_PER_POINT = 0.005;
 const CAP = 0.2;
 const LOWER_RARITY_CHANCE = 0.6;
