@@ -1540,10 +1540,6 @@ function privatePayload(
         value:
           "Không gây sát thương, hồi **1 MP**. Lần phản công này: DEF ×2 khi nhận vật lý, +15 RES khi nhận phép, giảm thêm 15% sát thương, miễn Crit. Hết hiệu lực sau phản công.",
       },
-      {
-        name: "Sở trường class",
-        value: `Sức mạnh ×${balance.power(state)}. Áp dụng vào sức mạnh vật lý và phép từ thuộc tính/trang bị; dải sát thương đang hiển thị đã tính hệ số. HP, DEF, RES và chi phí MP giữ theo thuộc tính.`,
-      },
     );
   } else if (tab === "effects") {
     for (const [key, n] of Object.entries(state.modifiers).filter(
