@@ -59,17 +59,27 @@ const delta = (state, key, suffix = "") => {
     ? ` (${n > 0 ? "+" : ""}${key === "critChance" ? Math.round(n * 1000) / 10 : n}${suffix})`
     : "";
 };
-function statLine(s, changes = false, compact = false) {
+function statLine(s, changes = false, compact = false, options = {}) {
   const d = (key, suffix) => (changes ? delta(s, key, suffix) : "");
   const inverse = s.paradox?.kind === "inverse";
   const range = core.physicalRange(s);
-  const defense = inverse ? (s.damageMin + s.damageMax) / 2 : s.defense;
+  const defense =
+    (inverse ? (s.damageMin + s.damageMax) / 2 : s.defense) +
+    (options.effective &&
+    classShrineActive(s) &&
+    s.classKey === "barbarian" &&
+    s.hp <= s.maxHp * 0.3
+      ? 8
+      : 0);
+  const resistance = options.effective
+    ? core.effectiveResistance(s)
+    : s.resistance;
   const lines = [
     `${healthBar(s.hp, s.maxHp)}${d("hp")}${d("maxHp", " MAX")}`,
     `${E.str} **STR** **${s.str}**${d("str")}${STAT_SEPARATOR}${E.dex} **DEX** **${s.dex}**${d("dex")}${STAT_SEPARATOR}${E.vit} **VIT** **${s.vit}**${d("vit")}${STAT_SEPARATOR}${E.ene} **ENE** **${s.ene}**${d("ene")}`,
-    `${E.mana} **MP** **${s.mana}/${s.maxMana}**${d("mana")}${d("maxMana", " MAX")}${STAT_SEPARATOR}${E.potion} **Bình** ${s.potions}${d("potions")}${STAT_SEPARATOR}${E.ticket} **Vé** ${s.escapeTokens}${d("escapeTokens")}`,
+    `${E.mana} **MP** **${s.mana}/${s.maxMana}**${d("mana")}${d("maxMana", " MAX")}${options.includeSupplies === false ? "" : `${STAT_SEPARATOR}${E.potion} **Bình** ${s.potions}${d("potions")}${STAT_SEPARATOR}${E.ticket} **Vé** ${s.escapeTokens}${d("escapeTokens")}`}`,
     `${E.attack} **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")}${STAT_SEPARATOR}${E.magic} **Phép** **${s.spellMin}–${s.spellMax}**${d("spellMin")}`,
-    `${E.defense} **DEF** **${defense}**${inverse ? " (Paradox)" : d("defense")}${STAT_SEPARATOR}${E.res} **RES** **${s.resistance}%**${d("resistance")}${STAT_SEPARATOR}${E.luck} **LUCK** **${s.luck}**${d("luck")}`,
+    `${E.defense} **DEF** **${defense}**${inverse ? " (Paradox)" : d("defense")}${STAT_SEPARATOR}${E.res} **RES** **${resistance}%**${options.effective && resistance !== s.resistance ? ` (gốc ${s.resistance}%)` : d("resistance")}${STAT_SEPARATOR}${E.luck} **LUCK** **${s.luck}**${d("luck")}`,
   ];
   if (!compact)
     lines.push(
@@ -1180,11 +1190,11 @@ function rows(sessionId, state, disabled = false) {
   );
   return result;
 }
-function riftModifierText(key, count, state) {
+function riftStatBonus(key, count) {
   const stacks = world.effectiveStacks(count);
   const stat = (label, value) => `${highlightStat(label)} **${value}**`;
   const amount = (n) => (Math.round(n * 1000) / 1000).toLocaleString("vi-VN");
-  const bonus = {
+  return {
     stone_skin: stat(`${E.defense} DEF`, `+${amount(stacks * 8)}%`),
     elemental_dominion: `${stat(`${E.attack} DMG`, `+${amount(stacks * 3)}%`)}; ${E.magic} **Tỷ lệ đòn phép** **+${amount(stacks * 3)} điểm phần trăm** (quái đánh hỗn hợp)`,
     bloodlust: stat(`${E.attack} DMG`, `+${amount(stacks * 6)}%`),
@@ -1195,6 +1205,9 @@ function riftModifierText(key, count, state) {
       `−${amount(stacks * 3)} điểm phần trăm`,
     ),
   }[key];
+}
+function riftModifierText(key, count, state) {
+  const bonus = riftStatBonus(key, count);
   const icons = {
     "Max HP": E.hp,
     HP: E.hp,
@@ -1242,6 +1255,105 @@ function contractEffectText(state) {
       : "";
   return `${eventIcon("contract")} **Rift Contract** · còn **${c.remaining} tầng**${range}\n**Điều kiện:** không dùng ${action}.\n**Thưởng khi hoàn thành:** ${reward}. Vi phạm hủy thưởng.`;
 }
+
+function classShrineActive(state) {
+  return Boolean(
+    state.classShrine &&
+    state.floor >= state.classShrine.from &&
+    state.floor <= state.classShrine.until &&
+    !state.classShrine.consumed,
+  );
+}
+function paradoxEffectText(state) {
+  if (paradox.active(state)) return paradox.describe(state);
+  const p = state.paradox;
+  if (!p || state.floor < p.from || state.floor > p.until)
+    return `${eventIcon("paradox")} Rift Paradox: không`;
+  return `${eventIcon("paradox")} **Rift Paradox** · ${p.kind === "blood" ? `Máu là tiền · hệ số thưởng xu ${p.bloodFactor >= 0 ? "+" : ""}${percent(p.bloodFactor)}. Hồi HP tại checkpoint không giảm hệ số.` : "Ngược đời · vật lý lấy DEF, DEF lấy trung bình vật lý gốc."} · hết tầng ${p.until}`;
+}
+function riftStatSummary(state) {
+  const lines = [];
+  for (const [key, count] of Object.entries(state.modifiers || {})) {
+    if (count <= 0) continue;
+    const bonus = riftStatBonus(key, count);
+    if (bonus)
+      lines.push(
+        `${RIFT_ICONS[key] || E.rift} **${world.RIFT_MODIFIERS[key].name} ×${count}** · **${key === "cursed_ground" ? "Bạn" : "Quái"}:** ${bonus}${key === "bloodlust" ? " khi quái còn dưới 50% HP" : ""}.`,
+      );
+    if (key === "soul_drain") {
+      const charges = Math.min(3, Math.ceil(count / 4));
+      const remaining =
+        state.phase === "encounter" &&
+        state.encounter.type === "combat" &&
+        Number.isInteger(state.encounter.drainCharges)
+          ? ` · quái còn ${state.encounter.drainCharges} lần hút trong trận này`
+          : "";
+      lines.push(
+        `${RIFT_ICONS[key]} **Soul Drain ×${count}** · **Bạn:** ${E.mana} MP −1 mỗi phản công trúng; ${charges} lần/trận${remaining}.`,
+      );
+    }
+  }
+  const p = paradox.active(state);
+  if (p) {
+    const effects = [];
+    const outgoing = paradox.outgoing(state),
+      incoming = paradox.incoming(state, false);
+    if (outgoing !== 1)
+      effects.push(
+        `${E.attack} DMG gây ra ×${outgoing.toLocaleString("vi-VN")}`,
+      );
+    if (incoming !== 1)
+      effects.push(
+        `${E.attack} DMG vật lý nhận ×${incoming.toLocaleString("vi-VN")}`,
+      );
+    if (["inverted_armor", "inverted_magic"].includes(p.id))
+      effects.push(
+        `${E.res} RES khi nhận phép: ${state.resistance}% → **${core.effectiveResistance(state)}%** (đã tính Rift/Class Shrine)`,
+      );
+    if (paradox.hpCost(state))
+      effects.push(`Skill trừ ${E.hp} **${paradox.hpCost(state)} HP**`);
+    if (p.id === "mana_fracture" || p.id === "unstable_soul") {
+      const locked =
+        p.id !== "unstable_soul" || Number.isInteger(p.lockedSkillCost);
+      effects.push(
+        locked
+          ? `Skill tốn ${E.mana} **${core.skillManaCost(state)} MP**`
+          : `Chi phí ${E.mana} MP của Skill được chốt theo lượt`,
+      );
+      if (p.id === "mana_fracture")
+        effects.push(`Tấn công hồi ${E.mana} **0 MP**; Phòng thủ hồi **1 MP**`);
+    }
+    if (p.id === "hunger") {
+      effects.push(
+        `Bình hồi ${percent(state.potionRate)} → **${percent(paradox.potionRate(state))} Max HP**`,
+      );
+      effects.push(
+        `Hạ quái hồi ${E.hp} **${Math.max(1, Math.floor(state.maxHp * 0.12))} HP** cho bạn`,
+      );
+    }
+    if (p.id === "blood_mirror")
+      effects.push(
+        paradox.potionLocked(state)
+          ? "Đang khóa bình máu"
+          : "Được dùng bình máu",
+      );
+    if (p.id === "time_debt")
+      effects.push(
+        `Quái còn sống phản công **2 lần** ở hành động thứ 3 của bạn trong trận`,
+      );
+    lines.push(
+      `${paradoxIcon(p.id)} **${paradox.CATALOG[p.id].name} · Bạn:** ${effects.join(STAT_SEPARATOR) || "Không có bonus DMG ở lượt hiện tại."}`,
+    );
+  } else if (
+    state.paradox?.kind === "inverse" &&
+    state.floor >= state.paradox.from &&
+    state.floor <= state.paradox.until
+  )
+    lines.push(
+      `${eventIcon("paradox")} **Ngược đời · Bạn:** ${E.attack} Vật lý ${state.damageMin}–${state.damageMax} → **${core.physicalRange(state).join("–")}**; ${E.defense} DEF ${state.defense} → **${(state.damageMin + state.damageMax) / 2}**.`,
+    );
+  return lines.join("\n") || "Không có ảnh hưởng chỉ số từ Rift/Paradox.";
+}
 function privatePayload(
   state,
   sessionId,
@@ -1255,25 +1367,15 @@ function privatePayload(
   const e = new EmbedBuilder()
     .setColor(0x9b59b6)
     .setTitle(
-      `SINH TỒN v${state.releaseVersion} · ${{ stats: "CHỈ SỐ", items: "TRANG BỊ VÀ CÔNG DỤNG", effects: "RIFT & HIỆU ỨNG", encounter: "CHI TIẾT" }[tab] || "CHI TIẾT"}`,
+      `SINH TỒN v${state.releaseVersion} · ${{ stats: "CHỈ SỐ", items: "TÚI ĐỒ", effects: "RIFT & HIỆU ỨNG", encounter: "CHI TIẾT" }[tab] || "CHI TIẾT"}`,
     )
     .setDescription(
       `${stats.CLASSES[state.classKey].emoji} ${stats.CLASSES[state.classKey].name} · Tầng ${state.floor}`,
     );
   if (tab === "items") {
-    addTextFields(
-      e,
-      `${E.backpack} Tổng hợp trang bị (${state.items.length})`,
-      equipmentSummary(state) +
-        (state.classShrine &&
-        state.floor >= state.classShrine.from &&
-        state.floor <= state.classShrine.until
-          ? `\n${E.shrine} Class Shrine · hết sau tầng ${state.classShrine.until}`
-          : ""),
-    );
     e.addFields({
-      name: "Vật tư",
-      value: `${E.potion} ${state.potions} bình · hồi ${percent(paradox.potionRate(state))} Max HP, tối thiểu 20.\n${E.ticket} ${state.escapeTokens} vé thoát hiểm (tối đa 1); tự cứu khi bỏ chạy RNGesus thất bại.\n🎟️ Vé hồi sinh: ${state.reviveTickets || 0} · hồi 50% HP. 🙏 Cầu nguyện: ${percent(core.rngesusPrayerChance(state))}.${state.adventurerRescue ? `\n🤝 Lost Adventurer bảo hộ một lần đến tầng ${state.adventurerRescue.until}, dùng trước vé hồi sinh.` : ""}`,
+      name: "Vật tư & vé",
+      value: `${E.potion} Bình máu: **${state.potions}**${STAT_SEPARATOR}${E.ticket} Vé thoát hiểm: **${state.escapeTokens}**\n🎟️ Vé hồi sinh: **${state.reviveTickets || 0}**`,
     });
     for (const item of state.items.slice(page * 5, page * 5 + 5))
       e.addFields({
@@ -1287,8 +1389,36 @@ function privatePayload(
     if (!state.items.length)
       e.addFields({ name: `${E.backpack} Trang bị`, value: "Chưa có." });
   } else if (tab === "stats") {
+    addTextFields(
+      e,
+      "Chỉ số nhân vật",
+      statLine(state, false, false, {
+        includeSupplies: false,
+        effective: true,
+      }),
+    );
+    addTextFields(
+      e,
+      `${E.backpack} Tổng hợp trang bị (${state.items.length})`,
+      equipmentSummary(state),
+    );
+    addTextFields(
+      e,
+      `${E.rift} Ảnh hưởng Rift/Paradox đến chỉ số`,
+      riftStatSummary(state),
+    );
+    if (classShrineActive(state))
+      addTextFields(
+        e,
+        `${E.shrine} Class Shrine · Bạn`,
+        `${SHRINES[state.classKey]} Hết tầng ${state.classShrine.until}.`,
+      );
+    addTextFields(
+      e,
+      "Cầu nguyện & bảo hộ",
+      `🙏 Cầu nguyện RNGesus: **${percent(core.rngesusPrayerChance(state))}**${state.adventurerRescue ? `\n🤝 Lost Adventurer bảo hộ một lần đến tầng ${state.adventurerRescue.until}; dùng trước vé hồi sinh.` : ""}`,
+    );
     e.addFields(
-      { name: "Chỉ số", value: statLine(state) },
       {
         name: "Bốn thuộc tính",
         value:
@@ -1320,11 +1450,13 @@ function privatePayload(
         name: `${RIFT_ICONS[key] || E.rift} ${world.RIFT_MODIFIERS[key].name} ×${n}`,
         value: riftModifierText(key, n, state),
       });
-    addTextFields(
-      e,
-      "Hiệu ứng hiện hành",
-      `${paradox.active(state) ? paradox.describe(state) : ""}${paradox.active(state) ? "" : `\n${eventIcon("paradox")} Rift Paradox: ${state.paradox ? `${state.paradox.kind === "blood" ? `Máu là tiền (hồi HP tại checkpoint không giảm hệ số) · hệ số thưởng xu ${state.paradox.bloodFactor >= 0 ? "+" : ""}${percent(state.paradox.bloodFactor)}` : "Ngược đời · vật lý lấy DEF, DEF lấy trung bình vật lý gốc"} · hết tầng ${state.paradox.until}` : "không"}`}\nClass Shrine: ${state.classShrine ? `${SHRINES[state.classKey]} Hết tầng ${state.classShrine.until}.` : "không"}\n${contractEffectText(state)}\nPayout gốc ${money(core.rawPayout(state))} ${E.coin}; bonus Blood Paradox không dùng mua đồ.`,
-    );
+    if (!Object.values(state.modifiers).some((count) => count > 0))
+      e.addFields({
+        name: `${E.rift} Rift modifier`,
+        value: "Chưa có Rift modifier.",
+      });
+    addTextFields(e, "Rift Paradox", paradoxEffectText(state));
+    addTextFields(e, "Rift Contract", contractEffectText(state));
   } else {
     const detail = hasEncounterDetails(state)
       ? encounterDetails(state)

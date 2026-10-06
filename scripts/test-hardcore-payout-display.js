@@ -280,7 +280,7 @@ for (const [encounter, action, rate] of [
   assert.ok(log.includes(coin + " **Thưởng xu · "));
   const detail = view.privatePayload(old, "payout-test", "message", "effects");
   assert.ok(!JSON.stringify(detail).includes("undefined"));
-  assert.ok(JSON.stringify(detail).includes(coin));
+  assert.ok(!JSON.stringify(detail).includes("Payout gốc"));
   setApplicationEmojisForTest([]);
 }
 db.close();
