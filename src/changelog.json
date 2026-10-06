@@ -1,5 +1,16 @@
 [
   {
+    "id": "8381b823-2095-4410-8052-83f2b16228c2",
+    "updatedAt": "2026-10-06T15:52:39.757Z",
+    "auditedAt": "2026-10-06T15:52:39.757Z",
+    "title": "Làm rõ Purifier và kết quả giải nguyền",
+    "changes": [
+      "Purifier hiển thị ngay trên bảng chính tên, độ hiếm, cấp trang bị, từng lời nguyền sẽ gỡ và dự báo chỉ số trước sang sau, gồm sức chứa bình máu; in đậm kết quả sau.",
+      "Hiển thị số xu cần trả theo 10% payout gốc. Chi tiết liệt kê buff và nội tại giữ nguyên, điều kiện trả phí và ảnh hưởng của các trang bị còn nguyền khác.",
+      "Lượt vừa rồi ghi rõ trang bị đã giải, hiệu ứng đã gỡ và sức chứa bình thay đổi, tránh lặp dòng kết quả chung."
+    ]
+  },
+  {
     "id": "afceb3fd-4294-4066-8e6b-e1144955dfc5",
     "updatedAt": "2026-10-06T15:36:48.703Z",
     "auditedAt": "2026-10-06T15:36:48.703Z",

@@ -1980,7 +1980,17 @@ function actSurprise(state, session, action, rng) {
   } else if (k === "purifier") {
     charge(state, serviceCost(state, PURIFIER_COST_RATE));
     const target = itemById(e.targetId);
+    if (!target) throw new Error("NO_CURSE");
+    const purified = {
+      name: target.name,
+      rarity: target.rarity,
+      level: target.level,
+      curseLevels: Math.max(0, target.level - (target.cleansedLevels || 0)),
+      curseEffects: structuredClone(target.definition.curse?.effects || {}),
+      maxPotionsBefore: state.maxPotions,
+    };
     cleanse(state, target);
+    state.lastPurifiedItem = { ...purified, maxPotionsAfter: state.maxPotions };
     done(
       `✨ ${target.name}: giải toàn bộ lời nguyền; giữ UR, level, buff và nội tại.`,
     );
@@ -2345,6 +2355,7 @@ function act(state, session, action, rng) {
   delete state.lastDeathCause;
   state.lastReceivedItems = [];
   delete state.lastUpgrade;
+  delete state.lastPurifiedItem;
   delete state.lastEventResult;
   delete state.pendingEventResult;
   if (

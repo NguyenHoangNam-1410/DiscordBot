@@ -207,6 +207,7 @@ function itemEffectChanges(effects, beforeLevel, afterLevel) {
           ? label + " ×" + Math.pow(1 - value, level).toFixed(3)
           : effectText({ [key]: value }, level, { compactCurses: true });
       const before = describe(beforeLevel);
+      if (afterLevel === 0) return "- " + before + " → **Đã gỡ**";
       const after = describe(afterLevel);
       if (before === after) return "- " + after + " (không đổi)";
       const prefix = label + " ";
@@ -286,6 +287,89 @@ function blacksmithText(state, detailed = false) {
     );
   } else {
     lines.push("Xem **Chi tiết** để đọc nội tại và điều kiện rèn.");
+  }
+  return lines.join("\n");
+}
+function purifierText(state, detailed = false) {
+  const target = state.items.find(
+    (item) => item.definition.id === state.encounter.targetId,
+  );
+  const curseLevels = target
+    ? Math.max(0, target.level - (target.cleansedLevels || 0))
+    : 0;
+  if (!target?.definition.curse || !curseLevels)
+    return (
+      eventIcon("purifier") +
+      " **Purifier**\nTrang bị không còn lời nguyền cần giải. Chọn **Bỏ qua** để đi tiếp."
+    );
+  const preview = structuredClone(state);
+  preview.items.find(
+    (item) => item.definition.id === target.definition.id,
+  ).cleansedLevels = target.level;
+  stats.recompute(preview);
+  const changes = statTransitions(state, preview, true, { empty: true });
+  const capacity =
+    state.maxPotions !== preview.maxPotions
+      ? passiveIcon("potionCapacity") +
+        " **Sức chứa bình**: " +
+        state.maxPotions +
+        " → **" +
+        preview.maxPotions +
+        "**"
+      : "";
+  const lines = [
+    eventIcon("purifier") +
+      " **Purifier** · Giải toàn bộ lời nguyền của **1 trang bị**.",
+    E.backpack +
+      " **" +
+      target.name +
+      " [" +
+      rarityLabel(target.rarity) +
+      "] · Lv." +
+      target.level +
+      "**",
+    "**Lời nguyền sẽ gỡ · " +
+      curseLevels +
+      " cấp chưa giải:**\n" +
+      itemEffectChanges(target.definition.curse.effects, curseLevels, 0),
+  ];
+  const statChanges = [changes, capacity].filter(Boolean).join(STAT_SEPARATOR);
+  if (statChanges)
+    lines.push(
+      "**Chỉ số của bạn sau giải nguyền:**\n- " +
+        statChanges.split(STAT_SEPARATOR).join("\n- "),
+    );
+  lines.push(
+    "**Giữ nguyên:** độ hiếm " +
+      rarityLabel(target.rarity) +
+      ", Lv." +
+      target.level +
+      ", buff và nội tại.",
+    "**Giá:** " +
+      E.coin +
+      " **" +
+      money(core.serviceCost(state, core.PURIFIER_COST_RATE)) +
+      " xu** (" +
+      percent(core.PURIFIER_COST_RATE) +
+      " payout gốc).",
+  );
+  if (detailed) {
+    const buffs = Object.fromEntries(
+      Object.entries(target.definition.effects).filter(
+        ([key]) => !["heal", "potions", "escapeTokens"].includes(key),
+      ),
+    );
+    if (Object.keys(buffs).length)
+      lines.push("**Buff giữ nguyên:** " + effectText(buffs, target.level));
+    const passive = passiveText(target.definition).trim();
+    if (passive) lines.push("**Nội tại giữ nguyên:**\n" + passive);
+    lines.push(
+      "Không nhận lại HP hồi, bình máu hoặc vé khi nhặt đồ. Nguyền của trang bị khác vẫn còn hiệu lực. Cần đủ payout gốc để trả phí. **Bỏ qua:** giữ nguyên trang bị và payout.",
+    );
+  } else {
+    lines.push(
+      "Xem **Chi tiết** để đọc buff, nội tại và điều kiện giải nguyền.",
+    );
   }
   return lines.join("\n");
 }
@@ -801,6 +885,7 @@ function encounterText(s) {
     return `${eventIcon("empty")} Phòng trống. Đi tiếp hoặc rút thưởng.`;
   const k = e.kind;
   if (k === "blacksmith") return blacksmithText(s, true);
+  if (k === "purifier") return purifierText(s, true);
   if (k.endsWith("_shop"))
     return `${eventIcon(e.kind)} **${e.name}** · mua tối đa **một món**. Giá và offer đã khóa.\n${e.offers.map((offer, i) => `**${i + 1}. ${offer.item.name} [${rarityLabel(offer.item.rarity)}] · ${shopPrice(k, offer)}**\n${itemText(offer.item)}`).join("\n")}\n${k === "blood_shop" ? "Giảm Max HP trong suốt run; phải còn ít nhất 1 Max HP sau trả giá. HP hiện tại chỉ hạ xuống nếu vượt Max HP mới." : k === "diamond_shop" ? "Kim cương bị trừ ngay khi mua, kể cả run sau đó tử trận." : "Chi phí lấy từ payout gốc; không dùng bonus Paradox để mua."}`;
   if (k === "merchant")
@@ -827,7 +912,6 @@ function encounterText(s) {
   }
   const descriptions = {
     healer: `**Hồi phục:** hồi ${E.hp} HP bằng 30% Max HP, ít nhất 20; +1 ${E.potion} bình máu (theo giới hạn bình của bạn). Miễn phí.`,
-    purifier: `Trả **${percent(core.PURIFIER_COST_RATE)} payout gốc**: gỡ **toàn bộ lời nguyền** của **${target?.name}**, giữ nguyên UR, buff, level và nội tại.`,
     sacrifice: `**Hiến HP:** mất tối đa 20% Max ${E.hp} HP (giữ ≥1) → +6 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\n**Hiến payout:** trả 10% payout → +6 ${E.vit} VIT. Hiến HP không cộng bonus Blood Paradox.`,
     contract: `Trong 3 tầng, chọn một điều kiện:\n- **Không dùng ${E.potion} bình:** nhận đồ [SSR].\n- **Không dùng skill:** bonus +50% cược.\n- **Không phòng thủ:** +10 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\nVi phạm chỉ hủy thưởng.`,
     class_shrine: `Hiệu lực ba tầng tiếp theo: ${SHRINES[s.classKey]}`,
@@ -865,6 +949,7 @@ function encounterSummary(s) {
   if (e.type === "surprise" && e.kind === "merchant") return encounterText(s);
   if (e.type === "surprise" && e.kind === "blacksmith")
     return blacksmithText(s);
+  if (e.type === "surprise" && e.kind === "purifier") return purifierText(s);
   if (hasEncounterDetails(s)) {
     const notices = {
       chest: e.revealed
@@ -1026,6 +1111,31 @@ function rawEncounterDetails(s) {
 }
 function turnText(state) {
   const details = [];
+  const purified = state.lastPurifiedItem;
+  if (purified) {
+    details.push(
+      eventIcon("purifier") +
+        " **Đã giải nguyền:** " +
+        E.backpack +
+        " **" +
+        purified.name +
+        " [" +
+        rarityLabel(purified.rarity) +
+        "] · Lv." +
+        purified.level +
+        "**\n" +
+        itemEffectChanges(purified.curseEffects, purified.curseLevels, 0),
+    );
+    if (purified.maxPotionsBefore !== purified.maxPotionsAfter)
+      details.push(
+        passiveIcon("potionCapacity") +
+          " **Sức chứa bình**: " +
+          purified.maxPotionsBefore +
+          " → **" +
+          purified.maxPotionsAfter +
+          "**",
+      );
+  }
   const received = state.lastReceivedItems || [];
   const receivedTitles = received.map(
     (item) =>
@@ -1128,6 +1238,11 @@ function turnText(state) {
       );
   }
   const lines = (state.lastLog || "Run bắt đầu.").split("\n").filter((line) => {
+    if (
+      purified &&
+      line.startsWith("✨ " + purified.name + ": giải toàn bộ lời nguyền;")
+    )
+      return false;
     // Older sessions still carry the simple item receipt in lastLog.
     const plain = line
       .replace(/<a?:\w+:\d+>/g, "")
