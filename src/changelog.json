@@ -1,5 +1,16 @@
 [
   {
+    "id": "afceb3fd-4294-4066-8e6b-e1144955dfc5",
+    "updatedAt": "2026-10-06T15:36:48.703Z",
+    "auditedAt": "2026-10-06T15:36:48.703Z",
+    "title": "RNGesus tăng tỷ lệ đều, bỏ spike",
+    "changes": [
+      "Bỏ spike và biến động ngẫu nhiên của tỷ lệ gặp RNGesus. Bắt đầu từ 0,30%, tăng cố định 0,05 điểm phần trăm sau mỗi tầng có roll nhưng không gặp, tối đa 12%; áp dụng cả ván mới và ván cũ.",
+      "Gặp RNGesus thì reset bộ đếm. Tầng ngay sau khi vượt vẫn an toàn 0%, lần roll hợp lệ tiếp theo bắt đầu lại ở 0,30%. Tầng boss và tầng bị chặn không tăng bộ đếm.",
+      "Đồng bộ luật chơi và mô tả Chaos theo cơ chế mới; tỷ lệ bỏ chạy và vé cầu nguyện tiếp tục theo trạng thái của ván."
+    ]
+  },
+  {
     "id": "be10819a-c590-4332-849d-2cf1a990a800",
     "updatedAt": "2026-10-06T15:15:38.409Z",
     "auditedAt": "2026-10-06T15:15:38.409Z",

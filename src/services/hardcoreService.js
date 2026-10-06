@@ -553,23 +553,11 @@ function makeChest(state, treasure = false) {
 }
 
 function rollRngesus(state, rolls = {}) {
-  const base = rngesusEncounterChance(state);
-  if (!base) {
-    state.lastChaosChance = 0;
-    state.lastChaosSpike = false;
-    return false;
-  }
-  const volatilityRoll = rolls.volatilityRoll ?? randomFloat();
-  const spikeRoll = rolls.spikeRoll ?? randomFloat();
-  const severityRoll = rolls.severityRoll ?? randomFloat();
-  const encounterRoll = rolls.encounterRoll ?? randomFloat();
-  const volatility = 0.25 + volatilityRoll * 2.75;
-  const heat = Math.min(0.025, (state.rngesusDry || 0) * 0.0005);
-  const spike = spikeRoll < 0.025 ? 0.04 + severityRoll * 0.06 : 0;
-  const chance = clamp(base * volatility + heat + spike, 0, 0.12);
-  const hit = encounterRoll < chance;
+  const chance = rngesusEncounterChance(state);
   state.lastChaosChance = chance;
-  state.lastChaosSpike = spike > 0;
+  state.lastChaosSpike = false;
+  if (!chance) return false;
+  const hit = (rolls.encounterRoll ?? randomFloat()) < chance;
   state.rngesusDry = hit ? 0 : (state.rngesusDry || 0) + 1;
   return hit;
 }

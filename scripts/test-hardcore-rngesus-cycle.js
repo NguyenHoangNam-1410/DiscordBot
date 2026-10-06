@@ -17,14 +17,14 @@ const { ratesEmbed } = require("../src/commands/hardcore");
 
 assert.deepEqual(
   [1, 4, 5, 9, 10, 19, 20, 999].map(policy.rngesusChance),
-  [0, 0, 0.003, 0.003, 0.006, 0.006, 0.01, 0.01],
+  [0, 0, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003],
 );
 assert.deepEqual(
   [1, 4, 5, 9, 10, 19, 20, 999].map((floor) =>
     policy.rngesusEncounterChance({ floor }),
   ),
-  [0, 0, 0.003, 0.003, 0.006, 0.006, 0.01, 0.01],
-  "old saves without the new field retain the initial curve until they survive RNGesus",
+  [0, 0, 0.003, 0.003, 0.003, 0.003, 0.003, 0.003],
+  "old saves without the reset boundary start at the fixed initial rate",
 );
 for (const anchor of [6, 77, 197, 900]) {
   const state = {
@@ -53,9 +53,9 @@ for (const anchor of [6, 77, 197, 900]) {
     [1, 0],
     [2, 0.003],
     [6, 0.003],
-    [7, 0.006],
-    [16, 0.006],
-    [17, 0.01],
+    [7, 0.003],
+    [16, 0.003],
+    [17, 0.003],
   ]) {
     state.floor = anchor + distance;
     assert.equal(
@@ -71,17 +71,11 @@ assert.equal(
   "minimum initial floor remains five",
 );
 
-// Both engines bypass ALL randomness on the adjacent floor, even with extreme heat/spike rolls.
+// Both engines bypass randomness on the adjacent floor and use the same fixed increments.
 for (const version of ["v1", "v2"]) {
-  const roll = (state, values = [0.5, 0.5, 0.999]) => {
-    if (version === "v1")
-      return service.rollRngesus(state, {
-        volatilityRoll: values[0],
-        spikeRoll: values[1],
-        severityRoll: 0.999,
-        encounterRoll: values[2],
-      });
-    return core.rollRngesus(state, () => values.shift() ?? 0.999);
+  const roll = (state, encounterRoll = 0.999) => {
+    if (version === "v1") return service.rollRngesus(state, { encounterRoll });
+    return core.rollRngesus(state, () => encounterRoll);
   };
   const safe = {
     floor: 78,
@@ -99,23 +93,23 @@ for (const version of ["v1", "v2"]) {
       }),
       false,
     );
-    assert.equal(draws, 0, "cooldown must not sample a spike");
-  } else assert.equal(roll(safe, [0, 0, 0]), false);
+    assert.equal(draws, 0, "cooldown must not draw randomness");
+  } else assert.equal(roll(safe, 0), false);
   assert.equal(safe.lastChaosChance, 0);
   assert.equal(safe.lastChaosSpike, false);
   assert.equal(safe.rngesusDry, 1000, "suppressed floor does not add heat");
   const growing = { floor: 79, rngesusResetFloor: 77, rngesusDry: 0 };
   roll(growing);
-  assert(Math.abs(growing.lastChaosChance - 0.003 * 1.625) < 1e-12);
+  assert(Math.abs(growing.lastChaosChance - 0.003) < 1e-12);
   assert.equal(growing.rngesusDry, 1);
   growing.floor++;
   roll(growing);
   assert(
-    Math.abs(growing.lastChaosChance - (0.003 * 1.625 + 0.0005)) < 1e-12,
+    Math.abs(growing.lastChaosChance - (0.003 + 0.0005)) < 1e-12,
     "dry heat grows at the original 0.05 percentage points",
   );
   const hit = { floor: 79, rngesusResetFloor: 77, rngesusDry: 2 };
-  assert(roll(hit, [0.5, 0.5, 0]));
+  assert(roll(hit, 0));
   assert.equal(hit.rngesusDry, 0);
   assert.equal(
     hit.rngesusResetFloor,
@@ -124,21 +118,20 @@ for (const version of ["v1", "v2"]) {
   );
 }
 
-// Show the exact encounter roll (including volatility, dry streak and spikes), not the base curve.
+// Show the fixed chance used to lock each encounter, including the rate cap.
 {
   const stats = require("../src/services/hardcoreStats");
   const view = require("../src/services/hardcoreV2View");
-  for (const [draws, expected, label] of [
-    [[0.5, 0.5, 0], 0.003 * 1.625 + 0.001, "RNGesus (0,59%)"],
-    [[0.5, 0, 0.5, 0], 0.003 * 1.625 + 0.001 + 0.07, "RNGesus (7,59%)"],
+  for (const [dry, expected, label] of [
+    [2, 0.004, "RNGesus (0,4%)"],
+    [1000, 0.12, "RNGesus (12%)"],
   ]) {
     const state = stats.createState("barbarian", 10);
-    Object.assign(state, { floor: 6, cleared: 5, rngesusDry: 2 });
-    const rolls = [...draws];
+    Object.assign(state, { floor: 6, cleared: 5, rngesusDry: dry });
     state.encounter = core.generateEncounter(
       state,
       { guild_id: "ui", user_id: "ui" },
-      () => rolls.shift() ?? 0.5,
+      () => 0,
     );
     assert.equal(state.encounter.type, "rngesus");
     assert.ok(Math.abs(state.encounter.encounterChance - expected) < 1e-12);
@@ -338,8 +331,8 @@ assert.equal(
 const cycleField = ratesFields("rngesus").find((field) =>
   field.name.includes("Chu kỳ"),
 );
-assert(cycleField.value.includes("0,3% trong 5 tầng"));
-assert(cycleField.value.includes("Tầng ngay sau đó: **0%**"));
+assert(cycleField.value.includes("0,05 điểm %"));
+assert(cycleField.value.includes("F+1 chắc chắn **0%**"));
 for (const version of ["legacy", "2"]) {
   process.env.HARDCORE_GAMEPLAY_VERSION = version;
   const embed = ratesEmbed("rngesus").toJSON();
@@ -357,5 +350,5 @@ for (const version of ["legacy", "2"]) {
 }
 db.close();
 console.log(
-  "RNGesus cycle passed: initial odds, slow restart, no adjacent encounters, all survival/revival paths, checkpoint resume, persistence and legacy runs.",
+  "RNGesus cycle passed: fixed rate, steady increments, reset, no adjacent encounters, all survival/revival paths, checkpoint resume, persistence and legacy runs.",
 );

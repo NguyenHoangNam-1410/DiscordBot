@@ -470,7 +470,7 @@ function chaosLabel(state) {
   if (!chance) return `${icon("large_green_circle")} Chaos: Yên`;
   if (chance < 0.01) return `${icon("large_green_circle")} Chaos: Thấp`;
   if (chance < 0.03) return `${icon("large_yellow_circle")} Chaos: Bất ổn`;
-  return `${icon("red_circle")} Chaos: NGUY HIỂM${state.lastChaosSpike ? " · SPIKE" : ""}`;
+  return `${icon("red_circle")} Chaos: NGUY HIỂM`;
 }
 function signed(value, percent = false) {
   const amount = percent ? Math.round(value * 100) : value;

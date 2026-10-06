@@ -937,23 +937,10 @@ function makeSurprise(state, rng, kind = null) {
   return itemPassives.prepareForecast(state, e, rng);
 }
 function rollRngesus(state, rng) {
-  const base = rngesusEncounterChance(state);
-  if (!base) {
-    state.lastChaosChance = 0;
-    state.lastChaosSpike = false;
-    return false;
-  }
-  const volatility = 0.25 + rng() * 2.75,
-    spike = rng() < 0.025;
-  const chance = clamp(
-    base * volatility +
-      (state.rngesusDry || 0) * 0.0005 +
-      (spike ? 0.04 + rng() * 0.06 : 0),
-    0,
-    0.12,
-  );
+  const chance = rngesusEncounterChance(state);
   state.lastChaosChance = chance;
-  state.lastChaosSpike = spike;
+  state.lastChaosSpike = false;
+  if (!chance) return false;
   const hit = rng() < chance;
   state.rngesusDry = hit ? 0 : (state.rngesusDry || 0) + 1;
   return hit;

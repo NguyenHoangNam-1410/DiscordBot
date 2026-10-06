@@ -446,14 +446,11 @@ function auditMechanics() {
   auditRiftModifiers();
   assert.deepEqual(
     [4, 5, 10, 20].map(hardcore.rngesusChance),
-    [0, 0.003, 0.006, 0.01],
+    [0, 0.003, 0.003, 0.003],
   );
   const chaos = { ...stateFor(), floor: 20, rngesusDry: 1000 };
   assert(
     hardcore.rollRngesus(chaos, {
-      volatilityRoll: 1,
-      spikeRoll: 0,
-      severityRoll: 1,
       encounterRoll: 0,
     }),
   );
@@ -461,9 +458,6 @@ function auditMechanics() {
   assert.equal(chaos.rngesusDry, 0);
   assert(
     !hardcore.rollRngesus(chaos, {
-      volatilityRoll: 1,
-      spikeRoll: 0,
-      severityRoll: 1,
       encounterRoll: 0.12,
     }),
   );
