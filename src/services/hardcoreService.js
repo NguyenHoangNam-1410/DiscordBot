@@ -14,6 +14,7 @@ const {
 } = require("discord.js");
 const emoji = require("../discordEmojiMap");
 const { appEmoji } = require("../utils/appEmoji");
+const { E } = require("./hardcoreIcons");
 const icon = (key, fallback) => appEmoji(key, emoji[`:${key}:`] || fallback);
 const { formatCoins } = require("../utils/economy");
 const { db } = require("../db");
@@ -245,7 +246,7 @@ const FALLBACK_ITEMS = Object.freeze({
       escapeTokens: 1,
       maxHp: 15,
       heal: 15,
-      text: "+15 HP, nhận 1 Vé Thoát Hiểm",
+      text: "+15 HP, nhận 1 Vé thoát",
     },
     {
       name: "The Last Bad Decision",
@@ -2808,7 +2809,7 @@ const actionTx = db.transaction(
             grantEscapeTickets(state, 1);
             completeFloor(
               state,
-              "🎫 Người lữ hành trao **1 Vé Thoát Hiểm**. Vé tự dùng nếu chạy khỏi RNGesus thất bại.",
+              `${E.ticket} Người lữ hành trao **1 Vé thoát**. Vé tự dùng nếu chạy khỏi RNGesus thất bại.`,
               0,
             );
           } else if (event.kind === "cache") {
@@ -2894,13 +2895,13 @@ const actionTx = db.transaction(
             state.escapeTokens -= 1;
             completeFloor(
               state,
-              "🎫 Chạy thất bại! Tự dùng **1 Vé Thoát Hiểm** để cứu bạn khỏi RNGesus và đi tiếp.",
+              `${E.ticket} Chạy thất bại! Tự dùng **1 Vé thoát** để cứu bạn khỏi RNGesus và đi tiếp.`,
               0,
             );
           } else
             completeFloor(
               state,
-              "🏃 Bạn thoát khỏi RNGesus với đôi chân run rẩy; giữ lại Vé Thoát Hiểm.",
+              "🏃 Bạn thoát khỏi RNGesus với đôi chân run rẩy; giữ lại Vé thoát.",
               0,
             );
         } else if (action === "bribe") {
@@ -2937,7 +2938,7 @@ const actionTx = db.transaction(
           state.escapeTokens -= 1;
           completeFloor(
             state,
-            "🎫 Dùng một Vé Thoát Hiểm, vượt tầng an toàn.",
+            `${E.ticket} Dùng một Vé thoát, vượt tầng an toàn.`,
             0,
           );
         } else throw new Error("INVALID_ACTION");
@@ -2951,7 +2952,7 @@ const actionTx = db.transaction(
         };
 
       if (state.lastDiscardedEscapeTokens)
-        state.lastLog += `\n🎫 Chỉ giữ tối đa 1 Vé Thoát Hiểm; bỏ ${state.lastDiscardedEscapeTokens} vé nhận thêm.`;
+        state.lastLog += `\n${E.ticket} Chỉ giữ tối đa 1 Vé thoát; bỏ ${state.lastDiscardedEscapeTokens} vé nhận thêm.`;
       delete state.lastDiscardedEscapeTokens;
       state.lastStatChanges = statChanges(state, before);
       // Persist cleared floors immediately; deaths and session cleanup must not erase milestones.
@@ -3321,7 +3322,7 @@ async function handleHardcoreButton(rawInteraction, logger) {
                               : error.message === "INSUFFICIENT_HP"
                                 ? "HP hiện tại chưa đủ cho lựa chọn này."
                                 : error.message === "NO_TICKET"
-                                  ? "Bạn không còn Vé Thoát Hiểm."
+                                  ? "Bạn không còn Vé thoát."
                                   : "Không thể thực hiện lựa chọn này.";
         return interaction.followUp({ content, flags: MessageFlags.Ephemeral });
       }

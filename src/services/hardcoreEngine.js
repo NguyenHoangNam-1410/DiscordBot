@@ -257,7 +257,7 @@ const SURPRISE_EVENTS = Object.freeze({
   },
   horadric: {
     name: "Horadric Forge",
-    text: "Mất 1 level trang bị và buff của level đó; món Lv.1 sẽ biến mất. Giữ các level còn lại, gỡ cả lời nguyền của level bị nghiền. Chọn nhận đúng 1 bonus: +3 ATK, +4 DEF, +10 MAX HP và hồi 10 HP, hoặc 1 Vé Thoát Hiểm nếu nghiền SSR/UR.",
+    text: "Mất 1 level trang bị và buff của level đó; món Lv.1 sẽ biến mất. Giữ các level còn lại, gỡ cả lời nguyền của level bị nghiền. Chọn nhận đúng 1 bonus: +3 ATK, +4 DEF, +10 MAX HP và hồi 10 HP, hoặc 1 Vé thoát nếu nghiền SSR/UR.",
   },
   merchant: {
     name: "Rift Merchant",
@@ -298,7 +298,7 @@ const MERCHANT_OFFERS = Object.freeze({
   heal: { label: "Hồi đầy HP", rate: 0.08 },
   luck: { label: "+1 LUCK", rate: 0.1 },
   item: { label: "Item SR", rate: 0.15 },
-  ticket: { label: "+1 Vé", rate: 0.25 },
+  ticket: { label: "+1 Vé thoát", rate: 0.25 },
 });
 function surpriseOptions(state) {
   const event = state.encounter;
@@ -357,7 +357,7 @@ function surpriseOptions(state) {
         option("event_grind_hp", "Đổi 1 level → +10 MAX HP / hồi 10"),
         option(
           "event_grind_ticket",
-          "Đổi 1 level → +1 Vé",
+          "Đổi 1 level → +1 Vé thoát",
           !["legendary", "cursed"].includes(event.targetRarity),
         ),
       ];

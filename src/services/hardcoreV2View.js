@@ -91,7 +91,7 @@ function statLine(s, changes = false, compact = false, options = {}) {
   const lines = [
     `${healthBar(s.hp, s.maxHp)}${d("hp")}${d("maxHp", " MAX")}`,
     `${E.str} **STR** **${s.str}**${d("str")}${STAT_SEPARATOR}${E.dex} **DEX** **${s.dex}**${d("dex")}${STAT_SEPARATOR}${E.vit} **VIT** **${s.vit}**${d("vit")}${STAT_SEPARATOR}${E.ene} **ENE** **${s.ene}**${d("ene")}`,
-    `${E.mana} **MP** **${s.mana}/${s.maxMana}**${d("mana")}${d("maxMana", " MAX")}${options.includeSupplies === false ? "" : `${STAT_SEPARATOR}${E.potion} **Bình** ${s.potions}${d("potions")}${STAT_SEPARATOR}${E.ticket} **Vé** ${s.escapeTokens}${d("escapeTokens")}`}`,
+    `${E.mana} **MP** **${s.mana}/${s.maxMana}**${d("mana")}${d("maxMana", " MAX")}${options.includeSupplies === false ? "" : `${STAT_SEPARATOR}${E.potion} **Bình** ${s.potions}${d("potions")}${STAT_SEPARATOR}${E.ticket} **Vé thoát** ${s.escapeTokens}${d("escapeTokens")}`}`,
     `${E.attack} **Vật lý** **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")}${STAT_SEPARATOR}${E.magic} **Phép** **${s.spellMin}–${s.spellMax}**${d("spellMin")}`,
     `${E.defense} **DEF** **${defense}**${inverse ? " (Paradox)" : d("defense")}${STAT_SEPARATOR}${E.res} **RES** **${resistance}%**${options.effective && resistance !== s.resistance ? ` (gốc ${s.resistance}%)` : d("resistance")}${STAT_SEPARATOR}${E.luck} **LUCK** **${s.luck}**${d("luck")}`,
   ];
@@ -115,7 +115,7 @@ function battleStats(s) {
     necromancer: "Phép luôn trúng, không Crit; chặn phản công.",
     paladin: "Vật lý, có thể trượt/Crit; tự Phòng thủ.",
   }[s.classKey];
-  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${s.maxMana}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé** **${s.escapeTokens}**\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${core.effectiveResistance(s)}%**${core.effectiveResistance(s) !== s.resistance ? ` (gốc ${s.resistance}%)` : ""}\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""}): ${skill.low}–${skill.high} DMG**\n${detail}\n`;
+  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${s.maxMana}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé thoát** **${s.escapeTokens}**\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${core.effectiveResistance(s)}%**${core.effectiveResistance(s) !== s.resistance ? ` (gốc ${s.resistance}%)` : ""}\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""}): ${skill.low}–${skill.high} DMG**\n${detail}\n`;
 }
 function effectText(effects, level = 1, { compactCurses = false } = {}) {
   const percentages = [
@@ -146,7 +146,7 @@ function effectText(effects, level = 1, { compactCurses = false } = {}) {
         if (key === "potions")
           return `${E.potion} **Bình máu** +${value} khi nhận mỗi cấp`;
         if (key === "escapeTokens")
-          return `${E.ticket} **Vé** +${value} khi nhận mỗi cấp (giữ tối đa 1)`;
+          return `${E.ticket} **Vé thoát** +${value} khi nhận mỗi cấp (giữ tối đa 1)`;
         if (key === "heal")
           return `${E.hp} **HP** +${value} (hồi khi nhận mỗi cấp)`;
         const n = value * level;
@@ -227,9 +227,9 @@ function merchantOffer(offer) {
         icon: E.luck,
       },
       ticket: {
-        name: `${E.ticket} Vé RNGesus`,
-        detail: `+1 ${E.ticket} vé (giữ tối đa 1); tự cứu khi bỏ chạy RNGesus thất bại.`,
-        button: "Vé RNGesus",
+        name: `${E.ticket} Vé thoát`,
+        detail: `${E.ticket} **Vé thoát +1** (tối đa 1); tự dùng khi bỏ chạy RNGesus thất bại.`,
+        button: "Vé thoát",
         icon: E.ticket,
       },
       chest: {
@@ -369,7 +369,7 @@ function randomEventText(s) {
             ? [
                 [
                   percent(1 - chance),
-                  `Tự dùng 1 ${E.ticket} vé nếu có; hết vé thì chết.`,
+                  `Tự dùng ${E.ticket} **Vé thoát ×1** nếu còn; hết vé thì tử trận.`,
                 ],
               ]
             : []),
@@ -381,7 +381,7 @@ function randomEventText(s) {
           ],
           [
             percent(1 - (e.prayerChance ?? core.rngesusPrayerChance(s))),
-            "Tử trận; Lost Adventurer hoặc vé hồi sinh cứu nếu còn.",
+            `Tử trận; Lost Adventurer hoặc ${E.reviveTicket} **Vé hồi sinh** cứu nếu còn.`,
           ],
         ]),
         "**Hối lộ:** cần payout ≥1.000 xu, mất 40% payout để thoát. **Đánh:** chết.",
@@ -645,7 +645,7 @@ function statTransitions(
       ["mana", `${E.mana} MP`],
       ["luck", `${E.luck} LUCK`],
       ["potions", `${E.potion} Bình máu`],
-      ["escapeTokens", `${E.ticket} Vé thoát hiểm`],
+      ["escapeTokens", `${E.ticket} Vé thoát`],
     ])
       add(label, [key], (s) => s[key]);
   }
@@ -716,7 +716,7 @@ function encounterText(s) {
     const guard = e.forgeStat || "str";
     const hasCurse =
       target.level > (target.cleansedLevels || 0) && target.definition.curse;
-    return `${eventIcon(k)} **HORADRIC FORGE · LÒ CHUYỂN HÓA**\nTiêu hao **1 level trang bị** để giữ hiệu ứng có lợi trong run và chọn thêm một phần thưởng. Không tốn xu.\n\n**${E.backpack} Trang bị dùng để chuyển hóa**\n${E.backpack} **${target.name} [${rarityLabel(target.rarity)}] · Lv.${target.level}**\n- Sau khi dùng: ${target.level === 1 ? "món này biến mất khỏi trang bị" : `level **${target.level}→${target.level - 1}**`}.\n- **Giữ nguyên hiệu ứng của level đã tiêu hao:** ${effectText(retained)}. Đây là hiệu ứng được giữ lại, không cộng thêm lần nữa.\n${hasCurse ? `- **Xóa lời nguyền của 1 level:** ${effectText(target.definition.curse.effects)}.\n` : ""}- Không nhận lại ${E.potion} bình máu, ${E.ticket} vé hoặc ${E.hp} HP hồi khi nhặt đồ.\n\n**Chọn một phần thưởng thêm**\n- ${E[main]} **${main.toUpperCase()} +6**.\n- ${E[guard]} **${guard.toUpperCase()} +7**.\n- ${E.vit} **VIT +4**.${["legendary", "cursed"].includes(target.rarity) ? `\n- ${E.ticket} **Nhận 1 vé thoát hiểm** (giữ tối đa 1).` : ""}\n\n**Bỏ qua:** giữ nguyên trang bị, không nhận phần thưởng.`;
+    return `${eventIcon(k)} **HORADRIC FORGE · LÒ CHUYỂN HÓA**\nTiêu hao **1 level trang bị** để giữ hiệu ứng có lợi trong run và chọn thêm một phần thưởng. Không tốn xu.\n\n**${E.backpack} Trang bị dùng để chuyển hóa**\n${E.backpack} **${target.name} [${rarityLabel(target.rarity)}] · Lv.${target.level}**\n- Sau khi dùng: ${target.level === 1 ? "món này biến mất khỏi trang bị" : `level **${target.level}→${target.level - 1}**`}.\n- **Giữ nguyên hiệu ứng của level đã tiêu hao:** ${effectText(retained)}. Đây là hiệu ứng được giữ lại, không cộng thêm lần nữa.\n${hasCurse ? `- **Xóa lời nguyền của 1 level:** ${effectText(target.definition.curse.effects)}.\n` : ""}- Không nhận lại ${E.potion} bình máu, ${E.ticket} Vé thoát hoặc ${E.hp} HP hồi khi nhặt đồ.\n\n**Chọn một phần thưởng thêm**\n- ${E[main]} **${main.toUpperCase()} +6**.\n- ${E[guard]} **${guard.toUpperCase()} +7**.\n- ${E.vit} **VIT +4**.${["legendary", "cursed"].includes(target.rarity) ? `\n- ${E.ticket} **Nhận 1 vé thoát** (giữ tối đa 1).` : ""}\n\n**Bỏ qua:** giữ nguyên trang bị, không nhận phần thưởng.`;
   }
   const descriptions = {
     healer: `**Hồi phục:** hồi ${E.hp} HP bằng 30% Max HP, ít nhất 20; +1 ${E.potion} bình máu (theo giới hạn bình của bạn). Miễn phí.`,
@@ -1105,12 +1105,16 @@ function embed(state, userId, result = null, sessionId = null) {
     });
   const protections = [
     ...(state.prayerBoost
-      ? ["🙏 Cầu nguyện RNGesus **60%** trong toàn run"]
+      ? [`${E.prayerTicket} **Vé cầu nguyện ×1** · RNGesus **60%**`]
       : []),
-    ...(state.reviveTickets ? ["🎟️ **1** vé hồi sinh · 50% HP"] : []),
+    ...(state.reviveTickets
+      ? [
+          `${E.reviveTicket} **Vé hồi sinh ×${state.reviveTickets}** · ${E.hp} **HP 50%**`,
+        ]
+      : []),
   ];
   if (protections.length)
-    e.addFields({ name: "Vé mang theo", value: protections.join("\n") });
+    e.addFields({ name: "Vé", value: protections.join("\n") });
   addTextFields(
     e,
     state.encounter.type === "combat" ? `${E.attack} Đối thủ` : "⚠️ Tình huống",
@@ -1505,11 +1509,13 @@ function privatePayload(
     .setDescription(
       `${stats.CLASSES[state.classKey].emoji} ${stats.CLASSES[state.classKey].name} · Tầng ${state.floor}`,
     );
-  if (tab === "items") {
+  if (["items", "stats"].includes(tab)) {
     e.addFields({
       name: "Vật tư & vé",
-      value: `${E.potion} Bình máu: **${state.potions}/${state.maxPotions}**${STAT_SEPARATOR}${E.ticket} Vé thoát hiểm: **${state.escapeTokens}**\n🎟️ Vé hồi sinh: **${state.reviveTickets || 0}**`,
+      value: `${E.potion} **Bình**: **${state.potions}/${state.maxPotions}**\n${E.ticket} **Vé thoát**: **${state.escapeTokens}**\n${E.prayerTicket} **Vé cầu nguyện**: **${state.prayerBoost ? 1 : 0}** · RNGesus **${percent(core.rngesusPrayerChance(state))}**\n${E.reviveTicket} **Vé hồi sinh**: **${state.reviveTickets || 0}** · ${E.hp} **HP 50%**`,
     });
+  }
+  if (tab === "items") {
     for (const item of state.items.slice(page * 5, page * 5 + 5))
       e.addFields({
         name: `${item.name} Lv.${item.level} [${rarityLabel(item.rarity)}]`,
@@ -1839,8 +1845,7 @@ function ratesFields(category) {
       },
       {
         name: `${eventIcon("adventurer")} Lost Adventurer · cứu / cướp`,
-        value:
-          "- **Cứu:** trả một bình, nhận R 70% / SR 30% và một lần bảo hộ trong cùng khu vực. Chết bởi RNGesus → hồi sinh 50% HP, sang tầng kế; chết khi đánh quái → hồi sinh 50% HP, ở lại đánh tiếp. Ưu tiên trước vé hồi sinh, hết hiệu lực khi dùng hoặc sang khu vực khác; không tạo hậu quả hẹn.\n- **Cướp:** nhận **SSR 75% / UR có nguyền 25%**. Sau **10–30 tầng**: **50% mất 10% payout**, **50% gặp Bounty Hunter (Elite)**, có thể bồi thường 20% payout để tránh đánh. Không có nhánh hồi máu/bonus. Tối đa 8 hậu quả đang chờ; kết quả khóa khi ghi nhận.",
+        value: `- **Cứu:** trả một bình, nhận R 70% / SR 30% và một lần bảo hộ trong cùng khu vực. Chết bởi RNGesus → hồi sinh 50% HP, sang tầng kế; chết khi đánh quái → hồi sinh 50% HP, ở lại đánh tiếp. Ưu tiên trước ${E.reviveTicket} **Vé hồi sinh**, hết hiệu lực khi dùng hoặc sang khu vực khác; không tạo hậu quả hẹn.\n- **Cướp:** nhận **SSR 75% / UR có nguyền 25%**. Sau **10–30 tầng**: **50% mất 10% payout**, **50% gặp Bounty Hunter (Elite)**, có thể bồi thường 20% payout để tránh đánh. Không có nhánh hồi máu/bonus. Tối đa 8 hậu quả đang chờ; kết quả khóa khi ghi nhận.`,
       },
       {
         name: `${eventIcon("echo")} Grave Echo`,
@@ -1859,13 +1864,11 @@ function ratesFields(category) {
       },
       {
         name: `${eventIcon("rngesus")} RNGesus · không được rút thưởng`,
-        value:
-          "Chaos trên bảng là tỷ lệ gặp RNGesus. RNGesus không thể bị đánh bại.\n- **Đánh:** tử trận ngay; Lost Adventurer hoặc vé hồi sinh có thể cứu nếu còn. Không được cứu thì mất cược/thưởng tạm giữ.\n- **Hối lộ:** cần payout hiển thị **≥1.000 xu**, đúng 1.000 vẫn được. Thoát an toàn, giảm hệ số payout 40%; thưởng tích lũy về sau cũng chịu hệ số đã giảm.\n- **Cầu nguyện:** **30%** thành công và nhận chắc chắn **1 trang bị UR kèm lời nguyền**; **70%** thất bại và tử trận. Mang vé cầu nguyện từ túi Sinh tồn: **60%** thành công, **40%** thất bại, áp dụng toàn run. Lost Adventurer hoặc vé hồi sinh cứu khi tử trận nếu còn.\nChỉ cầu nguyện thành công có thể tạo Thử thách thần linh; hối lộ không tạo ký ức mới. Xem trong Rift.",
+        value: `Chaos là tỷ lệ gặp RNGesus. Không thể đánh bại hoặc rút thưởng tại đây.\n- **Đánh:** tử trận ngay. Khi tử trận, Lost Adventurer hoặc ${E.reviveTicket} **Vé hồi sinh** có thể cứu nếu còn; hết bảo hộ/vé thì mất cược và thưởng tạm giữ.\n- **Hối lộ:** cần payout hiển thị **≥1.000 xu**, đúng 1.000 vẫn được. Thoát an toàn, giảm hệ số payout 40%; thưởng tích lũy về sau cũng chịu hệ số đã giảm.\n- **Cầu nguyện:** **30%** thành công và nhận chắc chắn **1 trang bị UR kèm lời nguyền**; **70%** thất bại và tử trận. Mang ${E.prayerTicket} **Vé cầu nguyện** từ túi Sinh tồn: **60%** thành công, **40%** thất bại, áp dụng toàn run. \nCầu nguyện thành công có thể tạo Thử thách thần linh; hối lộ không tạo ký ức mới. Xem trong Rift.`,
       },
       {
-        name: `${E.ticket} Bỏ chạy và vé thoát hiểm`,
-        value:
-          "- Tỷ lệ cho các lần **chọn Bỏ chạy trong cùng run:** **100% → 95% → 90% → 85% → 80% → 75%**, các lần sau giữ 75%. Lần đầu chắc chắn thoát.\n- Mỗi lần chọn chạy giảm 5 điểm % cho lần sau, kể cả chạy thất bại được vé cứu. Chọn hối lộ/cầu nguyện không giảm và không đặt lại tỷ lệ bỏ chạy.\n- **Run mới reset về 100%.** Mở lại UI hoặc restart bot giữ nguyên tỷ lệ của run đang chơi.\n- Chạy thành công không mất vé. Chạy thất bại tự dùng 1 vé thoát hiểm nếu có; hết vé thì tử trận và kiểm tra Lost Adventurer/vé hồi sinh. Giữ tối đa 1 vé thoát hiểm.\n- Vé thoát hiểm chỉ cứu bỏ chạy thất bại. Đánh/cầu nguyện thất bại có thể được Lost Adventurer hoặc vé hồi sinh cứu. Không có nút dùng vé thoát hiểm riêng tại RNGesus.",
+        name: `${E.ticket} Bỏ chạy và Vé thoát`,
+        value: `- Trong cùng ván: **100% → 95% → 90% → 85% → 80% → 75%**, các lần sau giữ **75%**.\n- Mỗi lần chọn **Bỏ chạy** giảm 5 điểm % cho lần sau, kể cả được vé cứu. Hối lộ/cầu nguyện giữ nguyên. **Ván mới: 100%.** Mở lại UI/restart bot giữ tỷ lệ đã lưu.\n- Chạy thất bại: tự dùng ${E.ticket} **Vé thoát ×1**; hết vé thì tử trận, kiểm tra Lost Adventurer hoặc ${E.reviveTicket} **Vé hồi sinh**.\n- ${E.ticket} **Vé thoát**: tối đa **1**, chỉ cứu bỏ chạy thất bại. Chạy thành công giữ vé. Không có nút dùng riêng tại RNGesus.`,
       },
     ],
     rewards: [
@@ -1876,8 +1879,7 @@ function ratesFields(category) {
       },
       {
         name: "Cửa hàng & túi Sinh tồn",
-        value:
-          "Dùng /sinhton cuahang và /sinhton tuido. Ba vé cố định: chạy RNGesus 100 💎, cầu nguyện ×2 100 💎, hồi sinh 300 💎. Năm trang bị chọn đều từ toàn bộ pool, đổi mỗi ngày lúc 00:00 Việt Nam: R 10.000 / SR 50.000 / SSR 100.000 / UR 200.000 xu. Mua không giới hạn lượt. Trước run chọn tối đa 5 món khác nhau (Lv.1), mỗi loại vé một chiếc; xem chỉ số rồi Bắt đầu. Không hoàn đồ/vé khi chết, rút, bỏ hoặc hết hạn run. Vé hồi sinh tự cứu một lần với 50% HP; ở lại đánh tiếp nếu chết khi đánh quái, sang tầng kế nếu chết bởi RNGesus.",
+        value: `Dùng /sinhton cuahang và /sinhton tuido. Giá vé: ${E.ticket} **Vé thoát** 100 💎; ${E.prayerTicket} **Vé cầu nguyện** 100 💎; ${E.reviveTicket} **Vé hồi sinh** 300 💎. Năm trang bị chọn đều từ toàn bộ pool, đổi mỗi ngày lúc 00:00 Việt Nam: R 10.000 / SR 50.000 / SSR 100.000 / UR 200.000 xu. Mua không giới hạn lượt. Trước run chọn tối đa 5 món khác nhau (Lv.1), mỗi loại vé một chiếc; xem chỉ số rồi Bắt đầu. Không hoàn đồ/vé khi chết, rút, bỏ hoặc hết hạn run. ${E.reviveTicket} **Vé hồi sinh** tự cứu một lần với 50% HP; ở lại đánh tiếp nếu chết khi đánh quái, sang tầng kế nếu chết bởi RNGesus.`,
       },
       {
         name: "Dịch vụ: giá và điều kiện",
@@ -1886,7 +1888,7 @@ function ratesFields(category) {
       },
       {
         name: `${eventIcon("merchant")} Rift Merchant · giá theo payout gốc`,
-        value: `Mỗi lần gặp có **3 loại hàng khác nhau**, chọn từ 6 loại; mua tối đa **1 món**. Giá được khóa khi gặp, làm tròn lên, tối thiểu 1 xu.\n- ${E.potion} +1 bình (giới hạn cơ bản 5, nội tại tăng tối đa 10): **2,5%** payout gốc.\n- ${E.hp} Hồi đầy HP: **4%**.\n- ${E.luck} +1 LUCK trong run: **5%**.\n- ${E.backpack} 1 trang bị SR: **7,5%**.\n- ${E.ticket} Vé thoát hiểm (tối đa 1): **12,5%**.\n- ${E.chest} Rương thường: **7,5%**, **mở ngay khi mua**; tỷ lệ và pity như hòm thường, có thể gặp Mimic hoặc rỗng/giả. Chi tiết liệt kê tỷ lệ của rương đang bán.\nTrả bằng payout của run; bonus Blood Paradox không dùng để mua.`,
+        value: `Mỗi lần gặp có **3 loại hàng khác nhau**, chọn từ 6 loại; mua tối đa **1 món**. Giá được khóa khi gặp, làm tròn lên, tối thiểu 1 xu.\n- ${E.potion} +1 bình (giới hạn cơ bản 5, nội tại tăng tối đa 10): **2,5%** payout gốc.\n- ${E.hp} Hồi đầy HP: **4%**.\n- ${E.luck} +1 LUCK trong run: **5%**.\n- ${E.backpack} 1 trang bị SR: **7,5%**.\n- ${E.ticket} Vé thoát (tối đa 1): **12,5%**.\n- ${E.chest} Rương thường: **7,5%**, **mở ngay khi mua**; tỷ lệ và pity như hòm thường, có thể gặp Mimic hoặc rỗng/giả. Chi tiết liệt kê tỷ lệ của rương đang bán.\nTrả bằng payout của run; bonus Blood Paradox không dùng để mua.`,
       },
       {
         name: `${eventIcon("purifier")} Purifier · giải lời nguyền`,
@@ -1898,7 +1900,7 @@ function ratesFields(category) {
       },
       {
         name: `${eventIcon("horadric")} Horadric Forge · chuyển hóa trang bị`,
-        value: `Không tốn xu. Tiêu hao **1 level** của món chỉ định: level 1 thì món rời trang bị. **Giữ nguyên** hiệu ứng có lợi của level đã dùng trong run, không cộng lại lần nữa; xóa lời nguyền tương ứng. Không nhận lại ${E.potion} bình, ${E.ticket} vé hoặc ${E.hp} HP hồi khi nhặt món đó.\nChọn **một** phần thưởng thêm: +6 thuộc tính sát thương phù hợp class; hoặc +7 STR/VIT đã ghi trên nút; hoặc +4 ${E.vit} VIT. Món SSR/UR còn có lựa chọn nhận 1 ${E.ticket} vé (giữ tối đa 1). Bỏ qua thì giữ trang bị và không nhận phần thưởng.`,
+        value: `Không tốn xu. Tiêu hao **1 level** của món chỉ định: level 1 thì món rời trang bị. **Giữ nguyên** hiệu ứng có lợi của level đã dùng trong run, không cộng lại lần nữa; xóa lời nguyền tương ứng. Không nhận lại ${E.potion} bình, ${E.ticket} Vé thoát hoặc ${E.hp} HP hồi khi nhặt món đó.\nChọn **một** phần thưởng thêm: +6 thuộc tính sát thương phù hợp class; hoặc +7 STR/VIT đã ghi trên nút; hoặc +4 ${E.vit} VIT. Món SSR/UR còn có lựa chọn nhận ${E.ticket} **Vé thoát +1** (giữ tối đa 1). Bỏ qua thì giữ trang bị và không nhận phần thưởng.`,
       },
       {
         name: "Rút thưởng và mất thưởng",

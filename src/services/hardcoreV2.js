@@ -186,8 +186,8 @@ function reviveAfterDeath(state, session, rng, reason) {
   state.lastLog += adventurer
     ? "\n" +
       memoryIcon("rescue") +
-      " Lost Adventurer trở lại cứu bạn! Đã dùng bảo hộ, giữ nguyên vé hồi sinh."
-    : "\n🎟️ Tự dùng 1 vé hồi sinh.";
+      ` Lost Adventurer trở lại cứu bạn! Đã dùng bảo hộ, giữ nguyên ${E.reviveTicket} Vé hồi sinh.`
+    : `\n${E.reviveTicket} **Vé hồi sinh −1**: tự dùng để cứu bạn.`;
   if (!combat || reason === "rngesus") completeFloor(state, session, rng, 0);
   // Set directly: checkpoint healing and regeneration must not alter the promised 50%.
   state.hp = Math.max(1, Math.ceil(state.maxHp * 0.5));
@@ -1583,7 +1583,7 @@ function surpriseActions(state) {
   if (k === "merchant")
     return e.offers.map((offer, i) => ({
       action: `buy_${i}`,
-      label: `${{ potion: "Bình", heal: "Hồi đầy", luck: "Luck +1", item: "Item SR", ticket: "Vé", chest: "Rương · mở ngay" }[offer.key]} · ${offer.price} xu`,
+      label: `${{ potion: "Bình", heal: "Hồi đầy", luck: "Luck +1", item: "Item SR", ticket: "Vé thoát", chest: "Rương · mở ngay" }[offer.key]} · ${offer.price} xu`,
       disabled: rawPayout(state) < offer.price,
     }));
   if (k === "duelist") {
@@ -1670,7 +1670,7 @@ function surpriseActions(state) {
         ...(["legendary", "cursed"].includes(
           state.items.find((x) => x.definition.id === e.targetId)?.rarity,
         )
-          ? [{ action: "forge_ticket", label: "Chuyển hóa · Nhận vé" }]
+          ? [{ action: "forge_ticket", label: "Chuyển hóa · Vé thoát" }]
           : []),
       ],
       mirror: [
@@ -1893,7 +1893,7 @@ function actSurprise(state, session, action, rng) {
       if (offer.key === "luck") addSource(state, { luck: 1 });
       if (offer.key === "ticket") state.escapeTokens = 1;
       done(
-        `🛒 Đã mua ${{ potion: `${E.potion} bình máu`, heal: `hồi đầy ${E.hp} HP`, luck: `+1 ${E.luck} Luck`, ticket: `${E.ticket} vé thoát hiểm` }[offer.key] || offer.key}.`,
+        `🛒 Đã mua ${{ potion: `${E.potion} bình máu`, heal: `hồi đầy ${E.hp} HP`, luck: `+1 ${E.luck} Luck`, ticket: `${E.ticket} Vé thoát` }[offer.key] || offer.key}.`,
       );
     }
     return;
@@ -2036,7 +2036,7 @@ function actSurprise(state, session, action, rng) {
             ? "vit"
             : "ticket";
     done(
-      `${eventIcon("horadric")} Horadric Forge: chuyển hóa ${E.backpack} **${target.name}** ${previousLevel === 1 ? "(đã hết level, rời trang bị)" : `Lv.${previousLevel}→**${target.level}**`}. Giữ hiệu ứng có lợi của level đã dùng trong run${removedCurse ? "; gỡ lời nguyền của level đó" : ""}.\nPhần thưởng đã chọn: ${E[rewardKey]} **${rewardKey === "ticket" ? "Vé thoát hiểm" : rewardKey.toUpperCase()}**.`,
+      `${eventIcon("horadric")} Horadric Forge: chuyển hóa ${E.backpack} **${target.name}** ${previousLevel === 1 ? "(đã hết level, rời trang bị)" : `Lv.${previousLevel}→**${target.level}**`}. Giữ hiệu ứng có lợi của level đã dùng trong run${removedCurse ? "; gỡ lời nguyền của level đó" : ""}.\nPhần thưởng đã chọn: ${E[rewardKey]} **${rewardKey === "ticket" ? "Vé thoát" : rewardKey.toUpperCase()}**.`,
     );
   } else if (k === "mirror") {
     if (action === "event_mirror_power") {
@@ -2540,10 +2540,10 @@ function act(state, session, action, rng) {
         if (chance < 1 && !e.fleeSuccess) {
           if (state.escapeTokens) {
             state.escapeTokens--;
-            state.lastLog = `RNGesus: bỏ chạy thất bại (nhánh ${failureChance}%); tự dùng 1 ${E.ticket} vé thoát hiểm để sống sót. Tỷ lệ chạy lần sau: **${nextChance}%**.`;
+            state.lastLog = `RNGesus: bỏ chạy thất bại (nhánh ${failureChance}%); tự dùng ${E.ticket} **Vé thoát** để sống sót. Tỷ lệ chạy lần sau: **${nextChance}%**.`;
           } else
             return die(
-              `Bỏ chạy khỏi RNGesus thất bại (nhánh ${failureChance}%) và không có vé thoát hiểm để cứu.`,
+              `Bỏ chạy khỏi RNGesus thất bại (nhánh ${failureChance}%) và không có vé thoát để cứu.`,
             );
         } else
           state.lastLog = `RNGesus: bỏ chạy thành công (tỷ lệ ${Math.round(chance * 100)}%), thoát an toàn. Tỷ lệ chạy lần sau: **${nextChance}%**.`;
@@ -2605,7 +2605,7 @@ function act(state, session, action, rng) {
   prepareParadoxCombat(state, rng);
   finishEventResult(state);
   if (state.discardedTicketsThisTurn)
-    state.lastLog += `\n${E.ticket} Bỏ ${state.discardedTicketsThisTurn} vé nhận thêm; chỉ giữ tối đa 1.`;
+    state.lastLog += `\n${E.ticket} Vé thoát: bỏ ${state.discardedTicketsThisTurn} vé dư (tối đa 1).`;
   delete state.discardedTicketsThisTurn;
   delete state.passiveCounterUsed;
   delete state.passiveImmunityThisTurn;

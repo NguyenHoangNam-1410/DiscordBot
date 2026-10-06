@@ -7,8 +7,9 @@ const CATALOG = Object.freeze({
   rescue: {
     name: "Ân nghĩa · Lost Adventurer",
     source: "Cứu Lost Adventurer",
-    detail:
-      "Bảo hộ một lần trong cùng khu vực: hồi sinh với 50% HP. Chết bởi RNGesus → sang tầng kế; chết khi đánh quái → ở lại đánh tiếp. Dùng trước vé hồi sinh; hết hiệu lực khi dùng hoặc rời khu vực.",
+    get detail() {
+      return `Bảo hộ một lần trong cùng khu vực: hồi sinh với 50% HP. Chết bởi RNGesus → sang tầng kế; chết khi đánh quái → ở lại đánh tiếp. Dùng trước ${E.reviveTicket} Vé hồi sinh; hết hiệu lực khi dùng hoặc rời khu vực.`;
+    },
   },
   bounty: {
     name: "Truy nã · Bounty Hunter",

@@ -413,7 +413,7 @@ const ITEMS = {
         vit: 12,
         escapeTokens: 1,
       },
-      text: "+12 VIT · +1 Vé Thoát Hiểm khi nhận mỗi cấp",
+      text: "+12 VIT · +1 Vé thoát khi nhận mỗi cấp",
       curse: null,
     },
     {

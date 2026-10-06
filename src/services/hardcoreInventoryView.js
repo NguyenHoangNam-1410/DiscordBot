@@ -14,22 +14,19 @@ const bag = require("./hardcoreInventoryService");
 const { getAccount } = require("./economyService");
 const { getPlayerProgression } = require("./playerLevelService");
 const v2View = require("./hardcoreV2View");
-const { E } = require("./hardcoreIcons");
+const { TICKET_TYPES, ticketIcon } = require("./hardcoreIcons");
+const { formatStatText } = require("./hardcoreUi");
 const { appEmoji, appEmojiObject } = require("../utils/appEmoji");
 const currencyIcon = (currency) =>
   currency === "diamonds" ? appEmoji("gem", "💎") : appEmoji("coin", "🪙");
-function ticketIcon(item) {
-  if (item.id === "survival_escape") return E.ticket;
-  if (item.id === "survival_prayer") return "🙏";
-  return "🎟️";
-}
 function ticketOptionEmoji(item) {
-  return item.id === "survival_escape"
-    ? appEmojiObject("ticket_rngesus") || { name: "🎫" }
-    : { name: ticketIcon(item) };
+  const ticket = TICKET_TYPES[item.id];
+  return appEmojiObject(ticket.emojiName) || { name: ticket.fallback };
 }
 const productName = (item) =>
-  item.typeCode === "ticket" ? `${ticketIcon(item)} ${item.name}` : item.name;
+  item.typeCode === "ticket"
+    ? `${ticketIcon(item.id)} ${item.name}`
+    : item.name;
 const money = (n) => n.toLocaleString("vi-VN");
 const PAGE_SIZE = 5,
   SELECT_PAGE_SIZE = 20;
@@ -42,7 +39,7 @@ const button = (id, label, disabled = false, style = ButtonStyle.Secondary) =>
     .setStyle(style)
     .setDisabled(disabled);
 function detail(item) {
-  if (item.typeCode === "ticket") return item.text;
+  if (item.typeCode === "ticket") return formatStatText(item.text);
   return `${v2View.effectText(item.effects)}${v2View.passiveText(item)}${item.curse ? `\n☣️ ${v2View.effectText(item.curse.effects)}` : ""}`;
 }
 function filterMenu(id, selected = "all", includeTickets = true) {
@@ -70,7 +67,7 @@ function shopPayload(guildId, userId) {
     );
   today.products.forEach((item) =>
     embed.addFields({
-      name: `${productName(item)} [${item.typeCode === "ticket" ? "Vé" : item.typeCode}] · ${money(item.price)} ${currencyIcon(item.currency)}`,
+      name: `${productName(item)}${item.typeCode === "ticket" ? "" : ` [${item.typeCode}]`} · ${money(item.price)} ${currencyIcon(item.currency)}`,
       value: detail(item).slice(0, 1024) || "—",
     }),
   );
@@ -115,7 +112,7 @@ function inventoryPayload(guildId, userId, filter = "all", page = 0) {
     });
   items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).forEach((item) =>
     embed.addFields({
-      name: `${productName(item)} [${item.typeCode === "ticket" ? "Vé" : item.typeCode}] ×${money(item.quantity)}`,
+      name: `${productName(item)}${item.typeCode === "ticket" ? "" : ` [${item.typeCode}]`} ×${money(item.quantity)}`,
       value: detail(item).slice(0, 1024) || "—",
     }),
   );
@@ -281,7 +278,7 @@ function setupPayload(draft, context) {
           loadout.ticketIds
             .map((itemId) => {
               const ticket = bag.product(itemId);
-              return `**${productName(ticket)}** · ${ticket.text}`;
+              return `**${productName(ticket)} ×1** · ${detail(ticket)}`;
             })
             .join("\n")
             .slice(0, 1024) || "Không mang vé.",

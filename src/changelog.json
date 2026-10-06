@@ -1,5 +1,15 @@
 [
   {
+    "id": "74be5799-7457-4a6e-998b-bc3eaadc1977",
+    "updatedAt": "2026-10-06T14:45:13.165Z",
+    "auditedAt": "2026-10-06T14:45:13.165Z",
+    "title": "Chuẩn hóa vé Sinh tồn",
+    "changes": [
+      "Thống nhất tên ngắn: Vé thoát, Vé cầu nguyện và Vé hồi sinh; mỗi loại dùng icon riêng trên bảng chơi, Chỉ số, cửa hàng, túi đồ và màn chọn đồ.",
+      "Mô tả vé cầu nguyện ghi rõ 30% lên 60% trong cả ván; vé hồi sinh ghi rõ hồi 50% Max HP và tiếp tục ở đâu. Rút gọn diễn biến dùng vé, bỏ nhãn Vé bị lặp trong cửa hàng và túi đồ."
+    ]
+  },
+  {
     "id": "49a6dc8d-6b2e-4346-a980-c6df42030036",
     "updatedAt": "2026-10-06T14:30:51.702Z",
     "auditedAt": "2026-10-06T14:30:51.702Z",

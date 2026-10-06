@@ -106,7 +106,9 @@ function effectText(item, level = 1) {
   if (item.potions)
     effects.push(`${E.potion} **Bình máu** đã nhận ${item.potions * level}`);
   if (item.escapeTokens)
-    effects.push(`${E.ticket} **Vé** đã nhận ${item.escapeTokens * level}`);
+    effects.push(
+      `${E.ticket} **Vé thoát** đã nhận ${item.escapeTokens * level}`,
+    );
   if (item.defenseSet !== undefined)
     effects.push(`${E.defense} **DEF** đặt về ${item.defenseSet} khi nhặt`);
   if (item.bonusPenalty)

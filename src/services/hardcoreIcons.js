@@ -2,6 +2,27 @@
 const emoji = require("../discordEmojiMap");
 const { appEmoji } = require("../utils/appEmoji");
 const icon = (key, fallback) => appEmoji(key, emoji[`:${key}:`] || fallback);
+const TICKET_TYPES = Object.freeze({
+  survival_escape: Object.freeze({
+    name: "Vé thoát",
+    emojiName: "ticket_rngesus",
+    fallback: "🎫",
+  }),
+  survival_prayer: Object.freeze({
+    name: "Vé cầu nguyện",
+    emojiName: "ticket_prayer",
+    fallback: "🙏",
+  }),
+  survival_revive: Object.freeze({
+    name: "Vé hồi sinh",
+    emojiName: "ticket_revive",
+    fallback: "🎟️",
+  }),
+});
+function ticketIcon(id) {
+  const ticket = TICKET_TYPES[id];
+  return ticket ? icon(ticket.emojiName, ticket.fallback) : "🎫";
+}
 const BUFF_ICON_NAMES = Object.freeze({
   potionPower: ["stat_potion_power", "⚗️"],
   bossDamage: ["stat_boss_damage", "👑"],
@@ -87,7 +108,13 @@ const E = {
     return icon("potion", "🧪");
   },
   get ticket() {
-    return icon("ticket_rngesus", "🎫");
+    return ticketIcon("survival_escape");
+  },
+  get prayerTicket() {
+    return ticketIcon("survival_prayer");
+  },
+  get reviveTicket() {
+    return ticketIcon("survival_revive");
   },
   get str() {
     return icon("STR", "💪");
@@ -224,6 +251,8 @@ function paradoxIcon(id) {
 }
 module.exports = {
   E,
+  TICKET_TYPES,
+  ticketIcon,
   BUFF_ICON_NAMES,
   buffIcon,
   effectStatLabel,

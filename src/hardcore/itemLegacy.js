@@ -492,7 +492,7 @@ const ITEMS = Object.freeze({
       "One More Hit",
       "charm",
       { escapeTokens: 1, maxHp: 15, heal: 15 },
-      "+15 HP, nhận 1 Vé Thoát Hiểm",
+      "+15 HP, nhận 1 Vé thoát",
       { tags: ["survival"] },
     ),
     SSR(

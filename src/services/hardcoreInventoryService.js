@@ -1,5 +1,6 @@
 "use strict";
 const crypto = require("node:crypto");
+const { TICKET_TYPES } = require("./hardcoreIcons");
 const { db } = require("../db");
 const { ITEMS, ITEM_ALIASES, resolveItemId } = require("../hardcore/item");
 const { spendCoins } = require("./economyService");
@@ -13,21 +14,21 @@ const PRICES = Object.freeze({
 const TICKETS = Object.freeze([
   {
     id: "survival_escape",
-    name: "Vé chạy khỏi RNGesus",
+    name: TICKET_TYPES.survival_escape.name,
     price: 100,
-    text: "Tự dùng khi bỏ chạy RNGesus thất bại, giữ tối đa 1 vé trong mỗi run.",
+    text: "Bỏ chạy RNGesus thất bại: tự dùng để thoát. Giữ tối đa 1.",
   },
   {
     id: "survival_prayer",
-    name: "Vé cầu nguyện RNGesus",
+    name: TICKET_TYPES.survival_prayer.name,
     price: 100,
-    text: "Tăng tỷ lệ cầu nguyện thành công gấp đôi ở mọi lần gặp RNGesus trong run.",
+    text: "Cầu nguyện RNGesus: 30% → 60% trong cả ván.",
   },
   {
     id: "survival_revive",
-    name: "Vé hồi sinh",
+    name: TICKET_TYPES.survival_revive.name,
     price: 300,
-    text: "Tự hồi sinh một lần khi tử trận, với 50% Max HP.",
+    text: "Tử trận: tự dùng 1 vé, hồi 50% Max HP. Đánh quái: ở lại đánh tiếp; RNGesus: sang tầng kế.",
   },
 ]);
 const CATALOG = Object.values(ITEMS)
