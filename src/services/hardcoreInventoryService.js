@@ -15,19 +15,19 @@ const TICKETS = Object.freeze([
     id: "survival_escape",
     name: "Vé chạy khỏi RNGesus",
     price: 100,
-    text: "Tự dùng khi bỏ chạy RNGesus thất bại; giữ tối đa 1 vé thoát hiểm trong run.",
+    text: "Tự dùng khi bỏ chạy RNGesus thất bại, giữ tối đa 1 vé trong mỗi run.",
   },
   {
     id: "survival_prayer",
-    name: "Vé cầu nguyện RNGesus ×2",
+    name: "Vé cầu nguyện RNGesus",
     price: 100,
-    text: "Tăng cầu nguyện thành công từ 30% lên 60% ở mọi lần gặp RNGesus trong run.",
+    text: "Tăng tỷ lệ cầu nguyện thành công gấp đôi ở mọi lần gặp RNGesus trong run.",
   },
   {
     id: "survival_revive",
     name: "Vé hồi sinh",
     price: 300,
-    text: "Tự hồi sinh một lần khi tử trận, với 50% Max HP. Lost Adventurer cứu trước, giữ lại vé.",
+    text: "Tự hồi sinh một lần khi tử trận, với 50% Max HP.",
   },
 ]);
 const CATALOG = Object.values(ITEMS).flat();
