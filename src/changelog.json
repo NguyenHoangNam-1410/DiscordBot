@@ -1,5 +1,16 @@
 [
   {
+    "id": "25ea2548-7d02-419b-bf62-dfd9b87b2d11",
+    "updatedAt": "2026-10-06T10:17:19.566Z",
+    "auditedAt": "2026-10-06T10:17:19.566Z",
+    "title": "Sinh tồn: giảm nghẽn cập nhật giao diện",
+    "changes": [
+      "Bảng chi tiết và lượt chơi dùng hàng đợi riêng, giúp hạn chế việc chờ nhau khi Discord cập nhật chậm.",
+      "Bấm trùng một lượt đang xử lý không gửi lại bảng battle đã cập nhật thành công; lượt chơi vẫn được lưu và cập nhật theo đúng thứ tự.",
+      "Bổ sung đo độ trễ xử lý lượt, dựng UI, chờ hàng đợi và gửi Discord để chẩn đoán phản hồi chậm."
+    ]
+  },
+  {
     "id": "c825a5da-cc84-4448-8af4-e51c82b144e4",
     "updatedAt": "2026-10-06T09:40:45.620Z",
     "auditedAt": "2026-10-06T09:40:45.620Z",

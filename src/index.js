@@ -5,6 +5,7 @@ const {
   Client,
   Collection,
   Events,
+  RESTEvents,
   GatewayIntentBits,
   MessageFlags,
 } = require("discord.js");
@@ -72,6 +73,20 @@ if (messageCommandsEnabled)
     GatewayIntentBits.MessageContent,
   );
 const client = new Client({ intents });
+client.rest.on(RESTEvents.RateLimited, (limit) => {
+  // Never log the request URL: interaction webhook URLs contain private tokens.
+  logger.warn(
+    {
+      global: limit.global,
+      method: limit.method,
+      timeToResetMs: limit.timeToReset,
+      retryAfterMs: limit.retryAfter,
+      sublimitTimeoutMs: limit.sublimitTimeout,
+      limit: limit.limit,
+    },
+    "discord REST rate limited",
+  );
+});
 const commandModules = loadCommands();
 client.commands = new Collection(
   commandModules.map((command) => [command.data.toJSON().name, command]),

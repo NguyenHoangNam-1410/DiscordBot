@@ -173,3 +173,22 @@ Paradox mới xuất hiện sau checkpoint/nâng thuộc tính tại mốc 25–
 Migration 35 tạo `hardcore_tower_sessions` và `hardcore_tower_results`, tự chạy khi bot khởi động. Sau pull bản mới: chạy `npm run register` trên server có env Discord rồi restart bot. Không cần upload asset/emoji mới.
 
 Chạy `npm run test:hardcore:paradox`, `npm run test:hardcore:tower`, `npm run solve:hardcore:tower`. Solver duyệt toàn bộ hành động hợp lệ và chỉ đăng ký challenge khi có đúng một lời giải, khớp chuỗi chuẩn và final state. Kịch bản nằm trong `src/hardcore/tower/`, catalog trong `src/hardcore/towerChallenges.js`; các tuần sau thêm dữ liệu mới, phiên bản/ID riêng và mốc `startsAt`/`endsAt` rõ timezone. `endsAt` hỗ trợ season hai tuần. Hiện chỉ đăng ký tuần 41; không tự tạo kịch bản khi sang tuần chưa có nội dung. History lưu fingerprint SHA-256 từng hành động; session không lưu chuỗi lời giải dạng plaintext.
+
+
+## Chẩn đoán phản hồi chậm của Sinh tồn
+
+Sinh tồn dùng hàng đợi riêng cho battle và bảng chi tiết: cập nhật bảng riêng không giữ lượt chơi chờ, còn cập nhật battle vẫn theo thứ tự để tránh ghi đè bằng lượt cũ. Các nút trùng lượt trong cùng hàng đợi được xác nhận nhưng không gửi lại bảng đã cập nhật thành công. Nút cũ ở lần bấm sau vẫn có thể khôi phục UI hiện tại.
+
+Bot ghi `slow hardcore interaction` khi một tương tác mất từ 1 giây, đến handler muộn từ 1 giây, hoặc xử lý lượt mất từ 100 ms. Log thường ở mức debug (`hardcore interaction timing`); đặt `LOG_LEVEL=debug` khi cần xem mọi lượt, restart bot và đổi về `info` sau khi kiểm tra. Log nằm trong `LOG_DIR/bot.log` (mặc định `logs/bot.log`, trừ khi đổi `LOG_FILE_NAME`).
+
+- `gameMs`: xử lý hành động và transaction SQLite.
+- `renderMs`: dựng battle hoặc bảng chi tiết.
+- `queueMs`: chờ các thao tác trước trong cùng hàng đợi.
+- `ackMs`: chờ Discord xác nhận đã nhận tương tác.
+- `discordMs`: tổng thời gian chờ các lời gọi Discord, gồm cả xác nhận, mạng, retry và hàng đợi REST. Vì đã bao gồm `ackMs`, không cộng hai số này.
+- `ingressAgeMs`: tuổi tương tác lúc handler bắt đầu; có thể bao gồm độ trễ giao nhận hoặc event loop bị nghẽn, chưa đủ để kết luận nguyên nhân.
+- `totalMs`: thời gian từ khi handler bắt đầu tới khi hoàn tất. `duplicateUpdateSkipped` cho biết bot đã bỏ cập nhật trùng.
+
+Log `discord REST rate limited` xác nhận thư viện đang chờ giới hạn API; có thời gian phải đợi, không ghi URL webhook/token. `discordMs` cao nhưng không có log rate limit có thể do mạng, Discord hoặc retry. `gameMs` cao cần kiểm tra CPU/SQLite/ổ đĩa trên server. Đây là các số đo để chẩn đoán, không phải cam kết về thời gian phản hồi.
+
+Chạy `npm run test:hardcore:latency` để kiểm tra Discord chậm, bấm trùng, thứ tự cập nhật, phục hồi lỗi và xác nhận rút thưởng. Script cũng báo thời gian xử lý lượt đơn giản/dựng battle trên SQLite trong RAM; số này không đo mạng hoặc ổ đĩa server.

@@ -482,7 +482,7 @@ async function main() {
   const rapidState = repo.parseState(repo.getSession(rapid.session.id));
   assert.equal(rapidState.turn, 1);
   assert.equal(rapidState.cleared, 1);
-  assert.equal(replies.length, 2);
+  assert.equal(replies.length, 1);
   for (const payload of replies)
     assert(
       payload.components
