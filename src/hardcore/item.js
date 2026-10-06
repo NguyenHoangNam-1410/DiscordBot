@@ -448,10 +448,10 @@ const ITEMS = {
       },
       effects: {
         str: 10,
-        vit: 8,
-        ene: 8,
+        vit: 16,
+        defense: 2,
       },
-      text: "+10 STR, +8 VIT, +8 ENE",
+      text: "+10 STR, +16 VIT · +2 Defense",
       curse: null,
     },
     {
@@ -486,10 +486,10 @@ const ITEMS = {
         amount: 0.03,
       },
       effects: {
-        vit: 16,
-        ene: 8,
+        vit: 12,
+        ene: 14,
       },
-      text: "+16 VIT, +8 ENE",
+      text: "+12 VIT, +14 ENE",
       curse: null,
     },
     {
@@ -524,10 +524,10 @@ const ITEMS = {
         amount: 0.12,
       },
       effects: {
-        str: 10,
-        vit: 16,
+        vit: 18,
+        defense: 6,
       },
-      text: "+10 STR, +16 VIT",
+      text: "+18 VIT · +6 Defense",
       curse: null,
     },
     {
@@ -601,11 +601,11 @@ const ITEMS = {
         amount: 0.25,
       },
       effects: {
-        str: 10,
-        vit: 6,
-        ene: 12,
+        vit: 10,
+        ene: 18,
+        resistance: 5,
       },
-      text: "+10 STR, +6 VIT, +12 ENE",
+      text: "+10 VIT, +18 ENE · +5 Resistance",
       curse: null,
     },
     {
@@ -638,10 +638,9 @@ const ITEMS = {
         amount: 0.03,
       },
       effects: {
-        str: 4,
-        vit: 22,
+        vit: 26,
       },
-      text: "+4 STR, +22 VIT",
+      text: "+26 VIT",
       curse: null,
     },
     {
@@ -769,14 +768,14 @@ const ITEMS = {
       typeCode: "SSR",
       catalogVersion: 2,
       passive: {
-        kind: "thorns",
-        amount: 0.12,
+        kind: "berserk",
+        amount: 0.22,
       },
       effects: {
-        str: 14,
-        vit: 12,
+        ene: 24,
+        vit: 4,
       },
-      text: "+14 STR, +12 VIT",
+      text: "+24 ENE, +4 VIT",
       curse: null,
     },
     {
@@ -810,12 +809,10 @@ const ITEMS = {
         amount: 0.04,
       },
       effects: {
-        dex: 4,
-        vit: 4,
-        luck: 9,
+        luck: 10,
         legendaryFind: 0.04,
       },
-      text: "+4 DEX, +4 VIT · +9 Luck, +4% tìm SSR",
+      text: "+10 Luck, +4% tìm SSR",
       curse: null,
     },
     {
@@ -830,10 +827,10 @@ const ITEMS = {
         amount: 2,
       },
       effects: {
-        str: 6,
-        vit: 22,
+        str: 8,
+        vit: 18,
       },
-      text: "+6 STR, +22 VIT",
+      text: "+8 STR, +18 VIT",
       curse: null,
     },
     {
@@ -902,9 +899,9 @@ const ITEMS = {
       curse: {
         id: "schrodingers_armor_curse",
         effects: {
-          vit: -12,
+          physicalDamageTaken: 0.2,
         },
-        text: "-12 VIT",
+        text: "nhận thêm 20% damage vật lý (tối đa 100%)",
       },
     },
     {
@@ -930,7 +927,7 @@ const ITEMS = {
         effects: {
           bonusPenalty: 0.15,
         },
-        text: "mất 15% payout hiện tại mỗi cấp nhận",
+        text: "mất 15% payout xu mỗi cấp chưa giải",
       },
     },
     {
@@ -953,9 +950,9 @@ const ITEMS = {
       curse: {
         id: "crown_of_ruin_curse",
         effects: {
-          bonusPenalty: 0.1,
+          potionCapacityLoss: 1,
         },
-        text: "mất 10% payout hiện tại mỗi cấp nhận",
+        text: "giảm 1 sức chứa bình mỗi cấp chưa giải, còn tối thiểu 1 bình",
       },
     },
     {
@@ -970,16 +967,16 @@ const ITEMS = {
         amount: 0.3,
       },
       effects: {
-        str: 40,
-        dex: 10,
+        ene: 40,
+        vit: 10,
       },
-      text: "+40 STR, +10 DEX",
+      text: "+40 ENE, +10 VIT",
       curse: {
         id: "blood_pact_curse",
         effects: {
-          vit: -15,
+          skillHpCost: 0.03,
         },
-        text: "-15 VIT",
+        text: "Skill tốn 3% Max HP mỗi cấp chưa giải (tối đa 15%); làm tròn xuống, tối thiểu 1 HP, phải còn 1 HP sau chi phí",
       },
     },
     {
@@ -1025,9 +1022,9 @@ const ITEMS = {
       curse: {
         id: "broken_hourglass_curse",
         effects: {
-          floorHpLoss: 0.04,
+          attackManaLoss: 1,
         },
-        text: "mất 4% Max HP sau mỗi tầng",
+        text: "Tấn công hồi ít hơn 1 MP mỗi cấp chưa giải (tối đa giảm 3 MP, tối thiểu hồi 0 MP); Phòng thủ không đổi",
       },
     },
     {
@@ -1101,9 +1098,9 @@ const ITEMS = {
       curse: {
         id: "hollow_crown_curse",
         effects: {
-          str: -15,
+          skillManaExtra: 1,
         },
-        text: "-15 STR",
+        text: "Skill tốn thêm 1 MP mỗi cấp chưa giải (tối đa thêm 3 MP); Skill miễn phí từ Class Shrine vẫn tốn 0 MP",
       },
     },
     {
@@ -1150,9 +1147,9 @@ const ITEMS = {
       curse: {
         id: "soul_leash_curse",
         effects: {
-          maxMana: -2,
+          combatManaLoss: 1,
         },
-        text: "-2 Max MP",
+        text: "khi vào combat mất 1 MP mỗi cấp chưa giải (tối đa 3 MP, không xuống dưới 0), chỉ một lần/combat và trước nội tại hồi MP",
       },
     },
     {
@@ -1199,10 +1196,9 @@ const ITEMS = {
       curse: {
         id: "null_idol_curse",
         effects: {
-          dex: -15,
-          luck: -6,
+          healingReduction: 0.2,
         },
-        text: "-15 DEX, -6 Luck",
+        text: "lượng HP hồi cho bạn giảm 20% mỗi cấp chưa giải (tối đa 60%); không giảm hồi đầy tại Checkpoint hoặc hồi sinh",
       },
     },
     {
@@ -1226,9 +1222,9 @@ const ITEMS = {
       curse: {
         id: "black_sun_curse",
         effects: {
-          potionPower: -0.2,
+          magicDamageTaken: 0.2,
         },
-        text: "-20% hiệu lực bình",
+        text: "nhận thêm 20% damage phép (tối đa 100%)",
       },
     },
     {
@@ -1253,10 +1249,9 @@ const ITEMS = {
       curse: {
         id: "oathbreaker_curse",
         effects: {
-          str: -10,
-          dex: -10,
+          normalDamagePenalty: 0.2,
         },
-        text: "-10 STR, -10 DEX",
+        text: "DMG Tấn công/Skill lên quái thường giảm 20% mỗi cấp chưa giải (tối đa 60%); không giảm DMG lên Tinh anh/Boss hoặc phản sát thương",
       },
     },
   ],

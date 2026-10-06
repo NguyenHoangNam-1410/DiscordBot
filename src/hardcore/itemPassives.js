@@ -20,7 +20,7 @@ const groups = {
   berserk: [
     [0.1, "rusted_edge"],
     [0.15, "boss_hunters_badge"],
-    [0.22, "the_last_bad_decision deimoss_scar"],
+    [0.22, "the_last_bad_decision deimoss_scar blood_moon_edge"],
     [0.3, "glass_cannon blood_pact"],
   ],
   mpLeech: [
@@ -36,7 +36,7 @@ const groups = {
   ],
   thorns: [
     [0.05, "minor_life_charm"],
-    [0.12, "riftbreaker living_armor blood_moon_edge"],
+    [0.12, "riftbreaker living_armor"],
     [0.18, "berserker_chains"],
   ],
   shopDiscount: [

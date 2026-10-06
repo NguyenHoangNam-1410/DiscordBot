@@ -114,7 +114,7 @@ async function main() {
     Object.values(core.ITEMS)
       .flat()
       .filter((i) => i.curse?.effects.bonusPenalty).length,
-    2,
+    1,
   );
   const stack = stats.createState("barbarian", 10);
   core.receiveItem(stack, item("rusted_edge"));

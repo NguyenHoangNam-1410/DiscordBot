@@ -15,6 +15,7 @@ function parse(text) {
     effects[match[2].toLowerCase()] = Number(match[1]);
   const patterns = {
     luck: /([+-]\d+) Luck/,
+    defense: /([+-]\d+) Defense/,
     maxMana: /([+-]\d+) Max Mana/,
     mimicDetection: /([+-]\d+)% phát hiện Mimic/,
     goblinChance: /([+-]\d+)% bắt Goblin/,
@@ -30,7 +31,7 @@ function parse(text) {
     if (m)
       effects[key] =
         Number(m[1]) /
-        (["luck", "maxMana", "resistance"].includes(key) ? 1 : 100);
+        (["luck", "maxMana", "resistance", "defense"].includes(key) ? 1 : 100);
   }
   if (/Defense = 0/.test(text)) effects.defenseSet = 0;
   const hpLoss = /mất (\d+)% Max HP/.exec(text);
@@ -38,7 +39,30 @@ function parse(text) {
   const payout = /mất (\d+)% payout/.exec(text);
   if (payout) effects.bonusPenalty = Number(payout[1]) / 100;
   const damage = /nhận thêm (\d+)% damage/.exec(text);
-  if (damage) effects.damageTaken = Number(damage[1]) / 100;
+  if (damage) {
+    const key = /damage vật lý/.test(text)
+      ? "physicalDamageTaken"
+      : /damage phép/.test(text)
+        ? "magicDamageTaken"
+        : "damageTaken";
+    effects[key] = Number(damage[1]) / 100;
+  }
+  const cursePatterns = {
+    potionCapacityLoss: [/giảm (\d+) sức chứa bình/, 1],
+    skillHpCost: [/Skill tốn (\d+)% Max HP/, 100],
+    attackManaLoss: [/Tấn công hồi ít hơn (\d+) MP/, 1],
+    skillManaExtra: [/Skill tốn thêm (\d+) MP/, 1],
+    combatManaLoss: [/khi vào combat mất (\d+) MP/, 1],
+    healingReduction: [/lượng HP hồi cho bạn giảm (\d+)%/, 100],
+    normalDamagePenalty: [
+      /DMG Tấn công\/Skill lên quái thường giảm (\d+)%/,
+      100,
+    ],
+  };
+  for (const [key, [pattern, scale]] of Object.entries(cursePatterns)) {
+    const found = pattern.exec(text);
+    if (found) effects[key] = Number(found[1]) / scale;
+  }
   const potions = /\+(\d+) bình/.exec(text);
   if (potions) effects.potions = Number(potions[1]);
   const ticket = /\+(\d+) Vé/.exec(text);

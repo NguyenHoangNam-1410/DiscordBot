@@ -1,4 +1,5 @@
 "use strict";
+const itemCurses = require("../hardcore/itemCurses");
 const { RNGESUS_CYCLE_RULES, rngesusChaosRules } = require("./hardcoreRngesus");
 const {
   EmbedBuilder,
@@ -84,7 +85,7 @@ function statLine(s, changes = false, compact = false, options = {}) {
   ];
   if (!compact)
     lines.push(
-      `${E.accuracy} **ACC** **${s.accuracy}**${d("accuracy")}${STAT_SEPARATOR}${E.evasion} **EVA** **${s.evasion}**${d("evasion")}${STAT_SEPARATOR}${E.crit} **CRIT** **${percent(s.critChance)}**${d("critChance", "%")}\nBình **${percent(paradox.potionRate(s))}** Max HP`,
+      `${E.accuracy} **ACC** **${s.accuracy}**${d("accuracy")}${STAT_SEPARATOR}${E.evasion} **EVA** **${s.evasion}**${d("evasion")}${STAT_SEPARATOR}${E.crit} **CRIT** **${percent(s.critChance)}**${d("critChance", "%")}\nBình **${percent(paradox.potionRate(s) * (1 - (s.healingReduction || 0)))}** Max HP`,
     );
   return lines.join("\n");
 }
@@ -98,13 +99,13 @@ function battleStats(s) {
     barbarian: "Vật lý, có thể trượt/Crit.",
     assassin: "Vật lý, có thể trượt/Crit; né phản công.",
     sorceress: "Phép luôn trúng, không Crit.",
-    druid: `Vật lý, có thể trượt/Crit; hồi tối đa ${E.hp} **${money(Math.floor(s.maxHp * 0.12))} HP** cho bạn (**12% Max HP**).`,
+    druid: `Vật lý, có thể trượt/Crit; hồi tối đa ${E.hp} **${money(core.healingAmount(s, s.maxHp * 0.12))} HP** cho bạn (**12% Max HP**${s.healingReduction ? " trước giảm hồi phục" : ""}).`,
     necromancer: "Phép luôn trúng, không Crit; chặn phản công.",
     paladin: "Vật lý, có thể trượt/Crit; tự Phòng thủ.",
   }[s.classKey];
-  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${s.maxMana}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé** **${s.escapeTokens}**\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${core.effectiveResistance(s)}%**${core.effectiveResistance(s) !== s.resistance ? ` (gốc ${s.resistance}%)` : ""}\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP${paradox.hpCost(s) ? `, −${paradox.hpCost(s)} HP` : ""}): ${skill.low}–${skill.high} DMG**\n${detail}\n`;
+  return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${s.maxMana}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé** **${s.escapeTokens}**\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${core.effectiveResistance(s)}%**${core.effectiveResistance(s) !== s.resistance ? ` (gốc ${s.resistance}%)` : ""}\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""}): ${skill.low}–${skill.high} DMG**\n${detail}\n`;
 }
-function effectText(effects, level = 1) {
+function effectText(effects, level = 1, { compactCurses = false } = {}) {
   const names = {
     str: `${E.str} STR`,
     dex: `${E.dex} DEX`,
@@ -145,6 +146,13 @@ function effectText(effects, level = 1) {
   return (
     Object.entries(effects)
       .map(([key, value]) => {
+        const curseText = itemCurses.describeEffect(
+          key,
+          value,
+          level,
+          compactCurses,
+        );
+        if (curseText) return formatPassiveText(curseText);
         if (key === "defenseSet") return `${E.defense} **DEF** = 0`;
         if (key === "bonusPenalty")
           return `**Payout** ×${(1 - value).toFixed(2)} mỗi cấp chưa giải`;
@@ -170,8 +178,9 @@ function formatPassiveText(text) {
     DEF: E.defense,
     CRIT: E.crit,
     EVA: E.evasion,
+    DMG: E.attack,
   };
-  return text.replace(/\b(Max HP|HP|MP|DEF|CRIT|EVA)\b/g, (label) =>
+  return text.replace(/\b(Max HP|HP|MP|DEF|CRIT|EVA|DMG)\b/g, (label) =>
     highlightStat(icons[label] + " " + label),
   );
 }
@@ -661,7 +670,7 @@ function encounterText(s) {
       `Đòn quái kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}** · Dự báo nhận **${p.low}–${p.high} HP** · Quái đánh trúng bạn **${percent(p.chance)}** *(chưa Crit/chưa Thủ)*\n` +
       `Bạn đánh vật lý trúng quái **${percent(world.hitChance(s.accuracy, e.evasion))}**; trượt gây 0 DMG nhưng vẫn hồi MP khi đánh thường. Skill phép luôn trúng.\n` +
       (e.mechanic ? `Cơ chế: ${mechanisms[e.mechanic]}\n` : "") +
-      `**Tấn công:** vật lý, hồi ${core.attackManaGain(s)} MP (tối đa Max MP). **Thủ:** DEF ×2 hoặc +15 RES, giảm thêm 15% DMG, miễn Crit, +1 MP.\n**${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP${paradox.hpCost(s) ? `, −${paradox.hpCost(s)} HP` : ""}):** ${SKILLS[s.classKey]} **Bình:** hồi ${percent(paradox.potionRate(s))} Max HP, ít nhất 20; quái còn sống phản công.`
+      `**Tấn công:** vật lý, hồi ${core.attackManaGain(s)} MP (tối đa Max MP). **Thủ:** DEF ×2 hoặc +15 RES, giảm thêm 15% DMG, miễn Crit, +1 MP.\n**${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""}):** ${SKILLS[s.classKey]} **Bình:** hồi tối đa ${core.healingAmount(s, Math.max(20, s.maxHp * paradox.potionRate(s)))} HP cho bạn; quái còn sống phản công.`
     );
   }
   if (e.type === "memory")
@@ -781,7 +790,7 @@ function equipmentSummary(state) {
     ),
   );
   return Object.keys(active).length
-    ? effectText(active)
+    ? effectText(active, 1, { compactCurses: true })
     : "Không có chỉ số cộng thêm.";
 }
 function hasEncounterDetails(s) {
@@ -1415,7 +1424,7 @@ function riftStatSummary(state) {
         `Bình hồi ${percent(state.potionRate)} → **${percent(paradox.potionRate(state))} Max HP**`,
       );
       effects.push(
-        `Hạ quái hồi ${E.hp} **${Math.max(1, Math.floor(state.maxHp * 0.12))} HP** cho bạn`,
+        `Hạ quái hồi ${E.hp} **${core.healingAmount(state, Math.max(1, Math.floor(state.maxHp * 0.12)))} HP** cho bạn`,
       );
     }
     if (p.id === "blood_mirror")
@@ -1448,9 +1457,9 @@ function privatePayload(
   tab = "items",
   page = 0,
 ) {
-  const pages =
+  let pages =
     tab === "items" ? Math.max(1, Math.ceil(state.items.length / 5)) : 1;
-  page = clampPage(page, pages);
+  if (tab === "items") page = clampPage(page, pages);
   const e = new EmbedBuilder()
     .setColor(0x9b59b6)
     .setTitle(
@@ -1508,7 +1517,7 @@ function privatePayload(
         E.evasion +
         " Né vật lý: " +
         percent(state.evasionCap) +
-        ". Nội tại không tăng theo level, các món khác nhau cùng loại cộng đến trần.",
+        ". Nội tại cộng giữa món khác nhau; không nhân level.",
     );
     addTextFields(
       e,
@@ -1571,6 +1580,27 @@ function privatePayload(
           checkpointPreview(state, key),
         );
   }
+  if (tab !== "items") {
+    // Keep every field accessible when a large build exceeds Discord's 6000-char limit.
+    const fieldPages = [[]];
+    let used = 0;
+    const budget = Math.min(
+      5200,
+      5800 - (e.data.title?.length || 0) - (e.data.description?.length || 0),
+    );
+    for (const field of e.data.fields || []) {
+      const size = field.name.length + field.value.length;
+      if (used + size > budget || fieldPages.at(-1).length >= 25) {
+        fieldPages.push([]);
+        used = 0;
+      }
+      fieldPages.at(-1).push(field);
+      used += size;
+    }
+    pages = fieldPages.length;
+    page = clampPage(page, pages);
+    e.data.fields = fieldPages[page];
+  }
   e.setFooter({
     text: `v${state.releaseVersion} · Lượt ${state.turn} · Trang ${page + 1}/${pages}`,
   });
@@ -1585,14 +1615,14 @@ function privatePayload(
   if (pages > 1)
     buttons.push(
       button(
-        prefix + `page_items_${Math.max(0, page - 1)}:${sourceMessageId}`,
+        prefix + `page_${tab}_${Math.max(0, page - 1)}:${sourceMessageId}`,
         "Trước",
         ButtonStyle.Secondary,
         page === 0,
       ),
       button(
         prefix +
-          `page_items_${Math.min(pages - 1, page + 1)}:${sourceMessageId}`,
+          `page_${tab}_${Math.min(pages - 1, page + 1)}:${sourceMessageId}`,
         "Sau",
         ButtonStyle.Secondary,
         page === pages - 1,

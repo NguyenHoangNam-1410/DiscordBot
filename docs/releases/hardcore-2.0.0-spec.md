@@ -386,27 +386,27 @@ Thuộc tính trong bảng được cộng **mỗi cấp**. Cột đặc biệt 
 |---|---|---|---|---|
 | One More Hit | charm | +12 VIT | +1 Vé Thoát Hiểm khi nhận mỗi cấp | — |
 | The Last Bad Decision | weapon | +12 STR, +12 DEX, -5 VIT | Không có | — |
-| Warden’s Bulwark | armor | +10 STR, +8 VIT, +8 ENE | Không có | — |
+| Warden’s Bulwark | armor | +10 STR, +16 VIT | +2 Defense | — |
 | Eye of RNGesus | charm | +5 STR, +5 DEX, +5 ENE | +7 Luck | — |
-| Phoenix Blood | charm | +16 VIT, +8 ENE | Không có | — |
+| Phoenix Blood | charm | +12 VIT, +14 ENE | Không có | — |
 | Riftbreaker | weapon | +12 STR, +8 DEX | +20% damage Boss, +15% damage Elite | — |
-| Living Armor | armor | +10 STR, +16 VIT | Không có | — |
+| Living Armor | armor | +18 VIT | +6 Defense | — |
 | Mimic Crown | armor | +6 DEX, +6 ENE | +3 Luck, +20% phát hiện Mimic, +5% tìm SSR | — |
 | Endless Flask | utility | +10 VIT, +8 ENE | +20% hiệu lực bình, +1 bình khi nhận mỗi cấp | — |
 | Chrono Shard | charm | +20 DEX | +2 Luck | — |
-| Seraphic Aegis | armor | +10 STR, +6 VIT, +12 ENE | Không có | — |
+| Seraphic Aegis | armor | +10 VIT, +18 ENE | +5 Resistance | — |
 | Doomwhisper | weapon | +14 STR, +12 DEX | Không có | — |
-| Worldroot Seed | charm | +4 STR, +22 VIT | Không có | — |
+| Worldroot Seed | charm | +26 VIT | Không có | — |
 | Void Lens | utility | +8 DEX, +8 ENE | +15% phát hiện Mimic, +8% tìm SSR | — |
 | Angelic Engine | charm | +6 VIT, +18 ENE | +2 Max Mana | — |
 | Predator’s Instinct | charm | +6 STR, +14 DEX | +25% damage Elite | — |
 | Deimoss Scar | charm | +14 STR, +6 VIT | +30% damage Boss | — |
 | Golden Goblet | utility | +6 DEX, +6 VIT | +5 Luck, +18% bắt Goblin | — |
 | Astral Mail | armor | +6 STR, +8 DEX, +6 VIT, +8 ENE | Không có | — |
-| Blood Moon Edge | weapon | +14 STR, +12 VIT | Không có | — |
+| Blood Moon Edge | weapon | +24 ENE, +4 VIT | Không có | — |
 | Oracle Mask | armor | +12 DEX, +10 ENE | +5 Luck | — |
-| Eternal Clover | charm | +4 DEX, +4 VIT | +9 Luck, +4% tìm SSR | — |
-| Titan Heart | charm | +6 STR, +22 VIT | Không có | — |
+| Eternal Clover | charm | Không cộng thuộc tính | +10 Luck, +4% tìm SSR | — |
+| Titan Heart | charm | +8 STR, +18 VIT | Không có | — |
 | Sevenfold Sigil | jewelry | +7 STR, +7 DEX, +7 VIT, +7 ENE | +3 Luck | — |
 
 ### 14.4. UR — Cursed
@@ -414,21 +414,27 @@ Thuộc tính trong bảng được cộng **mỗi cấp**. Cột đặc biệt 
 | Item | Nhóm | Thuộc tính mỗi cấp | Hiệu ứng đặc biệt | Lời nguyền khi chưa giải |
 |---|---|---|---|---|
 | Glass Cannon | weapon | +35 STR, +15 DEX | Không có | Defense = 0 |
-| Schrödinger’s Armor | armor | +20 STR, +30 VIT | Không có | -12 VIT |
-| Goblin’s Debt | charm | +20 DEX, +15 VIT | +12 Luck, +20% bắt Goblin | mất 15% payout hiện tại mỗi cấp nhận |
-| Crown of Ruin | armor | +20 STR, +15 VIT | +8 Luck | mất 10% payout hiện tại mỗi cấp nhận |
-| Blood Pact | weapon | +40 STR, +10 DEX | Không có | -15 VIT |
+| Schrödinger’s Armor | armor | +20 STR, +30 VIT | Không có | nhận thêm 20% damage vật lý (tối đa 100%) |
+| Goblin’s Debt | charm | +20 DEX, +15 VIT | +12 Luck, +20% bắt Goblin | mất 15% payout xu mỗi cấp chưa giải |
+| Crown of Ruin | armor | +20 STR, +15 VIT | +8 Luck | giảm 1 sức chứa bình mỗi cấp chưa giải, còn tối thiểu 1 bình |
+| Blood Pact | weapon | +40 ENE, +10 VIT | Không có | Skill tốn 3% Max HP mỗi cấp chưa giải (tối đa 15%); làm tròn xuống, tối thiểu 1 HP, phải còn 1 HP sau chi phí |
 | Void Heart | charm | +35 VIT, +20 ENE | Không có | -15% hiệu lực bình |
-| Broken Hourglass | charm | +40 DEX | +8 Luck | mất 4% Max HP sau mỗi tầng |
+| Broken Hourglass | charm | +40 DEX | +8 Luck | Tấn công hồi ít hơn 1 MP mỗi cấp chưa giải (tối đa giảm 3 MP, tối thiểu hồi 0 MP); Phòng thủ không đổi |
 | Mimic’s Promise | utility | +20 DEX, +15 ENE | +10% phát hiện Mimic, +12% tìm SSR | +12% Mimic |
 | Berserker Chains | weapon | +40 STR, +10 DEX | +20% damage Elite | nhận thêm 18% damage |
-| Hollow Crown | armor | +10 VIT, +40 ENE | +2 Max Mana | -15 STR |
+| Hollow Crown | armor | +10 VIT, +40 ENE | +2 Max Mana | Skill tốn thêm 1 MP mỗi cấp chưa giải (tối đa thêm 3 MP); Skill miễn phí từ Class Shrine vẫn tốn 0 MP |
 | Ashen Wings | armor | +40 DEX, +10 ENE | Không có | -20 Resistance |
-| Soul Leash | charm | +20 STR, +25 ENE | +35% damage Boss | -2 Max Mana |
+| Soul Leash | charm | +20 STR, +25 ENE | +35% damage Boss | khi vào combat mất 1 MP mỗi cấp chưa giải (tối đa 3 MP, không xuống dưới 0), chỉ một lần/combat và trước nội tại hồi MP |
 | Bleeding Star | jewelry | +20 STR, +30 DEX | Không có | mất 6% Max HP sau mỗi tầng |
-| Null Idol | charm | +20 STR, +15 VIT, +20 ENE | Không có | -15 DEX, -6 Luck |
-| Black Sun | charm | +10 DEX, +30 ENE | +10 Luck, +15% tìm SSR | -20% hiệu lực bình |
-| Oathbreaker | weapon | +25 STR, +15 DEX, +10 VIT | +25% damage Boss, +25% damage Elite | -10 STR, -10 DEX |
+| Null Idol | charm | +20 STR, +15 VIT, +20 ENE | Không có | lượng HP hồi cho bạn giảm 20% mỗi cấp chưa giải (tối đa 60%); không giảm hồi đầy tại Checkpoint hoặc hồi sinh |
+| Black Sun | charm | +10 DEX, +30 ENE | +10 Luck, +15% tìm SSR | nhận thêm 20% damage phép (tối đa 100%) |
+| Oathbreaker | weapon | +25 STR, +15 DEX, +10 VIT | +25% damage Boss, +25% damage Elite | DMG Tấn công/Skill lên quái thường giảm 20% mỗi cấp chưa giải (tối đa 60%); không giảm DMG lên Tinh anh/Boss hoặc phản sát thương |
+
+SSR/UR được phân hóa vai trò ngày 06/10/2026, giữ 63 mã để không làm mất vật phẩm người chơi: Warden thiên STR/VIT/DEF, Seraphic thiên ENE/VIT/RES, Living Armor chuyên VIT/DEF, Blood Moon Edge công phép. Phoenix Blood hỗ trợ ENE và hồi phục, Worldroot Seed chuyên VIT/hồi phục, Titan Heart STR/VIT/sức chứa bình. Eternal Clover chuyên LUCK; Blood Pact là vũ khí UR công phép. Nội tại vẫn chỉ cộng giữa các mã món khác nhau, không nhân level.
+
+Lời nguyền cộng theo số cấp chưa giải, có trần riêng ghi trong bảng; giải nguyền/chuyển hóa gỡ đúng cấp tương ứng. Chi phí HP Skill cộng với Huyết Ước Rift Paradox, phải còn ít nhất 1 HP. Chi phí MP cộng sau luật Paradox; Skill Class Shrine miễn phí vẫn 0 MP. Soul Leash rút MP một lần/combat, khóa cùng khởi động nội tại, không lặp khi resume/hồi sinh trong cùng combat. Null Idol giảm bình, Skill, event và nội tại hồi HP; Checkpoint/hồi sinh giữ luật hồi phục gốc. Sức chứa giảm có thể làm bỏ bình vượt giới hạn, giải nguyền không hoàn lại bình đã bỏ. Run đang chơi giữ definition đã lưu, kể cả khi nhận thêm level cùng mã; drop và loadout mới dùng thiết kế mới.
+
+LUCK chưa áp dụng drop cho quái thường trong bản này. Công thức drop theo quái là tính năng sắp tới; LUCK và nội tại may mắn sự kiện vẫn có phạm vi hiện hành.
 
 ### 14.5. Gộp mã item cũ
 
@@ -542,7 +548,7 @@ Mô tả từng món (nguồn mapping: src/hardcore/itemPassives.js):
 | SSR | Deimoss Scar | Cuồng chiến: sát thương Tấn công/Skill của bạn tăng theo HP đã mất, tối đa 22% khi gần cạn HP. |
 | SSR | Golden Goblet | Thương lượng: giảm 8% giá xu tại Rift Merchant/Payout Item Shop; không giảm HP, kim cương hay cửa hàng ngoài run. |
 | SSR | Astral Mail | Chống bẫy: giảm 15% HP mất do Fake Shrine/bẫy máu Wrong Portal; không giảm chi phí HP hay nguyền. |
-| SSR | Blood Moon Edge | Gai: khi sống sót sau đòn quái, phản 12% HP thực mất thành sát thương vật lý lên quái. |
+| SSR | Blood Moon Edge | Cuồng chiến: sát thương Tấn công/Skill của bạn tăng theo HP đã mất, tối đa 22% khi gần cạn HP. |
 | SSR | Oracle Mask | Tiên tri: biết trước an toàn/nguy hiểm của 1 lựa chọn mỗi event thuộc Three Doors, Mirror of Fate (đập gương); không biết trước RNGesus. |
 | SSR | Eternal Clover | May mắn sự kiện: tăng 4 điểm % tỷ lệ nhánh tốt ở Blood Fountain, Three Doors và Wrong Portal. |
 | SSR | Titan Heart | Túi bình: tăng giới hạn của bạn thêm 2 bình máu; không tặng bình. |
@@ -566,8 +572,9 @@ Mô tả từng món (nguồn mapping: src/hardcore/itemPassives.js):
 
 ## 15. Kiểm thử và cân bằng đã chốt
 
-- Toàn bộ `npm test` đã qua: command, economy, migration, lifecycle, item effect, event, setup, handler và security audit.
-- Catalog validator hiện xác nhận 63 item: 10 R, 13 SR, 24 SSR, 16 UR và không trùng tác dụng R/SR; chỉ hai curse trực tiếp giảm payout.
+- Mốc kiểm thử của release gốc: toàn bộ `npm test` đã qua tại thời điểm phát hành 2.0.0.
+- Rework item 06/10/2026: kiểm thử nguyền, nội tại, v2, loadout, hồi phục, payout, Paradox và Tower đã qua. Chuỗi `npm test` hiện vẫn dừng ở kiểm thử danh sách slash command cũ (`test-game-bot.js`), một lỗi đã tồn tại trước rework; không xem chuỗi test toàn repo là đã qua.
+- Catalog validator hiện xác nhận 63 item: 10 R, 13 SR, 24 SSR, 16 UR và không trùng tác dụng R/SR; chỉ Goblin’s Debt trực tiếp giảm payout trong catalog mới.
 - Bộ Sinh tồn v2 kiểm tra 12 nhóm abuse: stale click, checkpoint lặp, payout ảo, HP shop, kim cương thiếu/bấm lặp, Duelist, Severance, Soul Drain, Grave lease/cap và tương thích v1.
 - Mốc mô phỏng 700 run trước thay đổi hồi Mana/Rift có 0 lần vượt tầng 999, cao nhất 969. Smoke test Mana mới gồm 210 run cũng có 0 lần vượt, cao nhất 934. Theo yêu cầu vận hành, chưa chạy lại mô phỏng dài sau rework stack Rift; các số trên là mốc lịch sử, không được xem là tỷ lệ chính thức của bản mới.
 

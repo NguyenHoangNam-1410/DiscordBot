@@ -126,13 +126,18 @@ function sumEffects(state) {
   return { totals, curseFactor };
 }
 const itemPassives = require("../hardcore/itemPassives");
+const itemCurses = require("../hardcore/itemCurses");
 function derive(state) {
   const c = CLASSES[state.classKey];
   if (!c) throw new Error("INVALID_CLASS");
   const { totals: t, curseFactor } = sumEffects(state);
   const p = itemPassives.aggregate(state);
   const d = {
-    maxPotions: 5 + p.potionCapacity,
+    maxPotions: Math.max(
+      1,
+      5 + p.potionCapacity - Math.max(0, t.potionCapacityLoss || 0),
+    ),
+    ...itemCurses.derive(t),
     critCap: 0.6 + p.critCap,
     evasionCap: 0.45 + p.evasionCap,
   };

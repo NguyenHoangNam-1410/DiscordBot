@@ -491,7 +491,7 @@ try {
       procs = 0;
     for (let i = 0; i < 1800; i++) {
       s.encounter.hp = 100000;
-      s.mana = 2;
+      s.mana = core.skillManaCost(s) + 1;
       const r = core.playerAttack(s, "skill", rng);
       if (s.encounter.hp < 100000) {
         landed++;

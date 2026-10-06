@@ -320,11 +320,17 @@ function logPayoutChange(state, before, after, source) {
     money(delta) +
     " xu).";
 }
+function healingAmount(state, amount) {
+  return Math.max(0, Math.floor(amount * (1 - (state.healingReduction || 0))));
+}
 function heal(state, amount, { checkpoint = false } = {}) {
   if (!checkpoint) markDirect(state, ["hp"]);
   const actual = Math.max(
     0,
-    Math.min(state.maxHp - state.hp, Math.floor(amount)),
+    Math.min(
+      state.maxHp - state.hp,
+      checkpoint ? Math.floor(amount) : healingAmount(state, amount),
+    ),
   );
   state.hp += actual;
   if (!checkpoint && state.paradox?.kind === "blood")
@@ -383,6 +389,8 @@ function receiveItem(state, definition, levels = 1, cleansedLevels = 0) {
   }
   // A new drop or another level of existing equipment is the most recent receipt.
   state.items.unshift(item);
+  // Existing runs keep the saved design when receiving another level of the same ID.
+  definition = item.definition;
   item.level += levels;
   item.cleansedLevels += Math.min(levels, Math.max(0, cleansedLevels));
   if (definition.rarity === "cursed")
@@ -1121,6 +1129,8 @@ function attackDamage(
     : [attacker.damageMin, attacker.damageMax];
   let damage = raw ?? int(...range, rng);
   damage *= multiplier * (crit ? 1.75 : 1);
+  if (player && defender.rank === "normal")
+    damage *= 1 - (state.normalDamagePenalty || 0);
   if (player)
     damage *=
       1 + itemPassives.aggregate(state).berserk * (1 - state.hp / state.maxHp);
@@ -1156,6 +1166,10 @@ function attackDamage(
     damage *=
       paradox.incoming(state, magic) *
       (1 + state.damageTaken) *
+      (1 +
+        (magic
+          ? state.magicDamageTaken || 0
+          : state.physicalDamageTaken || 0)) *
       (defend ? 0.85 : 1);
   if (player && paradox.active(state)) {
     if (defender.mechanic === "deimoss") damage *= 0.75;
@@ -1229,6 +1243,13 @@ function prepareItemCombat(state, rng) {
   state.passiveCombatFloor = state.floor;
   if (e.passiveCombatStarted) return;
   e.passiveCombatStarted = true;
+  if (alive(state) && state.combatManaLoss > 0) {
+    const before = state.mana;
+    state.mana = Math.max(0, state.mana - state.combatManaLoss);
+    state.lastLog =
+      (state.lastLog || "") +
+      `\n${E.mana} Soul Leash: ${before} → ${state.mana} MP cho bạn.`;
+  }
   const p = itemPassives.aggregate(state);
   if (
     alive(state) &&
@@ -1327,18 +1348,25 @@ function incomingPreview(state) {
 function attackManaGain(state) {
   if (paradox.is(state, "mana_fracture")) return 0;
   return Math.max(
-    1,
-    Math.floor(
-      state.maxMana *
-        (["sorceress", "necromancer"].includes(state.classKey) ? 0.7 : 0.4),
-    ),
+    0,
+    Math.max(
+      1,
+      Math.floor(
+        state.maxMana *
+          (["sorceress", "necromancer"].includes(state.classKey) ? 0.7 : 0.4),
+      ),
+    ) - (state.attackManaLoss || 0),
   );
 }
 function skillManaCost(state) {
-  return paradox.manaCost(
-    state,
-    state.classKey === "sorceress" && shrineActive(state),
-  );
+  const free = state.classKey === "sorceress" && shrineActive(state);
+  return paradox.manaCost(state, free) + (free ? 0 : state.skillManaExtra || 0);
+}
+function skillHpCost(state) {
+  const curse = state.skillHpCost
+    ? Math.max(1, Math.floor(state.maxHp * state.skillHpCost))
+    : 0;
+  return paradox.hpCost(state) + curse;
 }
 function outgoingDamagePreview(state, action) {
   const e = state.encounter;
@@ -1364,8 +1392,8 @@ function outgoingDamagePreview(state, action) {
       : 0;
   const damage = (raw) => {
     const previewState =
-      skill && paradox.hpCost(state)
-        ? { ...state, hp: Math.max(1, state.hp - paradox.hpCost(state)) }
+      skill && skillHpCost(state)
+        ? { ...state, hp: Math.max(1, state.hp - skillHpCost(state)) }
         : state;
     const hit = attackDamage(previewState, e, previewState, () => 0, {
       player: true,
@@ -1434,9 +1462,13 @@ function playerAttack(state, action, rng) {
   if (action === "skill") {
     const cost = skillManaCost(state);
     if (state.mana < cost) throw new Error("NO_ENERGY");
-    const hpCost = paradox.hpCost(state);
+    const hpCost = skillHpCost(state);
     if (state.hp - hpCost < 1) throw new Error("INSUFFICIENT_SKILL_HP");
-    if (hpCost) hurt(state, hpCost, false);
+    if (hpCost) {
+      const before = state.hp;
+      hurt(state, hpCost, false);
+      healingLog += `\n${E.hp} Chi phí Skill: ${before} → ${state.hp} HP cho bạn (−${hpCost}).`;
+    }
     if (cost === 0 && state.classKey === "sorceress" && shrineActive(state))
       state.classShrine.consumed = true;
     state.mana -= cost;
@@ -1472,7 +1504,7 @@ function playerAttack(state, action, rng) {
       if (state.classKey === "druid") {
         const hpBefore = state.hp;
         const gained = heal(state, state.maxHp * 0.12);
-        healingLog = `\n${SKILL_ICONS.druid} Hồi ${E.hp} **${gained} HP** cho bạn: ${hpBefore} → **${state.hp}**.`;
+        healingLog += `\n${SKILL_ICONS.druid} Hồi ${E.hp} **${gained} HP** cho bạn: ${hpBefore} → **${state.hp}**.`;
       }
     }
   } else if (action === "attack") {
@@ -1693,10 +1725,10 @@ function actions(state) {
       { action: "defend", label: "+1 MP" },
       {
         action: "skill",
-        label: `${skillManaCost(state) === 0 ? "" : "−"}${skillManaCost(state)} MP${paradox.hpCost(state) ? ` · −${paradox.hpCost(state)} HP` : ""}`,
+        label: `${skillManaCost(state) === 0 ? "" : "−"}${skillManaCost(state)} MP${skillHpCost(state) ? ` · −${skillHpCost(state)} HP` : ""}`,
         disabled:
           state.mana < skillManaCost(state) ||
-          state.hp - paradox.hpCost(state) < 1,
+          state.hp - skillHpCost(state) < 1,
       },
       {
         action: "potion",
@@ -2448,6 +2480,7 @@ module.exports = {
   payout,
   rawPayout,
   heal,
+  healingAmount,
   hurt,
   receiveItem,
   receiveSnapshot,
@@ -2464,6 +2497,7 @@ module.exports = {
   playerAttack,
   attackManaGain,
   skillManaCost,
+  skillHpCost,
   skillDamagePreview,
   attackDamagePreview,
   enemyTurn,
