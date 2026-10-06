@@ -85,6 +85,158 @@ async function run() {
     midnight = beforeMidnight + 1;
   assert.equal(bag.vietnamDay(beforeMidnight), "2026-10-05");
   assert.equal(bag.vietnamDay(midnight), "2026-10-06");
+  // Canonicalization preserves every retired quantity and is safe to repeat.
+  const { ITEM_ALIASES, resolveItemId } = require("../src/hardcore/item");
+  const migratedUser = newUser();
+  const seedStock = db.prepare(
+    "INSERT INTO hardcore_inventory(guild_id,user_id,item_id,quantity,updated_at) VALUES(?,?,?,?,?)",
+  );
+  const expectedStock = new Map();
+  for (const [oldId, newId] of Object.entries(ITEM_ALIASES)) {
+    seedStock.run(guildId, migratedUser, oldId, 2, 123);
+    expectedStock.set(newId, (expectedStock.get(newId) || 0) + 2);
+    assert.equal(bag.product(oldId).id, newId);
+  }
+  for (const id of expectedStock.keys()) {
+    seedStock.run(guildId, migratedUser, id, 3, 456);
+    expectedStock.set(id, expectedStock.get(id) + 3);
+  }
+  const migrated = bag.inventory(guildId, migratedUser);
+  assert.equal(migrated.length, expectedStock.size);
+  for (const entry of migrated) {
+    assert.equal(entry.quantity, expectedStock.get(entry.id));
+    assert.equal(entry.updatedAt, 456);
+  }
+  assert.deepEqual(bag.inventory(guildId, migratedUser), migrated);
+  assert.equal(
+    db
+      .prepare(
+        "SELECT COUNT(*) AS n FROM hardcore_inventory WHERE guild_id=? AND user_id=?",
+      )
+      .get(guildId, migratedUser).n,
+    expectedStock.size,
+  );
+  assert.deepEqual(bag.validateLoadout({ itemIds: ["iron_dagger"] }).itemIds, [
+    "hunter_bow",
+  ]);
+  assert.throws(
+    () => bag.validateLoadout({ itemIds: ["iron_dagger", "hunter_bow"] }),
+    /INVALID_LOADOUT/,
+  );
+  assert.throws(
+    () => bag.validateLoadout({ itemIds: ["iron_dagger", "worn_boots"] }),
+    /INVALID_LOADOUT/,
+  );
+  const beforeTake = expectedStock.get("hunter_bow");
+  bag.consume(guildId, migratedUser, { itemIds: ["iron_dagger"] });
+  assert.equal(
+    bag.inventory(guildId, migratedUser).find((i) => i.id === "hunter_bow")
+      .quantity,
+    beforeTake - 1,
+  );
+  bag.grant(guildId, migratedUser, "worn_boots", 1);
+  assert.equal(
+    bag.inventory(guildId, migratedUser).find((i) => i.id === "hunter_bow")
+      .quantity,
+    beforeTake,
+  );
+  // Overflow rolls back the entire migration; neither original row is lost.
+  const overflowUser = newUser();
+  seedStock.run(
+    guildId,
+    overflowUser,
+    "hunter_bow",
+    Number.MAX_SAFE_INTEGER,
+    1,
+  );
+  seedStock.run(guildId, overflowUser, "iron_dagger", 1, 1);
+  assert.throws(() => bag.inventory(guildId, overflowUser), /INVALID_QUANTITY/);
+  assert.equal(
+    db
+      .prepare(
+        "SELECT quantity FROM hardcore_inventory WHERE guild_id=? AND user_id=? AND item_id=?",
+      )
+      .get(guildId, overflowUser, "iron_dagger").quantity,
+    1,
+  );
+  // Saved shop aliases collapse to distinct canonical offers, then fill once.
+  const oldShopGuild = "old-shop";
+  const oldDay = bag.vietnamDay(beforeMidnight);
+  db.prepare(
+    "INSERT INTO hardcore_shop_rotations(guild_id,day,items_json,created_at) VALUES(?,?,?,?)",
+  ).run(
+    oldShopGuild,
+    oldDay,
+    JSON.stringify([
+      "iron_dagger",
+      "worn_boots",
+      "fox_mask",
+      "mana_fragment",
+      "rusted_edge",
+    ]),
+    beforeMidnight,
+  );
+  const canonicalShop = bag.shop(oldShopGuild, beforeMidnight);
+  assert.equal(canonicalShop.products.length, 8);
+  assert.equal(new Set(canonicalShop.itemIds).size, 5);
+  assert(canonicalShop.itemIds.includes("hunter_bow"));
+  assert(canonicalShop.itemIds.every((id) => resolveItemId(id) === id));
+  assert.deepEqual(
+    bag.shop(oldShopGuild, beforeMidnight).itemIds,
+    canonicalShop.itemIds,
+  );
+  economy.creditCoins({
+    guildId: oldShopGuild,
+    userId: "buyer",
+    amount: 100000,
+    reason: "test",
+  });
+  const oldPurchase = {
+    guildId: oldShopGuild,
+    userId: "buyer",
+    itemId: "iron_dagger",
+    day: oldDay,
+    operationId: "old-offer",
+    now: beforeMidnight,
+  };
+  bag.purchase(oldPurchase);
+  assert.equal(bag.purchase(oldPurchase).duplicate, true);
+  assert.equal(
+    bag.inventory(oldShopGuild, "buyer").find((i) => i.id === "hunter_bow")
+      .quantity,
+    1,
+  );
+  // Saved in-run definitions keep their stats; resume cannot replay receipt effects.
+  const oldRun = stats.createState("barbarian", 10);
+  const oldDefinition = {
+    id: "iron_dagger",
+    name: "Iron Dagger",
+    category: "weapon",
+    rarity: "common",
+    typeCode: "R",
+    catalogVersion: 2,
+    effects: { str: 1, dex: 4 },
+    text: "+1 STR, +4 DEX",
+    curse: null,
+  };
+  core.receiveItem(oldRun, oldDefinition, 2);
+  core.normalize(oldRun);
+  const oldSnapshot = JSON.stringify(oldRun);
+  for (let i = 0; i < 3; i++) core.normalize(oldRun);
+  assert.equal(JSON.stringify(oldRun), oldSnapshot);
+  assert.equal(oldRun.str, 32);
+  assert.equal(oldRun.dex, 22);
+  const canonicalPreview = bag.preview("barbarian", 10, {
+    itemIds: ["iron_dagger"],
+  });
+  assert.equal(canonicalPreview.items[0].definition.id, "hunter_bow");
+
+  if (process.env.HARDCORE_MIGRATION_ONLY === "1") {
+    console.log(
+      "All 37 aliases: quantities, canonical loadout, consumption, idempotency, overflow rollback, saved rotation/purchase and run snapshots verified.",
+    );
+    return;
+  }
   const today = bag.shop(guildId, beforeMidnight);
   assert.equal(today.products.length, 8);
   assert.equal(new Set(today.itemIds).size, 5);
@@ -709,8 +861,9 @@ async function run() {
   );
   for (const item of bag.CATALOG) bag.grant(guildId, "whole-pool", item.id, 1);
   const many = { ...draft, userId: "whole-pool", itemIds: [] };
-  assert.equal(ui.loadoutPage(many).pages, 5);
-  for (let page = 0; page < 5; page++)
+  const expectedPages = Math.ceil(bag.CATALOG.length / 20);
+  assert.equal(ui.loadoutPage(many).pages, expectedPages);
+  for (let page = 0; page < expectedPages; page++)
     serialize(
       ui.setupPayload(
         { ...many, itemPage: page },

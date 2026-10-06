@@ -16,20 +16,6 @@ const ITEMS = {
       curse: null,
     },
     {
-      id: "iron_dagger",
-      name: "Iron Dagger",
-      category: "weapon",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        str: 1,
-        dex: 4,
-      },
-      text: "+1 STR, +4 DEX",
-      curse: null,
-    },
-    {
       id: "cracked_wand",
       name: "Cracked Wand",
       category: "weapon",
@@ -53,90 +39,6 @@ const ITEMS = {
         dex: 5,
       },
       text: "+5 DEX",
-      curse: null,
-    },
-    {
-      id: "militia_spear",
-      name: "Militia Spear",
-      category: "weapon",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        str: 3,
-        dex: 2,
-      },
-      text: "+3 STR, +2 DEX",
-      curse: null,
-    },
-    {
-      id: "bone_club",
-      name: "Bone Club",
-      category: "weapon",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        str: 6,
-        dex: -1,
-      },
-      text: "+6 STR, -1 DEX",
-      curse: null,
-    },
-    {
-      id: "dented_plate",
-      name: "Dented Plate",
-      category: "armor",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        str: 3,
-        vit: 2,
-      },
-      text: "+3 STR, +2 VIT",
-      curse: null,
-    },
-    {
-      id: "wooden_buckler",
-      name: "Wooden Buckler",
-      category: "armor",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        str: 2,
-        vit: 2,
-        ene: 1,
-      },
-      text: "+2 STR, +2 VIT, +1 ENE",
-      curse: null,
-    },
-    {
-      id: "worn_boots",
-      name: "Worn Boots",
-      category: "armor",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        dex: 4,
-      },
-      text: "+4 DEX",
-      curse: null,
-    },
-    {
-      id: "copper_ring",
-      name: "Copper Ring",
-      category: "jewelry",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        vit: 1,
-        ene: 4,
-      },
-      text: "+1 VIT, +4 ENE",
       curse: null,
     },
     {
@@ -179,20 +81,6 @@ const ITEMS = {
       curse: null,
     },
     {
-      id: "scout_lens",
-      name: "Scout Lens",
-      category: "utility",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        dex: 2,
-        mimicDetection: 0.02,
-      },
-      text: "+2 DEX · +2% phát hiện Mimic",
-      curse: null,
-    },
-    {
       id: "mana_fragment",
       name: "Mana Fragment",
       category: "charm",
@@ -200,132 +88,9 @@ const ITEMS = {
       typeCode: "R",
       catalogVersion: 2,
       effects: {
-        ene: 2,
         maxMana: 1,
       },
-      text: "+2 ENE · +1 Max MP",
-      curse: null,
-    },
-    {
-      id: "battle_token",
-      name: "Battle Token",
-      category: "charm",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        str: 2,
-        vit: 2,
-      },
-      text: "+2 STR, +2 VIT",
-      curse: null,
-    },
-    {
-      id: "silver_thread",
-      name: "Silver Thread",
-      category: "jewelry",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        dex: 2,
-        ene: 3,
-      },
-      text: "+2 DEX, +3 ENE",
-      curse: null,
-    },
-    {
-      id: "traveler_map",
-      name: "Traveler Map",
-      category: "utility",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        dex: 2,
-        luck: 1,
-      },
-      text: "+2 DEX · +1 Luck",
-      curse: null,
-    },
-    {
-      id: "small_ward",
-      name: "Small Ward",
-      category: "armor",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        str: 2,
-        vit: 3,
-      },
-      text: "+2 STR, +3 VIT",
-      curse: null,
-    },
-    {
-      id: "sharpening_stone",
-      name: "Sharpening Stone",
-      category: "utility",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        str: 5,
-      },
-      text: "+5 STR",
-      curse: null,
-    },
-    {
-      id: "ember_bead",
-      name: "Ember Bead",
-      category: "jewelry",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        str: 1,
-        ene: 4,
-      },
-      text: "+1 STR, +4 ENE",
-      curse: null,
-    },
-    {
-      id: "fox_mask",
-      name: "Fox Mask",
-      category: "armor",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        dex: 5,
-      },
-      text: "+5 DEX",
-      curse: null,
-    },
-    {
-      id: "oak_talisman",
-      name: "Oak Talisman",
-      category: "charm",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        vit: 6,
-      },
-      text: "+6 VIT",
-      curse: null,
-    },
-    {
-      id: "glass_bead",
-      name: "Glass Bead",
-      category: "jewelry",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        dex: 4,
-      },
-      text: "+4 DEX",
+      text: "+1 Max MP",
       curse: null,
     },
     {
@@ -339,59 +104,6 @@ const ITEMS = {
         heal: 10,
       },
       text: "hồi 10 HP khi nhận mỗi cấp",
-      curse: null,
-    },
-    {
-      id: "iron_nail",
-      name: "Iron Nail",
-      category: "charm",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        str: 3,
-        vit: 2,
-      },
-      text: "+3 STR, +2 VIT",
-      curse: null,
-    },
-    {
-      id: "hawk_feather",
-      name: "Hawk Feather",
-      category: "charm",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        dex: 5,
-      },
-      text: "+5 DEX",
-      curse: null,
-    },
-    {
-      id: "smoke_vial",
-      name: "Smoke Vial",
-      category: "utility",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        dex: 5,
-      },
-      text: "+5 DEX",
-      curse: null,
-    },
-    {
-      id: "cold_ash",
-      name: "Cold Ash",
-      category: "charm",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        ene: 5,
-      },
-      text: "+5 ENE",
       curse: null,
     },
     {
@@ -420,51 +132,8 @@ const ITEMS = {
       text: "+3% phát hiện Mimic",
       curse: null,
     },
-    {
-      id: "faded_clover",
-      name: "Faded Clover",
-      category: "charm",
-      rarity: "common",
-      typeCode: "R",
-      catalogVersion: 2,
-      effects: {
-        vit: 2,
-        luck: 1,
-      },
-      text: "+2 VIT · +1 Luck",
-      curse: null,
-    },
   ],
   rare: [
-    {
-      id: "hunters_fang",
-      name: "Hunter’s Fang",
-      category: "weapon",
-      rarity: "rare",
-      typeCode: "SR",
-      catalogVersion: 2,
-      effects: {
-        str: 4,
-        dex: 6,
-      },
-      text: "+4 STR, +6 DEX",
-      curse: null,
-    },
-    {
-      id: "runed_carapace",
-      name: "Runed Carapace",
-      category: "armor",
-      rarity: "rare",
-      typeCode: "SR",
-      catalogVersion: 2,
-      effects: {
-        str: 5,
-        vit: 4,
-        ene: 3,
-      },
-      text: "+5 STR, +4 VIT, +3 ENE",
-      curse: null,
-    },
     {
       id: "heart_of_the_wild",
       name: "Heart of the Wild",
@@ -486,10 +155,9 @@ const ITEMS = {
       typeCode: "SR",
       catalogVersion: 2,
       effects: {
-        vit: 2,
         luck: 3,
       },
-      text: "+2 VIT · +3 Luck",
+      text: "+3 Luck",
       curse: null,
     },
     {
@@ -500,10 +168,9 @@ const ITEMS = {
       typeCode: "SR",
       catalogVersion: 2,
       effects: {
-        str: 6,
-        dex: 6,
+        str: 10,
       },
-      text: "+6 STR, +6 DEX",
+      text: "+10 STR",
       curse: null,
     },
     {
@@ -520,34 +187,6 @@ const ITEMS = {
       curse: null,
     },
     {
-      id: "bone_talisman",
-      name: "Bone Talisman",
-      category: "charm",
-      rarity: "rare",
-      typeCode: "SR",
-      catalogVersion: 2,
-      effects: {
-        vit: 7,
-        ene: 5,
-      },
-      text: "+7 VIT, +5 ENE",
-      curse: null,
-    },
-    {
-      id: "bloodstone",
-      name: "Bloodstone",
-      category: "jewelry",
-      rarity: "rare",
-      typeCode: "SR",
-      catalogVersion: 2,
-      effects: {
-        str: 6,
-        vit: 6,
-      },
-      text: "+6 STR, +6 VIT",
-      curse: null,
-    },
-    {
       id: "rift_compass",
       name: "Rift Compass",
       category: "utility",
@@ -555,11 +194,9 @@ const ITEMS = {
       typeCode: "SR",
       catalogVersion: 2,
       effects: {
-        dex: 3,
-        luck: 2,
         mimicDetection: 0.08,
       },
-      text: "+3 DEX · +2 Luck, +8% phát hiện Mimic",
+      text: "+8% phát hiện Mimic",
       curse: null,
     },
     {
@@ -570,25 +207,9 @@ const ITEMS = {
       typeCode: "SR",
       catalogVersion: 2,
       effects: {
-        vit: 3,
-        potionPower: 0.05,
-        potions: 1,
+        potions: 2,
       },
-      text: "+3 VIT · +5% hiệu lực bình, +1 bình khi nhận mỗi cấp",
-      curse: null,
-    },
-    {
-      id: "guardian_seal",
-      name: "Guardian Seal",
-      category: "armor",
-      rarity: "rare",
-      typeCode: "SR",
-      catalogVersion: 2,
-      effects: {
-        str: 5,
-        vit: 7,
-      },
-      text: "+5 STR, +7 VIT",
+      text: "+2 bình khi nhận mỗi cấp",
       curse: null,
     },
     {
@@ -600,9 +221,8 @@ const ITEMS = {
       catalogVersion: 2,
       effects: {
         ene: 10,
-        maxMana: 1,
       },
-      text: "+10 ENE · +1 Max MP",
+      text: "+10 ENE",
       curse: null,
     },
     {
@@ -613,110 +233,9 @@ const ITEMS = {
       typeCode: "SR",
       catalogVersion: 2,
       effects: {
-        dex: 3,
-        luck: 1,
         goblinChance: 0.08,
       },
-      text: "+3 DEX · +1 Luck, +8% bắt Goblin",
-      curse: null,
-    },
-    {
-      id: "wardens_chain",
-      name: "Warden’s Chain",
-      category: "armor",
-      rarity: "rare",
-      typeCode: "SR",
-      catalogVersion: 2,
-      effects: {
-        str: 9,
-        dex: -2,
-        vit: 5,
-      },
-      text: "+9 STR, -2 DEX, +5 VIT",
-      curse: null,
-    },
-    {
-      id: "moonlit_blade",
-      name: "Moonlit Blade",
-      category: "weapon",
-      rarity: "rare",
-      typeCode: "SR",
-      catalogVersion: 2,
-      effects: {
-        str: 5,
-        ene: 7,
-      },
-      text: "+5 STR, +7 ENE",
-      curse: null,
-    },
-    {
-      id: "assassins_ribbon",
-      name: "Assassin’s Ribbon",
-      category: "charm",
-      rarity: "rare",
-      typeCode: "SR",
-      catalogVersion: 2,
-      effects: {
-        dex: 11,
-      },
-      text: "+11 DEX",
-      curse: null,
-    },
-    {
-      id: "lionheart_emblem",
-      name: "Lionheart Emblem",
-      category: "charm",
-      rarity: "rare",
-      typeCode: "SR",
-      catalogVersion: 2,
-      effects: {
-        str: 5,
-        vit: 8,
-      },
-      text: "+5 STR, +8 VIT",
-      curse: null,
-    },
-    {
-      id: "stormglass",
-      name: "Stormglass",
-      category: "jewelry",
-      rarity: "rare",
-      typeCode: "SR",
-      catalogVersion: 2,
-      effects: {
-        str: 5,
-        dex: 8,
-      },
-      text: "+5 STR, +8 DEX",
-      curse: null,
-    },
-    {
-      id: "saints_ward",
-      name: "Saint’s Ward",
-      category: "armor",
-      rarity: "rare",
-      typeCode: "SR",
-      catalogVersion: 2,
-      effects: {
-        str: 4,
-        vit: 3,
-        ene: 7,
-      },
-      text: "+4 STR, +3 VIT, +7 ENE",
-      curse: null,
-    },
-    {
-      id: "riftwalkers_boots",
-      name: "Riftwalker’s Boots",
-      category: "armor",
-      rarity: "rare",
-      typeCode: "SR",
-      catalogVersion: 2,
-      effects: {
-        dex: 10,
-        luck: 1,
-      },
-      text: "+10 DEX · +1 Luck",
+      text: "+8% bắt Goblin",
       curse: null,
     },
     {
@@ -727,11 +246,9 @@ const ITEMS = {
       typeCode: "SR",
       catalogVersion: 2,
       effects: {
-        str: 5,
-        dex: 4,
         eliteDamage: 0.12,
       },
-      text: "+5 STR, +4 DEX · +12% damage Elite",
+      text: "+12% damage Elite",
       curse: null,
     },
     {
@@ -742,11 +259,9 @@ const ITEMS = {
       typeCode: "SR",
       catalogVersion: 2,
       effects: {
-        str: 3,
-        vit: 6,
         bossDamage: 0.12,
       },
-      text: "+3 STR, +6 VIT · +12% damage Boss",
+      text: "+12% damage Boss",
       curse: null,
     },
     {
@@ -757,11 +272,9 @@ const ITEMS = {
       typeCode: "SR",
       catalogVersion: 2,
       effects: {
-        dex: 2,
-        mimicDetection: 0.05,
         legendaryFind: 0.03,
       },
-      text: "+2 DEX · +5% phát hiện Mimic, +3% tìm SSR",
+      text: "+3% tìm SSR",
       curse: null,
     },
     {
@@ -772,25 +285,9 @@ const ITEMS = {
       typeCode: "SR",
       catalogVersion: 2,
       effects: {
-        vit: 4,
         potionPower: 0.1,
       },
-      text: "+4 VIT · +10% hiệu lực bình",
-      curse: null,
-    },
-    {
-      id: "war_drums",
-      name: "War Drums",
-      category: "charm",
-      rarity: "rare",
-      typeCode: "SR",
-      catalogVersion: 2,
-      effects: {
-        str: 5,
-        dex: 4,
-        vit: 3,
-      },
-      text: "+5 STR, +4 DEX, +3 VIT",
+      text: "+10% hiệu lực bình",
       curse: null,
     },
     {
@@ -801,39 +298,9 @@ const ITEMS = {
       typeCode: "SR",
       catalogVersion: 2,
       effects: {
-        ene: 10,
-        maxMana: 1,
+        maxMana: 2,
       },
-      text: "+10 ENE · +1 Max MP",
-      curse: null,
-    },
-    {
-      id: "steel_lotus",
-      name: "Steel Lotus",
-      category: "armor",
-      rarity: "rare",
-      typeCode: "SR",
-      catalogVersion: 2,
-      effects: {
-        str: 4,
-        dex: 6,
-        vit: 3,
-      },
-      text: "+4 STR, +6 DEX, +3 VIT",
-      curse: null,
-    },
-    {
-      id: "fortune_dice",
-      name: "Fortune Dice",
-      category: "charm",
-      rarity: "rare",
-      typeCode: "SR",
-      catalogVersion: 2,
-      effects: {
-        dex: 6,
-        luck: 4,
-      },
-      text: "+6 DEX · +4 Luck",
+      text: "+2 Max MP",
       curse: null,
     },
   ],
@@ -1550,14 +1017,25 @@ const TYPE_CODES = Object.freeze({
 function validateItems(catalog = ITEMS) {
   const ids = new Set();
   for (const [rarity, count] of Object.entries({
-    common: 32,
-    rare: 28,
+    common: 10,
+    rare: 13,
     legendary: 24,
     cursed: 16,
   })) {
     if (catalog[rarity]?.length !== count)
       throw new Error("INVALID_HARDCORE_ITEM_COUNT");
+    const targets = new Set();
     for (const item of catalog[rarity]) {
+      if (rarity === "common" || rarity === "rare") {
+        const keys = Object.keys(item.effects);
+        if (
+          keys.length !== 1 ||
+          targets.has(keys[0]) ||
+          item.effects[keys[0]] <= 0
+        )
+          throw new Error("DUPLICATE_HARDCORE_ITEM_ROLE:" + item.id);
+        targets.add(keys[0]);
+      }
       if (
         ids.has(item.id) ||
         item.rarity !== rarity ||
@@ -1576,6 +1054,56 @@ function validateItems(catalog = ITEMS) {
   return true;
 }
 validateItems();
+const ITEM_ALIASES = Object.freeze({
+  iron_dagger: "hunter_bow",
+  militia_spear: "rusted_edge",
+  bone_club: "rusted_edge",
+  dented_plate: "minor_life_charm",
+  wooden_buckler: "minor_life_charm",
+  worn_boots: "hunter_bow",
+  copper_ring: "cracked_wand",
+  scout_lens: "chest_chalk",
+  battle_token: "rusted_edge",
+  silver_thread: "cracked_wand",
+  traveler_map: "rabbit_foot",
+  small_ward: "minor_life_charm",
+  sharpening_stone: "rusted_edge",
+  ember_bead: "cracked_wand",
+  fox_mask: "hunter_bow",
+  oak_talisman: "minor_life_charm",
+  glass_bead: "hunter_bow",
+  iron_nail: "rusted_edge",
+  hawk_feather: "hunter_bow",
+  smoke_vial: "hunter_bow",
+  cold_ash: "cracked_wand",
+  faded_clover: "rabbit_foot",
+  hunters_fang: "shadowstep_boots",
+  runed_carapace: "heart_of_the_wild",
+  bone_talisman: "heart_of_the_wild",
+  bloodstone: "vanguard_spear",
+  guardian_seal: "heart_of_the_wild",
+  wardens_chain: "vanguard_spear",
+  moonlit_blade: "mana_prism",
+  assassins_ribbon: "shadowstep_boots",
+  lionheart_emblem: "heart_of_the_wild",
+  stormglass: "shadowstep_boots",
+  saints_ward: "mana_prism",
+  riftwalkers_boots: "shadowstep_boots",
+  war_drums: "vanguard_spear",
+  steel_lotus: "shadowstep_boots",
+  fortune_dice: "lucky_coin",
+});
+const definitions = new Map(
+  Object.values(ITEMS)
+    .flat()
+    .map((item) => [item.id, item]),
+);
+for (const [oldId, targetId] of Object.entries(ITEM_ALIASES))
+  if (definitions.has(oldId) || !definitions.has(targetId))
+    throw new Error("INVALID_HARDCORE_ITEM_ALIAS:" + oldId);
+function resolveItemId(id) {
+  return Object.hasOwn(ITEM_ALIASES, id) ? ITEM_ALIASES[id] : id;
+}
 for (const pool of Object.values(ITEMS)) {
   for (const item of pool) {
     Object.freeze(item.effects);
@@ -1588,4 +1116,10 @@ for (const pool of Object.values(ITEMS)) {
   Object.freeze(pool);
 }
 Object.freeze(ITEMS);
-module.exports = { ITEMS, TYPE_CODES, validateItems };
+module.exports = {
+  ITEMS,
+  TYPE_CODES,
+  ITEM_ALIASES,
+  resolveItemId,
+  validateItems,
+};

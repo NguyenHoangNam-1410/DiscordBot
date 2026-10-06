@@ -341,79 +341,44 @@ Thành tích toàn tài khoản hiện có các mốc Sinh tồn: tầng 10 thư
 - Phiên không hoạt động quá 7 ngày bị tính là forfeit, payout bằng 0 và phiên bị xóa.
 - Item, thuộc tính và stat dẫn xuất được tính lại từ nguồn để tránh cộng chỉ số hai lần khi mở lại UI.
 
-## 14. Catalog 100 item v2
+## 14. Catalog item v2 — tinh gọn ngày 06/10/2026
+
+Catalog hiện có **63 món: 10 R, 13 SR, 24 SSR, 16 UR**. R/SR mỗi món chỉ có một chỉ số hoặc tác dụng trực tiếp, không trùng tác dụng trong cùng độ hiếm. Tác dụng tương ứng ở SR mạnh hơn R. STR/DEX/VIT/ENE vẫn ảnh hưởng các chỉ số dẫn xuất theo công thức của class.
 
 Thuộc tính trong bảng được cộng **mỗi cấp**. Cột đặc biệt chỉ liệt kê hiệu ứng thật sự còn hoạt động trong stat v2; các dòng attack/defense cũ trong source đã được thay bằng bốn thuộc tính. R=Common, SR=Rare, SSR=Legendary, UR=Cursed.
 
-### 14.1. R — Common
+### 14.1. R — Common (10 món)
 
 | Item | Nhóm | Thuộc tính mỗi cấp | Hiệu ứng đặc biệt | Lời nguyền khi chưa giải |
 |---|---|---|---|---|
 | Rusted Edge | weapon | +5 STR | Không có | — |
-| Iron Dagger | weapon | +1 STR, +4 DEX | Không có | — |
 | Cracked Wand | weapon | +5 ENE | Không có | — |
 | Hunter Bow | weapon | +5 DEX | Không có | — |
-| Militia Spear | weapon | +3 STR, +2 DEX | Không có | — |
-| Bone Club | weapon | +6 STR, -1 DEX | Không có | — |
-| Dented Plate | armor | +3 STR, +2 VIT | Không có | — |
-| Wooden Buckler | armor | +2 STR, +2 VIT, +1 ENE | Không có | — |
-| Worn Boots | armor | +4 DEX | Không có | — |
-| Copper Ring | jewelry | +1 VIT, +4 ENE | Không có | — |
 | Minor Life Charm | charm | +5 VIT | Không có | — |
 | Rabbit Foot | charm | Không cộng thuộc tính | +1 Luck | — |
 | Red Potion Belt | utility | Không cộng thuộc tính | +1 bình khi nhận mỗi cấp | — |
-| Scout Lens | utility | +2 DEX | +2% phát hiện Mimic | — |
-| Mana Fragment | charm | +2 ENE | +1 Max Mana | — |
-| Battle Token | charm | +2 STR, +2 VIT | Không có | — |
-| Silver Thread | jewelry | +2 DEX, +3 ENE | Không có | — |
-| Traveler Map | utility | +2 DEX | +1 Luck | — |
-| Small Ward | armor | +2 STR, +3 VIT | Không có | — |
-| Sharpening Stone | utility | +5 STR | Không có | — |
-| Ember Bead | jewelry | +1 STR, +4 ENE | Không có | — |
-| Fox Mask | armor | +5 DEX | Không có | — |
-| Oak Talisman | charm | +6 VIT | Không có | — |
-| Glass Bead | jewelry | +4 DEX | Không có | — |
+| Mana Fragment | charm | Không cộng thuộc tính | +1 Max Mana | — |
 | Field Bandage | utility | Không cộng thuộc tính | hồi 10 HP khi nhận mỗi cấp | — |
-| Iron Nail | charm | +3 STR, +2 VIT | Không có | — |
-| Hawk Feather | charm | +5 DEX | Không có | — |
-| Smoke Vial | utility | +5 DEX | Không có | — |
-| Cold Ash | charm | +5 ENE | Không có | — |
 | Goblin Hook | utility | Không cộng thuộc tính | +2% bắt Goblin | — |
 | Chest Chalk | utility | Không cộng thuộc tính | +3% phát hiện Mimic | — |
-| Faded Clover | charm | +2 VIT | +1 Luck | — |
 
-### 14.2. SR — Rare
+### 14.2. SR — Rare (13 món)
 
 | Item | Nhóm | Thuộc tính mỗi cấp | Hiệu ứng đặc biệt | Lời nguyền khi chưa giải |
 |---|---|---|---|---|
-| Hunter’s Fang | weapon | +4 STR, +6 DEX | Không có | — |
-| Runed Carapace | armor | +5 STR, +4 VIT, +3 ENE | Không có | — |
 | Heart of the Wild | charm | +10 VIT | Không có | — |
-| Lucky Coin | charm | +2 VIT | +3 Luck | — |
-| Vanguard Spear | weapon | +6 STR, +6 DEX | Không có | — |
+| Lucky Coin | charm | Không cộng thuộc tính | +3 Luck | — |
+| Vanguard Spear | weapon | +10 STR | Không có | — |
 | Shadowstep Boots | armor | +10 DEX | Không có | — |
-| Bone Talisman | charm | +7 VIT, +5 ENE | Không có | — |
-| Bloodstone | jewelry | +6 STR, +6 VIT | Không có | — |
-| Rift Compass | utility | +3 DEX | +2 Luck, +8% phát hiện Mimic | — |
-| Alchemist Belt | utility | +3 VIT | +5% hiệu lực bình, +1 bình khi nhận mỗi cấp | — |
-| Guardian Seal | armor | +5 STR, +7 VIT | Không có | — |
-| Mana Prism | charm | +10 ENE | +1 Max Mana | — |
-| Goblin Snare | utility | +3 DEX | +1 Luck, +8% bắt Goblin | — |
-| Warden’s Chain | armor | +9 STR, -2 DEX, +5 VIT | Không có | — |
-| Moonlit Blade | weapon | +5 STR, +7 ENE | Không có | — |
-| Assassin’s Ribbon | charm | +11 DEX | Không có | — |
-| Lionheart Emblem | charm | +5 STR, +8 VIT | Không có | — |
-| Stormglass | jewelry | +5 STR, +8 DEX | Không có | — |
-| Saint’s Ward | armor | +4 STR, +3 VIT, +7 ENE | Không có | — |
-| Riftwalker’s Boots | armor | +10 DEX | +1 Luck | — |
-| Executioner’s Mark | charm | +5 STR, +4 DEX | +12% damage Elite | — |
-| Boss Hunter’s Badge | charm | +3 STR, +6 VIT | +12% damage Boss | — |
-| Golden Monocle | utility | +2 DEX | +5% phát hiện Mimic, +3% tìm SSR | — |
-| Deep Flask | utility | +4 VIT | +10% hiệu lực bình | — |
-| War Drums | charm | +5 STR, +4 DEX, +3 VIT | Không có | — |
-| Spirit Lantern | utility | +10 ENE | +1 Max Mana | — |
-| Steel Lotus | armor | +4 STR, +6 DEX, +3 VIT | Không có | — |
-| Fortune Dice | charm | +6 DEX | +4 Luck | — |
+| Rift Compass | utility | Không cộng thuộc tính | +8% phát hiện Mimic | — |
+| Alchemist Belt | utility | Không cộng thuộc tính | +2 bình khi nhận mỗi cấp | — |
+| Mana Prism | charm | +10 ENE | Không có | — |
+| Goblin Snare | utility | Không cộng thuộc tính | +8% bắt Goblin | — |
+| Executioner’s Mark | charm | Không cộng thuộc tính | +12% damage Elite | — |
+| Boss Hunter’s Badge | charm | Không cộng thuộc tính | +12% damage Boss | — |
+| Golden Monocle | utility | Không cộng thuộc tính | +3% tìm SSR | — |
+| Deep Flask | utility | Không cộng thuộc tính | +10% hiệu lực bình | — |
+| Spirit Lantern | utility | Không cộng thuộc tính | +2 Max Mana | — |
 
 ### 14.3. SSR — Legendary
 
@@ -465,10 +430,54 @@ Thuộc tính trong bảng được cộng **mỗi cấp**. Cột đặc biệt 
 | Black Sun | charm | +10 DEX, +30 ENE | +10 Luck, +15% tìm SSR | -20% hiệu lực bình |
 | Oathbreaker | weapon | +25 STR, +15 DEX, +10 VIT | +25% damage Boss, +25% damage Elite | -10 STR, -10 DEX |
 
+### 14.5. Gộp mã item cũ
+
+Đồ trong túi ngoài run tự chuyển theo bảng dưới, cùng độ hiếm và giữ tổng số lượng (1 món cũ thành 1 món mới). Cửa hàng đã lưu đổi mã và bù đủ 5 món khác nhau, sau đó lưu lại để không reroll. Run đang chơi giữ nguyên definition/hiệu ứng đã lưu, không cộng lại bình hoặc HP. Pool rơi đồ mới và loadout mới dùng catalog tinh gọn. Lịch sử mua giữ mã gốc để xử lý bấm lặp; refund/setup lỗi chuyển về mã chuẩn.
+
+| Mã cũ | Mã thay thế |
+|---|---|
+| iron_dagger | hunter_bow |
+| militia_spear | rusted_edge |
+| bone_club | rusted_edge |
+| dented_plate | minor_life_charm |
+| wooden_buckler | minor_life_charm |
+| worn_boots | hunter_bow |
+| copper_ring | cracked_wand |
+| scout_lens | chest_chalk |
+| battle_token | rusted_edge |
+| silver_thread | cracked_wand |
+| traveler_map | rabbit_foot |
+| small_ward | minor_life_charm |
+| sharpening_stone | rusted_edge |
+| ember_bead | cracked_wand |
+| fox_mask | hunter_bow |
+| oak_talisman | minor_life_charm |
+| glass_bead | hunter_bow |
+| iron_nail | rusted_edge |
+| hawk_feather | hunter_bow |
+| smoke_vial | hunter_bow |
+| cold_ash | cracked_wand |
+| faded_clover | rabbit_foot |
+| hunters_fang | shadowstep_boots |
+| runed_carapace | heart_of_the_wild |
+| bone_talisman | heart_of_the_wild |
+| bloodstone | vanguard_spear |
+| guardian_seal | heart_of_the_wild |
+| wardens_chain | vanguard_spear |
+| moonlit_blade | mana_prism |
+| assassins_ribbon | shadowstep_boots |
+| lionheart_emblem | heart_of_the_wild |
+| stormglass | shadowstep_boots |
+| saints_ward | mana_prism |
+| riftwalkers_boots | shadowstep_boots |
+| war_drums | vanguard_spear |
+| steel_lotus | shadowstep_boots |
+| fortune_dice | lucky_coin |
+
 ## 15. Kiểm thử và cân bằng đã chốt
 
 - Toàn bộ `npm test` đã qua: command, economy, migration, lifecycle, item effect, event, setup, handler và security audit.
-- Catalog validator xác nhận đúng 100 item: 32 R, 28 SR, 24 SSR, 16 UR; chỉ hai curse trực tiếp giảm payout.
+- Catalog validator hiện xác nhận 63 item: 10 R, 13 SR, 24 SSR, 16 UR và không trùng tác dụng R/SR; chỉ hai curse trực tiếp giảm payout.
 - Bộ Sinh tồn v2 kiểm tra 12 nhóm abuse: stale click, checkpoint lặp, payout ảo, HP shop, kim cương thiếu/bấm lặp, Duelist, Severance, Soul Drain, Grave lease/cap và tương thích v1.
 - Mốc mô phỏng 700 run trước thay đổi hồi Mana/Rift có 0 lần vượt tầng 999, cao nhất 969. Smoke test Mana mới gồm 210 run cũng có 0 lần vượt, cao nhất 934. Theo yêu cầu vận hành, chưa chạy lại mô phỏng dài sau rework stack Rift; các số trên là mốc lịch sử, không được xem là tỷ lệ chính thức của bản mới.
 
@@ -476,7 +485,7 @@ Thuộc tính trong bảng được cộng **mỗi cấp**. Cột đặc biệt 
 
 - `src/services/hardcoreService.js`: gameplay, combat, encounter và transaction.
 - `src/services/hardcoreStats.js`: bốn thuộc tính và chỉ số dẫn xuất.
-- `src/hardcore/item.js`: catalog 100 item.
+- `src/hardcore/item.js`: catalog 63 item và alias chuyển mã cũ.
 - `src/services/hardcoreWorld.js`: khu vực, modifier và boss.
 - `src/services/hardcoreView.js`: embed và component Discord.
 - `src/services/hardcoreRepository.js`: session, record, Grave Echo/Nemesis.

@@ -69,7 +69,7 @@ async function main() {
   inversePreview.paradox = { kind: "inverse" };
   assert.deepEqual(core.physicalRange(inversePreview), [11, 16]);
   assert(view.statLine(inversePreview).includes("**11–16** (Paradox)"));
-  assert(view.statLine(inversePreview).includes("DEF **29.5** (Paradox)"));
+  assert(view.statLine(inversePreview).includes("**DEF** **29.5** (Paradox)"));
   const depleted = stats.createState("barbarian", 10);
   stats.addSource(depleted, { str: -999, dex: -999, ene: -999 });
   assert.deepEqual(
@@ -85,12 +85,30 @@ async function main() {
 
   assert.deepEqual(
     Object.values(core.ITEMS).map((pool) => pool.length),
-    [32, 28, 24, 16],
+    [10, 13, 24, 16],
   );
+  const { validateItems } = require("../src/hardcore/item");
+  const invalidRoles = structuredClone(core.ITEMS);
+  invalidRoles.common[1].effects = { str: 9 };
+  assert.throws(
+    () => validateItems(invalidRoles),
+    /DUPLICATE_HARDCORE_ITEM_ROLE/,
+  );
+  for (const item of core.ITEMS.common) {
+    const [key, value] = Object.entries(item.effects)[0];
+    const upgrade = core.ITEMS.rare.find((candidate) =>
+      Object.hasOwn(candidate.effects, key),
+    );
+    if (upgrade)
+      assert(
+        upgrade.effects[key] > value,
+        key + " SR upgrade must be stronger",
+      );
+  }
   const catalogState = stats.createState("barbarian", 10);
   for (const definition of Object.values(core.ITEMS).flat())
     core.receiveItem(catalogState, definition);
-  assert.equal(catalogState.items.length, 100);
+  assert.equal(catalogState.items.length, 63);
   assert(Number.isFinite(catalogState.maxHp));
   assert.equal(
     Object.values(core.ITEMS)
@@ -105,6 +123,7 @@ async function main() {
   assert.equal(stack.items[0].level, 2);
   core.receiveItem(stack, item("red_potion_belt"));
   assert.equal(stack.potions, 4);
+  core.normalize(stack);
   const snapshot = JSON.stringify(stack);
   for (let i = 0; i < 20; i++) core.normalize(stack);
   assert.equal(stack.potions, 4);
@@ -309,6 +328,7 @@ async function main() {
   );
   const blood = start();
   save(blood, (s) => {
+    s.floor = 11;
     s.cleared = 10;
     s.encounter = core.makeSurprise(s, rng, "blood_shop");
     s.hp = s.encounter.offers[0].price;
