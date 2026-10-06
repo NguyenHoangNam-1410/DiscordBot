@@ -1980,12 +1980,15 @@ function actSurprise(state, session, action, rng) {
     charge(state, serviceCost(state, 0.12));
     const target = itemById(e.targetId);
     if (!target) throw new Error("NO_FORGE_ITEM");
+    const previousLevel = target.level;
     const item = receiveItem(
       state,
       target.definition,
       1,
       target.level === (target.cleansedLevels || 0) ? 1 : 0,
     );
+    const receipt = state.lastReceivedItems?.at(-1);
+    if (receipt) receipt.upgradedFromLevel = previousLevel;
     done(`🔨 ${item.name} Lv.${item.level}.`);
   } else if (k === "purifier") {
     charge(state, serviceCost(state, PURIFIER_COST_RATE));

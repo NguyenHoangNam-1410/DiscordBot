@@ -1,5 +1,16 @@
 [
   {
+    "id": "be10819a-c590-4332-849d-2cf1a990a800",
+    "updatedAt": "2026-10-06T15:15:38.409Z",
+    "auditedAt": "2026-10-06T15:15:38.409Z",
+    "title": "Hiển thị rõ kết quả rèn trang bị",
+    "changes": [
+      "Blacksmith hiển thị trước khi rèn: tên và độ hiếm trang bị, cấp cũ sang cấp mới, từng buff và lời nguyền trước sang sau; in đậm kết quả sau.",
+      "Hiển thị số xu cần trả theo 12% payout gốc, nội tại giữ nguyên và điều kiện rèn trong Chi tiết. Trang bị đã giải toàn bộ nguyền được ghi rõ không thêm nguyền khi rèn.",
+      "Lượt vừa rồi ghi cấp trang bị trước sang sau khi rèn cùng các thay đổi chỉ số, tránh lặp dòng nhận trang bị."
+    ]
+  },
+  {
     "id": "72a9be73-c2d8-4443-a229-619cc23ecbfa",
     "updatedAt": "2026-10-06T15:09:09.224Z",
     "auditedAt": "2026-10-06T15:09:09.224Z",

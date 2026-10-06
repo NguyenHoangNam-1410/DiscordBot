@@ -198,6 +198,97 @@ function passiveText(item) {
 function itemText(item, level = 1) {
   return `${effectText(item.effects, level)}${passiveText(item)}${item.curse ? `\n☣️ Curse: ${effectText(item.curse.effects, level)}` : ""}`;
 }
+function itemEffectChanges(effects, beforeLevel, afterLevel) {
+  return Object.entries(effects)
+    .map(([key, value]) => {
+      const label = highlightStat(effectStatLabel(key));
+      const describe = (level) =>
+        key === "bonusPenalty"
+          ? label + " ×" + Math.pow(1 - value, level).toFixed(3)
+          : effectText({ [key]: value }, level, { compactCurses: true });
+      const before = describe(beforeLevel);
+      const after = describe(afterLevel);
+      if (before === after) return "- " + after + " (không đổi)";
+      const prefix = label + " ";
+      return before.startsWith(prefix) && after.startsWith(prefix)
+        ? "- " +
+            label +
+            ": " +
+            before.slice(prefix.length) +
+            " → **" +
+            after.slice(prefix.length) +
+            "**"
+        : "- " + before + " → **" + after.replace(/\*\*/g, "") + "**";
+    })
+    .join("\n");
+}
+function blacksmithText(state, detailed = false) {
+  const target = state.items.find(
+    (item) => item.definition.id === state.encounter.targetId,
+  );
+  if (!target)
+    return (
+      eventIcon("blacksmith") +
+      " **Blacksmith**\nKhông còn trang bị để rèn. Chọn **Bỏ qua** để đi tiếp."
+    );
+  const cost = core.serviceCost(state, 0.12);
+  const effects = target.definition.effects;
+  const instantKeys = ["heal", "potions", "escapeTokens"];
+  const buffs = Object.fromEntries(
+    Object.entries(effects).filter(([key]) => !instantKeys.includes(key)),
+  );
+  const instant = Object.fromEntries(
+    Object.entries(effects).filter(([key]) => instantKeys.includes(key)),
+  );
+  const curseLevels = Math.max(0, target.level - (target.cleansedLevels || 0));
+  const lines = [
+    eventIcon("blacksmith") +
+      " **Blacksmith** · Rèn thêm **1 cấp** cho trang bị.",
+    E.backpack +
+      " **" +
+      target.name +
+      " [" +
+      rarityLabel(target.rarity) +
+      "]** · Lv." +
+      target.level +
+      " → **Lv." +
+      (target.level + 1) +
+      "**",
+    Object.keys(buffs).length
+      ? "**Buff trang bị:**\n" + itemEffectChanges(buffs, target.level, target.level + 1)
+      : "",
+  ].filter(Boolean);
+  if (Object.keys(instant).length)
+    lines.push(
+      "**Nhận khi rèn:** " +
+        effectText(instant) +
+        ". Áp dụng giới hạn và hiệu ứng hồi phục hiện tại.",
+    );
+  if (target.definition.curse)
+    lines.push(
+      curseLevels
+        ? "☣️ **Lời nguyền:**\n" +
+            itemEffectChanges(
+              target.definition.curse.effects,
+              curseLevels,
+              curseLevels + 1,
+            )
+        : "☣️ **Đã giải toàn bộ nguyền:** rèn không thêm lời nguyền.",
+    );
+  lines.push(
+    "**Giá:** " + E.coin + " **" + money(cost) + " xu** (12% payout gốc).",
+  );
+  if (detailed) {
+    const passive = passiveText(target.definition).trim();
+    if (passive) lines.push("**Nội tại giữ nguyên:**\n" + passive);
+    lines.push(
+      "Cần đủ payout gốc để trả phí. **Bỏ qua:** giữ nguyên trang bị và payout.",
+    );
+  } else {
+    lines.push("Xem **Chi tiết** để đọc nội tại và điều kiện rèn.");
+  }
+  return lines.join("\n");
+}
 function merchantOffer(offer) {
   if (offer.item)
     return {
@@ -709,6 +800,7 @@ function encounterText(s) {
   if (e.type === "empty")
     return `${eventIcon("empty")} Phòng trống. Đi tiếp hoặc rút thưởng.`;
   const k = e.kind;
+  if (k === "blacksmith") return blacksmithText(s, true);
   if (k.endsWith("_shop"))
     return `${eventIcon(e.kind)} **${e.name}** · mua tối đa **một món**. Giá và offer đã khóa.\n${e.offers.map((offer, i) => `**${i + 1}. ${offer.item.name} [${rarityLabel(offer.item.rarity)}] · ${shopPrice(k, offer)}**\n${itemText(offer.item)}`).join("\n")}\n${k === "blood_shop" ? "Giảm Max HP trong suốt run; phải còn ít nhất 1 Max HP sau trả giá. HP hiện tại chỉ hạ xuống nếu vượt Max HP mới." : k === "diamond_shop" ? "Kim cương bị trừ ngay khi mua, kể cả run sau đó tử trận." : "Chi phí lấy từ payout gốc; không dùng bonus Paradox để mua."}`;
   if (k === "merchant")
@@ -735,7 +827,6 @@ function encounterText(s) {
   }
   const descriptions = {
     healer: `**Hồi phục:** hồi ${E.hp} HP bằng 30% Max HP, ít nhất 20; +1 ${E.potion} bình máu (theo giới hạn bình của bạn). Miễn phí.`,
-    blacksmith: `Trả 12% payout để tăng một cấp **${target?.name}**. Cộng buff mới; UR chưa giải nguyền cộng cả curse. Đồ đã giải hết nguyền giữ trạng thái sạch khi rèn.`,
     purifier: `Trả **${percent(core.PURIFIER_COST_RATE)} payout gốc**: gỡ **toàn bộ lời nguyền** của **${target?.name}**, giữ nguyên UR, buff, level và nội tại.`,
     sacrifice: `**Hiến HP:** mất tối đa 20% Max ${E.hp} HP (giữ ≥1) → +6 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\n**Hiến payout:** trả 10% payout → +6 ${E.vit} VIT. Hiến HP không cộng bonus Blood Paradox.`,
     contract: `Trong 3 tầng, chọn một điều kiện:\n- **Không dùng ${E.potion} bình:** nhận đồ [SSR].\n- **Không dùng skill:** bonus +50% cược.\n- **Không phòng thủ:** +10 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\nVi phạm chỉ hủy thưởng.`,
@@ -772,6 +863,8 @@ function encounterSummary(s) {
   if (e.type === "surprise" && e.kind.endsWith("_shop"))
     return `${eventIcon(e.kind)} **${e.name}** · mua một món\n${e.offers.map((o, i) => `${i + 1}. **${E.backpack} ${o.item.name} [${rarityLabel(o.item.rarity)}]** · ${shopPrice(e.kind, o)}`).join("\n")}\nXem Chi tiết để đọc công dụng và điều kiện mua.`;
   if (e.type === "surprise" && e.kind === "merchant") return encounterText(s);
+  if (e.type === "surprise" && e.kind === "blacksmith")
+    return blacksmithText(s);
   if (hasEncounterDetails(s)) {
     const notices = {
       chest: e.revealed
@@ -936,7 +1029,7 @@ function turnText(state) {
   const received = state.lastReceivedItems || [];
   const receivedTitles = received.map(
     (item) =>
-      `${E.backpack} **${item.name} [${rarityLabel(item.rarity)}] · Lv.${item.level}**`,
+      `${item.upgradedFromLevel != null ? eventIcon("blacksmith") + " **Rèn:** " : ""}${E.backpack} **${item.name} [${rarityLabel(item.rarity)}]** · ${item.upgradedFromLevel != null ? `Lv.${item.upgradedFromLevel} → **Lv.${item.level}**` : `**Lv.${item.level}**`}`,
   );
   if (state.lastUpgrade)
     details.push(
