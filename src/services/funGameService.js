@@ -6,7 +6,7 @@ const gameWordData = require("../../data/games/vietnamese-game-words.json");
 
 const commandCooldowns = new Map();
 const vuaSessions = new Map();
-const HARD_DURATION_MS = 30_000;
+const HARD_DURATION_MS = 60_000;
 const VTV_SKIP_COOLDOWN_MS = 5 * 60_000;
 const configuredHardChance = Number(process.env.HARD_QUESTION_CHANCE);
 const HARD_QUESTION_CHANCE = Number.isFinite(configuredHardChance)
