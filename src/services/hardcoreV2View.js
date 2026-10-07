@@ -1982,7 +1982,7 @@ function ratesFields(category) {
       {
         name: `${E.attack} Tấn công và sát thương`,
         value:
-          "- Đánh thường gây **vật lý**: có thể trượt (0 DMG) hoặc Crit ×1,75; DEF của quái giảm sát thương.\n- Sát thương **phép luôn trúng, không Crit**; chịu giảm trừ từ RES.\n- Dải DMG trên bảng giao tranh đã tính phòng thủ của quái hiện tại, chưa tính Crit và giả định đòn vật lý trúng. Chỉ số đầy đủ hiển thị sức mạnh trước giảm trừ.\n- Đánh thường hồi MP ngay cả khi trượt: Sorceress/Necromancer hồi 70% Max MP, class khác 40%; làm tròn xuống, ít nhất 1, không vượt Max MP.\n- Quái còn sống sẽ phản công sau hành động, trừ khi skill chặn/né đòn đó.",
+          `**${E.attack} Đánh thường:** Gây **vật lý**: có thể trượt (0 DMG) hoặc Crit ×1,75; ${E.defense} của quái giảm sát thương.\n- **Sát thương phép** luôn trúng, không Crit; chịu giảm trừ từ RES.\n- Dải DMG trên bảng giao tranh đã tính ${E.defense} của quái hiện tại, chưa tính Crit và giả định đòn vật lý trúng. Chỉ số đầy đủ hiển thị sức mạnh trước giảm trừ.\n- Đánh thường hồi MP ngay cả khi trượt: Sorceress/Necromancer hồi 70% Max MP, class khác 40%; làm tròn xuống, ít nhất 1, không vượt Max MP.\n- Quái còn sống sẽ phản công sau hành động, trừ khi skill chặn/né đòn đó.`,
       },
       {
         name: `${E.defense} Phòng thủ và ${E.potion} bình máu`,
