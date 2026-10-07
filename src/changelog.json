@@ -1,5 +1,16 @@
 [
   {
+    "id": "7da75a03-1879-451b-a80e-333253861c96",
+    "updatedAt": "2026-10-07T09:18:55.975Z",
+    "auditedAt": "2026-10-07T09:18:55.975Z",
+    "title": "Đánh giá checkpoint cuối run Sinh tồn",
+    "changes": [
+      "Đã mô phỏng 14.000 run, 1.000 run/class/cấu hình, so sánh checkpoint hiện tại với phương án từ tầng 700: mỗi 10 tầng chọn +10 thuộc tính, hồi đầy HP và thêm 2 bình.",
+      "Trong chiến thuật cố định được đo, cả 7 class đều giảm tỷ lệ thắng; Barbarian 26,3% → 8,6%, Sorceress 51% → 31,1%, Druid 16,8% → 13,8%. Tổng điểm cuối run không tăng, số lần hồi HP/nhận bình giảm một nửa.",
+      "Đây là báo cáo thử nghiệm; luật checkpoint đang chơi vẫn giữ hiện tại. Báo cáo kèm kết quả từng class, thống kê sau tầng 700, khoảng tin cậy và dữ liệu để chạy lại."
+    ]
+  },
+  {
     "id": "ad4e0172-75ad-4504-a362-9b6c33a817fe",
     "updatedAt": "2026-10-07T09:04:45.321Z",
     "auditedAt": "2026-10-07T09:04:45.321Z",
