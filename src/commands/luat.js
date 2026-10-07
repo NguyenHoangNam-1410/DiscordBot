@@ -84,7 +84,7 @@ function survivalRules() {
           {
             name: "Tháp Định Mệnh · mode riêng",
             value:
-              "`/choi sinhton thap` hoặc `/sinhton thap` mở/tiếp tục challenge 15 tầng · Perfect Chain 72–90 bước (tuần đầu 81). Sai một hành động phải chơi lại từ tầng 1; HP/MP/hiệu ứng giữ xuyên tầng. Xoay đủ 7 class trước khi lặp. Không cược, không dùng loadout, item, bình hoặc vé từ Sinh tồn 999. Damage cố định, không Miss/Crit/RNG; đọc tín hiệu từng bước, kể cả nhịp từ tầng trước. Snapshot đã kiểm chứng được khóa cả tuần; xem seed commitment trên bảng. Có thể giữ đồng thời một run mỗi mode. Challenge đổi lúc 00:00 thứ Hai (UTC+7); hết hạn có 24 giờ chỉ xem kết quả. Tuần 41: hoàn thành lần đầu nhận 500.000 xu + 250 kim cương; chơi lại không nhận thêm. Nút bảng xếp hạng nằm trên UI Tháp.",
+              "`/choi sinhton thap` hoặc `/sinhton thap` mở/tiếp tục tháp puzzle 15 tầng. Tầng N có đúng N bước; mọi hành động đều tiêu hao bước và hệ thống không báo sai giữa tầng. Nếu hết bước mà chưa hạ quái, người chơi nhận một gợi ý trừu tượng rồi thử lại từ đầu tầng chưa vượt. HP/MP/bình giữ xuyên tầng; tiến độ tầng đã vượt được lưu. Damage, hồi máu và tín hiệu đều cố định, không Miss/Crit/RNG. Class, chỉ số và bộ đồ mẫu được chụp từ dữ liệu Sinh Tồn hiện tại nhưng mode, túi đồ và phần thưởng hoàn toàn độc lập. Snapshot đã kiểm chứng được khóa cả tuần; thay đổi Sinh Tồn chỉ áp dụng từ rotation kế tiếp. Tháp mới mở lúc 00:00 thứ Hai (UTC+7), xoay đủ 7 class trước khi lặp. Hoàn thành lần đầu nhận 500.000 xu + 250 kim cương; nút chơi lại không trao thưởng lần nữa.",
           },
           {
             name: "Bốn thuộc tính",

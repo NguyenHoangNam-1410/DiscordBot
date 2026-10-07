@@ -88,7 +88,11 @@ function publishWeek(
     now = Date.now(),
   } = {},
 ) {
-  const existing = repo.challengeByWeek(week.isoYear, week.isoWeek);
+  const existing = repo.challengeByWeek(
+    week.isoYear,
+    week.isoWeek,
+    generator.GENERATOR_VERSION,
+  );
   if (existing) {
     if (!["published", "archived"].includes(existing.status))
       throw Error("CHALLENGE_NOT_PUBLISHED");
@@ -120,10 +124,13 @@ function ensureWeekly(now = Date.now(), options = {}) {
   const logger = options.logger || console;
   if (now < ANCHOR) return null;
   repo.archiveChallenges(now);
-  const target = weekAt(now).startsAt + WEEK_MS;
-  let cursor = repo.lastPublication()?.starts_at + WEEK_MS || ANCHOR;
-  // Published weeks are materialized chronologically, including the coming week:
-  // rotation advances only after a valid immutable snapshot is committed.
+  // Snapshot only the active week. Generating the next week in advance would
+  // freeze old Survival stats/items and miss balance changes made mid-week.
+  const target = weekAt(now).startsAt;
+  let cursor =
+    repo.lastPublication(generator.GENERATOR_VERSION)?.starts_at + WEEK_MS ||
+    ANCHOR;
+  // Rotation advances only after the new week's validated snapshot is committed.
   let generated = 0;
   while (cursor <= target && generated < 104) {
     const week = weekAt(cursor),

@@ -1120,6 +1120,7 @@ runMigration(34, "hardcore daily shop and persistent inventory", () => {
   `);
 });
 
+
 runMigration(
   35,
   "independent deterministic tower sessions and weekly results",
@@ -1194,7 +1195,6 @@ runMigration(38, "class floor 500 exclusive avatar rings", () => {
     ).run(ring.id, claim.guild_id, claim.user_id);
   }
 });
-
 
 runMigration(
   39,
@@ -1287,6 +1287,58 @@ runMigration(41, "Survival LR acquisition history", () => {
  AND json_extract(s.state_json,'$.towerChallengeId') IS NULL
  AND json_extract(r.value,'$.acquiredFloor') BETWEEN 1 AND 999
  AND json_extract(s.state_json,'$.classKey') IS NOT NULL;`);
+});
+
+runMigration(42, "tower puzzle snapshots with 120-step challenges", () => {
+  db.exec(`
+ DROP TRIGGER IF EXISTS tower_snapshot_no_delete;
+ DROP TRIGGER IF EXISTS tower_snapshot_initial_status;
+ DROP TRIGGER IF EXISTS tower_snapshot_immutable;
+ DROP TRIGGER IF EXISTS tower_publication_guard;
+ DROP INDEX IF EXISTS idx_tower_challenge_window;
+ ALTER TABLE hardcore_tower_challenges RENAME TO hardcore_tower_challenges_v3;
+ CREATE TABLE hardcore_tower_challenges (
+ challenge_id TEXT PRIMARY KEY,iso_year INTEGER NOT NULL,iso_week INTEGER NOT NULL,
+ rotation_index INTEGER NOT NULL,class_key TEXT NOT NULL,generator_version INTEGER NOT NULL,
+ content_version INTEGER NOT NULL,seed_commitment TEXT NOT NULL,payload_json TEXT NOT NULL,
+ step_count INTEGER NOT NULL CHECK(step_count BETWEEN 1 AND 120),solution_hash TEXT NOT NULL,
+ difficulty_score INTEGER NOT NULL,audit_json TEXT NOT NULL,
+ status TEXT NOT NULL CHECK(status IN ('draft','validated','published','archived')),
+ starts_at INTEGER NOT NULL,ends_at INTEGER NOT NULL,generated_at INTEGER NOT NULL,published_at INTEGER,
+ UNIQUE(iso_year,iso_week,generator_version),UNIQUE(rotation_index,generator_version),CHECK(ends_at>starts_at));
+ INSERT INTO hardcore_tower_challenges SELECT * FROM hardcore_tower_challenges_v3;
+ DROP TABLE hardcore_tower_challenges_v3;
+ CREATE INDEX idx_tower_challenge_window ON hardcore_tower_challenges(status,starts_at,ends_at);
+ UPDATE hardcore_tower_rotation SET next_index=0 WHERE id=1;
+ DELETE FROM hardcore_tower_generation_failures;
+
+ CREATE TRIGGER tower_snapshot_no_delete BEFORE DELETE ON hardcore_tower_challenges
+ WHEN OLD.status IN ('published','archived')
+ BEGIN SELECT RAISE(ABORT,'IMMUTABLE_TOWER_SNAPSHOT'); END;
+ CREATE TRIGGER tower_snapshot_initial_status BEFORE INSERT ON hardcore_tower_challenges
+ WHEN NEW.status NOT IN ('draft','validated')
+ BEGIN SELECT RAISE(ABORT,'INVALID_TOWER_PUBLICATION'); END;
+ CREATE TRIGGER tower_snapshot_immutable BEFORE UPDATE ON hardcore_tower_challenges
+ WHEN OLD.status IN ('published','archived') AND (
+ NEW.payload_json<>OLD.payload_json OR NEW.challenge_id<>OLD.challenge_id OR
+ NEW.iso_year<>OLD.iso_year OR NEW.iso_week<>OLD.iso_week OR NEW.rotation_index<>OLD.rotation_index OR
+ NEW.class_key<>OLD.class_key OR NEW.generator_version<>OLD.generator_version OR
+ NEW.content_version<>OLD.content_version OR NEW.seed_commitment<>OLD.seed_commitment OR
+ NEW.step_count<>OLD.step_count OR NEW.solution_hash<>OLD.solution_hash OR
+ NEW.difficulty_score<>OLD.difficulty_score OR NEW.audit_json<>OLD.audit_json OR
+ NEW.starts_at<>OLD.starts_at OR NEW.ends_at<>OLD.ends_at OR NEW.generated_at<>OLD.generated_at OR
+ NEW.published_at IS NOT OLD.published_at)
+ BEGIN SELECT RAISE(ABORT,'IMMUTABLE_TOWER_SNAPSHOT'); END;
+ CREATE TRIGGER tower_publication_guard BEFORE UPDATE OF status ON hardcore_tower_challenges
+ WHEN NOT (
+ (OLD.status='draft' AND NEW.status='validated') OR
+ (OLD.status='validated' AND NEW.status='published' AND
+ json_extract(NEW.audit_json,'$.winningPaths')=1 AND json_extract(NEW.audit_json,'$.wrongBranchesRecoverable')=0 AND
+ json_extract(NEW.audit_json,'$.canonicalLength')=NEW.step_count AND json_extract(NEW.audit_json,'$.minimumHp')>=1 AND
+ json_extract(NEW.audit_json,'$.solutionHash')=NEW.solution_hash) OR
+ (OLD.status='published' AND NEW.status='archived') OR OLD.status=NEW.status)
+ BEGIN SELECT RAISE(ABORT,'INVALID_TOWER_PUBLICATION'); END;
+ `);
 });
 
 module.exports = { db, dbPath, runMigration };

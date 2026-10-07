@@ -11,10 +11,19 @@ function initial(payload) {
     status: "playing",
     flags: [],
     classCharges: { ward: 0 },
+    potions: payload.initialState.potions || 0,
   };
 }
 function options(p, s) {
   const t = p.transitions[s.routeStep];
+  if (p.generatorVersion >= 4 && t)
+    return (
+      t.availableActions || ["attack", "skill", "defend", "potion"]
+    ).filter(
+      (a) =>
+        (a !== "skill" || s.mana >= t.skillCost) &&
+        (a !== "potion" || s.potions > 0),
+    );
   return t
     ? t.choices?.map((c) => c.action) ||
         ["attack", "skill", "defend"].filter(
@@ -25,7 +34,14 @@ function options(p, s) {
 function apply(p, s, action) {
   const t = p.transitions[s.routeStep];
   if (!t || !options(p, s).includes(action)) throw Error("INVALID_ACTION");
-  if (action !== t.expectedAction) return { ...s, status: "failed" };
+  if (action !== t.expectedAction)
+    return {
+      ...s,
+      status: "failed",
+      failedAction: action,
+      expectedAction: t.expectedAction,
+      failureHint: t.hintByAction?.[action] || "Hành động không đúng quy luật.",
+    };
   if (t.requiredFlags.some((f) => !s.flags.includes(f)))
     throw Error("UNSATISFIED_TOWER_FLAGS");
   if (t.hpRange && (s.hp < t.hpRange[0] || s.hp > t.hpRange[1]))
@@ -35,11 +51,13 @@ function apply(p, s, action) {
   const next = clone(s);
   next.hp += t.hpDelta;
   next.mana += t.manaDelta;
+  next.potions += t.potionsDelta || 0;
   if (
     next.hp < 1 ||
     next.hp > p.character.maxHp ||
     next.mana < 0 ||
-    next.mana > p.character.maxMana
+    next.mana > p.character.maxMana ||
+    next.potions < 0
   )
     throw Error("INVALID_TOWER_RESOURCE_CURVE");
   next.flags = next.flags.filter((f) => !t.removesFlags.includes(f));
@@ -66,6 +84,7 @@ function stateKey(s) {
     s.routeStep,
     s.hp,
     s.mana,
+    s.potions,
     s.flags.join(","),
     JSON.stringify(s.classCharges),
   ].join("|");
@@ -119,7 +138,7 @@ function solve(payload, { maxStates = 10000, timeoutMs = 1000 } = {}) {
     visited,
   };
 }
-function validate(payload, options = {}) {
+function validateV3(payload, options = {}) {
   if (
     payload.generatorVersion !== 3 ||
     payload.floors.length !== 15 ||
@@ -357,5 +376,170 @@ function validate(payload, options = {}) {
       n + 2 * waste + 5 * memoryFloors.size + 3 * eventChoices,
     ),
   };
+}
+function validateV4(payload, options = {}) {
+  const { FIXED_POTION_HEAL, MONSTERS } = require("./templates");
+  if (
+    payload.generatorVersion !== 4 ||
+    payload.floors.length !== 15 ||
+    payload.stepCount !== 120 ||
+    payload.transitions.length !== 120 ||
+    payload.catalogSource !== "survival-v2-readonly" ||
+    payload.deterministicCombat !== true ||
+    payload.runtimeRng !== false ||
+    payload.character.potionHeal !== FIXED_POTION_HEAL
+  )
+    throw Error("INVALID_TOWER_SHAPE");
+  const p = require("./classProfiles").profile(payload.classKey);
+  if (
+    payload.character.maxHp !== p.maxHp ||
+    payload.character.maxMana !== p.maxMana ||
+    payload.character.potions !== p.potions ||
+    JSON.stringify(payload.loadout) !== JSON.stringify(p.loadout)
+  )
+    throw Error("INVALID_SURVIVAL_SNAPSHOT");
+
+  let runtime = initial(payload),
+    routeStep = 0,
+    potionSteps = 0,
+    defendSteps = 0,
+    skillSteps = 0;
+  const actionSet = new Set(["attack", "skill", "defend", "potion"]);
+  for (let floor = 1; floor <= 15; floor++) {
+    const f = payload.floors[floor - 1];
+    const ts = payload.transitions.slice(routeStep, routeStep + floor);
+    if (
+      f.number !== floor ||
+      f.id !== MONSTERS[floor - 1].id ||
+      f.rule !== MONSTERS[floor - 1].rule ||
+      f.stepStart !== routeStep ||
+      f.stepCount !== floor ||
+      ts.length !== floor ||
+      ts.some(
+        (t, i) =>
+          t.floor !== floor ||
+          t.floorStep !== i ||
+          t.routeStep !== routeStep + i,
+      )
+    )
+      throw Error("INVALID_TOWER_FLOOR");
+    let enemyHp = f.hp;
+    for (const t of ts) {
+      if (
+        !actionSet.has(t.expectedAction) ||
+        !Number.isSafeInteger(t.hpDelta) ||
+        !Number.isSafeInteger(t.manaDelta) ||
+        !Number.isSafeInteger(t.potionsDelta) ||
+        !t.hintByAction ||
+        Object.keys(t.hintByAction).length !== 4 ||
+        typeof t.signal !== "string" ||
+        t.signal.length < 20 ||
+        t.hpBefore !== runtime.hp ||
+        t.manaBefore !== runtime.mana ||
+        t.potionsBefore !== runtime.potions
+      )
+        throw Error("INVALID_TOWER_TRANSITION");
+      const condition = {
+        attack: "physical_only",
+        skill: "arcane_only",
+        defend: "execution_guard",
+        potion: "fixed_potion_window",
+      }[t.expectedAction];
+      if (t.condition !== condition) throw Error("INVALID_TOWER_CONDITION");
+      const expectedDamage =
+          t.expectedAction === "attack"
+            ? p.attackDamage
+            : t.expectedAction === "skill"
+              ? p.skillDamage
+              : 0,
+        expectedManaDelta =
+          t.expectedAction === "skill"
+            ? -p.skillCost
+            : ["attack", "defend"].includes(t.expectedAction) &&
+                runtime.mana < p.maxMana
+              ? 1
+              : 0,
+        expectedHeal =
+          t.expectedAction === "potion"
+            ? FIXED_POTION_HEAL
+            : t.expectedAction === "skill"
+              ? Math.min(p.heal, p.maxHp - runtime.hp)
+              : 0;
+      if (
+        t.damage !== expectedDamage ||
+        t.enemyHpDelta !== -expectedDamage ||
+        t.manaDelta !== expectedManaDelta ||
+        t.heal !== expectedHeal ||
+        t.hpDelta !== expectedHeal - t.counterDamage
+      )
+        throw Error("INVALID_DETERMINISTIC_TRANSITION");
+      if (t.expectedAction === "potion") {
+        potionSteps++;
+        if (
+          t.heal !== FIXED_POTION_HEAL ||
+          t.hpDelta !== FIXED_POTION_HEAL ||
+          t.potionsDelta !== -1 ||
+          runtime.hp > payload.character.maxHp - FIXED_POTION_HEAL
+        )
+          throw Error("INVALID_FIXED_POTION");
+      } else if (t.potionsDelta !== 0) throw Error("INVALID_POTION_DELTA");
+      if (t.expectedAction === "defend") {
+        defendSteps++;
+        if (t.intentDamage <= payload.character.maxHp || t.counterDamage !== 0)
+          throw Error("INVALID_EXECUTION_GUARD");
+      } else if (
+        t.expectedAction !== "potion" &&
+        (t.counterDamage < 1 || t.intentDamage !== t.counterDamage)
+      )
+        throw Error("INVALID_FIXED_COUNTER");
+      if (t.expectedAction === "skill") skillSteps++;
+      enemyHp += t.enemyHpDelta;
+      if (t !== ts.at(-1) && enemyHp <= 0) throw Error("EARLY_ENEMY_FINISH");
+      runtime = apply(payload, runtime, t.expectedAction);
+    }
+    if (enemyHp !== 0 || !ts.at(-1).damage) throw Error("INVALID_ENEMY_CURVE");
+    if (
+      floor === 12 &&
+      !["attack", "skill", "defend"].every((action) =>
+        ts.some((t) => t.expectedAction === action),
+      )
+    )
+      throw Error("INVALID_THREE_SEAL_JUDGE");
+    routeStep += floor;
+  }
+  if (
+    runtime.status !== "completed" ||
+    JSON.stringify(runtime) !== JSON.stringify(payload.finalState)
+  )
+    throw Error("INVALID_TOWER_FINAL");
+  const proof = solve(payload, options);
+  if (
+    proof.winningPaths !== 1 ||
+    proof.canonicalLength !== 120 ||
+    proof.wrongBranchesRecoverable !== 0 ||
+    potionSteps !== 4 ||
+    defendSteps < 15 ||
+    skillSteps < 15
+  )
+    throw Error("INVALID_TOWER_SOLUTION");
+  const solutionHash = hash(
+    `${payload.challengeId}|${payload.generatorVersion}|${proof.canonicalSolution.join(",")}`,
+  );
+  return {
+    ...proof,
+    solutionHash,
+    finalHpRatio: proof.finalState.hp / payload.character.maxHp,
+    finalManaRatio: proof.finalState.mana / payload.character.maxMana,
+    resourceWasteWindows: defendSteps,
+    memoryChecks: 1,
+    eventChoices: 0,
+    categories: { puzzle: 120 },
+    difficultyScore: 120 + potionSteps * 5 + defendSteps * 2 + skillSteps,
+  };
+}
+function validate(payload, options = {}) {
+  return payload.generatorVersion === 4
+    ? validateV4(payload, options)
+    : validateV3(payload, options);
 }
 module.exports = { initial, options, apply, solve, validate, stateKey, hash };

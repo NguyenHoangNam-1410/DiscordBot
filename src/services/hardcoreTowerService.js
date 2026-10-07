@@ -85,7 +85,7 @@ const actionTx = db.transaction(
     if (!Number.isSafeInteger(expectedTurn) || state.turn !== expectedTurn)
       throw Error("STALE_ACTION");
     if (
-      c.generatorVersion === 3 &&
+      c.generatorVersion >= 3 &&
       (!Number.isSafeInteger(expectedRouteStep) ||
         state.routeStep !== expectedRouteStep)
     )
@@ -126,13 +126,16 @@ const actionTx = db.transaction(
     if (action === "replay") {
       if (state.status === "playing") throw Error("INVALID_ACTION");
       const turn = state.turn + 1;
-      state = engine.createState(c);
+      state =
+        state.status === "failed" && c.generatorVersion >= 4
+          ? engine.retryFloor(state, c)
+          : engine.createState(c);
       state.turn = turn;
       repo.beginAttempt(row, now);
     } else {
       if (state.status !== "playing") throw Error("STALE_ACTION");
       engine.act(state, c, action);
-      if (c.generatorVersion === 3 && state.status !== "playing")
+      if (c.generatorVersion >= 3 && state.status !== "playing")
         repo.attempt(row, now);
       repo.progress(row, state, now);
       if (state.status === "completed") {

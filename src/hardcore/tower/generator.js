@@ -1,55 +1,25 @@
 "use strict";
 const { createHash, createHmac } = require("node:crypto");
 const { profile } = require("./classProfiles");
-const { makeClue, eventChoices } = require("./templates");
+const { FIXED_POTION_HEAL, MONSTERS, tellFor } = require("./templates");
 const solver = require("./solver");
-const GENERATOR_VERSION = 3,
-  CONTENT_VERSION = 1;
-const FIRST_LENGTHS = [4, 4, 5, 5, 4, 5, 5, 5, 6, 5, 6, 6, 6, 7, 8];
-const FLOOR_NAMES = [
-  "Nhịp khai mở",
-  "Trật tự MP",
-  "Hai mặt lõi",
-  "Ngã rẽ sinh lực",
-  "Mana Paradox",
-  "Mana Fracture",
-  "Double Verdict",
-  "Gương lưu nhịp",
-  "Delayed Reflection",
-  "Purification Fork",
-  "Debt Collector",
-  "Reverse Memory",
-  "Class Seal",
-  "Final Auditor",
-  "The Unbroken Point",
-];
-function random(seed, nonce) {
-  let counter = 0;
-  return () =>
-    createHash("sha256")
-      .update(seed + ":" + nonce + ":" + counter++)
-      .digest()
-      .readUInt32BE(0) / 0x100000000;
-}
-function shuffle(list, rng) {
-  const out = list.slice();
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
+
+const GENERATOR_VERSION = 4;
+const CONTENT_VERSION = 3;
+const FLOOR_LENGTHS = Object.freeze(
+  Array.from({ length: 15 }, (_, i) => i + 1),
+);
+const POTION_STEPS = Object.freeze({ 6: 2, 10: 4, 13: 5, 15: 7 });
+const ACTION_CYCLE = Object.freeze(["attack", "skill", "defend", "attack"]);
+
+function deterministicIndex(seed, label, size) {
+  return (
+    createHash("sha256").update(`${seed}:${label}`).digest().readUInt32BE(0) %
+    size
+  );
 }
 function challengeId(year, week, classKey, version = GENERATOR_VERSION) {
-  return (
-    "tower:" +
-    year +
-    ":W" +
-    String(week).padStart(2, "0") +
-    ":" +
-    classKey +
-    ":g" +
-    version
-  );
+  return `tower:${year}:W${String(week).padStart(2, "0")}:${classKey}:g${version}`;
 }
 function productionSeed(
   id,
@@ -58,16 +28,44 @@ function productionSeed(
 ) {
   if (!secret) throw Error("MISSING_TOWER_GENERATOR_SECRET");
   return createHmac("sha256", secret)
-    .update(id + ":" + contentVersion)
+    .update(`${id}:${contentVersion}`)
     .digest("hex");
 }
-function costsAt(p, t) {
-  const fractured = t.floor > 5 || (t.floor === 5 && t.floorStep > 0);
+function failureHint(expected, chosen) {
+  if (chosen === "potion" && expected !== "potion")
+    return "Dòng Sinh lực đã bị khuấy động trước khi khế ước ổn định.";
+  if (expected === "potion")
+    return "Một cửa sổ Sinh lực đã khép lại mà chưa được tận dụng.";
+  if (expected === "defend")
+    return "Dấu Hành quyết vẫn còn lưu lại trên khiên của bạn.";
+  if (expected === "skill")
+    return "Một Ấn Linh hồn vẫn dao động khi số bước đã cạn.";
+  return "Một vết nứt vật chất chưa được khai thác trước khi cánh cửa đóng lại.";
+}
+function plannedAction({ floor, floorStep, mana, seed, nonce }) {
+  if (floor === 1) return "attack";
+  if (POTION_STEPS[floor] === floorStep) return "potion";
+  if (floor === 12 && floorStep < 3)
+    return ["defend", "attack", "skill"][floorStep];
+  if (floorStep === floor - 1)
+    return mana >= 2 && deterministicIndex(seed, `finish:${nonce}:${floor}`, 2)
+      ? "skill"
+      : "attack";
+  const offset = deterministicIndex(
+      seed,
+      `cycle:${nonce}:${floor}`,
+      ACTION_CYCLE.length,
+    ),
+    action = ACTION_CYCLE[(floorStep + offset) % ACTION_CYCLE.length];
+  return action === "skill" && mana < 2 ? "attack" : action;
+}
+function conditionFor(action) {
   return {
-    skillCost: fractured ? Math.max(1, p.skillCost - 1) : p.skillCost,
-    attackMana: fractured ? 0 : p.attackMana,
-    defendMana: p.defendMana,
-  };
+    attack: "physical_only",
+    skill: "arcane_only",
+    defend: "execution_guard",
+    potion: "fixed_potion_window",
+  }[action];
 }
 function candidate(
   {
@@ -82,384 +80,131 @@ function candidate(
   nonce,
 ) {
   const p = profile(classKey),
-    rng = random(seed, nonce),
-    first = isoYear === 2026 && isoWeek === 41;
-  const lengths = first
-    ? FIRST_LENGTHS.slice()
-    : [...Array(15)].map((_, i) => {
-        const range =
-          i < 3
-            ? [4, 5]
-            : i < 6
-              ? [4, 6]
-              : i < 10
-                ? [5, 6]
-                : i < 13
-                  ? [6, 7]
-                  : i === 13
-                    ? [7, 8]
-                    : [8, 10];
-        return range[0] + Math.floor(rng() * (range[1] - range[0] + 1));
-      });
-  const n = lengths.reduce((a, b) => a + b, 0);
-  if (n < 72 || n > 90 || lengths.slice(11).reduce((a, b) => a + b, 0) < 27)
-    throw Error("CANDIDATE_LENGTH");
-  const slots = [],
-    floors = [];
-  for (let i = 0; i < 15; i++) {
-    floors.push({
-      number: i + 1,
-      name: FLOOR_NAMES[i],
-      stepStart: slots.length,
-      stepCount: lengths[i],
-      hp: 0,
-    });
-    for (let j = 0; j < lengths[i]; j++)
-      slots.push({
-        floor: i + 1,
-        floorStep: j,
-        routeStep: slots.length,
-        type: "combat",
-      });
-  }
-  const floorSlots = (f) => slots.filter((t) => t.floor === f);
-  for (const [f, kind] of [
-    [4, "hp_fork"],
-    [5, "paradox"],
-    [8, "mana_fork"],
-    [10, "purification"],
-  ]) {
-    const t = floorSlots(f)[0];
-    t.type = "event";
-    t.eventKind = kind;
-    t.choices = eventChoices(kind, nonce);
-    t.expectedAction = t.choices[0].action;
-    t.category =
-      kind === "paradox"
-        ? "class"
-        : kind === "mana_fork"
-          ? "resource"
-          : "delayed";
-  }
-  function seedSequence(length) {
-    const sequence = [];
-    for (let i = 0; i < length; i++) {
-      const choices = shuffle(["attack", "skill", "defend"], rng).filter(
-        (a) =>
-          (i < length - 1 || a !== "defend") &&
-          !(
-            sequence.slice(-3).length === 3 &&
-            sequence.slice(-3).every((x) => x === a)
+    floors = [],
+    transitions = [];
+  let hp = p.maxHp,
+    mana = p.maxMana,
+    potions = p.potions;
+  for (let floor = 1; floor <= 15; floor++) {
+    const monster = MONSTERS[floor - 1],
+      stepStart = transitions.length,
+      local = [];
+    let enemyHp = 0;
+    for (let floorStep = 0; floorStep < floor; floorStep++) {
+      let action = plannedAction({ floor, floorStep, mana, seed, nonce });
+      if (action === "potion" && potions < 1)
+        throw Error("INSUFFICIENT_TOWER_POTIONS");
+      if (action === "skill" && mana < p.skillCost) action = "attack";
+
+      if (action === "potion" && p.maxHp - hp < FIXED_POTION_HEAL) {
+        const previous = local.findLast((t) =>
+            ["attack", "skill"].includes(t.expectedAction),
           ),
-      );
-      sequence.push(choices[0]);
-    }
-    return sequence;
-  }
-  const firstActions = [
-      ...shuffle(["attack", "skill", "defend"], rng),
-      ...seedSequence(lengths[0] - 3),
-    ],
-    eightActions = seedSequence(lengths[7] - 1);
-  if (new Set(firstActions).size < 3) throw Error("CANDIDATE_FIRST_RHYTHM");
-  for (const [f, seq] of [
-    [1, firstActions],
-    [8, eightActions],
-  ]) {
-    floorSlots(f)
-      .filter((t) => t.type === "combat")
-      .forEach((t, i) => (t.forced = seq[i]));
-  }
-  const reversedFirst = firstActions.slice().reverse(),
-    reversedEight = eightActions.slice().reverse();
-  floorSlots(12).forEach((t, i) => {
-    t.forced = reversedFirst[i % reversedFirst.length];
-    t.category = "memory";
-    t.memoryFloor = 1;
-    t.memoryIndex = i + 1;
-  });
-  floorSlots(14)
-    .slice(0, 3)
-    .forEach((t, i) => {
-      t.forced = reversedEight[i];
-      t.category = "memory";
-      t.memoryFloor = 8;
-      t.memoryIndex = i + 1;
-    });
-  const finalMana = Math.floor(rng() * (Math.floor(p.maxMana * 0.4) + 1));
-  const failed = new Set(),
-    orders = slots.map(() => shuffle(["attack", "skill", "defend"], rng));
-  function buildReverse(i, mana, nextAction, repeat, mask) {
-    if (i < 0) return mana;
-    const key = [i, mana, nextAction, repeat, mask].join("|");
-    if (failed.has(key)) return null;
-    const t = slots[i],
-      cost = costsAt(p, t);
-    Object.assign(t, cost);
-    if (t.type === "event") {
-      t.manaDelta = 0;
-      return buildReverse(
-        i - 1,
-        mana,
-        null,
-        0,
-        i === 0 || slots[i - 1].floor !== t.floor ? 0 : mask,
-      );
-    }
-    for (const a of orders[i]) {
-      const delta =
-        a === "skill"
-          ? -cost.skillCost
-          : a === "attack"
-            ? cost.attackMana
-            : cost.defendMana;
-      const before = mana - delta,
-        bit = { attack: 1, skill: 2, defend: 4 }[a],
-        newMask = mask | bit;
-      if (
-        before < 0 ||
-        before > p.maxMana ||
-        (t.forced && a !== t.forced) ||
-        (t.floorStep === lengths[t.floor - 1] - 1 && a === "defend") ||
-        (a === nextAction && repeat >= 3)
-      )
-        continue;
-      const boundary = i === 0 || slots[i - 1].floor !== t.floor;
-      if (
-        boundary &&
-        ((newMask & (newMask - 1)) === 0 || (t.floor === 15 && newMask !== 7))
-      )
-        continue;
-      const initial = buildReverse(
-        i - 1,
-        before,
-        a,
-        a === nextAction ? repeat + 1 : 1,
-        boundary ? 0 : newMask,
-      );
-      if (initial !== null) {
-        t.expectedAction = a;
-        t.manaDelta = delta;
-        return initial;
+          extra = FIXED_POTION_HEAL - (p.maxHp - hp);
+        if (!previous || previous.hpBefore - previous.counterDamage - extra < 1)
+          throw Error("INVALID_POTION_SETUP");
+        previous.counterDamage += extra;
+        previous.intentDamage += extra;
+        previous.hpDelta -= extra;
+        hp -= extra;
       }
-    }
-    failed.add(key);
-    return null;
-  }
-  const initialMana = buildReverse(n - 1, finalMana, null, 0, 0);
-  if (initialMana === null) throw Error("CANDIDATE_RESOURCE_DEAD_END");
-  let mana = initialMana;
-  let forwardMana = initialMana;
-  slots.forEach((t) => {
-    t.manaBefore = forwardMana;
-    forwardMana += t.manaDelta;
-  });
-  const counts = { direct: 0, resource: 0, delayed: 0, memory: 0, class: 0 };
-  slots.forEach((t) => {
-    if (t.category) counts[t.category]++;
-  });
-  for (const cat of ["resource", "delayed", "class"]) {
-    const target = Math.ceil(
-      n * (cat === "resource" ? 0.22 : cat === "delayed" ? 0.17 : 0.18),
-    );
-    const eligible = shuffle(
-      slots.filter((t) => !t.category && (cat !== "delayed" || t.floor >= 5)),
-      rng,
-    );
-    if (cat === "resource")
-      for (const t of eligible
-        .filter(
-          (x) => x.expectedAction === "defend" && x.manaBefore >= x.skillCost,
-        )
-        .slice(0, 4)) {
-        t.category = cat;
-        counts[cat]++;
-      }
-    for (let i = eligible.length - 1; i >= 0; i--)
-      if (eligible[i].category) eligible.splice(i, 1);
-    while (counts[cat] < target && eligible.length) {
-      eligible.pop().category = cat;
-      counts[cat]++;
-    }
-  }
-  slots.forEach((t) => {
-    if (!t.category) t.category = "direct";
-  });
-  // Walk backward from the boss's small surviving HP budget. Ward/dodge steps
-  // take no damage; Druid healing is accounted for in the fixed counter curve.
-  let ward = 0;
-  for (const t of slots) {
-    t.classChargesBefore = { ward };
-    const blocked =
-      t.type === "combat" &&
-      (ward > 0 ||
-        (p.mechanic === "dodge" && t.expectedAction === "skill") ||
-        (p.mechanic === "shield" && t.expectedAction === "skill"));
-    t.blocked = blocked;
-    if (t.type === "combat" && ward > 0) ward = 0;
-    if (p.mechanic === "ward" && t.expectedAction === "skill") ward = 1;
-    t.classChargesAfter = { ward };
-  }
-  const finalHp = 1 + Math.floor(rng() * Math.floor(p.maxHp * 0.2));
-  let budget = p.maxHp - finalHp - 3;
-  const vulnerable = slots.filter((t) => t.type === "combat" && !t.blocked);
-  const weights = vulnerable.map(() => 1 + Math.floor(rng() * 5)),
-    total = weights.reduce((a, b) => a + b, 0);
-  const losses = weights.map((w) => Math.floor((budget * w) / total));
-  let remaining = budget - losses.reduce((a, b) => a + b, 0);
-  for (const index of shuffle(
-    losses.map((_, i) => i),
-    rng,
-  )) {
-    if (!remaining) break;
-    losses[index]++;
-    remaining--;
-  }
-  let vi = 0;
-  for (const t of slots) {
-    t.hpDelta =
-      t.type === "event"
-        ? t.eventKind === "hp_fork"
-          ? -3
-          : 0
-        : t.blocked
-          ? 0
-          : -losses[vi++];
-    t.heal = t.type === "combat" && t.expectedAction === "skill" ? p.heal : 0;
-    t.counterDamage = t.type === "combat" ? t.heal - t.hpDelta : 0;
-    t.intentDamage = t.blocked
-      ? p.maxHp + 1
-      : p.mechanic === "shield" && t.expectedAction === "defend"
-        ? 2 * t.counterDamage
-        : t.counterDamage;
-    t.counterType =
-      p.mechanic === "shield" && t.expectedAction === "skill"
-        ? "magic"
-        : p.mechanic === "shield" && t.expectedAction === "defend"
-          ? "physical"
-          : rng() < 0.5
-            ? "physical"
-            : "magic";
-    t.requiredFlags = [];
-    t.grantsFlags = [];
-    t.removesFlags = [];
-    if (t.type === "event") {
-      if (t.eventKind === "hp_fork") t.grantsFlags = ["debt_bound"];
-      if (t.eventKind === "paradox") t.grantsFlags = ["mana_fracture"];
-      if (t.eventKind === "mana_fork") t.grantsFlags = ["mirror_bound"];
-    }
-    if (t.floor >= 12) t.requiredFlags.push("debt_bound");
-    if (t.category === "delayed" && t.floor >= 5)
-      t.requiredFlags.push("debt_bound");
-    if (t.category === "memory")
-      t.requiredFlags.push("memory_" + t.memoryFloor);
-    if (
-      t.floorStep === lengths[t.floor - 1] - 1 &&
-      (t.floor === 1 || t.floor === 8)
-    )
-      t.grantsFlags.push("memory_" + t.floor);
-    t.requiredFlags = [...new Set(t.requiredFlags)];
-    t.resourceWasteWindow =
-      t.category === "resource" &&
-      t.expectedAction === "defend" &&
-      t.manaBefore >= t.skillCost;
-    t.shieldCharges =
-      p.mechanic === "barrage" &&
-      t.category === "class" &&
-      t.expectedAction === "skill"
-        ? 2
-        : 0;
-    t.classMechanic = p.mechanic;
-    t.spellLocked =
-      p.mechanic === "reflection" &&
-      t.category === "class" &&
-      t.expectedAction !== "skill";
-  }
-  let hp = finalHp;
-  for (let i = n - 1; i >= 0; i--) {
-    const t = slots[i];
-    hp -= t.hpDelta;
-    t.hpBefore = hp;
-  }
-  if (hp !== p.maxHp) throw Error("CANDIDATE_HP_CURVE");
-  mana = initialMana;
-  const used = {},
-    templates = [];
-  for (const t of slots) {
-    t.manaBefore = mana;
-    mana += t.manaDelta;
-    t.hpRange =
-      p.mechanic === "regeneration" && t.category === "class"
-        ? [Math.max(1, t.hpBefore - 1), Math.min(p.maxHp, t.hpBefore + 1)]
-        : null;
-    if (
-      p.mechanic === "rage" &&
-      t.category === "class" &&
-      t.expectedAction === "attack" &&
-      t.hpBefore <= p.maxHp * 0.35
-    )
-      t.hpRange = [1, Math.floor(p.maxHp * 0.35)];
-    t.manaRange =
-      t.category === "resource" ? [t.manaBefore, t.manaBefore] : null;
-    let damage = 0;
-    if (t.expectedAction === "attack")
-      damage = Math.floor(
-        p.attackDamage *
-          (p.mechanic === "rage" && t.hpBefore <= p.maxHp * 0.35 ? 1.5 : 1),
-      );
-    if (t.expectedAction === "skill")
-      damage =
-        p.mechanic === "barrage"
-          ? Math.floor(p.skillDamage / 3) * (3 - t.shieldCharges)
-          : p.skillDamage + (p.mechanic === "dodge" ? 8 : 0);
-    t.enemyHpDelta = damage ? -damage : 0;
-    t.damage = damage;
-    floors[t.floor - 1].hp += damage;
-    if (t.type === "event") {
-      t.clueTemplate = "event_" + t.eventKind;
-      t.clue =
-        t.eventKind === "hp_fork"
-          ? "Khế ước đầu run sẽ bị thu nợ từ tầng 12. Hồi phục xóa dấu và đóng cửa thu nợ."
-          : t.eventKind === "paradox"
-            ? "Chuỗi này cần Mana Fracture. Lựa chọn tồn tại đến cuối run."
-            : t.eventKind === "mana_fork"
-              ? "Gương tầng 14 cần giữ nguyên nhịp combat tầng 8. Nạp đầy MP sẽ đổi nhịp."
-              : "Cửa thu nợ chỉ mở khi dấu khế ước đầu run vẫn còn.";
-      continue;
-    }
-    const variants = shuffle([0, 1, 2], rng).map((v) =>
-      makeClue(t.category, t.expectedAction, v, {
-        profile: p,
-        hpRange: t.hpRange,
-        memoryIndex: t.memoryIndex,
-        memoryFloor: t.memoryFloor,
-      }),
-    );
-    const clue = variants.find(
-      (x) =>
-        (used[x.template] || 0) < 6 &&
-        !(
-          templates.length >= 2 &&
-          templates.at(-1) === x.template &&
-          templates.at(-2) === x.template
+
+      const hpBefore = hp,
+        manaBefore = mana,
+        potionsBefore = potions,
+        attackMana = mana < p.maxMana ? 1 : 0,
+        defendMana = mana < p.maxMana ? 1 : 0,
+        manaDelta =
+          action === "skill"
+            ? -p.skillCost
+            : action === "attack"
+              ? attackMana
+              : action === "defend"
+                ? defendMana
+                : 0,
+        damage =
+          action === "attack"
+            ? p.attackDamage
+            : action === "skill"
+              ? p.skillDamage
+              : 0,
+        counterDamage = ["defend", "potion"].includes(action) ? 0 : 1,
+        requestedHeal =
+          action === "potion"
+            ? FIXED_POTION_HEAL
+            : action === "skill"
+              ? p.heal
+              : 0,
+        actualHeal = Math.min(requestedHeal, p.maxHp - hp),
+        hpDelta = actualHeal - counterDamage,
+        potionsDelta = action === "potion" ? -1 : 0,
+        variant = deterministicIndex(
+          seed,
+          `tell:${nonce}:${floor}:${floorStep}`,
+          3,
+        );
+      hp += hpDelta;
+      mana += manaDelta;
+      potions += potionsDelta;
+      enemyHp += damage;
+      if (hp < 1) throw Error("LETHAL_CANONICAL_ROUTE");
+      local.push({
+        routeStep: transitions.length + local.length,
+        floor,
+        floorStep,
+        type: "combat",
+        expectedAction: action,
+        availableActions: ["attack", "skill", "defend", "potion"],
+        clueTemplate: `monster_${monster.id}`,
+        clue: monster.rule,
+        puzzleRule: monster.rule,
+        signal: tellFor(action, floor, floorStep, variant),
+        condition: conditionFor(action),
+        hintByAction: Object.fromEntries(
+          ["attack", "skill", "defend", "potion"].map((chosen) => [
+            chosen,
+            failureHint(action, chosen),
+          ]),
         ),
-    );
-    if (!clue) throw Error("CANDIDATE_TEMPLATE_LIMIT");
-    t.clueTemplate = clue.template;
-    t.clue = clue.text;
-    if (t.category === "resource")
-      t.clue +=
-        " Khóa MP trước hành động: " + t.manaBefore + "/" + p.maxMana + ".";
-    if (t.floor === 1)
-      t.clue += " Ghi nhớ chuỗi combat tầng 1 để đảo nhịp ở tầng 12.";
-    if (t.floor === 8)
-      t.clue += " Ghi nhớ chuỗi combat tầng 8 để đảo nhịp ở tầng 14.";
-    used[clue.template] = (used[clue.template] || 0) + 1;
-    templates.push(clue.template);
-    delete t.forced;
-    delete t.blocked;
-    delete t.hpBefore;
-    delete t.manaBefore;
+        hpBefore,
+        manaBefore,
+        potionsBefore,
+        hpDelta,
+        manaDelta,
+        potionsDelta,
+        hpRange: action === "potion" ? [1, p.maxHp - FIXED_POTION_HEAL] : null,
+        manaRange: action === "skill" ? [p.skillCost, p.maxMana] : null,
+        enemyHpDelta: -damage,
+        damage,
+        heal: actualHeal,
+        counterDamage,
+        intentDamage: action === "defend" ? p.maxHp + 1 : counterDamage,
+        counterType:
+          action === "defend" ? "one_hit" : floor % 2 ? "physical" : "magic",
+        skillCost: p.skillCost,
+        attackMana,
+        defendMana,
+        requiredFlags: [],
+        grantsFlags: [],
+        removesFlags: [],
+        classChargesBefore: { ward: 0 },
+        classChargesAfter: { ward: 0 },
+        shieldCharges: 0,
+        spellLocked: false,
+      });
+    }
+    if (!local.at(-1).damage) throw Error("FLOOR_MUST_END_WITH_KILL");
+    floors.push({
+      number: floor,
+      id: monster.id,
+      name: monster.name,
+      mechanic: monster.id,
+      rule: monster.rule,
+      stepStart,
+      stepCount: floor,
+      hp: enemyHp,
+    });
+    transitions.push(...local);
   }
   const payload = {
     challengeId: challengeId(isoYear, isoWeek, classKey),
@@ -469,23 +214,22 @@ function candidate(
     contentVersion,
     classKey,
     seedCommitment: solver.hash(seed),
-    name: p.name + " · Perfect Chain",
-    weekLabel: "TUẦN " + isoWeek,
+    name: `${p.name} · Tháp Suy Luận`,
+    weekLabel: `TUẦN ${isoWeek}`,
     character: {
       classKey,
       name: p.name,
       maxHp: p.maxHp,
       maxMana: p.maxMana,
-      mana: initialMana,
-      str: p.attackDamage,
-      dex: 20,
-      vit: 25,
-      ene: p.maxMana * 10,
-      defense: classKey === "paladin" ? 20 : 6,
-      resistance: classKey === "paladin" ? 35 : 23,
-      accuracy: 100,
-      evasion: 0,
+      mana: p.maxMana,
+      potions: p.potions,
+      potionHeal: FIXED_POTION_HEAL,
+      ...p.survivalStats,
     },
+    loadout: p.loadout,
+    catalogSource: "survival-v2-readonly",
+    deterministicCombat: true,
+    runtimeRng: false,
     combat: {
       attackDamage: p.attackDamage,
       skillDamage: p.skillDamage,
@@ -493,25 +237,25 @@ function candidate(
       attackMana: p.attackMana,
       defendMana: p.defendMana,
       skillName: p.skillName,
+      potionHeal: FIXED_POTION_HEAL,
     },
     classDescription: p.description,
     floors,
-    transitions: slots,
-    initialState: { hp: p.maxHp, mana: initialMana },
+    transitions,
+    initialState: { hp: p.maxHp, mana: p.maxMana, potions: p.potions },
     finalState: null,
-    stepCount: n,
+    stepCount: 120,
     startsAt,
     endsAt,
     reward: { coins: 500000, diamonds: 250 },
-    wrongActionPolicy: "immediate_reset",
+    wrongActionPolicy: "hidden_until_floor_end_with_abstract_hint",
     candidateNonce: nonce,
     solutionHash: null,
     difficultyScore: 0,
   };
   let state = solver.initial(payload);
-  for (const t of slots) state = solver.apply(payload, state, t.expectedAction);
-  if (state.hp !== finalHp || state.mana !== finalMana)
-    throw Error("CANDIDATE_FINAL_CURVE");
+  for (const t of transitions)
+    state = solver.apply(payload, state, t.expectedAction);
   payload.finalState = state;
   return payload;
 }
@@ -537,14 +281,17 @@ function generate(
       failures[error.message] = (failures[error.message] || 0) + 1;
     }
   }
-  const error = Error("TOWER_GENERATION_FAILED: " + last?.message);
+  const error = Error(`TOWER_GENERATION_FAILED: ${last?.message}`);
   error.failures = failures;
   throw error;
 }
 module.exports = {
   GENERATOR_VERSION,
   CONTENT_VERSION,
-  FIRST_LENGTHS,
+  FIXED_POTION_HEAL,
+  FIRST_LENGTHS: FLOOR_LENGTHS,
+  FLOOR_LENGTHS,
+  FLOOR_PUZZLES: MONSTERS,
   challengeId,
   productionSeed,
   generate,

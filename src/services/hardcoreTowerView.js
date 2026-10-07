@@ -21,6 +21,7 @@ const actionName = {
   attack: "Tấn công",
   skill: "Arcane Burst",
   defend: "Phòng thủ",
+  potion: "Bình máu",
 };
 const tabs = {
   stats: "Chỉ số",
@@ -37,7 +38,7 @@ function encounterIcon(e) {
       : E.shrine;
 }
 function resources(state) {
-  return `${healthBar(state.hp, state.maxHp)}\n${E.mana} **MP** **${state.mana}/${state.maxMana}**`;
+  return `${healthBar(state.hp, state.maxHp)}\n${E.mana} **MP** **${state.mana}/${state.maxMana}**${Number.isInteger(state.potions) ? `${SEP}${E.potion} **Bình** **${state.potions}/${state.maxPotions}**` : ""}`;
 }
 function battleStats(state, c) {
   const cost = engine.costs(state, c);
@@ -80,7 +81,7 @@ function turnText(state, c) {
   const before = state.lastOutcome;
   if (!before) return state.lastLog || "";
   const prior =
-    c.generatorVersion === 3
+    c.generatorVersion >= 3
       ? {
           ...c.floors[before.floor - 1],
           type: c.transitions[before.routeStep].type,
@@ -104,6 +105,8 @@ function turnText(state, c) {
   if (before.heal) lines.push("Hồi phục cho bạn: **+" + before.heal + " HP**.");
   change(`${E.hp} HP`, before.hp, state.hp);
   change(`${E.mana} MP`, before.mana, state.mana);
+  if (Number.isInteger(before.potions))
+    change(`${E.potion} Bình`, before.potions, state.potions);
   change("Tầng", before.floor, state.floor);
   if (
     state.status === "playing" &&
@@ -114,7 +117,7 @@ function turnText(state, c) {
       `**Pha**: ${prior.phases?.[before.step]?.name || "Nhịp " + (before.step + 1)} → **${prior.phases?.[state.step]?.name || "Nhịp " + (state.step + 1)}**`,
     );
   const text = lines.join("\n");
-  return c.generatorVersion === 3
+  return c.generatorVersion >= 3
     ? text
     : text.replace(/\bMana\b(?! Vỡ Vụn)/g, "MP");
 }
@@ -151,6 +154,7 @@ function button(
     attack: E.attack,
     skill: SKILL_ICONS[classKey],
     defend: E.defense,
+    potion: E.potion,
     replay: appEmoji("repeat", "🔁"),
     top: appEmoji("trophy", "🏆"),
     touch: E.shrine,
@@ -184,7 +188,7 @@ function chunkRows(buttons) {
   return rows;
 }
 function payload(row, state, c, result, now = Date.now()) {
-  if (c.generatorVersion === 3)
+  if (c.generatorVersion >= 3)
     return payloadGenerated(row, state, c, result, now);
   const live = catalog.playable(c, now);
   const replayTarget =
@@ -272,7 +276,7 @@ function statsText(state, c) {
   const attributes = ["str", "dex", "vit", "ene"]
     .map((k) => `${E[k]} **${k.toUpperCase()}** **${s[k]}**`)
     .join(SEP);
-  return `${resources(state)}\n${attributes}\n${E.defense} **DEF** **${s.defense}**${SEP}${E.res} **RES** **${s.resistance}%**\n${E.accuracy} **ACC** **${s.accuracy}**${SEP}${E.evasion} **EVA** **${s.evasion}**${SEP}${E.crit} **CRIT** **Tắt**\n${E.potion} **Bình** **0**\n*Nhân vật cố định; sát thương và phản công dùng giá trị của challenge, đã tính giảm trừ.*`;
+  return `${resources(state)}\n${attributes}\n${E.defense} **DEF** **${s.defense}**${SEP}${E.res} **RES** **${s.resistance}%**\n${E.accuracy} **ACC** **${s.accuracy}**${SEP}${E.evasion} **EVA** **${s.evasion}**${SEP}${E.crit} **CRIT** **Tắt**\n*Nhân vật và trang bị lấy từ catalog Sinh Tồn; sát thương của puzzle là cố định.*`;
 }
 function rulesText(c) {
   const date = (value) =>
@@ -280,7 +284,7 @@ function rulesText(c) {
   return `• Vượt **${c.floors.length} tầng** với Sorceress cố định; không Crit, không Miss, không RNG.\n• Tấn công gây **${c.combat.attackDamage} damage**, nhận **${c.combat.attackMana} MP**. Arcane Burst gây **${c.combat.skillDamage} damage**, tốn **${c.combat.skillCost} MP**. Rift và luật pha có thể thay đổi các giá trị này.\n• Phòng thủ nhận **${c.combat.defendMana} MP**; sát thương nhận vào theo pha hiện tại. MP không vượt **${c.character.maxMana}**.\n• Kết liễu quái đúng luật pha không bị phản công. Phải tuân thủ hành động bắt buộc và giới hạn hành động của từng pha.\n• Không mang trang bị, vé hoặc bình vào Tháp.\n• Thưởng một lần mỗi người trong server cho challenge này. Chơi lại tăng số lần thử.\n• Mở: **${date(c.startsAt)}**; đóng: **${date(c.endsAt)}** (giờ Việt Nam). Sau khi đóng, chỉ xem kết quả trong 24 giờ.`;
 }
 function privatePayload(row, state, c, sourceMessageId, tab = "stats") {
-  if (c.generatorVersion === 3)
+  if (c.generatorVersion >= 3)
     return privateGenerated(row, state, c, sourceMessageId, tab);
   const embed = new EmbedBuilder()
     .setColor(color(state, c))
@@ -388,18 +392,30 @@ function generatedEncounter(state, c) {
     (t.floorStep + 1) +
     "/" +
     e.stepCount +
-    "**\n";
+    "** · Còn **" +
+    (e.stepCount - t.floorStep) +
+    " bước**\n";
   if (t.type === "combat") text += healthBar(state.enemyHp, e.hp) + "\n";
-  text += "**Tín hiệu:** " + t.clue;
+  text += "**Luật puzzle:** " + (e.rule || t.puzzleRule || t.clue);
+  if (t.signal) text += "\n**Dấu hiệu:** " + t.signal;
   if (t.type === "event")
     text += "\n" + t.choices.map((x) => "• " + x.label).join("\n");
+  else if (c.generatorVersion >= 4)
+    text +=
+      "\nÝ định quái: **" +
+      (t.counterType === "one_hit"
+        ? "đòn chí tử"
+        : t.intentDamage +
+          " damage " +
+          (t.counterType === "magic" ? "phép" : "vật lý")) +
+      "**. Hãy tự suy ra hành động; đáp án không được hiển thị.";
   else
     text +=
       "\nÝ định: **" +
       t.intentDamage +
       " damage " +
       (t.counterType === "magic" ? "phép" : "vật lý") +
-      "**. Cơ chế class có thể chặn/giảm đòn; phản công áp dụng trước khi qua tầng.";
+      "**.";
   return text;
 }
 function generatedStats(state, c) {
@@ -435,7 +451,13 @@ function generatedStats(state, c) {
     engine.counter(state, c, "defend") +
     " damage · +" +
     t.defendMana +
-    " MP**\n*Damage cố định, không Crit, không Miss. " +
+    " MP**\n" +
+    E.potion +
+    " **Bình máu: hồi tối đa " +
+    state.potionHeal +
+    " HP · còn " +
+    state.potions +
+    "**\n*Damage cố định, không Crit, không Miss. " +
     c.classDescription +
     "*"
   );
@@ -451,8 +473,12 @@ function generatedEffects(state, c) {
     memory_1: "Nhịp tầng 1 đã niêm phong cho Gương tầng 12.",
     memory_8: "Nhịp tầng 8 đã niêm phong cho Gương tầng 14.",
   };
+  const loadout = (c.loadout || [])
+    .map((item) => `• ${item.name} [${item.rarity}]: ${item.text}`)
+    .join("\n");
   return (
     c.classDescription +
+    (loadout ? "\n**Trang bị từ Sinh Tồn:**\n" + loadout : "") +
     (c.classKey === "necromancer"
       ? "\n**Ward:** " + state.classCharges.ward + " charge."
       : "") +
@@ -465,17 +491,22 @@ function generatedRules(c) {
   const date = (v) =>
     new Date(v).toLocaleString("vi-VN", { timeZone: "Asia/Bangkok" });
   return (
-    "• **Perfect Chain:** " +
+    "• **Tháp Puzzle:** " +
     c.character.name +
-    " cố định · 15 tầng · " +
+    " · 15 tầng; tầng N phải hạ quái trong đúng N bước (tổng " +
     c.stepCount +
-    " bước. Sai một hành động làm attempt thất bại ngay; bấm **Chơi lại từ tầng 1** để thử lại.\n" +
-    "• HP, MP, hiệu ứng, Ward và lựa chọn event giữ xuyên tầng. Mỗi bước có tín hiệu riêng, kể cả thứ tự nhịp đã ghi ở tầng trước.\n" +
+    "). Mọi hành động đều tiêu hao bước; kết quả chỉ được chấm khi hết số bước của tầng.\n" +
+    "• Bảng chỉ cho biết số bước, tài nguyên, luật tầng và ý định có thể quan sát. Người chơi tự tìm chuỗi hành động.\n" +
+    "• Hệ thống không báo sai giữa tầng. Nếu hết bước mà chưa hoàn thành, bạn nhận một gợi ý trừu tượng và thử lại từ đầu tầng đó.\n" +
+    "• Dấu hiệu đỏ = lõi vật chất, lam = linh hồn, đen = Hành quyết, xanh = cửa bình máu. Mỗi dấu hiệu chỉ có một đáp án hợp lệ.\n" +
+    "• HP, MP và bình máu giữ xuyên tầng. Quái phải còn sống trước bước cuối và bị hạ đúng ở bước cuối.\n" +
     "• " +
     c.classDescription +
     "\n" +
-    "• MP và HP áp dụng theo delta cố định của challenge; phản công xảy ra trước khi chuyển tầng. Không Crit, Miss hoặc RNG trong run.\n" +
-    "• Không mang đồ, vé, bình, cược hoặc chỉ số từ Sinh tồn 999 vào Tháp. Hai mode tồn tại độc lập.\n" +
+    "• Bình máu hồi đúng **" +
+    c.character.potionHeal +
+    " HP** và chỉ hợp lệ khi thiếu ít nhất lượng đó. MP, HP và damage đều cố định; không Crit, Miss, né ngẫu nhiên hoặc RNG trong run.\n" +
+    "• Class và bộ đồ mẫu được dựng từ catalog Sinh Tồn hiện tại ở chế độ chỉ đọc. Tháp có session, tiến trình và phần thưởng độc lập; không dùng hay sửa run/túi Sinh Tồn của người chơi.\n" +
     "• Thưởng " +
     money(c.reward.coins) +
     " " +
@@ -509,7 +540,7 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
       (row.user_id ? "👤 <@" + row.user_id + ">\n" : "") +
         "**" +
         c.character.name +
-        " · 15 tầng · " +
+        " · 15 puzzle · " +
         c.stepCount +
         " bước**" +
         (!live
@@ -521,16 +552,18 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
     .setFooter(footer(state, c));
   addTextFields(
     embed,
-    "🔗 Perfect Chain",
+    "🧩 Chuỗi puzzle 1–15",
     "Tầng **" +
       state.floor +
-      "/15** · Bước **" +
-      Math.min(state.routeStep + 1, c.stepCount) +
+      "/15** · Puzzle yêu cầu **" +
+      state.floor +
+      " bước** · Đang ở bước **" +
+      Math.min(state.floorStep + 1, state.floor) +
       "/" +
-      c.stepCount +
-      "**\nChain chính xác: **" +
+      state.floor +
+      "**\nTổng chuỗi đúng: **" +
       state.routeStep +
-      " hành động liên tiếp**.\nSai một hành động sẽ phải chơi lại từ tầng 1.",
+      " hành động đã dùng**.\nKết quả của tầng được giữ kín cho tới khi dùng hết số bước.",
   );
   addTextFields(
     embed,
@@ -574,7 +607,7 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
       embed,
       "🏁 KẾT QUẢ",
       state.status === "completed"
-        ? "🏆 **Hoàn thành Perfect Chain " +
+        ? "🏆 **Hoàn thành Tháp Puzzle " +
             c.stepCount +
             "/" +
             c.stepCount +
@@ -588,7 +621,11 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
       : [
           {
             action: "replay",
-            label: live ? "Chơi lại từ tầng 1" : "Chơi Tháp hiện tại",
+            label: live
+              ? state.status === "failed"
+                ? "Thử lại tầng " + state.floor
+                : "Chơi lại từ tầng 1"
+              : "Chơi Tháp hiện tại",
           },
         ];
   const labels =
@@ -597,6 +634,7 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
           attack: "+" + t.attackMana + " MP",
           skill: "−" + t.skillCost + " MP",
           defend: "+" + t.defendMana + " MP",
+          potion: "Hồi tối đa " + state.potionHeal + " HP",
         }
       : {};
   const components = chunkRows(

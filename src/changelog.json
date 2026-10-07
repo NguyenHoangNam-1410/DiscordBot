@@ -1,5 +1,58 @@
 [
   {
+    "id": "584f30e7-db0c-4738-b1ad-fd03fd0839fe",
+    "updatedAt": "2026-10-07T08:38:36.735Z",
+    "auditedAt": "2026-10-07T08:38:36.735Z",
+    "title": "Tháp Suy Luận: chấm kết quả cuối tầng",
+    "changes": [
+      "Sai bước không còn làm dừng lượt hoặc báo lỗi ngay; mọi hành động tiếp tục tiêu hao số bước của tầng.",
+      "Khi hết bước mà chưa vượt tầng, hệ thống chỉ đưa một gợi ý trừu tượng rồi cho thử lại từ đầu tầng chưa vượt.",
+      "Bổ sung kiểm thử ẩn lỗi giữa tầng, bình máu dùng trễ và khôi phục checkpoint khi thử lại."
+    ]
+  },
+  {
+    "id": "64731853-13cc-4b5d-8f43-22c7687c5bd7",
+    "updatedAt": "2026-10-07T08:26:26.439Z",
+    "auditedAt": "2026-10-07T08:26:26.439Z",
+    "title": "Tháp Suy Luận: quái và luật deterministic",
+    "changes": [
+      "Thêm bộ 15 quái riêng cho Tháp, mỗi dấu hiệu chiến đấu chỉ có một hành động hợp lệ và lời giải duy nhất.",
+      "Loại bỏ Crit, Miss, né và RNG trong lượt chơi; Tấn công, Kỹ năng, Phòng thủ cùng bình máu đều dùng giá trị cố định được kiểm chứng trước khi phát hành.",
+      "Bình máu hồi đúng 20 HP trong cửa sổ quy định; đòn Hành quyết bắt buộc Phòng thủ, chọn sai sẽ thất bại và nhận gợi ý theo mechanic."
+    ]
+  },
+  {
+    "id": "1ae77116-0cf2-4164-afb6-23f2222f6da6",
+    "updatedAt": "2026-10-07T08:10:30.297Z",
+    "auditedAt": "2026-10-07T08:10:30.297Z",
+    "title": "Tháp Định Mệnh: checkpoint theo tầng",
+    "changes": [
+      "Thất bại ở tầng nào sẽ thử lại từ đầu tầng đó, giữ nguyên các tầng đã vượt và khôi phục HP, MP, bình cùng hiệu ứng lúc vừa vào tầng.",
+      "Sau khi hoàn thành đủ 15 tầng, nút Chơi lại cho phép bắt đầu lại từ tầng 1 nhưng không trao lại phần thưởng đã nhận."
+    ]
+  },
+  {
+    "id": "9f8f275b-23dd-4506-979e-dbea147c84a8",
+    "updatedAt": "2026-10-07T07:55:58.178Z",
+    "auditedAt": "2026-10-07T07:55:58.178Z",
+    "title": "Tháp Định Mệnh: đồng bộ dữ liệu theo tuần",
+    "changes": [
+      "Stats và bộ trang bị của mỗi rotation được chụp từ dữ liệu Sinh tồn mới nhất khi tuần đó bắt đầu.",
+      "Thay đổi cân bằng trong lúc một tháp đang hoạt động không làm đổi tháp hiện tại và chỉ áp dụng từ 00:00 thứ Hai của tuần kế tiếp."
+    ]
+  },
+  {
+    "id": "134a8b97-08be-4875-863f-401a017cb424",
+    "updatedAt": "2026-10-07T07:47:29.504Z",
+    "auditedAt": "2026-10-07T07:47:29.504Z",
+    "title": "Tháp Định Mệnh: 15 tầng puzzle",
+    "changes": [
+      "Làm lại Tháp thành 15 puzzle chiến đấu: tầng 1 cần đúng 1 bước, tăng dần đến tầng 15 cần đúng 15 bước; quái phải bị hạ ở bước cuối.",
+      "Tháp dùng class, chỉ số, bình máu và bộ trang bị mẫu từ dữ liệu Sinh tồn hiện tại nhưng giữ session, tiến trình và phần thưởng hoàn toàn độc lập.",
+      "Khi chọn sai, lượt chơi dừng và đưa gợi ý theo đúng lỗi như dùng bình quá sớm, thiếu phòng thủ trước đòn chí tử hoặc dùng sai loại sát thương."
+    ]
+  },
+  {
     "id": "7d9efb27-0892-45f0-8851-a972d38940d8",
     "updatedAt": "2026-10-07T07:09:28.894Z",
     "auditedAt": "2026-10-07T07:09:28.894Z",
