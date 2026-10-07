@@ -1,5 +1,18 @@
 [
   {
+    "id": "7d9efb27-0892-45f0-8851-a972d38940d8",
+    "updatedAt": "2026-10-07T07:09:28.894Z",
+    "auditedAt": "2026-10-07T07:09:28.894Z",
+    "title": "Royal Invitation: quy đổi set thành di vật LR",
+    "changes": [
+      "Đủ set Diệt Vương hoặc Tinh Tú với mọi level UR đã giải nguyền sẽ mở Royal Invitation: trọng số 10, Purifier giữ 3, event thường 1.",
+      "Nhận lời giao nộp toàn bộ 5 món của set được chọn cùng mọi level để nhận Kingslayer’s Testament hoặc Astral Singularity. Mỗi run quy đổi một set; bỏ đi sẽ khóa thư mời trong cả run.",
+      "Kingslayer’s Testament tăng sát thương crit vật lý từ x2,5, thêm 0,1 sau mỗi boss định kỳ hạ kể từ kích hoạt, tối đa x3,5. Astral Singularity miễn MP cho Skill phép; Skill Necromancer không chặn phản công hai lượt liên tiếp.",
+      "Khi nhận di vật: hồi đầy HP/MP theo chỉ số còn lại, giải mọi nguyền UR và xóa mọi ấn Rift; giữ Paradox/Contract. Chỉ một nội tại LR hoạt động trong run.",
+      "Thêm thành tựu Di Chúc Diệt Vương và Điểm Kỳ Dị Tinh Tú. Thành tích nhận từng LR được lưu ngay: số lần nhận, class, tầng và thời gian, vẫn giữ sau tử trận hoặc rút thưởng. Có animation ban phước và thông tin trong Chi tiết/luật."
+    ]
+  },
+  {
     "id": "6542f0cd-53f9-4d46-baa0-6b670745e433",
     "updatedAt": "2026-10-07T06:19:54.366Z",
     "auditedAt": "2026-10-07T06:19:54.366Z",

@@ -1357,6 +1357,26 @@ const relicAchievements = [
     diamonds: 0,
     metric: "hardcoreGildedRelics",
   },
+  {
+    id: "hc_kingslayers_testament_1",
+    name: "Di Chúc Diệt Vương",
+    description:
+      "Giao nộp set Diệt Vương đã giải hết nguyền, nhận Kingslayer’s Testament [LR] từ Royal Invitation",
+    target: 1,
+    reward: 0,
+    diamonds: 0,
+    metric: "hardcoreKingslayerRelics",
+  },
+  {
+    id: "hc_astral_singularity_1",
+    name: "Điểm Kỳ Dị Tinh Tú",
+    description:
+      "Giao nộp set Tinh Tú đã giải hết nguyền, nhận Astral Singularity [LR] từ Royal Invitation",
+    target: 1,
+    reward: 0,
+    diamonds: 0,
+    metric: "hardcoreAstralRelics",
+  },
 ];
 const ACHIEVEMENTS = Object.freeze([
   ...BASE_ACHIEVEMENTS,
@@ -1372,6 +1392,8 @@ const CATEGORY_GROUPS = Object.freeze({
   hardcoreGodBlessings: "hardcoreEvents",
   hardcoreConquerorRelics: "hardcoreEvents",
   hardcoreGildedRelics: "hardcoreEvents",
+  hardcoreKingslayerRelics: "hardcoreEvents",
+  hardcoreAstralRelics: "hardcoreEvents",
   hardcoreChains: "hardcoreEvents",
   hardcoreEventKinds: "hardcoreEvents",
   hardcoreKills: "hardcoreEvents",
@@ -1597,6 +1619,8 @@ function metrics(guildId, userId) {
     ...classFloors,
     hardcoreConquerorRelics: Math.max(relicCounts.conquerors_covenant, eventRow.kinds_json && JSON.parse(eventRow.kinds_json).includes("conquerors_covenant") ? 1 : 0),
     hardcoreGildedRelics: relicCounts.gilded_soul,
+    hardcoreKingslayerRelics: relicCounts.kingslayers_testament,
+    hardcoreAstralRelics: relicCounts.astral_singularity,
     hardcoreGodBlessings: db.prepare("SELECT blessings FROM hardcore_rngesus_favor WHERE guild_id=? AND user_id=?").get(guild, user)?.blessings || 0,
     hardcoreEvents: eventRow.events || 0,
     hardcoreChains: eventRow.chains || 0,

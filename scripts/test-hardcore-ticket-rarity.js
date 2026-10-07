@@ -96,13 +96,27 @@ try {
             }
           : relic.id === "gilded_soul"
             ? { kind: "adventurer_ritual", method: "boss_victory" }
-            : null,
+            : require("../src/hardcore/events/royalSets").SETS[relic.id]
+              ? {
+                  kind: "royal_invitation",
+                  method: "item_set_exchange",
+                  setIds: [
+                    ...require("../src/hardcore/events/royalSets").SETS[
+                      relic.id
+                    ].ids,
+                  ],
+                }
+              : null,
     );
     assert.equal(
       relic.runtimeEnabled,
-      ["fatebreaker_seal", "conquerors_covenant", "gilded_soul"].includes(
-        relic.id,
-      ),
+      [
+        "fatebreaker_seal",
+        "conquerors_covenant",
+        "gilded_soul",
+        "kingslayers_testament",
+        "astral_singularity",
+      ].includes(relic.id),
     );
     assert.equal(relic.passive, null);
     assert.equal(relic.curse, null);

@@ -221,9 +221,11 @@ function eventIcon(key) {
       ? E.chest
       : key === "god_rngesus"
         ? "🌟"
-        : key === "ritual"
-          ? "🕯️"
-          : "⚠️",
+        : key === "royal_invitation"
+          ? "🏰"
+          : key === "ritual"
+            ? "🕯️"
+            : "⚠️",
   );
 }
 function treasureChestIcon(color) {

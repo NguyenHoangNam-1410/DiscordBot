@@ -91,10 +91,13 @@ module.exports = function createModule(dependencies) {
       };
     state.discardedTicketsThisTurn = 0;
     if (
-      state.encounter.type === "covenant_blessing" &&
-      action === "covenant_continue"
+      ["covenant_blessing", "royal_blessing"].includes(state.encounter.type) &&
+      ["covenant_continue", "royal_continue"].includes(action)
     ) {
-      state.lastLog = "💠 Tiếp tục khám phá sau phước lành Chinh Phạt.";
+      state.lastLog =
+        state.encounter.type === "royal_blessing"
+          ? "💠 Tiếp tục khám phá sau phước lành Hoàng Gia."
+          : "💠 Tiếp tục khám phá sau phước lành Chinh Phạt.";
       finishEventResult(state);
       nextMilestone(state, session, rng);
     } else if (

@@ -7,6 +7,7 @@ module.exports = function createModule(dependencies) {
     monsterLoot,
     memories,
     formatGodChance,
+    royal,
     stats,
     core,
     paradox,
@@ -47,6 +48,8 @@ module.exports = function createModule(dependencies) {
     if (s.phase === "summit")
       return `${eventIcon("boss")} Đã hạ Deimoss tầng 999. Bấm **Rút thưởng** để chốt chiến thắng và phần thưởng.`;
     const e = s.encounter;
+    if (e.type === "royal_blessing" || e.kind === "royal_invitation")
+      return royal.details(s);
     if (e.type === "covenant_blessing") {
       const b = e.blessing;
       return (
@@ -178,7 +181,11 @@ module.exports = function createModule(dependencies) {
       return `${eventIcon("paradox")} **RIFT PARADOX · HIỆU LỰC 5 TẦNG**\nTầng ${s.encounter.version === 2 ? s.encounter.milestone + 1 : s.floor}–${s.encounter.version === 2 ? s.encounter.milestone + 5 : s.floor + 4}. Chọn một luật bằng nút bên dưới.\nXem **Chi tiết** để đọc công dụng từng lựa chọn.`;
     if (s.phase !== "encounter") return encounterText(s);
     const e = s.encounter;
-    if (["memory", "god_rngesus", "covenant_blessing"].includes(e.type))
+    if (
+      ["memory", "god_rngesus", "covenant_blessing", "royal_blessing"].includes(
+        e.type,
+      )
+    )
       return encounterText(s);
     if (e.type === "combat") {
       const rank =
@@ -194,6 +201,11 @@ module.exports = function createModule(dependencies) {
       return `${e.memoryFamily ? memoryIcon(e.memoryFamily) : ["boss", "final_boss"].includes(e.rank) ? eventIcon("boss") : "👹"} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Tỷ lệ vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **${gilded.isBoss(e) ? "Dự báo đòn thường" : "Dự báo nhận"}:** **${preview.low}–${preview.high} DMG** · ${E.evasion} **${percent(preview.chance)}** trúng bạn *(chưa Crit/DEF${gilded.isBoss(e) ? "/phản phệ" : ""})*`;
     }
 
+    if (e.kind === "royal_invitation")
+      return (
+        eventIcon("royal_invitation") +
+        " **ROYAL INVITATION**\nGiao nộp toàn bộ 5 món của một set, kèm mọi level, để nhận LR và phước lành; hoặc bỏ đi để khóa thư mời trong run.\nXem **Chi tiết** trước khi quyết định."
+      );
     if (e.type === "empty")
       return `${eventIcon("empty")} **PHÒNG TRỐNG**\nĐi tiếp để vượt tầng hoặc rút thưởng.`;
     if (e.type === "surprise" && e.kind.endsWith("_shop"))
@@ -247,6 +259,7 @@ module.exports = function createModule(dependencies) {
         "rngesus",
         "god_rngesus",
         "covenant_blessing",
+        "royal_blessing",
         "trap",
         "echo",
         "surprise",

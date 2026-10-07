@@ -7,6 +7,7 @@ module.exports = function createModule(dependencies) {
     memories,
     EmbedBuilder,
     ButtonStyle,
+    royal,
     stats,
     core,
     itemPassives,
@@ -116,6 +117,7 @@ module.exports = function createModule(dependencies) {
           "💠 Nội tại LR · " + activeRelic.name,
           activeRelic.text +
             gilded.status(state) +
+            royal.status(state) +
             (covenant.active(state)
               ? "\n**Hiện tại:** +" +
                 percent(covenant.bonus(state)) +
@@ -175,7 +177,7 @@ module.exports = function createModule(dependencies) {
         },
         {
           name: `${E.attack} Tấn công`,
-          value: `- ${E.attack} **Vật lý**: 1 đòn, có thể trượt hoặc ${E.crit} **CRIT ×1,75**.\n- ${E.mana} **MP +${core.attackManaGain(state)}**, kể cả trượt (tối đa Max MP).\nQuái còn sống sẽ đánh trả.`,
+          value: `- ${E.attack} **Vật lý**: 1 đòn, có thể trượt hoặc ${E.crit} **CRIT ×${royal.critMultiplier(state).toLocaleString("vi-VN")}**.\n- ${E.mana} **MP +${core.attackManaGain(state)}**, kể cả trượt (tối đa Max MP).\nQuái còn sống sẽ đánh trả.`,
         },
         {
           name: `${E.defense} Phòng thủ`,

@@ -2,8 +2,11 @@
 const { EmbedBuilder } = require("discord.js");
 const { setTimeout: delay } = require("node:timers/promises");
 const god = require("./godRngesus");
+const royalReveal = require("./royalReveal");
 const covenantReveal = require("./covenantReveal");
 function frame(state, userId, stage = 0) {
+  if (state.encounter?.type === "royal_blessing")
+    return royalReveal.frame(state, userId, stage);
   if (state.encounter?.type === "covenant_blessing")
     return covenantReveal.frame(state, userId, stage);
   if (state.encounter?.type !== "god_rngesus") return null;
@@ -37,6 +40,8 @@ async function play(
   edit,
   { wait = delay, logger = null } = {},
 ) {
+  if (state.encounter?.type === "royal_blessing")
+    return royalReveal.play(sessionId, state, userId, edit, { wait, logger });
   if (state.encounter?.type === "covenant_blessing")
     return covenantReveal.play(sessionId, state, userId, edit, {
       wait,

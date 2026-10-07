@@ -2,6 +2,7 @@
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
+    royal,
     stats,
     itemPassives,
     godRngesus,
@@ -91,10 +92,18 @@ module.exports = function createModule(dependencies) {
       return true;
     });
     if (state.floor === 1 && PAID_EVENTS.has(kind)) kind = null;
+    if (royal.eligible(state).length) eligible.push("royal_invitation");
     const eventPool = eligible.flatMap((key) =>
-      Array(key === "purifier" ? PURIFIER_EVENT_WEIGHT : 1).fill(key),
+      Array(
+        key === "royal_invitation"
+          ? royal.WEIGHT
+          : key === "purifier"
+            ? PURIFIER_EVENT_WEIGHT
+            : 1,
+      ).fill(key),
     );
     kind = kind || pick(eventPool, rng);
+    if (kind === "royal_invitation") return royal.encounter(state);
     const e = {
       type: "surprise",
       kind,

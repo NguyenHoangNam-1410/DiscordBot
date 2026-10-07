@@ -9,6 +9,7 @@ const {
   StringSelectMenuOptionBuilder,
 } = require("discord.js");
 const { db } = require("../../db");
+const { RELIC_ITEMS } = require("../itemRelics");
 const relicRecords = require("../storage/relicRecords");
 const godRngesus = require("../events/godRngesus");
 const { godRngesusChance, formatGodChance } = require("../events/rngesus");
@@ -241,10 +242,7 @@ function tabEmbed(guildId, user, tab, page, overview) {
               : "Chưa được ban phước."),
         },
         ...relicRecords.IDS.map((id) => ({
-          name:
-            "💠 " +
-            (id === "gilded_soul" ? "Gilded Soul" : "Conqueror’s Covenant") +
-            " [LR]",
+          name: "💠 " + RELIC_ITEMS[id].name + " [LR]",
           value:
             "Đã lưu: **" +
             s.relicTotals[id] +

@@ -1,7 +1,7 @@
 "use strict";
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
-  const { gilded, covenant, stats, memories, paradox, world, mainStat } =
+  const { royal, gilded, covenant, stats, memories, paradox, world, mainStat } =
     dependencies;
   const rngesusFleeChance = (...args) =>
     dependencies.rngesusFleeChance(...args);
@@ -20,6 +20,7 @@ module.exports = function createModule(dependencies) {
   function surpriseActions(state) {
     const e = state.encounter,
       k = e.kind;
+    if (k === "royal_invitation") return royal.choices(state);
     if (k.endsWith("_shop"))
       return e.offers.map((offer, i) => ({
         action: `buy_${i}`,
@@ -216,6 +217,11 @@ module.exports = function createModule(dependencies) {
             gilded.potionLocked(state),
         },
       ];
+    if (e.type === "surprise" && e.kind === "royal_invitation")
+      return [
+        ...royal.choices(state),
+        { action: "event_skip", label: "Bỏ đi · không gặp lại" },
+      ];
     if (e.type === "surprise")
       return [
         ...surpriseActions(state),
@@ -248,6 +254,8 @@ module.exports = function createModule(dependencies) {
         { action: "touch", label: "Chạm Shrine" },
         { action: "skip", label: "Bỏ qua" },
       ];
+    if (e.type === "royal_blessing")
+      return [{ action: "royal_continue", label: "Tiếp tục khám phá" }];
     if (e.type === "covenant_blessing")
       return [{ action: "covenant_continue", label: "Tiếp tục khám phá" }];
     if (e.type === "god_rngesus")

@@ -15,6 +15,7 @@ module.exports = function createModule(dependencies) {
   const godRngesus = require("../events/godRngesus");
   const covenant = require("../events/covenant");
   const gilded = require("../events/gildedSoul");
+  const royal = require("../events/royalInvitation");
 
   const memories = require("../towerMemories");
 
@@ -199,6 +200,7 @@ module.exports = function createModule(dependencies) {
     godRngesus,
     covenant,
     gilded,
+    royal,
     memories,
     rngesusEncounterChance,
     resetRngesusEncounter,

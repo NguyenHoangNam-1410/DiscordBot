@@ -3,6 +3,7 @@
 module.exports = function createModule(dependencies) {
   const {
     gilded,
+    royal,
     stats,
     itemPassives,
     paradox,
@@ -29,7 +30,8 @@ module.exports = function createModule(dependencies) {
     paradox.prepareCombat(
       state,
       rng,
-      state.classKey === "sorceress" && shrineActive(state),
+      royal.freeMagic(state) ||
+        (state.classKey === "sorceress" && shrineActive(state)),
     );
   }
 
@@ -81,7 +83,8 @@ module.exports = function createModule(dependencies) {
       ? physicalRange(state)
       : [attacker.damageMin, attacker.damageMax];
     let damage = raw ?? int(...range, rng);
-    damage *= multiplier * (crit ? 1.75 : 1);
+    damage *=
+      multiplier * (crit ? (player ? royal.critMultiplier(state) : 1.75) : 1);
     if (player && defender.rank === "normal")
       damage *= 1 - (state.normalDamagePenalty || 0);
     if (player)
@@ -205,6 +208,7 @@ module.exports = function createModule(dependencies) {
       healingLog = "",
       hits = [];
     if (action === "defend") {
+      royal.limitGuard(state, action, false);
       state.mana = Math.min(state.maxMana, state.mana + 1);
       return {
         defend: true,
@@ -217,6 +221,7 @@ module.exports = function createModule(dependencies) {
       if (state.hp >= state.maxHp) throw new Error("FULL_HP");
       if (paradox.potionLocked(state) || gilded.potionLocked(state))
         throw new Error("POTION_LOCKED");
+      royal.limitGuard(state, action, false);
       const saveChance = itemPassives.aggregate(state).potionSave;
       const saved = saveChance > 0 && rng() < saveChance;
       if (!saved) state.potions--;
@@ -240,7 +245,12 @@ module.exports = function createModule(dependencies) {
         hurt(state, hpCost, false);
         healingLog += `\n${E.hp} Chi phí Skill: ${before} → ${state.hp} HP cho bạn (−${hpCost}).`;
       }
-      if (cost === 0 && state.classKey === "sorceress" && shrineActive(state))
+      if (
+        cost === 0 &&
+        !royal.freeMagic(state) &&
+        state.classKey === "sorceress" &&
+        shrineActive(state)
+      )
         state.classShrine.consumed = true;
       state.mana -= cost;
       if (["sorceress", "necromancer"].includes(state.classKey)) {
@@ -285,6 +295,7 @@ module.exports = function createModule(dependencies) {
       hits = [attackDamage(state, e, state, rng, { player: true })];
       state.mana = Math.min(state.maxMana, state.mana + attackManaGain(state));
     } else throw new Error("INVALID_ACTION");
+    dodge = royal.limitGuard(state, action, dodge);
     const bonus = ["boss", "final_boss"].includes(e.rank)
       ? state.bossDamage
       : e.rank === "elite"

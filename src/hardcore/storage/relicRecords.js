@@ -1,6 +1,11 @@
 "use strict";
 const { db } = require("../../db");
-const IDS = Object.freeze(["conquerors_covenant", "gilded_soul"]);
+const IDS = Object.freeze([
+  "conquerors_covenant",
+  "gilded_soul",
+  "kingslayers_testament",
+  "astral_singularity",
+]);
 function record(session, state, relicId, floor, now = Date.now()) {
   if (
     !IDS.includes(relicId) ||

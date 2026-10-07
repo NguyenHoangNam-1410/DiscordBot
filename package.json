@@ -47,7 +47,8 @@
     "test:hardcore:modules": "node scripts/test-hardcore-module-boundaries.js",
     "test:hardcore:rates": "node scripts/test-hardcore-rates-pagination.js",
     "test:hardcore:conqueror": "node scripts/test-hardcore-conqueror.js",
-    "test:hardcore:gilded": "node scripts/test-hardcore-gilded-soul.js"
+    "test:hardcore:gilded": "node scripts/test-hardcore-gilded-soul.js",
+    "test:hardcore:royal": "node scripts/test-hardcore-royal-invitation.js"
   },
   "engines": {
     "node": ">=18.17.0"

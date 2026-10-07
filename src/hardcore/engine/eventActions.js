@@ -3,6 +3,7 @@
 module.exports = function createModule(dependencies) {
   const {
     gilded,
+    royal,
     E,
     SKILL_ICONS,
     eventIcon,
@@ -47,6 +48,18 @@ module.exports = function createModule(dependencies) {
     };
     const itemById = (id) =>
       state.items.find((item) => item.definition.id === id);
+    if (k === "royal_invitation") {
+      if (action === "event_skip") {
+        royal.decline(state);
+        dependencies.noteEvent(state, k, false);
+        completeFloor(state, session, rng, 0);
+      } else {
+        royal.accept(state, session, action.slice(6), () =>
+          completeFloor(state, session, rng, 0, { deferEncounter: true }),
+        );
+      }
+      return;
+    }
     if (action === "event_skip") {
       state.lastLog = `Bỏ qua ${e.name}.`;
       completeFloor(state, session, rng, 0);

@@ -1,7 +1,7 @@
 "use strict";
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
-  const { paradox, world } = dependencies;
+  const { royal, paradox, world } = dependencies;
   const shrineActive = (...args) => dependencies.shrineActive(...args);
   const physicalRange = (...args) => dependencies.physicalRange(...args);
   const attackDamage = (...args) => dependencies.attackDamage(...args);
@@ -55,6 +55,7 @@ module.exports = function createModule(dependencies) {
   }
 
   function skillManaCost(state) {
+    if (royal.freeMagic(state)) return 0;
     const free = state.classKey === "sorceress" && shrineActive(state);
     return (
       paradox.manaCost(state, free) + (free ? 0 : state.skillManaExtra || 0)

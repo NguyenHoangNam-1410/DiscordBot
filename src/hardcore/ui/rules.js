@@ -117,6 +117,13 @@ module.exports = function createModule(dependencies) {
             "- Pool thường: quái thường 53%, Elite 12%, hòm 10%, Shrine 8%, kho báu 5%, bẫy 6%, sự kiện đặc biệt 4%, phòng trống 2%. Đây là tỷ lệ gốc; điều kiện tầng/Rift có thể thay đổi lựa chọn hợp lệ.\n- Boss mỗi 50 tầng và boss cuối 999 được ưu tiên; tiếp theo là RNGesus, Tower Remembers và Grave Echo trước khi chọn pool thường. Sự kiện đặc biệt cách nhau ít nhất 2 tầng.\n- Mỗi event ghi tên, lựa chọn, tỷ lệ và hậu quả trên bảng; kết quả thực tế nằm ở **Lượt vừa rồi**. Event trả tiền hoặc thu thuế không xuất hiện ở tầng 1.",
         },
         {
+          name:
+            eventIcon("royal_invitation") +
+            " Royal Invitation · quy đổi set LR",
+          value:
+            "Chỉ vào pool event đặc biệt khi đủ một set 5 món khác nhau và mọi level UR trong set đã giải hết nguyền. Trọng số Royal **10**, Purifier **3**, event thường **1**; giữ ưu tiên Boss/RNGesus và khoảng cách event cũ.\n**Diệt Vương → Kingslayer’s Testament:** Oathbreaker, Berserker Chains, Deimoss Scar, Predator’s Instinct, Warden’s Bulwark.\n**Tinh Tú → Astral Singularity:** Blood Pact, Hollow Crown, Seraphic Aegis, Phoenix Blood, Sevenfold Sigil.\n**Nhận lời:** tiêu hao toàn bộ 5 món của set đã chọn, gồm mọi level, buff/nội tại; nhận LR, hồi đầy HP/MP theo chỉ số còn lại, giải mọi nguyền UR và xóa ấn Rift. Giữ Paradox/Contract. Nếu đã có LR hoạt động, LR mới chỉ được sở hữu.\n**Bỏ đi:** giữ đồ, vượt tầng bình thường, khóa Royal Invitation trong cả run kể cả khi đủ set khác. Mỗi run chỉ quy đổi một set. Có thành tựu và thành tích lưu ngay khi nhận LR; xem Chi tiết trước khi giao nộp.",
+        },
+        {
           name: `${E.shrine} Shrine · chọn Chạm hoặc Bỏ qua`,
           value: `**6 loại ngang nhau (mỗi loại ≈16,7%)**; nếu Dấu ấn oán hận đến hạn, thêm Nghi lễ thành **7 nhánh ngang nhau (mỗi nhánh 1/7)**; kết quả được giữ cố định khi mở lại bảng.\n- **Healing:** hồi đầy ${E.hp} HP.\n- **Armor:** +5 vào một thuộc tính ${E.str} STR / ${E.dex} DEX / ${E.vit} VIT / ${E.ene} ENE; trong nhánh Armor, mỗi chỉ số 25%.\n- ${E.backpack} **Treasure:** 1 vật phẩm ngẫu nhiên, **R 50% / SR 30% / SSR 15% / UR 5%**. Không chịu LUCK/pity; UR có thể là trang bị hoặc Vé thoát.\n- **Corrupted:** +12 thuộc tính sát thương phù hợp class, −8 ${E.vit} VIT.\n- **Experience:** bonus bằng 25% tiền cược.\n- **Fake:** rút 30% Max ${E.hp} HP, mức bẫy tối thiểu 10; chỉ trừ đến khi còn **1 HP**.\n**Bỏ qua** giữ nguyên chỉ số và đi tiếp.`,
         },
@@ -210,7 +217,7 @@ module.exports = function createModule(dependencies) {
         },
         {
           name: `${eventIcon("purifier")} Purifier · giải lời nguyền`,
-          value: `Chỉ xuất hiện khi có trang bị còn lời nguyền; không xuất hiện ở tầng 1. Trong nhóm event đặc biệt đủ điều kiện, Purifier có trọng số **gấp ${core.PURIFIER_EVENT_WEIGHT}** mỗi event khác. Đây không phải tỷ lệ cố định trên mỗi tầng.\nBấm **Giải toàn bộ**: trả **${percent(core.PURIFIER_COST_RATE)} payout hiện tại**, làm tròn lên và tối thiểu 1 xu; gỡ mọi level lời nguyền của món được chỉ định, giữ nguyên UR, buff, level và nội tại.`,
+          value: `Chỉ xuất hiện khi có trang bị còn lời nguyền; không xuất hiện ở tầng 1. Trong nhóm event đặc biệt đủ điều kiện, Purifier có trọng số **gấp ${core.PURIFIER_EVENT_WEIGHT}** mỗi event thường (trọng số 1); Royal Invitation có trọng số 10 khi đủ điều kiện. Đây không phải tỷ lệ cố định trên mỗi tầng.\nBấm **Giải toàn bộ**: trả **${percent(core.PURIFIER_COST_RATE)} payout hiện tại**, làm tròn lên và tối thiểu 1 xu; gỡ mọi level lời nguyền của món được chỉ định, giữ nguyên UR, buff, level và nội tại.`,
         },
         {
           name: `${eventIcon("diamond_shop")} Diamond Merchant`,

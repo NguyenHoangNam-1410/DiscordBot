@@ -1,5 +1,6 @@
 "use strict";
-// LR relic catalog. Fatebreaker Seal, Conqueror's Covenant and Gilded Soul are active; other designs remain pending.
+// LR relic catalog. Five relics are active; Veil of the Absolute remains pending.
+const { SETS: ROYAL_SETS } = require("./events/royalSets");
 function deepFreeze(value) {
   if (value && typeof value === "object" && !Object.isFrozen(value)) {
     for (const child of Object.values(value)) deepFreeze(child);
@@ -142,6 +143,8 @@ const RELIC_ITEMS = deepFreeze(
           "fatebreaker_seal",
           "conquerors_covenant",
           "gilded_soul",
+          "kingslayers_testament",
+          "astral_singularity",
         ].includes(design.id),
         acquisition:
           design.id === "fatebreaker_seal"
@@ -159,7 +162,13 @@ const RELIC_ITEMS = deepFreeze(
                 }
               : design.id === "gilded_soul"
                 ? { kind: "adventurer_ritual", method: "boss_victory" }
-                : null,
+                : ROYAL_SETS[design.id]
+                  ? {
+                      kind: "royal_invitation",
+                      method: "item_set_exchange",
+                      setIds: [...ROYAL_SETS[design.id].ids],
+                    }
+                  : null,
       },
     ]),
   ),

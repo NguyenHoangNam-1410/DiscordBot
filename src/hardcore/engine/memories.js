@@ -4,6 +4,7 @@ module.exports = function createModule(dependencies) {
   const {
     covenant,
     gilded,
+    royal,
     monsterLoot,
     memories,
     paradox,
@@ -58,6 +59,7 @@ module.exports = function createModule(dependencies) {
     }
     state.lastLog += `\n🏆 Hạ ${e.name}.`;
     covenant.recordKill(state, e);
+    royal.recordBoss(state, e);
     if (paradox.is(state, "hunger"))
       state.lastLog += `\n🍖 Cơn Đói hồi ${heal(state, Math.max(1, Math.floor(state.maxHp * 0.12)))} HP.`;
     if (world.mimicKind(e) === "ancient_mimic") {

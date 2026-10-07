@@ -2,6 +2,7 @@
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
+    royal,
     stats,
     core,
     paradox,
@@ -63,7 +64,12 @@ module.exports = function createModule(dependencies) {
       assassin: "Vật lý, có thể trượt/Crit; né phản công.",
       sorceress: "Phép luôn trúng, không Crit.",
       druid: `Vật lý, có thể trượt/Crit; hồi tối đa ${E.hp} **${money(core.healingAmount(s, s.maxHp * 0.12))} HP** cho bạn (**12% Max HP**${s.healingReduction ? " trước giảm hồi phục" : ""}).`,
-      necromancer: "Phép luôn trúng, không Crit; chặn phản công.",
+      necromancer: royal.freeMagic(s)
+        ? "Phép luôn trúng, không Crit; " +
+          (s.encounter?.astralGuardLastAction
+            ? "lượt này không chặn phản công."
+            : "lượt này chặn phản công.")
+        : "Phép luôn trúng, không Crit; chặn phản công.",
       paladin: "Vật lý, có thể trượt/Crit; tự Phòng thủ.",
     }[s.classKey];
     return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${s.maxMana}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé thoát** **${s.escapeTokens}**\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${core.effectiveResistance(s)}%**${core.effectiveResistance(s) !== s.resistance ? ` (gốc ${s.resistance}%)` : ""}\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""}): ${skill.low}–${skill.high} DMG**\n${detail}\n`;
