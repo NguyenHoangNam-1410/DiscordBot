@@ -235,7 +235,7 @@ Khi gặp Shrine, giao diện thay phần chỉ số của lượt trước bằ
 | Event | Lựa chọn và kết quả |
 |---|---|
 | Wandering Healer | Miễn phí hồi max(20, 30% Max HP) và +1 bình. |
-| Treasure Goblin | Cơ hội bắt = min(90%, 60% + Luck*1% + bonus item). Thành công +25% tiền cược; thất bại mất 10% payout. |
+| Treasure Goblin | Cơ hội bắt = min(90%, 60% + Luck*1% + bonus item). Thành công +25% tiền cược; thất bại trừ một lần 5% payout hiện tại. |
 | Altar of Sacrifice | Hiến tối đa 20% Max HP nhưng giữ ít nhất 1 HP để nhận +6 stat damage chính; hoặc trả 10% payout để nhận +6 VIT. |
 | Cursed Gambler | Cược 10% hoặc 25% payout; 50% thắng. Thắng cộng gấp đôi khoản đặt vào bonus, thua mất khoản đã chi. |
 | Lost Adventurer | Cứu bằng 1 bình nhận R 70% / SR 30% và bảo hộ Ân nghĩa; cướp nhận SSR 75% / UR có nguyền 25% và Truy nã. |
@@ -281,7 +281,7 @@ Luật hiện hành v2.0.1, cập nhật ngày 2026-10-06:
 - Áp dụng cùng tỷ lệ cố định cho V2 và run legacy. Không có spike hay hệ số biến động ngẫu nhiên. Kết quả gặp/không gặp vẫn roll theo tỷ lệ đã tính; không roll lại khi mở UI.
 - **Đánh:** gây tử trận ngay vì không thể thắng RNGesus. Lost Adventurer/vé hồi sinh có thể cứu nếu còn; không được cứu thì kết thúc run.
 - **Bỏ chạy (V2):** 100% → 95% → 90% → 85% → 80% → 75%, các lần sau giữ 75%. Mỗi lần chọn chạy tăng bộ đếm, kể cả thất bại được vé cứu. Chạy thành công giữ vé; thất bại tự dùng một vé thoát hiểm nếu có. Không có vé thoát hiểm thì tử trận và kiểm tra cơ chế hồi sinh.
-- **Hối lộ:** cần payout hiển thị ít nhất 1.000 xu; giảm hệ số payout 40% và vượt tầng.
+- **Hối lộ:** cần payout hiển thị ít nhất 1.000 xu; trừ một lần 40% payout hiện tại (làm tròn lên) và vượt tầng; không giảm hệ số thưởng.
 - **Cầu nguyện (V2):** 30% thành công, hoặc 60% nếu mang vé cầu nguyện; áp dụng cả run. Thành công nhận một trang bị UR có nguyền; thất bại tử trận và kiểm tra cơ chế hồi sinh.
 - **Vé thoát hiểm (V2):** chỉ tự cứu khi bỏ chạy thất bại, tối đa một vé trong run; không có nút dùng vé riêng. Vé thoát hiểm không cứu khi Đánh/cầu nguyện thất bại.
 - Reset tỷ lệ **gặp** không reset tỷ lệ **bỏ chạy** hay hiệu lực vé cầu nguyện. Mốc reset lưu trong run, tiếp tục/restart không đặt lại hoặc roll lại kết quả đã khóa.
@@ -315,7 +315,7 @@ Thông tin nguồn gốc, điều kiện, kết quả và tầng đến hạn n�
 | Ân nghĩa | Cứu Lost Adventurer | Hồi sinh một lần với 50% HP trong cùng khu vực; RNGesus → tầng kế, quái → tiếp tục trận; ưu tiên trước vé hồi sinh. | tower_remember_rescue |
 | Truy nã | Cướp Lost Adventurer | 50% thu 10% payout; 50% Bounty Hunter Elite, cho chọn đánh hoặc bồi thường 20% payout. | tower_remember_bounty |
 | Hiến tế máu | Hiến HP ở Altar | Đến hạn hồi 20% Max HP và +1 bình theo giới hạn hiện tại. Giữ phần thưởng +6 stat chính ban đầu. | tower_remember_blood |
-| Hiến tế tài sản | Hiến 10% payout ở Altar | Giữ +6 VIT ban đầu; sau đó chọn bỏ qua hoặc đánh Vault Guardian Elite. Thắng nhận bonus bằng 150% khoản đã hiến. Bonus chịu hệ số payout của run. | tower_remember_wealth |
+| Hiến tế tài sản | Hiến 10% payout ở Altar | Giữ +6 VIT ban đầu; sau đó chọn bỏ qua hoặc đánh Vault Guardian Elite. Thắng nhận bonus bằng 150% tiền cược ban đầu của run. Bonus chịu hệ số payout của run. | tower_remember_wealth |
 | Dư âm gương | Nhánh xấu khi đập Mirror | Giữ 20% +2 LUCK không có ký ức; 80% Mirror Clone Elite xuất hiện trễ, giữ chỉ số lúc đập gương. Không đánh Clone ngay rồi đánh lại. | tower_remember_mirror |
 | Thử thách thần linh | Cầu nguyện RNGesus thành công | Chọn từ chối, hiến 1 bình hoặc đánh Herald of Fate Elite. Hiến/thắng gỡ 1 level nguyền của một UR, giữ UR/level/buff/nội tại; nếu hết nguyền, hồi 20% Max HP. Không có phần thưởng khi từ chối/thua. | tower_remember_divine |
 | Oán niệm | Nhánh thức tỉnh khi cướp Grave Echo | 50% an toàn; 50% quái Echo truy đuổi trễ, thay trận thức tỉnh ngay. Món được cướp chỉ nhận một lần; giữ bonus hạ Echo và drop theo LUCK. | tower_remember_vengeance |
@@ -334,8 +334,10 @@ floorPart = min(cleared,100)
 checkpointCount = min(20, floor(floorPart/5))
 baseMultiplier = 1 + min(floorPart,50)*0.06 + max(0,floorPart-50)*0.10 + checkpointCount*0.15
 gross = floor((stake*baseMultiplier + bonus)*payoutFactor)
-payout = clamp(gross, 0, 10.000.000) - payoutSpent
+payout = max(0, clamp(gross, 0, 10.000.000) - payoutSpent)
 ```
+
+Bonus event tính theo tiền cược ban đầu của run; ngoại lệ event cược tính thưởng theo khoản xu thực sự đã đặt. Bán rương boss cộng 100% cược, bán hòm thường cộng 15% cược. Mọi khoản phạt event trừ một lần `ceil(payout hiện tại * tỷ lệ)` vào `payoutSpent`, không giảm hệ số thưởng và không phạt tiền kiếm thêm sau đó. Các run V2 đang chịu hệ số phạt event cũ được chuyển sang khoản xu đã trừ, giữ nguyên payout tại lúc chuyển; lời nguyền item vẫn áp dụng.
 
 Hệ số tầng ngừng tăng sau tầng 100; bonus từ combat, item, Shrine và event vẫn tăng. Blood Paradox chỉ tác động preview/chốt cuối, không làm tăng số payout có thể chi trong shop. Cashout hoặc Summit mới trả payout; death/RNGesus/forfeit trả 0.
 

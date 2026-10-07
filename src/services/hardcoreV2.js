@@ -210,6 +210,15 @@ function normalize(state) {
       "giải toàn bộ lời nguyền; giữ UR, level, buff và nội tại.",
     );
   recompute(state);
+  // Convert historical event multipliers into a fixed loss without changing cashout.
+  if (state.eventPayoutFactor >= 0 && state.eventPayoutFactor < 1) {
+    const before = payout(state);
+    state.eventPayoutFactor = 1;
+    recompute(state);
+    const loss = Math.max(0, payout(state) - before);
+    state.payoutSpent = (state.payoutSpent || 0) + loss;
+    state.payoutEventSpent = (state.payoutEventSpent || 0) + loss;
+  }
   state.prayerBoost = Boolean(state.prayerBoost);
   state.reviveTickets = state.reviveTickets === 1 ? 1 : 0;
   expireAdventurer(state);
@@ -393,8 +402,9 @@ function hurt(state, amount, hostile = true, nonlethal = false) {
   return actual;
 }
 function penalty(state, fraction) {
-  state.eventPayoutFactor *= 1 - fraction;
-  recompute(state);
+  const cost = Math.ceil(payout(state) * fraction);
+  state.payoutSpent = (state.payoutSpent || 0) + cost;
+  state.payoutEventSpent = (state.payoutEventSpent || 0) + cost;
 }
 function charge(state, amount) {
   if (!Number.isSafeInteger(amount) || amount < 1 || rawPayout(state) < amount)
@@ -1706,7 +1716,7 @@ function actions(state) {
   if (state.phase === "boss_chest")
     return [
       { action: "boss_open", label: "Mở rương · SSR 70% / UR 30%" },
-      { action: "boss_sell", label: "Bán rương · +50% payout" },
+      { action: "boss_sell", label: "Bán rương · +100% cược" },
     ];
   if (state.phase === "upgrade")
     return stats.ATTRIBUTES.map((key) => ({
@@ -2016,7 +2026,7 @@ function actSurprise(state, session, action, rng) {
     charge(state, amount);
     if (e.roll < 0.5) state.bonus += amount * 2;
     done(
-      `${eventIcon("gambler")} ${e.roll < 0.5 ? "Thắng" : "Thua"}: đã trả ${amount.toLocaleString("vi-VN")} xu payout; ${e.roll < 0.5 ? `nhận bonus ${(amount * 2).toLocaleString("vi-VN")} xu, lãi ròng ${amount.toLocaleString("vi-VN")} xu` : "không nhận bonus"}.`,
+      `${eventIcon("gambler")} ${e.roll < 0.5 ? "Thắng" : "Thua"}: đã trả ${amount.toLocaleString("vi-VN")} xu payout; ${e.roll < 0.5 ? `nhận bonus ${(amount * 2).toLocaleString("vi-VN")} xu trước lời nguyền` : "không nhận bonus"}.`,
     );
   } else if (k === "adventurer") {
     if (action === "event_rescue") {
@@ -2249,13 +2259,15 @@ function applyMemoryReward(state, reward) {
         E.hp +
         " HP cho bạn.";
     }
-  } else if (reward.coins > 0) {
-    state.bonus += reward.coins;
+  } else if (reward.coins > 0 || reward.family === "wealth") {
+    const coins =
+      reward.family === "wealth" ? Math.floor(state.stake * 1.5) : reward.coins;
+    state.bonus += coins;
     state.lastLog +=
       "\n" +
       memoryIcon(reward.family) +
       " Bonus +" +
-      reward.coins.toLocaleString("vi-VN") +
+      coins.toLocaleString("vi-VN") +
       " " +
       E.coin +
       ".";
@@ -2289,7 +2301,9 @@ function resolveMemory(state, session, action, rng) {
       );
     } else if (debt.kind === "tax") {
       penalty(state, 0.1);
-      done(memoryIcon("legacy") + " Ký ức cũ: mất 10% payout.");
+      done(
+        memoryIcon("legacy") + " Ký ức cũ: trừ một lần 10% payout hiện tại.",
+      );
     } else startFight();
   } else if (key === "bounty") {
     if (debt.kind === "tax" || action === "memory_settle") {
@@ -2376,10 +2390,9 @@ function act(state, session, action, rng) {
       receiveItem(state, state.encounter.item);
       state.lastLog = `${eventIcon("boss_chest")} Đã mở rương boss tầng ${state.encounter.bossFloor}.`;
     } else {
-      const amount = Math.floor(rawPayout(state) * 0.5);
-      state.bonus +=
-        state.payoutFactor > 0 ? Math.ceil(amount / state.payoutFactor) : 0;
-      state.lastLog = `${eventIcon("boss_chest")} Bán rương boss: +50% payout gốc (${amount.toLocaleString("vi-VN")} xu), cộng vào thưởng của run.`;
+      const amount = state.stake;
+      state.bonus += amount;
+      state.lastLog = `${eventIcon("boss_chest")} Bán rương boss: bonus +100% cược (${amount.toLocaleString("vi-VN")} xu), cộng vào thưởng của run.`;
     }
     finishEventResult(state);
     nextMilestone(state, session, rng);
@@ -2544,7 +2557,7 @@ function act(state, session, action, rng) {
         if (e.badEffect === "payout") penalty(state, 0.1);
         if (e.badEffect === "curse") addSource(state, { str: -5, ene: -5 });
         state.encounter = e.enemy;
-        state.lastLog = `Wrong Portal: ${{ blood: "bẫy gây mất HP (giữ ≥1)", mana: "bị rút cạn MP", supply: "bị cướp bình máu", payout: "mất 10% payout", curse: "lời nguyền giảm thuộc tính" }[e.badEffect]}. Elite đánh phủ đầu.`;
+        state.lastLog = `Wrong Portal: ${{ blood: "bẫy gây mất HP (giữ ≥1)", mana: "bị rút cạn MP", supply: "bị cướp bình máu", payout: "trừ một lần 10% payout hiện tại", curse: "lời nguyền giảm thuộc tính" }[e.badEffect]}. Elite đánh phủ đầu.`;
         prepareItemCombat(state, rng);
         state.lastLog += `\n${enemyTurn(state, rng)}`;
       }
@@ -2575,7 +2588,7 @@ function act(state, session, action, rng) {
       }
       if (action === "bribe") {
         penalty(state, 0.4);
-        state.lastLog = "Hối lộ: mất 40% payout.";
+        state.lastLog = "Hối lộ: trừ một lần 40% payout hiện tại.";
       }
       if (action === "pray") {
         if (!e.prayerSuccess)

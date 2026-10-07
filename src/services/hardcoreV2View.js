@@ -256,7 +256,8 @@ function blacksmithText(state, detailed = false) {
       (target.level + 1) +
       "**",
     Object.keys(buffs).length
-      ? "**Buff trang bị:**\n" + itemEffectChanges(buffs, target.level, target.level + 1)
+      ? "**Buff trang bị:**\n" +
+        itemEffectChanges(buffs, target.level, target.level + 1)
       : "",
   ].filter(Boolean);
   if (Object.keys(instant).length)
@@ -559,7 +560,7 @@ function randomEventText(s) {
             `Tử trận; Lost Adventurer hoặc ${E.reviveTicket} **Vé hồi sinh** cứu nếu còn.`,
           ],
         ]),
-        "**Hối lộ:** cần payout ≥1.000 xu, mất 40% payout để thoát. **Đánh:** chết.",
+        "**Hối lộ:** cần payout ≥1.000 xu, trừ một lần 40% payout hiện tại để thoát. **Đánh:** chết.",
       ],
     );
   }
@@ -613,7 +614,10 @@ function randomEventText(s) {
             ...(s.floor === 1
               ? []
               : [
-                  [percent((1 - (e.goodChance ?? 0.5)) / 5), "Mất 10% payout."],
+                  [
+                    percent((1 - (e.goodChance ?? 0.5)) / 5),
+                    "Trừ một lần 10% payout hiện tại.",
+                  ],
                 ]),
             [
               percent((1 - (e.goodChance ?? 0.5)) / (s.floor === 1 ? 4 : 5)),
@@ -670,7 +674,7 @@ function randomEventText(s) {
       return show(e.name, "Trả khoản cược trước khi phân thắng thua.", [
         ...[10, 25].map((n) =>
           option(`Cược ${n}% payout`, [
-            ["50%", "Bonus bằng 2 lần khoản đã đặt."],
+            ["50%", "Bonus trước lời nguyền bằng 2 lần khoản đã đặt."],
             ["50%", "Mất khoản đã đặt, không nhận bonus."],
           ]),
         ),
@@ -846,7 +850,7 @@ function statTransitions(
 }
 function encounterText(s) {
   if (s.phase === "boss_chest")
-    return `${eventIcon("boss_chest")} **RƯƠNG BOSS · TẦNG ${s.encounter.bossFloor}**\nPhần thưởng sau boss cuối khu vực. Chọn **mở hoặc bán** để tiếp tục.\n\n**Mở rương**\n- **70%:** nhận trang bị **SSR**.\n- **30%:** nhận trang bị **UR**, kèm lời nguyền.\nĐồ trùng tên tăng level. Tỷ lệ cố định, không bị Luck/pity thay đổi.\n\n**Bán rương**\n- Cộng **50% payout gốc hiện tại (${money(Math.floor(core.rawPayout(s) * 0.5))} xu)** vào thưởng của run.\nPhải xử lý rương trước khi rút thưởng hoặc đi tiếp.`;
+    return `${eventIcon("boss_chest")} **RƯƠNG BOSS · TẦNG ${s.encounter.bossFloor}**\nPhần thưởng sau boss cuối khu vực. Chọn **mở hoặc bán** để tiếp tục.\n\n**Mở rương**\n- **70%:** nhận trang bị **SSR**.\n- **30%:** nhận trang bị **UR**, kèm lời nguyền.\nĐồ trùng tên tăng level. Tỷ lệ cố định, không bị Luck/pity thay đổi.\n\n**Bán rương**\n- Cộng **100% cược ban đầu (${money(s.stake)} xu)** vào thưởng của run.\nPhải xử lý rương trước khi rút thưởng hoặc đi tiếp.`;
   if (s.phase === "upgrade")
     return `${E.checkpoint} **CHECKPOINT** · Đã hồi đầy ${E.hp} HP và nhận thêm 2 ${E.potion} bình máu.\nChọn **+5 STR, DEX, VIT hoặc ENE**; dự báo thay đổi ở ngay bên dưới.`;
   if (s.phase === "paradox" && s.encounter.version === 2)
@@ -1287,18 +1291,24 @@ function turnText(state) {
 function coinPayoutDetails(state) {
   const lines = [];
   const factor = Math.max(0, Math.min(1, state.payoutFactor ?? 1));
-  if (factor < 1)
-    lines.push("**" + percent(1 - factor) + " xu** (event/nguyền)");
+  if (factor < 1) lines.push("**" + percent(1 - factor) + " xu** (nguyền)");
   const taxSpent = Math.min(state.payoutSpent || 0, state.payoutTaxSpent || 0);
   const goblinSpent = Math.min(
     (state.payoutSpent || 0) - taxSpent,
     state.payoutGoblinSpent || 0,
   );
-  const otherSpent = (state.payoutSpent || 0) - taxSpent - goblinSpent;
+  const eventSpent = Math.min(
+    (state.payoutSpent || 0) - taxSpent - goblinSpent,
+    state.payoutEventSpent || 0,
+  );
+  const otherSpent =
+    (state.payoutSpent || 0) - taxSpent - goblinSpent - eventSpent;
   if (taxSpent > 0)
     lines.push("**" + money(taxSpent) + " " + E.coin + "** thuế");
   if (goblinSpent > 0)
     lines.push("**" + money(goblinSpent) + " " + E.coin + "** do Goblin");
+  if (eventSpent > 0)
+    lines.push("**" + money(eventSpent) + " " + E.coin + "** do event");
   if (otherSpent > 0)
     lines.push("**" + money(otherSpent) + " " + E.coin + "** đã chi");
   return lines.length ? "\nĐã trừ: " + lines.join(STAT_SEPARATOR) : "";
@@ -1504,34 +1514,34 @@ function rows(sessionId, state, disabled = false) {
       state.encounter.type === "memory"
         ? memoryIcon(memories.family(state.encounter.debt))
         : a.action.startsWith("paradox_") && state.encounter.version === 2
-        ? paradoxIcon(a.action.slice(8))
-        : a.action.startsWith("chest_") &&
-            state.encounter.kind === "treasure_room"
-          ? treasureChestIcon(a.action.slice(6))
-          : a.action.startsWith("boss_")
-            ? eventIcon("boss_chest")
-            : a.action === "skill"
-              ? SKILL_ICONS[state.classKey]
-              : a.action.startsWith("forge_")
-                ? E[
-                    a.action === "forge_main"
-                      ? stats.mainStat(state)
-                      : a.action === "forge_guard"
-                        ? state.encounter.forgeStat || "str"
-                        : a.action === "forge_vit"
-                          ? "vit"
-                          : "ticket"
-                  ]
-                : state.encounter.kind === "merchant" &&
-                    a.action.startsWith("buy_")
-                  ? merchantOffer(
-                      state.encounter.offers[Number(a.action.slice(4))],
-                    ).icon
-                  : /^(event_|buy_|forge_|contract_|door_|duel_|hand_)/.test(
-                        a.action,
-                      )
-                    ? eventIcon(state.encounter.kind || state.encounter.type)
-                    : null,
+          ? paradoxIcon(a.action.slice(8))
+          : a.action.startsWith("chest_") &&
+              state.encounter.kind === "treasure_room"
+            ? treasureChestIcon(a.action.slice(6))
+            : a.action.startsWith("boss_")
+              ? eventIcon("boss_chest")
+              : a.action === "skill"
+                ? SKILL_ICONS[state.classKey]
+                : a.action.startsWith("forge_")
+                  ? E[
+                      a.action === "forge_main"
+                        ? stats.mainStat(state)
+                        : a.action === "forge_guard"
+                          ? state.encounter.forgeStat || "str"
+                          : a.action === "forge_vit"
+                            ? "vit"
+                            : "ticket"
+                    ]
+                  : state.encounter.kind === "merchant" &&
+                      a.action.startsWith("buy_")
+                    ? merchantOffer(
+                        state.encounter.offers[Number(a.action.slice(4))],
+                      ).icon
+                    : /^(event_|buy_|forge_|contract_|door_|duel_|hand_)/.test(
+                          a.action,
+                        )
+                      ? eventIcon(state.encounter.kind || state.encounter.type)
+                      : null,
     ),
   );
   if (state.encounter.type !== "rngesus" && state.phase !== "boss_chest")
@@ -1833,7 +1843,8 @@ function privatePayload(
       });
     addTextFields(e, "Rift Paradox", paradoxEffectText(state));
     addTextFields(e, "Rift Contract", contractEffectText(state));
-    for (const field of memories.fields(state)) addTextFields(e, field.name, field.value);
+    for (const field of memories.fields(state))
+      addTextFields(e, field.name, field.value);
   } else {
     const detail = hasEncounterDetails(state)
       ? encounterDetails(state)
@@ -2026,7 +2037,7 @@ function ratesFields(category) {
       {
         name: `${eventIcon("boss_chest")} Rương boss cuối khu vực`,
         value:
-          "- Hạ boss tầng **100/200/300/400/500/700/900**: lập tức nhận một rương boss bắt buộc xử lý. Boss 50 tầng khác và boss 999 không cho rương này.\n- **Mở:** 70% nhận SSR, 30% nhận UR có lời nguyền. Tỷ lệ cố định, không chịu Luck hoặc pity. Đồ trùng tăng level.\n- **Bán:** cộng bonus bằng **50% payout gốc hiện tại**; số xu cụ thể ghi trên bảng.\n- Không được bỏ qua hoặc rút thưởng khi rương chưa xử lý. Mở/bán không tính thêm một tầng.",
+          "- Hạ boss tầng **100/200/300/400/500/700/900**: lập tức nhận một rương boss bắt buộc xử lý. Boss 50 tầng khác và boss 999 không cho rương này.\n- **Mở:** 70% nhận SSR, 30% nhận UR có lời nguyền. Tỷ lệ cố định, không chịu Luck hoặc pity. Đồ trùng tăng level.\n- **Bán:** cộng bonus bằng **100% cược ban đầu**; số xu cụ thể ghi trên bảng.\n- Không được bỏ qua hoặc rút thưởng khi rương chưa xử lý. Mở/bán không tính thêm một tầng.",
       },
     ],
     encounters: [
@@ -2092,7 +2103,7 @@ function ratesFields(category) {
       },
       {
         name: `${eventIcon("rngesus")} RNGesus · không được rút thưởng`,
-        value: `Chaos là tỷ lệ gặp RNGesus. Không thể đánh bại hoặc rút thưởng tại đây.\n- **Đánh:** tử trận ngay. Khi tử trận, Lost Adventurer hoặc ${E.reviveTicket} **Vé hồi sinh** có thể cứu nếu còn; hết bảo hộ/vé thì mất cược và thưởng tạm giữ.\n- **Hối lộ:** cần payout hiển thị **≥1.000 xu**, đúng 1.000 vẫn được. Thoát an toàn, giảm hệ số payout 40%; thưởng tích lũy về sau cũng chịu hệ số đã giảm.\n- **Cầu nguyện:** **30%** thành công và nhận chắc chắn **1 trang bị UR kèm lời nguyền**; **70%** thất bại và tử trận. Mang ${E.prayerTicket} **Vé cầu nguyện** từ túi Sinh tồn: **60%** thành công, **40%** thất bại, áp dụng toàn run. \nCầu nguyện thành công có thể tạo Thử thách thần linh; hối lộ không tạo ký ức mới. Xem trong Rift.`,
+        value: `Chaos là tỷ lệ gặp RNGesus. Không thể đánh bại hoặc rút thưởng tại đây.\n- **Đánh:** tử trận ngay. Khi tử trận, Lost Adventurer hoặc ${E.reviveTicket} **Vé hồi sinh** có thể cứu nếu còn; hết bảo hộ/vé thì mất cược và thưởng tạm giữ.\n- **Hối lộ:** cần payout hiển thị **≥1.000 xu**, đúng 1.000 vẫn được. Thoát an toàn, trừ một lần **40% payout hiện tại**, làm tròn lên; không giảm hệ số thưởng hoặc phạt tiền kiếm thêm về sau.\n- **Cầu nguyện:** **30%** thành công và nhận chắc chắn **1 trang bị UR kèm lời nguyền**; **70%** thất bại và tử trận. Mang ${E.prayerTicket} **Vé cầu nguyện** từ túi Sinh tồn: **60%** thành công, **40%** thất bại, áp dụng toàn run. \nCầu nguyện thành công có thể tạo Thử thách thần linh; hối lộ không tạo ký ức mới. Xem trong Rift.`,
       },
       {
         name: `${E.ticket} Bỏ chạy và Vé thoát`,
@@ -2133,7 +2144,7 @@ function ratesFields(category) {
       {
         name: "Rút thưởng và mất thưởng",
         value:
-          "- Sau khi vượt ít nhất một tầng, **Rút thưởng** kết thúc run và nhận thưởng theo bảng. Rút trước tầng đầu là bỏ run, mất cược. RNGesus và rương boss chưa xử lý không cho rút.\n- Payout là **tổng thưởng xu**, không phải tiền lãi. Hệ số từ vượt tầng dừng tăng sau 100; bonus từ event vẫn có thể tăng. Giới hạn 10 triệu xu. Các khoản mua đồ/dịch vụ trong run làm giảm payout theo giá đã xác nhận.\n- Chết, bỏ run hoặc hết hạn: mất cược và toàn bộ xu/kim cương tạm giữ. Trang bị trong run cũng không chuyển vào túi Gacha.\n- Run mới dùng v2.0.1; run cũ tiếp tục theo phiên bản đã lưu.",
+          "- Sau khi vượt ít nhất một tầng, **Rút thưởng** kết thúc run và nhận thưởng theo bảng. Rút trước tầng đầu là bỏ run, mất cược. RNGesus và rương boss chưa xử lý không cho rút.\n- Payout là **tổng thưởng xu**, không phải tiền lãi. Hệ số từ vượt tầng dừng tăng sau 100. Bonus event tính theo cược ban đầu; event cược thưởng theo khoản đã đặt. Phạt event trừ một lần theo payout hiện tại, không giảm hệ số thưởng. Giới hạn 10 triệu xu. Các khoản mua đồ/dịch vụ trong run làm giảm payout theo giá đã xác nhận.\n- Chết, bỏ run hoặc hết hạn: mất cược và toàn bộ xu/kim cương tạm giữ. Trang bị trong run cũng không chuyển vào túi Gacha.\n- Run mới dùng v2.0.1; run cũ tiếp tục theo phiên bản đã lưu.",
       },
       {
         name: "Kim cương theo mốc",

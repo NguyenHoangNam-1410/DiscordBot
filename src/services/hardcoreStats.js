@@ -244,6 +244,7 @@ function createState(classKey, stake) {
     bonus: 0,
     eventPayoutFactor: 1,
     payoutSpent: 0,
+    payoutEventSpent: 0,
     modifiers: {},
     rngesusDry: 0,
     rngesusResetFloor: 0,

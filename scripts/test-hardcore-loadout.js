@@ -644,10 +644,13 @@ async function run() {
     const factor = state.eventPayoutFactor,
       bonus = state.bonus,
       floor = state.floor;
+    const loss = Math.ceil(core.payout(state) * 0.1);
+    const spent = state.payoutSpent;
     core.act(state, session, "next", () => 0.5);
     assert.equal(state.bonus, bonus);
     if (kind === "tax") {
-      assert.equal(state.eventPayoutFactor, factor * 0.9);
+      assert.equal(state.eventPayoutFactor, factor);
+      assert.equal(state.payoutSpent, spent + loss);
       assert.equal(state.floor, floor + 1);
     } else {
       assert.equal(state.encounter.type, "combat");
@@ -697,7 +700,13 @@ async function run() {
   const adventurerText = v2View.encounterText(adventurerPreview);
   assert.ok(adventurerText.includes("[SSR]"));
   assert.ok(adventurerText.includes("Rift"));
-  assert.ok(require("../src/hardcore/towerMemories").fields(adventurerPreview).some((field) => field.value.includes("50% bị thu 10% payout")));
+  assert.ok(
+    require("../src/hardcore/towerMemories")
+      .fields(adventurerPreview)
+      .some((field) =>
+        field.value.includes("50% bị thu một lần 10% payout hiện tại"),
+      ),
+  );
   assert.ok(
     core
       .actions(adventurerPreview)

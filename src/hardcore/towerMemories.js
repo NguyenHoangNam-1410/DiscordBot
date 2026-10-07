@@ -15,7 +15,7 @@ const CATALOG = Object.freeze({
     name: "Truy nã · Bounty Hunter",
     source: "Cướp Lost Adventurer",
     detail:
-      "50% bị thu 10% payout để bồi thường; 50% gặp Bounty Hunter tinh anh. Khi gặp thợ săn, chọn chiến đấu hoặc bồi thường 20% payout để tránh trận đánh.",
+      "50% bị thu một lần 10% payout hiện tại để bồi thường; 50% gặp Bounty Hunter tinh anh. Khi gặp thợ săn, chọn chiến đấu hoặc trả một lần 20% payout hiện tại để tránh trận đánh. Không giảm hệ số thưởng.",
   },
   blood: {
     name: "Hiến tế máu · Blood Blessing",
@@ -27,7 +27,7 @@ const CATALOG = Object.freeze({
     name: "Hiến tế tài sản · Offering Vault",
     source: "Hiến payout tại Altar of Sacrifice",
     detail:
-      "Một kho báu xuất hiện: có thể bỏ qua hoặc đánh Vault Guardian tinh anh. Hạ quái nhận bonus xu bằng 150% khoản đã hiến. Không tự động hoàn tiền; thất bại không nhận bonus.",
+      "Một kho báu xuất hiện: có thể bỏ qua hoặc đánh Vault Guardian tinh anh. Hạ quái nhận bonus xu bằng 150% tiền cược ban đầu của run. Không tự động hoàn tiền; thất bại không nhận bonus.",
   },
   mirror: {
     name: "Dư âm gương · Shattered Reflection",
@@ -107,7 +107,7 @@ function queue(state, action, rng, data = {}) {
     rng();
     rng();
   }
-  if (key === "wealth") debt.coins = Math.max(1, Math.ceil(data.paid * 1.5));
+  if (key === "wealth") debt.coins = Math.floor(state.stake * 1.5);
   if (["mirror", "vengeance"].includes(key)) {
     debt.enemy = structuredClone(data.enemy);
     if (!debt.enemy) throw new Error("MEMORY_REQUIRES_ENEMY");
@@ -146,7 +146,11 @@ function makeEncounter(state, debt, rng) {
     enemy.memoryDebt = { ...debt };
     delete enemy.memoryDebt.enemy;
     if (["wealth", "divine", "vengeance"].includes(key))
-      enemy.memoryReward = { family: key, coins: debt.coins || 0 };
+      enemy.memoryReward = {
+        family: key,
+        coins:
+          key === "wealth" ? Math.floor(state.stake * 1.5) : debt.coins || 0,
+      };
   }
   return { type: "memory", name: CATALOG[key].name, debt, enemy };
 }
@@ -250,19 +254,21 @@ function fields(state) {
     if (key === "wealth")
       detail +=
         "\nBonus nếu thắng: **" +
-        debt.coins.toLocaleString("vi-VN") +
+        Math.floor(state.stake * 1.5).toLocaleString("vi-VN") +
         "** " +
         E.coin +
         ".";
     if (current === debt && key === "bounty")
       detail =
         debt.kind === "tax"
-          ? "Chủ nhân yêu cầu bồi thường: đi tiếp để giảm 10% payout."
-          : "Bounty Hunter đã tìm đến. Chiến đấu hoặc bồi thường 20% payout.";
+          ? "Chủ nhân yêu cầu bồi thường: đi tiếp để trừ một lần 10% payout hiện tại."
+          : "Bounty Hunter đã tìm đến. Chiến đấu hoặc trả một lần 20% payout hiện tại.";
     if (key === "legacy" && debt.action === "event_rob")
       detail =
         "Hậu quả cướp từ run cũ: " +
-        (debt.kind === "tax" ? "giảm 10% payout." : "Bounty Hunter tinh anh.") +
+        (debt.kind === "tax"
+          ? "trừ một lần 10% payout hiện tại."
+          : "Bounty Hunter tinh anh.") +
         " Giữ kết quả đã khóa.";
     output.push({
       name: title(debt) + (current === debt ? " · Đang xử lý" : " · Đang chờ"),

@@ -133,9 +133,12 @@ try {
   assert.equal(sold.debts.length, 0);
   const bribed = fresh();
   bribed.encounter = { type: "rngesus", name: "RNGesus" };
+  const bribeCost = Math.ceil(core.payout(bribed) * 0.4);
   core.act(bribed, session, "bribe", rng);
   assert.equal(bribed.debts.length, 0);
-  assert.equal(bribed.eventPayoutFactor, 0.6);
+  assert.equal(bribed.eventPayoutFactor, 1);
+  assert.equal(bribed.payoutEventSpent, bribeCost);
+  assert.equal(bribed.payoutSpent, bribeCost);
   groups.push(
     "ordinary skips, sales and bribery no longer create unrelated consequences",
   );
@@ -197,7 +200,7 @@ try {
   core.act(wealth, session, "event_sacrifice_payout", rng);
   assert.equal(wealth.payoutSpent, paid);
   const wealthDebt = wealth.debts[0];
-  assert.equal(wealthDebt.coins, Math.ceil(paid * 1.5));
+  assert.equal(wealthDebt.coins, Math.floor(wealth.stake * 1.5));
   const declined = structuredClone(wealth);
   encounter(declined, declined.debts[0]);
   const declinedBonus = declined.bonus;
@@ -312,16 +315,18 @@ try {
     assert.equal(d.kind, expected);
     encounter(bounty, d);
     const prior = bounty.eventPayoutFactor;
+    const cost = Math.ceil(
+      core.payout(bounty) * (expected === "tax" ? 0.1 : 0.2),
+    );
     core.act(
       bounty,
       session,
       expected === "tax" ? "next" : "memory_settle",
       rng,
     );
-    assert.equal(
-      bounty.eventPayoutFactor,
-      prior * (expected === "tax" ? 0.9 : 0.8),
-    );
+    assert.equal(bounty.eventPayoutFactor, prior);
+    assert.equal(bounty.payoutSpent, cost);
+    assert.equal(bounty.payoutEventSpent, cost);
     assert.match(bounty.lastLog, /Thưởng xu/);
   }
   const hunted = fresh();

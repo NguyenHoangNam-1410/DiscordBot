@@ -1,5 +1,17 @@
 [
   {
+    "id": "bea968ad-c12d-40d5-a8e9-d00e0fa30422",
+    "updatedAt": "2026-10-07T02:03:15.777Z",
+    "auditedAt": "2026-10-07T02:03:15.777Z",
+    "title": "Thống nhất thưởng và phạt xu Sinh tồn V2",
+    "changes": [
+      "Bán rương boss nhận bonus bằng 100% cược ban đầu; hòm thường giữ 15%. Thử thách Hiến tế tài sản thưởng 150% cược ban đầu khi thắng.",
+      "Phạt Wrong Portal, hối lộ RNGesus và bồi thường Tower Remembers trừ xu một lần theo payout hiện tại, không giảm hệ số thưởng hoặc phạt tiền kiếm thêm về sau.",
+      "Event cược giữ thưởng theo khoản xu thực sự đã đặt. Run V2 cũ chuyển phạt hệ số sang khoản xu đã trừ, giữ nguyên payout tại lúc chuyển.",
+      "Cập nhật nút bán rương, Chi tiết, luật và log biến động xu; phân biệt tiền bị trừ do event với tiền mua đồ/dịch vụ."
+    ]
+  },
+  {
     "id": "8381b823-2095-4410-8052-83f2b16228c2",
     "updatedAt": "2026-10-06T15:52:39.757Z",
     "auditedAt": "2026-10-06T15:52:39.757Z",
