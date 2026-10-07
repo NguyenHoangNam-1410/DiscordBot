@@ -312,7 +312,9 @@ async function main() {
     .privatePayload(inventory, "recent", "public", "items", 1)
     .embeds[0].toJSON();
   assert.deepEqual(
-    firstPage.fields.slice(1).map((field) => field.name),
+    firstPage.fields
+      .filter((field) => field.name.includes(" Lv."))
+      .map((field) => field.name),
     inventory.items
       .slice(0, 5)
       .map(

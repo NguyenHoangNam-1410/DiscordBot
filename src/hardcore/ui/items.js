@@ -4,6 +4,8 @@ module.exports = function createModule(dependencies) {
   const {
     itemCurses,
     itemPassives,
+    royal,
+    core,
     E,
     effectStatLabel,
     passiveIcon,
@@ -127,6 +129,63 @@ module.exports = function createModule(dependencies) {
       .join("\n");
   }
 
+  function setProgressFields(state) {
+    if (!royal.enabled(state)) return [];
+    const definitions = Object.values(core.ITEMS).flat();
+    return Object.entries(royal.SETS).map(([id, set]) => {
+      const members = set.ids.map((key) =>
+        state.items.find((i) => i.definition.id === key && i.level > 0),
+      );
+      const count = members.filter(Boolean).length;
+      const cursed = members.some(
+        (i) => i?.definition.curse && i.level > (i.cleansedLevels || 0),
+      );
+      const exchanged = (state.relics || []).some((r) => r.id === id);
+      const status = exchanged
+        ? "💠 Đã quy đổi."
+        : royal.ended(state)
+          ? state.royalInvitation.status === "declined"
+            ? "Thư mời đã từ chối."
+            : "Đã dùng lượt quy đổi trong run."
+          : cursed
+            ? "☣️ UR còn nguyền; cần giải trước khi quy đổi."
+            : royal.eligible(state).includes(id)
+              ? "✅ Đủ set, sẵn sàng nhận thư mời."
+              : "";
+      return {
+        name:
+          (id === "kingslayers_testament" ? "👑" : "✨") +
+          " Set " +
+          set.name +
+          " (" +
+          count +
+          "/5)",
+        value:
+          "→ **" +
+          core.RELIC_ITEMS[id].name +
+          " [LR]**\n" +
+          set.ids
+            .map((key, n) => {
+              const item = members[n];
+              const name =
+                item?.name ||
+                definitions.find((d) => d.id === key)?.name ||
+                key;
+              return (
+                (item ? "✅ " : "▫️ ") +
+                name +
+                (item?.definition.curse &&
+                item.level > (item.cleansedLevels || 0)
+                  ? " ☣️"
+                  : "")
+              );
+            })
+            .join(STAT_SEPARATOR) +
+          (status ? "\n" + status : ""),
+      };
+    });
+  }
+
   function equipmentSummary(state) {
     if (!state.items.length) return "Chưa có trang bị.";
     const totals = {};
@@ -163,5 +222,6 @@ module.exports = function createModule(dependencies) {
     itemText,
     itemEffectChanges,
     equipmentSummary,
+    setProgressFields,
   };
 };
