@@ -1,4 +1,5 @@
 "use strict";
+const { createHash } = require("node:crypto");
 const stats = require("./hardcoreStats");
 const itemPassives = require("../hardcore/itemPassives");
 const monsterLoot = require("../hardcore/monsterLoot");
@@ -144,6 +145,20 @@ const pick = (pool, rng) => pool[Math.floor(rng() * pool.length)];
 const int = (lo, hi, rng) => lo + Math.floor(rng() * (hi - lo + 1));
 const randomItem = (rarity, rng) =>
   structuredClone(pick(ITEM_POOLS[rarity], rng));
+const SHRINE_KINDS = Object.freeze([
+  "healing",
+  "armor",
+  "treasure",
+  "experience",
+  "corrupted",
+  "fake",
+]);
+const SHRINE_TREASURE_WEIGHTS = Object.freeze({
+  common: 50,
+  rare: 30,
+  legendary: 15,
+  cursed: 5,
+});
 const MERCHANT_PRICES = {
   potion: 0.025,
   heal: 0.04,
@@ -228,6 +243,7 @@ function normalize(state) {
   state.prayerBoost = Boolean(state.prayerBoost);
   state.reviveTickets = state.reviveTickets === 1 ? 1 : 0;
   expireAdventurer(state);
+  upgradeTreasureShrine(state);
   const current = state.encounter;
   if (
     current?.type === "rngesus" &&
@@ -1088,17 +1104,7 @@ function generateRawEncounter(state, session, rng) {
   if (roll < 0.53 - extra) return world.makeEnemy(state, "normal", null, rng);
   if (roll < 0.65 - extra) return world.makeEnemy(state, "elite", null, rng);
   if (roll < 0.75 - extra / 2) return makeChest(state, rng);
-  if (roll < 0.83 - extra / 2)
-    return {
-      type: "shrine",
-      name: "Shrine",
-      kind: pick(
-        ["healing", "armor", "blood", "experience", "corrupted", "fake"],
-        rng,
-      ),
-      armorStat: pick(stats.ATTRIBUTES, rng),
-      powerStat: mainStat(state),
-    };
+  if (roll < 0.83 - extra / 2) return makeShrine(state, rng);
   if (roll < 0.88) return makeChest(state, rng, true);
   if (roll < 0.94) {
     const kind = pick(
@@ -1144,6 +1150,50 @@ function initialize(classKey, stake, session, rng) {
   state.encounter = generateEncounter(state, session, rng);
   prepareParadoxCombat(state, rng);
   return state;
+}
+function shrineTreasureItem(rng) {
+  const roll = rng() * 100;
+  let boundary = 0;
+  for (const [rarity, weight] of Object.entries(SHRINE_TREASURE_WEIGHTS)) {
+    boundary += weight;
+    if (roll < boundary) return randomItem(rarity, rng);
+  }
+  throw new Error("INVALID_SHRINE_ROLL");
+}
+function makeShrine(state, rng) {
+  const shrine = {
+    type: "shrine",
+    name: "Shrine",
+    kind: pick(SHRINE_KINDS, rng),
+    armorStat: pick(stats.ATTRIBUTES, rng),
+    powerStat: mainStat(state),
+  };
+  if (shrine.kind === "treasure") shrine.item = shrineTreasureItem(rng);
+  return shrine;
+}
+function upgradeTreasureShrine(state) {
+  const shrine = state.encounter;
+  if (shrine?.type !== "shrine" || shrine.kind !== "blood") return;
+  // A pending old Blood Shrine changes once, without consuming live RNG on readonly/resume.
+  const seed = createHash("sha256")
+    .update(
+      JSON.stringify([
+        "shrine-treasure-v1",
+        state.fair,
+        state.fairCounter,
+        state.classKey,
+        state.stake,
+        state.floor,
+        state.turn,
+        shrine,
+      ]),
+    )
+    .digest();
+  let index = 0;
+  shrine.kind = "treasure";
+  shrine.item = shrineTreasureItem(
+    () => seed.readUInt32BE(4 * index++) / 0x100000000,
+  );
 }
 function shrineActive(state) {
   return (
@@ -2552,11 +2602,11 @@ function act(state, session, action, rng) {
         completeFloor(state, session, rng, 0);
       } else openChest(state, session, e, rng);
     } else if (e.type === "shrine") {
+      upgradeTreasureShrine(state);
       if (action === "touch") {
         if (e.kind === "healing") heal(state, state.maxHp);
         if (e.kind === "armor") addSource(state, { [e.armorStat]: 5 });
-        if (e.kind === "blood")
-          addSource(state, { [e.powerStat || mainStat(state)]: 8, vit: -5 });
+        if (e.kind === "treasure") receiveItem(state, e.item);
         if (e.kind === "experience")
           state.bonus += Math.floor(state.stake * 0.25);
         if (e.kind === "corrupted")
@@ -2572,7 +2622,7 @@ function act(state, session, action, rng) {
         const outcomes = {
           healing: "Healing: hồi phục HP",
           armor: `Armor: tăng ${E[e.armorStat]} ${e.armorStat?.toUpperCase()}`,
-          blood: `Blood: tăng ${E[e.powerStat || mainStat(state)]} ${(e.powerStat || mainStat(state)).toUpperCase()}, giảm ${E.vit} VIT`,
+          treasure: "Treasure: đã nhận vật phẩm",
           experience: `Experience: bonus +25% cược (${Math.floor(state.stake * 0.25).toLocaleString("vi-VN")} xu), cộng vào thưởng của run`,
           corrupted: `Corrupted: tăng ${E[e.powerStat || mainStat(state)]} ${(e.powerStat || mainStat(state)).toUpperCase()}, giảm ${E.vit} VIT`,
           fake: `Fake: bẫy gây mất ${E.hp} HP, luôn chừa ít nhất **1 HP**`,
@@ -2727,6 +2777,9 @@ function act(state, session, action, rng) {
   return alive(state) ? null : "death";
 }
 module.exports = {
+  SHRINE_KINDS,
+  SHRINE_TREASURE_WEIGHTS,
+  makeShrine,
   ITEM_POOLS,
   CONSUMABLE_ITEMS,
   prepareItemCombat,

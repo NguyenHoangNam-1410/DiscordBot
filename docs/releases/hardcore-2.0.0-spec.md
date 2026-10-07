@@ -204,7 +204,7 @@ Khi gặp Shrine, giao diện thay phần chỉ số của lượt trước bằ
 |---|---|
 | Healing | Hồi đầy HP. |
 | Armor | +5 STR hoặc +5 VIT, lựa chọn được pre-roll. |
-| Blood | +8 STR, −5 VIT; HP bị clamp nếu Max HP giảm. |
+| Treasure | Nhận một vật phẩm trong run: R 50%, SR 30%, SSR 15%, UR 5%. Tỷ lệ cố định, không chịu LUCK/Rift/pity hòm; trang bị trùng tăng 1 level, UR có thể là Vé thoát (tối đa 1). Vật phẩm đã khóa khi gặp; Bỏ qua không nhận. Blood Shrine đang chờ từ bản cũ chuyển một lần thành Treasure, không reroll khi resume. |
 | Experience | Cộng 25% tiền cược vào bonus payout. |
 | Corrupted | +12 STR, −8 VIT. |
 | Fake | Gây max(10, 30% Max HP) damage. |

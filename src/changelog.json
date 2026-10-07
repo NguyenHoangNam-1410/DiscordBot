@@ -1,5 +1,16 @@
 [
   {
+    "id": "82b76c9b-a068-42a3-911b-1c654a88214a",
+    "updatedAt": "2026-10-07T03:17:24.627Z",
+    "auditedAt": "2026-10-07T03:17:24.627Z",
+    "title": "Treasure Shrine thay Blood Shrine",
+    "changes": [
+      "Trong Sinh tồn V2, Blood Shrine được thay bằng Treasure Shrine: nhận một vật phẩm ngẫu nhiên theo tỷ lệ R 50%, SR 30%, SSR 15%, UR 5%. Treasure vẫn là một trong sáu loại Shrine xuất hiện đồng đều.",
+      "Vật phẩm được khóa khi gặp Shrine, không đổi khi xem bảng hoặc tiếp tục run; tỷ lệ không chịu LUCK/pity hòm. Trang bị trùng tăng một level, UR có thể nhận Vé thoát; Bỏ qua không nhận vật phẩm.",
+      "Blood Shrine đang chờ của run V2 cũ được chuyển thành Treasure một lần. Cập nhật Chi tiết, luật và log Lượt vừa rồi cho phần thưởng mới."
+    ]
+  },
+  {
     "id": "8c4cd1d9-0ac8-4a84-91b0-839cf223e28f",
     "updatedAt": "2026-10-07T02:49:30.749Z",
     "auditedAt": "2026-10-07T02:49:30.749Z",

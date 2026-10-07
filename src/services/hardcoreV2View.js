@@ -523,7 +523,7 @@ function randomEventText(s) {
           ],
           [
             null,
-            `**Blood:** ${attr(e.powerStat || stats.mainStat(s), 8)}, ${attr("vit", -5)}.`,
+            `${E.backpack} **Treasure:** nhận 1 vật phẩm ngẫu nhiên: **R 50% / SR 30% / SSR 15% / UR 5%**. Tỷ lệ cố định, không chịu LUCK/pity; UR có thể là trang bị hoặc Vé thoát.`,
           ],
           [null, "**Experience:** bonus +25% cược."],
           [
@@ -2073,11 +2073,11 @@ function ratesFields(category) {
       },
       {
         name: `${E.shrine} Shrine · chọn Chạm hoặc Bỏ qua`,
-        value: `**6 loại có tỷ lệ bằng nhau (mỗi loại ≈16,7%)**; kết quả được giữ cố định khi mở lại bảng.\n- **Healing:** hồi đầy ${E.hp} HP.\n- **Armor:** +5 vào một thuộc tính ${E.str} STR / ${E.dex} DEX / ${E.vit} VIT / ${E.ene} ENE; trong nhánh Armor, mỗi chỉ số 25%.\n- **Blood:** +8 thuộc tính sát thương phù hợp class, −5 ${E.vit} VIT.\n- **Corrupted:** +12 thuộc tính sát thương phù hợp class, −8 ${E.vit} VIT.\n- **Experience:** bonus bằng 25% tiền cược.\n- **Fake:** rút 30% Max ${E.hp} HP, mức bẫy tối thiểu 10; chỉ trừ đến khi còn **1 HP**.\n**Bỏ qua** giữ nguyên chỉ số và đi tiếp.`,
+        value: `**6 loại có tỷ lệ bằng nhau (mỗi loại ≈16,7%)**; kết quả được giữ cố định khi mở lại bảng.\n- **Healing:** hồi đầy ${E.hp} HP.\n- **Armor:** +5 vào một thuộc tính ${E.str} STR / ${E.dex} DEX / ${E.vit} VIT / ${E.ene} ENE; trong nhánh Armor, mỗi chỉ số 25%.\n- ${E.backpack} **Treasure:** 1 vật phẩm ngẫu nhiên, **R 50% / SR 30% / SSR 15% / UR 5%**. Không chịu LUCK/pity; UR có thể là trang bị hoặc Vé thoát.\n- **Corrupted:** +12 thuộc tính sát thương phù hợp class, −8 ${E.vit} VIT.\n- **Experience:** bonus bằng 25% tiền cược.\n- **Fake:** rút 30% Max ${E.hp} HP, mức bẫy tối thiểu 10; chỉ trừ đến khi còn **1 HP**.\n**Bỏ qua** giữ nguyên chỉ số và đi tiếp.`,
       },
       {
-        name: `${E.shrine} Thuộc tính nhận từ Blood / Corrupted`,
-        value: `${E.dex} **DEX:** Amazon, Assassin.\n${E.ene} **ENE:** Sorceress, Necromancer.\n${E.str} **STR:** Barbarian, Druid, Paladin.\nMức tăng vẫn là +8 / +12 theo loại Shrine; cả hai đều giảm ${E.vit} VIT.`,
+        name: `${E.shrine} Thuộc tính nhận từ Corrupted`,
+        value: `${E.dex} **DEX:** Amazon, Assassin.\n${E.ene} **ENE:** Sorceress, Necromancer.\n${E.str} **STR:** Barbarian, Druid, Paladin.\nCorrupted tăng +12 thuộc tính phù hợp class và giảm 8 ${E.vit} VIT.`,
       },
       {
         name: `${E.luck} Bẫy và Lucky Break`,
