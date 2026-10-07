@@ -858,7 +858,7 @@ function encounterText(s) {
   if (s.phase === "paradox")
     return `${eventIcon("paradox")} **RIFT PARADOX**\nChọn **một** quy luật đặc biệt cho tầng **${s.floor}–${s.floor + 4}**. Hết hạn, cơ chế trở lại bình thường.\n\n**Máu là tiền · đổi HP lấy thưởng xu**\n- Mất HP do quái/bẫy: tăng hệ số thưởng xu; hồi HP từ bình/skill/event: giảm hệ số. Mỗi 10% Max HP tương ứng 10 điểm %.\n- Hệ số giới hạn từ **−50% đến +50%**, chỉ áp dụng khi hiệu ứng còn hoạt động. Không tác động kim cương.\n- Hồi đầy ${E.hp} HP tại ${E.checkpoint} checkpoint **không giảm hệ số thưởng**. HP dùng để mua đồ/hiến tế không tăng thưởng.\n\n**Ngược đời · ATK chuyển thành DEF và ngược lại**\n- ${E.attack} ATK: **${s.damageMin}–${s.damageMax} → ${Math.max(1, s.defense - 2)}–${Math.max(1, s.defense + 3)}** (paradox). \n- ${E.defense} DEF: **${s.defense} → ${(s.damageMin + s.damageMax) / 2}** (paradox).`;
   if (s.phase === "severance")
-    return `${eventIcon("severance")} Xóa **toàn bộ stack** của một modifier có hại. Unstable Rift được giữ. Chọn một nút để tiếp tục.`;
+    return `${eventIcon("severance")} Xóa **toàn bộ stack** của một Rift có hại. Unstable Rift được giữ.\nChọn icon của Rift muốn xóa. Xem nút **Rift** để đọc hiệu ứng từng loại.`;
   if (s.phase === "summit")
     return `${eventIcon("boss")} Đã hạ Deimoss tầng 999. Bấm **Rút thưởng** để chốt chiến thắng và phần thưởng.`;
   const e = s.encounter;
@@ -1457,9 +1457,9 @@ function button(
   if (action.startsWith("buy_")) symbol = ["shopping_cart", "🛒"];
   const b = new ButtonBuilder()
     .setCustomId(id)
-    .setLabel(label.slice(0, 80))
     .setStyle(style)
     .setDisabled(Boolean(disabled));
+  if (label) b.setLabel(label.slice(0, 80));
   if (emojiOverride) b.setEmoji(emojiOverride);
   else if (symbol) b.setEmoji(icon(...symbol));
   return b;
@@ -1490,19 +1490,22 @@ function rows(sessionId, state, disabled = false) {
   const buttons = actions.map((a) =>
     button(
       prefix + a.action,
-      (itemPassives.forecastLabel(state.encounter, a.action)
-        ? itemPassives.forecastLabel(state.encounter, a.action) + " · "
-        : "") +
-        ({
-          potion: `${state.potions}`,
-          open: "Mở hòm",
-          inspect: "Kiểm tra",
-          sell: "Bán hòm",
-          leave: "Tránh Mimic",
-        }[a.action] ||
-          (state.encounter.kind === "merchant" && a.action.startsWith("buy_")
-            ? `${merchantOffer(state.encounter.offers[Number(a.action.slice(4))]).button} · ${money(state.encounter.offers[Number(a.action.slice(4))].price)} xu`
-            : a.label)),
+      state.phase === "severance" && a.action !== "sever_none"
+        ? ""
+        : (itemPassives.forecastLabel(state.encounter, a.action)
+            ? itemPassives.forecastLabel(state.encounter, a.action) + " · "
+            : "") +
+            ({
+              potion: `${state.potions}`,
+              open: "Mở hòm",
+              inspect: "Kiểm tra",
+              sell: "Bán hòm",
+              leave: "Tránh Mimic",
+            }[a.action] ||
+              (state.encounter.kind === "merchant" &&
+              a.action.startsWith("buy_")
+                ? `${merchantOffer(state.encounter.offers[Number(a.action.slice(4))]).button} · ${money(state.encounter.offers[Number(a.action.slice(4))].price)} xu`
+                : a.label)),
       a.action === "fight"
         ? ButtonStyle.Danger
         : ["attack", "open", "next", "flee"].includes(a.action)
@@ -1511,37 +1514,41 @@ function rows(sessionId, state, disabled = false) {
             ? ButtonStyle.Success
             : ButtonStyle.Secondary,
       a.disabled,
-      state.encounter.type === "memory"
-        ? memoryIcon(memories.family(state.encounter.debt))
-        : a.action.startsWith("paradox_") && state.encounter.version === 2
-          ? paradoxIcon(a.action.slice(8))
-          : a.action.startsWith("chest_") &&
-              state.encounter.kind === "treasure_room"
-            ? treasureChestIcon(a.action.slice(6))
-            : a.action.startsWith("boss_")
-              ? eventIcon("boss_chest")
-              : a.action === "skill"
-                ? SKILL_ICONS[state.classKey]
-                : a.action.startsWith("forge_")
-                  ? E[
-                      a.action === "forge_main"
-                        ? stats.mainStat(state)
-                        : a.action === "forge_guard"
-                          ? state.encounter.forgeStat || "str"
-                          : a.action === "forge_vit"
-                            ? "vit"
-                            : "ticket"
-                    ]
-                  : state.encounter.kind === "merchant" &&
-                      a.action.startsWith("buy_")
-                    ? merchantOffer(
-                        state.encounter.offers[Number(a.action.slice(4))],
-                      ).icon
-                    : /^(event_|buy_|forge_|contract_|door_|duel_|hand_)/.test(
-                          a.action,
-                        )
-                      ? eventIcon(state.encounter.kind || state.encounter.type)
-                      : null,
+      state.phase === "severance" && a.action !== "sever_none"
+        ? RIFT_ICONS[a.action.slice(6)] || E.rift
+        : state.encounter.type === "memory"
+          ? memoryIcon(memories.family(state.encounter.debt))
+          : a.action.startsWith("paradox_") && state.encounter.version === 2
+            ? paradoxIcon(a.action.slice(8))
+            : a.action.startsWith("chest_") &&
+                state.encounter.kind === "treasure_room"
+              ? treasureChestIcon(a.action.slice(6))
+              : a.action.startsWith("boss_")
+                ? eventIcon("boss_chest")
+                : a.action === "skill"
+                  ? SKILL_ICONS[state.classKey]
+                  : a.action.startsWith("forge_")
+                    ? E[
+                        a.action === "forge_main"
+                          ? stats.mainStat(state)
+                          : a.action === "forge_guard"
+                            ? state.encounter.forgeStat || "str"
+                            : a.action === "forge_vit"
+                              ? "vit"
+                              : "ticket"
+                      ]
+                    : state.encounter.kind === "merchant" &&
+                        a.action.startsWith("buy_")
+                      ? merchantOffer(
+                          state.encounter.offers[Number(a.action.slice(4))],
+                        ).icon
+                      : /^(event_|buy_|forge_|contract_|door_|duel_|hand_)/.test(
+                            a.action,
+                          )
+                        ? eventIcon(
+                            state.encounter.kind || state.encounter.type,
+                          )
+                        : null,
     ),
   );
   if (state.encounter.type !== "rngesus" && state.phase !== "boss_chest")
