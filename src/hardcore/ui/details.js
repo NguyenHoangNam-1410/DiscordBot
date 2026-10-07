@@ -24,6 +24,8 @@ module.exports = function createModule(dependencies) {
     SHRINES,
   } = dependencies;
   const statLine = (...args) => dependencies.statLine(...args);
+  const coinPayoutDetails = (...args) =>
+    dependencies.coinPayoutDetails(...args);
   const checkpointPreview = (...args) =>
     dependencies.checkpointPreview(...args);
   const riftStatSummary = (...args) => dependencies.riftStatSummary(...args);
@@ -134,6 +136,8 @@ module.exports = function createModule(dependencies) {
           effective: true,
         }),
       );
+      const deductions = coinPayoutDetails(state).trim();
+      if (deductions) addTextFields(e, `${E.coin} Thống kê xu`, deductions);
       addTextFields(
         e,
         `${E.backpack} Tổng hợp trang bị (${state.items.length})`,

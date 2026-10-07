@@ -19,8 +19,6 @@ module.exports = function createModule(dependencies) {
   const battleStats = (...args) => dependencies.battleStats(...args);
   const encounterSummary = (...args) => dependencies.encounterSummary(...args);
   const turnText = (...args) => dependencies.turnText(...args);
-  const coinPayoutDetails = (...args) =>
-    dependencies.coinPayoutDetails(...args);
 
   function embed(state, userId, result = null, sessionId = null) {
     const c = stats.CLASSES[state.classKey];
@@ -74,9 +72,9 @@ module.exports = function createModule(dependencies) {
       name: `${icon("moneybag", "💰")} Rút thưởng`,
       value: result
         ? `Đã nhận **${money(result.payout)} ${icon("coin", "🪙")}** ${STAT_SEPARATOR} **${money(result.diamonds || 0)} ${icon("gem", "💎")}**`
-        : (state.cleared
-            ? `Thực nhận: **${money(core.payout(state))} ${E.coin}**${STAT_SEPARATOR}**${money(runDiamondReward(state))} ${icon("gem", "💎")}**`
-            : "Chưa thể rút") + coinPayoutDetails(state),
+        : state.cleared
+          ? `Thực nhận: **${money(core.payout(state))} ${E.coin}**${STAT_SEPARATOR}**${money(runDiamondReward(state))} ${icon("gem", "💎")}**`
+          : "Chưa thể rút",
       inline: false,
     });
     addTextFields(e, `${icon("scroll", "📜")} Lượt vừa rồi`, turnText(state));
