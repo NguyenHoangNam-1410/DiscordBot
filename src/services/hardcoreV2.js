@@ -811,6 +811,9 @@ function makeChest(state, rng, treasure = false) {
     ),
   };
 }
+function purifierCost(state) {
+  return Math.max(1, Math.ceil(payout(state) * PURIFIER_COST_RATE));
+}
 function serviceCost(state, fraction) {
   return Math.max(1, Math.ceil(rawPayout(state) * fraction));
 }
@@ -1656,8 +1659,8 @@ function surpriseActions(state) {
       purifier: [
         {
           action: "event_cleanse",
-          label: `Giải toàn bộ · ${serviceCost(state, PURIFIER_COST_RATE)} xu`,
-          disabled: rawPayout(state) < 1,
+          label: `Giải toàn bộ · ${purifierCost(state)} xu`,
+          disabled: payout(state) < purifierCost(state),
         },
       ],
       sacrifice: [
@@ -2020,9 +2023,11 @@ function actSurprise(state, session, action, rng) {
     if (receipt) receipt.upgradedFromLevel = previousLevel;
     done(`🔨 ${item.name} Lv.${item.level}.`);
   } else if (k === "purifier") {
-    charge(state, serviceCost(state, PURIFIER_COST_RATE));
     const target = itemById(e.targetId);
     if (!target) throw new Error("NO_CURSE");
+    const cost = purifierCost(state);
+    if (payout(state) < cost) throw new Error("INSUFFICIENT_RUN_PAYOUT");
+    state.payoutSpent = (state.payoutSpent || 0) + cost;
     const purified = {
       name: target.name,
       rarity: target.rarity,
@@ -2697,6 +2702,7 @@ module.exports = {
   EVENTS,
   EVENT_NAMES,
   BLOOD_PRICES,
+  purifierCost,
   PURIFIER_COST_RATE,
   PURIFIER_EVENT_WEIGHT,
   initialize,

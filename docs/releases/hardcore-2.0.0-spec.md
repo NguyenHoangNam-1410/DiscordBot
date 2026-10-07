@@ -189,7 +189,7 @@ Hòm roll Mimic trước: 3% Ancient Mimic và 12% Mimic ở trạng thái khôn
 - Nhặt trùng đúng tên item tăng Level thay vì tạo dòng mới.
 - Mỗi cấp item cộng lại toàn bộ thuộc tính và hiệu ứng đặc biệt của item. Hiệu ứng một lần như bình, hồi HP hoặc Vé cũng kích hoạt khi nhận thêm cấp.
 - Thợ rèn trả 12% payout khả dụng để tăng một cấp. UR chưa giải nguyền cộng lại cả buff và curse.
-- Tu sĩ trả 10% payout gốc để giải toàn bộ lời nguyền, giữ nguyên độ hiếm UR, buff, cấp và nội tại. Trạng thái đã giải được giữ khi rèn; nhặt thêm cùng món UR chưa giải chỉ thêm lời nguyền của level mới. Run cũ từng bị đổi thành SSR được khôi phục nhãn UR khi resume, không đổi buff/cấp hoặc lớp nguyền đã giải.
+- Tu sĩ trả 10% payout hiện tại đang hiển thị trước khi giải nguyền (bao gồm Paradox, sau lời nguyền và các khoản đã chi; làm tròn lên, tối thiểu 1 xu) để giải toàn bộ lời nguyền, giữ nguyên độ hiếm UR, buff, cấp và nội tại. Trạng thái đã giải được giữ khi rèn; nhặt thêm cùng món UR chưa giải chỉ thêm lời nguyền của level mới. Run cũ từng bị đổi thành SSR được khôi phục nhãn UR khi resume, không đổi buff/cấp hoặc lớp nguyền đã giải.
 - Horadric Forge nghiền đúng một cấp item. Phần chỉ số của cấp bị nghiền được hấp thụ vĩnh viễn trong run, sau đó nhận thêm phần thưởng event.
 
 ## 8. Catalog event hiện hành
@@ -241,7 +241,7 @@ Khi gặp Shrine, giao diện thay phần chỉ số của lượt trước bằ
 | Lost Adventurer | Cứu bằng 1 bình nhận R 70% / SR 30% và bảo hộ Ân nghĩa; cướp nhận SSR 75% / UR có nguyền 25% và Truy nã. |
 | Blood Fountain | 60% hồi đầy HP; 25% +15 Max HP/HP; 15% gọi Blood Mimic. |
 | Blacksmith | Trả 12% payout để tăng một cấp item ngẫu nhiên đang có. |
-| Purifier | Trả 20% payout để giải curse một UR ngẫu nhiên đang có. |
+| Purifier | Trả 10% payout hiện tại trước khi giải, gỡ toàn bộ lời nguyền của một trang bị UR được chỉ định; giữ UR, level, buff và nội tại. |
 | Horadric Forge | Nghiền một cấp item để chọn +6 stat damage chính, +7 STR/VIT đã pre-roll, +4 VIT; SSR/UR còn có thể đổi lấy một Vé Thoát Hiểm. |
 | Rift Merchant | Hiện ba món ngẫu nhiên: bình 5%, hồi đầy 8%, +1 Luck 10%, SR 15%, Vé 25% payout. Chỉ mua một món. |
 | Mirror of Fate | Chọn +10 stat damage chính; hoặc +8 VIT và +5 STR/DEX phòng thủ; hoặc đập gương: 20% +2 Luck, 80% tạo Dư âm gương, sau 10–30 tầng đấu Mirror Clone giữ chỉ số lúc đập. |

@@ -1,5 +1,15 @@
 [
   {
+    "id": "426616ef-9923-4af6-aaa3-ccdb17f6aad6",
+    "updatedAt": "2026-10-07T02:33:54.568Z",
+    "auditedAt": "2026-10-07T02:33:54.568Z",
+    "title": "Purifier: phí theo payout hiện tại",
+    "changes": [
+      "Phí giải nguyền của Purifier là 10% số xu payout hiện tại đang hiển thị trước khi giải, sau lời nguyền, Paradox và các khoản đã chi; làm tròn lên, tối thiểu 1 xu.",
+      "Nút giải nguyền, Chi tiết và luật dùng cùng cách tính. Trừ phí một lần, giữ nguyên UR, level, buff và nội tại; không giảm hệ số payout."
+    ]
+  },
+  {
     "id": "f084a54c-da43-4b08-a6ff-3eae6f8d1320",
     "updatedAt": "2026-10-07T02:30:04.516Z",
     "auditedAt": "2026-10-07T02:30:04.516Z",

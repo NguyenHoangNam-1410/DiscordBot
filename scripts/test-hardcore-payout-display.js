@@ -205,7 +205,7 @@ for (const [encounter, action, rate] of [
   const s = create({ type: "empty", name: "Trống" });
   const cursed = core.ITEMS.cursed.find((i) => i.curse?.effects.bonusPenalty);
   core.receiveItem(s, cursed);
-  const spent = Math.max(1, Math.ceil(core.rawPayout(s) * 0.1));
+  const spent = Math.max(1, Math.ceil(core.payout(s) * 0.1));
   s.encounter = {
     type: "surprise",
     kind: "purifier",
@@ -219,6 +219,82 @@ for (const [encounter, action, rate] of [
     Math.floor(10000 * baseMultiplier({ cleared: 4 })) - spent,
   );
 }
+// Purifier prices the displayed payout before cleansing, including Blood Paradox.
+// The fee is fixed spending; future earnings and other service prices are unchanged.
+for (const bloodFactor of [null, -0.5, 0.5]) {
+  for (const remaining of [null, 0, 1]) {
+    const s = create(
+      { type: "empty", name: "Trống" },
+      {
+        bonus: 50000,
+        payoutSpent: 1234,
+        curseFactor: 0.8,
+        ...(bloodFactor == null
+          ? {}
+          : { paradox: { kind: "blood", bloodFactor, until: 20 } }),
+      },
+    );
+    const target = core.ITEMS.cursed.find((i) => i.id === "glass_cannon");
+    core.receiveItem(s, target);
+    s.encounter = {
+      type: "surprise",
+      kind: "purifier",
+      name: "Purifier",
+      targetId: target.id,
+    };
+    if (remaining != null) s.payoutSpent += core.payout(s) - remaining;
+    const before = core.payout(s),
+      spent = s.payoutSpent;
+    const factor = s.payoutFactor,
+      eventFactor = s.eventPayoutFactor;
+    const cost = Math.max(1, Math.ceil(before * core.PURIFIER_COST_RATE));
+    assert.equal(core.purifierCost(s), cost);
+    assert.equal(
+      core.serviceCost(s, 0.12),
+      Math.max(1, Math.ceil(core.rawPayout(s) * 0.12)),
+    );
+    const action = core.actions(s).find((a) => a.action === "event_cleanse");
+    assert.equal(action.label, "Giải toàn bộ · " + cost + " xu");
+    assert.equal(action.disabled, before < cost);
+    const detail = JSON.stringify(
+      view.privatePayload(s, "payout-test", "message", "encounter"),
+    );
+    assert.ok(detail.includes("payout hiện tại"));
+    assert.ok(!detail.includes("payout gốc"));
+    assert.ok(detail.includes(money(cost) + " xu**"));
+    if (!before) {
+      assert.throws(
+        () => core.act(s, session, "event_cleanse", rng),
+        /INVALID_ACTION/,
+      );
+      assert.equal(s.payoutSpent, spent);
+      assert.equal(
+        s.items.find((i) => i.definition.id === target.id).cleansedLevels,
+        0,
+      );
+      continue;
+    }
+    // Pending, persisted Purifier encounters must use the same price when resumed.
+    const resumed = JSON.parse(JSON.stringify(s));
+    core.normalize(resumed);
+    assert.equal(core.purifierCost(resumed), cost);
+    const receipt = play(resumed, "event_cleanse");
+    assert.equal(receipt.payoutAfter.coins, before - cost);
+    assert.equal(resumed.payoutSpent, spent + cost);
+    assert.equal(resumed.payoutFactor, factor);
+    assert.equal(resumed.eventPayoutFactor, eventFactor);
+    assert.equal(resumed.payoutEventSpent || 0, s.payoutEventSpent || 0);
+    const clean = resumed.items.find((i) => i.definition.id === target.id);
+    assert.equal(clean.cleansedLevels, clean.level);
+    assert.equal(clean.rarity, "cursed");
+  }
+}
+const purifierRule = view
+  .ratesFields()
+  .find((f) => f.name.includes("Purifier"));
+assert.ok(purifierRule.value.includes("payout hiện tại"));
+assert.ok(!purifierRule.value.includes("payout gốc"));
+
 // Bonus at the cap is recorded as no cash change, never a fictitious +2500.
 {
   const s = create(
