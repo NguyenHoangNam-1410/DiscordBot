@@ -1,5 +1,15 @@
 [
   {
+    "id": "e4ac06c2-ed18-4413-b22e-b4f64eba4659",
+    "updatedAt": "2026-10-07T04:46:41.400Z",
+    "auditedAt": "2026-10-07T04:46:41.400Z",
+    "title": "Bảo trì cấu trúc Sinh tồn",
+    "changes": [
+      "Tổ chức lại Sinh tồn theo từng chức năng để dễ bảo trì và cập nhật; giữ nguyên luật chơi, phần thưởng và dữ liệu run đang diễn ra.",
+      "Tower mode và các game khác giữ nguyên."
+    ]
+  },
+  {
     "id": "b607d33b-b2ec-4b28-ad60-fa16b075399f",
     "updatedAt": "2026-10-07T04:20:52.585Z",
     "auditedAt": "2026-10-07T04:20:52.585Z",
