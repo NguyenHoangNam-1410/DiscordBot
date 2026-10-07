@@ -27,6 +27,10 @@ const productName = (item) =>
   item.typeCode === "ticket"
     ? `${ticketIcon(item.id)} ${item.name}`
     : item.name;
+const raritySuffix = (item) => {
+  const code = item.typeCode === "ticket" ? item.rarity : item.typeCode;
+  return code ? ` [${code}]` : "";
+};
 const money = (n) => n.toLocaleString("vi-VN");
 const PAGE_SIZE = 5,
   SELECT_PAGE_SIZE = 20;
@@ -47,14 +51,14 @@ function filterMenu(id, selected = "all", includeTickets = true) {
     .setCustomId(id)
     .setPlaceholder("Lọc theo độ hiếm / vé")
     .addOptions(
-      bag.FILTERS.filter((filter) => includeTickets || filter !== "ticket").map(
-        (filter) => ({
-          label:
-            filter === "all" ? "Tất cả" : filter === "ticket" ? "Vé" : filter,
-          value: filter,
-          default: selected === filter,
-        }),
-      ),
+      bag.FILTERS.filter(
+        (filter) => includeTickets || !["ticket", "LR"].includes(filter),
+      ).map((filter) => ({
+        label:
+          filter === "all" ? "Tất cả" : filter === "ticket" ? "Vé" : filter,
+        value: filter,
+        default: selected === filter,
+      })),
     );
 }
 function shopPayload(guildId, userId) {
@@ -67,7 +71,7 @@ function shopPayload(guildId, userId) {
     );
   today.products.forEach((item) =>
     embed.addFields({
-      name: `${productName(item)}${item.typeCode === "ticket" ? "" : ` [${item.typeCode}]`} · ${money(item.price)} ${currencyIcon(item.currency)}`,
+      name: `${productName(item)}${raritySuffix(item)} · ${money(item.price)} ${currencyIcon(item.currency)}`,
       value: detail(item).slice(0, 1024) || "—",
     }),
   );
@@ -105,14 +109,14 @@ function inventoryPayload(guildId, userId, filter = "all", page = 0) {
     .setColor(0x9b59b6)
     .setTitle("🎒 SINH TỒN · TÚI ĐỒ")
     .setDescription(
-      "Trang bị xếp **UR → SSR → SR → R**. Vé ở cuối danh sách.\nMỗi run chọn tối đa 5 món khác nhau, một bản mỗi món, và một vé mỗi loại. Đồ/vé mang vào run không hoàn khi chết hoặc rút thưởng.",
+      "Xếp theo độ hiếm **LR → UR → SSR → SR → R**. Vé cầu nguyện ở cuối; bộ lọc Vé chứa mọi loại vé.\nMỗi run chọn tối đa 5 món khác nhau, một bản mỗi món, và một vé mỗi loại. Đồ/vé mang vào run không hoàn khi chết hoặc rút thưởng.",
     )
     .setFooter({
       text: `Bộ lọc: ${filter} · Trang ${page + 1}/${pages} · ${items.length} loại`,
     });
   items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).forEach((item) =>
     embed.addFields({
-      name: `${productName(item)}${item.typeCode === "ticket" ? "" : ` [${item.typeCode}]`} ×${money(item.quantity)}`,
+      name: `${productName(item)}${raritySuffix(item)} ×${money(item.quantity)}`,
       value: detail(item).slice(0, 1024) || "—",
     }),
   );
@@ -278,7 +282,7 @@ function setupPayload(draft, context) {
           loadout.ticketIds
             .map((itemId) => {
               const ticket = bag.product(itemId);
-              return `**${productName(ticket)} ×1** · ${detail(ticket)}`;
+              return `**${productName(ticket)}${raritySuffix(ticket)} ×1** · ${detail(ticket)}`;
             })
             .join("\n")
             .slice(0, 1024) || "Không mang vé.",
@@ -325,7 +329,7 @@ function setupPayload(draft, context) {
     .addOptions(
       availableTickets.length
         ? availableTickets.map((ticket) => ({
-            label: `${ticket.name} ×${ticket.quantity}`,
+            label: `${ticket.name}${raritySuffix(ticket)} ×${ticket.quantity}`,
             value: ticket.id,
             emoji: ticketOptionEmoji(ticket),
             default: loadout.ticketIds.includes(ticket.id),

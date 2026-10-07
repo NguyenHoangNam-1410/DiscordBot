@@ -4,6 +4,7 @@ const RARITY_ICON = Object.freeze({
   SR: "🟣",
   SSR: "🟠",
   UR: "🔴",
+  LR: "💠",
 });
 const LEGACY_RARITY_ICON = Object.freeze({
   common: "⚪",

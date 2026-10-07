@@ -282,7 +282,7 @@ Luật hiện hành v2.0.1, cập nhật ngày 2026-10-06:
 - **Đánh:** gây tử trận ngay vì không thể thắng RNGesus. Lost Adventurer/vé hồi sinh có thể cứu nếu còn; không được cứu thì kết thúc run.
 - **Bỏ chạy (V2):** 100% → 95% → 90% → 85% → 80% → 75%, các lần sau giữ 75%. Mỗi lần chọn chạy tăng bộ đếm, kể cả thất bại được vé cứu. Chạy thành công giữ vé; thất bại tự dùng một vé thoát hiểm nếu có. Không có vé thoát hiểm thì tử trận và kiểm tra cơ chế hồi sinh.
 - **Hối lộ:** cần payout hiển thị ít nhất 1.000 xu; trừ một lần 40% payout hiện tại (làm tròn lên) và vượt tầng; không giảm hệ số thưởng.
-- **Cầu nguyện (V2):** 30% thành công, hoặc 60% nếu mang vé cầu nguyện; áp dụng cả run. Thành công nhận một trang bị UR có nguyền; thất bại tử trận và kiểm tra cơ chế hồi sinh.
+- **Cầu nguyện (V2):** 30% thành công, hoặc 60% nếu mang vé cầu nguyện; áp dụng cả run. Thành công nhận một vật phẩm UR (trang bị có nguyền hoặc Vé thoát); thất bại tử trận và kiểm tra cơ chế hồi sinh.
 - **Vé thoát hiểm (V2):** chỉ tự cứu khi bỏ chạy thất bại, tối đa một vé trong run; không có nút dùng vé riêng. Vé thoát hiểm không cứu khi Đánh/cầu nguyện thất bại.
 - Reset tỷ lệ **gặp** không reset tỷ lệ **bỏ chạy** hay hiệu lực vé cầu nguyện. Mốc reset lưu trong run, tiếp tục/restart không đặt lại hoặc roll lại kết quả đã khóa.
 
@@ -342,6 +342,13 @@ Bonus event tính theo tiền cược ban đầu của run; ngoại lệ event c
 Hệ số tầng ngừng tăng sau tầng 100; bonus từ combat, item, Shrine và event vẫn tăng. Blood Paradox chỉ tác động preview/chốt cuối, không làm tăng số payout có thể chi trong shop. Cashout hoặc Summit mới trả payout; death/RNGesus/forfeit trả 0.
 
 Thành tích toàn tài khoản hiện có các mốc Sinh tồn: tầng 10 thưởng 10.000 xu và 30 kim cương; tầng 25 thưởng 30.000 xu và 100 kim cương; tầng 50 thưởng 75.000 xu và 250 kim cương. Sinh tồn không roll vật phẩm shop/economy bên ngoài sau ván; item trong catalog chỉ tồn tại trong run.
+
+### Vật phẩm vé và độ hiếm LR
+- Vé thoát RNGesus là vật phẩm UR trong pool nhận đồ của run: hòm, drop boss, thưởng event/Mimic và shop trong run có nhánh UR đều có thể chọn vé. Các tỷ lệ chọn độ hiếm không đổi; trong nhóm UR chọn đều 16 trang bị và 1 vé.
+- Vé nhặt được vào ô vé, giữ tối đa 1; không có level, buff trang bị hoặc lời nguyền. Nhặt khi đã có vé thì bỏ vé dư, ghi ở Lượt vừa rồi.
+- Vé hồi sinh thuộc LR. LR hiện chỉ có vật phẩm, chưa có trang bị; không có pool ngẫu nhiên/Gacha và không rơi từ quái/hòm. Nguồn từ một hoặc chuỗi sự kiện đặc biệt sẽ được đặc tả sau, chưa bổ sung sự kiện.
+- Theo yêu cầu giữ bán vé, cửa hàng Sinh tồn vẫn bán đủ ba loại: Vé thoát UR 100, Vé cầu nguyện 100, Vé hồi sinh LR 300 kim cương. Vé cũ giữ nguyên số lượng và công dụng.
+- Túi Sinh tồn lọc được UR/LR hoặc toàn bộ vé, sắp xếp LR trước UR; vé vẫn được chọn ở ô vé riêng, không tính vào giới hạn 5 trang bị.
 
 ## 13. Chống lỗi và abuse
 

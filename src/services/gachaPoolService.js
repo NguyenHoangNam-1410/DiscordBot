@@ -409,7 +409,8 @@ function listGachaPool(
     .filter(
       (entry) =>
         entry.kind !== "item" ||
-        getCatalogItem(entry.itemId)?.gachaEligible !== false,
+        (getCatalogItem(entry.itemId)?.gachaEligible !== false &&
+          getCatalogItem(entry.itemId)?.rarity !== "LR"),
     )
     .map((entry) =>
       entry.itemId === "vietnamese_word_count"
@@ -483,7 +484,7 @@ function upsertEntry(guildId, entry, updatedBy) {
 // Thêm (hoặc bật lại) một vật phẩm catalog vào bậc tương ứng; tỷ lệ bậc không đổi, chỉ chia đều cho thêm một vật phẩm.
 function addGachaItem(guildId, itemId, tier, updatedBy) {
   const item = getCatalogItem(itemId);
-  if (!item || item.gachaEligible === false)
+  if (!item || item.gachaEligible === false || item.rarity === "LR")
     throw new Error("INVALID_GACHA_ITEM");
   if (!["R", "SR", "SSR", "UR"].includes(tier) || tier !== item.rarity)
     throw new Error("INVALID_GACHA_TIER");
@@ -530,7 +531,12 @@ function setGachaEnabled(guildId, rewardKey, enabled, updatedBy) {
 
 function gachaItemChoices() {
   return listCatalog()
-    .filter((item) => item.type !== "color" && item.gachaEligible !== false)
+    .filter(
+      (item) =>
+        item.type !== "color" &&
+        item.gachaEligible !== false &&
+        item.rarity !== "LR",
+    )
     .map((item) => ({ name: item.name, value: item.id }));
 }
 

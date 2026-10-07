@@ -2,7 +2,12 @@
 const crypto = require("node:crypto");
 const { TICKET_TYPES } = require("./hardcoreIcons");
 const { db } = require("../db");
-const { ITEMS, ITEM_ALIASES, resolveItemId } = require("../hardcore/item");
+const {
+  ITEMS,
+  CONSUMABLE_ITEMS,
+  ITEM_ALIASES,
+  resolveItemId,
+} = require("../hardcore/item");
 const { spendCoins } = require("./economyService");
 const { spendDiamonds } = require("./playerLevelService");
 const PRICES = Object.freeze({
@@ -35,14 +40,21 @@ const CATALOG = Object.values(ITEMS)
   .flat()
   .filter((item) => !Object.hasOwn(ITEM_ALIASES, item.id));
 const DEFINITIONS = new Map(CATALOG.map((item) => [item.id, item]));
-const RANK = { UR: 4, SSR: 3, SR: 2, R: 1, ticket: 0 };
-const FILTERS = ["all", "UR", "SSR", "SR", "R", "ticket"];
+const RANK = { LR: 5, UR: 4, SSR: 3, SR: 2, R: 1, ticket: 0 };
+const FILTERS = ["all", "LR", "UR", "SSR", "SR", "R", "ticket"];
 function vietnamDay(now = Date.now()) {
   return new Date(now + 7 * 60 * 60_000).toISOString().slice(0, 10);
 }
 function product(id) {
   const ticket = TICKETS.find((entry) => entry.id === id);
-  if (ticket) return { ...ticket, typeCode: "ticket", currency: "diamonds" };
+  if (ticket)
+    return {
+      ...ticket,
+      typeCode: "ticket",
+      category: "consumable",
+      rarity: CONSUMABLE_ITEMS[id]?.typeCode || null,
+      currency: "diamonds",
+    };
   const definition = DEFINITIONS.get(resolveItemId(id));
   return definition
     ? { ...definition, price: PRICES[definition.typeCode], currency: "coins" }
@@ -136,10 +148,17 @@ function inventory(guildId, userId, filter = "all") {
         ? { ...entry, quantity: row.quantity, updatedAt: row.updated_at }
         : null;
     })
-    .filter((item) => item && (filter === "all" || item.typeCode === filter))
+    .filter(
+      (item) =>
+        item &&
+        (filter === "all" ||
+          item.typeCode === filter ||
+          item.rarity === filter),
+    )
     .sort(
       (a, b) =>
-        RANK[b.typeCode] - RANK[a.typeCode] ||
+        RANK[b.typeCode === "ticket" ? b.rarity || "ticket" : b.typeCode] -
+          RANK[a.typeCode === "ticket" ? a.rarity || "ticket" : a.typeCode] ||
         a.name.localeCompare(b.name) ||
         a.id.localeCompare(b.id),
     );

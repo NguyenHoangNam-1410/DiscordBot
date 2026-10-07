@@ -70,6 +70,7 @@ function gameLabels(item) {
 }
 
 const RARITY_RANK = Object.freeze({
+  LR: 6,
   mythic: 5,
   UR: 4,
   legendary: 4,

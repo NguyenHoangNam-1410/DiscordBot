@@ -1,5 +1,17 @@
 [
   {
+    "id": "f084a54c-da43-4b08-a6ff-3eae6f8d1320",
+    "updatedAt": "2026-10-07T02:30:04.516Z",
+    "auditedAt": "2026-10-07T02:30:04.516Z",
+    "title": "Sinh tồn: vật phẩm UR và độ hiếm LR",
+    "changes": [
+      "Vé thoát RNGesus [UR] vào pool vật phẩm của run. Nhặt được nhận tối đa một vé, không có level hoặc lời nguyền và không chiếm ô trang bị; vé dư được ghi trong Lượt vừa rồi.",
+      "Vé hồi sinh được xếp [LR], hiện LR chỉ có vật phẩm. LR không nằm trong Gacha hoặc pool rơi đồ ngẫu nhiên; sự kiện đặc biệt cấp LR sẽ có spec sau.",
+      "Cửa hàng Sinh tồn vẫn bán cả ba vé với giá cũ: thoát 100, cầu nguyện 100, hồi sinh 300 kim cương. Vé đã sở hữu vẫn sử dụng được.",
+      "Túi đồ hỗ trợ lọc LR/UR cho vé và sắp xếp LR trước UR. Mỗi loại vé vẫn chọn riêng một chiếc trước khi bắt đầu run."
+    ]
+  },
+  {
     "id": "6f4501a4-b859-455e-9019-a1b0da437611",
     "updatedAt": "2026-10-07T02:11:03.095Z",
     "auditedAt": "2026-10-07T02:11:03.095Z",

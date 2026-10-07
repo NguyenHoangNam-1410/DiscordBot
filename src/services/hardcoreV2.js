@@ -27,7 +27,7 @@ const {
 } = require("./hardcoreIcons");
 const world = require("./hardcoreWorld");
 const echoes = require("./hardcoreEchoRepository");
-const { ITEMS } = require("../hardcore/item");
+const { ITEMS, ITEM_POOLS, CONSUMABLE_ITEMS } = require("../hardcore/item");
 const { GOBLIN_REWARDS, goblinRewardRarity } = require("./hardcoreEngine");
 const { spendDiamonds } = require("./playerLevelService");
 const { runDiamondReward, baseMultiplier } = require("./hardcoreRewards");
@@ -142,7 +142,8 @@ const EVENT_NAMES = {
 };
 const pick = (pool, rng) => pool[Math.floor(rng() * pool.length)];
 const int = (lo, hi, rng) => lo + Math.floor(rng() * (hi - lo + 1));
-const randomItem = (rarity, rng) => structuredClone(pick(ITEMS[rarity], rng));
+const randomItem = (rarity, rng) =>
+  structuredClone(pick(ITEM_POOLS[rarity], rng));
 const MERCHANT_PRICES = {
   potion: 0.025,
   heal: 0.04,
@@ -420,6 +421,35 @@ function receiveItem(state, definition, levels = 1, cleansedLevels = 0) {
   )
     throw new Error("INVALID_HARDCORE_ITEM");
   const before = statSnapshot(state);
+  if (definition.category === "consumable") {
+    const consumable = CONSUMABLE_ITEMS[definition.id];
+    if (!consumable) throw new Error("INVALID_HARDCORE_ITEM");
+    const key =
+      definition.id === "survival_escape" ? "escapeTokens" : "reviveTickets";
+    const previous = state[key] || 0;
+    state[key] = Math.min(1, previous + levels);
+    const gained = state[key] - previous;
+    if (state.lastReceivedItems)
+      state.lastReceivedItems.push({
+        name: consumable.name,
+        rarity: consumable.rarity,
+        consumable: true,
+        quantity: gained,
+        discarded: levels - gained,
+        definition: structuredClone(consumable),
+        before,
+        after: statSnapshot(state),
+        directKeys: [key],
+        sourceName:
+          state.pendingEventResult?.name || state.encounter?.name || "vật phẩm",
+        inEventResult: Boolean(state.pendingEventResult),
+      });
+    return {
+      name: consumable.name,
+      rarity: consumable.rarity,
+      consumable: true,
+    };
+  }
   const index = state.items.findIndex((x) => x.definition.id === definition.id);
   let item = state.items[index];
   if (!item) {
@@ -1895,7 +1925,9 @@ function actSurprise(state, session, action, rng) {
     }
     if (offer.item) {
       const item = receiveItem(state, offer.item);
-      done(`${paymentLog}${E.backpack} Nhận ${item.name} Lv.${item.level}.`);
+      done(
+        `${paymentLog}${E.backpack} Nhận ${item.name}${item.consumable ? "" : ` Lv.${item.level}`}.`,
+      );
     } else {
       if (offer.key === "potion")
         state.potions = Math.min(state.maxPotions, state.potions + 1);
@@ -2194,7 +2226,7 @@ function defeatEnemy(state, session, rng, e) {
     const roll = rng();
     const rarity = roll < 0.5 ? "rare" : roll < 0.8 ? "legendary" : "cursed";
     receiveItem(state, randomItem(rarity, rng));
-    state.lastLog += `\n${E.chest} Phần thưởng hạ Ancient Mimic: đã nhận trang bị.`;
+    state.lastLog += `\n${E.chest} Phần thưởng hạ Ancient Mimic: đã nhận vật phẩm.`;
   } else if (world.mimicKind(e) === "blood_mimic") {
     const rarity = rng() < 0.6 ? "rare" : "legendary";
     receiveItem(state, randomItem(rarity, rng));
@@ -2217,7 +2249,7 @@ function defeatEnemy(state, session, rng, e) {
   if (dropRarity) {
     const dropped = randomItem(dropRarity, rng);
     receiveItem(state, dropped);
-    state.lastLog += `\n${E.backpack} Nhặt được trang bị từ ${e.name}.`;
+    state.lastLog += `\n${E.backpack} Nhặt được ${dropped.category === "consumable" ? "vật phẩm" : "trang bị"} từ ${e.name}.`;
   }
   if (monsterLoot.hasRegionBossChest(state, e)) {
     const rarity = rng() < 0.7 ? "legendary" : "cursed";
@@ -2596,7 +2628,7 @@ function act(state, session, action, rng) {
             `Cầu nguyện RNGesus thất bại (nhánh ${Math.round((1 - (e.prayerChance ?? rngesusPrayerChance(state))) * 100)}%).`,
           );
         receiveItem(state, e.prayerItem);
-        state.lastLog = `${eventIcon("rngesus")} RNGesus: cầu nguyện thành công, đã nhận **trang bị UR** kèm lời nguyền.`;
+        state.lastLog = `${eventIcon("rngesus")} RNGesus: cầu nguyện thành công, đã nhận **${e.prayerItem.name} [UR]**${e.prayerItem.curse ? " kèm lời nguyền" : ""}.`;
         remember(state, "pray_rngesus", rng);
       }
       completeFloor(state, session, rng, 0);
@@ -2657,6 +2689,8 @@ function act(state, session, action, rng) {
   return alive(state) ? null : "death";
 }
 module.exports = {
+  ITEM_POOLS,
+  CONSUMABLE_ITEMS,
   prepareItemCombat,
   noteEvent,
   ITEMS,

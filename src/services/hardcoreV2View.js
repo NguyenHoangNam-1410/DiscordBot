@@ -31,9 +31,12 @@ const {
   memoryIcon,
   effectStatLabel,
   passiveIcon,
+  ticketIcon,
 } = require("./hardcoreIcons");
 const rarityLabel = (r) =>
-  ({ common: "R", rare: "SR", legendary: "SSR", cursed: "UR" })[r];
+  ({ common: "R", rare: "SR", legendary: "SSR", cursed: "UR", limited: "LR" })[
+    r
+  ];
 const percent = (n) => `${Math.round(n * 1000) / 10}%`;
 const money = (n) => Math.floor(n).toLocaleString("vi-VN");
 const {
@@ -196,6 +199,8 @@ function passiveText(item) {
   return text ? "\n" + formatPassiveText(text) : "";
 }
 function itemText(item, level = 1) {
+  if (item.category === "consumable")
+    return `${ticketIcon(item.id)} **Vật phẩm:** ${item.text}`;
   return `${effectText(item.effects, level)}${passiveText(item)}${item.curse ? `\n☣️ Curse: ${effectText(item.curse.effects, level)}` : ""}`;
 }
 function itemEffectChanges(effects, beforeLevel, afterLevel) {
@@ -416,7 +421,7 @@ function merchantOffer(offer) {
           .filter(([, chance]) => chance > 0)
           .map(
             ([key, chance]) =>
-              `- **${percent(chance)}:** ${{ ancient_mimic: "Ancient Mimic", mimic: "Mimic", legendary: "SSR", cursed: "UR kèm lời nguyền", rare: "SR", common: "R", empty: "Rỗng", fake: "Đồ giả" }[key]}`,
+              `- **${percent(chance)}:** ${{ ancient_mimic: "Ancient Mimic", mimic: "Mimic", legendary: "SSR", cursed: "UR: trang bị có nguyền hoặc Vé thoát", rare: "SR", common: "R", empty: "Rỗng", fake: "Đồ giả" }[key]}`,
           )
           .join("\n")}`,
         button: "Rương · mở ngay",
@@ -480,7 +485,7 @@ function randomEventText(s) {
       ancient_mimic: "Chiến đấu Ancient Mimic (Tinh anh).",
       mimic: "Chiến đấu Mimic.",
       legendary: "Nhận đồ [SSR].",
-      cursed: "Nhận đồ [UR], kèm curse.",
+      cursed: "Nhận [UR]: trang bị có nguyền hoặc Vé thoát.",
       rare: "Nhận đồ [SR].",
       common: "Nhận đồ [R].",
       empty: "Hòm trống.",
@@ -553,7 +558,7 @@ function randomEventText(s) {
         option("Cầu nguyện", [
           [
             percent(e.prayerChance ?? core.rngesusPrayerChance(s)),
-            "Sống và nhận **1 trang bị UR**, kèm lời nguyền.",
+            "Sống và nhận **1 vật phẩm UR**: trang bị có nguyền hoặc Vé thoát.",
           ],
           [
             percent(1 - (e.prayerChance ?? core.rngesusPrayerChance(s))),
@@ -663,7 +668,7 @@ function randomEventText(s) {
             Object.entries(core.GOBLIN_REWARDS.rarities).map(
               ([rarity, odds]) => [
                 percent(odds),
-                `1 ${E.backpack} trang bị **[${rarityLabel(rarity)}]**${rarity === "cursed" ? ", kèm lời nguyền" : ""}.`,
+                `1 ${E.backpack} vật phẩm **[${rarityLabel(rarity)}]**${rarity === "cursed" ? ": trang bị có nguyền hoặc Vé thoát" : ""}.`,
               ],
             ),
           ),
@@ -850,7 +855,7 @@ function statTransitions(
 }
 function encounterText(s) {
   if (s.phase === "boss_chest")
-    return `${eventIcon("boss_chest")} **RƯƠNG BOSS · TẦNG ${s.encounter.bossFloor}**\nPhần thưởng sau boss cuối khu vực. Chọn **mở hoặc bán** để tiếp tục.\n\n**Mở rương**\n- **70%:** nhận trang bị **SSR**.\n- **30%:** nhận trang bị **UR**, kèm lời nguyền.\nĐồ trùng tên tăng level. Tỷ lệ cố định, không bị Luck/pity thay đổi.\n\n**Bán rương**\n- Cộng **100% cược ban đầu (${money(s.stake)} xu)** vào thưởng của run.\nPhải xử lý rương trước khi rút thưởng hoặc đi tiếp.`;
+    return `${eventIcon("boss_chest")} **RƯƠNG BOSS · TẦNG ${s.encounter.bossFloor}**\nPhần thưởng sau boss cuối khu vực. Chọn **mở hoặc bán** để tiếp tục.\n\n**Mở rương**\n- **70%:** nhận trang bị **SSR**.\n- **30%:** nhận **UR**: trang bị có nguyền hoặc Vé thoát.\nĐồ trùng tên tăng level. Tỷ lệ cố định, không bị Luck/pity thay đổi.\n\n**Bán rương**\n- Cộng **100% cược ban đầu (${money(s.stake)} xu)** vào thưởng của run.\nPhải xử lý rương trước khi rút thưởng hoặc đi tiếp.`;
   if (s.phase === "upgrade")
     return `${E.checkpoint} **CHECKPOINT** · Đã hồi đầy ${E.hp} HP và nhận thêm 2 ${E.potion} bình máu.\nChọn **+5 STR, DEX, VIT hoặc ENE**; dự báo thay đổi ở ngay bên dưới.`;
   if (s.phase === "paradox" && s.encounter.version === 2)
@@ -1084,7 +1089,7 @@ function monsterLootDetails(state) {
       : mimic === "blood_mimic"
         ? "SR 60% · SSR 40%"
         : "";
-  return `${E.backpack} **Rơi trang bị khi hạ quái:** **${percent(info.chance)}** · ${E.luck} **LUCK ${info.luck}** (chốt khi vào combat).\n**Khi có drop:** ${pool}. Tự nhặt 1 món vào run; đồ trùng tăng 1 level.\nTỷ lệ = 1% + LUCK × 0,5 điểm %, tối đa **20%**. Không chịu pity hòm hay hiệu ứng tìm SSR.${reward ? `\n**Thưởng riêng chắc chắn:** 1 món (${reward}), cộng thêm roll drop ở trên.` : ""}`;
+  return `${E.backpack} **Rơi trang bị khi hạ quái:** **${percent(info.chance)}** · ${E.luck} **LUCK ${info.luck}** (chốt khi vào combat).\n**Khi có drop:** ${pool}. Tự nhặt 1 món vào run; trang bị trùng tăng 1 level, Vé thoát UR giữ tối đa 1 vé.\nTỷ lệ = 1% + LUCK × 0,5 điểm %, tối đa **20%**. Không chịu pity hòm hay hiệu ứng tìm SSR.${reward ? `\n**Thưởng riêng chắc chắn:** 1 món (${reward}), cộng thêm roll drop ở trên.` : ""}`;
 }
 function rawEncounterDetails(s) {
   if (s.phase !== "encounter") return encounterText(s);
@@ -1143,7 +1148,7 @@ function turnText(state) {
   const received = state.lastReceivedItems || [];
   const receivedTitles = received.map(
     (item) =>
-      `${item.upgradedFromLevel != null ? eventIcon("blacksmith") + " **Rèn:** " : ""}${E.backpack} **${item.name} [${rarityLabel(item.rarity)}]** · ${item.upgradedFromLevel != null ? `Lv.${item.upgradedFromLevel} → **Lv.${item.level}**` : `**Lv.${item.level}**`}`,
+      `${item.upgradedFromLevel != null ? eventIcon("blacksmith") + " **Rèn:** " : ""}${item.consumable ? ticketIcon(item.definition.id) : E.backpack} **${item.name} [${rarityLabel(item.rarity)}]**${item.consumable ? " · Vật phẩm" : ` · ${item.upgradedFromLevel != null ? `Lv.${item.upgradedFromLevel} → **Lv.${item.level}**` : `**Lv.${item.level}**`}`}`,
   );
   if (state.lastUpgrade)
     details.push(
@@ -1195,6 +1200,12 @@ function turnText(state) {
       );
   }
   received.forEach((item, index) => {
+    if (item.consumable) {
+      details.push(
+        `${receivedTitles[index]}: nhận **${item.quantity} vé**${item.discarded ? `; bỏ **${item.discarded} vé dư** (tối đa 1)` : ""}. Không tăng level, không chiếm chỗ trang bị.`,
+      );
+      return;
+    }
     if (!item.before || !item.after) {
       details.push(
         `${receivedTitles[index]}: ${effectText(item.definition.effects, item.levels)}${item.definition.curse && item.curseLevels ? `\n☣️ Lời nguyền: ${effectText(item.definition.curse.effects, item.curseLevels)}` : ""}`,
@@ -2024,7 +2035,11 @@ function ratesFields(category) {
       {
         name: `${E.backpack} Trang bị và bảo hiểm hòm`,
         value:
-          "- Catalog có **63 món:** R 10, SR 13, SSR 24, UR 16. Mỗi món R/SR chuyên một chỉ số hoặc tác dụng, không trùng vai trò trong cùng độ hiếm; SR cho mức cộng cao hơn R. Đồ chỉ tồn tại trong run; trùng tên tăng level và cộng hiệu ứng. **UR có cả buff và lời nguyền**. Lời nguyền rút HP cuối tầng luôn chừa ít nhất **1 HP**.\n- Sau **5 hòm đã mở không nhận SR trở lên**, hòm kế bảo đảm SR+ và không có Mimic.\n- Sau **10 hòm không nhận SSR**, tỷ lệ SSR được cộng 2 điểm % mỗi lần tiếp theo; nhận SSR thì đặt lại bộ đếm. Luck cũng tăng tỷ lệ SSR, tổng tối đa 35% ở hòm thường.\n- Mốc 10 là lúc bắt đầu tăng xác suất, không phải bảo đảm SSR. Đồ rơi từ quái, Ancient Mimic/Blood Mimic, rương boss, shop hoặc event khác không đặt lại bộ đếm hòm thường/kho báu; rương thường mua ở Rift Merchant vẫn tính.",
+          "- Catalog có **63 trang bị:** R 10, SR 13, SSR 24, UR 16; pool UR có thêm Vé thoát loại vật phẩm. Mỗi món R/SR chuyên một chỉ số hoặc tác dụng, không trùng vai trò trong cùng độ hiếm; SR cho mức cộng cao hơn R. Đồ chỉ tồn tại trong run; trùng tên tăng level và cộng hiệu ứng. **Trang bị UR có cả buff và lời nguyền**. Lời nguyền rút HP cuối tầng luôn chừa ít nhất **1 HP**.\n- Sau **5 hòm đã mở không nhận SR trở lên**, hòm kế bảo đảm SR+ và không có Mimic.\n- Sau **10 hòm không nhận SSR**, tỷ lệ SSR được cộng 2 điểm % mỗi lần tiếp theo; nhận SSR thì đặt lại bộ đếm. Luck cũng tăng tỷ lệ SSR, tổng tối đa 35% ở hòm thường.\n- Mốc 10 là lúc bắt đầu tăng xác suất, không phải bảo đảm SSR. Đồ rơi từ quái, Ancient Mimic/Blood Mimic, rương boss, shop hoặc event khác không đặt lại bộ đếm hòm thường/kho báu; rương thường mua ở Rift Merchant vẫn tính.",
+      },
+      {
+        name: `${E.ticket} Vật phẩm UR / LR`,
+        value: `- ${E.ticket} **Vé thoát [UR]** nằm trong pool vật phẩm của run. Nhặt vé vào ô vé, tối đa 1; không tăng level, không có nguyền và không chiếm chỗ trang bị. Vé dư bị bỏ.\n- ${E.reviveTicket} **Vé hồi sinh [LR]**: hiện LR chỉ có loại vật phẩm, chưa có trang bị. Không xuất hiện trong Gacha hay pool rơi đồ ngẫu nhiên; nguồn sự kiện đặc biệt sẽ có spec sau.\n- Cửa hàng Sinh tồn vẫn bán cả ba vé: thoát 100, cầu nguyện 100, hồi sinh 300 kim cương. Vé đã sở hữu vẫn dùng được.`,
       },
       {
         name: `${E.hp} Lời nguyền rút HP`,
@@ -2034,7 +2049,7 @@ function ratesFields(category) {
       {
         name: `${E.chest} Phần thưởng Ancient Mimic`,
         value:
-          "Ancient Mimic là **quái Tinh anh**, hưởng bonus sát thương lên Tinh anh. Hạ quái nhận ngay **1 trang bị**: **50% SR · 30% SSR · 20% UR**. UR kèm lời nguyền; đồ trùng tăng level. Trang bị được cộng ngay trong run và hiển thị ở **Lượt vừa rồi**. Tỷ lệ cố định, không chịu Luck/pity; phần thưởng này không làm thay đổi bộ đếm bảo hiểm hòm. Mimic thường không có phần thưởng này.",
+          "Ancient Mimic là **quái Tinh anh**, hưởng bonus sát thương lên Tinh anh. Hạ quái nhận ngay **1 vật phẩm**: **50% SR · 30% SSR · 20% UR**. UR có thể là trang bị có nguyền hoặc Vé thoát; trang bị trùng tăng level. Vật phẩm được nhận ngay trong run và hiển thị ở **Lượt vừa rồi**. Tỷ lệ cố định, không chịu Luck/pity; phần thưởng này không làm thay đổi bộ đếm bảo hiểm hòm. Mimic thường không có phần thưởng này.",
       },
       {
         name: `${E.chest} Phần thưởng Blood Mimic`,
@@ -2044,7 +2059,7 @@ function ratesFields(category) {
       {
         name: `${eventIcon("boss_chest")} Rương boss cuối khu vực`,
         value:
-          "- Hạ boss tầng **100/200/300/400/500/700/900**: lập tức nhận một rương boss bắt buộc xử lý. Boss 50 tầng khác và boss 999 không cho rương này.\n- **Mở:** 70% nhận SSR, 30% nhận UR có lời nguyền. Tỷ lệ cố định, không chịu Luck hoặc pity. Đồ trùng tăng level.\n- **Bán:** cộng bonus bằng **100% cược ban đầu**; số xu cụ thể ghi trên bảng.\n- Không được bỏ qua hoặc rút thưởng khi rương chưa xử lý. Mở/bán không tính thêm một tầng.",
+          "- Hạ boss tầng **100/200/300/400/500/700/900**: lập tức nhận một rương boss bắt buộc xử lý. Boss 50 tầng khác và boss 999 không cho rương này.\n- **Mở:** 70% nhận SSR, 30% nhận UR (trang bị có nguyền hoặc Vé thoát). Tỷ lệ cố định, không chịu Luck hoặc pity. Đồ trùng tăng level.\n- **Bán:** cộng bonus bằng **100% cược ban đầu**; số xu cụ thể ghi trên bảng.\n- Không được bỏ qua hoặc rút thưởng khi rương chưa xử lý. Mở/bán không tính thêm một tầng.",
       },
     ],
     encounters: [
@@ -2067,7 +2082,7 @@ function ratesFields(category) {
       },
       {
         name: `${eventIcon("goblin")} Treasure Goblin`,
-        value: `Tỷ lệ bắt = **60% + LUCK ×1 điểm % + buff bắt Goblin**, tối đa **90%**.\n- **Bắt được:** bonus bằng **25% tiền cược** và **1 ${E.backpack} trang bị**. Độ hiếm khi bắt thành công: **60% SR / 35% SSR / 5% UR kèm lời nguyền**. Buff bắt chỉ tăng cơ hội bắt; tỷ lệ độ hiếm giữ nguyên, không dùng pity của hòm. Đồ trùng tăng 1 level.\n- **Goblin thoát:** trừ một lần **5% payout hiển thị hiện tại**, làm tròn lên 1 xu. Khoản này không giảm hệ số payout hoặc thưởng tăng thêm về sau.\n- Phần thưởng được khóa khi event xuất hiện; mở lại bảng không roll lại. Item và thay đổi chỉ số hiển thị ở **Lượt vừa rồi**.`,
+        value: `Tỷ lệ bắt = **60% + LUCK ×1 điểm % + buff bắt Goblin**, tối đa **90%**.\n- **Bắt được:** bonus bằng **25% tiền cược** và **1 ${E.backpack} vật phẩm**. Độ hiếm khi bắt thành công: **60% SR / 35% SSR / 5% UR** (trang bị có nguyền hoặc Vé thoát). Buff bắt chỉ tăng cơ hội bắt; tỷ lệ độ hiếm giữ nguyên, không dùng pity của hòm. Đồ trùng tăng 1 level.\n- **Goblin thoát:** trừ một lần **5% payout hiển thị hiện tại**, làm tròn lên 1 xu. Khoản này không giảm hệ số payout hoặc thưởng tăng thêm về sau.\n- Phần thưởng được khóa khi event xuất hiện; mở lại bảng không roll lại. Item và thay đổi chỉ số hiển thị ở **Lượt vừa rồi**.`,
       },
       {
         name: "Các sự kiện đặc biệt",
@@ -2091,7 +2106,7 @@ function ratesFields(category) {
       },
       {
         name: `${eventIcon("adventurer")} Lost Adventurer · cứu / cướp`,
-        value: `- **Cứu:** trả một bình, nhận R 70% / SR 30% và một lần bảo hộ trong cùng khu vực. Chết bởi RNGesus → hồi sinh 50% HP, sang tầng kế; chết khi đánh quái → hồi sinh 50% HP, ở lại đánh tiếp. Ưu tiên trước ${E.reviveTicket} **Vé hồi sinh**, hết hiệu lực khi dùng hoặc sang khu vực khác; không tạo hậu quả hẹn.\n- **Cướp:** nhận **SSR 75% / UR có nguyền 25%**. Sau **10–30 tầng**: **50% mất 10% payout**, **50% gặp Bounty Hunter (Elite)**, có thể bồi thường 20% payout để tránh đánh. Không có nhánh hồi máu/bonus. Tối đa 8 hậu quả đang chờ; kết quả khóa khi ghi nhận.`,
+        value: `- **Cứu:** trả một bình, nhận R 70% / SR 30% và một lần bảo hộ trong cùng khu vực. Chết bởi RNGesus → hồi sinh 50% HP, sang tầng kế; chết khi đánh quái → hồi sinh 50% HP, ở lại đánh tiếp. Ưu tiên trước ${E.reviveTicket} **Vé hồi sinh**, hết hiệu lực khi dùng hoặc sang khu vực khác; không tạo hậu quả hẹn.\n- **Cướp:** nhận **SSR 75% / UR 25%** (trang bị có nguyền hoặc Vé thoát). Sau **10–30 tầng**: **50% mất 10% payout**, **50% gặp Bounty Hunter (Elite)**, có thể bồi thường 20% payout để tránh đánh. Không có nhánh hồi máu/bonus. Tối đa 8 hậu quả đang chờ; kết quả khóa khi ghi nhận.`,
       },
       {
         name: `${eventIcon("echo")} Grave Echo`,
@@ -2110,7 +2125,7 @@ function ratesFields(category) {
       },
       {
         name: `${eventIcon("rngesus")} RNGesus · không được rút thưởng`,
-        value: `Chaos là tỷ lệ gặp RNGesus. Không thể đánh bại hoặc rút thưởng tại đây.\n- **Đánh:** tử trận ngay. Khi tử trận, Lost Adventurer hoặc ${E.reviveTicket} **Vé hồi sinh** có thể cứu nếu còn; hết bảo hộ/vé thì mất cược và thưởng tạm giữ.\n- **Hối lộ:** cần payout hiển thị **≥1.000 xu**, đúng 1.000 vẫn được. Thoát an toàn, trừ một lần **40% payout hiện tại**, làm tròn lên; không giảm hệ số thưởng hoặc phạt tiền kiếm thêm về sau.\n- **Cầu nguyện:** **30%** thành công và nhận chắc chắn **1 trang bị UR kèm lời nguyền**; **70%** thất bại và tử trận. Mang ${E.prayerTicket} **Vé cầu nguyện** từ túi Sinh tồn: **60%** thành công, **40%** thất bại, áp dụng toàn run. \nCầu nguyện thành công có thể tạo Thử thách thần linh; hối lộ không tạo ký ức mới. Xem trong Rift.`,
+        value: `Chaos là tỷ lệ gặp RNGesus. Không thể đánh bại hoặc rút thưởng tại đây.\n- **Đánh:** tử trận ngay. Khi tử trận, Lost Adventurer hoặc ${E.reviveTicket} **Vé hồi sinh** có thể cứu nếu còn; hết bảo hộ/vé thì mất cược và thưởng tạm giữ.\n- **Hối lộ:** cần payout hiển thị **≥1.000 xu**, đúng 1.000 vẫn được. Thoát an toàn, trừ một lần **40% payout hiện tại**, làm tròn lên; không giảm hệ số thưởng hoặc phạt tiền kiếm thêm về sau.\n- **Cầu nguyện:** **30%** thành công và nhận chắc chắn **1 vật phẩm UR** (trang bị có nguyền hoặc Vé thoát); **70%** thất bại và tử trận. Mang ${E.prayerTicket} **Vé cầu nguyện** từ túi Sinh tồn: **60%** thành công, **40%** thất bại, áp dụng toàn run. \nCầu nguyện thành công có thể tạo Thử thách thần linh; hối lộ không tạo ký ức mới. Xem trong Rift.`,
       },
       {
         name: `${E.ticket} Bỏ chạy và Vé thoát`,
@@ -2142,7 +2157,7 @@ function ratesFields(category) {
       },
       {
         name: `${eventIcon("diamond_shop")} Diamond Merchant`,
-        value: `Từ tầng **101**; tối đa **2 lần gặp/run**, cách ít nhất 50 tầng. Bỏ qua vẫn tính một lần gặp.\nMỗi lần có **3 món ngẫu nhiên**, độ hiếm của từng món độc lập: **40% SR / 40% SSR / 20% UR**.\nGiá: **SR 100 / SSR 300 / UR 480** ${icon("gem", "💎")}. Mua tối đa **1 món/lần gặp**. Kim cương trừ từ tài khoản ngay khi mua, không hoàn khi chết. UR kèm lời nguyền; đồ chỉ dùng trong run.`,
+        value: `Từ tầng **101**; tối đa **2 lần gặp/run**, cách ít nhất 50 tầng. Bỏ qua vẫn tính một lần gặp.\nMỗi lần có **3 món ngẫu nhiên**, độ hiếm của từng món độc lập: **40% SR / 40% SSR / 20% UR**.\nGiá: **SR 100 / SSR 300 / UR 480** ${icon("gem", "💎")}. Mua tối đa **1 món/lần gặp**. Kim cương trừ từ tài khoản ngay khi mua, không hoàn khi chết. UR có thể là trang bị có nguyền hoặc Vé thoát; vật phẩm chỉ dùng trong run.`,
       },
       {
         name: `${eventIcon("horadric")} Horadric Forge · chuyển hóa trang bị`,

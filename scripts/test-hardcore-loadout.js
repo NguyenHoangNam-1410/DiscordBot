@@ -361,14 +361,23 @@ async function run() {
   for (const id of [...selectedItems, ...ticketIds])
     bag.grant(guildId, carrier, id, 2);
   assert.deepEqual(
-    bag.inventory(guildId, carrier).map((item) => item.typeCode),
-    ["UR", "UR", "SSR", "SR", "R", "ticket", "ticket", "ticket"],
+    bag
+      .inventory(guildId, carrier)
+      .map((item) =>
+        item.typeCode === "ticket" ? item.rarity || "ticket" : item.typeCode,
+      ),
+    ["LR", "UR", "UR", "UR", "SSR", "SR", "R", "ticket"],
   );
   for (const filter of bag.FILTERS)
     assert.ok(
       bag
         .inventory(guildId, carrier, filter)
-        .every((item) => filter === "all" || item.typeCode === filter),
+        .every(
+          (item) =>
+            filter === "all" ||
+            item.typeCode === filter ||
+            item.rarity === filter,
+        ),
     );
   const loadout = { itemIds: selectedItems, ticketIds };
   assert.throws(
