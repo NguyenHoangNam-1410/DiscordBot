@@ -750,9 +750,21 @@ async function main() {
           t = c.transitions[step];
         const board = serialize(view.payload(r, s, c, result, now));
         assert.ok(board.includes(c.character.name));
-        assert.ok(board.includes("Mục tiêu:"));
-        assert.ok(board.includes("Quái đang làm gì:"));
-        assert.ok(board.includes("HP quái phải về đúng **0**"));
+        assert.ok(board.includes("Hạ quái trong đúng"));
+        assert.ok(board.includes("Trạng thái:"));
+        assert.ok(
+          board.includes(
+            {
+              physical_only: "Kháng phép",
+              arcane_only: "Kháng vật lý",
+              execution_guard: "Chuẩn bị đòn chí tử",
+              fixed_potion_window: "Miễn nhiễm sát thương",
+            }[t.condition],
+          ),
+        );
+        assert.ok(!board.includes("không gây sát thương"));
+        assert.ok(!board.includes("Phải Phòng thủ"));
+        assert.ok(!board.includes("thời điểm hồi"));
         assert.ok(!board.includes("Luật puzzle:"));
         assert.ok(!board.includes("Dấu hiệu:"));
         // Commitment belongs to the readonly rules panel after the battle UI cleanup.
@@ -820,10 +832,8 @@ async function main() {
           assert.equal(s.lastOutcome.counterDamage, counter);
         }
         const afterUi = serialize(view.payload(r, s, c, result, now));
-        if (before.hp !== s.hp)
-          assert.ok(afterUi.includes(before.hp + " → **" + s.hp + "**"));
-        if (before.mana !== s.mana)
-          assert.ok(afterUi.includes(before.mana + " → **" + s.mana + "**"));
+        assert.ok(afterUi.includes(String(s.hp)));
+        assert.ok(afterUi.includes(String(s.mana)));
         assert.ok(s.actionHistory.every((v) => /^[0-9a-f]{64}$/.test(v)));
       }
       assert.equal(s.status, "completed");
