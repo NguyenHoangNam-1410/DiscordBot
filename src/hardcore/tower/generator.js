@@ -5,7 +5,7 @@ const { FIXED_POTION_HEAL, MONSTERS, tellFor } = require("./templates");
 const solver = require("./solver");
 
 const GENERATOR_VERSION = 4;
-const CONTENT_VERSION = 3;
+const CONTENT_VERSION = 4;
 const FLOOR_LENGTHS = Object.freeze(
   Array.from({ length: 15 }, (_, i) => i + 1),
 );
@@ -44,6 +44,7 @@ function failureHint(expected, chosen) {
 }
 function plannedAction({ floor, floorStep, mana, seed, nonce }) {
   if (floor === 1) return "attack";
+  if (floor === 2 && floorStep === 0) return "defend";
   if (POTION_STEPS[floor] === floorStep) return "potion";
   if (floor === 12 && floorStep < 3)
     return ["defend", "attack", "skill"][floorStep];

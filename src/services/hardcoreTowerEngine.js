@@ -520,7 +520,8 @@ function actPuzzle(s, c, action, t, before) {
   const p = require("../hardcore/tower/classProfiles").profile(c.classKey),
     mistakes = (s.floorMistakes ||= []),
     cleanSoFar = mistakes.length === 0,
-    correct = action === t.expectedAction;
+    correct = action === t.expectedAction,
+    fatalMistake = !correct && t.expectedAction === "defend";
   s.actionHistory.push(sha(JSON.stringify([s.turn, action])));
   s.turn++;
   if (!correct)
@@ -528,6 +529,7 @@ function actPuzzle(s, c, action, t, before) {
       floorStep: s.floorStep,
       expected: t.expectedAction,
       chosen: action,
+      fatal: fatalMistake,
       hint: abstractMistakeHint(t.expectedAction, action),
     });
 
@@ -550,12 +552,13 @@ function actPuzzle(s, c, action, t, before) {
     heal = t.heal;
     s.enemyHp = Math.max(0, oldEnemy + t.enemyHpDelta);
   } else {
-    actionDamage =
-      action === "attack"
+    actionDamage = correct
+      ? action === "attack"
         ? p.attackDamage
         : action === "skill"
           ? p.skillDamage
-          : 0;
+          : 0
+      : 0;
     if (action === "skill") s.mana = Math.max(0, s.mana - t.skillCost);
     else if (action === "attack")
       s.mana = Math.min(s.maxMana, s.mana + t.attackMana);
@@ -569,8 +572,13 @@ function actPuzzle(s, c, action, t, before) {
       heal = Math.min(p.heal, s.maxHp - s.hp);
       s.hp += heal;
     }
-    counterDamage = action === "defend" ? 0 : Math.max(1, t.counterDamage);
-    s.hp = Math.max(1, s.hp - counterDamage);
+    counterDamage =
+      action === "defend"
+        ? 0
+        : fatalMistake
+          ? s.hp
+          : Math.max(1, t.counterDamage);
+    s.hp = Math.max(fatalMistake ? 0 : 1, s.hp - counterDamage);
     s.enemyHp = Math.max(1, s.enemyHp - actionDamage);
     s.routeStep++;
     s.floorStep++;
@@ -578,7 +586,12 @@ function actPuzzle(s, c, action, t, before) {
   }
 
   const floorEnded = t.floorStep + 1 === t.floor;
-  if (floorEnded && mistakes.length) {
+  if (fatalMistake) {
+    s.status = "failed";
+    s.floor = t.floor;
+    s.failure = "Đòn chí tử đã hạ gục bạn.";
+    s.failureHint = s.failure;
+  } else if (floorEnded && mistakes.length) {
     s.status = "failed";
     s.floor = t.floor;
     s.floorStep = t.floor;

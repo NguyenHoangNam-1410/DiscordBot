@@ -1,5 +1,27 @@
 [
   {
+    "id": "ad4e0172-75ad-4504-a362-9b6c33a817fe",
+    "updatedAt": "2026-10-07T09:04:45.321Z",
+    "auditedAt": "2026-10-07T09:04:45.321Z",
+    "title": "Tháp Suy Luận: đòn chí tử kết thúc ngay",
+    "changes": [
+      "Nếu không Phòng thủ trước đòn chí tử, HP về 0 và attempt kết thúc ngay thay vì chờ hết số bước của tầng.",
+      "Các lỗi puzzle không gây chết vẫn tiếp tục được giữ kín và chỉ chấm khi hết bước."
+    ]
+  },
+  {
+    "id": "0f1348cb-0047-4d31-962c-f27e96cd18c0",
+    "updatedAt": "2026-10-07T09:00:00.233Z",
+    "auditedAt": "2026-10-07T09:00:00.233Z",
+    "title": "Tháp Suy Luận: mechanic dễ hiểu hơn",
+    "changes": [
+      "Mỗi tầng hiển thị thẳng mục tiêu hạ quái trong đúng số bước và đưa HP quái về đúng 0 ở bước cuối.",
+      "Trạng thái quái được viết rõ bằng tiếng Việt: kháng vật lý, kháng phép, đòn chí tử bắt buộc Phòng thủ hoặc thời điểm dùng bình máu.",
+      "Hành động sai mechanic không gây damage; bỏ qua Phòng thủ trước đòn chí tử sẽ khiến HP về 0 khi chấm cuối tầng.",
+      "Đổi tên bộ quái sang tiếng Việt và khóa tổng HP quái đúng bằng tổng damage của chuỗi lời giải duy nhất."
+    ]
+  },
+  {
     "id": "584f30e7-db0c-4738-b1ad-fd03fd0839fe",
     "updatedAt": "2026-10-07T08:38:36.735Z",
     "auditedAt": "2026-10-07T08:38:36.735Z",

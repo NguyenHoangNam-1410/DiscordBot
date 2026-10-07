@@ -411,7 +411,7 @@ function validateV4(payload, options = {}) {
     if (
       f.number !== floor ||
       f.id !== MONSTERS[floor - 1].id ||
-      f.rule !== MONSTERS[floor - 1].rule ||
+      (payload.contentVersion >= 4 && f.rule !== MONSTERS[floor - 1].rule) ||
       f.stepStart !== routeStep ||
       f.stepCount !== floor ||
       ts.length !== floor ||

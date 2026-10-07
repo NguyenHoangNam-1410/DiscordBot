@@ -43,6 +43,7 @@ try {
   const a = generator.generate(input),
     b = generator.generate(input);
   assert.equal(JSON.stringify(a.payload), JSON.stringify(b.payload));
+  assert.equal(a.payload.contentVersion, 4);
   assert.equal(a.payload.stepCount, 120);
   assert.equal(a.payload.floors.length, 15);
   assert.deepEqual(
@@ -82,6 +83,21 @@ try {
     ),
   );
   assert.ok(a.payload.transitions.every((t) => t.signal.length >= 20));
+  assert.equal(
+    a.payload.transitions.find((t) => t.floor === 2 && t.floorStep === 0)
+      .expectedAction,
+    "defend",
+  );
+  assert.ok(
+    a.payload.transitions.every((t) =>
+      ({
+        physical_only: /kháng phép|chống phép|vô hiệu hóa kỹ năng/i,
+        arcane_only: /kháng vật lý|giáp vật lý|đánh thường/i,
+        execution_guard: /chí tử|Max HP|kết liễu/i,
+        fixed_potion_window: /20 HP|hồi máu/i,
+      })[t.condition].test(t.signal),
+    ),
+  );
   assert.ok(
     ["attack", "skill", "defend"].every((action) =>
       a.payload.transitions
