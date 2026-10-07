@@ -1,5 +1,15 @@
 [
   {
+    "id": "1370f7cd-3c95-4150-ae86-540ab5443e84",
+    "updatedAt": "2026-10-07T02:41:41.820Z",
+    "auditedAt": "2026-10-07T02:41:41.820Z",
+    "title": "Wrong Portal: cho phép bỏ qua",
+    "changes": [
+      "Wrong Portal có hai nút Vào portal và Bỏ qua. Bỏ qua giúp vượt tầng, không nhận thưởng, không chịu hiệu ứng portal và không gặp Elite đánh phủ đầu; hiệu ứng cuối tầng và checkpoint vẫn diễn ra bình thường.",
+      "Nội tại tiên tri vẫn đánh dấu an toàn/nguy hiểm trên nút Vào portal. Bỏ qua không tính đã tham gia sự kiện; nút cũ bấm lặp không thể vượt thêm tầng."
+    ]
+  },
+  {
     "id": "426616ef-9923-4af6-aaa3-ccdb17f6aad6",
     "updatedAt": "2026-10-07T02:33:54.568Z",
     "auditedAt": "2026-10-07T02:33:54.568Z",

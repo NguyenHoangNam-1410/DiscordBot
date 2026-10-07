@@ -592,7 +592,7 @@ function randomEventText(s) {
           percent(1 - (e.goodChance ?? 0.5)) +
           " xấu. Các kết quả trong mỗi nhóm có tỷ lệ bằng nhau; Lucky Break không áp dụng.",
         [
-          option("Đi tiếp · kết quả tốt", [
+          option("Vào portal · kết quả tốt", [
             [
               percent((e.goodChance ?? 0.5) / 3),
               `+10 ${E.hp} Max HP, hồi đầy ${E.hp} HP, +1 ${E.potion} bình máu.`,
@@ -603,7 +603,7 @@ function randomEventText(s) {
               `${attr("str", 6)}${STAT_SEPARATOR}${attr("ene", 6)}${STAT_SEPARATOR}${attr("luck", 1)}.`,
             ],
           ]),
-          option("Đi tiếp · kết quả xấu (Elite đánh phủ đầu sau đó)", [
+          option("Vào portal · kết quả xấu (Elite đánh phủ đầu sau đó)", [
             [
               percent((1 - (e.goodChance ?? 0.5)) / (s.floor === 1 ? 4 : 5)),
               `Mất 15% Max ${E.hp} HP, giữ ít nhất 1.`,
@@ -629,6 +629,7 @@ function randomEventText(s) {
               `${attr("str", -5)}, ${attr("ene", -5)}.`,
             ],
           ]),
+          "**Bỏ qua:** vượt tầng, không nhận thưởng hoặc chịu hiệu ứng của portal, không gặp Elite đánh phủ đầu. Tiên tri (nếu có) đánh dấu nút **Vào portal**.",
         ],
       );
     const lucky = Math.min(0.3, s.luck * 0.015);
@@ -966,7 +967,10 @@ function encounterSummary(s) {
         : "Chọn mở, kiểm tra hoặc bán hòm.",
       shrine: "Chọn chạm Shrine hoặc bỏ qua.",
       rngesus: "Không thể đánh bại hoặc rút thưởng tại đây. Chọn cách đối phó.",
-      trap: "Đi tiếp để xử lý tình huống.",
+      trap:
+        e.kind === "portal"
+          ? "Chọn vào portal hoặc bỏ qua để vượt tầng."
+          : "Đi tiếp để xử lý tình huống.",
       echo: "Chọn cách tương tác với mộ.",
       surprise: "Chọn một hành động bằng nút bên dưới.",
     };
@@ -1981,8 +1985,7 @@ function ratesFields(category) {
     combat: [
       {
         name: `${E.attack} Tấn công và sát thương`,
-        value:
-          `**${E.attack} Đánh thường:** Gây **vật lý**: có thể trượt (0 DMG) hoặc Crit ×1,75; ${E.defense} của quái giảm sát thương.\n- **Sát thương phép** luôn trúng, không Crit; chịu giảm trừ từ RES.\n- Dải DMG trên bảng giao tranh đã tính ${E.defense} của quái hiện tại, chưa tính Crit và giả định đòn vật lý trúng. Chỉ số đầy đủ hiển thị sức mạnh trước giảm trừ.\n- Đánh thường hồi MP ngay cả khi trượt: Sorceress/Necromancer hồi 70% Max MP, class khác 40%; làm tròn xuống, ít nhất 1, không vượt Max MP.\n- Quái còn sống sẽ phản công sau hành động, trừ khi skill chặn/né đòn đó.`,
+        value: `**${E.attack} Đánh thường:** Gây **vật lý**: có thể trượt (0 DMG) hoặc Crit ×1,75; ${E.defense} của quái giảm sát thương.\n- **Sát thương phép** luôn trúng, không Crit; chịu giảm trừ từ RES.\n- Dải DMG trên bảng giao tranh đã tính ${E.defense} của quái hiện tại, chưa tính Crit và giả định đòn vật lý trúng. Chỉ số đầy đủ hiển thị sức mạnh trước giảm trừ.\n- Đánh thường hồi MP ngay cả khi trượt: Sorceress/Necromancer hồi 70% Max MP, class khác 40%; làm tròn xuống, ít nhất 1, không vượt Max MP.\n- Quái còn sống sẽ phản công sau hành động, trừ khi skill chặn/né đòn đó.`,
       },
       {
         name: `${E.defense} Phòng thủ và ${E.potion} bình máu`,
@@ -2078,7 +2081,7 @@ function ratesFields(category) {
       },
       {
         name: `${E.luck} Bẫy và Lucky Break`,
-        value: `- **Thu thuế:** trừ một lần 15% số xu có thể rút tại lúc xử lý event (làm tròn lên 1 xu); không đổi hệ số payout và không đánh thuế phần thưởng tăng thêm sau đó. **Trộm bình:** lấy 1 ${E.potion} bình nếu còn. Lucky Break có thể tránh hai hậu quả này: mỗi Luck cho 1,5 điểm %, tối đa 30%.\n- **Wrong Portal:** 50% tốt / 50% xấu, không chịu Luck. Nhánh xấu gọi Elite đánh phủ đầu; phải hạ Elite mới vượt tầng.\n- Phòng trống cho phép đi tiếp hoặc rút thưởng.`,
+        value: `- **Thu thuế:** trừ một lần 15% số xu có thể rút tại lúc xử lý event (làm tròn lên 1 xu); không đổi hệ số payout và không đánh thuế phần thưởng tăng thêm sau đó. **Trộm bình:** lấy 1 ${E.potion} bình nếu còn. Lucky Break có thể tránh hai hậu quả này: mỗi Luck cho 1,5 điểm %, tối đa 30%.\n- **Wrong Portal:** cơ bản 50% tốt / 50% xấu; LUCK không tác động, nội tại may mắn sự kiện có thể tăng nhánh tốt. Chọn **Vào portal** để nhận kết quả; nhánh xấu gọi Elite đánh phủ đầu, phải hạ Elite mới vượt tầng. **Bỏ qua** để vượt tầng mà không nhận thưởng, chịu hiệu ứng portal hoặc gặp Elite. Tiên tri (nếu có) đánh dấu nút vào portal.\n- Phòng trống cho phép đi tiếp hoặc rút thưởng.`,
       },
       {
         name: `${eventIcon("goblin")} Treasure Goblin`,

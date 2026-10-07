@@ -214,7 +214,7 @@ Khi gặp Shrine, giao diện thay phần chỉ số của lượt trước bằ
 - **Tax Collector:** mất 15% payout hiện tại.
 - **Potion Thief:** mất một bình nếu còn bình.
 - Mỗi Luck cho 1,5% Lucky Break né hai trap trên, cap 30%.
-- **Wrong Portal:** cố định 50% tốt/50% xấu; Luck không tác động. Kết quả xấu luôn gọi Rift Ambusher Elite và quái đánh phủ đầu.
+- **Wrong Portal:** chọn Vào portal hoặc Bỏ qua. Vào portal dùng kết quả đã khóa: cơ bản 50% tốt/50% xấu, LUCK không tác động nhưng nội tại may mắn sự kiện có thể tăng nhánh tốt. Kết quả xấu gọi Rift Ambusher Elite đánh phủ đầu. Bỏ qua vượt tầng, không nhận thưởng, chịu hiệu ứng portal hoặc gặp Elite, không tính đã tham gia sự kiện. Tiên tri (nếu có) đánh dấu an toàn/nguy hiểm trên nút Vào portal. Hiệu ứng cuối tầng và checkpoint vẫn áp dụng như khi bỏ qua sự kiện khác.
 
 | Portal tốt | Kết quả |
 |---|---|

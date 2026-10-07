@@ -1809,6 +1809,11 @@ function actions(state) {
         ? []
         : [{ action: "event_skip", label: "Bỏ qua" }]),
     ];
+  if (e.type === "trap" && e.kind === "portal")
+    return [
+      { action: "next", label: "Vào portal" },
+      { action: "skip", label: "Bỏ qua" },
+    ];
   if (e.type === "chest")
     return [
       { action: "inspect", label: "Kiểm tra", disabled: e.inspected },
@@ -2555,8 +2560,13 @@ function act(state, session, action, rng) {
       } else state.lastLog = `Bỏ qua ${E.shrine} Shrine.`;
       if (alive(state)) completeFloor(state, session, rng, 0);
     } else if (e.type === "trap") {
-      if (e.kind === "portal") noteEvent(state, "wrong_portal", !e.good);
-      if (e.kind !== "portal") {
+      if (e.kind === "portal" && action !== "skip")
+        noteEvent(state, "wrong_portal", !e.good);
+      if (e.kind === "portal" && action === "skip") {
+        state.lastLog =
+          "Bỏ qua Wrong Portal: không nhận thưởng hoặc chịu hiệu ứng của portal.";
+        completeFloor(state, session, rng, 0);
+      } else if (e.kind !== "portal") {
         if (e.lucky) state.lastLog = `${E.luck} Lucky Break: tránh bẫy.`;
         else if (e.kind === "tax") {
           const cost = taxCost(state);

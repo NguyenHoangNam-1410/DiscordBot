@@ -424,6 +424,99 @@ try {
   };
   p.prepareForecast(oracle, portal, () => 0);
   assert.deepEqual(portal.passiveForecast, [{ action: "next", safe: false }]);
+  // Every Wrong Portal branch can be declined, with or without foresight.
+  for (const ids of [[], ["eye_of_rngesus"]]) {
+    for (const effect of [
+      "healing",
+      "treasure",
+      "blessing",
+      "blood",
+      "mana",
+      "supply",
+      "payout",
+      "curse",
+    ]) {
+      const s = state(ids);
+      s.hp = Math.floor(s.maxHp / 2);
+      s.mana = 2;
+      s.encounter = {
+        type: "trap",
+        kind: "portal",
+        name: "Wrong Portal",
+        good: ["healing", "treasure", "blessing"].includes(effect),
+        effect,
+        badEffect: effect,
+        enemy: s.encounter,
+      };
+      p.prepareForecast(s, s.encounter, () => 0);
+      const locked = serial(s);
+      assert.equal(locked.encounter.good, s.encounter.good);
+      assert.deepEqual(
+        locked.encounter.passiveForecast,
+        s.encounter.passiveForecast,
+      );
+      const labels = view
+        .rows("p", locked)
+        .flatMap((r) => r.toJSON().components.map((c) => c.label || ""));
+      assert(labels.includes("Bỏ qua"));
+      assert(labels.some((label) => label.includes("Vào portal")));
+      assert.equal(
+        labels.some((label) => /An toàn|Nguy hiểm/.test(label)),
+        ids.length > 0,
+      );
+      bounds(view.privatePayload(locked, "p", "m", "encounter"));
+      assert.match(
+        textOf(view.privatePayload(locked, "p", "m", "encounter")),
+        /Bỏ qua/,
+      );
+      const keys = [
+        "hp",
+        "maxHp",
+        "mana",
+        "potions",
+        "bonus",
+        "payoutSpent",
+        "payoutFactor",
+        "str",
+        "ene",
+        "luck",
+        "evCount",
+        "chainCount",
+      ];
+      const before = Object.fromEntries(keys.map((k) => [k, locked[k]]));
+      const floor = locked.floor;
+      core.act(locked, session, "skip", () => 0.999);
+      assert.equal(locked.cleared, floor);
+      assert.equal(locked.floor, floor + 1);
+      assert.equal(locked.encounter.type, "empty");
+      assert.deepEqual(
+        Object.fromEntries(keys.map((k) => [k, locked[k]])),
+        before,
+      );
+      assert.equal(
+        locked.lastEventResult,
+        undefined,
+        "skipped portal has no item, stat or payout effect receipt",
+      );
+      assert.match(locked.lastLog, /Bỏ qua Wrong Portal/);
+      assert.doesNotMatch(locked.lastLog, /đánh phủ đầu|Rift Ambusher/);
+      assert.equal(locked.lastReceivedItems.length, 0);
+    }
+  }
+  // Declining is specific to portals, not mandatory tax/potion traps or fights.
+  for (const kind of ["tax", "potion_thief"]) {
+    const s = state();
+    s.encounter = { type: "trap", kind, name: kind, lucky: false };
+    const before = JSON.stringify(s);
+    assert.throws(
+      () => core.act(s, session, "skip", () => 0.999),
+      /INVALID_ACTION/,
+    );
+    assert.equal(JSON.stringify(s), before);
+  }
+  groups.push(
+    "Wrong Portal skip across all locked good/bad branches, foresight UI, persistence and no rewards/ambush",
+  );
   const forbidden = {
     type: "rngesus",
     name: "RNGesus",
@@ -584,6 +677,41 @@ try {
   );
   groups.push(
     "loadout snapshot, transactional passive kill, persistence and stale-click rejection",
+  );
+
+  // A repeated click from the same portal must not clear a second floor.
+  const portalSaved = repo.parseState(repo.getSession(run.session.id));
+  portalSaved.encounter = {
+    type: "trap",
+    kind: "portal",
+    name: "Wrong Portal",
+    good: false,
+    badEffect: "payout",
+    enemy: state().encounter,
+  };
+  repo.saveState(run.session, portalSaved);
+  const skippedPortal = service.playHardcore({
+    sessionId: run.session.id,
+    userId: "player",
+    expectedTurn: portalSaved.turn,
+    action: "skip",
+  });
+  assert.equal(skippedPortal.state.cleared, portalSaved.floor);
+  assert.match(skippedPortal.state.lastLog, /Bỏ qua Wrong Portal/);
+  const portalPersisted = repo.getSession(run.session.id).state_json;
+  assert.throws(
+    () =>
+      service.playHardcore({
+        sessionId: run.session.id,
+        userId: "player",
+        expectedTurn: portalSaved.turn,
+        action: "skip",
+      }),
+    /STALE_ACTION/,
+  );
+  assert.equal(repo.getSession(run.session.id).state_json, portalPersisted);
+  groups.push(
+    "Wrong Portal transactional skip persists once and rejects stale repeated clicks",
   );
 
   const debt = state([
