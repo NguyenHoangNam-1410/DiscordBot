@@ -3,6 +3,7 @@
 module.exports = function createModule(dependencies) {
   const {
     covenant,
+    gilded,
     stats,
     core,
     E,
@@ -29,9 +30,13 @@ module.exports = function createModule(dependencies) {
     const option = (name, outcomes) =>
       `**${name}**\n${outcomes.map(([chance, text]) => `- ${chance ? `**${chance}:** ` : ""}${text}`).join("\n")}`;
     const show = (name, intro, options) =>
-      [heading(name, intro), ...options].join("\n\n");
+      [heading(name, intro), ...options].join("\n\n") + grudgeInfo;
     const attr = (key, n) =>
       `${E[key]} **${key.toUpperCase()}** ${n > 0 ? "+" : ""}${n}`;
+    const grudgeInfo =
+      e.type === "surprise" && e.kind === "adventurer"
+        ? "\n**Cướp còn tạo Dấu ấn oán hận** riêng trong Rift: từ tầng cướp +10, Shrine thêm nhánh nghi lễ 1/7 để triệu hồi boss nhận Gilded Soul [LR]. Hậu quả cướp cũ giữ nguyên."
+        : "";
     if (e.type === "chest") {
       const labels = {
         ancient_mimic: "Chiến đấu Ancient Mimic (Tinh anh).",
@@ -62,10 +67,13 @@ module.exports = function createModule(dependencies) {
         ],
       );
     }
+    if (e.type === "shrine" && e.kind === "ritual") return gilded.details(s);
     if (e.type === "shrine")
       return show(
         "Shrine",
-        "Chạm để nhận một hiệu ứng; 6 loại có tỷ lệ bằng nhau, mỗi loại 1/6 ≈ 16,7%.",
+        e.branchCount === 7
+          ? "Dấu ấn đã đến hạn: 7 nhánh ngang nhau (1/7 ≈ 14,3%); nhánh Nghi lễ Oán Hận triệu hồi boss nhận Gilded Soul [LR]. Xem Rift."
+          : "Chạm để nhận một hiệu ứng; 6 loại có tỷ lệ bằng nhau, mỗi loại 1/6 ≈ 16,7%.",
         [
           option("Chạm Shrine", [
             [null, `**Healing:** hồi đầy ${E.hp} HP.`],

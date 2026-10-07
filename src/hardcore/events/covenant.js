@@ -3,6 +3,7 @@ const world = require("../engine/world");
 const { RELIC_ITEMS } = require("../itemRelics");
 const { restore } = require("./blessing");
 const { E } = require("../shared/icons");
+const records = require("../storage/relicRecords");
 const RELIC_ID = "conquerors_covenant";
 const FRAGMENTS = Object.freeze({
   mimic: "Mảnh Nanh Giả · Mimic",
@@ -116,7 +117,7 @@ function beginTrial(state, rng) {
   state.lastLog =
     "🗝️ Xuống tầng hầm: **Covenant Guardian** chặn đường. Bốn mảnh vẫn được giữ cho đến khi bạn thắng.";
 }
-function grant(state, enemy) {
+function grant(state, enemy, session) {
   if (
     !enemy.covenantTrial ||
     enemy.type !== "combat" ||
@@ -128,6 +129,7 @@ function grant(state, enemy) {
   )
     throw new Error("INVALID_COVENANT_TRIAL");
   const acquiredFloor = enemy.covenantTrial.floor;
+  records.record(session, state, RELIC_ID, acquiredFloor);
   state.covenant.fragments = {};
   state.covenant.completed = true;
   state.covenant.stage = "completed";

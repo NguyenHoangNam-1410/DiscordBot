@@ -1272,4 +1272,21 @@ runMigration(40, "God of RNGesus persistent favor and encounter records", () => 
   `);
 });
 
+runMigration(41, "Survival LR acquisition history", () => {
+  db.exec(`CREATE TABLE IF NOT EXISTS hardcore_relic_acquisitions (
+ session_id TEXT NOT NULL,relic_id TEXT NOT NULL,guild_id TEXT NOT NULL,user_id TEXT NOT NULL,
+ class_key TEXT NOT NULL,floor INTEGER NOT NULL CHECK(floor BETWEEN 1 AND 999),acquired_at INTEGER,
+ PRIMARY KEY(session_id,relic_id));
+ CREATE INDEX IF NOT EXISTS idx_hardcore_relic_player ON hardcore_relic_acquisitions(guild_id,user_id,acquired_at);
+ INSERT OR IGNORE INTO hardcore_relic_acquisitions(session_id,relic_id,guild_id,user_id,class_key,floor,acquired_at)
+ SELECT s.id,json_extract(r.value,'$.id'),s.guild_id,s.user_id,json_extract(s.state_json,'$.classKey'),json_extract(r.value,'$.acquiredFloor'),NULL
+ FROM hardcore_sessions s,json_each(s.state_json,'$.relics') r
+ WHERE json_extract(r.value,'$.id') IN ('conquerors_covenant','gilded_soul')
+ AND json_extract(s.state_json,'$.gameplayVersion')=2
+ AND COALESCE(json_extract(s.state_json,'$.mode'),'') NOT LIKE 'tower%'
+ AND json_extract(s.state_json,'$.towerChallengeId') IS NULL
+ AND json_extract(r.value,'$.acquiredFloor') BETWEEN 1 AND 999
+ AND json_extract(s.state_json,'$.classKey') IS NOT NULL;`);
+});
+
 module.exports = { db, dbPath, runMigration };

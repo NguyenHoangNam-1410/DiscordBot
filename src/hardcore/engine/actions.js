@@ -3,6 +3,7 @@
 module.exports = function createModule(dependencies) {
   const {
     covenant,
+    gilded,
     paradox,
     E,
     RIFT_ICONS,
@@ -163,9 +164,14 @@ module.exports = function createModule(dependencies) {
             "Mộ đã hết thời gian claim; trận đấu tiếp tục, không còn loot từ mộ.\n";
         } else if (e.echoId) echoes.renew(session, e.echoId);
         prepareItemCombat(state, rng);
-        const acted = playerAttack(state, action, rng);
-        paradox.afterAction(state, action);
+        const acted =
+          action === "ritual_claim"
+            ? { log: "", dealt: 0, critical: false }
+            : playerAttack(state, action, rng);
+        if (action !== "ritual_claim") paradox.afterAction(state, action);
         state.lastLog += acted.log;
+        const ritual = gilded.afterAction(state, action, acted, hurt);
+        state.lastLog += ritual.log;
         if (
           state.contract &&
           state.floor >= state.contract.from &&
@@ -175,9 +181,9 @@ module.exports = function createModule(dependencies) {
           state.contract = null;
           state.lastLog += "\n📜 Vi phạm hợp đồng: hủy phần thưởng.";
         }
-        if (e.hp <= 0) {
+        if (e.hp <= 0 && alive(state)) {
           defeatEnemy(state, session, rng, e);
-        } else {
+        } else if (alive(state) && !ritual.skipCounter) {
           const doubleCounter =
             paradox.is(state, "time_debt") &&
             state.activeParadox.combatActionCount === 3;
@@ -206,6 +212,14 @@ module.exports = function createModule(dependencies) {
           state.lastLog = "Tránh Mimic.";
           completeFloor(state, session, rng, 0);
         } else openChest(state, session, e, rng);
+      } else if (
+        e.type === "shrine" &&
+        e.kind === "ritual" &&
+        action === "ritual_summon"
+      ) {
+        gilded.summon(state, rng);
+        noteEvent(state, "adventurer_ritual", true);
+        prepareParadoxCombat(state, rng);
       } else if (e.type === "shrine") {
         upgradeTreasureShrine(state);
         if (action === "touch") {

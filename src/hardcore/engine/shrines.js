@@ -2,6 +2,7 @@
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
+    gilded,
     createHash,
     stats,
     mainStat,
@@ -25,10 +26,14 @@ module.exports = function createModule(dependencies) {
     const shrine = {
       type: "shrine",
       name: "Shrine",
-      kind: pick(SHRINE_KINDS, rng),
+      kind: pick(
+        gilded.ready(state) ? [...SHRINE_KINDS, "ritual"] : SHRINE_KINDS,
+        rng,
+      ),
       armorStat: pick(stats.ATTRIBUTES, rng),
       powerStat: mainStat(state),
     };
+    if (gilded.ready(state)) shrine.branchCount = 7;
     if (shrine.kind === "treasure") shrine.item = shrineTreasureItem(rng);
     return shrine;
   }

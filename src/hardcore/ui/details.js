@@ -3,6 +3,7 @@
 module.exports = function createModule(dependencies) {
   const {
     covenant,
+    gilded,
     memories,
     EmbedBuilder,
     ButtonStyle,
@@ -114,6 +115,7 @@ module.exports = function createModule(dependencies) {
           e,
           "💠 Nội tại LR · " + activeRelic.name,
           activeRelic.text +
+            gilded.status(state) +
             (covenant.active(state)
               ? "\n**Hiện tại:** +" +
                 percent(covenant.bonus(state)) +
@@ -195,7 +197,7 @@ module.exports = function createModule(dependencies) {
         });
       addTextFields(e, "Rift Paradox", paradoxEffectText(state));
       addTextFields(e, "Rift Contract", contractEffectText(state));
-      for (const field of memories.fields(state))
+      for (const field of [...memories.fields(state), ...gilded.fields(state)])
         addTextFields(e, field.name, field.value);
     } else {
       const detail = hasEncounterDetails(state)

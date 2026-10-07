@@ -45,6 +45,8 @@ module.exports = function createModule(dependencies) {
       event_skip: ["walking", "🚶"],
       touch: ["event_shrine", "🗿"],
       next: ["arrow_right", "➡️"],
+      ritual_summon: ["event_ritual", "🕯️"],
+      ritual_claim: ["relic_gilded_soul", "💠"],
       covenant_basement: ["event_covenant", "🗝️"],
       covenant_continue: ["arrow_right", "➡️"],
       fight: ["PHYS", "⚔️"],

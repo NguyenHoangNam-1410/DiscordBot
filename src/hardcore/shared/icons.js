@@ -217,7 +217,13 @@ function eventIcon(key) {
   };
   return icon(
     aliases[key] || `event_${key}`,
-    key === "boss_chest" ? E.chest : key === "god_rngesus" ? "🌟" : "⚠️",
+    key === "boss_chest"
+      ? E.chest
+      : key === "god_rngesus"
+        ? "🌟"
+        : key === "ritual"
+          ? "🕯️"
+          : "⚠️",
   );
 }
 function treasureChestIcon(color) {
@@ -225,6 +231,7 @@ function treasureChestIcon(color) {
 }
 function memoryIcon(family) {
   const fallback = {
+    grudge: "🕯️",
     rescue: "🤝",
     bounty: "⚖️",
     blood: "🩸",

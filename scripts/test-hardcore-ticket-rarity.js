@@ -94,11 +94,15 @@ try {
                 "mirror_clone",
               ],
             }
-          : null,
+          : relic.id === "gilded_soul"
+            ? { kind: "adventurer_ritual", method: "boss_victory" }
+            : null,
     );
     assert.equal(
       relic.runtimeEnabled,
-      ["fatebreaker_seal", "conquerors_covenant"].includes(relic.id),
+      ["fatebreaker_seal", "conquerors_covenant", "gilded_soul"].includes(
+        relic.id,
+      ),
     );
     assert.equal(relic.passive, null);
     assert.equal(relic.curse, null);

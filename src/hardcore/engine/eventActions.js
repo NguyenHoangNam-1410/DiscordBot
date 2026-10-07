@@ -2,6 +2,7 @@
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
+    gilded,
     E,
     SKILL_ICONS,
     eventIcon,
@@ -238,6 +239,7 @@ module.exports = function createModule(dependencies) {
         receiveItem(state, e.robItem);
         state.lastLog = `🗡️ Cướp: nhận ${e.robItem.name}.`;
         remember(state, action, rng);
+        gilded.mark(state);
       }
       completeFloor(state, session, rng, 0);
     } else if (k === "fountain") {

@@ -1,12 +1,15 @@
 "use strict";
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
-  const { itemPassives, monsterLoot, E, passiveIcon, world } = dependencies;
+  const { gilded, itemPassives, monsterLoot, E, passiveIcon, world } =
+    dependencies;
+  const payout = (...args) => dependencies.payout(...args);
   const alive = (...args) => dependencies.alive(...args);
 
   function prepareItemCombat(state, rng) {
     const e = state.encounter;
     if (e?.type !== "combat") return;
+    gilded.prepareCombat(state, payout(state));
     monsterLoot.prepare(state, e);
     state.passiveCombatFloor = state.floor;
     if (e.passiveCombatStarted) return;

@@ -118,7 +118,7 @@ module.exports = function createModule(dependencies) {
         },
         {
           name: `${E.shrine} Shrine · chọn Chạm hoặc Bỏ qua`,
-          value: `**6 loại có tỷ lệ bằng nhau (mỗi loại ≈16,7%)**; kết quả được giữ cố định khi mở lại bảng.\n- **Healing:** hồi đầy ${E.hp} HP.\n- **Armor:** +5 vào một thuộc tính ${E.str} STR / ${E.dex} DEX / ${E.vit} VIT / ${E.ene} ENE; trong nhánh Armor, mỗi chỉ số 25%.\n- ${E.backpack} **Treasure:** 1 vật phẩm ngẫu nhiên, **R 50% / SR 30% / SSR 15% / UR 5%**. Không chịu LUCK/pity; UR có thể là trang bị hoặc Vé thoát.\n- **Corrupted:** +12 thuộc tính sát thương phù hợp class, −8 ${E.vit} VIT.\n- **Experience:** bonus bằng 25% tiền cược.\n- **Fake:** rút 30% Max ${E.hp} HP, mức bẫy tối thiểu 10; chỉ trừ đến khi còn **1 HP**.\n**Bỏ qua** giữ nguyên chỉ số và đi tiếp.`,
+          value: `**6 loại ngang nhau (mỗi loại ≈16,7%)**; nếu Dấu ấn oán hận đến hạn, thêm Nghi lễ thành **7 nhánh ngang nhau (mỗi nhánh 1/7)**; kết quả được giữ cố định khi mở lại bảng.\n- **Healing:** hồi đầy ${E.hp} HP.\n- **Armor:** +5 vào một thuộc tính ${E.str} STR / ${E.dex} DEX / ${E.vit} VIT / ${E.ene} ENE; trong nhánh Armor, mỗi chỉ số 25%.\n- ${E.backpack} **Treasure:** 1 vật phẩm ngẫu nhiên, **R 50% / SR 30% / SSR 15% / UR 5%**. Không chịu LUCK/pity; UR có thể là trang bị hoặc Vé thoát.\n- **Corrupted:** +12 thuộc tính sát thương phù hợp class, −8 ${E.vit} VIT.\n- **Experience:** bonus bằng 25% tiền cược.\n- **Fake:** rút 30% Max ${E.hp} HP, mức bẫy tối thiểu 10; chỉ trừ đến khi còn **1 HP**.\n**Bỏ qua** giữ nguyên chỉ số và đi tiếp.`,
         },
         {
           name: `${E.shrine} Thuộc tính nhận từ Corrupted`,
@@ -155,6 +155,11 @@ module.exports = function createModule(dependencies) {
         {
           name: `${eventIcon("adventurer")} Lost Adventurer · cứu / cướp`,
           value: `- **Cứu:** trả một bình, nhận R 70% / SR 30% và một lần bảo hộ trong cùng khu vực. Chết bởi RNGesus → hồi sinh 50% HP, sang tầng kế; chết khi đánh quái → hồi sinh 50% HP, ở lại đánh tiếp. Ưu tiên trước ${E.reviveTicket} **Vé hồi sinh**, hết hiệu lực khi dùng hoặc sang khu vực khác; không tạo hậu quả hẹn.\n- **Cướp:** nhận **SSR 75% / UR 25%** (trang bị có nguyền hoặc Vé thoát). Sau **10–30 tầng**: **50% mất 10% payout**, **50% gặp Bounty Hunter (Elite)**, có thể bồi thường 20% payout để tránh đánh. Không có nhánh hồi máu/bonus. Tối đa 8 hậu quả đang chờ; kết quả khóa khi ghi nhận.`,
+        },
+        {
+          name: "🕯️ Nghi lễ Oán Hận · Gilded Soul [LR]",
+          value:
+            "Cướp Lost Adventurer vẫn giữ hậu quả 50% mất 10% payout / 50% Bounty Hunter, đồng thời thêm dấu ấn riêng trong Rift. Từ tầng cướp +10, Shrine có 7 nhánh ngang nhau: nghi lễ 1/7. Cướp thêm không lùi mốc; bỏ qua giữ dấu ấn.\nTriệu hồi Avarice Revenant (Boss), bạn hành động trước. Dưới 40% Max HP không dùng bình. Đòn Tấn công/Skill gây phản phệ 30% DMG thực tế (làm tròn xuống), không né/chặn/Crit, kể cả đòn kết liễu. Không tấn công một lượt: boss chờ; hai lượt liên tiếp trở đi: boss đánh. CRIT gián đoạn đòn thường nhưng vẫn chịu phản phệ.\nHạ boss và sống sót: nhận Gilded Soul, không ban phước hồi HP/MP/giải nguyền. DMG Tấn công/Skill +10/20/30/40/50% khi xu có thể rút trong run đạt 2/5/10/20/40 lần cược; chốt mỗi combat, tối đa +50%. Chỉ một nội tại LR hoạt động/run. Ghi nhận thành tích và thành tựu.",
         },
         {
           name: `${eventIcon("echo")} Grave Echo`,

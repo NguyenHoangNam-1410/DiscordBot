@@ -3,6 +3,7 @@
 module.exports = function createModule(dependencies) {
   const {
     covenant,
+    gilded,
     monsterLoot,
     memories,
     paradox,
@@ -98,11 +99,13 @@ module.exports = function createModule(dependencies) {
       };
       state.lastLog += `\n${eventIcon("boss_chest")} Nhận rương boss: mở hoặc bán để tiếp tục.`;
     }
+    if (gilded.isBoss(e) && gilded.enabled(state))
+      gilded.grant(state, e, session);
     if (e.covenantTrial && covenant.enabled(state)) {
       completeFloor(state, session, rng, e.rewardMultiplier, {
         deferEncounter: true,
       });
-      covenant.grant(state, e);
+      covenant.grant(state, e, session);
     } else completeFloor(state, session, rng, e.rewardMultiplier);
   }
 

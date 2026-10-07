@@ -1,6 +1,7 @@
 const { ringForAchievement } = require("./avatarRingCatalog");
 const { grantCosmetic } = require("./profileCosmeticService");
 const { db } = require("../db");
+const relicRecords = require("../hardcore/storage/relicRecords");
 const { getAccount, creditCoins } = require("./economyService");
 const { addDiamonds } = require("./playerLevelService");
 
@@ -1335,12 +1336,42 @@ const godAchievement = {
   description: "Gặp God of RNGesus và nhận phước lành trong Sinh tồn",
   target: 1, reward: 0, diamonds: 0, metric: "hardcoreGodBlessings",
 };
-const ACHIEVEMENTS = Object.freeze([...BASE_ACHIEVEMENTS, ...classFloorAchievements, ...eventAchievements, godAchievement]);
+const relicAchievements = [
+  {
+    id: "hc_conquerors_covenant_1",
+    name: "Khế Ước Chinh Phạt",
+    description:
+      "Hợp nhất bốn mảnh và hạ Covenant Guardian, nhận Conqueror’s Covenant [LR] trong Sinh tồn",
+    target: 1,
+    reward: 0,
+    diamonds: 0,
+    metric: "hardcoreConquerorRelics",
+  },
+  {
+    id: "hc_gilded_soul_1",
+    name: "Linh Hồn Hoàng Kim",
+    description:
+      "Vượt nghi lễ Oán Hận, hạ Avarice Revenant và nhận Gilded Soul [LR] trong Sinh tồn",
+    target: 1,
+    reward: 0,
+    diamonds: 0,
+    metric: "hardcoreGildedRelics",
+  },
+];
+const ACHIEVEMENTS = Object.freeze([
+  ...BASE_ACHIEVEMENTS,
+  ...classFloorAchievements,
+  ...eventAchievements,
+  godAchievement,
+  ...relicAchievements,
+]);
 
 // Nhóm bộ lọc ở /kiemtra (Discord giới hạn 25 mục chọn): các chỉ số cùng chủ đề gộp thành một mục lọc.
 const CATEGORY_GROUPS = Object.freeze({
   hardcoreEvents: "hardcoreEvents",
   hardcoreGodBlessings: "hardcoreEvents",
+  hardcoreConquerorRelics: "hardcoreEvents",
+  hardcoreGildedRelics: "hardcoreEvents",
   hardcoreChains: "hardcoreEvents",
   hardcoreEventKinds: "hardcoreEvents",
   hardcoreKills: "hardcoreEvents",
@@ -1391,6 +1422,7 @@ function metrics(guildId, userId) {
   const guild = String(guildId);
   const user = String(userId);
   const account = getAccount(guild, user);
+  const relicCounts = relicRecords.totals(guild, user);
   const gameTypes = db
     .prepare(
       "SELECT COUNT(*) count FROM game_player_stats WHERE guild_id=? AND user_id=? AND played>0",
@@ -1563,6 +1595,8 @@ function metrics(guildId, userId) {
     gameTypes,
     hardcoreFloor,
     ...classFloors,
+    hardcoreConquerorRelics: Math.max(relicCounts.conquerors_covenant, eventRow.kinds_json && JSON.parse(eventRow.kinds_json).includes("conquerors_covenant") ? 1 : 0),
+    hardcoreGildedRelics: relicCounts.gilded_soul,
     hardcoreGodBlessings: db.prepare("SELECT blessings FROM hardcore_rngesus_favor WHERE guild_id=? AND user_id=?").get(guild, user)?.blessings || 0,
     hardcoreEvents: eventRow.events || 0,
     hardcoreChains: eventRow.chains || 0,

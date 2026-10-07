@@ -1,5 +1,5 @@
 "use strict";
-// LR relic catalog. Fatebreaker Seal and Conqueror's Covenant are active; other designs remain pending.
+// LR relic catalog. Fatebreaker Seal, Conqueror's Covenant and Gilded Soul are active; other designs remain pending.
 function deepFreeze(value) {
   if (value && typeof value === "object" && !Object.isFrozen(value)) {
     for (const child of Object.values(value)) deepFreeze(child);
@@ -138,9 +138,11 @@ const RELIC_ITEMS = deepFreeze(
         gachaEligible: false,
         shopEligible: false,
         loadoutEligible: false,
-        runtimeEnabled: ["fatebreaker_seal", "conquerors_covenant"].includes(
-          design.id,
-        ),
+        runtimeEnabled: [
+          "fatebreaker_seal",
+          "conquerors_covenant",
+          "gilded_soul",
+        ].includes(design.id),
         acquisition:
           design.id === "fatebreaker_seal"
             ? { kind: "god_rngesus", method: "blessing" }
@@ -155,7 +157,9 @@ const RELIC_ITEMS = deepFreeze(
                     "mirror_clone",
                   ],
                 }
-              : null,
+              : design.id === "gilded_soul"
+                ? { kind: "adventurer_ritual", method: "boss_victory" }
+                : null,
       },
     ]),
   ),

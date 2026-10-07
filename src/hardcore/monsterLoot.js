@@ -18,6 +18,7 @@ function hasRegionBossChest(state, enemy = state.encounter) {
     enemy?.type === "combat" &&
     enemy.rank === "boss" &&
     !enemy.echoId &&
+    !enemy.gildedTrial &&
     world.REGIONS.some(
       (region) => region.start > 1 && region.start === state.floor,
     )

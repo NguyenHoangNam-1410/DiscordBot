@@ -2,6 +2,7 @@
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
+    gilded,
     stats,
     itemPassives,
     paradox,
@@ -87,6 +88,7 @@ module.exports = function createModule(dependencies) {
       damage *=
         1 +
         itemPassives.aggregate(state).berserk * (1 - state.hp / state.maxHp);
+    if (player) damage *= 1 + gilded.damageBonus(state);
     if (player && paradox.active(state)) {
       const bonus = ["boss", "final_boss"].includes(defender.rank)
         ? state.bossDamage
@@ -213,7 +215,8 @@ module.exports = function createModule(dependencies) {
     if (action === "potion") {
       if (!state.potions) throw new Error("NO_POTION");
       if (state.hp >= state.maxHp) throw new Error("FULL_HP");
-      if (paradox.potionLocked(state)) throw new Error("POTION_LOCKED");
+      if (paradox.potionLocked(state) || gilded.potionLocked(state))
+        throw new Error("POTION_LOCKED");
       const saveChance = itemPassives.aggregate(state).potionSave;
       const saved = saveChance > 0 && rng() < saveChance;
       if (!saved) state.potions--;
@@ -326,6 +329,8 @@ module.exports = function createModule(dependencies) {
     return {
       defend,
       dodge,
+      dealt,
+      critical: dealt > 0 && hits.some((hit) => hit.crit),
       log: `${actionName}: ${outcome}${shots}${healingLog}`,
     };
   }

@@ -1,7 +1,8 @@
 "use strict";
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
-  const { covenant, stats, memories, paradox, world, mainStat } = dependencies;
+  const { gilded, covenant, stats, memories, paradox, world, mainStat } =
+    dependencies;
   const rngesusFleeChance = (...args) =>
     dependencies.rngesusFleeChance(...args);
   const rngesusPrayerChance = (...args) =>
@@ -189,6 +190,8 @@ module.exports = function createModule(dependencies) {
     }
     if (state.phase === "summit") return [];
     const e = state.encounter;
+    if (gilded.isBoss(e) && e.hp <= 0 && state.hp > 0)
+      return [{ action: "ritual_claim", label: "Nhận di vật" }];
     if (e.type === "combat")
       return [
         {
@@ -209,7 +212,8 @@ module.exports = function createModule(dependencies) {
           disabled:
             !state.potions ||
             state.hp === state.maxHp ||
-            paradox.potionLocked(state),
+            paradox.potionLocked(state) ||
+            gilded.potionLocked(state),
         },
       ];
     if (e.type === "surprise")
@@ -233,6 +237,11 @@ module.exports = function createModule(dependencies) {
         { action: "open", label: "Mở hòm" },
         { action: "sell", label: "Bán · 15% cược" },
         ...(e.revealed ? [{ action: "leave", label: "Né Mimic" }] : []),
+      ];
+    if (e.type === "shrine" && e.kind === "ritual")
+      return [
+        { action: "ritual_summon", label: "Triệu hồi boss" },
+        { action: "skip", label: "Bỏ qua" },
       ];
     if (e.type === "shrine")
       return [

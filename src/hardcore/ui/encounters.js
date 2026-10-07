@@ -3,6 +3,7 @@
 module.exports = function createModule(dependencies) {
   const {
     covenant,
+    gilded,
     monsterLoot,
     memories,
     formatGodChance,
@@ -118,7 +119,11 @@ module.exports = function createModule(dependencies) {
         `**${e.name}** · ${e.rank}\n${E.hp} ${e.hp}/${e.maxHp} · ${E.attack} ${e.damageMin}–${e.damageMax} · ${E.defense} ${e.defense} · ${E.res} RES ${e.resistance}%\n` +
         `Đòn quái kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}** · Dự báo nhận **${p.low}–${p.high} HP** · Quái đánh trúng bạn **${percent(p.chance)}** *(chưa Crit/chưa Thủ)*\n` +
         `Bạn đánh vật lý trúng quái **${percent(world.hitChance(s.accuracy, e.evasion))}**; trượt gây 0 DMG nhưng vẫn hồi MP khi đánh thường. Skill phép luôn trúng.\n` +
-        (e.mechanic ? `Cơ chế: ${mechanisms[e.mechanic]}\n` : "") +
+        (gilded.isBoss(e)
+          ? gilded.details(s) + "\n"
+          : e.mechanic
+            ? `Cơ chế: ${mechanisms[e.mechanic]}\n`
+            : "") +
         `**Tấn công:** vật lý, hồi ${core.attackManaGain(s)} MP (tối đa Max MP). **Thủ:** DEF ×2 hoặc +15 RES, giảm thêm 15% DMG, miễn Crit, +1 MP.\n**${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""}):** ${SKILLS[s.classKey]} **Bình:** hồi tối đa ${core.healingAmount(s, Math.max(20, s.maxHp * paradox.potionRate(s)))} HP cho bạn; quái còn sống phản công.`
       );
     }
@@ -186,7 +191,7 @@ module.exports = function createModule(dependencies) {
           ancient_mimic: "Ancient Mimic",
         }[world.mimicKind(e) ? "elite" : e.rank] || e.rank;
       const preview = core.incomingPreview(s);
-      return `${e.memoryFamily ? memoryIcon(e.memoryFamily) : ["boss", "final_boss"].includes(e.rank) ? eventIcon("boss") : "👹"} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Tỷ lệ vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **Dự báo nhận:** **${preview.low}–${preview.high} DMG** · ${E.evasion} **${percent(preview.chance)}** trúng bạn *(chưa Crit/DEF)*`;
+      return `${e.memoryFamily ? memoryIcon(e.memoryFamily) : ["boss", "final_boss"].includes(e.rank) ? eventIcon("boss") : "👹"} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Tỷ lệ vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **${gilded.isBoss(e) ? "Dự báo đòn thường" : "Dự báo nhận"}:** **${preview.low}–${preview.high} DMG** · ${E.evasion} **${percent(preview.chance)}** trúng bạn *(chưa Crit/DEF${gilded.isBoss(e) ? "/phản phệ" : ""})*`;
     }
 
     if (e.type === "empty")
@@ -202,7 +207,10 @@ module.exports = function createModule(dependencies) {
         chest: e.revealed
           ? "Đã phát hiện Mimic. Chọn mở hòm để chiến đấu hoặc tránh Mimic."
           : "Chọn mở, kiểm tra hoặc bán hòm.",
-        shrine: "Chọn chạm Shrine hoặc bỏ qua.",
+        shrine:
+          e.kind === "ritual"
+            ? "Nghi lễ Oán Hận: triệu hồi boss hoặc bỏ qua. Xem Chi tiết; dấu ấn trong Rift."
+            : "Chọn chạm Shrine hoặc bỏ qua.",
         rngesus:
           "Không thể đánh bại hoặc rút thưởng tại đây. Chọn cách đối phó.",
         trap:
@@ -333,7 +341,7 @@ module.exports = function createModule(dependencies) {
           deimoss:
             "Abyssal Spires giảm **25% sát thương bạn gây ra**, áp dụng mọi đòn. Dự báo skill trên bảng chính đã tính giảm trừ này.",
         }[e.mechanic] || "Quái này không có chu kỳ kích hoạt riêng.";
-      return `${eventIcon("boss")} **${e.name} · Chi tiết chiến đấu**\n${mechanism}\n\n${monsterLootDetails(s)}${covenant.combatDetails(s)}${e.drainCharges > 0 ? `\nSoul Drain: **quái** còn **${e.drainCharges} lần hút**; mỗi phản công trúng rút **1** ${E.mana} **MP** của **bạn**.` : ""}`;
+      return `${eventIcon("boss")} **${e.name} · Chi tiết chiến đấu**\n${gilded.isBoss(e) ? gilded.details(s) : mechanism}\n\n${monsterLootDetails(s)}${covenant.combatDetails(s)}${e.drainCharges > 0 ? `\nSoul Drain: **quái** còn **${e.drainCharges} lần hút**; mỗi phản công trúng rút **1** ${E.mana} **MP** của **bạn**.` : ""}`;
     }
     if (e.type === "chest")
       return encounterText(s).replace(

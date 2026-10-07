@@ -9,6 +9,7 @@ const {
   StringSelectMenuOptionBuilder,
 } = require("discord.js");
 const { db } = require("../../db");
+const relicRecords = require("../storage/relicRecords");
 const godRngesus = require("../events/godRngesus");
 const { godRngesusChance, formatGodChance } = require("../events/rngesus");
 const { CLASSES } = require("../engine/stats");
@@ -66,6 +67,10 @@ function gatherStats(guildId, userId) {
     totals,
     godFavor: godRngesus.favor(g, u),
     godHistory: godRngesus.history(g, u),
+    relicTotals: relicRecords.totals(g, u),
+    relicHistory: Object.fromEntries(
+      relicRecords.IDS.map((id) => [id, relicRecords.history(g, u, id)]),
+    ),
     byClass: all(
       `SELECT class_key,COUNT(*) runs,MAX(cleared) best,AVG(cleared) avg,
       SUM(CASE WHEN reason IN ('cashout','summit') THEN 1 ELSE 0 END) escapes,
@@ -235,6 +240,35 @@ function tabEmbed(guildId, user, tab, page, overview) {
                   .join("\n")
               : "Chưa được ban phước."),
         },
+        ...relicRecords.IDS.map((id) => ({
+          name:
+            "💠 " +
+            (id === "gilded_soul" ? "Gilded Soul" : "Conqueror’s Covenant") +
+            " [LR]",
+          value:
+            "Đã lưu: **" +
+            s.relicTotals[id] +
+            "** lần" +
+            (s.relicTotals[id] === 0 && e.kinds.includes(id)
+              ? "\nĐã hoàn thành trong run cũ; chưa có thời điểm/số lần đầy đủ."
+              : "") +
+            (s.relicHistory[id].length
+              ? "\n" +
+                s.relicHistory[id]
+                  .map(
+                    (h) =>
+                      "Tầng " +
+                      h.floor +
+                      " · " +
+                      classLabel(h.class_key) +
+                      " · " +
+                      (h.acquired_at == null
+                        ? "Run cũ, chưa có thời điểm"
+                        : "<t:" + Math.floor(h.acquired_at / 1000) + ":d>"),
+                  )
+                  .join("\n")
+              : ""),
+        })),
         { name: "Sự kiện đã gặp", value: String(e.events), inline: true },
         { name: "Chuỗi kích hoạt", value: String(e.chains), inline: true },
         { name: "Loại sự kiện", value: String(e.kinds.length), inline: true },
