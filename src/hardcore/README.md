@@ -38,6 +38,13 @@
 | Lịch sử run, Echo và Nemesis                      | `storage/echoes.js`                                                                     |
 | Run cũ và công thức/UI cũ                         | `legacy/`                                                                               |
 
+## Chuỗi LR Chinh Phạt
+
+- `events/covenant.js`: bốn mảnh, điều kiện portal, thử thách, nhận LR và thưởng xu theo quái hạ.
+- `events/blessing.js`: hồi đầy HP/MP, giải nguyền UR và gỡ ấn Rift dùng chung với God; không đổi lịch sử God.
+- `events/covenantReveal.js`: claim animation một lần trên encounter/turn đã lưu; `events/godReveal.js` điều phối cả hai animation.
+- Mảnh và nội tại thuộc state JSON của run; thu mảnh không tiêu thụ RNG. Thử thách hoàn thành tầng trước khi ban phước, rồi tạm dừng trước milestone/tầng mới để giữ checkpoint/boss và nhận LR trước lần roll God tiếp theo.
+
 ## Cách nối module
 
 `engine/index.js`, `ui/index.js`, `runtime/index.js` và các entry trong `legacy/` tạo một bộ dependencies duy nhất khi module được require lần đầu. `dependencies.js` chứa import, hằng số và trạng thái dùng chung; các file nghiệp vụ nhận đúng dependencies cần dùng.
@@ -52,6 +59,7 @@ Giữ public exports tương thích khi tách thêm module. Không tạo thêm b
 
 ## Kiểm tra
 
+- `npm run test:hardcore:conqueror`: mảnh, provenance Mirror Clone, portal, thử thách, hồi sinh, payout LR, save/rollback và animation một lần.
 - `npm run test:hardcore:rates`: phân trang tỷ lệ/luật, giới hạn Discord, emoji và quyền chuyển trang.
 - `npm run test:hardcore:modules`: thứ tự require, singleton, phiên/transaction/queue dùng chung giữa đường dẫn mới và cũ.
 - `npm run test:hardcore:v2`, `npm run test:hardcore:god`, `npm run test:hardcore:latency`.

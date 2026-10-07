@@ -2,6 +2,7 @@
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
+    covenant,
     paradox,
     E,
     RIFT_ICONS,
@@ -88,7 +89,17 @@ module.exports = function createModule(dependencies) {
         directKeys: [],
       };
     state.discardedTicketsThisTurn = 0;
-    if (state.encounter.type === "god_rngesus" && action === "god_continue") {
+    if (
+      state.encounter.type === "covenant_blessing" &&
+      action === "covenant_continue"
+    ) {
+      state.lastLog = "💠 Tiếp tục khám phá sau phước lành Chinh Phạt.";
+      finishEventResult(state);
+      nextMilestone(state, session, rng);
+    } else if (
+      state.encounter.type === "god_rngesus" &&
+      action === "god_continue"
+    ) {
       state.lastLog =
         "✨ Tiếp tục tầng " +
         state.floor +
@@ -227,9 +238,17 @@ module.exports = function createModule(dependencies) {
         } else state.lastLog = `Bỏ qua ${E.shrine} Shrine.`;
         if (alive(state)) completeFloor(state, session, rng, 0);
       } else if (e.type === "trap") {
-        if (e.kind === "portal" && action !== "skip")
+        if (
+          e.kind === "portal" &&
+          action !== "skip" &&
+          action !== "covenant_basement"
+        )
           noteEvent(state, "wrong_portal", !e.good);
-        if (e.kind === "portal" && action === "skip") {
+        if (action === "covenant_basement") {
+          covenant.beginTrial(state, rng);
+          noteEvent(state, "covenant_basement", true);
+          prepareItemCombat(state, rng);
+        } else if (e.kind === "portal" && action === "skip") {
           state.lastLog =
             "Bỏ qua Wrong Portal: không nhận thưởng hoặc chịu hiệu ứng của portal.";
           completeFloor(state, session, rng, 0);

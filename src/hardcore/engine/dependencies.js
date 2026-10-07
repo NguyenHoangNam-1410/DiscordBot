@@ -13,6 +13,7 @@ module.exports = function createModule(dependencies) {
   const monsterLoot = require("../monsterLoot");
 
   const godRngesus = require("../events/godRngesus");
+  const covenant = require("../events/covenant");
 
   const memories = require("../towerMemories");
 
@@ -195,6 +196,7 @@ module.exports = function createModule(dependencies) {
     itemPassives,
     monsterLoot,
     godRngesus,
+    covenant,
     memories,
     rngesusEncounterChance,
     resetRngesusEncounter,

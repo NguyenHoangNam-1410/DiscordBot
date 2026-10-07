@@ -1,7 +1,8 @@
 "use strict";
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
-  const { paradox, E, GOBLIN_REWARDS, baseMultiplier, clamp } = dependencies;
+  const { covenant, paradox, E, GOBLIN_REWARDS, baseMultiplier, clamp } =
+    dependencies;
 
   function rawPayout(state) {
     if (!state.cleared) return 0;
@@ -11,7 +12,8 @@ module.exports = function createModule(dependencies) {
         10_000_000,
         Math.floor(
           (state.stake * baseMultiplier(state) + state.bonus) *
-            state.payoutFactor,
+            state.payoutFactor *
+            (1 + covenant.bonus(state)),
         ),
       ) - (state.payoutSpent || 0),
     );
@@ -27,7 +29,8 @@ module.exports = function createModule(dependencies) {
         Math.floor(
           (state.stake * baseMultiplier(state) + state.bonus) *
             state.payoutFactor *
-            (1 + state.paradox.bloodFactor),
+            (1 + state.paradox.bloodFactor) *
+            (1 + covenant.bonus(state)),
         ),
       ) - (state.payoutSpent || 0),
     );
@@ -55,6 +58,7 @@ module.exports = function createModule(dependencies) {
       bonus: state.bonus,
       factor: state.payoutFactor,
       spent: state.payoutSpent || 0,
+      covenantBonus: covenant.bonus(state),
       bloodFactor:
         state.paradox?.kind === "blood" ? state.paradox.bloodFactor : 0,
     };

@@ -86,7 +86,13 @@ module.exports = function createModule(dependencies) {
     delete state.pendingEventResult;
   }
 
-  function completeFloor(state, session, rng, reward = 1) {
+  function completeFloor(
+    state,
+    session,
+    rng,
+    reward = 1,
+    { deferEncounter = false } = {},
+  ) {
     const floor = state.floor;
     const peaceful =
       state.encounter?.type !== "combat" && state.passiveCombatFloor !== floor;
@@ -192,7 +198,7 @@ module.exports = function createModule(dependencies) {
     state.floor = Math.min(999, floor + 1);
     expireAdventurer(state);
     if (state.pendingBossChest) state.pendingMilestones.unshift("boss_chest");
-    nextMilestone(state, session, rng);
+    if (!deferEncounter) nextMilestone(state, session, rng);
   }
 
   function initialize(classKey, stake, session, rng) {

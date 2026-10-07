@@ -2,6 +2,7 @@
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
+    covenant,
     monsterLoot,
     memories,
     formatGodChance,
@@ -45,6 +46,32 @@ module.exports = function createModule(dependencies) {
     if (s.phase === "summit")
       return `${eventIcon("boss")} Đã hạ Deimoss tầng 999. Bấm **Rút thưởng** để chốt chiến thắng và phần thưởng.`;
     const e = s.encounter;
+    if (e.type === "covenant_blessing") {
+      const b = e.blessing;
+      return (
+        "✨ **PHƯỚC LÀNH CHINH PHẠT**\n" +
+        E.hp +
+        " **HP " +
+        b.hpBefore +
+        " → " +
+        b.hpAfter +
+        "** · " +
+        E.mana +
+        " **MP " +
+        b.manaBefore +
+        " → " +
+        b.manaAfter +
+        "**\nĐã giải **" +
+        b.cleansedLevels +
+        "** lớp nguyền UR và xóa **" +
+        b.removedRiftStacks +
+        "** ấn Rift. Giữ UR, level, Paradox và Contract.\n💠 **Conqueror’s Covenant [LR]** · " +
+        (covenant.active(s)
+          ? "Đang hoạt động: mỗi quái hạ từ bây giờ tăng 0,2 điểm % thưởng xu, tối đa +100%."
+          : "Đã nhận; chưa kích hoạt vì đã có nội tại LR khác hoạt động.") +
+        "\nĐã tiêu thụ bốn mảnh và vượt tầng thử thách. Bấm Tiếp tục để xử lý checkpoint hoặc tầng kế tiếp."
+      );
+    }
     if (e.type === "god_rngesus") {
       const b = e.blessing;
       return (
@@ -146,7 +173,8 @@ module.exports = function createModule(dependencies) {
       return `${eventIcon("paradox")} **RIFT PARADOX · HIỆU LỰC 5 TẦNG**\nTầng ${s.encounter.version === 2 ? s.encounter.milestone + 1 : s.floor}–${s.encounter.version === 2 ? s.encounter.milestone + 5 : s.floor + 4}. Chọn một luật bằng nút bên dưới.\nXem **Chi tiết** để đọc công dụng từng lựa chọn.`;
     if (s.phase !== "encounter") return encounterText(s);
     const e = s.encounter;
-    if (["memory", "god_rngesus"].includes(e.type)) return encounterText(s);
+    if (["memory", "god_rngesus", "covenant_blessing"].includes(e.type))
+      return encounterText(s);
     if (e.type === "combat") {
       const rank =
         {
@@ -179,7 +207,9 @@ module.exports = function createModule(dependencies) {
           "Không thể đánh bại hoặc rút thưởng tại đây. Chọn cách đối phó.",
         trap:
           e.kind === "portal"
-            ? "Chọn vào portal hoặc bỏ qua để vượt tầng."
+            ? covenant.canEnter(s)
+              ? "Đủ bốn mảnh: cửa tầng hầm đã mở. Chọn vào portal, bỏ qua hoặc thử thách tầng hầm."
+              : "Chọn vào portal hoặc bỏ qua để vượt tầng."
             : "Đi tiếp để xử lý tình huống.",
         echo: "Chọn cách tương tác với mộ.",
         surprise: "Chọn một hành động bằng nút bên dưới.",
@@ -208,6 +238,7 @@ module.exports = function createModule(dependencies) {
         "shrine",
         "rngesus",
         "god_rngesus",
+        "covenant_blessing",
         "trap",
         "echo",
         "surprise",
@@ -227,7 +258,7 @@ module.exports = function createModule(dependencies) {
   function viewLabel(tab, s) {
     return {
       stats: "Chỉ số",
-      items: `Túi (${s.items.length + (s.relics?.length || 0)})`,
+      items: `Túi (${s.items.length + (s.relics?.length || 0) + covenant.fragmentCount(s)})`,
       effects: `Rift (${Object.values(s.modifiers || {}).filter((stacks) => stacks > 0).length})`,
       encounter: "Chi tiết",
     }[tab];
@@ -302,7 +333,7 @@ module.exports = function createModule(dependencies) {
           deimoss:
             "Abyssal Spires giảm **25% sát thương bạn gây ra**, áp dụng mọi đòn. Dự báo skill trên bảng chính đã tính giảm trừ này.",
         }[e.mechanic] || "Quái này không có chu kỳ kích hoạt riêng.";
-      return `${eventIcon("boss")} **${e.name} · Chi tiết chiến đấu**\n${mechanism}\n\n${monsterLootDetails(s)}${e.drainCharges > 0 ? `\nSoul Drain: **quái** còn **${e.drainCharges} lần hút**; mỗi phản công trúng rút **1** ${E.mana} **MP** của **bạn**.` : ""}`;
+      return `${eventIcon("boss")} **${e.name} · Chi tiết chiến đấu**\n${mechanism}\n\n${monsterLootDetails(s)}${covenant.combatDetails(s)}${e.drainCharges > 0 ? `\nSoul Drain: **quái** còn **${e.drainCharges} lần hút**; mỗi phản công trúng rút **1** ${E.mana} **MP** của **bạn**.` : ""}`;
     }
     if (e.type === "chest")
       return encounterText(s).replace(

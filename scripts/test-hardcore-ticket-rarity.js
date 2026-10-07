@@ -83,9 +83,23 @@ try {
       relic.acquisition,
       relic.id === "fatebreaker_seal"
         ? { kind: "god_rngesus", method: "blessing" }
-        : null,
+        : relic.id === "conquerors_covenant"
+          ? {
+              kind: "mimic_fragments",
+              method: "basement_trial",
+              sources: [
+                "mimic",
+                "ancient_mimic",
+                "blood_mimic",
+                "mirror_clone",
+              ],
+            }
+          : null,
     );
-    assert.equal(relic.runtimeEnabled, relic.id === "fatebreaker_seal");
+    assert.equal(
+      relic.runtimeEnabled,
+      ["fatebreaker_seal", "conquerors_covenant"].includes(relic.id),
+    );
     assert.equal(relic.passive, null);
     assert.equal(relic.curse, null);
     assert.deepEqual(relic.effects, {});

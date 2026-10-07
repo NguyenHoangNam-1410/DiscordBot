@@ -2,6 +2,7 @@
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
+    covenant,
     memories,
     EmbedBuilder,
     ButtonStyle,
@@ -82,6 +83,15 @@ module.exports = function createModule(dependencies) {
         });
       if (!state.items.length)
         e.addFields({ name: `${E.backpack} Trang bị`, value: "Chưa có." });
+      if (
+        covenant.enabled(state) &&
+        (covenant.fragmentCount(state) > 0 ||
+          covenant.progress(state).completed)
+      )
+        e.addFields({
+          name: "🧩 Bốn mảnh Chinh Phạt",
+          value: covenant.bagText(state),
+        });
       for (const relic of state.relics || []) {
         const definition = core.RELIC_ITEMS[relic.id];
         if (definition)
@@ -103,7 +113,14 @@ module.exports = function createModule(dependencies) {
         addTextFields(
           e,
           "💠 Nội tại LR · " + activeRelic.name,
-          activeRelic.text,
+          activeRelic.text +
+            (covenant.active(state)
+              ? "\n**Hiện tại:** +" +
+                percent(covenant.bonus(state)) +
+                " thưởng xu · " +
+                covenant.progress(state).kills +
+                " quái hạ sau kích hoạt (tối đa 500)."
+              : ""),
         );
       addTextFields(
         e,

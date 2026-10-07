@@ -2,6 +2,7 @@
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
+    covenant,
     monsterLoot,
     memories,
     paradox,
@@ -43,6 +44,8 @@ module.exports = function createModule(dependencies) {
   }
 
   function defeatEnemy(state, session, rng, e) {
+    if (e.hp > 0 || state.hp <= 0 || e.defeatSettled) return;
+    e.defeatSettled = true;
     monsterLoot.prepare(state, e);
     noteKill(state, e);
     if (e.rank === "final_boss" && e.mechanic === "deimoss")
@@ -53,6 +56,7 @@ module.exports = function createModule(dependencies) {
       echoes.consume(session, e.echoId);
     }
     state.lastLog += `\n🏆 Hạ ${e.name}.`;
+    covenant.recordKill(state, e);
     if (paradox.is(state, "hunger"))
       state.lastLog += `\n🍖 Cơn Đói hồi ${heal(state, Math.max(1, Math.floor(state.maxHp * 0.12)))} HP.`;
     if (world.mimicKind(e) === "ancient_mimic") {
@@ -94,7 +98,12 @@ module.exports = function createModule(dependencies) {
       };
       state.lastLog += `\n${eventIcon("boss_chest")} Nhận rương boss: mở hoặc bán để tiếp tục.`;
     }
-    completeFloor(state, session, rng, e.rewardMultiplier);
+    if (e.covenantTrial && covenant.enabled(state)) {
+      completeFloor(state, session, rng, e.rewardMultiplier, {
+        deferEncounter: true,
+      });
+      covenant.grant(state, e);
+    } else completeFloor(state, session, rng, e.rewardMultiplier);
   }
 
   function applyMemoryReward(state, reward) {

@@ -66,6 +66,11 @@ module.exports = function createModule(dependencies) {
       ],
       loot: [
         {
+          name: "🧩 Chuỗi bốn mảnh · Conqueror’s Covenant [LR]",
+          value:
+            "Mimic, Ancient Mimic, Blood Mimic và Clone từ ký ức sau khi phá Mirror of Fate: mỗi nguồn cho 100% một mảnh ở lần hạ hợp lệ đầu tiên trong run, độc lập LUCK; giữ thưởng cũ. Đủ 4 mảnh: Wrong Portal tiếp theo bảo đảm có cửa tầng hầm, vẫn giữ nút vào/bỏ qua. Thắng Covenant Guardian (Tinh anh HP ×1,25, DMG ×1,10 cùng tầng/Rift) mới tiêu thụ mảnh và nhận LR; bạn hành động trước, có thể hồi sinh để đánh tiếp. Nhận di vật kèm animation, hồi đầy HP/MP, giải mọi nguyền UR, xóa ấn Rift; giữ Paradox/Contract. Mỗi quái hạ sau kích hoạt cộng 0,2 điểm % thưởng xu, tối đa +100%; nhân một lần trước trần 10 triệu và chi phí/phạt, không tăng kim cương. Chỉ 1 LR hoạt động/run, không đổi giữa run. Mảnh/di vật mất khi run kết thúc; không gacha, shop hay roll drop LR.",
+        },
+        {
           name: `${E.chest} Hòm thường: mở, kiểm tra hoặc bán`,
           value:
             "- **Kiểm tra:** thử phát hiện Mimic một lần; tỷ lệ tăng theo Luck/trang bị. Phát hiện được mới có nút tránh Mimic. Kiểm tra không đổi nội dung hòm.\n- **Mở:** có thể nhận đồ, gặp hòm rỗng/giả hoặc phải đánh Mimic. Tỷ lệ cơ bản: Ancient Mimic 3%, Mimic thường 12%.\n- **Nếu không phải Mimic:** SSR 10%, UR 3%, SR 22%, R 40%, rỗng 20%, giả 5%. Đây là tỷ lệ trong nhánh an toàn, không phải tỷ lệ tổng của mọi hòm. Luck/Rift/trang bị/pity có thể đổi tỷ lệ; xem **Chi tiết** để biết tỷ lệ của hòm hiện tại.\n- **Bán:** cộng bonus bằng 15% cược, không mở hòm. Kho báu có bảng tỷ lệ riêng.",

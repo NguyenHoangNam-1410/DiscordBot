@@ -2,6 +2,7 @@
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
+    covenant,
     stats,
     core,
     E,
@@ -181,6 +182,11 @@ module.exports = function createModule(dependencies) {
               ],
             ]),
             "**Bỏ qua:** vượt tầng, không nhận thưởng hoặc chịu hiệu ứng của portal, không gặp Elite đánh phủ đầu. Tiên tri (nếu có) đánh dấu nút **Vào portal**.",
+            ...(covenant.canEnter(s)
+              ? [
+                  "🗝️ **Cửa thứ ba · Tầng hầm:** đủ bốn mảnh, bảo đảm mở cửa, không roll thêm. Đánh Covenant Guardian (Tinh anh, HP ×1,25, DMG ×1,10 so với cùng tầng/Rift), bạn hành động trước. Thắng mới tiêu thụ mảnh và nhận **Conqueror’s Covenant [LR]** cùng phước lành hồi đầy HP/MP, giải mọi nguyền UR, xóa ấn Rift; giữ Paradox/Contract. Chỉ một nội tại LR hoạt động/run. Vào portal thường hoặc bỏ qua vẫn giữ mảnh để dùng ở portal sau.",
+                ]
+              : []),
           ],
         );
       const lucky = Math.min(0.3, s.luck * 0.015);

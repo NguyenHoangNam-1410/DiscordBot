@@ -45,6 +45,8 @@ module.exports = function createModule(dependencies) {
       event_skip: ["walking", "🚶"],
       touch: ["event_shrine", "🗿"],
       next: ["arrow_right", "➡️"],
+      covenant_basement: ["event_covenant", "🗝️"],
+      covenant_continue: ["arrow_right", "➡️"],
       fight: ["PHYS", "⚔️"],
       flee: ["runner", "🏃"],
       bribe: ["moneybag", "💰"],

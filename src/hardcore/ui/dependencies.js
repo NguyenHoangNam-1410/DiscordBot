@@ -4,6 +4,7 @@ module.exports = function createModule(dependencies) {
   const itemCurses = require("../itemCurses");
 
   const monsterLoot = require("../monsterLoot");
+  const covenant = require("../events/covenant");
 
   const memories = require("../towerMemories");
 
@@ -114,6 +115,7 @@ module.exports = function createModule(dependencies) {
   return {
     itemCurses,
     monsterLoot,
+    covenant,
     memories,
     RNGESUS_CYCLE_RULES,
     GOD_RNGESUS_RULES,

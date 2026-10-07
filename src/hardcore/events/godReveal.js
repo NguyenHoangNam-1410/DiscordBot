@@ -2,7 +2,10 @@
 const { EmbedBuilder } = require("discord.js");
 const { setTimeout: delay } = require("node:timers/promises");
 const god = require("./godRngesus");
+const covenantReveal = require("./covenantReveal");
 function frame(state, userId, stage = 0) {
+  if (state.encounter?.type === "covenant_blessing")
+    return covenantReveal.frame(state, userId, stage);
   if (state.encounter?.type !== "god_rngesus") return null;
   const texts = [
     "…\nKhông gian quanh bạn đột ngột im lặng.\n🎲 Một ánh mắt dừng lại trên số phận của bạn.",
@@ -34,6 +37,11 @@ async function play(
   edit,
   { wait = delay, logger = null } = {},
 ) {
+  if (state.encounter?.type === "covenant_blessing")
+    return covenantReveal.play(sessionId, state, userId, edit, {
+      wait,
+      logger,
+    });
   if (
     state.encounter?.type !== "god_rngesus" ||
     !god.claimReveal(sessionId, state.floor)

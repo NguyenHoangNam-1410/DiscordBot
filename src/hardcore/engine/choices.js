@@ -1,7 +1,7 @@
 "use strict";
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
-  const { stats, memories, paradox, world, mainStat } = dependencies;
+  const { covenant, stats, memories, paradox, world, mainStat } = dependencies;
   const rngesusFleeChance = (...args) =>
     dependencies.rngesusFleeChance(...args);
   const rngesusPrayerChance = (...args) =>
@@ -223,6 +223,9 @@ module.exports = function createModule(dependencies) {
       return [
         { action: "next", label: "Vào portal" },
         { action: "skip", label: "Bỏ qua" },
+        ...(covenant.canEnter(state)
+          ? [{ action: "covenant_basement", label: "Xuống tầng hầm · 4 mảnh" }]
+          : []),
       ];
     if (e.type === "chest")
       return [
@@ -236,6 +239,8 @@ module.exports = function createModule(dependencies) {
         { action: "touch", label: "Chạm Shrine" },
         { action: "skip", label: "Bỏ qua" },
       ];
+    if (e.type === "covenant_blessing")
+      return [{ action: "covenant_continue", label: "Tiếp tục khám phá" }];
     if (e.type === "god_rngesus")
       return [{ action: "god_continue", label: "Tiếp tục khám phá" }];
     if (e.type === "rngesus")

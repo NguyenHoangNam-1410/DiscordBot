@@ -1,6 +1,6 @@
 "use strict";
 const { db } = require("../../db");
-const stats = require("../engine/stats");
+const { restore } = require("./blessing");
 const {
   GOD_RNGESUS_RATE,
   godRngesusChance,
@@ -94,22 +94,8 @@ function tryEncounter(state, session, rng) {
   const chance = godRngesusChance(previous.deaths_since_blessing);
   if (rng() >= chance) return null;
   if (!recordEncounter(session, state.floor, chance)) return null;
-  const hpBefore = state.hp,
-    manaBefore = state.mana;
-  let cleansedLevels = 0;
-  for (const item of state.items || []) {
-    if (!item.definition?.curse) continue;
-    cleansedLevels += Math.max(0, item.level - (item.cleansedLevels || 0));
-    item.cleansedLevels = item.level;
-  }
-  const removedRiftStacks = Object.values(state.modifiers || {}).reduce(
-    (sum, n) => sum + Math.max(0, n),
-    0,
-  );
-  state.modifiers = {};
-  stats.recompute(state);
-  state.hp = state.maxHp;
-  state.mana = state.maxMana;
+  const blessing = restore(state);
+  const { hpBefore, manaBefore } = blessing;
   const definition = RELIC_ITEMS.fatebreaker_seal;
   state.relics ||= [];
   if (!state.relics.some((item) => item.id === definition.id))
@@ -125,14 +111,6 @@ function tryEncounter(state, session, rng) {
   state.evKinds = Array.from(
     new Set([...(state.evKinds || []), "god_rngesus"]),
   );
-  const blessing = {
-    hpBefore,
-    manaBefore,
-    hpAfter: state.hp,
-    manaAfter: state.mana,
-    cleansedLevels,
-    removedRiftStacks,
-  };
   state.lastLog =
     (state.lastLog ? state.lastLog + "\n" : "") +
     eventIcon("god_rngesus") +
