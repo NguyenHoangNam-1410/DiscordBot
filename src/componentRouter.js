@@ -99,6 +99,11 @@ const ROUTES = Object.freeze([
     handle: (interaction) => hardcoreCommand.handleRatesSelect(interaction),
   },
   {
+    kind: "button",
+    prefix: "hardcore-rates-page:",
+    handle: (interaction) => hardcoreCommand.handleRatesPage(interaction),
+  },
+  {
     kind: "select",
     prefix: "shop:",
     handle: (interaction) => shopCommand.handleSelect(interaction),

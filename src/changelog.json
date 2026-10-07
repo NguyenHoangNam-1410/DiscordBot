@@ -1,5 +1,15 @@
 [
   {
+    "id": "e39ddeac-f7cd-4134-9a7d-b56dceb0eff3",
+    "updatedAt": "2026-10-07T05:12:26.114Z",
+    "auditedAt": "2026-10-07T05:12:26.114Z",
+    "title": "Sửa bảng tỷ lệ Sinh tồn",
+    "changes": [
+      "Sửa lỗi sinhton tyle không gửi được bảng khi emoji của bot làm nội dung vượt giới hạn Discord. Các nhóm dài có phân trang Trước/Sau, chuyển nhóm quay về trang đầu và giữ đủ mô tả.",
+      "Luật Sinh tồn cũng tự chia trang để hiển thị đầy đủ với emoji portal và emoji động. Chỉ người mở bảng được chuyển nhóm hoặc trang."
+    ]
+  },
+  {
     "id": "e4ac06c2-ed18-4413-b22e-b4f64eba4659",
     "updatedAt": "2026-10-07T04:46:41.400Z",
     "auditedAt": "2026-10-07T04:46:41.400Z",

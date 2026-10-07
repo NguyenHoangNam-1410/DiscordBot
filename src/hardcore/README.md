@@ -33,7 +33,7 @@
 | Battle embed và button                            | `ui/battle.js`, `ui/buttons.js`, `runtime/render.js`                                    |
 | Nội dung event, preview dịch vụ, log lượt         | `ui/events.js`, `ui/services.js`, `ui/encounters.js`, `ui/log.js`                       |
 | Túi / Rift / chỉ số / Chi tiết                    | `ui/details.js`, `ui/items.js`, `ui/rift.js`, `ui/stats.js`                             |
-| Luật chơi / hồ sơ / bảng thành tích               | `ui/rules.js`, `ui/profile.js`                                                          |
+| Luật chơi / hồ sơ / bảng thành tích               | `ui/rules.js`, `ui/ratesPanel.js`, `ui/rulePages.js`, `ui/profile.js`                   |
 | Emoji, định dạng chỉ số và trang bị               | `shared/icons.js`, `shared/ui.js`, `shared/equipment.js`                                |
 | Lịch sử run, Echo và Nemesis                      | `storage/echoes.js`                                                                     |
 | Run cũ và công thức/UI cũ                         | `legacy/`                                                                               |
@@ -52,6 +52,7 @@ Giữ public exports tương thích khi tách thêm module. Không tạo thêm b
 
 ## Kiểm tra
 
+- `npm run test:hardcore:rates`: phân trang tỷ lệ/luật, giới hạn Discord, emoji và quyền chuyển trang.
 - `npm run test:hardcore:modules`: thứ tự require, singleton, phiên/transaction/queue dùng chung giữa đường dẫn mới và cũ.
 - `npm run test:hardcore:v2`, `npm run test:hardcore:god`, `npm run test:hardcore:latency`.
 - Các suite payout, healing, passives, curses, loot, blood, memories, rngesus, tickets và paradox theo phần sửa.

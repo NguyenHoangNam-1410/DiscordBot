@@ -1,4 +1,8 @@
 const {
+  paginateRuleEmbed,
+  splitRuleFields,
+} = require("../hardcore/ui/rulePages");
+const {
   RNGESUS_CYCLE_RULES,
   rngesusChaosRules,
 } = require("../services/hardcoreRngesus");
@@ -64,7 +68,7 @@ function survivalRules() {
       rngesus: "RNGESUS",
       rewards: "DỊCH VỤ & RÚT THƯỞNG",
     };
-    return [
+    const pages = [
       new EmbedBuilder()
         .setColor(0x9b59b6)
         .setTitle("📖 SINH TỒN v2.0.1 · CÁCH CHƠI")
@@ -97,9 +101,10 @@ function survivalRules() {
           new EmbedBuilder()
             .setColor(0x9b59b6)
             .setTitle(`📖 SINH TỒN v2.0.1 · ${sections[category]}`)
-            .addFields(view.ratesFields(category)),
+            .addFields(splitRuleFields(view.ratesFields(category))),
       ),
     ];
+    return pages.flatMap((page) => paginateRuleEmbed(page));
   }
   const overview = new EmbedBuilder()
     .setColor(0x9b59b6)
