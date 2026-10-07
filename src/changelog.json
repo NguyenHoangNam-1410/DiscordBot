@@ -1,5 +1,16 @@
 [
   {
+    "id": "f1ca9b07-77aa-4248-8089-bc521ec331f2",
+    "updatedAt": "2026-10-07T03:53:41.373Z",
+    "auditedAt": "2026-10-07T03:53:41.373Z",
+    "title": "Khai báo nhóm di vật LR cho Sinh tồn",
+    "changes": [
+      "Bổ sung tên và thiết kế nội tại cho 6 di vật LR: Di Chúc Diệt Vương, Điểm Kỳ Dị Tinh Tú, Ấn Phá Mệnh, Màn Chắn Tuyệt Đối, Khế Ước Chinh Phạt và Linh Hồn Hoàng Kim.",
+      "Di vật LR không cộng chỉ số cơ bản, không có level; dự kiến chỉ một nội tại được kích hoạt trong mỗi run. Cách nhận và kích hoạt chưa mở; không có trong drop, Gacha, cửa hàng hay loadout.",
+      "Vé hồi sinh LR vẫn là vật phẩm tiêu hao riêng và tiếp tục bán như trước."
+    ]
+  },
+  {
     "id": "82b76c9b-a068-42a3-911b-1c654a88214a",
     "updatedAt": "2026-10-07T03:17:24.627Z",
     "auditedAt": "2026-10-07T03:17:24.627Z",

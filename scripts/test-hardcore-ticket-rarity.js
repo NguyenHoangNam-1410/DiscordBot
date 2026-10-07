@@ -61,6 +61,60 @@ try {
     "UR ticket in run pool; LR excluded; equipment catalog preserved",
   );
 
+  const relics = Object.values(core.RELIC_ITEMS);
+  assert.equal(relics.length, 6);
+  assert.equal(core.RELIC_RULES.maxActivePerRun, 1);
+  assert.equal(core.RELIC_RULES.canSwitchDuringRun, false);
+  assert.equal(core.RELIC_RULES.consumesRevivalTicketSlot, false);
+  const ordinaryIds = new Set([
+    ...Object.values(core.ITEMS)
+      .flat()
+      .map((item) => item.id),
+    ...Object.keys(core.CONSUMABLE_ITEMS),
+  ]);
+  assert.equal(new Set(relics.map((item) => item.id)).size, relics.length);
+  const gachaDefinitions = require("../src/services/itemCatalogService");
+  const relicRollPool = Object.values(core.ITEM_POOLS).flat();
+  for (const relic of relics) {
+    assert.equal(relic.typeCode, "LR");
+    assert.equal(relic.rarity, "limited");
+    assert.equal(relic.category, "relic");
+    assert.equal(relic.acquisition, null);
+    assert.equal(relic.runtimeEnabled, false);
+    assert.equal(relic.passive, null);
+    assert.equal(relic.curse, null);
+    assert.deepEqual(relic.effects, {});
+    for (const flag of [
+      "levelable",
+      "randomEligible",
+      "gachaEligible",
+      "shopEligible",
+      "loadoutEligible",
+    ])
+      assert.equal(relic[flag], false);
+    assert.ok(!ordinaryIds.has(relic.id));
+    assert.ok(!relicRollPool.some((item) => item.id === relic.id));
+    assert.equal(bag.product(relic.id), null);
+    assert.ok(
+      !gachaDefinitions.listCatalog().some((item) => item.id === relic.id),
+    );
+    assert.ok(Object.isFrozen(relic));
+    assert.ok(Object.isFrozen(relic.relicPassive));
+    assert.ok(
+      Object.isFrozen(
+        relic.relicPassive.thresholds ||
+          relic.relicPassive.damageTypes ||
+          relic.effects,
+      ),
+    );
+  }
+  const relicShop = bag.shop("lr-catalog", Date.UTC(2026, 9, 7));
+  assert.ok(relicShop.itemIds.every((id) => !core.RELIC_ITEMS[id]));
+  assert.equal(bag.product(revive.id).price, 300);
+  groups.push(
+    "six LR relic designs isolated from all reward/shop/loadout pools; revival ticket unchanged",
+  );
+
   const s = fresh(),
     before = stats.derive(s);
   const first = core.receiveItem(s, escape);

@@ -28,7 +28,13 @@ const {
 } = require("./hardcoreIcons");
 const world = require("./hardcoreWorld");
 const echoes = require("./hardcoreEchoRepository");
-const { ITEMS, ITEM_POOLS, CONSUMABLE_ITEMS } = require("../hardcore/item");
+const {
+  ITEMS,
+  ITEM_POOLS,
+  CONSUMABLE_ITEMS,
+  RELIC_ITEMS,
+  RELIC_RULES,
+} = require("../hardcore/item");
 const { GOBLIN_REWARDS, goblinRewardRarity } = require("./hardcoreEngine");
 const { spendDiamonds } = require("./playerLevelService");
 const { runDiamondReward, baseMultiplier } = require("./hardcoreRewards");
@@ -2782,6 +2788,8 @@ module.exports = {
   makeShrine,
   ITEM_POOLS,
   CONSUMABLE_ITEMS,
+  RELIC_ITEMS,
+  RELIC_RULES,
   prepareItemCombat,
   noteEvent,
   ITEMS,

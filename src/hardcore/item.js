@@ -1,6 +1,7 @@
 "use strict";
 // Sinh tồn 2.0.0 — generated from docs/releases/hardcore-2.0.0-spec.md.
 const passives = require("./itemPassives");
+const { RELIC_ITEMS, RELIC_RULES } = require("./itemRelics");
 const ITEMS = {
   common: [
     {
@@ -1414,6 +1415,8 @@ module.exports = {
   ITEMS,
   ITEM_POOLS,
   CONSUMABLE_ITEMS,
+  RELIC_ITEMS,
+  RELIC_RULES,
   TYPE_CODES,
   ITEM_ALIASES,
   resolveItemId,

@@ -610,3 +610,22 @@ Mô tả từng món (nguồn mapping: src/hardcore/itemPassives.js):
 - `scripts/test-hardcore-v2.js`: kiểm thử công thức và abuse.
 - `scripts/simulate-hardcore.js`: mô phỏng cân bằng 999 tầng.
 
+
+## 17. Catalog nội tại LR — khai báo trước, chưa mở cách nhận
+
+Nguồn dữ liệu: `src/hardcore/itemRelics.js`, được export qua catalog Sinh tồn v2.
+
+Sáu di vật LR không cộng thuộc tính cơ bản, không có level hoặc lời nguyền. Nội tại được khai báo riêng bằng `relicPassive`; `passive` thường để null. Cách nhận (`acquisition`) chưa khai báo, runtime chưa kích hoạt. Không có trong pool drop, Gacha, cửa hàng hoặc loadout. Các thông số dưới đây là thiết kế ban đầu, chưa có kết quả simulate LR.
+
+| Tên | Tên Việt | Độ hiếm | Nội tại dự kiến |
+|---|---|---|---|
+| Kingslayer's Testament | Di Chúc Diệt Vương | LR | CRIT vật lý của bạn gây DMG ×2,5. Mỗi Boss định kỳ hạ sau khi kích hoạt tăng hệ số thêm 0,1, tối đa ×3,5; không tăng tỷ lệ CRIT, không áp dụng phép, Elite, Mimic hoặc Clone. |
+| Astral Singularity | Điểm Kỳ Dị Tinh Tú | LR | Skill phép của bạn không tiêu hao MP. Khi dùng nội tại này, hiệu ứng chặn phản công từ Skill không thể kích hoạt hai lượt liên tiếp. Vẫn trả chi phí HP và chịu hạn chế Skill, lời nguyền. |
+| Fatebreaker Seal | Ấn Phá Mệnh | LR | Tỷ lệ gặp RNGesus của bạn về 0% từ lúc kích hoạt đến hết run. Không giải quyết RNGesus đang gặp và không miễn tử vong từ nguồn khác. |
+| Veil of the Absolute | Màn Chắn Tuyệt Đối | LR | Chọn cố định vật lý hoặc phép khi kích hoạt. Trong mỗi combat, bạn miễn hai đòn đầu thuộc loại đã chọn, sau đó nhận ít hơn 50% DMG cùng loại. Không miễn hiến tế HP, chi phí Skill, lời nguyền hoặc tử vong từ event. |
+| Conqueror's Covenant | Khế Ước Chinh Phạt | LR | Mỗi quái hạ sau khi kích hoạt cộng 0,2 điểm % thưởng xu cho bạn, tối đa +100%. Nhân một lần trên thưởng xu trước khi trừ chi phí/tiền phạt; giữ trần payout và không tăng kim cương. Mỗi encounter chỉ tính một lần. |
+| Gilded Soul | Linh Hồn Hoàng Kim | LR | DMG Tấn công/Skill của bạn tăng theo xu có thể rút trong run: đạt 2/5/10/20/40 lần tiền cược thì tăng 10/20/30/40/50%. Chốt mức tăng khi vào combat; không dùng ví xu ngoài run, không cộng thuộc tính cơ bản. |
+
+Quy tắc nội tại dự kiến: tối đa một LR kích hoạt trong toàn run, không đổi nội tại giữa run, không tăng theo level, chỉ tính tiến trình sau kích hoạt. Lựa chọn vật lý/phép của Veil of the Absolute khóa theo run. Di vật tồn tại trong run; cách nhận, nguyên liệu và chuỗi event sẽ khai báo sau.
+
+Vé hồi sinh LR hiện tại vẫn là vật phẩm tiêu hao và vẫn bán trong cửa hàng như trước; không chiếm suất nội tại LR.
