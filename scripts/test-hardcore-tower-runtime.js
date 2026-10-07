@@ -363,21 +363,48 @@ async function main() {
   assert.equal(replay.result.attempts, 1);
   assert.ok(replay.state.turn > lost.state.turn);
   assert.throws(() => play(failed, "replay"), /INVALID_ACTION/);
-  const checkpointed = start("checkpointed");
-  runTo(checkpointed, 6); // Floors 1–3 cleared; floor 4 has not started.
+
+  const fatalRun = start("fatal-run");
+  runTo(fatalRun, 1);
+  assert.equal(
+    c.transitions[state(fatalRun).routeStep].expectedAction,
+    "defend",
+  );
+  const fatalResult = play(fatalRun, "attack");
+  assert.equal(fatalResult.state.status, "failed");
+  assert.equal(fatalResult.state.hp, 0);
+  assert.equal(fatalResult.state.floor, 2);
+  assert.equal(fatalResult.result.attempts, 1);
+  assert.equal(
+    replayButton(repo.session(fatalRun.id), c).label,
+    "Thử lại tầng 2",
+  );
+
+  const hiddenTarget = c.transitions.find(
+      (t) =>
+        t.floor >= 3 &&
+        t.floorStep < t.floor - 1 &&
+        t.expectedAction !== "defend",
+    ),
+    hiddenFloor = c.floors[hiddenTarget.floor - 1],
+    checkpointed = start("checkpointed");
+  runTo(checkpointed, hiddenFloor.stepStart);
   const floorStart = state(checkpointed);
-  assert.equal(floorStart.floor, 4);
-  assert.equal(floorStart.cleared, 3);
-  play(checkpointed, c.transitions[6].expectedAction);
+  assert.equal(floorStart.floor, hiddenTarget.floor);
+  assert.equal(floorStart.cleared, hiddenTarget.floor - 1);
+  while (state(checkpointed).routeStep < hiddenTarget.routeStep) {
+    const live = state(checkpointed);
+    play(checkpointed, c.transitions[live.routeStep].expectedAction);
+  }
   const midFloor = state(checkpointed),
-    wrongAtFloor4 = engine
+    wrongAtTarget = engine
       .actions(midFloor, c)
       .find(
         (option) =>
           !option.disabled &&
           option.action !== c.transitions[midFloor.routeStep].expectedAction,
       ).action;
-  play(checkpointed, wrongAtFloor4);
+  play(checkpointed, wrongAtTarget);
   assert.equal(state(checkpointed).status, "playing");
   assert.equal(state(checkpointed).failure, undefined);
   while (state(checkpointed).status === "playing") {
@@ -392,13 +419,13 @@ async function main() {
   }
   assert.equal(
     replayButton(repo.session(checkpointed.id), c).label,
-    "Thử lại tầng 4",
+    "Thử lại tầng " + hiddenTarget.floor,
   );
   const retryFloor4 = play(checkpointed, "replay").state;
   assert.equal(retryFloor4.status, "playing");
-  assert.equal(retryFloor4.floor, 4);
-  assert.equal(retryFloor4.cleared, 3);
-  assert.equal(retryFloor4.routeStep, 6);
+  assert.equal(retryFloor4.floor, hiddenTarget.floor);
+  assert.equal(retryFloor4.cleared, hiddenTarget.floor - 1);
+  assert.equal(retryFloor4.routeStep, hiddenFloor.stepStart);
   assert.equal(retryFloor4.floorStep, 0);
   for (const field of ["hp", "mana", "potions", "enemyHp"])
     assert.equal(retryFloor4[field], floorStart[field]);
@@ -415,6 +442,11 @@ async function main() {
   engine.act(delayedPotion, c, "attack");
   assert.equal(delayedPotion.status, "playing");
   assert.equal(delayedPotion.failure, undefined);
+  while (
+    delayedPotion.status === "playing" &&
+    c.transitions[delayedPotion.routeStep].expectedAction === "defend"
+  )
+    engine.act(delayedPotion, c, "defend");
   engine.act(delayedPotion, c, "potion");
   while (delayedPotion.status === "playing") {
     const available = engine
@@ -718,6 +750,11 @@ async function main() {
           t = c.transitions[step];
         const board = serialize(view.payload(r, s, c, result, now));
         assert.ok(board.includes(c.character.name));
+        assert.ok(board.includes("Mục tiêu:"));
+        assert.ok(board.includes("Quái đang làm gì:"));
+        assert.ok(board.includes("HP quái phải về đúng **0**"));
+        assert.ok(!board.includes("Luật puzzle:"));
+        assert.ok(!board.includes("Dấu hiệu:"));
         // Commitment belongs to the readonly rules panel after the battle UI cleanup.
         assert.ok(
           serialize(
@@ -733,7 +770,13 @@ async function main() {
           engine.act(wrongState, c, option.action);
           assert.equal(wrongState.routeStep, step + 1);
           assert.equal(wrongState.floorMistakes.length, 1);
-          if (t.floorStep + 1 < t.floor) {
+          assert.equal(wrongState.lastOutcome.actionDamage, 0);
+          const fatal = t.expectedAction === "defend";
+          if (fatal) {
+            assert.equal(wrongState.status, "failed");
+            assert.equal(wrongState.hp, 0);
+            assert.equal(wrongState.failure, "Đòn chí tử đã hạ gục bạn.");
+          } else if (t.floorStep + 1 < t.floor) {
             assert.equal(wrongState.status, "playing");
             assert.equal(wrongState.failure, undefined);
             const hiddenBoard = serialize(
@@ -754,6 +797,7 @@ async function main() {
           }
           assert.equal(wrongState.status, "failed");
           assert.ok(wrongState.failure);
+          if (fatal) assert.equal(wrongState.hp, 0);
           assert.ok(!/bước\s+\d+/i.test(wrongState.failure));
           assert.ok(
             !/phải\s+(tấn công|phòng thủ|dùng)/i.test(wrongState.failure),

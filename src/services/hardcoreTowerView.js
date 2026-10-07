@@ -7,6 +7,7 @@ const {
 } = require("discord.js");
 const engine = require("./hardcoreTowerEngine");
 const catalog = require("../hardcore/tower/challengeCatalog");
+const { MONSTERS } = require("../hardcore/tower/templates");
 const { E, SKILL_ICONS } = require("./hardcoreIcons");
 const { CATALOG } = require("./hardcoreParadoxService");
 const {
@@ -385,37 +386,36 @@ function generatedButton(
 }
 function generatedEncounter(state, c) {
   const { encounter: e, transition: t } = engine.current(state, c);
+  const monster = MONSTERS[t.floor - 1] || e,
+    mechanic = {
+      physical_only:
+        "Quái đang kháng phép. Kỹ năng không gây sát thương; chỉ đòn đánh thường có hiệu lực.",
+      arcane_only:
+        "Quái đang kháng vật lý. Đòn đánh thường không gây sát thương; chỉ kỹ năng có hiệu lực.",
+      execution_guard:
+        "Quái chuẩn bị đòn chí tử lớn hơn Max HP. Phải Phòng thủ để không bị hạ gục.",
+      fixed_potion_window:
+        "Quái tạm miễn nhiễm sát thương. Đây là thời điểm hồi đúng " +
+        c.character.potionHeal +
+        " HP bằng bình máu.",
+    }[t.condition];
   let text =
     "**" +
-    e.name +
-    "** · Nhịp **" +
+    monster.name +
+    "**\n🎯 **Mục tiêu:** Hạ quái trong đúng **" +
+    e.stepCount +
+    " bước**; HP quái phải về đúng **0** sau bước cuối.\n" +
+    healthBar(state.enemyHp, e.hp) +
+    "\n**Bước " +
     (t.floorStep + 1) +
     "/" +
     e.stepCount +
-    "** · Còn **" +
+    "** · còn **" +
     (e.stepCount - t.floorStep) +
-    " bước**\n";
-  if (t.type === "combat") text += healthBar(state.enemyHp, e.hp) + "\n";
-  text += "**Luật puzzle:** " + (e.rule || t.puzzleRule || t.clue);
-  if (t.signal) text += "\n**Dấu hiệu:** " + t.signal;
+    " bước**\n**Quái đang làm gì:** " +
+    mechanic;
   if (t.type === "event")
     text += "\n" + t.choices.map((x) => "• " + x.label).join("\n");
-  else if (c.generatorVersion >= 4)
-    text +=
-      "\nÝ định quái: **" +
-      (t.counterType === "one_hit"
-        ? "đòn chí tử"
-        : t.intentDamage +
-          " damage " +
-          (t.counterType === "magic" ? "phép" : "vật lý")) +
-      "**. Hãy tự suy ra hành động; đáp án không được hiển thị.";
-  else
-    text +=
-      "\nÝ định: **" +
-      t.intentDamage +
-      " damage " +
-      (t.counterType === "magic" ? "phép" : "vật lý") +
-      "**.";
   return text;
 }
 function generatedStats(state, c) {
@@ -435,7 +435,7 @@ function generatedStats(state, c) {
     E.attack +
     " **Tấn công: " +
     engine.damage(state, c, "attack") +
-    " damage · +" +
+    " damage khi quái không kháng vật lý · +" +
     t.attackMana +
     " MP**\n" +
     SKILL_ICONS[c.classKey] +
@@ -443,13 +443,11 @@ function generatedStats(state, c) {
     c.combat.skillName +
     ": " +
     engine.damage(state, c, "skill") +
-    " damage · −" +
+    " damage khi quái không kháng phép · −" +
     t.skillCost +
     " MP**\n" +
     E.defense +
-    " **Phòng thủ: nhận " +
-    engine.counter(state, c, "defend") +
-    " damage · +" +
+    " **Phòng thủ: chặn đòn chí tử · +" +
     t.defendMana +
     " MP**\n" +
     E.potion +
@@ -496,9 +494,9 @@ function generatedRules(c) {
     " · 15 tầng; tầng N phải hạ quái trong đúng N bước (tổng " +
     c.stepCount +
     "). Mọi hành động đều tiêu hao bước; kết quả chỉ được chấm khi hết số bước của tầng.\n" +
-    "• Bảng chỉ cho biết số bước, tài nguyên, luật tầng và ý định có thể quan sát. Người chơi tự tìm chuỗi hành động.\n" +
-    "• Hệ thống không báo sai giữa tầng. Nếu hết bước mà chưa hoàn thành, bạn nhận một gợi ý trừu tượng và thử lại từ đầu tầng đó.\n" +
-    "• Dấu hiệu đỏ = lõi vật chất, lam = linh hồn, đen = Hành quyết, xanh = cửa bình máu. Mỗi dấu hiệu chỉ có một đáp án hợp lệ.\n" +
+    "• Mục tiêu ở mọi tầng luôn giống nhau: **hạ quái trong đúng số bước của tầng**. HP quái phải còn trên 0 trước bước cuối và về đúng 0 ở bước cuối.\n" +
+    "• Lỗi thường không bị báo giữa tầng. Riêng đòn chí tử sẽ kết thúc attempt ngay vì người chơi đã bị hạ gục. Các lỗi còn lại chỉ được chấm khi hết bước, kèm một gợi ý trừu tượng.\n" +
+    "• Mỗi bước ghi thẳng trạng thái của quái: kháng vật lý, kháng phép, chuẩn bị đòn chí tử hoặc mở thời điểm hồi máu. Hành động không phù hợp không được tính vào lượng damage cần để hạ quái.\n" +
     "• HP, MP và bình máu giữ xuyên tầng. Quái phải còn sống trước bước cuối và bị hạ đúng ở bước cuối.\n" +
     "• " +
     c.classDescription +
@@ -561,7 +559,7 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
       Math.min(state.floorStep + 1, state.floor) +
       "/" +
       state.floor +
-      "**\nTổng chuỗi đúng: **" +
+      "**\nTổng bước đã dùng: **" +
       state.routeStep +
       " hành động đã dùng**.\nKết quả của tầng được giữ kín cho tới khi dùng hết số bước.",
   );

@@ -5,64 +5,68 @@
 const FIXED_POTION_HEAL = 20;
 const MONSTERS = Object.freeze(
   [
-    ["gate_sentinel", "Gate Sentinel", "Một lõi, một nhát kết liễu."],
-    ["executioner", "Iron Executioner", "Đỡ nhịp hành quyết rồi phản công."],
-    ["mana_jailer", "Mana Jailer", "Giữ nhịp MP để mở khóa lõi phép."],
-    ["phase_hound", "Phase Hound", "Thân xác và linh thể đổi chỗ theo dấu ấn."],
+    ["gate_sentinel", "Lính Gác Cổng", "Làm quen với sát thương cố định."],
+    ["executioner", "Đao Phủ Sắt", "Có đòn chí tử bắt buộc phải đỡ."],
+    ["mana_jailer", "Cai Ngục Mana", "Phải quản lý MP để dùng kỹ năng."],
+    [
+      "phase_hound",
+      "Chó Săn Chuyển Pha",
+      "Luân phiên kháng vật lý và kháng phép.",
+    ],
     [
       "mirror_knight",
-      "Mirror Knight",
-      "Không đánh vào lớp phản chiếu đang sáng.",
+      "Hiệp Sĩ Gương",
+      "Đổi trạng thái phòng thủ sau mỗi bước.",
     ],
     [
       "blood_alchemist",
-      "Blood Alchemist",
-      "Khế ước máu chỉ mở đúng một cửa sổ hồi phục.",
+      "Nhà Giả Kim Máu",
+      "Có đúng một thời điểm an toàn để hồi máu.",
     ],
     [
       "parity_golem",
-      "Parity Golem",
-      "Đọc lõi vật chất, linh hồn và dấu hành quyết.",
+      "Golem Đổi Giáp",
+      "Kết hợp kháng vật lý, kháng phép và đòn chí tử.",
     ],
     [
       "mana_warden",
-      "Mana Warden",
-      "Không để MP thiếu khi ấn linh hồn xuất hiện.",
+      "Giám Ngục Mana",
+      "Ép người chơi tích MP trước bước cần kỹ năng.",
     ],
     [
       "twin_shell",
-      "Twin-shell Behemoth",
-      "Phá đúng lớp giáp đang lộ trước khi chạm lõi.",
+      "Cự Thú Song Giáp",
+      "Hai loại giáp thay nhau vô hiệu hóa sát thương.",
     ],
     [
       "scar_collector",
-      "Scar Collector",
-      "Vết thương phải được chữa đúng nhịp khế ước.",
+      "Kẻ Thu Thập Vết Thương",
+      "Buộc dùng bình máu đúng thời điểm.",
     ],
     [
       "echo_revenant",
-      "Echo Revenant",
-      "Mỗi dấu hiệu chỉ có một phản ứng an toàn.",
+      "Oán Linh Vọng Âm",
+      "Chuỗi trạng thái dài hơn, mỗi bước chỉ có một cách xử lý.",
     ],
     [
       "three_seal_judge",
-      "Three-seal Judge",
-      "Ba ấn Vật chất, Linh hồn và Hành quyết đều bắt buộc xuất hiện.",
+      "Quan Tòa Ba Thế",
+      "Bắt buộc dùng đòn thường, kỹ năng và phòng thủ.",
     ],
     [
       "vitality_debtor",
-      "Vitality Debtor",
-      "HP, MP và bình máu cùng bị kiểm toán.",
+      "Chủ Nợ Sinh Mệnh",
+      "Kiểm tra đồng thời HP, MP và bình máu.",
     ],
     [
       "memory_archon",
-      "Memory Archon",
-      "Đọc lại ngôn ngữ dấu ấn dưới chuỗi dài hơn.",
+      "Đại Pháp Sư Ký Ức",
+      "Lặp lại các trạng thái trong một chuỗi dài.",
     ],
     [
       "fate_auditor",
-      "Fate Auditor",
-      "Bài kiểm tra cuối kết hợp mọi dấu ấn và cửa sổ tài nguyên.",
+      "Kẻ Phán Xét Số Mệnh",
+      "Kết hợp toàn bộ cơ chế chiến đấu và tài nguyên.",
     ],
   ].map(([id, name, rule], index) =>
     Object.freeze({ id, name, rule, tier: index + 1 }),
@@ -71,24 +75,24 @@ const MONSTERS = Object.freeze(
 
 const TELLS = Object.freeze({
   attack: Object.freeze([
-    "Giáp linh hồn khép kín; lõi vật chất màu đỏ lộ ra.",
-    "Ấn Vật chất hạ xuống, ma lực bị phản xạ khỏi mục tiêu.",
-    "Bóng quái đứng yên trong thân xác; vết nứt đỏ mở trên giáp.",
+    "Quái đang KHÁNG PHÉP: kỹ năng không gây sát thương trong bước này.",
+    "Lớp chống phép đang bật: chỉ sát thương vật lý có hiệu lực.",
+    "Quái vô hiệu hóa kỹ năng ở bước này; giáp vật lý đang mở.",
   ]),
   skill: Object.freeze([
-    "Thân xác hóa sương; ấn Linh hồn màu lam hiện rõ.",
-    "Lõi vật chất biến mất, chỉ mạch Arcane màu lam còn dao động.",
-    "Giáp đỏ đóng lại; linh thể màu lam tách khỏi thân xác.",
+    "Quái đang KHÁNG VẬT LÝ: tấn công thường không gây sát thương.",
+    "Giáp vật lý đang đóng; chỉ kỹ năng mới gây sát thương.",
+    "Đòn đánh thường bị vô hiệu hóa trong bước này.",
   ]),
   defend: Object.freeze([
-    "Vương miện đen khóa mục tiêu; đòn Hành quyết đang tụ lực.",
-    "Hai lõi cùng tắt và lưỡi chém chí tử đã giương lên.",
-    "Ấn Hành quyết phủ kín chiến trường; gây damage lúc này sẽ bị phản sát.",
+    "Quái chuẩn bị ĐÒN CHÍ TỬ: không Phòng thủ sẽ bị hạ gục.",
+    "Đòn kế tiếp gây sát thương lớn hơn Max HP; chỉ Phòng thủ mới chặn được.",
+    "Quái đang lấy đà kết liễu người chơi; không thể dùng đòn tấn công ở bước này.",
   ]),
   potion: Object.freeze([
-    "Khế ước Máu mở trong một nhịp; cơ thể đang thiếu ít nhất 20 HP.",
-    "Bình tế lễ phát sáng; cửa hồi phục cố định 20 HP đã mở.",
-    "Ấn Sinh lực chuyển xanh: đây là nhịp duy nhất chấp nhận bình máu.",
+    "Quái tạm ngừng tấn công: đây là thời điểm dùng bình hồi đúng 20 HP.",
+    "Không đòn đánh nào có hiệu lực ở bước này; có thể hồi đúng 20 HP.",
+    "Cửa sổ hồi máu đang mở và sẽ đóng sau bước này.",
   ]),
 });
 
