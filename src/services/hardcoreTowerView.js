@@ -26,10 +26,11 @@ const actionName = {
 };
 const tabs = {
   stats: "Chỉ số",
-  effects: "Rift",
+  effects: "Trang bị",
   encounter: "Chi tiết",
   rules: "Luật chơi",
 };
+const visibleTabs = ["stats", "effects", "rules"];
 function encounterIcon(e) {
   if (e.type === "combat") return E.attack;
   return e.choices.some((x) => x.paradox)
@@ -387,77 +388,54 @@ function generatedButton(
 function generatedEncounter(state, c) {
   const { encounter: e, transition: t } = engine.current(state, c);
   const monster = MONSTERS[t.floor - 1] || e,
-    mechanic = {
-      physical_only:
-        "Quái đang kháng phép. Kỹ năng không gây sát thương; chỉ đòn đánh thường có hiệu lực.",
-      arcane_only:
-        "Quái đang kháng vật lý. Đòn đánh thường không gây sát thương; chỉ kỹ năng có hiệu lực.",
-      execution_guard:
-        "Quái chuẩn bị đòn chí tử lớn hơn Max HP. Phải Phòng thủ để không bị hạ gục.",
-      fixed_potion_window:
-        "Quái tạm miễn nhiễm sát thương. Đây là thời điểm hồi đúng " +
-        c.character.potionHeal +
-        " HP bằng bình máu.",
+    status = {
+      physical_only: "Kháng phép",
+      arcane_only: "Kháng vật lý",
+      execution_guard: "Chuẩn bị đòn chí tử",
+      fixed_potion_window: "Miễn nhiễm sát thương",
     }[t.condition];
   let text =
-    "**" +
-    monster.name +
-    "**\n🎯 **Mục tiêu:** Hạ quái trong đúng **" +
-    e.stepCount +
-    " bước**; HP quái phải về đúng **0** sau bước cuối.\n" +
     healthBar(state.enemyHp, e.hp) +
     "\n**Bước " +
     (t.floorStep + 1) +
     "/" +
     e.stepCount +
-    "** · còn **" +
-    (e.stepCount - t.floorStep) +
-    " bước**\n**Quái đang làm gì:** " +
-    mechanic;
+    "** · Trạng thái: **" +
+    status +
+    "**";
   if (t.type === "event")
     text += "\n" + t.choices.map((x) => "• " + x.label).join("\n");
-  return text;
+  return { name: monster.name, text };
 }
 function generatedStats(state, c) {
   const t = engine.current(state, c).transition;
   return (
     resources(state) +
-    SEP +
-    E.defense +
-    " **DEF " +
-    c.character.defense +
-    "**" +
-    SEP +
-    E.res +
-    " **RES " +
-    c.character.resistance +
-    "%**\n" +
+    "\n" +
     E.attack +
-    " **Tấn công: " +
+    " **Đánh " +
     engine.damage(state, c, "attack") +
-    " damage khi quái không kháng vật lý · +" +
+    "** (+" +
     t.attackMana +
-    " MP**\n" +
+    " MP)" +
+    SEP +
     SKILL_ICONS[c.classKey] +
     " **" +
     c.combat.skillName +
-    ": " +
+    " " +
     engine.damage(state, c, "skill") +
-    " damage khi quái không kháng phép · −" +
+    "** (−" +
     t.skillCost +
-    " MP**\n" +
+    " MP)\n" +
     E.defense +
-    " **Phòng thủ: chặn đòn chí tử · +" +
+    " **Thủ** (+" +
     t.defendMana +
-    " MP**\n" +
+    " MP)" +
+    SEP +
     E.potion +
-    " **Bình máu: hồi tối đa " +
+    " **Bình +" +
     state.potionHeal +
-    " HP · còn " +
-    state.potions +
-    "**\n*Damage cố định, không Crit, không Miss. " +
-    c.classDescription +
-    "*"
+    " HP**"
   );
 }
 function generatedEffects(state, c) {
@@ -538,9 +516,7 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
       (row.user_id ? "👤 <@" + row.user_id + ">\n" : "") +
         "**" +
         c.character.name +
-        " · 15 puzzle · " +
-        c.stepCount +
-        " bước**" +
+        "**" +
         (!live
           ? replayTarget
             ? "\n⏰ Challenge này đã đóng. Bấm Chơi Tháp hiện tại để mở tuần đang hoạt động."
@@ -550,18 +526,14 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
     .setFooter(footer(state, c));
   addTextFields(
     embed,
-    "🧩 Chuỗi puzzle 1–15",
-    "Tầng **" +
+    "🧩 Tầng " + state.floor + "/15",
+    "Hạ quái trong đúng **" +
       state.floor +
-      "/15** · Puzzle yêu cầu **" +
-      state.floor +
-      " bước** · Đang ở bước **" +
+      " bước**. Tiến trình: **" +
       Math.min(state.floorStep + 1, state.floor) +
       "/" +
       state.floor +
-      "**\nTổng bước đã dùng: **" +
-      state.routeStep +
-      " hành động đã dùng**.\nKết quả của tầng được giữ kín cho tới khi dùng hết số bước.",
+      "**.",
   );
   addTextFields(
     embed,
@@ -570,12 +542,10 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
       ? generatedStats(state, c)
       : resources(state),
   );
-  if (state.status === "playing")
-    addTextFields(
-      embed,
-      encounterIcon(e) + " " + (e.type === "combat" ? "Đối thủ" : "Tình huống"),
-      generatedEncounter(state, c),
-    );
+  if (state.status === "playing") {
+    const enemy = generatedEncounter(state, c);
+    addTextFields(embed, encounterIcon(e) + " " + enemy.name, enemy.text);
+  }
   if (state.flags.length)
     addTextFields(
       embed,
@@ -597,8 +567,9 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
       (result.attempts + (state.status === "playing" ? 1 : 0)) +
       "**",
   );
-  addTextFields(embed, "🏆 Phần thưởng", rewardText(state, c, result));
-  if (state.lastLog)
+  if (state.status !== "playing")
+    addTextFields(embed, "🏆 Phần thưởng", rewardText(state, c, result));
+  if (state.status !== "playing" && state.lastLog)
     addTextFields(embed, "📜 Lượt vừa rồi", turnText(state, c));
   if (state.status !== "playing")
     addTextFields(
@@ -649,8 +620,8 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
   );
   components.push(
     new ActionRowBuilder().addComponents([
-      ...Object.entries(tabs).map(([tab, label]) =>
-        generatedButton(row, state, c, "view_" + tab, label),
+      ...visibleTabs.map((tab) =>
+        generatedButton(row, state, c, "view_" + tab, tabs[tab]),
       ),
       generatedButton(row, state, c, "top", "Bảng xếp hạng tuần"),
     ]),
@@ -681,7 +652,7 @@ function privateGenerated(row, state, c, source, tab) {
         : tab === "rules"
           ? generatedRules(c)
           : state.status === "playing"
-            ? generatedEncounter(state, c) +
+            ? generatedEncounter(state, c).text +
               (engine.current(state, c).encounter.type === "combat"
                 ? "\n" + generatedStats(state, c)
                 : "")
@@ -693,13 +664,13 @@ function privateGenerated(row, state, c, source, tab) {
     content: "",
     embeds: [embed],
     components: chunkRows(
-      Object.entries(tabs).map(([t, label]) =>
+      visibleTabs.map((t) =>
         generatedButton(
           row,
           state,
           c,
           "view_" + t,
-          label,
+          tabs[t],
           t === tab,
           t === tab,
           source,

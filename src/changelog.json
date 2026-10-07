@@ -11,6 +11,17 @@
     ]
   },
   {
+    "id": "c7cd1811-e68b-41cd-ae1e-2a223e66bf97",
+    "updatedAt": "2026-10-07T09:18:17.882Z",
+    "auditedAt": "2026-10-07T09:18:17.882Z",
+    "title": "Tháp Suy Luận: tối giản giao diện",
+    "changes": [
+      "Trạng thái quái chỉ còn các nhãn ngắn như Kháng vật lý, Kháng phép, Miễn nhiễm sát thương và Chuẩn bị đòn chí tử; không còn giải thích hành động cần chọn.",
+      "Bảng chính được rút gọn còn mục tiêu tầng, HP/MP/bình, damage cơ bản, HP quái và tiến trình bước.",
+      "Ẩn phần thưởng và nhật ký lượt chi tiết trong lúc đang giải để giảm nội dung lặp và tránh lộ hướng giải."
+    ]
+  },
+  {
     "id": "ad4e0172-75ad-4504-a362-9b6c33a817fe",
     "updatedAt": "2026-10-07T09:04:45.321Z",
     "auditedAt": "2026-10-07T09:04:45.321Z",
