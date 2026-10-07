@@ -97,13 +97,13 @@ function afterAction(state, action, acted, hurt) {
     };
   }
   enemy.idleTurns = 0;
-  const recoil = Math.max(0, Math.floor((acted.dealt || 0) * 0.3));
+  const recoil = Math.max(0, Math.floor((acted.dealt || 0) * 0.1));
   const before = state.hp;
   if (hurt) hurt(state, recoil, true);
   else state.hp = Math.max(0, state.hp - recoil);
   if (!state.hp)
     state.lastDeathCause =
-      BOSS_NAME + " phản phệ 30% DMG bạn thực sự gây ra, khiến HP về 0.";
+      BOSS_NAME + " phản phệ 10% DMG bạn thực sự gây ra, khiến HP về 0.";
   return {
     skipCounter: Boolean(acted.critical),
     recoil: before - state.hp,
@@ -117,7 +117,7 @@ function afterAction(state, action, acted, hurt) {
           state.hp +
           "** (−" +
           (before - state.hp) +
-          " HP; 30% DMG thực tế, không Crit/né)."
+          " HP; 10% DMG thực tế, không Crit/né)."
         : "") +
       (acted.critical && enemy.hp > 0
         ? "\n" +
@@ -200,7 +200,7 @@ function fields(state) {
   ];
 }
 const BOSS_RULES =
-  "Dưới **40% Max HP**: không dùng bình máu; đúng 40% vẫn dùng được. Tấn công/Skill gây phản phệ bằng **30% DMG thực tế** gây lên boss (làm tròn xuống), kể cả đòn kết liễu; không Crit, không né/chặn, không giảm bởi DEF/RES, không kích hoạt phản đòn của trang bị. Phản phệ có thể giết bạn.\nKhông tấn công một lượt: boss chờ; từ lượt thứ hai liên tiếp: boss chủ động đánh. Tấn công/Skill, kể cả trượt, đặt lại bộ đếm. CRIT gây DMG gián đoạn đòn đánh thường của boss trong lượt đó, nhưng vẫn chịu phản phệ. Skill chặn/né và Phòng thủ vẫn áp dụng cho đòn đánh thường.";
+  "Dưới **40% Max HP**: không dùng bình máu; đúng 40% vẫn dùng được. Tấn công/Skill gây phản phệ bằng **10% DMG thực tế** gây lên boss (làm tròn xuống), kể cả đòn kết liễu; không Crit, không né/chặn, không giảm bởi DEF/RES, không kích hoạt phản đòn của trang bị. Phản phệ có thể giết bạn.\nKhông tấn công một lượt: boss chờ; từ lượt thứ hai liên tiếp: boss chủ động đánh. Tấn công/Skill, kể cả trượt, đặt lại bộ đếm. CRIT gây DMG gián đoạn đòn đánh thường của boss trong lượt đó, nhưng vẫn chịu phản phệ. Skill chặn/né và Phòng thủ vẫn áp dụng cho đòn đánh thường.";
 function details(state) {
   if (isBoss(state.encounter))
     return (
