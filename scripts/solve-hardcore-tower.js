@@ -8,7 +8,7 @@ try {
   const id = process.argv.slice(2).find((v) => !v.startsWith("--"));
   const challenge = id ? catalog.get(id) : catalog.active() || catalog.recent();
   if (!challenge) throw Error("UNKNOWN_CHALLENGE");
-  if (challenge.generatorVersion !== 3)
+  if (challenge.generatorVersion < 3)
     throw Error("Use legacy fixture tests for archived v1 challenges");
   const proof = solver.validate(challenge),
     expired = Date.now() >= challenge.endsAt;

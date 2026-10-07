@@ -32,7 +32,7 @@ try {
     assert.equal(catalog.weekAt(Date.parse("2027-01-03T17:00:00Z")).isoWeek, 1);
   }
   const id = generator.challengeId(2026, 41, "sorceress");
-  assert.equal(id, "tower:2026:W41:sorceress:g3");
+  assert.equal(id, "tower:2026:W41:sorceress:g4");
   const seed = generator.productionSeed(id, 1, secret);
   assert.notEqual(seed, generator.productionSeed(id, 1, "different-secret"));
   assert.throws(
@@ -43,25 +43,100 @@ try {
   const a = generator.generate(input),
     b = generator.generate(input);
   assert.equal(JSON.stringify(a.payload), JSON.stringify(b.payload));
-  assert.equal(a.payload.stepCount, 81);
+  assert.equal(a.payload.stepCount, 120);
   assert.equal(a.payload.floors.length, 15);
   assert.deepEqual(
     a.payload.floors.map((f) => f.stepCount),
     generator.FIRST_LENGTHS,
   );
+  for (const floor of a.payload.floors) {
+    const turns = a.payload.transitions.slice(
+      floor.stepStart,
+      floor.stepStart + floor.stepCount,
+    );
+    let enemyHp = floor.hp;
+    for (const [index, turn] of turns.entries()) {
+      enemyHp += turn.enemyHpDelta;
+      if (index < turns.length - 1) assert.ok(enemyHp > 0);
+    }
+    assert.equal(enemyHp, 0);
+  }
+  assert.equal(a.payload.catalogSource, "survival-v2-readonly");
+  assert.equal(a.payload.deterministicCombat, true);
+  assert.equal(a.payload.runtimeRng, false);
+  assert.deepEqual(
+    a.payload.loadout.map((item) => item.id),
+    ["rusted_edge", "mana_fragment", "red_potion_belt"],
+  );
+  assert.ok(a.payload.transitions.some((t) => t.expectedAction === "potion"));
+  const potionTurns = a.payload.transitions.filter(
+    (t) => t.expectedAction === "potion",
+  );
+  assert.equal(potionTurns.length, 4);
+  assert.ok(
+    potionTurns.every(
+      (t) =>
+        t.heal === generator.FIXED_POTION_HEAL &&
+        t.hpDelta === generator.FIXED_POTION_HEAL &&
+        t.potionsDelta === -1,
+    ),
+  );
+  assert.ok(a.payload.transitions.every((t) => t.signal.length >= 20));
+  assert.ok(
+    ["attack", "skill", "defend"].every((action) =>
+      a.payload.transitions
+        .filter((t) => t.floor === 12)
+        .some((t) => t.expectedAction === action),
+    ),
+  );
+  assert.ok(
+    a.payload.transitions.some((t) =>
+      Object.values(t.hintByAction).some((hint) =>
+        hint.includes("Dòng Sinh lực"),
+      ),
+    ),
+  );
+  assert.ok(
+    a.payload.transitions.some((t) =>
+      Object.values(t.hintByAction).some((hint) =>
+        hint.includes("Dấu Hành quyết"),
+      ),
+    ),
+  );
   assert.equal(a.audit.winningPaths, 1);
   assert.equal(a.audit.wrongBranchesRecoverable, 0);
-  assert.ok(a.audit.finalHpRatio > 0 && a.audit.finalHpRatio <= 0.25);
-  assert.ok(a.audit.finalManaRatio >= 0 && a.audit.finalManaRatio <= 0.4);
+  assert.ok(a.audit.finalHpRatio > 0 && a.audit.finalHpRatio <= 1);
+  assert.ok(a.audit.finalManaRatio >= 0 && a.audit.finalManaRatio <= 1);
   assert.equal(a.payload.seedCommitment, solver.hash(seed));
   assert.equal(
     a.payload.solutionHash,
-    solver.hash(id + "|3|" + a.canonicalSolution.join(",")),
+    solver.hash(id + "|4|" + a.canonicalSolution.join(",")),
   );
   assert.ok(!("canonicalSolution" in a.payload));
   const broken = structuredClone(a.payload);
   broken.transitions[0].manaDelta = 200;
   assert.throws(() => solver.validate(broken));
+  const hiddenTell = structuredClone(a.payload);
+  hiddenTell.transitions[0].signal = "";
+  assert.throws(() => solver.validate(hiddenTell), /INVALID_TOWER_TRANSITION/);
+  const randomCombat = structuredClone(a.payload);
+  randomCombat.runtimeRng = true;
+  assert.throws(() => solver.validate(randomCombat), /INVALID_TOWER_SHAPE/);
+  const weakPotion = structuredClone(a.payload);
+  const potion = weakPotion.transitions.find(
+    (t) => t.expectedAction === "potion",
+  );
+  potion.heal--;
+  assert.throws(
+    () => solver.validate(weakPotion),
+    /INVALID_(FIXED_POTION|DETERMINISTIC_TRANSITION)/,
+  );
+  const weakGuard = structuredClone(a.payload);
+  const guard = weakGuard.transitions.find(
+    (t) => t.expectedAction === "defend",
+  );
+  guard.intentDamage = 1;
+  assert.throws(() => solver.validate(weakGuard), /INVALID_EXECUTION_GUARD/);
   assert.throws(
     () => solver.validate(a.payload, { timeoutMs: 0 }),
     /TOWER_SOLVER_TIMEOUT/,
@@ -115,8 +190,8 @@ try {
     force: true,
   });
   assert.equal(current.challengeId, id);
-  assert.equal(repo.rotation().next_index, 2); // current + coming week's commitment
-  assert.equal(catalog.upcoming(catalog.ANCHOR).classKey, "druid");
+  assert.equal(repo.rotation().next_index, 1);
+  assert.equal(catalog.upcoming(catalog.ANCHOR), null);
   const snapshot = repo.challenge(id).payload_json;
   catalog.ensureWeekly(catalog.ANCHOR + 1000, {
     secret: "rotated-secret",
@@ -149,10 +224,13 @@ try {
     const c = catalog.active(now);
     assert.equal(c.classKey, CLASS_ROTATION[i % 7]);
     rotation.push(c.classKey);
-    assert.ok(c.stepCount >= 72 && c.stepCount <= 90);
+    assert.equal(c.stepCount, 120);
     assert.equal(c.floors.length, 15);
-    assert.ok(c.floors.every((f) => f.stepCount >= 4));
-    assert.ok(c.floors.slice(-4).reduce((a, f) => a + f.stepCount, 0) >= 27);
+    assert.deepEqual(
+      c.floors.map((f) => f.stepCount),
+      generator.FLOOR_LENGTHS,
+    );
+    assert.ok(c.floors.every((f) => f.hp > 0 && f.rule));
     const audit = solver.validate(c);
     assert.equal(audit.winningPaths, 1);
     assert.equal(audit.canonicalLength, c.stepCount);
@@ -197,7 +275,7 @@ try {
       assert.equal(solver.validate(r.payload).winningPaths, 1);
     }
   console.log(
-    "Tower v3 generator: determinism, 81-step fixture, 7-class rotation, 70 diverse seeds, unique paths, resource mechanics, audit rejection, immutable publication and UTC+7 rollover passed.",
+    "Tower v4 generator: deterministic 1–15 floor puzzles, Survival catalog snapshots, 7-class rotation, unique paths, hints, immutable publication and UTC+7 rollover passed.",
   );
 } finally {
   Math.random = rng;

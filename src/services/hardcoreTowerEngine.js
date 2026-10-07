@@ -2,7 +2,7 @@
 const { createHash } = require("node:crypto");
 const sha = (s) => createHash("sha256").update(s).digest("hex");
 function solutionHash(c, actions = c.canonicalSolution) {
-  if (c.generatorVersion === 3) return c.solutionHash;
+  if (c.generatorVersion >= 3) return c.solutionHash;
   return sha(JSON.stringify([c.challengeId, c.contentVersion, actions]));
 }
 function enter(s, c) {
@@ -12,7 +12,7 @@ function enter(s, c) {
   s.enemyHp = e.hp || 0;
 }
 function createState(c) {
-  if (c.generatorVersion === 3) return createGeneratedState(c);
+  if (c.generatorVersion >= 3) return createGeneratedState(c);
   const s = {
     mode: "tower15",
     challengeId: c.challengeId,
@@ -34,12 +34,12 @@ function createState(c) {
   return s;
 }
 function current(s, c) {
-  if (c.generatorVersion === 3) return currentGenerated(s, c);
+  if (c.generatorVersion >= 3) return currentGenerated(s, c);
   const encounter = c.floors[s.floor - 1];
   return { encounter, phase: encounter.phases?.[s.step] };
 }
 function costs(s, c) {
-  if (c.generatorVersion === 3)
+  if (c.generatorVersion >= 3)
     return { mana: currentGenerated(s, c).transition.skillCost, hp: 0 };
   return {
     mana: s.paradox?.id === "mana_fracture" ? 1 : c.combat.skillCost,
@@ -50,12 +50,12 @@ function costs(s, c) {
   };
 }
 function attackMana(s, c) {
-  if (c.generatorVersion === 3)
+  if (c.generatorVersion >= 3)
     return currentGenerated(s, c).transition.attackMana;
   return s.paradox?.id === "mana_fracture" ? 0 : c.combat.attackMana;
 }
 function damage(s, c, action) {
-  if (c.generatorVersion === 3) return damageGenerated(s, c, action);
+  if (c.generatorVersion >= 3) return damageGenerated(s, c, action);
   const { encounter, phase } = current(s, c);
   if (encounter.type !== "combat" || !["attack", "skill"].includes(action))
     return 0;
@@ -72,14 +72,14 @@ function damage(s, c, action) {
   );
 }
 function counter(s, c, action) {
-  if (c.generatorVersion === 3) return counterGenerated(s, c, action);
+  if (c.generatorVersion >= 3) return counterGenerated(s, c, action);
   const { phase } = current(s, c);
   return action === "defend"
     ? (phase.defendCounter ?? phase.counterDamage ?? 0)
     : (phase.counterDamage ?? 0);
 }
 function actions(s, c) {
-  if (c.generatorVersion === 3) return actionsGenerated(s, c);
+  if (c.generatorVersion >= 3) return actionsGenerated(s, c);
   if (s.status !== "playing") return [];
   const { encounter } = current(s, c);
   if (encounter.type === "event")
@@ -127,7 +127,7 @@ function advance(s, c) {
   enter(s, c);
 }
 function act(s, c, action) {
-  if (c.generatorVersion === 3) return actGenerated(s, c, action);
+  if (c.generatorVersion >= 3) return actGenerated(s, c, action);
   if (s.challengeId !== c.challengeId || s.contentVersion !== c.contentVersion)
     throw Error("CHALLENGE_VERSION_MISMATCH");
   if (!actions(s, c).some((x) => x.action === action && !x.disabled))
@@ -225,7 +225,7 @@ function act(s, c, action) {
   return s;
 }
 function solve(c) {
-  if (c.generatorVersion === 3) {
+  if (c.generatorVersion >= 3) {
     const p = require("../hardcore/tower/solver").solve(c);
     return {
       winningPaths: p.winningPaths
@@ -254,7 +254,7 @@ function solve(c) {
   return { winningPaths, visited };
 }
 function verify(c) {
-  if (c.generatorVersion === 3) {
+  if (c.generatorVersion >= 3) {
     const p = require("../hardcore/tower/solver").validate(c);
     return { ...solve(c), solutionHash: p.solutionHash, audit: p };
   }
@@ -268,6 +268,43 @@ function verify(c) {
     throw Error("INVALID_TOWER_SOLUTION: " + c.challengeId);
   return { ...proof, solutionHash: solutionHash(c) };
 }
+function floorCheckpoint(s) {
+  return {
+    floor: s.floor,
+    floorStep: s.floorStep,
+    routeStep: s.routeStep,
+    hp: s.hp,
+    mana: s.mana,
+    potions: s.potions,
+    flags: structuredClone(s.flags),
+    classCharges: structuredClone(s.classCharges),
+    enemyHp: s.enemyHp,
+    cleared: s.cleared,
+    step: s.step,
+    paradox: structuredClone(s.paradox),
+    actionHistoryLength: s.actionHistory.length,
+    floorMistakes: [],
+  };
+}
+function retryFloor(s, c) {
+  if (c.generatorVersion < 4 || s.status !== "failed" || !s.floorCheckpoint)
+    return createState(c);
+  const next = structuredClone(s),
+    checkpoint = structuredClone(s.floorCheckpoint);
+  Object.assign(next, checkpoint, {
+    status: "playing",
+    actionHistory: s.actionHistory.slice(0, checkpoint.actionHistoryLength),
+    lastLog: `Thử lại tầng ${checkpoint.floor} từ bước đầu.`,
+    lastOutcome: null,
+    floorMistakes: [],
+  });
+  delete next.failure;
+  delete next.failureHint;
+  delete next.failedAction;
+  delete next.expectedAction;
+  delete next.actionHistoryLength;
+  return next;
+}
 module.exports = {
   createState,
   current,
@@ -280,6 +317,7 @@ module.exports = {
   solve,
   verify,
   solutionHash,
+  retryFloor,
 };
 
 function createGeneratedState(c) {
@@ -288,7 +326,7 @@ function createGeneratedState(c) {
     mode: "tower15",
     challengeId: c.challengeId,
     contentVersion: c.contentVersion,
-    generatorVersion: 3,
+    generatorVersion: c.generatorVersion,
     maxHp: c.character.maxHp,
     maxMana: c.character.maxMana,
     cleared: 0,
@@ -296,8 +334,12 @@ function createGeneratedState(c) {
     turn: 0,
     paradox: null,
     actionHistory: [],
+    maxPotions: c.character.potions || 0,
+    potionHeal: c.character.potionHeal || 0,
+    floorMistakes: [],
   });
   s.enemyHp = c.floors[0].hp;
+  s.floorCheckpoint = floorCheckpoint(s);
   return s;
 }
 function currentGenerated(s, c) {
@@ -319,21 +361,35 @@ function actionsGenerated(s, c) {
   const t = c.transitions[s.routeStep];
   if (t.type === "event")
     return t.choices.map((x) => ({ ...x, disabled: false }));
-  return ["attack", "skill", "defend"].map((action) => ({
+  const available =
+    c.generatorVersion >= 4
+      ? ["attack", "skill", "defend", "potion"]
+      : ["attack", "skill", "defend"];
+  return available.map((action) => ({
     action,
     label:
       action === "skill"
         ? c.combat.skillName
         : action === "attack"
           ? "Tấn công"
-          : "Phòng thủ",
-    disabled: action === "skill" && (s.mana < t.skillCost || t.spellLocked),
+          : action === "defend"
+            ? "Phòng thủ"
+            : "Bình máu",
+    disabled:
+      (action === "skill" && (s.mana < t.skillCost || t.spellLocked)) ||
+      (action === "potion" && s.potions < 1),
   }));
 }
 function damageGenerated(s, c, action) {
   const t = currentGenerated(s, c).transition,
     p = require("../hardcore/tower/classProfiles").profile(c.classKey);
   if (t.type !== "combat") return 0;
+  if (c.generatorVersion >= 4)
+    return action === "attack"
+      ? p.attackDamage
+      : action === "skill"
+        ? p.skillDamage
+        : 0;
   if (action === "attack")
     return p.mechanic === "barrage" && t.shieldCharges > 0
       ? 0
@@ -351,6 +407,8 @@ function counterGenerated(s, c, action) {
   const t = currentGenerated(s, c).transition,
     p = require("../hardcore/tower/classProfiles").profile(c.classKey);
   if (t.type !== "combat") return 0;
+  if (c.generatorVersion >= 4)
+    return action === t.expectedAction ? t.counterDamage : t.intentDamage;
   if (
     s.classCharges.ward > 0 ||
     (action === "skill" && ["shield", "dodge"].includes(p.mechanic))
@@ -370,17 +428,21 @@ function actGenerated(s, c, action) {
       hp: s.hp,
       mana: s.mana,
       enemyHp: s.enemyHp,
+      potions: s.potions,
       floor: s.floor,
       step: s.step,
       routeStep: s.routeStep,
     };
+  if (c.generatorVersion >= 4) return actPuzzle(s, c, action, t, before);
   const next = require("../hardcore/tower/solver").apply(c, s, action);
   s.actionHistory.push(sha(JSON.stringify([s.turn, action])));
   s.turn++;
   if (next.status === "failed") {
     s.status = "failed";
-    s.failure = "Perfect Chain bị gãy. Tín hiệu của bước vừa chọn: " + t.clue;
-    s.lastLog = "Sai nhịp. Chơi lại từ tầng 1 để thử chuỗi mới.";
+    s.failure = next.failureHint;
+    s.failureHint = next.failureHint;
+    s.lastLog =
+      "Sai lời giải ở tầng " + s.floor + ", bước " + (s.floorStep + 1) + ".";
     s.lastOutcome = { ...before, actionDamage: 0, counterDamage: 0 };
     return s;
   }
@@ -394,7 +456,10 @@ function actGenerated(s, c, action) {
   });
   s.cleared = next.status === "completed" ? 15 : next.floor - 1;
   s.enemyHp = Math.max(0, oldEnemy + t.enemyHpDelta);
-  if (s.floor !== before.floor) s.enemyHp = c.floors[s.floor - 1].hp;
+  if (s.floor !== before.floor) {
+    s.enemyHp = c.floors[s.floor - 1].hp;
+    s.floorCheckpoint = floorCheckpoint(s);
+  }
   if (s.flags.includes("mana_fracture"))
     s.paradox = { id: "mana_fracture", startFloor: 5, endFloor: 15 };
   const label =
@@ -403,7 +468,9 @@ function actGenerated(s, c, action) {
       ? c.combat.skillName
       : action === "attack"
         ? "Tấn công"
-        : "Phòng thủ");
+        : action === "defend"
+          ? "Phòng thủ"
+          : "Bình máu");
   s.lastLog = label + ": đúng nhịp " + s.routeStep + "/" + c.stepCount + ".";
   s.lastOutcome = {
     ...before,
@@ -411,5 +478,129 @@ function actGenerated(s, c, action) {
     counterDamage: t.counterDamage,
     heal: t.heal,
   };
+  return s;
+}
+
+function actionLabel(action, c) {
+  return action === "skill"
+    ? c.combat.skillName
+    : action === "attack"
+      ? "Tấn công"
+      : action === "defend"
+        ? "Phòng thủ"
+        : "Bình máu";
+}
+
+function abstractMistakeHint(expected, chosen) {
+  if (chosen === "potion" && expected !== "potion")
+    return "Dòng Sinh lực đã bị khuấy động trước khi khế ước ổn định.";
+  if (expected === "potion")
+    return "Một cửa sổ Sinh lực đã khép lại mà chưa được tận dụng.";
+  if (expected === "defend")
+    return "Dấu Hành quyết vẫn còn lưu lại trên khiên của bạn.";
+  if (expected === "skill")
+    return "Một Ấn Linh hồn vẫn dao động khi số bước đã cạn.";
+  return "Một vết nứt vật chất chưa được khai thác trước khi cánh cửa đóng lại.";
+}
+
+function abstractFloorHint(mistakes) {
+  const missedPotion = mistakes.find((x) => x.expected === "potion");
+  if (missedPotion) {
+    const latePotion = mistakes.some(
+      (x) => x.floorStep > missedPotion.floorStep && x.chosen === "potion",
+    );
+    return latePotion
+      ? "Sinh lực đã được gọi khi cửa sổ của nó chỉ còn là dư âm."
+      : missedPotion.hint;
+  }
+  return mistakes[0]?.hint || "Nhịp điệu của tầng vẫn còn một chỗ lệch.";
+}
+
+function actPuzzle(s, c, action, t, before) {
+  const p = require("../hardcore/tower/classProfiles").profile(c.classKey),
+    mistakes = (s.floorMistakes ||= []),
+    cleanSoFar = mistakes.length === 0,
+    correct = action === t.expectedAction;
+  s.actionHistory.push(sha(JSON.stringify([s.turn, action])));
+  s.turn++;
+  if (!correct)
+    mistakes.push({
+      floorStep: s.floorStep,
+      expected: t.expectedAction,
+      chosen: action,
+      hint: abstractMistakeHint(t.expectedAction, action),
+    });
+
+  let actionDamage = 0,
+    counterDamage = 0,
+    heal = 0;
+  if (correct && cleanSoFar) {
+    const next = require("../hardcore/tower/solver").apply(c, s, action),
+      turn = s.turn,
+      history = s.actionHistory,
+      oldEnemy = s.enemyHp;
+    Object.assign(s, next, {
+      turn,
+      actionHistory: history,
+      floorMistakes: mistakes,
+      step: next.floorStep,
+    });
+    actionDamage = Math.abs(t.enemyHpDelta);
+    counterDamage = t.counterDamage;
+    heal = t.heal;
+    s.enemyHp = Math.max(0, oldEnemy + t.enemyHpDelta);
+  } else {
+    actionDamage =
+      action === "attack"
+        ? p.attackDamage
+        : action === "skill"
+          ? p.skillDamage
+          : 0;
+    if (action === "skill") s.mana = Math.max(0, s.mana - t.skillCost);
+    else if (action === "attack")
+      s.mana = Math.min(s.maxMana, s.mana + t.attackMana);
+    else if (action === "defend")
+      s.mana = Math.min(s.maxMana, s.mana + t.defendMana);
+    if (action === "potion") {
+      heal = Math.min(s.potionHeal, s.maxHp - s.hp);
+      s.hp += heal;
+      s.potions--;
+    } else if (action === "skill" && p.heal) {
+      heal = Math.min(p.heal, s.maxHp - s.hp);
+      s.hp += heal;
+    }
+    counterDamage = action === "defend" ? 0 : Math.max(1, t.counterDamage);
+    s.hp = Math.max(1, s.hp - counterDamage);
+    s.enemyHp = Math.max(1, s.enemyHp - actionDamage);
+    s.routeStep++;
+    s.floorStep++;
+    s.step = s.floorStep;
+  }
+
+  const floorEnded = t.floorStep + 1 === t.floor;
+  if (floorEnded && mistakes.length) {
+    s.status = "failed";
+    s.floor = t.floor;
+    s.floorStep = t.floor;
+    s.step = t.floor;
+    s.failure = abstractFloorHint(mistakes);
+    s.failureHint = s.failure;
+  } else if (floorEnded && s.status !== "completed") {
+    s.cleared = t.floor;
+    s.enemyHp = c.floors[s.floor - 1].hp;
+    s.floorMistakes = [];
+    s.floorCheckpoint = floorCheckpoint(s);
+  } else {
+    s.cleared = s.status === "completed" ? 15 : s.floor - 1;
+  }
+  if (s.status === "completed") s.cleared = 15;
+  s.lastLog =
+    actionLabel(action, c) +
+    ": đã dùng bước " +
+    (t.floorStep + 1) +
+    "/" +
+    t.floor +
+    " của tầng.";
+  s.lastOutcome = { ...before, actionDamage, counterDamage, heal };
   return s;
 }

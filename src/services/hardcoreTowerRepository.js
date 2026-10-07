@@ -107,13 +107,13 @@ function challenge(id) {
       .get(id) || null
   );
 }
-function challengeByWeek(year, week) {
+function challengeByWeek(year, week, generatorVersion = null) {
   return (
     db
       .prepare(
-        "SELECT * FROM hardcore_tower_challenges WHERE iso_year=? AND iso_week=?",
+        "SELECT * FROM hardcore_tower_challenges WHERE iso_year=? AND iso_week=? AND (? IS NULL OR generator_version=?) ORDER BY generator_version DESC LIMIT 1",
       )
-      .get(year, week) || null
+      .get(year, week, generatorVersion, generatorVersion) || null
   );
 }
 function rotation() {
@@ -123,7 +123,7 @@ function activeChallenge(now) {
   return (
     db
       .prepare(
-        "SELECT * FROM hardcore_tower_challenges WHERE status='published' AND starts_at<=? AND ends_at>? ORDER BY starts_at DESC LIMIT 1",
+        "SELECT * FROM hardcore_tower_challenges WHERE status='published' AND starts_at<=? AND ends_at>? ORDER BY generator_version DESC,starts_at DESC LIMIT 1",
       )
       .get(now, now) || null
   );
@@ -132,18 +132,18 @@ function recentChallenge(now) {
   return (
     db
       .prepare(
-        "SELECT * FROM hardcore_tower_challenges WHERE status IN ('published','archived') AND starts_at<=? ORDER BY starts_at DESC LIMIT 1",
+        "SELECT * FROM hardcore_tower_challenges WHERE status IN ('published','archived') AND starts_at<=? ORDER BY starts_at DESC,generator_version DESC LIMIT 1",
       )
       .get(now) || null
   );
 }
-function lastPublication() {
+function lastPublication(generatorVersion = null) {
   return (
     db
       .prepare(
-        "SELECT * FROM hardcore_tower_challenges WHERE status IN ('published','archived') ORDER BY starts_at DESC LIMIT 1",
+        "SELECT * FROM hardcore_tower_challenges WHERE status IN ('published','archived') AND (? IS NULL OR generator_version=?) ORDER BY starts_at DESC LIMIT 1",
       )
-      .get() || null
+      .get(generatorVersion, generatorVersion) || null
   );
 }
 function archiveChallenges(now) {
@@ -171,11 +171,15 @@ function clearGenerationFailure(startsAt) {
   ).run(startsAt);
 }
 const publishChallenge = db.transaction((payload, audit, index, now) => {
-  const existing = challengeByWeek(payload.isoYear, payload.isoWeek);
+  const existing = challengeByWeek(
+    payload.isoYear,
+    payload.isoWeek,
+    payload.generatorVersion,
+  );
   if (existing) return existing;
   if (rotation().next_index !== index) throw Error("STALE_TOWER_ROTATION");
   const catalog = require("../hardcore/tower/challengeCatalog"),
-    previous = lastPublication(),
+    previous = lastPublication(payload.generatorVersion),
     expectedStart = previous
       ? previous.starts_at + catalog.WEEK_MS
       : catalog.ANCHOR;
@@ -247,6 +251,16 @@ function beginAttempt(row, now) {
   if (row.challenge_id === "tower:2026:W41:sorceress:g3")
     db.prepare(
       "UPDATE hardcore_tower_results SET reward_claimed_at=(SELECT reward_claimed_at FROM hardcore_tower_results WHERE guild_id=? AND user_id=? AND challenge_id='tower-2026-W41-v1') WHERE guild_id=? AND user_id=? AND challenge_id=? AND reward_claimed_at IS NULL",
+    ).run(
+      row.guild_id,
+      row.user_id,
+      row.guild_id,
+      row.user_id,
+      row.challenge_id,
+    );
+  if (row.challenge_id === "tower:2026:W41:sorceress:g4")
+    db.prepare(
+      "UPDATE hardcore_tower_results SET reward_claimed_at=(SELECT MAX(reward_claimed_at) FROM hardcore_tower_results WHERE guild_id=? AND user_id=? AND challenge_id IN ('tower-2026-W41-v1','tower:2026:W41:sorceress:g3')) WHERE guild_id=? AND user_id=? AND challenge_id=? AND reward_claimed_at IS NULL",
     ).run(
       row.guild_id,
       row.user_id,

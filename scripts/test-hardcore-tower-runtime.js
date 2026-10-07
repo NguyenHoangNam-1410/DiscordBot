@@ -211,7 +211,7 @@ async function verifyReplayRegression(reward) {
     activeJson,
     "opening from a legacy board must preserve an active chain",
   );
-  // Actual Discord IDs from failed/completed v3 boards reset to floor 1.
+  // Actual Discord IDs from failed/completed generated boards reset to floor 1.
   const failed = start("button-failed");
   play(
     failed,
@@ -337,7 +337,7 @@ async function main() {
     ).action;
   const lost = play(failed, wrong);
   assert.equal(lost.state.status, "failed");
-  assert.equal(lost.state.routeStep, 0);
+  assert.equal(lost.state.routeStep, 1);
   assert.equal(lost.result.attempts, 1);
   assert.throws(
     () => play(failed, wrong, { expectedTurn: 0, expectedRouteStep: 0 }),
@@ -363,6 +363,77 @@ async function main() {
   assert.equal(replay.result.attempts, 1);
   assert.ok(replay.state.turn > lost.state.turn);
   assert.throws(() => play(failed, "replay"), /INVALID_ACTION/);
+  const checkpointed = start("checkpointed");
+  runTo(checkpointed, 6); // Floors 1–3 cleared; floor 4 has not started.
+  const floorStart = state(checkpointed);
+  assert.equal(floorStart.floor, 4);
+  assert.equal(floorStart.cleared, 3);
+  play(checkpointed, c.transitions[6].expectedAction);
+  const midFloor = state(checkpointed),
+    wrongAtFloor4 = engine
+      .actions(midFloor, c)
+      .find(
+        (option) =>
+          !option.disabled &&
+          option.action !== c.transitions[midFloor.routeStep].expectedAction,
+      ).action;
+  play(checkpointed, wrongAtFloor4);
+  assert.equal(state(checkpointed).status, "playing");
+  assert.equal(state(checkpointed).failure, undefined);
+  while (state(checkpointed).status === "playing") {
+    const live = state(checkpointed),
+      expected = c.transitions[live.routeStep].expectedAction,
+      available = engine.actions(live, c).filter((x) => !x.disabled);
+    play(
+      checkpointed,
+      available.find((x) => x.action === expected)?.action ||
+        available[0].action,
+    );
+  }
+  assert.equal(
+    replayButton(repo.session(checkpointed.id), c).label,
+    "Thử lại tầng 4",
+  );
+  const retryFloor4 = play(checkpointed, "replay").state;
+  assert.equal(retryFloor4.status, "playing");
+  assert.equal(retryFloor4.floor, 4);
+  assert.equal(retryFloor4.cleared, 3);
+  assert.equal(retryFloor4.routeStep, 6);
+  assert.equal(retryFloor4.floorStep, 0);
+  for (const field of ["hp", "mana", "potions", "enemyHp"])
+    assert.equal(retryFloor4[field], floorStart[field]);
+
+  const delayedPotion = engine.createState(c),
+    potionStep = c.transitions.findIndex((t) => t.expectedAction === "potion");
+  while (delayedPotion.routeStep < potionStep)
+    engine.act(
+      delayedPotion,
+      c,
+      c.transitions[delayedPotion.routeStep].expectedAction,
+    );
+  const missedWindow = c.transitions[delayedPotion.routeStep];
+  engine.act(delayedPotion, c, "attack");
+  assert.equal(delayedPotion.status, "playing");
+  assert.equal(delayedPotion.failure, undefined);
+  engine.act(delayedPotion, c, "potion");
+  while (delayedPotion.status === "playing") {
+    const available = engine
+        .actions(delayedPotion, c)
+        .filter((x) => !x.disabled),
+      expected = c.transitions[delayedPotion.routeStep].expectedAction;
+    engine.act(
+      delayedPotion,
+      c,
+      available.find((x) => x.action === expected)?.action ||
+        available[0].action,
+    );
+  }
+  assert.equal(delayedPotion.floor, missedWindow.floor);
+  assert.equal(
+    delayedPotion.failure,
+    "Sinh lực đã được gọi khi cửa sổ của nó chỉ còn là dư âm.",
+  );
+
   const reward = start("reward");
   runTo(reward, c.stepCount - 1);
   const pre = repo.session(reward.id).state_json,
@@ -411,6 +482,10 @@ async function main() {
   assert.equal(
     diamonds.getPlayerProgression("tower", "reward").diamonds,
     gems + 250,
+  );
+  assert.equal(
+    replayButton(repo.session(reward.id), c).label,
+    "Chơi lại từ tầng 1",
   );
   play(reward, "replay");
   runTo(reward, c.stepCount);
@@ -656,10 +731,33 @@ async function main() {
           .filter((x) => !x.disabled && x.action !== t.expectedAction)) {
           const wrongState = structuredClone(s);
           engine.act(wrongState, c, option.action);
+          assert.equal(wrongState.routeStep, step + 1);
+          assert.equal(wrongState.floorMistakes.length, 1);
+          if (t.floorStep + 1 < t.floor) {
+            assert.equal(wrongState.status, "playing");
+            assert.equal(wrongState.failure, undefined);
+            const hiddenBoard = serialize(
+              view.payload(r, wrongState, c, { ...result, attempts: 0 }, now),
+            );
+            assert.ok(!hiddenBoard.includes(wrongState.floorMistakes[0].hint));
+            assert.ok(engine.actions(wrongState, c).length > 0);
+          }
+          while (wrongState.status === "playing") {
+            const expected = c.transitions[wrongState.routeStep].expectedAction,
+              available = engine
+                .actions(wrongState, c)
+                .filter((x) => !x.disabled),
+              chosen =
+                available.find((x) => x.action === expected)?.action ||
+                available[0].action;
+            engine.act(wrongState, c, chosen);
+          }
           assert.equal(wrongState.status, "failed");
-          assert.equal(wrongState.routeStep, step);
-          assert.equal(wrongState.hp, s.hp);
-          assert.equal(wrongState.mana, s.mana);
+          assert.ok(wrongState.failure);
+          assert.ok(!/bước\s+\d+/i.test(wrongState.failure));
+          assert.ok(
+            !/phải\s+(tấn công|phòng thủ|dùng)/i.test(wrongState.failure),
+          );
           serialize(
             view.payload(r, wrongState, c, { ...result, attempts: 1 }, now),
           );
@@ -697,7 +795,7 @@ async function main() {
   const oldFailed = repo.byUser(
     "tower",
     "replay-after-week",
-    "tower:2026:W41:sorceress:g3",
+    "tower:2026:W41:sorceress:g4",
   );
   await pressReplay(oldFailed, catalog.get(oldFailed.challenge_id), {
     twice: true,
@@ -705,7 +803,7 @@ async function main() {
   const weekRun = repo.byUser("tower", "replay-after-week", c.challengeId);
   assert.equal(state(weekRun).routeStep, 0);
   assert.equal(state(weekRun).challengeId, c.challengeId);
-  const old = catalog.get("tower:2026:W41:sorceress:g3");
+  const old = catalog.get("tower:2026:W41:sorceress:g4");
   const oldRow = repo.byUser("tower", "owner", old.challengeId),
     oldJson = oldRow.state_json;
   assert.throws(
@@ -726,7 +824,7 @@ async function main() {
       .options.some((x) => x.name === "thap"),
   );
   console.log(
-    "Tower v3 runtime: all 7 class UIs and wrong branches, stale/duplicate/forged clicks, retries, persistence, rollback, one-time reward, v1 claim carryover, mode isolation, private tabs and rollover passed.",
+    "Tower v4 runtime: 1–15 puzzles, Survival loadouts, hints, all 7 class UIs, retries, persistence, rewards, isolation and rollover passed.",
   );
 }
 main()
