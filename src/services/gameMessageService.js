@@ -12,6 +12,7 @@ async function handleVuaMessage(message, answer) {
     await require("../commands/vuatiengviet").postNextQuestionMessage(
       message.guildId,
       message.channel,
+      "expired",
     );
     return true;
   }

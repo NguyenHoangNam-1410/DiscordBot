@@ -35,11 +35,32 @@ function isAdmin(interaction) {
   );
 }
 
-function questionEmbed(guildId, question, notice = null) {
+// Màu viền: câu khó đổi theo thời gian còn lại; kết thúc thì xám (bỏ qua/hết hạn) hoặc xanh dương (trả lời đúng).
+const COLORS = Object.freeze({
+  normal: 0x9b59b6,
+  green: 0x2ecc71,
+  yellow: 0xf1c40f,
+  red: 0xe74c3c,
+  gray: 0x7f8c8d,
+  blue: 0x3498db,
+});
+function countdownBand(question, now = Date.now()) {
+  if (!question?.hard || !question.expiresAt) return "normal";
+  const remaining = (question.expiresAt - now) / 1000;
+  if (remaining >= 30) return "green";
+  if (remaining >= 10) return "yellow";
+  return "red";
+}
+const OUTCOME_BANDS = Object.freeze({ correct: "blue", skipped: "gray", expired: "gray" });
+function questionColor(question, outcome = null, now = Date.now()) {
+  return COLORS[OUTCOME_BANDS[outcome] || countdownBand(question, now)];
+}
+
+function questionEmbed(guildId, question, notice = null, outcome = null) {
   const baseReward = getGameReward(guildId, "vuatiengviet");
   const reward = baseReward * (question.hard ? 10 : 1);
   return new EmbedBuilder()
-    .setColor(0x9b59b6)
+    .setColor(questionColor(question, outcome))
     .setTitle("👑 VUA TIẾNG VIỆT")
     .setDescription(
       `Sắp xếp các chữ cái thành từ hoặc cụm từ có nghĩa:\n${vuaQuestionText(question)}`,
@@ -178,7 +199,7 @@ async function updateQuestionMessage(guildId, channel, notice = null) {
   return message;
 }
 
-async function postNextQuestionMessage(guildId, channel) {
+async function postNextQuestionMessage(guildId, channel, outcome = "correct") {
   const session = getVuaSession(guildId);
   if (!session || !channel?.isTextBased?.()) return null;
   const previousMessageId = session.uiMessageId;
@@ -197,8 +218,17 @@ async function postNextQuestionMessage(guildId, channel) {
     const previousMessage = await channel.messages
       .fetch(previousMessageId)
       .catch(() => null);
-    if (previousMessage)
-      await previousMessage.edit({ components: [] }).catch(() => null);
+    if (previousMessage) {
+      const old = previousMessage.embeds?.[0];
+      await previousMessage
+        .edit({
+          embeds: old
+            ? [EmbedBuilder.from(old).setColor(COLORS[OUTCOME_BANDS[outcome] || "blue"])]
+            : previousMessage.embeds,
+          components: [],
+        })
+        .catch(() => null);
+    }
   }
   return message;
 }
@@ -402,19 +432,23 @@ const command = {
               interaction.guildId,
               result.skipped,
               `⏭️ Đã bỏ qua · Đáp án: **${result.skipped.answer}**`,
+              "skipped",
             ),
           ],
           components: [],
           allowedMentions: { parse: [] },
         })
         .catch(() => null);
-    await postNextQuestionMessage(interaction.guildId, interaction.channel);
+    await postNextQuestionMessage(interaction.guildId, interaction.channel, "skipped");
     return interaction.followUp({
       content: skipStatusText(result),
       flags: MessageFlags.Ephemeral,
     });
   },
   questionEmbed,
+  questionColor,
+  countdownBand,
+  COLORS,
   controlRows,
   isAdmin,
   updateQuestionMessage,
@@ -502,13 +536,14 @@ const playerCommand = {
               interaction.guildId,
               result.skipped,
               `⏭️ Đã bỏ qua · Đáp án: **${result.skipped.answer}**`,
+              "skipped",
             ),
           ],
           components: [],
           allowedMentions: { parse: [] },
         })
         .catch(() => null);
-    await postNextQuestionMessage(interaction.guildId, interaction.channel);
+    await postNextQuestionMessage(interaction.guildId, interaction.channel, "skipped");
     return interaction.reply({
       content: skipStatusText(result),
       flags: MessageFlags.Ephemeral,

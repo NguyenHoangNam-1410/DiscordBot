@@ -34,7 +34,7 @@ const GAME_CONFIG_SPECS = Object.freeze({
     type: "integer",
     min: 5,
     max: 3_600,
-    fallback: 30,
+    fallback: 60,
     note: "Số giây trả lời cho mỗi câu khó mới.",
     clampEnv: true,
   }),
