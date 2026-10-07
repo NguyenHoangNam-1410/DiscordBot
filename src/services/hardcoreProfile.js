@@ -9,6 +9,8 @@ const {
   StringSelectMenuOptionBuilder,
 } = require("discord.js");
 const { db } = require("../db");
+const godRngesus = require("./hardcoreGodRngesus");
+const { godRngesusChance, formatGodChance } = require("./hardcoreRngesus");
 const { CLASSES } = require("./hardcoreStats");
 const { formatCoins } = require("../utils/economy");
 const { AVATAR_RINGS } = require("./avatarRingCatalog");
@@ -56,6 +58,8 @@ function gatherStats(guildId, userId) {
       .get(g, u) || {};
   return {
     totals,
+    godFavor: godRngesus.favor(g, u),
+    godHistory: godRngesus.history(g, u),
     byClass: all(
       `SELECT class_key,COUNT(*) runs,MAX(cleared) best,AVG(cleared) avg,
       SUM(CASE WHEN reason IN ('cashout','summit') THEN 1 ELSE 0 END) escapes,
@@ -172,9 +176,13 @@ function tabEmbed(guildId, user, tab, page, overview) {
       .setTitle("🌀 SINH TỒN · SỰ KIỆN VÀ CHUỖI")
       .setDescription(head)
       .addFields(
+        { name: "🌟 God of RNGesus", value:
+          "Đã gặp: **" + s.godFavor.blessings + "** lần · Tỷ lệ hiện tại: **" + formatGodChance(godRngesusChance(s.godFavor.deaths_since_blessing)) + "**\n" +
+          (s.godHistory.length ? s.godHistory.map((h) => "Tầng " + h.floor + " · **" + formatGodChance(h.chance) + "** · <t:" + Math.floor(h.encountered_at / 1000) + ":d>").join("\n") : "Chưa được ban phước.")
+        },
         { name: "Sự kiện đã gặp", value: String(e.events), inline: true },
         { name: "Chuỗi kích hoạt", value: String(e.chains), inline: true },
-        { name: "Loại sự kiện", value: `${e.kinds.length}/20`, inline: true },
+        { name: "Loại sự kiện", value: String(e.kinds.length), inline: true },
         {
           name: "Đã gặp",
           value: e.kinds.length ? e.kinds.map((k) => `\`${k}\``).join(" ").slice(0, 1000) : "Chưa có.",

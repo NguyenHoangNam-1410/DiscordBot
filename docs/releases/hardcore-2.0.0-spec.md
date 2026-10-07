@@ -611,11 +611,11 @@ Mô tả từng món (nguồn mapping: src/hardcore/itemPassives.js):
 - `scripts/simulate-hardcore.js`: mô phỏng cân bằng 999 tầng.
 
 
-## 17. Catalog nội tại LR — khai báo trước, chưa mở cách nhận
+## 17. Catalog di vật và nội tại LR
 
 Nguồn dữ liệu: `src/hardcore/itemRelics.js`, được export qua catalog Sinh tồn v2.
 
-Sáu di vật LR không cộng thuộc tính cơ bản, không có level hoặc lời nguyền. Nội tại được khai báo riêng bằng `relicPassive`; `passive` thường để null. Cách nhận (`acquisition`) chưa khai báo, runtime chưa kích hoạt. Không có trong pool drop, Gacha, cửa hàng hoặc loadout. Các thông số dưới đây là thiết kế ban đầu, chưa có kết quả simulate LR.
+Sáu di vật LR không cộng thuộc tính cơ bản, không có level hoặc lời nguyền. Nội tại được khai báo riêng bằng `relicPassive`; `passive` thường để null. Fatebreaker Seal đã mở cách nhận qua God of RNGesus và kích hoạt trong run; năm di vật còn lại chưa khai báo cách nhận hoặc kích hoạt runtime. Không có trong pool drop, Gacha, cửa hàng hoặc loadout. Các thông số dưới đây là thiết kế ban đầu, chưa có kết quả simulate LR.
 
 | Tên | Tên Việt | Độ hiếm | Nội tại dự kiến |
 |---|---|---|---|
@@ -626,6 +626,19 @@ Sáu di vật LR không cộng thuộc tính cơ bản, không có level hoặc 
 | Conqueror's Covenant | Khế Ước Chinh Phạt | LR | Mỗi quái hạ sau khi kích hoạt cộng 0,2 điểm % thưởng xu cho bạn, tối đa +100%. Nhân một lần trên thưởng xu trước khi trừ chi phí/tiền phạt; giữ trần payout và không tăng kim cương. Mỗi encounter chỉ tính một lần. |
 | Gilded Soul | Linh Hồn Hoàng Kim | LR | DMG Tấn công/Skill của bạn tăng theo xu có thể rút trong run: đạt 2/5/10/20/40 lần tiền cược thì tăng 10/20/30/40/50%. Chốt mức tăng khi vào combat; không dùng ví xu ngoài run, không cộng thuộc tính cơ bản. |
 
-Quy tắc nội tại dự kiến: tối đa một LR kích hoạt trong toàn run, không đổi nội tại giữa run, không tăng theo level, chỉ tính tiến trình sau kích hoạt. Lựa chọn vật lý/phép của Veil of the Absolute khóa theo run. Di vật tồn tại trong run; cách nhận, nguyên liệu và chuỗi event sẽ khai báo sau.
+Quy tắc nội tại dự kiến: tối đa một LR kích hoạt trong toàn run, không đổi nội tại giữa run, không tăng theo level, chỉ tính tiến trình sau kích hoạt. Lựa chọn vật lý/phép của Veil of the Absolute khóa theo run. Di vật tồn tại trong run; cách nhận, nguyên liệu và chuỗi event của năm món còn lại sẽ khai báo sau.
 
 Vé hồi sinh LR hiện tại vẫn là vật phẩm tiêu hao và vẫn bán trong cửa hàng như trước; không chiếm suất nội tại LR.
+
+## 18. God of RNGesus — phước lành và Fatebreaker Seal
+
+- Roll độc lập một lần mỗi tầng từ tầng 1, trước tình huống thường; mọi tầng kể cả boss 50/100/... và boss cuối 999 đều có thể gặp.
+- Tỷ lệ ban đầu là 0,0001% (xác suất 0,000001). Mỗi run kết thúc thật sự vì RNGesus tăng 0,0001 điểm %, cộng dồn theo người chơi trong server từ lần được ban phước trước. Công thức: min(100%, (1 + số lần tử trận) × 0,0001%). Không tăng theo tầng, LUCK hoặc nguyền.
+- Lịch sử archive có reason=rngesus được backfill khi migration 40 chạy. Death khác, rút thưởng, bỏ run, chạy/hối lộ/cầu nguyện thành công và được vé/Lost Adventurer cứu không tăng. Chỉ đếm một lần/session; dữ liệu lưu trong SQLite và giữ qua restart.
+- Phước lành nhận ngay lúc gặp: giải tất cả lớp nguyền UR trên trang bị (giữ UR, level, buff và nội tại), xóa mọi Rift modifier; sau khi tính lại chỉ số hồi đầy HP/MP. Paradox, Contract, vé và ký ức giữ nguyên.
+- Nhận Fatebreaker Seal [LR] riêng trong túi run, không có level hoặc chỉ số thường. Nội tại ngăn tạo encounter RNGesus mới trong phần còn lại của run; không chặn God, không mang sang run sau. Không có trong drop/Gacha/cửa hàng/loadout.
+- Gặp God reset bộ đếm tử trận tích lũy về 0 và tỷ lệ về 0,0001%. Không reset tổng số lần tử trận/thành tích đã lưu. Chance ở encounter và lịch sử là chance trước reset.
+- God không tự vượt tầng hoặc thay thế boss: bấm Tiếp tục khám phá để tạo tình huống của chính tầng đó, không roll God lần nữa. Tầng chưa vượt không được tính vào milestone/payout.
+- Animation gồm hai frame ngắn (650 ms và 850 ms), không có nút hành động, rồi reveal tên God, tỷ lệ và phước lành. Mỗi encounter chỉ chạy một lần. Animation/Discord lỗi không thu hồi phước lành; dùng /sinhton tieptuc để mở lại run đã lưu.
+- Thành tựu Được Thần Vận Mệnh Chọn mở ngay khi gặp lần đầu; không thêm thưởng tiền ngoài phước lành. Hồ sơ Sinh tồn, tab Sự kiện và chuỗi, lưu số lần gặp, tỷ lệ hiện tại và ba lần gặp gần nhất kèm tầng/tỷ lệ/thời gian.
+- Tower có kịch bản riêng, không roll event God.

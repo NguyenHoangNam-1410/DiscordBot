@@ -2,7 +2,12 @@
 const itemCurses = require("../hardcore/itemCurses");
 const monsterLoot = require("../hardcore/monsterLoot");
 const memories = require("../hardcore/towerMemories");
-const { RNGESUS_CYCLE_RULES, rngesusChaosRules } = require("./hardcoreRngesus");
+const {
+  RNGESUS_CYCLE_RULES,
+  GOD_RNGESUS_RULES,
+  formatGodChance,
+  rngesusChaosRules,
+} = require("./hardcoreRngesus");
 const {
   EmbedBuilder,
   ActionRowBuilder,
@@ -868,6 +873,37 @@ function encounterText(s) {
   if (s.phase === "summit")
     return `${eventIcon("boss")} Đã hạ Deimoss tầng 999. Bấm **Rút thưởng** để chốt chiến thắng và phần thưởng.`;
   const e = s.encounter;
+  if (e.type === "god_rngesus") {
+    const b = e.blessing;
+    return (
+      eventIcon("god_rngesus") +
+      " **God of RNGesus (" +
+      formatGodChance(e.encounterChance) +
+      ")**\n" +
+      E.hp +
+      " **HP " +
+      b.hpBefore +
+      " → " +
+      b.hpAfter +
+      "** · " +
+      E.mana +
+      " **MP " +
+      b.manaBefore +
+      " → " +
+      b.manaAfter +
+      "**\n" +
+      "Đã giải **" +
+      b.cleansedLevels +
+      "** lớp nguyền UR và xóa **" +
+      b.removedRiftStacks +
+      "** ấn Rift. Giữ UR, level, Paradox và Contract.\n" +
+      "💠 **Fatebreaker Seal [LR]** · " +
+      (s.activeRelic === "fatebreaker_seal"
+        ? "Đang hoạt động: không gặp RNGesus trong phần còn lại của run."
+        : "Đã nhận; đang có nội tại LR khác hoạt động.") +
+      "\nTỷ lệ God đã reset về **0,0001%**. Thành tích đã được lưu.\nTiếp tục khám phá để xử lý tầng hiện tại; không bỏ qua boss."
+    );
+  }
   const formatted = randomEventText(s);
   if (formatted) return formatted;
   if (e.type === "combat") {
@@ -937,7 +973,7 @@ function encounterSummary(s) {
     return `${eventIcon("paradox")} **RIFT PARADOX · HIỆU LỰC 5 TẦNG**\nTầng ${s.encounter.version === 2 ? s.encounter.milestone + 1 : s.floor}–${s.encounter.version === 2 ? s.encounter.milestone + 5 : s.floor + 4}. Chọn một luật bằng nút bên dưới.\nXem **Chi tiết** để đọc công dụng từng lựa chọn.`;
   if (s.phase !== "encounter") return encounterText(s);
   const e = s.encounter;
-  if (e.type === "memory") return encounterText(s);
+  if (["memory", "god_rngesus"].includes(e.type)) return encounterText(s);
   if (e.type === "combat") {
     const rank =
       {
@@ -1021,9 +1057,15 @@ function hasEncounterDetails(s) {
   if (s.phase !== "encounter") return false;
   const e = s.encounter;
   return (
-    ["chest", "shrine", "rngesus", "trap", "echo", "surprise"].includes(
-      e.type,
-    ) || e.type === "combat"
+    [
+      "chest",
+      "shrine",
+      "rngesus",
+      "god_rngesus",
+      "trap",
+      "echo",
+      "surprise",
+    ].includes(e.type) || e.type === "combat"
   );
 }
 function viewTabs(s) {
@@ -1037,7 +1079,7 @@ function viewTabs(s) {
 function viewLabel(tab, s) {
   return {
     stats: "Chỉ số",
-    items: `Túi (${s.items.length})`,
+    items: `Túi (${s.items.length + (s.relics?.length || 0)})`,
     effects: `Rift (${Object.values(s.modifiers || {}).filter((stacks) => stacks > 0).length})`,
     encounter: "Chi tiết",
   }[tab];
@@ -1791,7 +1833,25 @@ function privatePayload(
       });
     if (!state.items.length)
       e.addFields({ name: `${E.backpack} Trang bị`, value: "Chưa có." });
+    for (const relic of state.relics || []) {
+      const definition = core.RELIC_ITEMS[relic.id];
+      if (definition)
+        e.addFields({
+          name: "💠 " + definition.name + " [LR]",
+          value:
+            (state.activeRelic === relic.id
+              ? "**Đang hoạt động**"
+              : "Chưa kích hoạt") +
+            " · Nhận tại tầng " +
+            relic.acquiredFloor +
+            "\n" +
+            definition.text,
+        });
+    }
   } else if (tab === "stats") {
+    const activeRelic = core.RELIC_ITEMS[state.activeRelic];
+    if (activeRelic)
+      addTextFields(e, "💠 Nội tại LR · " + activeRelic.name, activeRelic.text);
     addTextFields(
       e,
       "Chỉ số nhân vật",
@@ -2118,6 +2178,10 @@ function ratesFields(category) {
       },
     ],
     rngesus: [
+      {
+        name: `${eventIcon("god_rngesus")} God of RNGesus`,
+        value: GOD_RNGESUS_RULES,
+      },
       {
         name: "📊 Chu kỳ gặp RNGesus",
         value: RNGESUS_CYCLE_RULES,

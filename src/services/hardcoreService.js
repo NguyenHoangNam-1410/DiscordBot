@@ -29,6 +29,8 @@ const { getGameChannel } = require("./gameChannelService");
 const { requireGameChannel } = require("../utils/gameChannel");
 const { createFairness, fairInt } = require("./fairnessService");
 const hardcoreRepository = require("./hardcoreRepository");
+const godRngesus = require("./hardcoreGodRngesus");
+const godReveal = require("./hardcoreGodReveal");
 const { addDiamonds } = require("./playerLevelService");
 const hardcoreView = require("./hardcoreView");
 const hardcoreInventory = require("./hardcoreInventoryService");
@@ -1100,7 +1102,10 @@ const getSession = hardcoreRepository.getSession;
 const getHardcoreByUser = hardcoreRepository.getByUser;
 function parseState(session) {
   const state = hardcoreRepository.parseState(session);
-  if (isV2(state)) return hardcoreV2.normalize(state);
+  if (isV2(state)) {
+    state.godRngesusEnabled = true;
+    return hardcoreV2.normalize(state);
+  }
   state.escapeTokens = clamp(Math.floor(Number(state.escapeTokens) || 0), 0, 1);
   state.modifiers ||= {};
   state.payoutSpent ||= 0;
@@ -1393,6 +1398,7 @@ const startTx = db.transaction(
       created_at: now,
       updated_at: now,
     };
+    if (isV2(state)) state.godRngesusEnabled = true;
     if (isV2(state))
       state.encounter =
         forcedEncounter ||
@@ -1783,15 +1789,49 @@ async function handleHardcoreSetup(interaction, logger = console) {
   }
   let message;
   try {
-    message = await interaction.channel.send({
-      embeds: [
-        hardcoreEmbed(started.state, draft.userId, null, started.session.id),
-      ],
-      components: hardcoreRows(started.session.id, started.state),
-      allowedMentions: { parse: [] },
-    });
+    const initialGodFrame = godReveal.frame(started.state, draft.userId);
+    message = await interaction.channel.send(
+      initialGodFrame || {
+        embeds: [
+          hardcoreEmbed(started.state, draft.userId, null, started.session.id),
+        ],
+        components: hardcoreRows(started.session.id, started.state),
+        allowedMentions: { parse: [] },
+      },
+    );
     setMessageId(started.session.id, message.id);
+    if (initialGodFrame) {
+      await godReveal.play(
+        started.session.id,
+        started.state,
+        draft.userId,
+        (payload) => message.edit(payload),
+        { logger },
+      );
+      await message.edit({
+        content: "",
+        embeds: [
+          hardcoreEmbed(started.state, draft.userId, null, started.session.id),
+        ],
+        components: hardcoreRows(started.session.id, started.state),
+        allowedMentions: { parse: [] },
+      });
+    }
   } catch (error) {
+    if (started.state.encounter.type === "god_rngesus") {
+      // Never discard this rare, already-persisted blessing because Discord could not publish it.
+      closeSetup(draft);
+      logger.warn?.(
+        { err: error, sessionId: started.session.id },
+        "God blessing saved; initial panel could not publish",
+      );
+      await interaction.editReply(
+        closedSetup(
+          "Phước lành God of RNGesus và run đã được lưu. Discord chưa hiển thị được bảng; dùng /sinhton tieptuc để tiếp tục.",
+        ),
+      );
+      return started;
+    }
     forceEndHardcoreSession(started.session.id, draft.guildId, draft.userId, {
       label: "setup-ui-failed",
     });
@@ -1853,6 +1893,7 @@ function killerName(state, reason) {
 }
 
 function finishRun(session, state, reason) {
+  godRngesus.recordDeath(session, reason);
   if (["death", "rngesus"].includes(reason))
     state.killedBy = killerName(state, reason);
   const diamonds =
@@ -3016,7 +3057,15 @@ async function showHardcoreTurn(
     } finally {
       if (timing) timing.renderMs += performance.now() - renderStart;
     }
-    return await interaction.editReply(payload);
+    if (!settled)
+      await godReveal.play(
+        sessionId,
+        state,
+        interaction.user.id,
+        (frame) => interaction.editReply(frame),
+        { logger },
+      );
+    return await interaction.editReply({ content: "", ...payload });
   } catch (error) {
     logger?.warn({ err: error, sessionId }, "could not update hardcore panel");
     const fallback = {

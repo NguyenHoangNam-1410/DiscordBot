@@ -1,5 +1,16 @@
 [
   {
+    "id": "b607d33b-b2ec-4b28-ad60-fa16b075399f",
+    "updatedAt": "2026-10-07T04:20:52.585Z",
+    "auditedAt": "2026-10-07T04:20:52.585Z",
+    "title": "God of RNGesus và di vật Fatebreaker Seal",
+    "changes": [
+      "Thêm God of RNGesus: roll riêng từng tầng từ tầng 1 với tỷ lệ ban đầu 0,0001%; mỗi run tử trận thật sự do RNGesus tăng thêm 0,0001 điểm %. Tính cả lịch sử tử trận RNGesus đã lưu, giữ qua các run và restart.",
+      "God ban phước hồi đầy HP/MP, giải mọi nguyền UR và xóa mọi ấn Rift; giữ UR, level, Paradox và Contract. Nhận Fatebreaker Seal [LR], không gặp RNGesus trong phần còn lại của run; tỷ lệ God reset về 0,0001%.",
+      "Thêm animation ngắn khi gặp God, hiển thị đúng tỷ lệ lúc gặp, thành tựu Được Thần Vận Mệnh Chọn và lịch sử trong hồ sơ Sinh tồn. Không bỏ qua boss, không nhận phước lặp khi bấm nút cũ; lỗi Discord không làm mất phước lành đã lưu."
+    ]
+  },
+  {
     "id": "f1ca9b07-77aa-4248-8089-bc521ec331f2",
     "updatedAt": "2026-10-07T03:53:41.373Z",
     "auditedAt": "2026-10-07T03:53:41.373Z",

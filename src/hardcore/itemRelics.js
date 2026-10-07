@@ -1,5 +1,5 @@
 "use strict";
-// LR relic design catalog. Acquisition and runtime activation are intentionally pending.
+// LR relic catalog. Fatebreaker Seal is active; the other five designs remain pending.
 function deepFreeze(value) {
   if (value && typeof value === "object" && !Object.isFrozen(value)) {
     for (const child of Object.values(value)) deepFreeze(child);
@@ -138,8 +138,11 @@ const RELIC_ITEMS = deepFreeze(
         gachaEligible: false,
         shopEligible: false,
         loadoutEligible: false,
-        runtimeEnabled: false,
-        acquisition: null,
+        runtimeEnabled: design.id === "fatebreaker_seal",
+        acquisition:
+          design.id === "fatebreaker_seal"
+            ? { kind: "god_rngesus", method: "blessing" }
+            : null,
       },
     ]),
   ),

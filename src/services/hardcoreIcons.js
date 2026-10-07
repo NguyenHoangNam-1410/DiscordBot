@@ -217,7 +217,7 @@ function eventIcon(key) {
   };
   return icon(
     aliases[key] || `event_${key}`,
-    key === "boss_chest" ? E.chest : "⚠️",
+    key === "boss_chest" ? E.chest : key === "god_rngesus" ? "🌟" : "⚠️",
   );
 }
 function treasureChestIcon(color) {

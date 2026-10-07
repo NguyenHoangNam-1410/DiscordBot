@@ -1247,4 +1247,29 @@ runMigration(
   },
 );
 
+
+runMigration(40, "God of RNGesus persistent favor and encounter records", () => {
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS hardcore_rngesus_favor (
+      guild_id TEXT NOT NULL,user_id TEXT NOT NULL,
+      deaths_since_blessing INTEGER NOT NULL DEFAULT 0 CHECK(deaths_since_blessing>=0),
+      rngesus_deaths INTEGER NOT NULL DEFAULT 0 CHECK(rngesus_deaths>=0),
+      blessings INTEGER NOT NULL DEFAULT 0 CHECK(blessings>=0),updated_at INTEGER NOT NULL,
+      PRIMARY KEY(guild_id,user_id));
+    CREATE TABLE IF NOT EXISTS hardcore_rngesus_death_marks (
+      session_id TEXT PRIMARY KEY,guild_id TEXT NOT NULL,user_id TEXT NOT NULL,ended_at INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS hardcore_god_rngesus_encounters (
+      session_id TEXT NOT NULL,floor INTEGER NOT NULL CHECK(floor BETWEEN 1 AND 999),
+      guild_id TEXT NOT NULL,user_id TEXT NOT NULL,chance REAL NOT NULL CHECK(chance>0 AND chance<=1),
+      encountered_at INTEGER NOT NULL,revealed_at INTEGER,PRIMARY KEY(session_id,floor));
+    CREATE INDEX IF NOT EXISTS idx_god_rngesus_player
+      ON hardcore_god_rngesus_encounters(guild_id,user_id,encountered_at);
+    INSERT OR IGNORE INTO hardcore_rngesus_death_marks(session_id,guild_id,user_id,ended_at)
+      SELECT session_id,guild_id,user_id,ended_at FROM hardcore_run_archive WHERE reason='rngesus';
+    INSERT OR IGNORE INTO hardcore_rngesus_favor(guild_id,user_id,deaths_since_blessing,rngesus_deaths,blessings,updated_at)
+      SELECT guild_id,user_id,COUNT(*),COUNT(*),0,MAX(ended_at)
+      FROM hardcore_rngesus_death_marks GROUP BY guild_id,user_id;
+  `);
+});
+
 module.exports = { db, dbPath, runMigration };

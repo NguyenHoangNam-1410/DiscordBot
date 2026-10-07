@@ -1,3 +1,4 @@
+const godReveal = require("../services/hardcoreGodReveal");
 const {
   RNGESUS_CYCLE_RULES,
   rngesusChaosRules,
@@ -48,7 +49,8 @@ function recordEmbed(user, record) {
 }
 
 const profileView = require("../services/hardcoreProfile");
-const overviewFor = (guildId) => (user) => recordEmbed(user, getHardcoreRecord(guildId, user.id));
+const overviewFor = (guildId) => (user) =>
+  recordEmbed(user, getHardcoreRecord(guildId, user.id));
 
 const RATE_CATEGORIES = Object.freeze([
   {
@@ -269,12 +271,16 @@ module.exports = {
   recordEmbed,
   ratesEmbed,
   handleProfileSelect: (interaction) =>
-    profileView.handleSelect(interaction, overviewFor(interaction.guildId), (id) =>
-      interaction.client.users.fetch(id),
+    profileView.handleSelect(
+      interaction,
+      overviewFor(interaction.guildId),
+      (id) => interaction.client.users.fetch(id),
     ),
   handleProfilePage: (interaction) =>
-    profileView.handlePage(interaction, overviewFor(interaction.guildId), (id) =>
-      interaction.client.users.fetch(id),
+    profileView.handlePage(
+      interaction,
+      overviewFor(interaction.guildId),
+      (id) => interaction.client.users.fetch(id),
     ),
   handleTopSelect: (interaction) => profileView.handleTopSelect(interaction),
   handleTopPage: (interaction) => profileView.handleTopPage(interaction),
@@ -321,7 +327,12 @@ module.exports = {
     }
     if (subcommand === "top")
       return interaction.reply({
-        ...profileView.topPayload(interaction.guildId, interaction.user.id, "all", 0),
+        ...profileView.topPayload(
+          interaction.guildId,
+          interaction.user.id,
+          "all",
+          0,
+        ),
         flags: MessageFlags.Ephemeral,
       });
     if (subcommand === "rates")
@@ -356,19 +367,46 @@ module.exports = {
             content:
               "Hãy tiếp tục lượt này trong kênh Sinh tồn nơi bạn đã bắt đầu.",
           });
-        const message = await interaction.channel.send({
-          embeds: [
-            hardcoreEmbed(
-              current.state,
-              interaction.user.id,
-              null,
-              current.session.id,
-            ),
-          ],
-          components: hardcoreRows(current.session.id, current.state),
-          allowedMentions: { parse: [] },
-        });
+        const initialGodFrame = godReveal.frame(
+          current.state,
+          interaction.user.id,
+        );
+        const message = await interaction.channel.send(
+          initialGodFrame || {
+            embeds: [
+              hardcoreEmbed(
+                current.state,
+                interaction.user.id,
+                null,
+                current.session.id,
+              ),
+            ],
+            components: hardcoreRows(current.session.id, current.state),
+            allowedMentions: { parse: [] },
+          },
+        );
         setMessageId(current.session.id, message.id);
+        if (initialGodFrame) {
+          await godReveal.play(
+            current.session.id,
+            current.state,
+            interaction.user.id,
+            (payload) => message.edit(payload),
+          );
+          await message.edit({
+            content: "",
+            embeds: [
+              hardcoreEmbed(
+                current.state,
+                interaction.user.id,
+                null,
+                current.session.id,
+              ),
+            ],
+            components: hardcoreRows(current.session.id, current.state),
+            allowedMentions: { parse: [] },
+          });
+        }
         if (current.session.message_id) {
           const previous = await interaction.channel.messages
             .fetch(current.session.message_id)

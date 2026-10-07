@@ -3,6 +3,7 @@ const { createHash } = require("node:crypto");
 const stats = require("./hardcoreStats");
 const itemPassives = require("../hardcore/itemPassives");
 const monsterLoot = require("../hardcore/monsterLoot");
+const godRngesus = require("./hardcoreGodRngesus");
 const memories = require("../hardcore/towerMemories");
 const {
   rngesusEncounterChance,
@@ -218,7 +219,8 @@ function reviveAfterDeath(state, session, rng, reason) {
     : `\n${E.reviveTicket} **Vé hồi sinh −1**: tự dùng để cứu bạn.`;
   if (!combat || reason === "rngesus") completeFloor(state, session, rng, 0);
   // Set directly: checkpoint healing and regeneration must not alter the promised 50%.
-  state.hp = Math.max(1, Math.ceil(state.maxHp * 0.5));
+  if (state.encounter.type !== "god_rngesus")
+    state.hp = Math.max(1, Math.ceil(state.maxHp * 0.5));
   state.lastLog += `\n❤️ Hồi sinh với **${state.hp}/${state.maxHp} HP**; ${combat ? "tiếp tục đánh quái tại tầng này" : "đi sang tầng kế tiếp"}.`;
   return true;
 }
@@ -1060,6 +1062,8 @@ function echoEnemy(state, echo, rng, challenge = false) {
   return enemy;
 }
 function generateEncounter(state, session, rng) {
+  const god = godRngesus.tryEncounter(state, session, rng);
+  if (god) return god;
   return itemPassives.prepareForecast(
     state,
     generateRawEncounter(state, session, rng),
@@ -1907,6 +1911,8 @@ function actions(state) {
       { action: "touch", label: "Chạm Shrine" },
       { action: "skip", label: "Bỏ qua" },
     ];
+  if (e.type === "god_rngesus")
+    return [{ action: "god_continue", label: "Tiếp tục khám phá" }];
   if (e.type === "rngesus")
     return [
       { action: "fight", label: "Đánh (chết)" },
@@ -2506,7 +2512,11 @@ function act(state, session, action, rng) {
       directKeys: [],
     };
   state.discardedTicketsThisTurn = 0;
-  if (state.phase === "boss_chest") {
+  if (state.encounter.type === "god_rngesus" && action === "god_continue") {
+    state.lastLog =
+      "✨ Tiếp tục tầng " + state.floor + " sau phước lành của God of RNGesus.";
+    state.encounter = generateEncounter(state, session, rng);
+  } else if (state.phase === "boss_chest") {
     if (action === "boss_open") {
       receiveItem(state, state.encounter.item);
       state.lastLog = `${eventIcon("boss_chest")} Đã mở rương boss tầng ${state.encounter.bossFloor}.`;

@@ -265,6 +265,8 @@ for (const test of [
   );
   const restored = JSON.parse(JSON.stringify(saved));
   core.normalize(restored);
+  // This fixture isolates the ordinary RNGesus cycle, not the separate God roll.
+  restored.godRngesusEnabled = false;
   restored.floor = floor + 1;
   restored.phase = "encounter";
   assert.notEqual(

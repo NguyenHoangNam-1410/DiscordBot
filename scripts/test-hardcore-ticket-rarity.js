@@ -79,8 +79,13 @@ try {
     assert.equal(relic.typeCode, "LR");
     assert.equal(relic.rarity, "limited");
     assert.equal(relic.category, "relic");
-    assert.equal(relic.acquisition, null);
-    assert.equal(relic.runtimeEnabled, false);
+    assert.deepEqual(
+      relic.acquisition,
+      relic.id === "fatebreaker_seal"
+        ? { kind: "god_rngesus", method: "blessing" }
+        : null,
+    );
+    assert.equal(relic.runtimeEnabled, relic.id === "fatebreaker_seal");
     assert.equal(relic.passive, null);
     assert.equal(relic.curse, null);
     assert.deepEqual(relic.effects, {});

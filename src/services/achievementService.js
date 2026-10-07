@@ -1330,11 +1330,17 @@ const eventAchievements = [
   ["hc_boss_10", "Thợ săn trùm", "Hạ 10 boss trong Sinh tồn", 10, 60_000, 150, "hardcoreBossKills"],
   ["hc_boss_50", "Bóng đen của trùm", "Hạ 50 boss trong Sinh tồn", 50, 250_000, 600, "hardcoreBossKills"],
 ].map(([id, name, description, target, reward, diamonds, metric]) => ({ id, name, description, target, reward, diamonds, metric }));
-const ACHIEVEMENTS = Object.freeze([...BASE_ACHIEVEMENTS, ...classFloorAchievements, ...eventAchievements]);
+const godAchievement = {
+  id: "hc_god_rngesus_1", name: "Được Thần Vận Mệnh Chọn",
+  description: "Gặp God of RNGesus và nhận phước lành trong Sinh tồn",
+  target: 1, reward: 0, diamonds: 0, metric: "hardcoreGodBlessings",
+};
+const ACHIEVEMENTS = Object.freeze([...BASE_ACHIEVEMENTS, ...classFloorAchievements, ...eventAchievements, godAchievement]);
 
 // Nhóm bộ lọc ở /kiemtra (Discord giới hạn 25 mục chọn): các chỉ số cùng chủ đề gộp thành một mục lọc.
 const CATEGORY_GROUPS = Object.freeze({
   hardcoreEvents: "hardcoreEvents",
+  hardcoreGodBlessings: "hardcoreEvents",
   hardcoreChains: "hardcoreEvents",
   hardcoreEventKinds: "hardcoreEvents",
   hardcoreKills: "hardcoreEvents",
@@ -1557,6 +1563,7 @@ function metrics(guildId, userId) {
     gameTypes,
     hardcoreFloor,
     ...classFloors,
+    hardcoreGodBlessings: db.prepare("SELECT blessings FROM hardcore_rngesus_favor WHERE guild_id=? AND user_id=?").get(guild, user)?.blessings || 0,
     hardcoreEvents: eventRow.events || 0,
     hardcoreChains: eventRow.chains || 0,
     hardcoreKills: eventRow.kills || 0,
@@ -1592,7 +1599,7 @@ function claimAchievements(guildId, userId, now = Date.now()) {
       db.prepare(
         "INSERT INTO achievement_claims(guild_id,user_id,achievement_id,claimed_at) VALUES(?,?,?,?)",
       ).run(String(guildId), String(userId), item.id, now);
-      creditCoins({
+      if (item.reward > 0) creditCoins({
         guildId,
         userId,
         amount: item.reward,

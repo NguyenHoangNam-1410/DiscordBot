@@ -1,10 +1,38 @@
 "use strict";
 
 const RNGESUS_RATE = Object.freeze({ initial: 0.003, step: 0.0005, max: 0.12 });
+
+const GOD_RNGESUS_RATE = Object.freeze({ initial: 0.000001, step: 0.000001 });
+function godRngesusChance(deaths = 0) {
+  const count = Number.isSafeInteger(deaths) ? Math.max(0, deaths) : 0;
+  return Math.min(1, (count + 1) / 1_000_000);
+}
+function formatGodChance(chance) {
+  return (
+    (chance * 100).toLocaleString("vi-VN", {
+      minimumFractionDigits: 4,
+      maximumFractionDigits: 4,
+    }) + "%"
+  );
+}
+function hasFatebreaker(state) {
+  return (
+    state.activeRelic === "fatebreaker_seal" &&
+    (state.relics || []).some((item) => item.id === "fatebreaker_seal")
+  );
+}
+const GOD_RNGESUS_RULES = [
+  "- God of RNGesus roll riêng mỗi tầng từ tầng 1: **0,0001% + số lần tử trận thật sự do RNGesus từ lần ban phước trước × 0,0001 điểm %**.",
+  "- Tính theo người chơi trong server, cộng dồn qua các run và restart bot. Lịch sử tử trận RNGesus đã lưu được tính; được cứu/hồi sinh hoặc chết vì nguồn khác không tăng.",
+  "- Gặp: hồi đầy HP/MP, giải toàn bộ nguyền UR (giữ UR và level), xóa mọi ấn Rift; giữ Paradox/Contract. Nhận Fatebreaker Seal [LR], không gặp RNGesus nữa trong run.",
+  "- Reset tỷ lệ God về **0,0001%**; lưu tỷ lệ đã xảy ra vào thành tích. Không bỏ qua boss/tình huống của tầng.",
+].join("\n");
+
 function rngesusChance(floor) {
   return floor < 5 ? 0 : RNGESUS_RATE.initial;
 }
 function rngesusEncounterChance(state) {
+  if (hasFatebreaker(state)) return 0;
   if (!rngesusChance(state.floor)) return 0;
   const resetFloor = state.rngesusResetFloor;
   // Retain one safe floor after surviving RNGesus.
@@ -45,6 +73,11 @@ function rngesusChaosRules() {
   );
 }
 module.exports = {
+  GOD_RNGESUS_RATE,
+  GOD_RNGESUS_RULES,
+  godRngesusChance,
+  formatGodChance,
+  hasFatebreaker,
   RNGESUS_CYCLE_RULES,
   rngesusChaosRules,
   rngesusChance,
