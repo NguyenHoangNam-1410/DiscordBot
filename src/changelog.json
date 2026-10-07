@@ -1,5 +1,17 @@
 [
   {
+    "id": "8c4cd1d9-0ac8-4a84-91b0-839cf223e28f",
+    "updatedAt": "2026-10-07T02:49:30.749Z",
+    "auditedAt": "2026-10-07T02:49:30.749Z",
+    "title": "Thống nhất mọi phí xu theo payout hiện tại",
+    "changes": [
+      "Blacksmith, Purifier, hiến tế xu và khoản cược Cursed Gambler đều tính theo payout hiện tại đang hiển thị, sau lời nguyền, Paradox và các khoản đã chi. Giữ nguyên tỷ lệ phí; cược thắng vẫn thưởng theo khoản đã đặt.",
+      "Rift Merchant và Payout Shop chốt giá theo payout hiện tại lúc gặp, áp dụng nội tại giảm giá xu một lần. Điều kiện đủ tiền và thanh toán dùng cùng số payout.",
+      "Cửa hàng đang chờ của bản cũ được cập nhật giá một lần khi mở lại, giữ nguyên hàng và kết quả rương. Giá mới tiếp tục được khóa, không tính lại khi xem UI.",
+      "Đồng bộ bảng chơi, Chi tiết và luật; bỏ mô tả payout gốc khỏi các event."
+    ]
+  },
+  {
     "id": "1370f7cd-3c95-4150-ae86-540ab5443e84",
     "updatedAt": "2026-10-07T02:41:41.820Z",
     "auditedAt": "2026-10-07T02:41:41.820Z",

@@ -175,7 +175,7 @@ Stack hiệu dụng dùng giảm dần: ba stack đầu tính 100%; stack 4–8 
 
 ### 6.2. Rift Paradox
 
-- **Máu là tiền:** mỗi phần trăm Max HP thực sự mất bởi nguồn thù địch cộng 1% payout tạm; mỗi phần trăm HP thực sự hồi trừ 1%. Biên từ −50% đến +50%. Chi phí tự nguyện không tăng bonus. Shop dùng payout gốc đã chốt nên không thể dùng payout ảo để mua đồ.
+- **Máu là tiền:** mỗi phần trăm Max HP thực sự mất bởi nguồn thù địch cộng 1% payout tạm; mỗi phần trăm HP thực sự hồi trừ 1%. Biên từ −50% đến +50%. Chi phí tự nguyện không tăng bonus. Mọi phí xu và khoản cược dùng payout hiện tại đang hiển thị, bao gồm hiệu ứng này. Giá shop được chốt lúc gặp; trả giá và hồi phục sau mua không tính lại phí đã trả.
 - **Ngược đời:** damage vật lý của người chơi lấy Defense làm nguồn tấn công; Defense chống vật lý của người chơi lấy trung bình damage vật lý làm nguồn. Chỉ tồn tại trong năm tầng của Paradox.
 
 ## 7. Hòm, rarity, pity và item level
@@ -236,14 +236,14 @@ Khi gặp Shrine, giao diện thay phần chỉ số của lượt trước bằ
 |---|---|
 | Wandering Healer | Miễn phí hồi max(20, 30% Max HP) và +1 bình. |
 | Treasure Goblin | Cơ hội bắt = min(90%, 60% + Luck*1% + bonus item). Thành công +25% tiền cược; thất bại trừ một lần 5% payout hiện tại. |
-| Altar of Sacrifice | Hiến tối đa 20% Max HP nhưng giữ ít nhất 1 HP để nhận +6 stat damage chính; hoặc trả 10% payout để nhận +6 VIT. |
-| Cursed Gambler | Cược 10% hoặc 25% payout; 50% thắng. Thắng cộng gấp đôi khoản đặt vào bonus, thua mất khoản đã chi. |
+| Altar of Sacrifice | Hiến tối đa 20% Max HP nhưng giữ ít nhất 1 HP để nhận +6 stat damage chính; hoặc trả 10% payout hiện tại để nhận +6 VIT. |
+| Cursed Gambler | Cược 10% hoặc 25% payout hiện tại; 50% thắng. Thắng cộng gấp đôi khoản đặt vào bonus, thua mất khoản đã chi. |
 | Lost Adventurer | Cứu bằng 1 bình nhận R 70% / SR 30% và bảo hộ Ân nghĩa; cướp nhận SSR 75% / UR có nguyền 25% và Truy nã. |
 | Blood Fountain | 60% hồi đầy HP; 25% +15 Max HP/HP; 15% gọi Blood Mimic. |
-| Blacksmith | Trả 12% payout để tăng một cấp item ngẫu nhiên đang có. |
+| Blacksmith | Trả 12% payout hiện tại để tăng một cấp item ngẫu nhiên đang có. |
 | Purifier | Trả 10% payout hiện tại trước khi giải, gỡ toàn bộ lời nguyền của một trang bị UR được chỉ định; giữ UR, level, buff và nội tại. |
 | Horadric Forge | Nghiền một cấp item để chọn +6 stat damage chính, +7 STR/VIT đã pre-roll, +4 VIT; SSR/UR còn có thể đổi lấy một Vé Thoát Hiểm. |
-| Rift Merchant | Hiện ba món ngẫu nhiên: bình 5%, hồi đầy 8%, +1 Luck 10%, SR 15%, Vé 25% payout. Chỉ mua một món. |
+| Rift Merchant | Ba món khác nhau: bình 2,5%, hồi đầy 4%, +1 LUCK 5%, SR 7,5%, Vé thoát 12,5%, rương thường mở ngay 7,5% payout hiện tại lúc gặp. Giá khóa một lần, áp dụng nội tại giảm giá xu; chỉ mua một món. |
 | Mirror of Fate | Chọn +10 stat damage chính; hoặc +8 VIT và +5 STR/DEX phòng thủ; hoặc đập gương: 20% +2 Luck, 80% tạo Dư âm gương, sau 10–30 tầng đấu Mirror Clone giữ chỉ số lúc đập. |
 | Treasure Room | Ba hòm đỏ/xanh/vàng, một hòm là Mimic. Được inspect một màu. Đỏ +5 damage trực tiếp; xanh +6 Defense/+5 RES; vàng +50% cược và +1 Luck. |
 | Rift Contract | Trong 3 tầng: không dùng bình → SSR; không dùng skill → +50% cược; không Defend → +10 stat damage chính. Vi phạm chỉ hủy thưởng. |
@@ -263,7 +263,7 @@ Khi gặp Shrine, giao diện thay phần chỉ số của lượt trước bằ
 
 | Shop | Rarity | Giá | Giới hạn |
 |---|---|---|---|
-| Payout | 45% R, 40% SR, 15% SSR | 5%/12%/25% payout gốc | Tối đa 5 lần/run |
+| Payout | 45% R, 40% SR, 15% SSR | 5%/12%/25% payout hiện tại | Tối đa 5 lần/run |
 | Blood | 55% SR, 35% SSR, 10% UR | 12%/25%/40% Max HP lúc shop xuất hiện | Tối đa 3 lần/run |
 | Diamond | 40% SR, 40% SSR, 20% UR | 200/600/1.600 kim cương | Chỉ từ tầng 101, tối đa 2 lần/run |
 
@@ -356,7 +356,7 @@ Thành tích toàn tài khoản hiện có các mốc Sinh tồn: tầng 10 thư
 - Interaction của cùng session được xếp hàng để tránh hai click đồng thời.
 - Toàn bộ mutation run, economy, shop và Grave Echo chạy trong SQLite transaction.
 - Giao dịch kim cương có operation ID idempotent.
-- Payout shop kiểm tra payout gốc sau các khoản đã chi; không dùng bonus Blood Paradox.
+- Mọi dịch vụ, hiến tế xu, cược và cửa hàng xu kiểm tra payout hiện tại sau lời nguyền, Paradox và các khoản đã chi. Giá Rift Merchant/Payout Shop khóa lúc gặp, áp dụng giảm giá xu đúng một lần. Cửa hàng đang chờ của bản cũ được chuyển giá một lần theo payout hiện tại khi resume, giữ nguyên hàng hóa, rương và kết quả đã khóa.
 - Blood Shop kiểm tra lại Max HP ngay lúc mua, giảm giới hạn HP trong suốt run và giữ ít nhất 1 Max HP trước khi nhận item.
 - Kết quả RNG/event, inventory shop, giá, tay Duelist và karma consequence được lưu trong state; resume không reroll.
 - Phiên không hoạt động quá 7 ngày bị tính là forfeit, payout bằng 0 và phiên bị xóa.

@@ -283,13 +283,13 @@ function blacksmithText(state, detailed = false) {
         : "☣️ **Đã giải toàn bộ nguyền:** rèn không thêm lời nguyền.",
     );
   lines.push(
-    "**Giá:** " + E.coin + " **" + money(cost) + " xu** (12% payout gốc).",
+    "**Giá:** " + E.coin + " **" + money(cost) + " xu** (12% payout hiện tại).",
   );
   if (detailed) {
     const passive = passiveText(target.definition).trim();
     if (passive) lines.push("**Nội tại giữ nguyên:**\n" + passive);
     lines.push(
-      "Cần đủ payout gốc để trả phí. **Bỏ qua:** giữ nguyên trang bị và payout.",
+      "Cần đủ payout hiện tại để trả phí. **Bỏ qua:** giữ nguyên trang bị và payout.",
     );
   } else {
     lines.push("Xem **Chi tiết** để đọc nội tại và điều kiện rèn.");
@@ -897,7 +897,7 @@ function encounterText(s) {
   if (k === "blacksmith") return blacksmithText(s, true);
   if (k === "purifier") return purifierText(s, true);
   if (k.endsWith("_shop"))
-    return `${eventIcon(e.kind)} **${e.name}** · mua tối đa **một món**. Giá và offer đã khóa.\n${e.offers.map((offer, i) => `**${i + 1}. ${offer.item.name} [${rarityLabel(offer.item.rarity)}] · ${shopPrice(k, offer)}**\n${itemText(offer.item)}`).join("\n")}\n${k === "blood_shop" ? "Giảm Max HP trong suốt run; phải còn ít nhất 1 Max HP sau trả giá. HP hiện tại chỉ hạ xuống nếu vượt Max HP mới." : k === "diamond_shop" ? "Kim cương bị trừ ngay khi mua, kể cả run sau đó tử trận." : "Chi phí lấy từ payout gốc; không dùng bonus Paradox để mua."}`;
+    return `${eventIcon(e.kind)} **${e.name}** · mua tối đa **một món**. Giá và offer đã khóa.\n${e.offers.map((offer, i) => `**${i + 1}. ${offer.item.name} [${rarityLabel(offer.item.rarity)}] · ${shopPrice(k, offer)}**\n${itemText(offer.item)}`).join("\n")}\n${k === "blood_shop" ? "Giảm Max HP trong suốt run; phải còn ít nhất 1 Max HP sau trả giá. HP hiện tại chỉ hạ xuống nếu vượt Max HP mới." : k === "diamond_shop" ? "Kim cương bị trừ ngay khi mua, kể cả run sau đó tử trận." : "Giá chốt theo payout hiện tại lúc gặp; bao gồm Paradox và các khoản đã chi."}`;
   if (k === "merchant")
     return `${eventIcon(k)} **${e.name}**\nMua tối đa **một món** bằng xu payout:\n${e.offers.map((o) => `- **${merchantOffer(o).name}** · **${money(o.price)} ${icon("coin", "🪙")}**`).join("\n")}\nXem **Chi tiết** để đọc công dụng và điều kiện mua.`;
   const target = s.items.find((x) => x.definition.id === e.targetId);
@@ -922,7 +922,7 @@ function encounterText(s) {
   }
   const descriptions = {
     healer: `**Hồi phục:** hồi ${E.hp} HP bằng 30% Max HP, ít nhất 20; +1 ${E.potion} bình máu (theo giới hạn bình của bạn). Miễn phí.`,
-    sacrifice: `**Hiến HP:** mất tối đa 20% Max ${E.hp} HP (giữ ≥1) → +6 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\n**Hiến payout:** trả 10% payout → +6 ${E.vit} VIT. Hiến HP không cộng bonus Blood Paradox.`,
+    sacrifice: `**Hiến HP:** mất tối đa 20% Max ${E.hp} HP (giữ ≥1) → +6 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\n**Hiến payout:** trả 10% payout hiện tại → +6 ${E.vit} VIT. Hiến HP không cộng bonus Blood Paradox.`,
     contract: `Trong 3 tầng, chọn một điều kiện:\n- **Không dùng ${E.potion} bình:** nhận đồ [SSR].\n- **Không dùng skill:** bonus +50% cược.\n- **Không phòng thủ:** +10 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\nVi phạm chỉ hủy thưởng.`,
     class_shrine: `Hiệu lực ba tầng tiếp theo: ${SHRINES[s.classKey]}`,
   };
@@ -1117,9 +1117,9 @@ function rawEncounterDetails(s) {
       chestPityText(s, e, true),
     );
   if (e.type === "surprise" && e.kind.endsWith("_shop"))
-    return `${eventIcon(e.kind)} **Công dụng các món đang bán**\n${e.offers.map((offer, i) => `${i + 1}. **${E.backpack} ${offer.item.name} [${rarityLabel(offer.item.rarity)}]**\n${itemText(offer.item)}`).join("\n\n")}\n\nMua tối đa **một món** trong lần gặp. ${e.kind === "blood_shop" ? "Trả bằng cách giảm Max HP trong suốt run, phải còn ít nhất 1 Max HP trước khi cộng vật phẩm. HP hiện tại chỉ hạ xuống nếu vượt Max HP mới." : e.kind === "diamond_shop" ? "Kim cương trừ ngay khi mua, không hoàn lại khi run kết thúc." : "Trả từ payout gốc; bonus Blood Paradox không dùng để mua."}`;
+    return `${eventIcon(e.kind)} **Công dụng các món đang bán**\n${e.offers.map((offer, i) => `${i + 1}. **${E.backpack} ${offer.item.name} [${rarityLabel(offer.item.rarity)}]**\n${itemText(offer.item)}`).join("\n\n")}\n\nMua tối đa **một món** trong lần gặp. ${e.kind === "blood_shop" ? "Trả bằng cách giảm Max HP trong suốt run, phải còn ít nhất 1 Max HP trước khi cộng vật phẩm. HP hiện tại chỉ hạ xuống nếu vượt Max HP mới." : e.kind === "diamond_shop" ? "Kim cương trừ ngay khi mua, không hoàn lại khi run kết thúc." : "Trả từ payout hiện tại; giá chốt lúc gặp, bao gồm Paradox và các khoản đã chi."}`;
   if (e.type === "surprise" && e.kind === "merchant")
-    return `${eventIcon("merchant")} **Công dụng hàng hóa**\n${e.offers.map((o) => `**${merchantOffer(o).name}**\n${merchantOffer(o).detail}`).join("\n\n")}\nChỉ mua một món; trả từ payout gốc. Cần đủ payout để mua.`;
+    return `${eventIcon("merchant")} **Công dụng hàng hóa**\n${e.offers.map((o) => `**${merchantOffer(o).name}**\n${merchantOffer(o).detail}`).join("\n\n")}\nChỉ mua một món; giá chốt theo payout hiện tại lúc gặp, gồm Paradox và các khoản đã chi. Cần đủ payout hiện tại để mua.`;
   return encounterText(s);
 }
 function turnText(state) {
@@ -2148,11 +2148,11 @@ function ratesFields(category) {
       {
         name: "Dịch vụ: giá và điều kiện",
         value:
-          "- **Rèn:** trả 12% payout gốc, tăng một level gồm buff và curse còn lại. **Giải nguyền:** trả 10% payout hiện tại, gỡ toàn bộ curse, giữ nguyên UR, buff, level và nội tại.\n- **Horadric Forge:** tiêu hao 1 level trang bị, giữ nguyên hiệu ứng có lợi của level đó trong run và xóa lời nguyền tương ứng; chọn thêm một phần thưởng. Không nhận lại bình/vé/HP hồi khi nhặt đồ.\n- **Payout Shop:** R/SR/SSR giá 5%/12%/25% payout gốc, tối đa 5 lần gặp/run. **Blood Shop:** giảm 12%/25%/40% Max HP để mua SR/SSR/UR, tối đa 3 lần gặp/run. Giá chốt lúc gặp, làm tròn lên; giảm Max HP trong suốt run, phải còn ít nhất 1 Max HP trước khi nhận vật phẩm. HP hiện tại chỉ hạ xuống nếu vượt Max HP mới.\n- **Diamond Shop:** từ tầng 101, giá SR 100 / SSR 300 / UR 480 kim cương, tối đa 2 lần gặp/run; trừ ngay từ tài khoản, không hoàn khi chết.\n- Mỗi loại shop cách nhau ít nhất 50 tầng; mỗi lần gặp mua tối đa một món. Giá cụ thể và công dụng ghi trên bảng/Chi tiết.",
+          "- **Rèn:** trả 12% payout hiện tại, tăng một level gồm buff và curse còn lại. **Giải nguyền:** trả 10% payout hiện tại, gỡ toàn bộ curse, giữ nguyên UR, buff, level và nội tại.\n- **Horadric Forge:** tiêu hao 1 level trang bị, giữ nguyên hiệu ứng có lợi của level đó trong run và xóa lời nguyền tương ứng; chọn thêm một phần thưởng. Không nhận lại bình/vé/HP hồi khi nhặt đồ.\n- **Payout Shop:** R/SR/SSR giá 5%/12%/25% payout hiện tại, tối đa 5 lần gặp/run. **Blood Shop:** giảm 12%/25%/40% Max HP để mua SR/SSR/UR, tối đa 3 lần gặp/run. Giá chốt lúc gặp, làm tròn lên; giảm Max HP trong suốt run, phải còn ít nhất 1 Max HP trước khi nhận vật phẩm. HP hiện tại chỉ hạ xuống nếu vượt Max HP mới.\n- **Diamond Shop:** từ tầng 101, giá SR 100 / SSR 300 / UR 480 kim cương, tối đa 2 lần gặp/run; trừ ngay từ tài khoản, không hoàn khi chết.\n- Mỗi loại shop cách nhau ít nhất 50 tầng; mỗi lần gặp mua tối đa một món. Giá cụ thể và công dụng ghi trên bảng/Chi tiết.",
       },
       {
-        name: `${eventIcon("merchant")} Rift Merchant · giá theo payout gốc`,
-        value: `Mỗi lần gặp có **3 loại hàng khác nhau**, chọn từ 6 loại; mua tối đa **1 món**. Giá được khóa khi gặp, làm tròn lên, tối thiểu 1 xu.\n- ${E.potion} +1 bình (giới hạn cơ bản 5, nội tại tăng tối đa 10): **2,5%** payout gốc.\n- ${E.hp} Hồi đầy HP: **4%**.\n- ${E.luck} +1 LUCK trong run: **5%**.\n- ${E.backpack} 1 trang bị SR: **7,5%**.\n- ${E.ticket} Vé thoát (tối đa 1): **12,5%**.\n- ${E.chest} Rương thường: **7,5%**, **mở ngay khi mua**; tỷ lệ và pity như hòm thường, có thể gặp Mimic hoặc rỗng/giả. Chi tiết liệt kê tỷ lệ của rương đang bán.\nTrả bằng payout của run; bonus Blood Paradox không dùng để mua.`,
+        name: `${eventIcon("merchant")} Rift Merchant · giá theo payout hiện tại`,
+        value: `Mỗi lần gặp có **3 loại hàng khác nhau**, chọn từ 6 loại; mua tối đa **1 món**. Giá được khóa khi gặp, làm tròn lên, tối thiểu 1 xu.\n- ${E.potion} +1 bình (giới hạn cơ bản 5, nội tại tăng tối đa 10): **2,5%** payout hiện tại.\n- ${E.hp} Hồi đầy HP: **4%**.\n- ${E.luck} +1 LUCK trong run: **5%**.\n- ${E.backpack} 1 trang bị SR: **7,5%**.\n- ${E.ticket} Vé thoát (tối đa 1): **12,5%**.\n- ${E.chest} Rương thường: **7,5%**, **mở ngay khi mua**; tỷ lệ và pity như hòm thường, có thể gặp Mimic hoặc rỗng/giả. Chi tiết liệt kê tỷ lệ của rương đang bán.\nGiá chốt theo payout hiện tại lúc gặp, sau lời nguyền, Paradox và các khoản đã chi; nội tại giảm giá xu vẫn áp dụng.`,
       },
       {
         name: `${eventIcon("purifier")} Purifier · giải lời nguyền`,

@@ -570,10 +570,10 @@ async function main() {
   funds.floor = 11;
   funds.cleared = 10;
   funds.paradox = { kind: "blood", from: 11, until: 15, bloodFactor: 0.5 };
-  const available = core.rawPayout(funds);
+  const available = core.payout(funds);
   funds.encounter = core.makeSurprise(funds, rng, "payout_shop");
   funds.encounter.offers[0].price = available + 1;
-  assert(core.payout(funds) > available);
+  assert(core.payout(funds) > core.rawPayout(funds));
   assert(core.actions(funds).find((a) => a.action === "buy_0").disabled);
   assert.equal(
     JSON.stringify(

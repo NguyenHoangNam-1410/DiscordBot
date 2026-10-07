@@ -152,6 +152,11 @@ const MERCHANT_PRICES = {
   ticket: 0.125,
   chest: 0.075,
 };
+const PAYOUT_PRICES = Object.freeze({
+  common: 0.05,
+  rare: 0.12,
+  legendary: 0.25,
+});
 const BLOOD_PRICES = Object.freeze({
   rare: 0.12,
   legendary: 0.25,
@@ -267,6 +272,7 @@ function normalize(state) {
     }
     current.priceVersion = 2;
   }
+  upgradeCoinShopPrices(state, current);
   state.rngesusFleeCount = Number.isSafeInteger(state.rngesusFleeCount)
     ? Math.max(0, state.rngesusFleeCount)
     : 0;
@@ -408,9 +414,9 @@ function penalty(state, fraction) {
   state.payoutEventSpent = (state.payoutEventSpent || 0) + cost;
 }
 function charge(state, amount) {
-  if (!Number.isSafeInteger(amount) || amount < 1 || rawPayout(state) < amount)
+  if (!Number.isSafeInteger(amount) || amount < 1 || payout(state) < amount)
     throw new Error("INSUFFICIENT_RUN_PAYOUT");
-  state.payoutSpent += amount;
+  state.payoutSpent = (state.payoutSpent || 0) + amount;
 }
 function receiveItem(state, definition, levels = 1, cleansedLevels = 0) {
   if (
@@ -812,10 +818,33 @@ function makeChest(state, rng, treasure = false) {
   };
 }
 function purifierCost(state) {
-  return Math.max(1, Math.ceil(payout(state) * PURIFIER_COST_RATE));
+  return serviceCost(state, PURIFIER_COST_RATE);
 }
 function serviceCost(state, fraction) {
-  return Math.max(1, Math.ceil(rawPayout(state) * fraction));
+  return Math.max(1, Math.ceil(payout(state) * fraction));
+}
+// Convert pending pre-policy shops once; retain offers, chest outcomes and locked prices thereafter.
+function upgradeCoinShopPrices(state, encounter) {
+  if (
+    encounter?.type !== "surprise" ||
+    !["merchant", "payout_shop"].includes(encounter.kind) ||
+    encounter.coinPayoutPriceVersion === 1
+  )
+    return;
+  for (const offer of encounter.offers || []) {
+    const fraction =
+      encounter.kind === "merchant"
+        ? MERCHANT_PRICES[offer.key]
+        : PAYOUT_PRICES[offer.item?.rarity];
+    if (!fraction) continue;
+    offer.price = serviceCost(state, fraction);
+    offer.fraction = fraction;
+    delete offer.basePrice;
+    delete offer.discount;
+  }
+  delete encounter.passivePriceVersion;
+  itemPassives.discountOffers(state, encounter);
+  encounter.coinPayoutPriceVersion = 1;
 }
 function makeSurprise(state, rng, kind = null) {
   const eligible = EVENTS.filter((key) => {
@@ -839,7 +868,7 @@ function makeSurprise(state, rng, kind = null) {
       )
         return false;
       if (key === "diamond_shop" && state.floor < 101) return false;
-      if (key === "payout_shop" && rawPayout(state) < 1) return false;
+      if (key === "payout_shop" && payout(state) < 1) return false;
     }
     return true;
   });
@@ -924,7 +953,7 @@ function makeSurprise(state, rng, kind = null) {
     e.history = [];
   }
   if (kind.endsWith("_shop")) {
-    const raw = rawPayout(state),
+    const available = payout(state),
       maxHp = state.maxHp;
     const odds = {
       payout_shop: [0.45, 0.85, 1],
@@ -943,12 +972,7 @@ function makeSurprise(state, rng, kind = null) {
               : "cursed";
       const price =
         kind === "payout_shop"
-          ? Math.max(
-              1,
-              Math.ceil(
-                raw * { common: 0.05, rare: 0.12, legendary: 0.25 }[rarity],
-              ),
-            )
+          ? Math.max(1, Math.ceil(available * PAYOUT_PRICES[rarity]))
           : kind === "blood_shop"
             ? Math.max(1, Math.ceil(maxHp * BLOOD_PRICES[rarity]))
             : DIAMOND_PRICES[rarity];
@@ -976,6 +1000,7 @@ function makeSurprise(state, rng, kind = null) {
     }
     e.priceVersion = 2;
   }
+  if (["merchant", "payout_shop"].includes(kind)) e.coinPayoutPriceVersion = 1;
   itemPassives.discountOffers(state, e);
   return itemPassives.prepareForecast(state, e, rng);
 }
@@ -1621,13 +1646,13 @@ function surpriseActions(state) {
       label: `${i + 1}. ${offer.item.name} · ${offer.price}${k === "blood_shop" ? " Max HP" : k === "diamond_shop" ? " 💎" : " xu"}`,
       disabled:
         (k === "blood_shop" && state.maxHp <= offer.price) ||
-        (k === "payout_shop" && rawPayout(state) < offer.price),
+        (k === "payout_shop" && payout(state) < offer.price),
     }));
   if (k === "merchant")
     return e.offers.map((offer, i) => ({
       action: `buy_${i}`,
       label: `${{ potion: "Bình", heal: "Hồi đầy", luck: "Luck +1", item: "Item SR", ticket: "Vé thoát", chest: "Rương · mở ngay" }[offer.key]} · ${offer.price} xu`,
-      disabled: rawPayout(state) < offer.price,
+      disabled: payout(state) < offer.price,
     }));
   if (k === "duelist") {
     if (!e.mode)
@@ -1653,7 +1678,7 @@ function surpriseActions(state) {
         {
           action: "event_smith",
           label: `Rèn · ${serviceCost(state, 0.12)} xu`,
-          disabled: rawPayout(state) < 1,
+          disabled: payout(state) < 1,
         },
       ],
       purifier: [
@@ -1672,19 +1697,19 @@ function surpriseActions(state) {
         {
           action: "event_sacrifice_payout",
           label: "10% payout · +6 VIT",
-          disabled: rawPayout(state) < 1 || !memories.canQueue(state),
+          disabled: payout(state) < 1 || !memories.canQueue(state),
         },
       ],
       gambler: [
         {
           action: "event_gamble_10",
           label: "Cược 10% payout",
-          disabled: rawPayout(state) < 1,
+          disabled: payout(state) < 1,
         },
         {
           action: "event_gamble_25",
           label: "Cược 25% payout",
-          disabled: rawPayout(state) < 1,
+          disabled: payout(state) < 1,
         },
       ],
       adventurer: [
@@ -2030,9 +2055,7 @@ function actSurprise(state, session, action, rng) {
   } else if (k === "purifier") {
     const target = itemById(e.targetId);
     if (!target) throw new Error("NO_CURSE");
-    const cost = purifierCost(state);
-    if (payout(state) < cost) throw new Error("INSUFFICIENT_RUN_PAYOUT");
-    state.payoutSpent = (state.payoutSpent || 0) + cost;
+    charge(state, purifierCost(state));
     const purified = {
       name: target.name,
       rarity: target.rarity,

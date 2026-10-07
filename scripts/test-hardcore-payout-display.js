@@ -220,7 +220,7 @@ for (const [encounter, action, rate] of [
   );
 }
 // Purifier prices the displayed payout before cleansing, including Blood Paradox.
-// The fee is fixed spending; future earnings and other service prices are unchanged.
+// The fee is fixed spending; future earnings keep their normal value.
 for (const bloodFactor of [null, -0.5, 0.5]) {
   for (const remaining of [null, 0, 1]) {
     const s = create(
@@ -251,7 +251,7 @@ for (const bloodFactor of [null, -0.5, 0.5]) {
     assert.equal(core.purifierCost(s), cost);
     assert.equal(
       core.serviceCost(s, 0.12),
-      Math.max(1, Math.ceil(core.rawPayout(s) * 0.12)),
+      Math.max(1, Math.ceil(core.payout(s) * 0.12)),
     );
     const action = core.actions(s).find((a) => a.action === "event_cleanse");
     assert.equal(action.label, "Giải toàn bộ · " + cost + " xu");
@@ -294,6 +294,172 @@ const purifierRule = view
   .find((f) => f.name.includes("Purifier"));
 assert.ok(purifierRule.value.includes("payout hiện tại"));
 assert.ok(!purifierRule.value.includes("payout gốc"));
+
+// Audit every coin fee and wager against the displayed payout, not raw payout.
+for (const bloodFactor of [-0.5, 0.5]) {
+  for (const kind of ["blacksmith", "sacrifice", "gambler"]) {
+    const s = create(
+      { type: "empty", name: "Trống" },
+      {
+        bonus: 50000,
+        payoutSpent: 2000,
+        curseFactor: 0.8,
+        paradox: { kind: "blood", bloodFactor, until: 20 },
+      },
+    );
+    const gear = core.ITEMS.common[0];
+    core.receiveItem(s, gear);
+    s.encounter = core.makeSurprise(s, () => 0.5, kind);
+    if (kind === "blacksmith") s.encounter.targetId = gear.id;
+    // Ensure the gambler's locked win branch follows the actual paid wager.
+    s.encounter.roll = 0.49;
+    const fraction =
+      kind === "blacksmith" ? 0.12 : kind === "gambler" ? 0.25 : 0.1;
+    const before = core.payout(s),
+      spent = s.payoutSpent,
+      bonus = s.bonus,
+      factor = s.payoutFactor;
+    const cost = Math.max(1, Math.ceil(before * fraction));
+    const action = {
+      blacksmith: "event_smith",
+      sacrifice: "event_sacrifice_payout",
+      gambler: "event_gamble_25",
+    }[kind];
+    assert.equal(core.serviceCost(s, fraction), cost);
+    assert(core.actions(s).some((a) => a.action === action && !a.disabled));
+    const detail = JSON.stringify(
+      view.privatePayload(s, "fee-test", "message", "encounter"),
+    );
+    assert(!detail.includes("payout gốc"));
+    play(s, action);
+    assert.equal(s.payoutSpent, spent + cost, kind);
+    assert.equal(s.payoutFactor, factor, kind);
+    assert.equal(s.eventPayoutFactor, 1, kind);
+    assert.equal(s.bonus, bonus + (kind === "gambler" ? 2 * cost : 0), kind);
+  }
+  for (const shopRoll of [0.1, 0.5, 0.9]) {
+    for (const kind of ["merchant", "payout_shop"]) {
+      const s = create(
+        { type: "empty", name: "Trống" },
+        {
+          bonus: 50000,
+          payoutSpent: 2000,
+          curseFactor: 0.8,
+          paradox: { kind: "blood", bloodFactor, until: 20 },
+        },
+      );
+      const discountItem = core.ITEMS.legendary.find(
+        (i) => i.id === "golden_goblet",
+      );
+      core.receiveItem(s, discountItem);
+      const before = core.payout(s);
+      s.encounter = core.makeSurprise(s, () => shopRoll, kind);
+      const offers = s.encounter.offers;
+      const fractions = {
+        potion: 0.025,
+        heal: 0.04,
+        luck: 0.05,
+        item: 0.075,
+        ticket: 0.125,
+        chest: 0.075,
+      };
+      for (const offer of offers) {
+        const rate =
+          kind === "merchant"
+            ? fractions[offer.key]
+            : { common: 0.05, rare: 0.12, legendary: 0.25 }[offer.item.rarity];
+        assert.equal(offer.basePrice, Math.max(1, Math.ceil(before * rate)));
+        assert.equal(
+          offer.price,
+          Math.max(1, Math.ceil(offer.basePrice * 0.92)),
+        );
+      }
+      const legacy = JSON.parse(JSON.stringify(s));
+      delete legacy.encounter.coinPayoutPriceVersion;
+      const lockedRewards = JSON.stringify(
+        legacy.encounter.offers.map((o) => [o.key, o.item, o.chest]),
+      );
+      for (const o of legacy.encounter.offers) o.price = o.basePrice = 999999;
+      core.normalize(legacy);
+      assert.equal(
+        JSON.stringify(
+          legacy.encounter.offers.map((o) => [o.key, o.item, o.chest]),
+        ),
+        lockedRewards,
+      );
+      assert.deepEqual(
+        legacy.encounter.offers.map((o) => [o.price, o.basePrice, o.discount]),
+        offers.map((o) => [o.price, o.basePrice, o.discount]),
+      );
+      const firstResume = JSON.stringify(legacy);
+      core.normalize(legacy);
+      assert.equal(JSON.stringify(legacy), firstResume);
+      const frozenPrices = JSON.stringify(legacy.encounter.offers);
+      legacy.paradox.bloodFactor *= -1;
+      core.normalize(legacy);
+      assert.equal(
+        JSON.stringify(legacy.encounter.offers),
+        frozenPrices,
+        "locked price must not move or apply discount twice",
+      );
+      const resumed = JSON.parse(JSON.stringify(s));
+      core.normalize(resumed);
+      const cost = resumed.encounter.offers[0].price,
+        spent = resumed.payoutSpent;
+      play(resumed, "buy_0");
+      assert.equal(resumed.payoutSpent, spent + cost);
+      assert(
+        !JSON.stringify(
+          view.privatePayload(s, "fee-test", "message", "encounter"),
+        ).includes("payout gốc"),
+      );
+    }
+  }
+}
+// Positive Blood payout remains spendable even after raw payout has reached zero.
+for (const kind of [
+  "blacksmith",
+  "sacrifice",
+  "gambler",
+  "merchant",
+  "payout_shop",
+]) {
+  const s = create(
+    { type: "empty", name: "Trống" },
+    { bonus: 50000, paradox: { kind: "blood", bloodFactor: 0.5, until: 20 } },
+  );
+  core.receiveItem(s, core.ITEMS.common[0]);
+  s.payoutSpent = core.rawPayout(s);
+  assert.equal(core.rawPayout(s), 0);
+  assert(core.payout(s) > 0);
+  s.encounter = core.makeSurprise(s, () => 0.5, kind);
+  const action = {
+    blacksmith: "event_smith",
+    sacrifice: "event_sacrifice_payout",
+    gambler: "event_gamble_10",
+    merchant: "buy_0",
+    payout_shop: "buy_0",
+  }[kind];
+  assert(!core.actions(s).find((a) => a.action === action).disabled, kind);
+  play(s, action);
+  const zero = create({ type: "empty", name: "Trống" });
+  core.receiveItem(zero, core.ITEMS.common[0]);
+  zero.payoutSpent = core.payout(zero);
+  zero.encounter = core.makeSurprise(zero, () => 0.5, kind);
+  assert(core.actions(zero).find((a) => a.action === action).disabled, kind);
+  const snapshot = JSON.stringify(zero);
+  assert.throws(
+    () => core.act(zero, session, action, () => 0.5),
+    /INVALID_ACTION/,
+  );
+  assert.equal(JSON.stringify(zero), snapshot);
+}
+for (const rule of view.ratesFields()) {
+  assert(
+    !rule.name.includes("payout gốc") && !rule.value.includes("payout gốc"),
+  );
+  assert(rule.value.length <= 1024);
+}
 
 // Bonus at the cap is recorded as no cash change, never a fictitious +2500.
 {
