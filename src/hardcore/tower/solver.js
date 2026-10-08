@@ -2,7 +2,24 @@
 const { createHash } = require("node:crypto");
 const hash = (s) => createHash("sha256").update(s).digest("hex");
 const clone = (s) => JSON.parse(JSON.stringify(s));
+const reusableSkill = (p) => p.generatorVersion >= 4 && p.contentVersion >= 4;
+const advancedPuzzle = (p) => reusableSkill(p) && p.contentVersion >= 5;
+function resistances(payload, state, transition) {
+  const adaptive = state.adaptiveArmor,
+    bonus = 25;
+  return {
+    physical: Math.min(
+      100,
+      (transition.physicalResist || 0) + (adaptive === "physical" ? bonus : 0),
+    ),
+    magic: Math.min(
+      100,
+      (transition.magicResist || 0) + (adaptive === "magic" ? bonus : 0),
+    ),
+  };
+}
 function initial(payload) {
+  const first = payload.floors[0];
   return {
     ...clone(payload.initialState),
     routeStep: 0,
@@ -13,6 +30,11 @@ function initial(payload) {
     classCharges: { ward: 0 },
     enemyHp: payload.floors[0].hp,
     skillUsed: false,
+    breakGauge: 0,
+    adaptiveArmor: null,
+    delayedEffects: [],
+    bossPhase: 0,
+    phaseHp: first.phaseHps?.[0] || first.hp,
   };
 }
 function options(p, s) {
@@ -24,7 +46,7 @@ function options(p, s) {
             a !== "skill" ||
             (s.mana >= t.skillCost &&
               !t.spellLocked &&
-              !(p.generatorVersion >= 4 && s.skillUsed)),
+              !(!reusableSkill(p) && p.generatorVersion >= 4 && s.skillUsed)),
         )
     : [];
 }
@@ -50,6 +72,11 @@ function apply(p, s, action) {
     next.enemyHp = out.enemyHp;
     next.classCharges = out.classCharges;
     next.skillUsed = out.skillUsed;
+    next.breakGauge = out.breakGauge;
+    next.adaptiveArmor = out.adaptiveArmor;
+    next.delayedEffects = out.delayedEffects;
+    next.bossPhase = out.bossPhase;
+    next.phaseHp = out.phaseHp;
     if (out.hp < 1) {
       next.status = "failed";
       next.failureKind = "combat";
@@ -92,6 +119,12 @@ function apply(p, s, action) {
       next.skillUsed = false;
       next.classCharges = { ward: 0 };
       next.flags = [];
+      next.breakGauge = 0;
+      next.adaptiveArmor = null;
+      next.delayedEffects = [];
+      next.bossPhase = 0;
+      next.phaseHp =
+        p.floors[n.floor - 1].phaseHps?.[0] || p.floors[n.floor - 1].hp;
     }
     next.floor = n.floor;
     next.floorStep = n.floorStep;
@@ -116,23 +149,88 @@ function combatOutcome(payload, state, transition, action) {
     damage = Math.floor(
       p.attackDamage *
         (p.mechanic === "rage" && state.hp <= p.maxHp * 0.35 ? 1.5 : 1) *
-        (payload.generatorVersion >= 4 && transition.finisher ? 0.5 : 1),
+        (!reusableSkill(payload) &&
+        payload.generatorVersion >= 4 &&
+        transition.finisher
+          ? 0.5
+          : 1),
     );
   if (action === "skill")
     damage =
       p.mechanic === "barrage"
         ? Math.floor(p.skillDamage / 3) * (3 - transition.shieldCharges)
         : p.skillDamage + (p.mechanic === "dodge" ? 8 : 0);
-  let enemyHp = Math.max(0, state.enemyHp - damage),
-    enemyHeal = 0;
-  if (payload.generatorVersion >= 4 && action === "skill" && enemyHp > 0) {
+  let breakGauge = state.breakGauge || 0,
+    adaptiveArmor = state.adaptiveArmor || null;
+  if (advancedPuzzle(payload)) {
+    const resistance = resistances(payload, state, transition),
+      type = action === "attack" ? "physical" : "magic";
+    if (action === "attack" || action === "skill") {
+      damage = Math.floor((damage * (100 - resistance[type])) / 100);
+      if (action === "skill") {
+        damage = Math.floor((damage * (100 + breakGauge * 20)) / 100);
+        breakGauge = 0;
+      } else breakGauge = Math.min(3, breakGauge + 1);
+      adaptiveArmor = type;
+    } else if (transition.guardIntent) breakGauge = Math.min(3, breakGauge + 1);
+  } else if (reusableSkill(payload)) {
+    if (
+      (action === "attack" &&
+        ["physical_resist", "immune"].includes(transition.stance)) ||
+      (action === "skill" &&
+        ["magic_resist", "immune"].includes(transition.stance))
+    )
+      damage = 0;
+  }
+  let delayedEffects = clone(state.delayedEffects || []),
+    echoDamage = 0;
+  if (advancedPuzzle(payload)) {
+    delayedEffects = delayedEffects
+      .map((effect) => ({ ...effect, turns: effect.turns - 1 }))
+      .filter((effect) => {
+        if (effect.turns > 0) return true;
+        echoDamage += effect.damage;
+        return false;
+      });
+    if (transition.echoDelay && damage > 0)
+      delayedEffects.push({
+        turns: transition.echoDelay,
+        damage: Math.max(1, Math.floor(damage / 2)),
+      });
+  }
+  const rawDamage = damage + echoDamage,
+    floor = payload.floors[state.floor - 1],
+    phaseHps = floor.phaseHps || [floor.hp];
+  let bossPhase = state.bossPhase || 0,
+    phaseHp = state.phaseHp ?? phaseHps[bossPhase],
+    appliedDamage = Math.min(rawDamage, phaseHp),
+    enemyHp = Math.max(0, state.enemyHp - appliedDamage),
+    phaseEnded = phaseHp > 0 && appliedDamage >= phaseHp;
+  phaseHp = Math.max(0, phaseHp - appliedDamage);
+  if (phaseEnded && bossPhase + 1 < phaseHps.length) {
+    bossPhase++;
+    phaseHp = phaseHps[bossPhase];
+  }
+  if (!advancedPuzzle(payload)) appliedDamage = damage;
+  let enemyHeal = 0;
+  if (
+    !reusableSkill(payload) &&
+    payload.generatorVersion >= 4 &&
+    action === "skill" &&
+    enemyHp > 0
+  ) {
     enemyHeal = damage;
     enemyHp = Math.min(payload.floors[state.floor - 1].hp, enemyHp + enemyHeal);
   }
   const ward = state.classCharges.ward > 0,
+    forcedGuard =
+      (advancedPuzzle(payload) && transition.guardIntent) ||
+      (reusableSkill(payload) && transition.stance === "immune"),
     blocked =
-      ward || (action === "skill" && ["shield", "dodge"].includes(p.mechanic));
-  let counter = enemyHp === 0 ? 0 : transition.intentDamage;
+      !forcedGuard &&
+      (ward ||
+        (action === "skill" && ["shield", "dodge"].includes(p.mechanic)));
+  let counter = enemyHp === 0 || phaseEnded ? 0 : transition.intentDamage;
   if (blocked) counter = 0;
   else if (action === "defend")
     counter = transition.defendDamage ?? Math.floor(counter / 2);
@@ -140,7 +238,10 @@ function combatOutcome(payload, state, transition, action) {
     ward: p.mechanic === "ward" && action === "skill" ? 1 : 0,
   };
   return {
-    damage,
+    damage: appliedDamage,
+    directDamage: damage,
+    echoDamage,
+    rawDamage,
     counter,
     heal,
     mana,
@@ -148,10 +249,16 @@ function combatOutcome(payload, state, transition, action) {
     hp: Math.max(0, Math.min(p.maxHp, state.hp + heal - counter)),
     classCharges,
     skillUsed:
-      payload.generatorVersion >= 4
+      payload.generatorVersion >= 4 && !reusableSkill(payload)
         ? Boolean(state.skillUsed || action === "skill")
         : false,
     enemyHeal,
+    breakGauge,
+    adaptiveArmor,
+    delayedEffects,
+    bossPhase,
+    phaseHp,
+    phaseEnded,
   };
 }
 function stateKey(s) {
@@ -165,10 +272,55 @@ function stateKey(s) {
     s.skillUsed ? 1 : 0,
     s.flags.join(","),
     JSON.stringify(s.classCharges),
+    s.breakGauge || 0,
+    s.adaptiveArmor || "-",
+    JSON.stringify(s.delayedEffects || []),
+    s.bossPhase || 0,
+    s.phaseHp ?? 0,
   ].join("|");
 }
 function maximumRemainingDamage(payload, state) {
   const p = require("./classProfiles").profile(payload.classKey);
+  if (advancedPuzzle(payload)) {
+    const attack = Math.floor(
+        p.attackDamage * (p.mechanic === "rage" ? 1.5 : 1),
+      ),
+      skill = Math.floor(
+        (p.mechanic === "barrage"
+          ? p.skillDamage
+          : p.skillDamage + (p.mechanic === "dodge" ? 8 : 0)) * 1.6,
+      );
+    let total = (state.delayedEffects || []).reduce(
+      (sum, effect) => sum + effect.damage,
+      0,
+    );
+    for (let i = state.routeStep; i < payload.transitions.length; i++) {
+      const t = payload.transitions[i];
+      if (t.floor !== state.floor) break;
+      if (t.type !== "combat") continue;
+      const best = Math.max(attack, skill);
+      total += best + (t.echoDelay ? Math.floor(best / 2) : 0);
+    }
+    return total;
+  }
+  if (reusableSkill(payload)) {
+    let total = 0;
+    for (let i = state.routeStep; i < payload.transitions.length; i++) {
+      const t = payload.transitions[i];
+      if (t.floor !== state.floor) break;
+      if (t.type !== "combat") continue;
+      const probe = {
+        ...state,
+        hp: p.mechanic === "rage" ? 1 : state.hp,
+        enemyHp: Number.MAX_SAFE_INTEGER,
+      };
+      total += Math.max(
+        combatOutcome(payload, probe, t, "attack").damage,
+        combatOutcome(payload, probe, t, "skill").damage,
+      );
+    }
+    return total;
+  }
   let total = 0,
     bestSkillUpgrade = 0;
   const attack = Math.floor(p.attackDamage * (p.mechanic === "rage" ? 1.5 : 1));
@@ -191,23 +343,49 @@ function solve(payload, { maxStates = 100000, timeoutMs = 5000 } = {}) {
     memo = new Map();
   let visited = 0,
     wrongBranches = 0,
-    recoverable = 0;
+    recoverable = 0,
+    lookaheadDepth = 0,
+    lookaheadBranches = 0,
+    nearMissBranches = 0;
   function visit(s) {
     if (performance.now() - started > timeoutMs)
       throw Error("TOWER_SOLVER_TIMEOUT");
     if (++visited > maxStates) throw Error("TOWER_SOLVER_STATE_LIMIT");
     if (s.status === "failed")
-      return { wins: 0, path: [], final: null, minWinHp: Infinity };
+      return {
+        wins: 0,
+        path: [],
+        final: null,
+        minWinHp: Infinity,
+        maxLossDepth: 0,
+        minLossEnemyHp: s.enemyHp,
+      };
     if (s.status === "completed")
-      return { wins: 1, path: [], final: s, minWinHp: s.hp };
+      return {
+        wins: 1,
+        path: [],
+        final: s,
+        minWinHp: s.hp,
+        maxLossDepth: -Infinity,
+        minLossEnemyHp: Infinity,
+      };
     if (s.enemyHp > maximumRemainingDamage(payload, s))
-      return { wins: 0, path: [], final: null, minWinHp: Infinity };
+      return {
+        wins: 0,
+        path: [],
+        final: null,
+        minWinHp: Infinity,
+        maxLossDepth: 0,
+        minLossEnemyHp: s.enemyHp,
+      };
     const key = stateKey(s);
     if (memo.has(key)) return memo.get(key);
     let wins = 0,
       path = [],
       final = null,
-      minWinHp = Infinity;
+      minWinHp = Infinity,
+      maxLossDepth = -Infinity,
+      minLossEnemyHp = Infinity;
     const t = payload.transitions[s.routeStep];
     for (const action of options(payload, s)) {
       const next = apply(payload, s, action),
@@ -215,6 +393,13 @@ function solve(payload, { maxStates = 100000, timeoutMs = 5000 } = {}) {
       if (action !== t.expectedAction) {
         wrongBranches++;
         recoverable += out.wins;
+        if (!out.wins) {
+          const depth = 1 + Math.max(0, out.maxLossDepth);
+          lookaheadDepth = Math.max(lookaheadDepth, depth);
+          if (depth >= 3) lookaheadBranches++;
+          if (out.minLossEnemyHp <= payload.floors[s.floor - 1].hp * 0.15)
+            nearMissBranches++;
+        }
       }
       if (out.wins) {
         wins += out.wins;
@@ -222,8 +407,19 @@ function solve(payload, { maxStates = 100000, timeoutMs = 5000 } = {}) {
         final = out.final;
         minWinHp = Math.min(s.hp, out.minWinHp, minWinHp);
       }
+      if (!out.wins) {
+        maxLossDepth = Math.max(maxLossDepth, 1 + out.maxLossDepth);
+        minLossEnemyHp = Math.min(minLossEnemyHp, out.minLossEnemyHp);
+      }
     }
-    const out = { wins, path, final, minWinHp };
+    const out = {
+      wins,
+      path,
+      final,
+      minWinHp,
+      maxLossDepth,
+      minLossEnemyHp,
+    };
     memo.set(key, out);
     return out;
   }
@@ -237,6 +433,9 @@ function solve(payload, { maxStates = 100000, timeoutMs = 5000 } = {}) {
     minimumHp: out.minWinHp,
     finalState: out.final,
     visited,
+    lookaheadDepth,
+    lookaheadBranches,
+    nearMissBranches,
   };
 }
 function validate(payload, options = {}) {
@@ -277,7 +476,11 @@ function validate(payload, options = {}) {
     previousTemplate = null,
     templateRun = 0,
     waste = 0,
-    eventChoices = 0;
+    eventChoices = 0,
+    midFloorSkills = 0,
+    multiSkillFloors = 0,
+    echoWindows = 0,
+    partialResistanceWindows = 0;
   for (let f = 0; f < 15; f++) {
     const floor = payload.floors[f],
       ts = payload.transitions.filter((t) => t.floor === f + 1);
@@ -288,11 +491,33 @@ function validate(payload, options = {}) {
       new Set(ts.map((t) => t.expectedAction)).size < 2
     )
       throw Error("INVALID_TOWER_FLOOR");
+    if (reusableSkill(payload)) {
+      const combat = ts.filter((t) => t.type === "combat"),
+        skillCount = combat.filter((t) => t.expectedAction === "skill").length;
+      if (new Set(combat.map((t) => t.expectedAction)).size !== 3)
+        throw Error("TOWER_FLOOR_NOT_COMPLEX");
+      midFloorSkills += combat
+        .slice(0, -1)
+        .filter((t) => t.expectedAction === "skill").length;
+      if (skillCount >= 2) multiSkillFloors++;
+    }
+    if (advancedPuzzle(payload)) {
+      const expectedPhases = f === 14 ? 3 : f >= 12 ? 2 : 1;
+      if (
+        floor.phaseCount !== expectedPhases ||
+        floor.phaseHps.length !== expectedPhases ||
+        floor.phaseHps.some((hp) => !Number.isSafeInteger(hp) || hp < 1) ||
+        floor.phaseHps.reduce((sum, hp) => sum + hp, 0) !== floor.hp
+      )
+        throw Error("INVALID_TOWER_BOSS_PHASES");
+    }
     if (ts.at(-1).expectedAction === "defend")
       throw Error("INVALID_FLOOR_FINISH");
   }
   if (payload.floors.slice(11).reduce((a, f) => a + f.stepCount, 0) < 27)
     throw Error("TOWER_END_TOO_SHORT");
+  if (reusableSkill(payload) && (midFloorSkills < 10 || multiSkillFloors < 4))
+    throw Error("TOWER_SKILL_TIMING_TOO_SIMPLE");
   for (let i = 0; i < payload.transitions.length; i++) {
     const t = payload.transitions[i];
     if (
@@ -307,6 +532,42 @@ function validate(payload, options = {}) {
           t.floorStep === payload.floors[t.floor - 1].stepCount - 1)
     )
       throw Error("INVALID_TOWER_FINISHER");
+    if (
+      reusableSkill(payload) &&
+      !advancedPuzzle(payload) &&
+      t.type === "combat" &&
+      (t.spellLocked ||
+        t.stance !==
+          {
+            attack: "magic_resist",
+            skill: "physical_resist",
+            defend: "immune",
+          }[t.expectedAction])
+    )
+      throw Error("INVALID_TOWER_STANCE");
+    if (
+      advancedPuzzle(payload) &&
+      t.type === "combat" &&
+      (t.spellLocked ||
+        ![t.physicalResist, t.magicResist].every(
+          (value) =>
+            Number.isSafeInteger(value) &&
+            value >= 0 &&
+            value <= 100 &&
+            value % 25 === 0,
+        ) ||
+        (t.echoDelay != null && ![1, 2].includes(t.echoDelay)))
+    )
+      throw Error("INVALID_TOWER_ADVANCED_MECHANIC");
+    if (advancedPuzzle(payload) && t.type === "combat") {
+      if (t.echoDelay) echoWindows++;
+      if (
+        [t.physicalResist, t.magicResist].some(
+          (value) => value > 0 && value < 100,
+        )
+      )
+        partialResistanceWindows++;
+    }
     if (
       !Number.isSafeInteger(t.hpDelta) ||
       !Number.isSafeInteger(t.manaDelta) ||
@@ -446,6 +707,18 @@ function validate(payload, options = {}) {
     proof.minimumHp < 1
   )
     throw Error("INVALID_TOWER_SOLUTION");
+  if (
+    advancedPuzzle(payload) &&
+    (echoWindows < 4 || partialResistanceWindows < 15)
+  )
+    throw Error("TOWER_ADVANCED_VARIETY_REJECTED");
+  if (
+    advancedPuzzle(payload) &&
+    (proof.lookaheadDepth < 3 ||
+      proof.lookaheadBranches < 10 ||
+      proof.nearMissBranches < 3)
+  )
+    throw Error("TOWER_DIFFICULTY_LOOKAHEAD_REJECTED");
   const finalHpRatio = proof.finalState.hp / payload.character.maxHp,
     finalManaRatio = proof.finalState.mana / payload.character.maxMana;
   if (
@@ -469,9 +742,16 @@ function validate(payload, options = {}) {
     resourceWasteWindows: waste,
     memoryChecks: memoryFloors.size,
     eventChoices,
+    echoWindows,
+    partialResistanceWindows,
     categories: counts,
     difficultyScore: Math.round(
-      n + 2 * waste + 5 * memoryFloors.size + 3 * eventChoices,
+      n +
+        2 * waste +
+        5 * memoryFloors.size +
+        3 * eventChoices +
+        (proof.lookaheadBranches || 0) +
+        2 * (proof.nearMissBranches || 0),
     ),
   };
 }
@@ -484,4 +764,6 @@ module.exports = {
   stateKey,
   hash,
   combatOutcome,
+  resistances,
+  advancedPuzzle,
 };

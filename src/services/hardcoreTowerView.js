@@ -391,6 +391,68 @@ function generatedEncounter(state, c) {
   const { encounter: e, transition: t } = engine.current(state, c);
   let text = "**" + e.name + "**\n";
   if (t.type === "combat") text += healthBar(state.enemyHp, e.hp);
+  if (c.contentVersion >= 5 && t.type === "combat") {
+    const solver = require("../hardcore/tower/solver"),
+      resistance = solver.resistances(c, state, t),
+      next = c.transitions[state.routeStep + 1],
+      intent = (transition) => {
+        if (!transition || transition.floor !== t.floor) return "Hết tầng";
+        if (transition.type === "event") return "Tình huống";
+        if (transition.guardIntent)
+          return "Trọng kích " + transition.intentDamage + " DMG";
+        if (transition.phaseEnd) return "Cửa chuyển phase";
+        return (
+          transition.intentDamage +
+          " DMG " +
+          (transition.counterType === "magic" ? "phép" : "vật lý")
+        );
+      },
+      pending = (state.delayedEffects || [])
+        .map((effect) => effect.damage + " DMG/" + effect.turns)
+        .join(", ");
+    text +=
+      "\nGiáp: **VL " +
+      resistance.physical +
+      "% · Phép " +
+      resistance.magic +
+      "%**" +
+      (state.adaptiveArmor
+        ? " · Thích nghi **" +
+          (state.adaptiveArmor === "physical" ? "VL" : "Phép") +
+          "**"
+        : "") +
+      "\nBreak **" +
+      state.breakGauge +
+      "/3**" +
+      (pending ? " · Vọng âm **" + pending + "**" : "") +
+      "\nIntent: **" +
+      intent(t) +
+      "** · Sau: **" +
+      intent(next) +
+      "**";
+    if (e.phaseHps?.length > 1)
+      text +=
+        "\nBoss **Pha " +
+        (state.bossPhase + 1) +
+        "/" +
+        e.phaseHps.length +
+        "** · HP phase **" +
+        state.phaseHp +
+        "/" +
+        e.phaseHps[state.bossPhase] +
+        "**";
+    if (t.echoDelay)
+      text +=
+        "\nVọng âm: **50% damage hành động lặp sau " + t.echoDelay + " lượt**";
+  } else if (t.stance)
+    text +=
+      "\nTrạng thái: **" +
+      {
+        magic_resist: "Kháng phép",
+        physical_resist: "Kháng vật lý",
+        immune: "Miễn nhiễm sát thương",
+      }[t.stance] +
+      "**";
   if (t.type === "event")
     text += t.choices.map((x) => "• " + x.label).join("\n");
   else if (t.finisher)
@@ -456,7 +518,11 @@ function generatedRules(c) {
     " cố định · 15 tầng. Hạ quái trước khi quái hạ bạn; tử trận sẽ **thử lại từ đầu tầng hiện tại**.\n" +
     "• Mỗi tầng là một puzzle độc lập. Khi sang tầng mới, HP, MP, Skill, Ward và hiệu ứng được đặt lại theo trạng thái đầu tầng; không lựa chọn nào từ tầng trước ảnh hưởng tầng sau. Tháp không công bố số hành động của từng tầng hoặc toàn bộ hành trình.\n" +
     "• Mỗi tuần chỉ có **một chuỗi hành động duy nhất** có thể hoàn thành đủ 15 tầng.\n" +
-    "• Tấn công và Skill luôn gây đúng damage đang hiển thị. Skill dùng **một lần mỗi tầng**; nếu Skill không kết liễu, quái hấp thụ và hồi lại toàn bộ damage vừa nhận.\n" +
+    (c.contentVersion >= 5
+      ? "• Skill dùng tự do khi đủ MP. Tấn công tăng Break; Skill tiêu Break để tăng damage. Giáp thích nghi cộng kháng với loại damage vừa nhận; kháng được tính theo phần trăm hiển thị.\n• Bảng hiện hai intent. Vọng âm lặp 50% damage sau tối đa hai lượt. Boss tầng 13–15 có nhiều phase, damage dư không xuyên phase.\n"
+      : c.contentVersion >= 4
+        ? "• Skill hoạt động bình thường, có thể dùng nhiều lần nếu đủ MP và không cần làm đòn kết liễu. Quái không hồi lại damage Skill; trạng thái kháng hoặc miễn nhiễm của từng lượt được hiển thị trực tiếp.\n"
+        : "• Tấn công và Skill luôn gây đúng damage đang hiển thị. Skill dùng **một lần mỗi tầng**; nếu Skill không kết liễu, quái hấp thụ và hồi lại toàn bộ damage vừa nhận.\n") +
     "• Phòng thủ giảm đòn sắp nhận xuống đúng số dự báo. Quái chết trong lượt thì không thể phản công.\n" +
     "• " +
     c.classDescription +

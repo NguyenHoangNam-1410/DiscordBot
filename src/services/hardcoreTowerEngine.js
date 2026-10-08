@@ -294,6 +294,11 @@ function floorCheckpoint(s) {
     skillUsed: s.skillUsed,
     flags: structuredClone(s.flags),
     classCharges: structuredClone(s.classCharges),
+    breakGauge: s.breakGauge,
+    adaptiveArmor: s.adaptiveArmor,
+    delayedEffects: structuredClone(s.delayedEffects),
+    bossPhase: s.bossPhase,
+    phaseHp: s.phaseHp,
     cleared: s.cleared,
     step: s.step,
     paradox: structuredClone(s.paradox),
@@ -379,7 +384,7 @@ function actionsGenerated(s, c) {
       action === "skill" &&
       (s.mana < t.skillCost ||
         t.spellLocked ||
-        (c.generatorVersion >= 4 && s.skillUsed)),
+        (c.generatorVersion >= 4 && c.contentVersion < 4 && s.skillUsed)),
   }));
 }
 function damageGenerated(s, c, action) {
@@ -404,6 +409,11 @@ function actGenerated(s, c, action) {
       hp: s.hp,
       mana: s.mana,
       enemyHp: s.enemyHp,
+      breakGauge: s.breakGauge,
+      adaptiveArmor: s.adaptiveArmor,
+      delayedEffects: structuredClone(s.delayedEffects),
+      bossPhase: s.bossPhase,
+      phaseHp: s.phaseHp,
       floor: s.floor,
       step: s.step,
       routeStep: s.routeStep,
@@ -450,6 +460,9 @@ function actGenerated(s, c, action) {
     heal: outcome?.heal || 0,
     enemyHeal: outcome?.enemyHeal || 0,
     enemyHpAfter: outcome?.enemyHp ?? before.enemyHp,
+    directDamage: outcome?.directDamage || 0,
+    echoDamage: outcome?.echoDamage || 0,
+    phaseEnded: outcome?.phaseEnded || false,
   };
   return s;
 }
