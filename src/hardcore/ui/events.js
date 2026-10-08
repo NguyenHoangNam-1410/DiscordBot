@@ -35,7 +35,7 @@ module.exports = function createModule(dependencies) {
       `${E[key]} **${key.toUpperCase()}** ${n > 0 ? "+" : ""}${n}`;
     const grudgeInfo =
       e.type === "surprise" && e.kind === "adventurer"
-        ? "\n**Cướp còn tạo Dấu ấn oán hận** riêng trong Rift: từ tầng cướp +10, Shrine thêm nhánh nghi lễ 1/7 để triệu hồi boss nhận Gilded Soul [LR]. Hậu quả cướp cũ giữ nguyên."
+        ? "\n**Cướp còn tạo Dấu ấn oán hận** riêng trong Rift: từ tầng cướp +10, Shrine thêm nhánh nghi lễ 1/7 để triệu hồi boss nhận Gilded Soul [LR]."
         : "";
     if (e.type === "chest") {
       const labels = {
