@@ -93,6 +93,13 @@ async function run() {
   const levels = require("../src/services/playerLevelService");
   const previousAdmin = process.env.ADMIN_USER_ID;
   process.env.ADMIN_USER_ID = "admin";
+  const towerResetDenied = interaction({
+    user: { id: "guild-admin" },
+    memberPermissions: { has: () => true },
+    options: { getSubcommand: () => "thapreset" },
+  });
+  await require("../src/commands/quantri").execute(towerResetDenied);
+  assert.match(towerResetDenied.replies[0].content, /quản trị bot/);
   const silentReplies = [];
   const adminMessage = (content) => ({
     id: `prefix-${content}`,

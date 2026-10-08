@@ -125,18 +125,24 @@ assert.deepEqual(
     .options.map((option) => option.name),
   ["cuahang", "mua", "tui", "sudung", "tang", "quay", "chitiet"],
 );
-// 3 lệnh thưởng vai trò được gộp thành một bảng (xemthuongvaitro) và thêm hesothang: 25 − 2 + 1 = 24, còn trống 1 chỗ
+// Lệnh quản trị dùng đủ 25 vị trí Discord cho phép, gồm cả thapreset.
 assert.equal(
   require("../src/commands/quantri").data.toJSON().options.length,
-  24,
+  25,
 );
 const adminOptionNames = require("../src/commands/quantri")
   .data.toJSON()
   .options.map((option) => option.name);
 assert(
-  ["themgacha", "batgacha", "xemgacha", "datbuff", "xemthuongvaitro", "hesothang"].every((name) =>
-    adminOptionNames.includes(name),
-  ),
+  [
+    "themgacha",
+    "batgacha",
+    "xemgacha",
+    "datbuff",
+    "xemthuongvaitro",
+    "hesothang",
+    "thapreset",
+  ].every((name) => adminOptionNames.includes(name)),
 );
 assert(
   !require("../src/commands/xu")

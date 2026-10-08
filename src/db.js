@@ -986,19 +986,33 @@ runMigration(26, "remove Oan tu ti game", () => {
     "game_bet_limits",
     "multiplayer_rounds",
   ])
-    db.prepare(`DELETE FROM ${table} WHERE game IN ('oantuti','rpsduel')`).run();
-  db.prepare("DELETE FROM game_settings WHERE setting_key='WIN_MULT_OANTUTI'").run();
-  const items = ["rps_loss_shield", "rps_counter_charm", "rps_coward_privilege"];
+    db.prepare(
+      `DELETE FROM ${table} WHERE game IN ('oantuti','rpsduel')`,
+    ).run();
+  db.prepare(
+    "DELETE FROM game_settings WHERE setting_key='WIN_MULT_OANTUTI'",
+  ).run();
+  const items = [
+    "rps_loss_shield",
+    "rps_counter_charm",
+    "rps_coward_privilege",
+  ];
   const marks = items.map(() => "?").join(",");
-  db.prepare(`DELETE FROM user_inventory WHERE item_id IN (${marks})`).run(...items);
-  db.prepare(`DELETE FROM shop_items WHERE cosmetic_id IN (${marks})`).run(...items);
+  db.prepare(`DELETE FROM user_inventory WHERE item_id IN (${marks})`).run(
+    ...items,
+  );
+  db.prepare(`DELETE FROM shop_items WHERE cosmetic_id IN (${marks})`).run(
+    ...items,
+  );
   db.prepare(
     `DELETE FROM gacha_pool_entries WHERE item_id IN (${marks}) OR reward_key IN (${marks})`,
   ).run(...items, ...items);
   db.prepare(
     "DELETE FROM user_item_effects WHERE effect_id IN ('rps_counter','rps_draw_win','rps_loss_shield')",
   ).run();
-  db.exec("DROP TABLE IF EXISTS rps_duels; DROP TABLE IF EXISTS rps_bot_rounds");
+  db.exec(
+    "DROP TABLE IF EXISTS rps_duels; DROP TABLE IF EXISTS rps_bot_rounds",
+  );
 });
 
 runMigration(27, "mines achievement records", () => {
@@ -1120,7 +1134,6 @@ runMigration(34, "hardcore daily shop and persistent inventory", () => {
   `);
 });
 
-
 runMigration(
   35,
   "independent deterministic tower sessions and weekly results",
@@ -1147,8 +1160,11 @@ runMigration(36, "hardcore event and chain achievement stats", () => {
     updated_at INTEGER NOT NULL,PRIMARY KEY(guild_id,user_id))`);
 });
 
-runMigration(37, "hardcore profile statistics: kills, killers and boss tallies", () => {
-  db.exec(`
+runMigration(
+  37,
+  "hardcore profile statistics: kills, killers and boss tallies",
+  () => {
+    db.exec(`
     ALTER TABLE hardcore_run_archive ADD COLUMN killed_by TEXT;
     ALTER TABLE hardcore_run_archive ADD COLUMN kills INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hardcore_run_archive ADD COLUMN boss_kills INTEGER NOT NULL DEFAULT 0;
@@ -1160,7 +1176,8 @@ runMigration(37, "hardcore profile statistics: kills, killers and boss tallies",
       guild_id TEXT NOT NULL,user_id TEXT NOT NULL,boss TEXT NOT NULL,
       count INTEGER NOT NULL DEFAULT 0,PRIMARY KEY(guild_id,user_id,boss));
   `);
-});
+  },
+);
 
 runMigration(38, "class floor 500 exclusive avatar rings", () => {
   if (
@@ -1247,9 +1264,11 @@ runMigration(
   },
 );
 
-
-runMigration(40, "God of RNGesus persistent favor and encounter records", () => {
-  db.exec(`
+runMigration(
+  40,
+  "God of RNGesus persistent favor and encounter records",
+  () => {
+    db.exec(`
     CREATE TABLE IF NOT EXISTS hardcore_rngesus_favor (
       guild_id TEXT NOT NULL,user_id TEXT NOT NULL,
       deaths_since_blessing INTEGER NOT NULL DEFAULT 0 CHECK(deaths_since_blessing>=0),
@@ -1270,7 +1289,8 @@ runMigration(40, "God of RNGesus persistent favor and encounter records", () => 
       SELECT guild_id,user_id,COUNT(*),COUNT(*),0,MAX(ended_at)
       FROM hardcore_rngesus_death_marks GROUP BY guild_id,user_id;
   `);
-});
+  },
+);
 
 runMigration(41, "Survival LR acquisition history", () => {
   db.exec(`CREATE TABLE IF NOT EXISTS hardcore_relic_acquisitions (
@@ -1311,6 +1331,57 @@ runMigration(42, "tower puzzle snapshots with 120-step challenges", () => {
  CREATE INDEX idx_tower_challenge_window ON hardcore_tower_challenges(status,starts_at,ends_at);
  UPDATE hardcore_tower_rotation SET next_index=0 WHERE id=1;
  DELETE FROM hardcore_tower_generation_failures;
+
+ CREATE TRIGGER tower_snapshot_no_delete BEFORE DELETE ON hardcore_tower_challenges
+ WHEN OLD.status IN ('published','archived')
+ BEGIN SELECT RAISE(ABORT,'IMMUTABLE_TOWER_SNAPSHOT'); END;
+ CREATE TRIGGER tower_snapshot_initial_status BEFORE INSERT ON hardcore_tower_challenges
+ WHEN NEW.status NOT IN ('draft','validated')
+ BEGIN SELECT RAISE(ABORT,'INVALID_TOWER_PUBLICATION'); END;
+ CREATE TRIGGER tower_snapshot_immutable BEFORE UPDATE ON hardcore_tower_challenges
+ WHEN OLD.status IN ('published','archived') AND (
+ NEW.payload_json<>OLD.payload_json OR NEW.challenge_id<>OLD.challenge_id OR
+ NEW.iso_year<>OLD.iso_year OR NEW.iso_week<>OLD.iso_week OR NEW.rotation_index<>OLD.rotation_index OR
+ NEW.class_key<>OLD.class_key OR NEW.generator_version<>OLD.generator_version OR
+ NEW.content_version<>OLD.content_version OR NEW.seed_commitment<>OLD.seed_commitment OR
+ NEW.step_count<>OLD.step_count OR NEW.solution_hash<>OLD.solution_hash OR
+ NEW.difficulty_score<>OLD.difficulty_score OR NEW.audit_json<>OLD.audit_json OR
+ NEW.starts_at<>OLD.starts_at OR NEW.ends_at<>OLD.ends_at OR NEW.generated_at<>OLD.generated_at OR
+ NEW.published_at IS NOT OLD.published_at)
+ BEGIN SELECT RAISE(ABORT,'IMMUTABLE_TOWER_SNAPSHOT'); END;
+ CREATE TRIGGER tower_publication_guard BEFORE UPDATE OF status ON hardcore_tower_challenges
+ WHEN NOT (
+ (OLD.status='draft' AND NEW.status='validated') OR
+ (OLD.status='validated' AND NEW.status='published' AND
+ json_extract(NEW.audit_json,'$.winningPaths')=1 AND json_extract(NEW.audit_json,'$.wrongBranchesRecoverable')=0 AND
+ json_extract(NEW.audit_json,'$.canonicalLength')=NEW.step_count AND json_extract(NEW.audit_json,'$.minimumHp')>=1 AND
+ json_extract(NEW.audit_json,'$.solutionHash')=NEW.solution_hash) OR
+ (OLD.status='published' AND NEW.status='archived') OR OLD.status=NEW.status)
+ BEGIN SELECT RAISE(ABORT,'INVALID_TOWER_PUBLICATION'); END;
+ `);
+});
+
+runMigration(43, "allow manual tower rotations inside a weekly window", () => {
+  db.exec(`
+ DROP TRIGGER IF EXISTS tower_snapshot_no_delete;
+ DROP TRIGGER IF EXISTS tower_snapshot_initial_status;
+ DROP TRIGGER IF EXISTS tower_snapshot_immutable;
+ DROP TRIGGER IF EXISTS tower_publication_guard;
+ DROP INDEX IF EXISTS idx_tower_challenge_window;
+ ALTER TABLE hardcore_tower_challenges RENAME TO hardcore_tower_challenges_weekly;
+ CREATE TABLE hardcore_tower_challenges (
+ challenge_id TEXT PRIMARY KEY,iso_year INTEGER NOT NULL,iso_week INTEGER NOT NULL,
+ rotation_index INTEGER NOT NULL,class_key TEXT NOT NULL,generator_version INTEGER NOT NULL,
+ content_version INTEGER NOT NULL,seed_commitment TEXT NOT NULL,payload_json TEXT NOT NULL,
+ step_count INTEGER NOT NULL CHECK(step_count BETWEEN 1 AND 120),solution_hash TEXT NOT NULL,
+ difficulty_score INTEGER NOT NULL,audit_json TEXT NOT NULL,
+ status TEXT NOT NULL CHECK(status IN ('draft','validated','published','archived')),
+ starts_at INTEGER NOT NULL,ends_at INTEGER NOT NULL,generated_at INTEGER NOT NULL,published_at INTEGER,
+ UNIQUE(rotation_index,generator_version),CHECK(ends_at>starts_at));
+ INSERT INTO hardcore_tower_challenges SELECT * FROM hardcore_tower_challenges_weekly;
+ DROP TABLE hardcore_tower_challenges_weekly;
+ CREATE INDEX idx_tower_challenge_window ON hardcore_tower_challenges(status,starts_at,ends_at);
+ CREATE INDEX idx_tower_challenge_week ON hardcore_tower_challenges(iso_year,iso_week,generator_version,starts_at DESC);
 
  CREATE TRIGGER tower_snapshot_no_delete BEFORE DELETE ON hardcore_tower_challenges
  WHEN OLD.status IN ('published','archived')
