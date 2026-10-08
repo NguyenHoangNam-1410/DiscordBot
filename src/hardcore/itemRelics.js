@@ -89,7 +89,7 @@ const designs = [
     id: "gilded_soul",
     name: "Gilded Soul",
     vietnameseName: "Linh Hồn Hoàng Kim",
-    text: "DMG Tấn công/Skill của bạn tăng theo xu có thể rút trong run: đạt 2/5/10/20/40 lần tiền cược thì tăng 10/20/30/40/50%. Chốt mức tăng khi vào combat; không dùng ví xu ngoài run, không cộng thuộc tính cơ bản.",
+    text: "DMG Tấn công/Skill của bạn tăng theo xu có thể rút trong run: đạt 2/3/4/5/7 lần tiền cược thì tăng 10/20/30/40/50%. Chốt mức tăng khi vào combat; không dùng ví xu ngoài run, không cộng thuộc tính cơ bản.",
     relicPassive: {
       kind: "runWealthDamage",
       source: "currentRunPayout",
@@ -101,19 +101,19 @@ const designs = [
           damageBonus: 0.1,
         },
         {
-          stakeMultiple: 5,
+          stakeMultiple: 3,
           damageBonus: 0.2,
         },
         {
-          stakeMultiple: 10,
+          stakeMultiple: 4,
           damageBonus: 0.3,
         },
         {
-          stakeMultiple: 20,
+          stakeMultiple: 5,
           damageBonus: 0.4,
         },
         {
-          stakeMultiple: 40,
+          stakeMultiple: 7,
           damageBonus: 0.5,
         },
       ],

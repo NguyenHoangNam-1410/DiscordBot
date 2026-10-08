@@ -22,6 +22,7 @@ module.exports = function createModule(dependencies) {
   const payoutChanged = (...args) => dependencies.payoutChanged(...args);
   const logPayoutChange = (...args) => dependencies.logPayoutChange(...args);
   const heal = (...args) => dependencies.heal(...args);
+  const healEvent = (...args) => dependencies.healEvent(...args);
   const hurt = (...args) => dependencies.hurt(...args);
   const receiveItem = (...args) => dependencies.receiveItem(...args);
   const alive = (...args) => dependencies.alive(...args);
@@ -138,9 +139,11 @@ module.exports = function createModule(dependencies) {
       floor >= state.classShrine.from &&
       floor <= state.classShrine.until
     ) {
-      const hpBefore = state.hp;
-      const gained = heal(state, state.maxHp * 0.05);
-      state.lastLog += `\n${E.shrine} Class Shrine · Druid: hồi ${E.hp} **${gained} HP** cho bạn: ${hpBefore} → **${state.hp}**.`;
+      const hpBefore = state.hp,
+        manaBefore = state.mana;
+      const recovered = healEvent(state, state.maxHp * 0.05);
+      const gained = recovered.hp;
+      state.lastLog += `\n${E.shrine} Class Shrine · Druid: hồi ${E.hp} **${gained} HP** cho bạn: ${hpBefore} → **${state.hp}**.\n${E.mana} Class Shrine · Druid: MP ${manaBefore} → **${state.mana}** (+${recovered.mp}).`;
     }
     if (state.classShrine && floor >= state.classShrine.until)
       state.classShrine = null;
@@ -203,6 +206,7 @@ module.exports = function createModule(dependencies) {
 
   function initialize(classKey, stake, session, rng) {
     const state = stats.createState(classKey, stake);
+    state.bossRosterVersion = 1;
     state.encounter = generateEncounter(state, session, rng);
     prepareParadoxCombat(state, rng);
     return state;

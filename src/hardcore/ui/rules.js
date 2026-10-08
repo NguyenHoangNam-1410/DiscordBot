@@ -56,7 +56,7 @@ module.exports = function createModule(dependencies) {
         {
           name: `${eventIcon("boss")} Cơ chế boss`,
           value:
-            "- **The Butcher:** mỗi lần ra đòn tăng 8% DMG, tối đa 5 stack.\n- **Ascendant Riftwalker:** miễn sát thương ở lượt đầu của mỗi chu kỳ 3 lượt giao tranh.\n- **Assur:** EVA và Crit cao.\n- **Lucion:** hồi HP bằng 35% sát thương thực sự gây ra.\n- **Deimoss:** Abyssal Spires giảm 25% sát thương nhận; tầng 999 là phiên bản boss cuối.\nNút **Chi tiết** cho biết cơ chế và trạng thái của boss đang gặp.",
+            "- Sinh tồn có **21 boss riêng**: mỗi 50 tầng, Kabraxis 666 và Deimoss 999. Boss ưu tiên trước RNGesus, ký ức và event thường.\n- Tầng **333** chọn một ấn War/Protection/Arcane, lưu một lần; tầng **666** có cửa rút thưởng trước trận. Vào Kabraxis thì không rút/bỏ qua. Hạ nhận SSR 66,6% / UR có nguyền 33,4%, bonus 66,6% cược và thức tỉnh ấn; không thêm rương/drop LUCK.\n- **Deimoss:** ba thanh HP độc lập 30/30/40%, không xuyên damage dư, không phản công khi chuyển phase; chỉ trao thưởng sau Phase 3.\n- Bảng boss hiển thị cơ chế, stack, cảnh báo và dự báo damage. **Chi tiết** giải thích cách xử lý. Trận đã lưu giữ nguyên cơ chế; boss xuất hiện sau cập nhật dùng roster mới. Tower giữ luật riêng.",
         },
         {
           name: `${E.checkpoint} Checkpoint và ${E.rift} Rift`,
@@ -125,7 +125,7 @@ module.exports = function createModule(dependencies) {
         },
         {
           name: `${E.shrine} Shrine · chọn Chạm hoặc Bỏ qua`,
-          value: `**6 loại ngang nhau (mỗi loại ≈16,7%)**; nếu Dấu ấn oán hận đến hạn, thêm Nghi lễ thành **7 nhánh ngang nhau (mỗi nhánh 1/7)**; kết quả được giữ cố định khi mở lại bảng.\n- **Healing:** hồi đầy ${E.hp} HP.\n- **Armor:** +5 vào một thuộc tính ${E.str} STR / ${E.dex} DEX / ${E.vit} VIT / ${E.ene} ENE; trong nhánh Armor, mỗi chỉ số 25%.\n- ${E.backpack} **Treasure:** 1 vật phẩm ngẫu nhiên, **R 50% / SR 30% / SSR 15% / UR 5%**. Không chịu LUCK/pity; UR có thể là trang bị hoặc Vé thoát.\n- **Corrupted:** +12 thuộc tính sát thương phù hợp class, −8 ${E.vit} VIT.\n- **Experience:** bonus bằng 25% tiền cược.\n- **Fake:** rút 30% Max ${E.hp} HP, mức bẫy tối thiểu 10; chỉ trừ đến khi còn **1 HP**.\n**Bỏ qua** giữ nguyên chỉ số và đi tiếp.`,
+          value: `**6 loại ngang nhau (mỗi loại ≈16,7%)**; nếu Dấu ấn oán hận đến hạn, thêm Nghi lễ thành **7 nhánh ngang nhau (mỗi nhánh 1/7)**; kết quả được giữ cố định khi mở lại bảng.\n- **Healing:** hồi đầy ${E.hp} HP/${E.mana} MP.\n- **Armor:** +5 vào một thuộc tính ${E.str} STR / ${E.dex} DEX / ${E.vit} VIT / ${E.ene} ENE; trong nhánh Armor, mỗi chỉ số 25%.\n- ${E.backpack} **Treasure:** 1 vật phẩm ngẫu nhiên, **R 50% / SR 30% / SSR 15% / UR 5%**. Không chịu LUCK/pity; UR có thể là trang bị hoặc Vé thoát.\n- **Corrupted:** +12 thuộc tính sát thương phù hợp class, −8 ${E.vit} VIT.\n- **Experience:** bonus bằng 25% tiền cược.\n- **Fake:** rút 30% Max ${E.hp} HP, mức bẫy tối thiểu 10; chỉ trừ đến khi còn **1 HP**.\n**Bỏ qua** giữ nguyên chỉ số và đi tiếp.`,
         },
         {
           name: `${E.shrine} Thuộc tính nhận từ Corrupted`,
@@ -142,7 +142,7 @@ module.exports = function createModule(dependencies) {
         {
           name: "Các sự kiện đặc biệt",
           value:
-            "Healer · Treasure Goblin · Blacksmith · Purifier · Sacrificial Altar · Cursed Gambler · Lost Adventurer · Fountain · Horadric Forge · Rift Merchant · Mirror · Treasure Room · Contract · Class Shrine · Strange Doors · Duelist · Payout Shop · Blood Shop · Diamond Shop.\n\nChỉ những event đủ điều kiện mới được chọn. Các lựa chọn có thể đổi HP, thuộc tính, trang bị, payout hoặc tạo hiệu ứng tạm thời. Không phải event nào cũng miễn phí hoặc an toàn; đọc giá, tỷ lệ và điều kiện trên bảng trước khi xác nhận.",
+            "Healer · Treasure Goblin · Blacksmith · Purifier · Sacrificial Altar · Cursed Gambler · Lost Adventurer · Fountain · Horadric Forge · Rift Merchant · Mirror · Treasure Room · Contract · Class Shrine · Strange Doors · Duelist · Payout Shop · Blood Shop · Diamond Shop.\n\nChỉ những event đủ điều kiện mới được chọn. Các lựa chọn có thể đổi HP/MP, thuộc tính, trang bị, payout hoặc tạo hiệu ứng tạm thời. Event hồi HP cũng hồi MP theo cùng tỷ lệ Max MP, làm tròn lên, không vượt Max MP; HP đã đầy vẫn hồi MP. Checkpoint chỉ hồi HP. Lời nguyền giảm hồi HP không giảm MP hồi. Không phải event nào cũng miễn phí hoặc an toàn; đọc giá, tỷ lệ và điều kiện trên bảng trước khi xác nhận.",
         },
         {
           name: `${eventIcon("treasure_room")} Treasure Room`,
@@ -166,12 +166,12 @@ module.exports = function createModule(dependencies) {
         {
           name: "🕯️ Nghi lễ Oán Hận · Gilded Soul [LR]",
           value:
-            "Cướp Lost Adventurer vẫn giữ hậu quả 50% mất 10% payout / 50% Bounty Hunter, đồng thời thêm dấu ấn riêng trong Rift. Từ tầng cướp +10, Shrine có 7 nhánh ngang nhau: nghi lễ 1/7. Cướp thêm không lùi mốc; bỏ qua giữ dấu ấn.\nTriệu hồi Avarice Revenant (Boss), bạn hành động trước. Dưới 40% Max HP không dùng bình. Đòn Tấn công/Skill gây phản phệ 10% DMG thực tế (làm tròn xuống), không né/chặn/Crit, kể cả đòn kết liễu. Không tấn công một lượt: boss chờ; hai lượt liên tiếp trở đi: boss đánh. CRIT gián đoạn đòn thường nhưng vẫn chịu phản phệ.\nHạ boss và sống sót: nhận Gilded Soul, không ban phước hồi HP/MP/giải nguyền. DMG Tấn công/Skill +10/20/30/40/50% khi xu có thể rút trong run đạt 2/5/10/20/40 lần cược; chốt mỗi combat, tối đa +50%. Chỉ một nội tại LR hoạt động/run. Ghi nhận thành tích và thành tựu.",
+            "Cướp Lost Adventurer vẫn giữ hậu quả 50% mất 10% payout / 50% Bounty Hunter, đồng thời thêm dấu ấn riêng trong Rift. Từ tầng cướp +10, Shrine có 7 nhánh ngang nhau: nghi lễ 1/7. Cướp thêm không lùi mốc; bỏ qua giữ dấu ấn.\nTriệu hồi Avarice Revenant (Boss), bạn hành động trước. Dưới 40% Max HP không dùng bình. Đòn Tấn công/Skill gây phản phệ 10% DMG thực tế (làm tròn xuống), không né/chặn/Crit, kể cả đòn kết liễu. Không tấn công một lượt: boss chờ; hai lượt liên tiếp trở đi: boss đánh. CRIT gián đoạn đòn thường nhưng vẫn chịu phản phệ.\nHạ boss và sống sót: nhận Gilded Soul, không ban phước hồi HP/MP/giải nguyền. DMG Tấn công/Skill +10/20/30/40/50% khi xu có thể rút trong run đạt 2/3/4/5/7 lần cược; chốt mỗi combat, tối đa +50%. Chỉ một nội tại LR hoạt động/run. Ghi nhận thành tích và thành tựu.",
         },
         {
           name: `${eventIcon("echo")} Grave Echo`,
           value:
-            "- Từ tầng 101, có 1% cơ hội ở tình huống hợp lệ; tối đa một lần trong mỗi dải 100 tầng, không gặp mộ của chính mình.\n- Có thể cầu nguyện hồi HP, bỏ đi, cướp hoặc khiêu chiến. Cướp: 50% an toàn, 50% tạo Oán niệm sau 10–30 tầng, thay trận thức tỉnh tức thì; món đã cướp không nhận lại. Khiêu chiến vẫn đánh ngay với đối thủ mạnh hơn. Đọc tỷ lệ và phần thưởng trên bảng trước khi chọn.",
+            "- Từ tầng 101, có 1% cơ hội ở tình huống hợp lệ; tối đa một lần trong mỗi dải 100 tầng, không gặp mộ của chính mình.\n- Có thể cầu nguyện hồi 15% Max HP/MP (MP làm tròn lên), bỏ đi, cướp hoặc khiêu chiến. Cướp: 50% an toàn, 50% tạo Oán niệm sau 10–30 tầng, thay trận thức tỉnh tức thì; món đã cướp không nhận lại. Khiêu chiến vẫn đánh ngay với đối thủ mạnh hơn. Đọc tỷ lệ và phần thưởng trên bảng trước khi chọn.",
         },
       ],
       rngesus: [
@@ -213,7 +213,7 @@ module.exports = function createModule(dependencies) {
         },
         {
           name: `${eventIcon("merchant")} Rift Merchant · giá theo payout hiện tại`,
-          value: `Mỗi lần gặp có **3 loại hàng khác nhau**, chọn từ 6 loại; mua tối đa **1 món**. Giá được khóa khi gặp, làm tròn lên, tối thiểu 1 xu.\n- ${E.potion} +1 bình (giới hạn cơ bản 5, nội tại tăng tối đa 10): **2,5%** payout hiện tại.\n- ${E.hp} Hồi đầy HP: **4%**.\n- ${E.luck} +1 LUCK trong run: **5%**.\n- ${E.backpack} 1 trang bị SR: **7,5%**.\n- ${E.ticket} Vé thoát (tối đa 1): **12,5%**.\n- ${E.chest} Rương thường: **7,5%**, **mở ngay khi mua**; tỷ lệ và pity như hòm thường, có thể gặp Mimic hoặc rỗng/giả. Chi tiết liệt kê tỷ lệ của rương đang bán.\nGiá chốt theo payout hiện tại lúc gặp, sau lời nguyền, Paradox và các khoản đã chi; nội tại giảm giá xu vẫn áp dụng.`,
+          value: `Mỗi lần gặp có **3 loại hàng khác nhau**, chọn từ 6 loại; mua tối đa **1 món**. Giá được khóa khi gặp, làm tròn lên, tối thiểu 1 xu.\n- ${E.potion} +1 bình (giới hạn cơ bản 5, nội tại tăng tối đa 10): **2,5%** payout hiện tại.\n- ${E.hp} Hồi đầy HP/${E.mana} MP: **4%**.\n- ${E.luck} +1 LUCK trong run: **5%**.\n- ${E.backpack} 1 trang bị SR: **7,5%**.\n- ${E.ticket} Vé thoát (tối đa 1): **12,5%**.\n- ${E.chest} Rương thường: **7,5%**, **mở ngay khi mua**; tỷ lệ và pity như hòm thường, có thể gặp Mimic hoặc rỗng/giả. Chi tiết liệt kê tỷ lệ của rương đang bán.\nGiá chốt theo payout hiện tại lúc gặp, sau lời nguyền, Paradox và các khoản đã chi; nội tại giảm giá xu vẫn áp dụng.`,
         },
         {
           name: `${eventIcon("purifier")} Purifier · giải lời nguyền`,

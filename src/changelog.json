@@ -23,6 +23,39 @@
     ]
   },
   {
+    "id": "a47f9ca7-c452-4765-be78-9d3ec9a2c933",
+    "updatedAt": "2026-10-08T04:32:25.394Z",
+    "auditedAt": "2026-10-08T04:32:25.394Z",
+    "title": "Event hồi phục cả HP và MP",
+    "changes": [
+      "Các event hồi HP trong Sinh tồn nay hồi thêm MP theo cùng tỷ lệ Max MP, làm tròn lên và không vượt giới hạn; HP đã đầy vẫn hồi MP. Healer hồi 30% MP, Grave Echo hồi 15%; các nhánh hồi đầy cũng hồi đầy MP.",
+      "Áp dụng cho Healing Shrine, Blood Fountain, cửa sáng, Wrong Portal tốt, dịch vụ hồi phục của Rift Merchant, phần thưởng hồi phục Tower Remembers và Class Shrine của Druid (5% MP mỗi tầng hiệu lực).",
+      "Checkpoint vẫn chỉ hồi HP. Cập nhật nút, Chi tiết, luật và log HP/MP trước → sau; lời nguyền giảm hồi HP không giảm lượng MP hồi."
+    ]
+  },
+  {
+    "id": "aaac3efc-3196-4aa1-afc5-e680c6b40dde",
+    "updatedAt": "2026-10-08T03:08:00.089Z",
+    "auditedAt": "2026-10-08T03:08:00.089Z",
+    "title": "Sinh tồn: 21 boss và Threefold Prophecy",
+    "changes": [
+      "Thay vòng 5 boss bằng 21 boss có cơ chế riêng tại các mốc 50 tầng, thêm Kabraxis tầng 666; hiển thị stack, cảnh báo và dự báo sát thương, xem toàn bộ cơ chế trong Chi tiết.",
+      "Tầng 333 chọn ấn War, Protection hoặc Arcane một lần. Tầng 666 cho rút thưởng trước cửa; khi vào trận không thể bỏ qua/rút. Hạ Kabraxis nhận trang bị SSR 66,6% hoặc UR có nguyền 33,4%, bonus 66,6% cược và thức tỉnh ấn.",
+      "Deimoss tầng 999 có ba thanh HP riêng 30/30/40%; sát thương dư không xuyên phase, chuyển phase không phản công, chỉ nhận thưởng khi phá thanh thứ ba.",
+      "Khóa phần thưởng từ lúc boss xuất hiện và giữ trạng thái khi tiếp tục; trận cũ đang đánh giữ cơ chế cũ, các boss tiếp theo dùng bộ mới. Tower không đổi."
+    ]
+  },
+  {
+    "id": "320f661e-e6a9-404c-8b43-6ddbe3d466f5",
+    "updatedAt": "2026-10-08T01:14:11.177Z",
+    "auditedAt": "2026-10-08T01:14:11.177Z",
+    "title": "Điều chỉnh mốc Gilded Soul",
+    "changes": [
+      "Gilded Soul tăng 10/20/30/40/50% DMG khi xu có thể rút trong run đạt 2/3/4/5/7 lần cược, thay cho 2/5/10/20/40.",
+      "Đồng bộ mô tả và luật; mức tăng vẫn chốt khi vào combat, trận đang diễn ra giữ mức đã chốt."
+    ]
+  },
+  {
     "id": "942d7e12-5cbb-4405-bba4-6166e399824a",
     "updatedAt": "2026-10-07T10:38:15.497Z",
     "auditedAt": "2026-10-07T10:38:15.497Z",

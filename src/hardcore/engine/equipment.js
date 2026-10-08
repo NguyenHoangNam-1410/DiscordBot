@@ -3,6 +3,8 @@
 module.exports = function createModule(dependencies) {
   const {
     memories,
+    bosses,
+    E,
     paradox,
     CONSUMABLE_ITEMS,
     clamp,
@@ -37,6 +39,50 @@ module.exports = function createModule(dependencies) {
         0.5,
       );
     return actual;
+  }
+
+  // Event recovery is separate from potions, skills, item passives and checkpoints.
+  function healEvent(state, amount, { manaRate = amount / state.maxHp } = {}) {
+    const hpBefore = state.hp,
+      manaBefore = state.mana;
+    const hp = heal(state, amount);
+    let mp = 0;
+    if (
+      state.gameplayVersion === 2 &&
+      !state.mode?.startsWith("tower") &&
+      !state.towerChallengeId
+    ) {
+      const maximum = bosses.effectiveMaxMana(state);
+      const fraction = maximum * clamp(manaRate, 0, 1);
+      // Avoid a floating-point tail turning an exact 1 MP into 2 MP.
+      const requested = Math.ceil(
+        fraction - Number.EPSILON * Math.max(1, fraction),
+      );
+      mp = Math.max(0, Math.min(maximum - state.mana, requested));
+      state.mana += mp;
+      markDirect(state, ["mana"]);
+    }
+    return {
+      hp,
+      mp,
+      log:
+        E.hp +
+        " HP: " +
+        hpBefore +
+        " → **" +
+        state.hp +
+        "** (+" +
+        hp +
+        ") · " +
+        E.mana +
+        " MP: " +
+        manaBefore +
+        " → **" +
+        state.mana +
+        "** (+" +
+        mp +
+        ").",
+    };
   }
 
   function hurt(state, amount, hostile = true, nonlethal = false) {
@@ -199,6 +245,7 @@ module.exports = function createModule(dependencies) {
   return {
     healingAmount,
     heal,
+    healEvent,
     hurt,
     receiveItem,
     receiveSnapshot,

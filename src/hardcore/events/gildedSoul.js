@@ -214,7 +214,7 @@ function details(state) {
       eventIcon("ritual") +
       " **SHRINE · NGHI LỄ OÁN HẬN (1/7)**\nDấu ấn đã đến hạn. Chọn triệu hồi **Avarice Revenant (Boss)** hoặc bỏ qua để giữ dấu ấn cho Shrine sau. Bạn hành động trước.\n\n" +
       BOSS_RULES +
-      "\n\nThắng và sống sót: nhận **Gilded Soul [LR]**. DMG Tấn công/Skill của bạn tăng 10/20/30/40/50% khi xu có thể rút trong run đạt 2/5/10/20/40 lần cược; chốt mỗi combat, không dùng xu trong ví. Không hồi HP/MP, không giải nguyền/ấn Rift. Hậu quả cướp cũ giữ nguyên."
+      "\n\nThắng và sống sót: nhận **Gilded Soul [LR]**. DMG Tấn công/Skill của bạn tăng 10/20/30/40/50% khi xu có thể rút trong run đạt 2/3/4/5/7 lần cược; chốt mỗi combat, không dùng xu trong ví. Không hồi HP/MP, không giải nguyền/ấn Rift. Hậu quả cướp cũ giữ nguyên."
     );
   return "";
 }

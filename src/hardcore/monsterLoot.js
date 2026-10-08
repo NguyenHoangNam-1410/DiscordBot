@@ -46,7 +46,10 @@ function odds(state, enemy = state.encounter) {
   const pool = POOLS[locked?.group || group(enemy)];
   return {
     luck,
-    chance: hasRegionBossChest(state, enemy) ? 0 : chance(luck),
+    chance:
+      hasRegionBossChest(state, enemy) || enemy.boss?.id === "kabraxis"
+        ? 0
+        : chance(luck),
     rarities: pool,
     lowerChance: LOWER_RARITY_CHANCE,
     regionChest: hasRegionBossChest(state, enemy),

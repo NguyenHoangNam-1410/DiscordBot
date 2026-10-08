@@ -21,7 +21,7 @@ const CATALOG = Object.freeze({
     name: "Hiến tế máu · Blood Blessing",
     source: "Hiến HP tại Altar of Sacrifice",
     detail:
-      "Khi đến hạn, hồi 20% Max HP cho bạn và thêm 1 bình máu, trong giới hạn bình hiện tại. Không tạo truy nã hoặc trừ payout.",
+      "Khi đến hạn, hồi 20% Max HP và 20% Max MP (MP làm tròn lên) cho bạn, thêm 1 bình máu, trong giới hạn bình hiện tại. Không tạo truy nã hoặc trừ payout.",
   },
   wealth: {
     name: "Hiến tế tài sản · Offering Vault",
@@ -39,7 +39,7 @@ const CATALOG = Object.freeze({
     name: "Thử thách thần linh · Trial of Faith",
     source: "Cầu nguyện RNGesus thành công",
     detail:
-      "Chọn hiến 1 bình máu hoặc hạ Herald of Fate tinh anh để gỡ 1 level nguyền của một món UR, giữ UR/level/buff/nội tại. Nếu không còn món bị nguyền, hồi 20% Max HP. Có thể từ chối, không bị phạt. Đây là sứ giả có thể đánh bại, không phải RNGesus.",
+      "Chọn hiến 1 bình máu hoặc hạ Herald of Fate tinh anh để gỡ 1 level nguyền của một món UR, giữ UR/level/buff/nội tại. Nếu không còn món bị nguyền, hồi 20% Max HP và 20% Max MP (MP làm tròn lên). Có thể từ chối, không bị phạt. Đây là sứ giả có thể đánh bại, không phải RNGesus.",
   },
   vengeance: {
     name: "Oán niệm · Restless Spirit",
@@ -51,7 +51,7 @@ const CATALOG = Object.freeze({
     name: "Ký ức từ run cũ",
     source: "Hành động trước khi nâng cấp",
     detail:
-      "Giữ nguyên kết quả đã khóa trong run cũ: hồi HP/bonus, giảm payout hoặc Bounty Hunter. Không roll lại và không tạo thêm ký ức thông thường mới.",
+      "Giữ nguyên kết quả đã khóa trong run cũ: hồi HP/MP theo cùng tỷ lệ (MP làm tròn lên)/bonus, giảm payout hoặc Bounty Hunter. Không roll lại và không tạo thêm ký ức thông thường mới.",
   },
 });
 

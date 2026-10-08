@@ -1,4 +1,5 @@
 "use strict";
+const bosses = require("../bosses/mechanics");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -72,9 +73,11 @@ module.exports = function createModule(dependencies) {
       name: `${icon("moneybag", "💰")} Rút thưởng`,
       value: result
         ? `Đã nhận **${money(result.payout)} ${icon("coin", "🪙")}** ${STAT_SEPARATOR} **${money(result.diamonds || 0)} ${icon("gem", "💎")}**`
-        : state.cleared
-          ? `Thực nhận: **${money(core.payout(state))} ${E.coin}**${STAT_SEPARATOR}**${money(runDiamondReward(state))} ${icon("gem", "💎")}**`
-          : "Chưa thể rút",
+        : bosses.retreatLocked(state)
+          ? "Kabraxis đã khóa rút thưởng trong trận."
+          : state.cleared
+            ? `Thực nhận: **${money(core.payout(state))} ${E.coin}**${STAT_SEPARATOR}**${money(runDiamondReward(state))} ${icon("gem", "💎")}**`
+            : "Chưa thể rút",
       inline: false,
     });
     addTextFields(e, `${icon("scroll", "📜")} Lượt vừa rồi`, turnText(state));

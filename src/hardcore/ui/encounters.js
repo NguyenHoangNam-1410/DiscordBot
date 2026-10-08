@@ -1,4 +1,5 @@
 "use strict";
+const bossDisplay = require("../bosses/display");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -164,7 +165,7 @@ module.exports = function createModule(dependencies) {
       return `${eventIcon(k)} **HORADRIC FORGE · LÒ CHUYỂN HÓA**\nTiêu hao **1 level trang bị** để giữ hiệu ứng có lợi trong run và chọn thêm một phần thưởng. Không tốn xu.\n\n**${E.backpack} Trang bị dùng để chuyển hóa**\n${E.backpack} **${target.name} [${rarityLabel(target.rarity)}] · Lv.${target.level}**\n- Sau khi dùng: ${target.level === 1 ? "món này biến mất khỏi trang bị" : `level **${target.level}→${target.level - 1}**`}.\n- **Giữ nguyên hiệu ứng của level đã tiêu hao:** ${effectText(retained)}. Đây là hiệu ứng được giữ lại, không cộng thêm lần nữa.\n${hasCurse ? `- **Xóa lời nguyền của 1 level:** ${effectText(target.definition.curse.effects)}.\n` : ""}- Không nhận lại ${E.potion} bình máu, ${E.ticket} Vé thoát hoặc ${E.hp} HP hồi khi nhặt đồ.\n\n**Chọn một phần thưởng thêm**\n- ${E[main]} **${main.toUpperCase()} +6**.\n- ${E[guard]} **${guard.toUpperCase()} +7**.\n- ${E.vit} **VIT +4**.${["legendary", "cursed"].includes(target.rarity) ? `\n- ${E.ticket} **Nhận 1 vé thoát** (giữ tối đa 1).` : ""}\n\n**Bỏ qua:** giữ nguyên trang bị, không nhận phần thưởng.`;
     }
     const descriptions = {
-      healer: `**Hồi phục:** hồi ${E.hp} HP bằng 30% Max HP, ít nhất 20; +1 ${E.potion} bình máu (theo giới hạn bình của bạn). Miễn phí.`,
+      healer: `**Hồi phục:** hồi ${E.hp} HP bằng 30% Max HP, ít nhất 20; hồi 30% Max ${E.mana} MP (làm tròn lên); +1 ${E.potion} bình máu (theo giới hạn bình của bạn). Miễn phí.`,
       sacrifice: `**Hiến HP:** mất tối đa 20% Max ${E.hp} HP (giữ ≥1) → +6 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\n**Hiến payout:** trả 10% payout hiện tại → +6 ${E.vit} VIT. Hiến HP không cộng bonus Blood Paradox.`,
       contract: `Trong 3 tầng, chọn một điều kiện:\n- **Không dùng ${E.potion} bình:** nhận đồ [SSR].\n- **Không dùng skill:** bonus +50% cược.\n- **Không phòng thủ:** +10 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\nVi phạm chỉ hủy thưởng.`,
       class_shrine: `Hiệu lực ba tầng tiếp theo: ${SHRINES[s.classKey]}`,
@@ -181,6 +182,8 @@ module.exports = function createModule(dependencies) {
       return `${eventIcon("paradox")} **RIFT PARADOX · HIỆU LỰC 5 TẦNG**\nTầng ${s.encounter.version === 2 ? s.encounter.milestone + 1 : s.floor}–${s.encounter.version === 2 ? s.encounter.milestone + 5 : s.floor + 4}. Chọn một luật bằng nút bên dưới.\nXem **Chi tiết** để đọc công dụng từng lựa chọn.`;
     if (s.phase !== "encounter") return encounterText(s);
     const e = s.encounter;
+    if (["prophecy", "boss_gate"].includes(e.type))
+      return bossDisplay.special(s);
     if (
       ["memory", "god_rngesus", "covenant_blessing", "royal_blessing"].includes(
         e.type,
@@ -198,6 +201,13 @@ module.exports = function createModule(dependencies) {
           ancient_mimic: "Ancient Mimic",
         }[world.mimicKind(e) ? "elite" : e.rank] || e.rank;
       const preview = core.incomingPreview(s);
+      if (e.boss)
+        return `${eventIcon("boss")} **${e.name}** · Tầng ${s.floor}${e.boss.id === "deimoss" ? "" : " · Phase " + e.boss.phase}
+${bossDisplay.bars(s) || healthBar(e.hp, e.maxHp)}
+${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%
+${bossDisplay.status(s)}
+🎯 **Đòn kế tiếp:** ${preview.trueDamage ? "DMG chuẩn" : e.nextDamageType === "magic" ? E.magic + " Phép" : E.attack + " Vật lý"}
+📉 **Dự báo nhận:** **${preview.low}–${preview.high} DMG** · ${percent(preview.chance)} trúng bạn *(chưa CRIT)*`;
       return `${e.memoryFamily ? memoryIcon(e.memoryFamily) : ["boss", "final_boss"].includes(e.rank) ? eventIcon("boss") : "👹"} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Tỷ lệ vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **${gilded.isBoss(e) ? "Dự báo đòn thường" : "Dự báo nhận"}:** **${preview.low}–${preview.high} DMG** · ${E.evasion} **${percent(preview.chance)}** trúng bạn *(chưa Crit/DEF${gilded.isBoss(e) ? "/phản phệ" : ""})*`;
     }
 
@@ -254,6 +264,8 @@ module.exports = function createModule(dependencies) {
     const e = s.encounter;
     return (
       [
+        "prophecy",
+        "boss_gate",
         "chest",
         "shrine",
         "rngesus",
@@ -343,7 +355,16 @@ module.exports = function createModule(dependencies) {
   function rawEncounterDetails(s) {
     if (s.phase !== "encounter") return encounterText(s);
     const e = s.encounter;
+    if (e.type === "boss_gate")
+      return (
+        bossDisplay.special(s) +
+        "\n\n" +
+        bossDisplay.details({ ...s, encounter: e.enemy })
+      );
+    if (e.type === "prophecy") return bossDisplay.special(s);
     if (e.type === "combat") {
+      if (e.boss)
+        return `${eventIcon("boss")} **${e.name} · Chi tiết chiến đấu**\n${bossDisplay.details(s)}\n\n${monsterLootDetails(s)}`;
       const mechanism =
         {
           butcher: `Frenzy: mỗi lần phản công tăng 8% sát thương, tối đa 5 stack. Hiện **${e.frenzy}/5**; phản công kế dùng **${Math.min(5, e.frenzy + 1)}/5** stack.`,

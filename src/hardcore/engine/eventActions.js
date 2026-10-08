@@ -24,7 +24,7 @@ module.exports = function createModule(dependencies) {
   const goblinEscapeCost = (...args) => dependencies.goblinEscapeCost(...args);
   const penalty = (...args) => dependencies.penalty(...args);
   const charge = (...args) => dependencies.charge(...args);
-  const heal = (...args) => dependencies.heal(...args);
+  const healEvent = (...args) => dependencies.healEvent(...args);
   const hurt = (...args) => dependencies.hurt(...args);
   const receiveItem = (...args) => dependencies.receiveItem(...args);
   const cleanse = (...args) => dependencies.cleanse(...args);
@@ -108,11 +108,13 @@ module.exports = function createModule(dependencies) {
       } else {
         if (offer.key === "potion")
           state.potions = Math.min(state.maxPotions, state.potions + 1);
-        if (offer.key === "heal") heal(state, state.maxHp);
+        const recovery =
+          offer.key === "heal" ? healEvent(state, state.maxHp) : null;
         if (offer.key === "luck") addSource(state, { luck: 1 });
         if (offer.key === "ticket") state.escapeTokens = 1;
         done(
-          `🛒 Đã mua ${{ potion: `${E.potion} bình máu`, heal: `hồi đầy ${E.hp} HP`, luck: `+1 ${E.luck} Luck`, ticket: `${E.ticket} Vé thoát` }[offer.key] || offer.key}.`,
+          `🛒 Đã mua ${{ potion: `${E.potion} bình máu`, heal: `hồi đầy ${E.hp} HP/${E.mana} MP`, luck: `+1 ${E.luck} Luck`, ticket: `${E.ticket} Vé thoát` }[offer.key] || offer.key}.` +
+            (recovery ? "\n" + recovery.log : ""),
         );
       }
       return;
@@ -160,9 +162,14 @@ module.exports = function createModule(dependencies) {
       return;
     }
     if (k === "healer") {
-      heal(state, Math.max(20, state.maxHp * 0.3));
+      const recovery = healEvent(state, Math.max(20, state.maxHp * 0.3), {
+        manaRate: 0.3,
+      });
       state.potions = Math.min(state.maxPotions, state.potions + 1);
-      done("Wandering Healer đã hồi phục và tiếp tế cho bạn.");
+      done(
+        "Wandering Healer đã hồi phục HP/MP và tiếp tế cho bạn.\n" +
+          recovery.log,
+      );
     } else if (k === "goblin") {
       if (e.roll < goblinCatchChance(state)) {
         state.bonus += Math.floor(state.stake * GOBLIN_REWARDS.bonusRate);
@@ -257,12 +264,15 @@ module.exports = function createModule(dependencies) {
       completeFloor(state, session, rng, 0);
     } else if (k === "fountain") {
       if (e.roll < (e.healThreshold ?? 0.6)) {
-        heal(state, state.maxHp);
-        done("🩸 Blood Fountain đã hồi phục cho bạn.");
+        const recovery = healEvent(state, state.maxHp);
+        done("🩸 Blood Fountain đã hồi phục HP/MP cho bạn.\n" + recovery.log);
       } else if (e.roll < (e.goodThreshold ?? 0.85)) {
         addSource(state, { maxHp: 15 });
-        heal(state, 15);
-        done("🩸 Blood Fountain đã tăng sinh lực cho bạn.");
+        const recovery = healEvent(state, 15);
+        done(
+          "🩸 Blood Fountain đã tăng sinh lực và hồi HP/MP cho bạn.\n" +
+            recovery.log,
+        );
       } else combat(e.enemy, "Blood Mimic xuất hiện!");
     } else if (k === "horadric") {
       const target = itemById(e.targetId);
@@ -344,7 +354,7 @@ module.exports = function createModule(dependencies) {
         barbarian: `${E.defense} DEF +8 khi ${E.hp} HP ≤30%`,
         assassin: `${E.evasion} chặn một phản công, tiêu hao khi kích hoạt`,
         sorceress: `${SKILL_ICONS.sorceress} một skill miễn phí ${E.mana} MP, tiêu hao khi dùng`,
-        druid: `${E.hp} hồi 5% Max HP mỗi tầng`,
+        druid: `${E.hp} hồi 5% Max HP và ${E.mana} 5% Max MP mỗi tầng (MP làm tròn lên)`,
         necromancer: `${E.evasion} chặn một phản công, tiêu hao khi kích hoạt`,
         paladin: `${E.res} RES +10 khi nhận phép`,
       };
@@ -354,14 +364,16 @@ module.exports = function createModule(dependencies) {
     } else if (k === "doors") {
       const door = action.slice(5);
       if (e.doors[door]) {
+        let recovery;
         if (door === "light") {
-          heal(state, state.maxHp);
+          recovery = healEvent(state, state.maxHp);
           state.potions = Math.min(state.maxPotions, state.potions + 1);
         }
         if (door === "gold") state.bonus += Math.floor(state.stake * 0.5);
         if (door === "dark") receiveItem(state, e.item);
         done(
-          `${eventIcon("doors")} Cửa ${{ light: "sáng", gold: "vàng", dark: "tối" }[door]}: ${door === "light" ? `hồi đầy ${E.hp} HP và tiếp tế ${E.potion} bình máu` : door === "gold" ? `bonus +50% cược (${Math.floor(state.stake * 0.5).toLocaleString("vi-VN")} xu)` : "nhận trang bị SSR"}.`,
+          `${eventIcon("doors")} Cửa ${{ light: "sáng", gold: "vàng", dark: "tối" }[door]}: ${door === "light" ? `hồi đầy ${E.hp} HP/${E.mana} MP và tiếp tế ${E.potion} bình máu` : door === "gold" ? `bonus +50% cược (${Math.floor(state.stake * 0.5).toLocaleString("vi-VN")} xu)` : "nhận trang bị SSR"}.` +
+            (recovery ? "\n" + recovery.log : ""),
         );
       } else if (door === "light") {
         hurt(state, state.maxHp * 0.2, true, true);

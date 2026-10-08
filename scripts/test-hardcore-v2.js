@@ -704,6 +704,16 @@ async function main() {
     s.encounter.hp = 1;
     s.mana = 2;
   });
+  for (const phase of [2, 3]) {
+    const shifted = play(final, "skill");
+    assert.equal(shifted.state.encounter.boss.phase, phase);
+    assert.equal(shifted.state.cleared, 998);
+    assert.equal(shifted.state.finalBossDefeated, false);
+    save(final, (s) => {
+      s.encounter.hp = 1;
+      s.mana = 2;
+    });
+  }
   const win = play(final, "skill");
   assert.equal(win.state.phase, "summit");
   assert.equal(win.state.finalBossDefeated, true);

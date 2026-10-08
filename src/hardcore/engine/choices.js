@@ -1,8 +1,17 @@
 "use strict";
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
-  const { royal, gilded, covenant, stats, memories, paradox, world, mainStat } =
-    dependencies;
+  const {
+    bosses,
+    royal,
+    gilded,
+    covenant,
+    stats,
+    memories,
+    paradox,
+    world,
+    mainStat,
+  } = dependencies;
   const rngesusFleeChance = (...args) =>
     dependencies.rngesusFleeChance(...args);
   const rngesusPrayerChance = (...args) =>
@@ -32,7 +41,7 @@ module.exports = function createModule(dependencies) {
     if (k === "merchant")
       return e.offers.map((offer, i) => ({
         action: `buy_${i}`,
-        label: `${{ potion: "Bình", heal: "Hồi đầy", luck: "Luck +1", item: "Item SR", ticket: "Vé thoát", chest: "Rương · mở ngay" }[offer.key]} · ${offer.price} xu`,
+        label: `${{ potion: "Bình", heal: "Hồi đầy HP/MP", luck: "Luck +1", item: "Item SR", ticket: "Vé thoát", chest: "Rương · mở ngay" }[offer.key]} · ${offer.price} xu`,
         disabled: payout(state) < offer.price,
       }));
     if (k === "duelist") {
@@ -48,7 +57,7 @@ module.exports = function createModule(dependencies) {
     }
     return (
       {
-        healer: [{ action: "event_heal", label: "Hồi máu +1 bình" }],
+        healer: [{ action: "event_heal", label: "Hồi HP/MP +1 bình" }],
         goblin: [
           {
             action: "event_catch",
@@ -153,6 +162,17 @@ module.exports = function createModule(dependencies) {
   }
 
   function actions(state) {
+    if (state.encounter?.type === "prophecy")
+      return [
+        { action: "prophecy_war", label: "War · +12 stat chính, +8% DMG boss" },
+        {
+          action: "prophecy_protection",
+          label: "Protection · +12 VIT, +5 RES",
+        },
+        { action: "prophecy_arcane", label: "Arcane · +10 ENE, +1 Max MP" },
+      ];
+    if (state.encounter?.type === "boss_gate")
+      return [{ action: "enter_kabraxis", label: "Bước vào trận Kabraxis" }];
     if (state.phase === "boss_chest")
       return [
         { action: "boss_open", label: "Mở rương · SSR 70% / UR 30%" },
@@ -199,10 +219,18 @@ module.exports = function createModule(dependencies) {
           action: "attack",
           label: `+${attackManaGain(state)} MP`,
         },
-        { action: "defend", label: "+1 MP" },
+        {
+          action: "defend",
+          label:
+            bosses.vanished(state) ||
+            (state.encounter?.boss?.id === "gharbad" &&
+              state.encounter.boss.surrender)
+              ? "+2 MP"
+              : "+1 MP",
+        },
         {
           action: "skill",
-          label: `${skillManaCost(state) === 0 ? "" : "−"}${skillManaCost(state)} MP${skillHpCost(state) ? ` · −${skillHpCost(state)} HP` : ""}`,
+          label: `${bosses.brainControl(state) ? "Brain Control · " : ""}${skillManaCost(state) === 0 ? "" : "−"}${skillManaCost(state)} MP${skillHpCost(state) ? ` · −${skillHpCost(state)} HP` : ""}`,
           disabled:
             state.mana < skillManaCost(state) ||
             state.hp - skillHpCost(state) < 1,
@@ -279,7 +307,7 @@ module.exports = function createModule(dependencies) {
       ];
     if (e.type === "echo")
       return [
-        { action: "echo_pray", label: "Cầu nguyện · hồi 15% HP" },
+        { action: "echo_pray", label: "Cầu nguyện · hồi 15% HP/MP" },
         {
           action: "echo_rob",
           label: "Cướp · 50% oán niệm",

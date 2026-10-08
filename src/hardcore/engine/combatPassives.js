@@ -1,7 +1,7 @@
 "use strict";
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
-  const { gilded, itemPassives, monsterLoot, E, passiveIcon, world } =
+  const { bosses, gilded, itemPassives, monsterLoot, E, passiveIcon, world } =
     dependencies;
   const payout = (...args) => dependencies.payout(...args);
   const alive = (...args) => dependencies.alive(...args);
@@ -76,15 +76,18 @@ module.exports = function createModule(dependencies) {
       (state.passiveImmunityThisTurn ?? e.combatTurn % 3 === 0)
     )
       damage = 0;
-    if (e.mechanic === "deimoss") damage = Math.floor(damage * 0.75);
+    if (!bosses.on(e) && e.mechanic === "deimoss")
+      damage = Math.floor(damage * 0.75);
+    damage = Math.floor(damage * bosses.playerFactor(state, false, true));
     damage = Math.min(
       Math.max(0, budget - (state.passiveCounterUsed || 0)),
       damage,
-      e.hp,
+      Math.max(0, e.hp - bosses.floorHp(state)),
     );
     if (damage <= 0) return "";
     state.passiveCounterUsed = (state.passiveCounterUsed || 0) + damage;
     e.hp -= damage;
+    bosses.hit(state, damage, true);
     return (
       "\n" +
       triggered.join(" + ") +

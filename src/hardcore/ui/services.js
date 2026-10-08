@@ -200,9 +200,9 @@ module.exports = function createModule(dependencies) {
           icon: E.potion,
         },
         heal: {
-          name: `${E.hp} Hồi đầy HP`,
-          detail: `Hồi đầy ${E.hp} HP.`,
-          button: "Hồi đầy HP",
+          name: `${E.hp} Hồi đầy HP/MP`,
+          detail: `Hồi đầy ${E.hp} HP/${E.mana} MP.`,
+          button: "Hồi đầy HP/MP",
           icon: E.hp,
         },
         luck: {

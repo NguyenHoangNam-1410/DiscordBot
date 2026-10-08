@@ -3,6 +3,7 @@
 module.exports = function createModule(dependencies) {
   const {
     gilded,
+    bosses,
     royal,
     stats,
     itemPassives,
@@ -51,7 +52,7 @@ module.exports = function createModule(dependencies) {
       world.effectiveStacks(state.modifiers.cursed_ground || 0) * 3;
     if (shrineActive(state) && state.classKey === "paladin") res += 10;
     if (defend) res += 15;
-    return paradox.effectiveRes(state, res);
+    return paradox.effectiveRes(state, res - bosses.resPenalty(state));
   }
 
   function attackDamage(
@@ -77,6 +78,15 @@ module.exports = function createModule(dependencies) {
           player ? 0.45 : (state.evasionCap ?? 0.45),
         );
     if (!hit) return { damage: 0, hit: false, crit: false };
+    if (
+      player &&
+      bosses.on(defender) &&
+      (bosses.vanished(state) ||
+        (defender.boss.id === "giyua" &&
+          defender.boss.action === "attack" &&
+          defender.boss.nests > 0))
+    )
+      return { damage: 0, hit: false, crit: false };
     const crit =
       !magic && !defend && (critical ?? rng() < (attacker.critChance || 0));
     const range = player
@@ -91,7 +101,9 @@ module.exports = function createModule(dependencies) {
       damage *=
         1 +
         itemPassives.aggregate(state).berserk * (1 - state.hp / state.maxHp);
-    if (player) damage *= 1 + gilded.damageBonus(state);
+    if (player)
+      damage *=
+        (1 + gilded.damageBonus(state)) * bosses.playerFactor(state, magic);
     if (player && paradox.active(state)) {
       const bonus = ["boss", "final_boss"].includes(defender.rank)
         ? state.bossDamage
@@ -130,9 +142,12 @@ module.exports = function createModule(dependencies) {
             : state.physicalDamageTaken || 0)) *
         (defend ? 0.85 : 1);
     if (player && paradox.active(state)) {
-      if (defender.mechanic === "deimoss") damage *= 0.75;
+      if (!bosses.on(defender) && defender.mechanic === "deimoss")
+        damage *= 0.75;
+      if (player) bosses.hit(state, damage);
       return { damage: Math.max(1, damage), hit: true, crit };
     }
+    if (player) bosses.hit(state, damage);
     return { damage: Math.max(1, Math.floor(damage)), hit: true, crit };
   }
 
@@ -142,31 +157,52 @@ module.exports = function createModule(dependencies) {
     defend = false,
     dodge = false,
     reflectGuard = defend,
+    extra = false,
   ) {
     prepareItemCombat(state, rng);
     const enemy = state.encounter;
-    const physical = enemy.nextDamageType !== "magic";
-    if (dodge) return `${E.evasion} Bạn chặn/né hoàn toàn phản công.`;
+    const plan = bosses.counter(state, defend, extra);
+    const physical = !plan.magic;
+    enemy.nextDamageType = plan.magic ? "magic" : "physical";
+    if (plan.skip) {
+      const log = bosses.afterCounter(state, 0, false, defend);
+      return (
+        "✨ Cơ chế đã được xử lý: boss không phản công." +
+        (log ? "\n" + log : "")
+      );
+    }
+    if (dodge) {
+      const log = bosses.afterCounter(state, 0, false, defend);
+      return (
+        `${E.evasion} Bạn chặn/né hoàn toàn phản công.` +
+        (log ? "\n" + log : "")
+      );
+    }
     if (
       shrineActive(state) &&
       ["assassin", "necromancer"].includes(state.classKey)
     ) {
       state.classShrine.consumed = true;
-      return "✨ Class Shrine chặn phản công.";
+      const log = bosses.afterCounter(state, 0, false, defend);
+      return "✨ Class Shrine chặn phản công." + (log ? "\n" + log : "");
     }
     const blood =
       enemy.hp < enemy.maxHp * 0.5
         ? 1 + world.effectiveStacks(state.modifiers.bloodlust || 0) * 0.06
         : 1;
     const frenzy =
-      enemy.mechanic === "butcher"
+      !bosses.on(enemy) && enemy.mechanic === "butcher"
         ? 1 + Math.min(5, enemy.frenzy + 1) * 0.08
         : 1;
-    const hit = attackDamage(enemy, state, state, rng, {
-      magic: enemy.nextDamageType === "magic",
-      multiplier: blood * frenzy,
-      defend,
-    });
+    const hit = plan.trueDamage
+      ? { damage: plan.raw, hit: true, crit: false }
+      : attackDamage(enemy, state, state, rng, {
+          magic: plan.magic,
+          multiplier: (plan.raw != null ? 1 : blood * frenzy) * plan.multiplier,
+          raw: plan.raw,
+          critical: plan.critical,
+          defend,
+        });
     const actual = hurt(state, hit.damage);
     if (!alive(state))
       state.lastDeathCause = `${enemy.name} gây ${actual} DMG ${enemy.nextDamageType === "magic" ? "phép" : "vật lý"}, khiến HP về 0.`;
@@ -174,9 +210,15 @@ module.exports = function createModule(dependencies) {
       state.mana = Math.max(0, state.mana - 1);
       enemy.drainCharges--;
     }
-    if (enemy.mechanic === "butcher")
+    const bossLog = bosses.afterCounter(
+      state,
+      actual,
+      hit.hit && actual > 0,
+      defend,
+    );
+    if (!bosses.on(enemy) && enemy.mechanic === "butcher")
       enemy.frenzy = Math.min(5, enemy.frenzy + 1);
-    if (enemy.mechanic === "lucion" && actual)
+    if (!bosses.on(enemy) && enemy.mechanic === "lucion" && actual)
       enemy.hp = Math.min(enemy.maxHp, enemy.hp + Math.floor(actual * 0.35));
     enemy.nextDamageType =
       enemy.damageType === "mixed"
@@ -194,27 +236,55 @@ module.exports = function createModule(dependencies) {
     return (
       (hit.hit
         ? `${hit.crit ? `${E.crit} Critical! ` : ""}Bạn nhận ${actual} DMG${defend ? " (đã phòng thủ)" : ""}.`
-        : `${E.evasion} Quái đánh trượt.`) + reflected
+        : `${E.evasion} Quái đánh trượt.`) +
+      reflected +
+      (bossLog ? "\n" + bossLog : "")
+    );
+  }
+
+  function playerManaLeech(state, dealt, rng) {
+    const leech = itemPassives.aggregate(state).mpLeech;
+    if (
+      dealt <= 0 ||
+      state.mana >= bosses.effectiveMaxMana(state) ||
+      leech <= 0 ||
+      rng() >= leech
+    )
+      return "";
+    const before = state.mana;
+    state.mana = Math.min(bosses.effectiveMaxMana(state), state.mana + 1);
+    return (
+      "\n" +
+      passiveIcon("mpLeech") +
+      " Hút MP: " +
+      before +
+      " → " +
+      state.mana +
+      " MP cho bạn."
     );
   }
 
   function playerAttack(state, action, rng) {
     prepareItemCombat(state, rng);
     const e = state.encounter;
-    state.passiveImmunityThisTurn =
-      e.mechanic === "riftwalker" && e.combatTurn % 3 === 0;
+    bosses.beginAction(state, action);
+    state.passiveImmunityThisTurn = bosses.on(e)
+      ? bosses.vanished(state)
+      : e.mechanic === "riftwalker" && e.combatTurn % 3 === 0;
     let dodge = false,
       defend = false,
       healingLog = "",
       hits = [];
     if (action === "defend") {
       royal.limitGuard(state, action, false);
-      state.mana = Math.min(state.maxMana, state.mana + 1);
-      return {
+      state.mana = Math.min(bosses.effectiveMaxMana(state), state.mana + 1);
+      const acted = {
         defend: true,
         dodge: false,
         log: `${E.defense} Phòng thủ và hồi 1 ${E.mana} MP.`,
       };
+      bosses.afterPlayer(state, action, acted);
+      return acted;
     }
     if (action === "potion") {
       if (!state.potions) throw new Error("NO_POTION");
@@ -229,11 +299,13 @@ module.exports = function createModule(dependencies) {
         state,
         Math.max(20, state.maxHp * paradox.potionRate(state)),
       );
-      return {
+      const acted = {
         defend: false,
         dodge: false,
         log: `${E.potion} Hồi ${gained} ${E.hp} HP${saved ? ` · ${passiveIcon("potionSave")} **Tiết kiệm bình:** giữ lại bình` : ""}; quái còn sống phản công.`,
       };
+      bosses.afterPlayer(state, action, acted);
+      return acted;
     }
     if (action === "skill") {
       const cost = skillManaCost(state);
@@ -247,12 +319,33 @@ module.exports = function createModule(dependencies) {
       }
       if (
         cost === 0 &&
+        !bosses.brainControl(state) &&
         !royal.freeMagic(state) &&
         state.classKey === "sorceress" &&
         shrineActive(state)
       )
         state.classShrine.consumed = true;
       state.mana -= cost;
+      if (bosses.brainControl(state)) {
+        royal.limitGuard(state, action, false);
+        const dealt = Math.min(e.hp, Math.floor(e.maxHp * 0.2));
+        e.hp -= dealt;
+        healingLog += playerManaLeech(state, dealt, rng);
+        const acted = {
+          defend: false,
+          dodge: false,
+          dealt,
+          critical: false,
+          log:
+            "🧠 Brain Control: " +
+            dealt +
+            " DMG chuẩn; Scales mất hiệu lực trong 2 đòn gây sát thương tiếp theo." +
+            healingLog,
+        };
+        e.combatTurn++;
+        bosses.afterPlayer(state, action, acted);
+        return acted;
+      }
       if (["sorceress", "necromancer"].includes(state.classKey)) {
         hits = [
           attackDamage(state, e, state, rng, {
@@ -293,7 +386,10 @@ module.exports = function createModule(dependencies) {
       }
     } else if (action === "attack") {
       hits = [attackDamage(state, e, state, rng, { player: true })];
-      state.mana = Math.min(state.maxMana, state.mana + attackManaGain(state));
+      state.mana = Math.min(
+        bosses.effectiveMaxMana(state),
+        state.mana + attackManaGain(state),
+      );
     } else throw new Error("INVALID_ACTION");
     dodge = royal.limitGuard(state, action, dodge);
     const bonus = ["boss", "final_boss"].includes(e.rank)
@@ -305,26 +401,21 @@ module.exports = function createModule(dependencies) {
       hits.reduce((sum, hit) => sum + hit.damage, 0) *
         (paradox.active(state) ? 1 : 1 + bonus),
     );
-    const immune = e.mechanic === "riftwalker" && e.combatTurn % 3 === 0;
+    const immune = bosses.on(e)
+      ? bosses.vanished(state)
+      : e.mechanic === "riftwalker" && e.combatTurn % 3 === 0;
     if (immune) damage = 0;
-    if (!paradox.active(state) && e.mechanic === "deimoss" && damage > 0)
+    if (
+      !bosses.on(e) &&
+      !paradox.active(state) &&
+      e.mechanic === "deimoss" &&
+      damage > 0
+    )
       damage = Math.max(1, Math.floor(damage * 0.75));
     e.combatTurn++;
-    const dealt = Math.min(e.hp, damage);
-    e.hp = Math.max(0, e.hp - damage);
-    const leech = itemPassives.aggregate(state).mpLeech;
-    if (dealt > 0 && state.mana < state.maxMana && leech > 0 && rng() < leech) {
-      const before = state.mana;
-      state.mana = Math.min(state.maxMana, state.mana + 1);
-      healingLog +=
-        "\n" +
-        passiveIcon("mpLeech") +
-        " Hút MP: " +
-        before +
-        " → " +
-        state.mana +
-        " MP cho bạn.";
-    }
+    const dealt = Math.min(Math.max(0, e.hp - bosses.floorHp(state)), damage);
+    e.hp = Math.max(bosses.floorHp(state), e.hp - damage);
+    healingLog += playerManaLeech(state, dealt, rng);
     const landed = hits.filter((hit) => hit.hit).length;
     const actionName =
       action === "skill"
@@ -337,13 +428,16 @@ module.exports = function createModule(dependencies) {
         : `${damage} DMG${hits.some((h) => h.crit) ? ` · ${E.crit} Critical` : ""}.`;
     const shots =
       hits.length > 1 ? ` Trúng ${landed}/${hits.length} phát.` : "";
-    return {
+    const acted = {
       defend,
       dodge,
       dealt,
+      damage,
       critical: dealt > 0 && hits.some((hit) => hit.crit),
       log: `${actionName}: ${outcome}${shots}${healingLog}`,
     };
+    bosses.afterPlayer(state, action, acted);
+    return acted;
   }
   return {
     prepareParadoxCombat,

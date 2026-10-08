@@ -5,6 +5,7 @@ module.exports = function createModule(dependencies) {
     E,
     memoryIcon,
     world,
+    bosses,
     ITEMS,
     runDiamondReward,
     recompute,
@@ -98,6 +99,12 @@ module.exports = function createModule(dependencies) {
   function normalize(state) {
     if (!["2.0.0", "2.0.1"].includes(state.releaseVersion))
       throw new Error("UNSUPPORTED_HARDCORE_VERSION");
+    if (
+      state.gameplayVersion === 2 &&
+      !state.mode?.startsWith("tower") &&
+      !state.towerChallengeId
+    )
+      state.bossRosterVersion ??= bosses.VERSION;
     // Older runs downgraded fully cleansed UR equipment; rarity belongs to its design.
     for (const item of [
       ...(state.items || []),
@@ -110,6 +117,7 @@ module.exports = function createModule(dependencies) {
         "giải toàn bộ lời nguyền; giữ UR, level, buff và nội tại.",
       );
     recompute(state);
+    state.mana = Math.min(state.mana, bosses.effectiveMaxMana(state));
     // Convert historical event multipliers into a fixed loss without changing cashout.
     if (state.eventPayoutFactor >= 0 && state.eventPayoutFactor < 1) {
       const before = payout(state);
