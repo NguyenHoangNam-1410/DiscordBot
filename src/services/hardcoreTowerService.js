@@ -125,12 +125,15 @@ const actionTx = db.transaction(
     if (!catalog.playable(c, now)) throw Error("CHALLENGE_EXPIRED");
     if (action === "replay") {
       if (state.status === "playing") throw Error("INVALID_ACTION");
-      const turn = state.turn + 1;
       state =
-        state.status === "failed" && c.generatorVersion >= 4
+        c.generatorVersion >= 4 && state.status === "failed"
           ? engine.retryFloor(state, c)
-          : engine.createState(c);
-      state.turn = turn;
+          : (() => {
+              const turn = state.turn + 1,
+                fresh = engine.createState(c);
+              fresh.turn = turn;
+              return fresh;
+            })();
       repo.beginAttempt(row, now);
     } else {
       if (state.status !== "playing") throw Error("STALE_ACTION");

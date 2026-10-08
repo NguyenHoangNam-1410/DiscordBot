@@ -211,7 +211,7 @@ async function verifyReplayRegression(reward) {
     activeJson,
     "opening from a legacy board must preserve an active chain",
   );
-  // Actual Discord IDs from failed/completed generated boards reset to floor 1.
+  // Current-week failure retries its floor; completion starts a fresh replay.
   const failed = start("button-failed");
   play(
     failed,
@@ -337,7 +337,7 @@ async function main() {
     ).action;
   const lost = play(failed, wrong);
   assert.equal(lost.state.status, "failed");
-  assert.equal(lost.state.routeStep, 1);
+  assert.equal(lost.state.routeStep, 0);
   assert.equal(lost.result.attempts, 1);
   assert.throws(
     () => play(failed, wrong, { expectedTurn: 0, expectedRouteStep: 0 }),
@@ -363,109 +363,52 @@ async function main() {
   assert.equal(replay.result.attempts, 1);
   assert.ok(replay.state.turn > lost.state.turn);
   assert.throws(() => play(failed, "replay"), /INVALID_ACTION/);
-
-  const fatalRun = start("fatal-run");
-  runTo(fatalRun, 1);
-  assert.equal(
-    c.transitions[state(fatalRun).routeStep].expectedAction,
-    "defend",
-  );
-  const fatalResult = play(fatalRun, "attack");
-  assert.equal(fatalResult.state.status, "failed");
-  assert.equal(fatalResult.state.hp, 0);
-  assert.equal(fatalResult.state.floor, 2);
-  assert.equal(fatalResult.result.attempts, 1);
-  assert.equal(
-    replayButton(repo.session(fatalRun.id), c).label,
-    "Thử lại tầng 2",
-  );
-
-  const hiddenTarget = c.transitions.find(
-      (t) =>
-        t.floor >= 3 &&
-        t.floorStep < t.floor - 1 &&
-        t.expectedAction !== "defend",
-    ),
-    hiddenFloor = c.floors[hiddenTarget.floor - 1],
-    checkpointed = start("checkpointed");
-  runTo(checkpointed, hiddenFloor.stepStart);
-  const floorStart = state(checkpointed);
-  assert.equal(floorStart.floor, hiddenTarget.floor);
-  assert.equal(floorStart.cleared, hiddenTarget.floor - 1);
-  while (state(checkpointed).routeStep < hiddenTarget.routeStep) {
-    const live = state(checkpointed);
-    play(checkpointed, c.transitions[live.routeStep].expectedAction);
-  }
-  const midFloor = state(checkpointed),
-    wrongAtTarget = engine
-      .actions(midFloor, c)
-      .find(
-        (option) =>
-          !option.disabled &&
-          option.action !== c.transitions[midFloor.routeStep].expectedAction,
-      ).action;
-  play(checkpointed, wrongAtTarget);
-  assert.equal(state(checkpointed).status, "playing");
-  assert.equal(state(checkpointed).failure, undefined);
+  const checkpointed = start("checkpointed");
+  const thirdFloorStart = c.floors[2].stepStart;
+  runTo(checkpointed, thirdFloorStart);
+  const checkpoint = structuredClone(state(checkpointed));
+  assert.equal(checkpoint.floor, 3);
+  let choseWrong = false;
   while (state(checkpointed).status === "playing") {
-    const live = state(checkpointed),
-      expected = c.transitions[live.routeStep].expectedAction,
-      available = engine.actions(live, c).filter((x) => !x.disabled);
-    play(
-      checkpointed,
-      available.find((x) => x.action === expected)?.action ||
-        available[0].action,
-    );
+    const current = state(checkpointed),
+      transition = c.transitions[current.routeStep],
+      legal = engine.actions(current, c).filter((x) => !x.disabled),
+      selected =
+        (!choseWrong &&
+          legal.find((x) => x.action !== transition.expectedAction)) ||
+        legal.find((x) => x.action === transition.expectedAction) ||
+        legal[0];
+    assert.ok(selected);
+    if (selected.action !== transition.expectedAction) choseWrong = true;
+    play(checkpointed, selected.action);
   }
+  const checkpointLoss = state(checkpointed);
+  assert.equal(choseWrong, true);
+  assert.equal(checkpointLoss.status, "failed");
+  assert.equal(checkpointLoss.floor, 3);
   assert.equal(
     replayButton(repo.session(checkpointed.id), c).label,
-    "Thử lại tầng " + hiddenTarget.floor,
+    "Thử lại tầng 3",
   );
-  const retryFloor4 = play(checkpointed, "replay").state;
-  assert.equal(retryFloor4.status, "playing");
-  assert.equal(retryFloor4.floor, hiddenTarget.floor);
-  assert.equal(retryFloor4.cleared, hiddenTarget.floor - 1);
-  assert.equal(retryFloor4.routeStep, hiddenFloor.stepStart);
-  assert.equal(retryFloor4.floorStep, 0);
-  for (const field of ["hp", "mana", "potions", "enemyHp"])
-    assert.equal(retryFloor4[field], floorStart[field]);
-
-  const delayedPotion = engine.createState(c),
-    potionStep = c.transitions.findIndex((t) => t.expectedAction === "potion");
-  while (delayedPotion.routeStep < potionStep)
-    engine.act(
-      delayedPotion,
-      c,
-      c.transitions[delayedPotion.routeStep].expectedAction,
-    );
-  const missedWindow = c.transitions[delayedPotion.routeStep];
-  engine.act(delayedPotion, c, "attack");
-  assert.equal(delayedPotion.status, "playing");
-  assert.equal(delayedPotion.failure, undefined);
-  while (
-    delayedPotion.status === "playing" &&
-    c.transitions[delayedPotion.routeStep].expectedAction === "defend"
-  )
-    engine.act(delayedPotion, c, "defend");
-  engine.act(delayedPotion, c, "potion");
-  while (delayedPotion.status === "playing") {
-    const available = engine
-        .actions(delayedPotion, c)
-        .filter((x) => !x.disabled),
-      expected = c.transitions[delayedPotion.routeStep].expectedAction;
-    engine.act(
-      delayedPotion,
-      c,
-      available.find((x) => x.action === expected)?.action ||
-        available[0].action,
-    );
-  }
-  assert.equal(delayedPotion.floor, missedWindow.floor);
-  assert.equal(
-    delayedPotion.failure,
-    "Sinh lực đã được gọi khi cửa sổ của nó chỉ còn là dư âm.",
-  );
-
+  const checkpointRetry = play(checkpointed, "replay").state;
+  for (const field of [
+    "floor",
+    "floorStep",
+    "routeStep",
+    "hp",
+    "mana",
+    "enemyHp",
+    "skillUsed",
+    "flags",
+    "classCharges",
+    "cleared",
+    "step",
+    "paradox",
+    "actionHistory",
+  ])
+    assert.deepEqual(checkpointRetry[field], checkpoint[field]);
+  assert.equal(checkpointRetry.status, "playing");
+  assert.ok(checkpointRetry.turn > checkpointLoss.turn);
   const reward = start("reward");
   runTo(reward, c.stepCount - 1);
   const pre = repo.session(reward.id).state_json,
@@ -545,6 +488,12 @@ async function main() {
   );
   await verifyReplayRegression(reward);
   // Mode isolation: wrong tower actions do not change the simultaneous 999-floor run.
+  economy.creditCoins({
+    guildId: "tower",
+    userId: "isolated",
+    amount: 10,
+    reason: "test:tower-mode-isolation",
+  });
   const survival = require("../src/services/hardcoreService").startHardcore({
     guildId: "tower",
     userId: "isolated",
@@ -689,7 +638,9 @@ async function main() {
     };
     await service.handleTowerButton(nav);
     serialize(detail);
-    assert.ok(detail.embeds[0].toJSON().footer.text.includes("Lượt 2"));
+    assert.ok(
+      !detail.embeds[0].toJSON().footer.text.toLowerCase().includes("lượt"),
+    );
     const latest = repo.session(resume.id).state_json;
     await service.handleTowerButton({ ...nav, user: { id: "other" } });
     assert.equal(detail.flags, 64);
@@ -733,9 +684,19 @@ async function main() {
     throw Error("TOWER_RUNTIME_RNG");
   };
   try {
+    let sawCombatBranchContinue = false,
+      sawSkillAbsorb = false;
     for (let i = 0; i < 7; i++) {
       now = catalog.ANCHOR + i * catalog.WEEK_MS + 1000;
       c = catalog.ensureWeekly(now, { secret, logger: quiet });
+      assert.ok(
+        c,
+        "weekly publication failed: " +
+          JSON.stringify({
+            failure: repo.generationFailure(catalog.weekAt(now).startsAt),
+            rotation: repo.rotation(),
+          }),
+      );
       const r = start("all-class-" + i),
         s = engine.createState(c),
         result = { attempts: 0, best_floor: 1, reward_claimed_at: null };
@@ -750,69 +711,72 @@ async function main() {
           t = c.transitions[step];
         const board = serialize(view.payload(r, s, c, result, now));
         assert.ok(board.includes(c.character.name));
-        assert.ok(board.includes("Hạ quái trong đúng"));
-        assert.ok(board.includes("Trạng thái:"));
-        assert.ok(
-          board.includes(
-            {
-              physical_only: "Kháng phép",
-              arcane_only: "Kháng vật lý",
-              execution_guard: "Chuẩn bị đòn chí tử",
-              fixed_potion_window: "Miễn nhiễm sát thương",
-            }[t.condition],
-          ),
-        );
-        assert.ok(!board.includes("không gây sát thương"));
-        assert.ok(!board.includes("Phải Phòng thủ"));
-        assert.ok(!board.includes("thời điểm hồi"));
-        assert.ok(!board.includes("Luật puzzle:"));
-        assert.ok(!board.includes("Dấu hiệu:"));
+        assert.ok(!board.includes(c.stepCount + " bước"));
+        assert.ok(!board.includes("Bước **"));
+        assert.ok(!board.includes("Hiệu ứng xuyên tầng"));
         // Commitment belongs to the readonly rules panel after the battle UI cleanup.
         assert.ok(
           serialize(
             view.privatePayload(r, s, c, "1234567890123456789", "rules"),
           ).includes(c.seedCommitment),
         );
-        for (const tab of ["stats", "effects", "encounter", "rules"])
-          serialize(view.privatePayload(r, s, c, "1234567890123456789", tab));
+        for (const tab of ["stats", "effects", "encounter", "rules"]) {
+          const privateBoard = serialize(
+            view.privatePayload(r, s, c, "1234567890123456789", tab),
+          );
+          assert.ok(!privateBoard.includes("giữ xuyên tầng"));
+        }
+        const skillOption = engine
+          .actions(s, c)
+          .find((x) => x.action === "skill" && !x.disabled);
+        if (
+          !sawSkillAbsorb &&
+          t.type === "combat" &&
+          !t.finisher &&
+          !t.guardIntent &&
+          skillOption
+        ) {
+          const branch = structuredClone(s),
+            shownDamage = engine.damage(branch, c, "skill");
+          engine.act(branch, c, "skill");
+          assert.equal(branch.lastOutcome.actionDamage, shownDamage);
+          assert.equal(branch.lastOutcome.enemyHeal, shownDamage);
+          assert.equal(branch.enemyHp, s.enemyHp);
+          if (branch.status === "playing")
+            assert.ok(
+              engine
+                .actions(branch, c)
+                .find((x) => x.action === "skill" && x.disabled),
+            );
+          sawSkillAbsorb = true;
+        }
         for (const option of engine
           .actions(s, c)
           .filter((x) => !x.disabled && x.action !== t.expectedAction)) {
           const wrongState = structuredClone(s);
           engine.act(wrongState, c, option.action);
-          assert.equal(wrongState.routeStep, step + 1);
-          assert.equal(wrongState.floorMistakes.length, 1);
-          assert.equal(wrongState.lastOutcome.actionDamage, 0);
-          const fatal = t.expectedAction === "defend";
-          if (fatal) {
-            assert.equal(wrongState.status, "failed");
-            assert.equal(wrongState.hp, 0);
-            assert.equal(wrongState.failure, "Đòn chí tử đã hạ gục bạn.");
-          } else if (t.floorStep + 1 < t.floor) {
-            assert.equal(wrongState.status, "playing");
-            assert.equal(wrongState.failure, undefined);
-            const hiddenBoard = serialize(
-              view.payload(r, wrongState, c, { ...result, attempts: 0 }, now),
-            );
-            assert.ok(!hiddenBoard.includes(wrongState.floorMistakes[0].hint));
-            assert.ok(engine.actions(wrongState, c).length > 0);
-          }
-          while (wrongState.status === "playing") {
-            const expected = c.transitions[wrongState.routeStep].expectedAction,
-              available = engine
-                .actions(wrongState, c)
-                .filter((x) => !x.disabled),
-              chosen =
-                available.find((x) => x.action === expected)?.action ||
-                available[0].action;
-            engine.act(wrongState, c, chosen);
+          if (
+            t.type === "combat" &&
+            t.expectedAction !== "defend" &&
+            wrongState.status === "playing"
+          )
+            sawCombatBranchContinue = true;
+          let guard = 0;
+          while (wrongState.status === "playing" && guard++ < c.stepCount) {
+            const transition = c.transitions[wrongState.routeStep],
+              legal = engine.actions(wrongState, c).filter((x) => !x.disabled),
+              follow =
+                legal.find((x) => x.action === transition.expectedAction) ||
+                legal[0];
+            assert.ok(follow);
+            engine.act(wrongState, c, follow.action);
           }
           assert.equal(wrongState.status, "failed");
-          assert.ok(wrongState.failure);
-          if (fatal) assert.equal(wrongState.hp, 0);
-          assert.ok(!/bước\s+\d+/i.test(wrongState.failure));
-          assert.ok(
-            !/phải\s+(tấn công|phòng thủ|dùng)/i.test(wrongState.failure),
+          assert.equal(wrongState.hp, 0);
+          assert.ok(wrongState.routeStep <= c.stepCount);
+          assert.match(
+            wrongState.failure,
+            t.type === "combat" ? /chưa hạ được quái/i : /lựa chọn này/i,
           );
           serialize(
             view.payload(r, wrongState, c, { ...result, attempts: 1 }, now),
@@ -821,10 +785,19 @@ async function main() {
         }
         const predictedDamage = engine.damage(s, c, t.expectedAction),
           counter = engine.counter(s, c, t.expectedAction);
+        if (t.finisher) assert.equal(counter, 0);
         engine.act(s, c, t.expectedAction);
         assert.equal(s.routeStep, step + 1);
-        assert.equal(s.hp - before.hp, t.hpDelta);
-        assert.equal(s.mana - before.mana, t.manaDelta);
+        if (s.status === "playing" && s.floor !== before.floor) {
+          assert.equal(s.hp, c.character.maxHp);
+          assert.equal(s.mana, c.initialState.mana);
+          assert.equal(s.skillUsed, false);
+          assert.deepEqual(s.flags, []);
+          assert.deepEqual(s.classCharges, { ward: 0 });
+        } else {
+          assert.equal(s.hp - before.hp, t.hpDelta);
+          assert.equal(s.mana - before.mana, t.manaDelta);
+        }
         if (t.type === "combat") {
           assert.equal(predictedDamage, Math.abs(t.enemyHpDelta));
           assert.equal(counter, t.counterDamage);
@@ -832,8 +805,10 @@ async function main() {
           assert.equal(s.lastOutcome.counterDamage, counter);
         }
         const afterUi = serialize(view.payload(r, s, c, result, now));
-        assert.ok(afterUi.includes(String(s.hp)));
-        assert.ok(afterUi.includes(String(s.mana)));
+        if (before.hp !== s.hp)
+          assert.ok(afterUi.includes(before.hp + " → **" + s.hp + "**"));
+        if (before.mana !== s.mana)
+          assert.ok(afterUi.includes(before.mana + " → **" + s.mana + "**"));
         assert.ok(s.actionHistory.every((v) => /^[0-9a-f]{64}$/.test(v)));
       }
       assert.equal(s.status, "completed");
@@ -842,6 +817,8 @@ async function main() {
       runTo(r, c.stepCount, c);
       assert.equal(state(r).status, "completed");
     }
+    assert.equal(sawCombatBranchContinue, true);
+    assert.equal(sawSkillAbsorb, true);
   } finally {
     Math.random = random;
   }
@@ -878,7 +855,7 @@ async function main() {
       .options.some((x) => x.name === "thap"),
   );
   console.log(
-    "Tower v4 runtime: 1–15 puzzles, Survival loadouts, hints, all 7 class UIs, retries, persistence, rewards, isolation and rollover passed.",
+    "Tower v4 runtime: all 7 class UIs and lethal wrong branches, stale/duplicate/forged clicks, retries, persistence, rollback, one-time reward, v1 claim carryover, mode isolation, private tabs and rollover passed.",
   );
 }
 main()

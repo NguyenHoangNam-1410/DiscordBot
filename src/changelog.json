@@ -1,5 +1,28 @@
 [
   {
+    "id": "c07a6793-315a-41e8-b207-33221f4508d2",
+    "updatedAt": "2026-10-08T07:00:35.185Z",
+    "auditedAt": "2026-10-08T07:00:35.185Z",
+    "title": "Tháp Định Mệnh: checkpoint từng tầng",
+    "changes": [
+      "Tử trận hoặc chọn sai nhánh sẽ cho thử lại từ đầu tầng hiện tại; các tầng đã vượt không bị đặt lại.",
+      "Mỗi tầng nay là một puzzle độc lập: HP, MP, Skill, Ward và hiệu ứng được đặt lại khi bước sang tầng mới, không mang lựa chọn hay tài nguyên từ tầng trước.",
+      "Ổn định bộ sinh puzzle cho các class có hồi máu để rotation tuần luôn tạo được challenge hợp lệ; chơi lại sau khi hoàn thành vẫn không trao thêm phần thưởng."
+    ]
+  },
+  {
+    "id": "1d52c714-67fc-423e-97d3-9aa5829d4b6d",
+    "updatedAt": "2026-10-08T04:47:41.398Z",
+    "auditedAt": "2026-10-08T04:47:41.398Z",
+    "title": "Tháp Định Mệnh v4: Combat Puzzle",
+    "changes": [
+      "Thiết kế lại Tháp thành combat thật: Tấn công, Skill và Phòng thủ luôn xử lý theo damage, HP, MP cùng ý định quái đang hiển thị; không còn phạt vì chọn sai đáp án ẩn.",
+      "Skill chỉ dùng một lần mỗi tầng và bị quái hấp thụ toàn bộ damage nếu chưa kết liễu; Trọng kích hiển thị damage khi đỡ, còn Hành quyết chỉ giết người chơi nếu quái vẫn sống.",
+      "Ẩn toàn bộ số nhịp và số hành động khỏi giao diện; mỗi tuần vẫn có đúng một đường hoàn thành đã được solver xác nhận.",
+      "Tử trận hoặc chọn sai nhánh event sẽ kết thúc attempt và chơi lại từ tầng 1; phần thưởng hoàn thành vẫn chỉ nhận một lần mỗi tuần."
+    ]
+  },
+  {
     "id": "942d7e12-5cbb-4405-bba4-6166e399824a",
     "updatedAt": "2026-10-07T10:38:15.497Z",
     "auditedAt": "2026-10-07T10:38:15.497Z",
