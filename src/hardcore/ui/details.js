@@ -216,21 +216,6 @@ module.exports = function createModule(dependencies) {
         });
       addTextFields(e, "Rift Paradox", paradoxEffectText(state));
       addTextFields(e, "Rift Contract", contractEffectText(state));
-      if (
-        state.prophecy &&
-        !state.mode?.startsWith("tower") &&
-        !state.towerChallengeId
-      )
-        e.addFields({
-          name: "🔺 The Tower Remembers · Threefold Prophecy",
-          value:
-            "Ấn **" +
-            state.prophecy.kind +
-            "** · " +
-            (state.prophecy.awakened
-              ? "Đã thức tỉnh sau chiến thắng Kabraxis."
-              : "The Tower will remember your choice at floor 666."),
-        });
       for (const field of [...memories.fields(state), ...gilded.fields(state)])
         addTextFields(e, field.name, field.value);
     } else {

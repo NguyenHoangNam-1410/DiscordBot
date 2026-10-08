@@ -1,5 +1,15 @@
 [
   {
+    "id": "a8fdf65d-83a5-473c-b57f-823d02f53808",
+    "updatedAt": "2026-10-08T08:27:11.713Z",
+    "auditedAt": "2026-10-08T08:27:11.713Z",
+    "title": "Làm rõ ký ức của tháp trong Rift",
+    "changes": [
+      "Thêm định nghĩa Tower Remembers ngay trong mục ký ức ở UI Rift: tháp ghi nhớ lựa chọn để tạo phước lành, thử thách hoặc hậu quả về sau.",
+      "Lời tiên tri tầng 333 và log chọn ấn dùng tiếng Việt rõ nghĩa; Rift hiển thị ấn đã chọn, liên hệ với Kabraxis tầng 666, trạng thái chờ/thức tỉnh và chỉ số nhận thêm khi hạ boss."
+    ]
+  },
+  {
     "id": "b2336083-91cd-40f8-a320-d844f55a8beb",
     "updatedAt": "2026-10-08T08:00:41.876Z",
     "auditedAt": "2026-10-08T08:00:41.876Z",

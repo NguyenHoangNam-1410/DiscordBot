@@ -106,7 +106,7 @@ module.exports = function createModule(dependencies) {
             : { ene: 10, maxMana: 1 };
       state.prophecy = { kind, floor: 333, awakened: false };
       addSource(state, effects, "prophecy");
-      state.lastLog = "🔺 The Tower will remember your choice at floor 666.";
+      state.lastLog = "🔺 Đã ghi nhớ ấn bạn chọn: quyết định cơ chế Kabraxis ở tầng 666. Xem Rift để biết phần thưởng thức tỉnh.";
       completeFloor(state, session, rng, 0);
     } else if (state.encounter.type === "boss_gate") {
       state.encounter = state.encounter.enemy;

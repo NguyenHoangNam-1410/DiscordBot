@@ -208,7 +208,7 @@ function details(s) {
 }
 function special(s) {
   if (s.encounter.type === "prophecy")
-    return "🔺 **THREEFOLD PROPHECY · TẦNG 333**\nChọn một ấn: **War** +12 stat chính, +8% DMG boss; **Protection** +12 VIT, +5 RES; **Arcane** +10 ENE, +1 Max MP.\nLựa chọn được lưu một lần. The Tower will remember your choice at floor 666.";
+    return "🔺 **THREEFOLD PROPHECY · TẦNG 333**\nChọn một ấn: **War** +12 stat chính, +8% DMG boss; **Protection** +12 VIT, +5 RES; **Arcane** +10 ENE, +1 Max MP.\nẤn bạn chọn quyết định cơ chế Kabraxis ở tầng 666. Xem **Rift** để biết hiệu lực của ký ức này.";
   if (s.encounter.type === "boss_gate")
     return (
       "🔺 **KABRAXIS · TẦNG 666**\nBạn có thể rút thưởng ngay tại cửa. Bước vào sẽ khóa rút thưởng; phải thắng hoặc tử trận.\nXem **Chi tiết** để biết cơ chế của ấn " +

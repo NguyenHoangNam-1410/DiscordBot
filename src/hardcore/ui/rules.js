@@ -151,6 +151,8 @@ module.exports = function createModule(dependencies) {
         {
           name: `${eventIcon("memory")} The Tower Remembers`,
           value:
+            memories.DEFINITION +
+            "\n\n" +
             Object.entries(memories.CATALOG)
               .map(
                 ([family, entry]) =>

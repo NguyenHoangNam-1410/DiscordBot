@@ -2,7 +2,11 @@
 const world = require("../services/hardcoreWorld");
 const { E, memoryIcon } = require("../services/hardcoreIcons");
 
+const { mainStat } = require("./engine/stats");
+
 const LIMIT = 8;
+const DEFINITION =
+  "Tháp ghi nhớ lựa chọn của bạn để tạo phước lành, thử thách hoặc hậu quả về sau. Mỗi ký ức có nguồn gốc và điều kiện kích hoạt riêng.";
 const CATALOG = Object.freeze({
   rescue: {
     name: "Ân nghĩa · Lost Adventurer",
@@ -196,16 +200,45 @@ function fields(state) {
     {
       name: "The Tower Remembers",
       value:
-        "Ký ức chờ: **" +
+        DEFINITION +
+        "\n\n" +
+        "Hậu quả đang chờ: **" +
         (state.debts || []).length +
         "/" +
         LIMIT +
-        "**. Hậu quả hẹn sau 10–30 tầng, xử lý một lần; boss/RNGesus được ưu tiên. Ân nghĩa là bảo hộ riêng theo khu vực." +
+        "**. Hậu quả thường đến sau 10–30 tầng, xử lý một lần; boss/RNGesus được ưu tiên. Ân nghĩa bảo hộ theo khu vực; lời tiên tri kích hoạt ở tầng 666." +
         (!canQueue(state)
           ? "\nĐã đầy ký ức: cần xử lý bớt trước khi cướp/hiến tế/đập gương. Cầu nguyện RNGesus vẫn dùng được nhưng không thêm thử thách."
           : ""),
     },
   ];
+  if (
+    state.prophecy &&
+    !state.mode?.startsWith("tower") &&
+    !state.towerChallengeId
+  ) {
+    const kind = state.prophecy.kind;
+    const seal =
+      { war: "War", protection: "Protection", arcane: "Arcane" }[kind] || kind;
+    const stat = mainStat(state);
+    const bonus = {
+      war: "+8 " + E[stat] + " " + stat.toUpperCase() + " cho bạn",
+      protection: "+8 " + E.vit + " VIT, +3 điểm % " + E.res + " RES cho bạn",
+      arcane: "+8 " + E.ene + " ENE, +1 " + E.mana + " Max MP cho bạn",
+    }[kind];
+    output.push({
+      name: "🔺 The Tower Remembers · Threefold Prophecy",
+      value:
+        "**Nguồn:** chọn ấn **" +
+        seal +
+        "** tại tầng **333**.\n**Tầng 666:** ấn quyết định cơ chế của Kabraxis; xem **Chi tiết** khi gặp boss.\n" +
+        (state.prophecy.awakened
+          ? "**Đã thức tỉnh:** hạ Kabraxis, nhận thêm " + bonus + "."
+          : "**Đang chờ:** hạ Kabraxis để thức tỉnh ấn và nhận thêm " +
+            bonus +
+            "."),
+    });
+  }
   const encounter = state.encounter || {};
   const possibilities =
     encounter.type === "rngesus"
@@ -288,11 +321,12 @@ function fields(state) {
     });
   }
   if (output.length === 1)
-    output[0].value += "\nChưa có ký ức hoặc bảo hộ đang chờ.";
+    output[0].value += "\nChưa có hậu quả hẹn hoặc bảo hộ đang chờ.";
   return output;
 }
 
 module.exports = {
+  DEFINITION,
   LIMIT,
   CATALOG,
   family,
