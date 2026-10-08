@@ -202,7 +202,7 @@ module.exports = function createModule(dependencies) {
         }[world.mimicKind(e) ? "elite" : e.rank] || e.rank;
       const preview = core.incomingPreview(s);
       if (e.boss)
-        return `${eventIcon("boss")} **${e.name}** · Tầng ${s.floor}${e.boss.id === "deimoss" ? "" : " · Phase " + e.boss.phase}
+        return `${eventIcon("boss")} **${e.name}** · Tầng ${s.floor}${["anomaly", "kabraxis"].includes(e.boss.id) ? " · Phase " + e.boss.phase : ""}
 ${bossDisplay.bars(s) || healthBar(e.hp, e.maxHp)}
 ${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%
 ${bossDisplay.status(s)}

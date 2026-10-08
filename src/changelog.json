@@ -1,5 +1,14 @@
 [
   {
+    "id": "c438a444-ede8-466c-b374-7a109fe7ba6d",
+    "updatedAt": "2026-10-08T10:39:33.564Z",
+    "auditedAt": "2026-10-08T10:39:33.564Z",
+    "title": "Ẩn Phase ở boss một giai đoạn",
+    "changes": [
+      "Giao diện Sinh tồn không ghi Phase cho boss chỉ có một giai đoạn. Boss nhiều giai đoạn vẫn hiển thị phase hiện tại; Deimoss giữ bảng ba thanh HP."
+    ]
+  },
+  {
     "id": "ee7a55b0-6dc6-4cbd-b11d-78dffb7ef351",
     "updatedAt": "2026-10-08T09:49:27.694Z",
     "auditedAt": "2026-10-08T09:49:27.694Z",
