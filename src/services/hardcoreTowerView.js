@@ -7,7 +7,6 @@ const {
 } = require("discord.js");
 const engine = require("./hardcoreTowerEngine");
 const catalog = require("../hardcore/tower/challengeCatalog");
-const { MONSTERS } = require("../hardcore/tower/templates");
 const { E, SKILL_ICONS } = require("./hardcoreIcons");
 const { CATALOG } = require("./hardcoreParadoxService");
 const {
@@ -22,15 +21,13 @@ const actionName = {
   attack: "Tấn công",
   skill: "Arcane Burst",
   defend: "Phòng thủ",
-  potion: "Bình máu",
 };
 const tabs = {
   stats: "Chỉ số",
-  effects: "Trang bị",
+  effects: "Cơ chế",
   encounter: "Chi tiết",
   rules: "Luật chơi",
 };
-const visibleTabs = ["stats", "effects", "rules"];
 function encounterIcon(e) {
   if (e.type === "combat") return E.attack;
   return e.choices.some((x) => x.paradox)
@@ -40,7 +37,7 @@ function encounterIcon(e) {
       : E.shrine;
 }
 function resources(state) {
-  return `${healthBar(state.hp, state.maxHp)}\n${E.mana} **MP** **${state.mana}/${state.maxMana}**${Number.isInteger(state.potions) ? `${SEP}${E.potion} **Bình** **${state.potions}/${state.maxPotions}**` : ""}`;
+  return `${healthBar(state.hp, state.maxHp)}\n${E.mana} **MP** **${state.mana}/${state.maxMana}**`;
 }
 function battleStats(state, c) {
   const cost = engine.costs(state, c);
@@ -102,13 +99,19 @@ function turnText(state, c) {
     change(
       "HP quái",
       before.enemyHp,
-      Math.max(0, before.enemyHp - before.actionDamage),
+      before.enemyHpAfter ??
+        Math.max(
+          0,
+          before.enemyHp - before.actionDamage + (before.enemyHeal || 0),
+        ),
+    );
+  if (before.enemyHeal)
+    lines.push(
+      "Quái hấp thụ Skill chưa kết liễu: **+" + before.enemyHeal + " HP**.",
     );
   if (before.heal) lines.push("Hồi phục cho bạn: **+" + before.heal + " HP**.");
   change(`${E.hp} HP`, before.hp, state.hp);
   change(`${E.mana} MP`, before.mana, state.mana);
-  if (Number.isInteger(before.potions))
-    change(`${E.potion} Bình`, before.potions, state.potions);
   change("Tầng", before.floor, state.floor);
   if (
     state.status === "playing" &&
@@ -141,7 +144,7 @@ function rewardText(state, c, result) {
 }
 function footer(state, c) {
   return {
-    text: `Challenge ${c.challengeId} · v${c.contentVersion} · Lượt ${state.turn}`,
+    text: `Challenge ${c.challengeId} · v${c.contentVersion}`,
   };
 }
 function button(
@@ -156,7 +159,6 @@ function button(
     attack: E.attack,
     skill: SKILL_ICONS[classKey],
     defend: E.defense,
-    potion: E.potion,
     replay: appEmoji("repeat", "🔁"),
     top: appEmoji("trophy", "🏆"),
     touch: E.shrine,
@@ -278,7 +280,7 @@ function statsText(state, c) {
   const attributes = ["str", "dex", "vit", "ene"]
     .map((k) => `${E[k]} **${k.toUpperCase()}** **${s[k]}**`)
     .join(SEP);
-  return `${resources(state)}\n${attributes}\n${E.defense} **DEF** **${s.defense}**${SEP}${E.res} **RES** **${s.resistance}%**\n${E.accuracy} **ACC** **${s.accuracy}**${SEP}${E.evasion} **EVA** **${s.evasion}**${SEP}${E.crit} **CRIT** **Tắt**\n*Nhân vật và trang bị lấy từ catalog Sinh Tồn; sát thương của puzzle là cố định.*`;
+  return `${resources(state)}\n${attributes}\n${E.defense} **DEF** **${s.defense}**${SEP}${E.res} **RES** **${s.resistance}%**\n${E.accuracy} **ACC** **${s.accuracy}**${SEP}${E.evasion} **EVA** **${s.evasion}**${SEP}${E.crit} **CRIT** **Tắt**\n${E.potion} **Bình** **0**\n*Nhân vật cố định; sát thương và phản công dùng giá trị của challenge, đã tính giảm trừ.*`;
 }
 function rulesText(c) {
   const date = (value) =>
@@ -387,102 +389,96 @@ function generatedButton(
 }
 function generatedEncounter(state, c) {
   const { encounter: e, transition: t } = engine.current(state, c);
-  const monster = MONSTERS[t.floor - 1] || e,
-    status = {
-      physical_only: "Kháng phép",
-      arcane_only: "Kháng vật lý",
-      execution_guard: "Chuẩn bị đòn chí tử",
-      fixed_potion_window: "Miễn nhiễm sát thương",
-    }[t.condition];
-  let text =
-    healthBar(state.enemyHp, e.hp) +
-    "\n**Bước " +
-    (t.floorStep + 1) +
-    "/" +
-    e.stepCount +
-    "** · Trạng thái: **" +
-    status +
-    "**";
+  let text = "**" + e.name + "**\n";
+  if (t.type === "combat") text += healthBar(state.enemyHp, e.hp) + "\n";
+  text +=
+    t.type === "combat" && c.generatorVersion >= 4
+      ? "**Quy luật:** gây damage thật, quản lý MP và hạ quái trước khi nó hạ bạn."
+      : "**Tín hiệu:** " + t.clue;
   if (t.type === "event")
     text += "\n" + t.choices.map((x) => "• " + x.label).join("\n");
-  return { name: monster.name, text };
+  else if (t.finisher)
+    text +=
+      "\n💀 **Ý định Hành quyết:** giáp cuối giảm 50% damage Tấn công thường; nếu quái còn sống sau hành động này, bạn sẽ tử trận.";
+  else if (t.guardIntent)
+    text +=
+      "\n🛡️ **Ý định Trọng kích:** nếu quái còn sống, đòn này gây **" +
+      t.intentDamage +
+      " damage**; Phòng thủ giảm còn **" +
+      t.defendDamage +
+      " damage**.";
+  else
+    text +=
+      "\nÝ định: **" +
+      t.intentDamage +
+      " damage " +
+      (t.counterType === "magic" ? "phép" : "vật lý") +
+      "**. Cơ chế class có thể chặn/giảm đòn; phản công áp dụng trước khi qua tầng.";
+  return text;
 }
 function generatedStats(state, c) {
   const t = engine.current(state, c).transition;
   return (
     resources(state) +
-    "\n" +
-    E.attack +
-    " **Đánh " +
-    engine.damage(state, c, "attack") +
-    "** (+" +
-    t.attackMana +
-    " MP)" +
     SEP +
+    E.defense +
+    " **DEF " +
+    c.character.defense +
+    "**" +
+    SEP +
+    E.res +
+    " **RES " +
+    c.character.resistance +
+    "%**\n" +
+    E.attack +
+    " **Tấn công: " +
+    engine.damage(state, c, "attack") +
+    " damage · +" +
+    t.attackMana +
+    " MP**\n" +
     SKILL_ICONS[c.classKey] +
     " **" +
     c.combat.skillName +
-    " " +
+    ": " +
     engine.damage(state, c, "skill") +
-    "** (−" +
+    " damage · −" +
     t.skillCost +
-    " MP)\n" +
+    " MP · một lần/tầng**\n" +
     E.defense +
-    " **Thủ** (+" +
+    " **Phòng thủ: dự kiến nhận " +
+    engine.counter(state, c, "defend") +
+    " damage · +" +
     t.defendMana +
-    " MP)" +
-    SEP +
-    E.potion +
-    " **Bình +" +
-    state.potionHeal +
-    " HP**"
+    " MP**\n*Skill không kết liễu sẽ bị quái hấp thụ và hồi toàn bộ damage vừa nhận. Damage cố định, không Crit, không Miss. " +
+    c.classDescription +
+    "*"
   );
 }
 function generatedEffects(state, c) {
-  const flags = {
-    debt_bound:
-      "Khế ước sinh lực: dấu nợ được giữ từ đầu run, cần tại cửa thu nợ tầng 12 trở đi.",
-    mana_fracture:
-      "Mana Fracture: skill giảm 1 MP (tối thiểu 1); đòn thường +0 MP, phòng thủ giữ mức MP của class.",
-    mirror_bound:
-      "Khế ước Gương: nhịp combat tầng 8 được giữ nguyên cho tầng 14.",
-    memory_1: "Nhịp tầng 1 đã niêm phong cho Gương tầng 12.",
-    memory_8: "Nhịp tầng 8 đã niêm phong cho Gương tầng 14.",
-  };
-  const loadout = (c.loadout || [])
-    .map((item) => `• ${item.name} [${item.rarity}]: ${item.text}`)
-    .join("\n");
   return (
     c.classDescription +
-    (loadout ? "\n**Trang bị từ Sinh Tồn:**\n" + loadout : "") +
     (c.classKey === "necromancer"
       ? "\n**Ward:** " + state.classCharges.ward + " charge."
       : "") +
-    "\n" +
-    (state.flags.map((f) => "• " + (flags[f] || f)).join("\n") ||
-      "Chưa có hiệu ứng xuyên tầng.")
+    "\nMọi trạng thái chỉ có hiệu lực trong tầng hiện tại."
   );
 }
 function generatedRules(c) {
   const date = (v) =>
     new Date(v).toLocaleString("vi-VN", { timeZone: "Asia/Bangkok" });
   return (
-    "• **Tháp Puzzle:** " +
+    "• **Thử thách sinh tử:** " +
     c.character.name +
-    " · 15 tầng; tầng N phải hạ quái trong đúng N bước (tổng " +
-    c.stepCount +
-    "). Mọi hành động đều tiêu hao bước; kết quả chỉ được chấm khi hết số bước của tầng.\n" +
-    "• Mục tiêu ở mọi tầng luôn giống nhau: **hạ quái trong đúng số bước của tầng**. HP quái phải còn trên 0 trước bước cuối và về đúng 0 ở bước cuối.\n" +
-    "• Lỗi thường không bị báo giữa tầng. Riêng đòn chí tử sẽ kết thúc attempt ngay vì người chơi đã bị hạ gục. Các lỗi còn lại chỉ được chấm khi hết bước, kèm một gợi ý trừu tượng.\n" +
-    "• Mỗi bước ghi thẳng trạng thái của quái: kháng vật lý, kháng phép, chuẩn bị đòn chí tử hoặc mở thời điểm hồi máu. Hành động không phù hợp không được tính vào lượng damage cần để hạ quái.\n" +
-    "• HP, MP và bình máu giữ xuyên tầng. Quái phải còn sống trước bước cuối và bị hạ đúng ở bước cuối.\n" +
+    " cố định · 15 tầng. Hạ quái trước khi quái hạ bạn; tử trận sẽ **thử lại từ đầu tầng hiện tại**.\n" +
+    "• Mỗi tầng là một puzzle độc lập. Khi sang tầng mới, HP, MP, Skill, Ward và hiệu ứng được đặt lại theo trạng thái đầu tầng; không lựa chọn nào từ tầng trước ảnh hưởng tầng sau. Tháp không công bố số hành động của từng tầng hoặc toàn bộ hành trình.\n" +
+    "• Mỗi tuần chỉ có **một chuỗi hành động duy nhất** có thể hoàn thành đủ 15 tầng.\n" +
+    "• Tấn công và Skill luôn gây đúng damage đang hiển thị. Skill dùng **một lần mỗi tầng**; nếu Skill không kết liễu, quái hấp thụ và hồi lại toàn bộ damage vừa nhận.\n" +
+    "• Phòng thủ giảm đòn sắp nhận xuống đúng số dự báo. Quái chết trong lượt thì không thể phản công.\n" +
     "• " +
     c.classDescription +
     "\n" +
-    "• Bình máu hồi đúng **" +
-    c.character.potionHeal +
-    " HP** và chỉ hợp lệ khi thiếu ít nhất lượng đó. MP, HP và damage đều cố định; không Crit, Miss, né ngẫu nhiên hoặc RNG trong run.\n" +
-    "• Class và bộ đồ mẫu được dựng từ catalog Sinh Tồn hiện tại ở chế độ chỉ đọc. Tháp có session, tiến trình và phần thưởng độc lập; không dùng hay sửa run/túi Sinh Tồn của người chơi.\n" +
+    "• MP và HP áp dụng theo delta cố định của challenge; phản công xảy ra trước khi chuyển tầng. Không Crit, Miss hoặc RNG trong run.\n" +
+    "• Không mang đồ, vé, bình, cược hoặc chỉ số từ Sinh tồn 999 vào Tháp. Hai mode tồn tại độc lập.\n" +
     "• Thưởng " +
     money(c.reward.coins) +
     " " +
@@ -516,7 +512,7 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
       (row.user_id ? "👤 <@" + row.user_id + ">\n" : "") +
         "**" +
         c.character.name +
-        "**" +
+        " · 15 tầng**" +
         (!live
           ? replayTarget
             ? "\n⏰ Challenge này đã đóng. Bấm Chơi Tháp hiện tại để mở tuần đang hoạt động."
@@ -526,14 +522,10 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
     .setFooter(footer(state, c));
   addTextFields(
     embed,
-    "🧩 Tầng " + state.floor + "/15",
-    "Hạ quái trong đúng **" +
+    "⚔️ Thử thách sinh tử",
+    "Tầng **" +
       state.floor +
-      " bước**. Tiến trình: **" +
-      Math.min(state.floorStep + 1, state.floor) +
-      "/" +
-      state.floor +
-      "**.",
+      "/15**\nHạ quái trước khi bị kết liễu. Tháp không tiết lộ số hành động còn lại.\nChỉ có **một lời giải duy nhất** để vượt đủ 15 tầng.",
   );
   addTextFields(
     embed,
@@ -542,15 +534,11 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
       ? generatedStats(state, c)
       : resources(state),
   );
-  if (state.status === "playing") {
-    const enemy = generatedEncounter(state, c);
-    addTextFields(embed, encounterIcon(e) + " " + enemy.name, enemy.text);
-  }
-  if (state.flags.length)
+  if (state.status === "playing")
     addTextFields(
       embed,
-      E.rift + " Hiệu ứng xuyên tầng",
-      generatedEffects(state, c),
+      encounterIcon(e) + " " + (e.type === "combat" ? "Đối thủ" : "Tình huống"),
+      generatedEncounter(state, c),
     );
   addTextFields(
     embed,
@@ -567,20 +555,15 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
       (result.attempts + (state.status === "playing" ? 1 : 0)) +
       "**",
   );
-  if (state.status !== "playing")
-    addTextFields(embed, "🏆 Phần thưởng", rewardText(state, c, result));
-  if (state.status !== "playing" && state.lastLog)
+  addTextFields(embed, "🏆 Phần thưởng", rewardText(state, c, result));
+  if (state.lastLog)
     addTextFields(embed, "📜 Lượt vừa rồi", turnText(state, c));
   if (state.status !== "playing")
     addTextFields(
       embed,
       "🏁 KẾT QUẢ",
       state.status === "completed"
-        ? "🏆 **Hoàn thành Tháp Puzzle " +
-            c.stepCount +
-            "/" +
-            c.stepCount +
-            " bước!**"
+        ? "🏆 **Đã hạ toàn bộ kẻ địch và hoàn thành 15 tầng!**"
         : "❌ " + state.failure,
     );
   const t = engine.current(state, c).transition;
@@ -603,7 +586,6 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
           attack: "+" + t.attackMana + " MP",
           skill: "−" + t.skillCost + " MP",
           defend: "+" + t.defendMana + " MP",
-          potion: "Hồi tối đa " + state.potionHeal + " HP",
         }
       : {};
   const components = chunkRows(
@@ -620,8 +602,8 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
   );
   components.push(
     new ActionRowBuilder().addComponents([
-      ...visibleTabs.map((tab) =>
-        generatedButton(row, state, c, "view_" + tab, tabs[tab]),
+      ...Object.entries(tabs).map(([tab, label]) =>
+        generatedButton(row, state, c, "view_" + tab, label),
       ),
       generatedButton(row, state, c, "top", "Bảng xếp hạng tuần"),
     ]),
@@ -633,15 +615,7 @@ function privateGenerated(row, state, c, source, tab) {
     .setColor(color(state, c))
     .setTitle("🗼 " + tabs[tab] + " · THÁP ĐỊNH MỆNH")
     .setDescription(
-      "**" +
-        c.character.name +
-        "** · Tầng **" +
-        state.floor +
-        "/15** · Bước **" +
-        Math.min(c.stepCount, state.routeStep + 1) +
-        "/" +
-        c.stepCount +
-        "**",
+      "**" + c.character.name + "** · Tầng **" + state.floor + "/15**",
     )
     .setFooter(footer(state, c));
   const text =
@@ -652,7 +626,7 @@ function privateGenerated(row, state, c, source, tab) {
         : tab === "rules"
           ? generatedRules(c)
           : state.status === "playing"
-            ? generatedEncounter(state, c).text +
+            ? generatedEncounter(state, c) +
               (engine.current(state, c).encounter.type === "combat"
                 ? "\n" + generatedStats(state, c)
                 : "")
@@ -664,13 +638,13 @@ function privateGenerated(row, state, c, source, tab) {
     content: "",
     embeds: [embed],
     components: chunkRows(
-      visibleTabs.map((t) =>
+      Object.entries(tabs).map(([t, label]) =>
         generatedButton(
           row,
           state,
           c,
           "view_" + t,
-          tabs[t],
+          label,
           t === tab,
           t === tab,
           source,

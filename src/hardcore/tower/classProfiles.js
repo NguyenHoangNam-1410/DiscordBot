@@ -1,10 +1,4 @@
 "use strict";
-
-// Tower is a separate mode, but its characters and equipment are snapshots
-// built from the live Survival catalogs. Nothing in Survival is mutated.
-const survivalStats = require("../engine/stats");
-const { ITEMS } = require("../item");
-
 const CLASS_ROTATION = Object.freeze([
   "sorceress",
   "druid",
@@ -14,93 +8,118 @@ const CLASS_ROTATION = Object.freeze([
   "barbarian",
   "assassin",
 ]);
-const MECHANICS = Object.freeze({
-  sorceress: [
-    "arcane",
-    "Arcane Burst là đòn phép cố định, không Crit hoặc roll damage.",
-  ],
-  druid: [
-    "regeneration",
-    "Wild Regeneration hồi lượng HP cố định đã hiển thị khi dùng đúng ấn.",
-  ],
-  necromancer: [
-    "soul",
-    "Totem Ward được dùng như đòn phép cố định trong luật Ấn Linh hồn.",
-  ],
-  paladin: [
-    "divine",
-    "Divine Shield được dùng như đòn phép cố định; Phòng thủ là hành động riêng.",
-  ],
-  amazon: ["barrage", "Barrage gây lượng damage cố định khi Ấn Linh hồn mở."],
-  barbarian: [
-    "iron",
-    "Iron Will gây lượng damage cố định; không có kích hoạt ngẫu nhiên.",
-  ],
-  assassin: [
-    "shadow",
-    "Shadow Step gây lượng damage cố định; không roll né trong Tháp.",
-  ],
-});
-const LOADOUT_IDS = Object.freeze([
-  "rusted_edge",
-  "mana_fragment",
-  "red_potion_belt",
-]);
-const ITEM_BY_ID = new Map(
-  Object.values(ITEMS)
-    .flat()
-    .map((item) => [item.id, item]),
-);
-
-function profile(classKey) {
-  const base = survivalStats.CLASSES[classKey];
-  if (!base) throw Error("UNKNOWN_TOWER_CLASS");
-  const state = survivalStats.createState(classKey, 0);
-  state.items = LOADOUT_IDS.map((id) => ({
-    definition: ITEM_BY_ID.get(id),
-    level: 1,
-    cleansedLevels: 1,
-  }));
-  survivalStats.recompute(state);
-  const [mechanic, description] = MECHANICS[classKey];
-  return Object.freeze({
-    name: base.name,
-    skillName: base.skill,
-    maxHp: state.maxHp,
-    maxMana: state.maxMana,
-    attackDamage: Math.floor((state.damageMin + state.damageMax) / 2),
-    skillDamage: Math.floor((state.spellMin + state.spellMax) / 2),
+const PROFILES = {
+  sorceress: {
+    name: "Sorceress",
+    skillName: "Arcane Burst",
+    maxHp: 120,
+    maxMana: 5,
+    attackDamage: 12,
+    skillDamage: 30,
     skillCost: 2,
     attackMana: 1,
     defendMana: 1,
-    heal:
-      classKey === "druid" ? Math.max(6, Math.floor(state.maxHp * 0.08)) : 0,
-    mechanic,
-    description,
-    potions: Math.min(state.maxPotions, state.potions + 1),
-    potionHeal: Math.max(1, Math.floor(state.maxHp * state.potionRate)),
-    loadout: LOADOUT_IDS.map((id) => {
-      const item = ITEM_BY_ID.get(id);
-      return {
-        id: item.id,
-        name: item.name,
-        rarity: item.typeCode,
-        text: item.text,
-      };
-    }),
-    survivalStats: {
-      str: state.str,
-      dex: state.dex,
-      vit: state.vit,
-      ene: state.ene,
-      defense: state.defense,
-      resistance: state.resistance,
-      accuracy: state.accuracy,
-      evasion: state.evasion,
-    },
-  });
+    heal: 0,
+    mechanic: "reflection",
+    description:
+      "Arcane Reflection khóa phép theo nhịp; xen kẽ đòn thường và phòng thủ để giữ MP.",
+  },
+  druid: {
+    name: "Druid",
+    skillName: "Wildfire",
+    maxHp: 140,
+    maxMana: 4,
+    attackDamage: 15,
+    skillDamage: 24,
+    skillCost: 2,
+    attackMana: 1,
+    defendMana: 1,
+    heal: 6,
+    mechanic: "regeneration",
+    description:
+      "Wildfire hồi 6 HP; cửa sinh lực chỉ mở trong khoảng HP ghi trên tín hiệu.",
+  },
+  necromancer: {
+    name: "Necromancer",
+    skillName: "Soul Ward",
+    maxHp: 100,
+    maxMana: 5,
+    attackDamage: 10,
+    skillDamage: 26,
+    skillCost: 2,
+    attackMana: 1,
+    defendMana: 1,
+    heal: 0,
+    mechanic: "ward",
+    description:
+      "Soul Ward cấp một Ward, chặn phản công kế tiếp rồi mất; không cộng dồn.",
+  },
+  paladin: {
+    name: "Paladin",
+    skillName: "Divine Shield",
+    maxHp: 150,
+    maxMana: 4,
+    attackDamage: 18,
+    skillDamage: 24,
+    skillCost: 3,
+    attackMana: 0,
+    defendMana: 2,
+    heal: 0,
+    mechanic: "shield",
+    description:
+      "Phòng thủ là nguồn MP chính, giảm một nửa damage vật lý; Divine Shield chặn phản công phép hiện tại.",
+  },
+  amazon: {
+    name: "Amazon",
+    skillName: "Barrage",
+    maxHp: 110,
+    maxMana: 4,
+    attackDamage: 16,
+    skillDamage: 30,
+    skillCost: 2,
+    attackMana: 1,
+    defendMana: 1,
+    heal: 0,
+    mechanic: "barrage",
+    description:
+      "Barrage có ba hit cố định; mỗi charge chắn mất một hit. Đòn thường có một hit.",
+  },
+  barbarian: {
+    name: "Barbarian",
+    skillName: "Armor Break",
+    maxHp: 160,
+    maxMana: 3,
+    attackDamage: 24,
+    skillDamage: 36,
+    skillCost: 2,
+    attackMana: 1,
+    defendMana: 1,
+    heal: 0,
+    mechanic: "rage",
+    description:
+      "HP ≤35% kích hoạt Rage: damage vật lý ×1,5; Armor Break xuyên giáp ở đúng pha.",
+  },
+  assassin: {
+    name: "Assassin",
+    skillName: "Shadow Step",
+    maxHp: 80,
+    maxMana: 4,
+    attackDamage: 14,
+    skillDamage: 24,
+    skillCost: 2,
+    attackMana: 1,
+    defendMana: 1,
+    heal: 0,
+    mechanic: "dodge",
+    description:
+      "Shadow Step né phản công hiện tại và phản kích 8 damage cố định; không roll EVA.",
+  },
+};
+for (const p of Object.values(PROFILES)) Object.freeze(p);
+Object.freeze(PROFILES);
+function profile(classKey) {
+  const p = PROFILES[classKey];
+  if (!p) throw Error("UNKNOWN_TOWER_CLASS");
+  return p;
 }
-const PROFILES = Object.freeze(
-  Object.fromEntries(CLASS_ROTATION.map((key) => [key, profile(key)])),
-);
-module.exports = { CLASS_ROTATION, PROFILES, profile, LOADOUT_IDS };
+module.exports = { CLASS_ROTATION, PROFILES, profile };

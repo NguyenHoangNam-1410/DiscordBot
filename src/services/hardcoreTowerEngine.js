@@ -268,43 +268,6 @@ function verify(c) {
     throw Error("INVALID_TOWER_SOLUTION: " + c.challengeId);
   return { ...proof, solutionHash: solutionHash(c) };
 }
-function floorCheckpoint(s) {
-  return {
-    floor: s.floor,
-    floorStep: s.floorStep,
-    routeStep: s.routeStep,
-    hp: s.hp,
-    mana: s.mana,
-    potions: s.potions,
-    flags: structuredClone(s.flags),
-    classCharges: structuredClone(s.classCharges),
-    enemyHp: s.enemyHp,
-    cleared: s.cleared,
-    step: s.step,
-    paradox: structuredClone(s.paradox),
-    actionHistoryLength: s.actionHistory.length,
-    floorMistakes: [],
-  };
-}
-function retryFloor(s, c) {
-  if (c.generatorVersion < 4 || s.status !== "failed" || !s.floorCheckpoint)
-    return createState(c);
-  const next = structuredClone(s),
-    checkpoint = structuredClone(s.floorCheckpoint);
-  Object.assign(next, checkpoint, {
-    status: "playing",
-    actionHistory: s.actionHistory.slice(0, checkpoint.actionHistoryLength),
-    lastLog: `Thử lại tầng ${checkpoint.floor} từ bước đầu.`,
-    lastOutcome: null,
-    floorMistakes: [],
-  });
-  delete next.failure;
-  delete next.failureHint;
-  delete next.failedAction;
-  delete next.expectedAction;
-  delete next.actionHistoryLength;
-  return next;
-}
 module.exports = {
   createState,
   current,
@@ -320,6 +283,45 @@ module.exports = {
   retryFloor,
 };
 
+function floorCheckpoint(s) {
+  return {
+    floor: s.floor,
+    floorStep: s.floorStep,
+    routeStep: s.routeStep,
+    hp: s.hp,
+    mana: s.mana,
+    enemyHp: s.enemyHp,
+    skillUsed: s.skillUsed,
+    flags: structuredClone(s.flags),
+    classCharges: structuredClone(s.classCharges),
+    cleared: s.cleared,
+    step: s.step,
+    paradox: structuredClone(s.paradox),
+    actionHistoryLength: s.actionHistory.length,
+  };
+}
+
+function retryFloor(s, c) {
+  if (c.generatorVersion < 4 || s.status !== "failed" || !s.floorCheckpoint)
+    return createState(c);
+  const checkpoint = structuredClone(s.floorCheckpoint),
+    next = structuredClone(s),
+    turn = s.turn + 1;
+  Object.assign(next, checkpoint, {
+    status: "playing",
+    turn,
+    actionHistory: s.actionHistory.slice(0, checkpoint.actionHistoryLength),
+    lastLog: `Thử lại tầng ${checkpoint.floor} từ trạng thái đầu tầng.`,
+    lastOutcome: null,
+  });
+  delete next.failure;
+  delete next.failureKind;
+  delete next.lastCombat;
+  delete next.actionHistoryLength;
+  next.floorCheckpoint = floorCheckpoint(next);
+  return next;
+}
+
 function createGeneratedState(c) {
   const s = require("../hardcore/tower/solver").initial(c);
   Object.assign(s, {
@@ -334,9 +336,6 @@ function createGeneratedState(c) {
     turn: 0,
     paradox: null,
     actionHistory: [],
-    maxPotions: c.character.potions || 0,
-    potionHeal: c.character.potionHeal || 0,
-    floorMistakes: [],
   });
   s.enemyHp = c.floors[0].hp;
   s.floorCheckpoint = floorCheckpoint(s);
@@ -344,16 +343,23 @@ function createGeneratedState(c) {
 }
 function currentGenerated(s, c) {
   const t = c.transitions[Math.min(s.routeStep, c.stepCount - 1)],
-    f = c.floors[s.floor - 1];
+    f = c.floors[s.floor - 1],
+    transition = {
+      ...t,
+      // Published g3 snapshots predate the explicit flag. Derive it without
+      // mutating their immutable payload so resumed runs still show Hành quyết.
+      finisher:
+        t.finisher ?? (t.type === "combat" && t.floorStep === f.stepCount - 1),
+    };
   return {
     encounter: {
       ...f,
-      type: t.type,
-      choices: t.choices || [],
-      spellLocked: Boolean(t.spellLocked),
+      type: transition.type,
+      choices: transition.choices || [],
+      spellLocked: Boolean(transition.spellLocked),
     },
-    phase: { ...t, name: t.clueTemplate },
-    transition: t,
+    phase: { ...transition, name: transition.clueTemplate },
+    transition,
   };
 }
 function actionsGenerated(s, c) {
@@ -361,62 +367,32 @@ function actionsGenerated(s, c) {
   const t = c.transitions[s.routeStep];
   if (t.type === "event")
     return t.choices.map((x) => ({ ...x, disabled: false }));
-  const available =
-    c.generatorVersion >= 4
-      ? ["attack", "skill", "defend", "potion"]
-      : ["attack", "skill", "defend"];
-  return available.map((action) => ({
+  return ["attack", "skill", "defend"].map((action) => ({
     action,
     label:
       action === "skill"
         ? c.combat.skillName
         : action === "attack"
           ? "Tấn công"
-          : action === "defend"
-            ? "Phòng thủ"
-            : "Bình máu",
+          : "Phòng thủ",
     disabled:
-      (action === "skill" && (s.mana < t.skillCost || t.spellLocked)) ||
-      (action === "potion" && s.potions < 1),
+      action === "skill" &&
+      (s.mana < t.skillCost ||
+        t.spellLocked ||
+        (c.generatorVersion >= 4 && s.skillUsed)),
   }));
 }
 function damageGenerated(s, c, action) {
-  const t = currentGenerated(s, c).transition,
-    p = require("../hardcore/tower/classProfiles").profile(c.classKey);
+  const t = currentGenerated(s, c).transition;
   if (t.type !== "combat") return 0;
-  if (c.generatorVersion >= 4)
-    return action === "attack"
-      ? p.attackDamage
-      : action === "skill"
-        ? p.skillDamage
-        : 0;
-  if (action === "attack")
-    return p.mechanic === "barrage" && t.shieldCharges > 0
-      ? 0
-      : Math.floor(
-          p.attackDamage *
-            (p.mechanic === "rage" && s.hp <= s.maxHp * 0.35 ? 1.5 : 1),
-        );
-  if (action === "skill")
-    return p.mechanic === "barrage"
-      ? Math.floor(p.skillDamage / 3) * (3 - t.shieldCharges)
-      : p.skillDamage + (p.mechanic === "dodge" ? 8 : 0);
-  return 0;
+  return require("../hardcore/tower/solver").combatOutcome(c, s, t, action)
+    .damage;
 }
 function counterGenerated(s, c, action) {
-  const t = currentGenerated(s, c).transition,
-    p = require("../hardcore/tower/classProfiles").profile(c.classKey);
+  const t = currentGenerated(s, c).transition;
   if (t.type !== "combat") return 0;
-  if (c.generatorVersion >= 4)
-    return action === t.expectedAction ? t.counterDamage : t.intentDamage;
-  if (
-    s.classCharges.ward > 0 ||
-    (action === "skill" && ["shield", "dodge"].includes(p.mechanic))
-  )
-    return 0;
-  return p.mechanic === "shield" && action === "defend"
-    ? Math.floor(t.intentDamage / 2)
-    : t.intentDamage;
+  return require("../hardcore/tower/solver").combatOutcome(c, s, t, action)
+    .counter;
 }
 function actGenerated(s, c, action) {
   if (s.challengeId !== c.challengeId || s.contentVersion !== c.contentVersion)
@@ -428,38 +404,26 @@ function actGenerated(s, c, action) {
       hp: s.hp,
       mana: s.mana,
       enemyHp: s.enemyHp,
-      potions: s.potions,
       floor: s.floor,
       step: s.step,
       routeStep: s.routeStep,
     };
-  if (c.generatorVersion >= 4) return actPuzzle(s, c, action, t, before);
-  const next = require("../hardcore/tower/solver").apply(c, s, action);
+  const solver = require("../hardcore/tower/solver"),
+    outcome =
+      t.type === "combat" ? solver.combatOutcome(c, s, t, action) : null,
+    next = solver.apply(c, s, action);
   s.actionHistory.push(sha(JSON.stringify([s.turn, action])));
   s.turn++;
-  if (next.status === "failed") {
-    s.status = "failed";
-    s.failure = next.failureHint;
-    s.failureHint = next.failureHint;
-    s.lastLog =
-      "Sai lời giải ở tầng " + s.floor + ", bước " + (s.floorStep + 1) + ".";
-    s.lastOutcome = { ...before, actionDamage: 0, counterDamage: 0 };
-    return s;
-  }
   const turn = s.turn,
-    history = s.actionHistory,
-    oldEnemy = s.enemyHp;
+    history = s.actionHistory;
   Object.assign(s, next, {
     turn,
     actionHistory: history,
     step: next.floorStep,
   });
   s.cleared = next.status === "completed" ? 15 : next.floor - 1;
-  s.enemyHp = Math.max(0, oldEnemy + t.enemyHpDelta);
-  if (s.floor !== before.floor) {
-    s.enemyHp = c.floors[s.floor - 1].hp;
+  if (s.status === "playing" && s.floor !== before.floor)
     s.floorCheckpoint = floorCheckpoint(s);
-  }
   if (s.flags.includes("mana_fracture"))
     s.paradox = { id: "mana_fracture", startFloor: 5, endFloor: 15 };
   const label =
@@ -468,152 +432,24 @@ function actGenerated(s, c, action) {
       ? c.combat.skillName
       : action === "attack"
         ? "Tấn công"
-        : action === "defend"
-          ? "Phòng thủ"
-          : "Bình máu");
-  s.lastLog = label + ": đúng nhịp " + s.routeStep + "/" + c.stepCount + ".";
+        : "Phòng thủ");
+  if (s.status === "failed") {
+    s.failure =
+      t.type === "combat"
+        ? "Bạn chưa hạ được quái trước khi bị nó kết liễu."
+        : "Lựa chọn này khiến hành trình trong Tháp chấm dứt.";
+    s.lastLog =
+      t.type === "combat"
+        ? label + ": quái còn sống và phản công kết liễu bạn."
+        : "Lựa chọn không thể đưa bạn vượt qua Tháp.";
+  } else s.lastLog = label + ": hành động đã được thực hiện.";
   s.lastOutcome = {
     ...before,
-    actionDamage: Math.abs(t.enemyHpDelta),
-    counterDamage: t.counterDamage,
-    heal: t.heal,
+    actionDamage: outcome?.damage || 0,
+    counterDamage: outcome?.counter || 0,
+    heal: outcome?.heal || 0,
+    enemyHeal: outcome?.enemyHeal || 0,
+    enemyHpAfter: outcome?.enemyHp ?? before.enemyHp,
   };
-  return s;
-}
-
-function actionLabel(action, c) {
-  return action === "skill"
-    ? c.combat.skillName
-    : action === "attack"
-      ? "Tấn công"
-      : action === "defend"
-        ? "Phòng thủ"
-        : "Bình máu";
-}
-
-function abstractMistakeHint(expected, chosen) {
-  if (chosen === "potion" && expected !== "potion")
-    return "Dòng Sinh lực đã bị khuấy động trước khi khế ước ổn định.";
-  if (expected === "potion")
-    return "Một cửa sổ Sinh lực đã khép lại mà chưa được tận dụng.";
-  if (expected === "defend")
-    return "Dấu Hành quyết vẫn còn lưu lại trên khiên của bạn.";
-  if (expected === "skill")
-    return "Một Ấn Linh hồn vẫn dao động khi số bước đã cạn.";
-  return "Một vết nứt vật chất chưa được khai thác trước khi cánh cửa đóng lại.";
-}
-
-function abstractFloorHint(mistakes) {
-  const missedPotion = mistakes.find((x) => x.expected === "potion");
-  if (missedPotion) {
-    const latePotion = mistakes.some(
-      (x) => x.floorStep > missedPotion.floorStep && x.chosen === "potion",
-    );
-    return latePotion
-      ? "Sinh lực đã được gọi khi cửa sổ của nó chỉ còn là dư âm."
-      : missedPotion.hint;
-  }
-  return mistakes[0]?.hint || "Nhịp điệu của tầng vẫn còn một chỗ lệch.";
-}
-
-function actPuzzle(s, c, action, t, before) {
-  const p = require("../hardcore/tower/classProfiles").profile(c.classKey),
-    mistakes = (s.floorMistakes ||= []),
-    cleanSoFar = mistakes.length === 0,
-    correct = action === t.expectedAction,
-    fatalMistake = !correct && t.expectedAction === "defend";
-  s.actionHistory.push(sha(JSON.stringify([s.turn, action])));
-  s.turn++;
-  if (!correct)
-    mistakes.push({
-      floorStep: s.floorStep,
-      expected: t.expectedAction,
-      chosen: action,
-      fatal: fatalMistake,
-      hint: abstractMistakeHint(t.expectedAction, action),
-    });
-
-  let actionDamage = 0,
-    counterDamage = 0,
-    heal = 0;
-  if (correct && cleanSoFar) {
-    const next = require("../hardcore/tower/solver").apply(c, s, action),
-      turn = s.turn,
-      history = s.actionHistory,
-      oldEnemy = s.enemyHp;
-    Object.assign(s, next, {
-      turn,
-      actionHistory: history,
-      floorMistakes: mistakes,
-      step: next.floorStep,
-    });
-    actionDamage = Math.abs(t.enemyHpDelta);
-    counterDamage = t.counterDamage;
-    heal = t.heal;
-    s.enemyHp = Math.max(0, oldEnemy + t.enemyHpDelta);
-  } else {
-    actionDamage = correct
-      ? action === "attack"
-        ? p.attackDamage
-        : action === "skill"
-          ? p.skillDamage
-          : 0
-      : 0;
-    if (action === "skill") s.mana = Math.max(0, s.mana - t.skillCost);
-    else if (action === "attack")
-      s.mana = Math.min(s.maxMana, s.mana + t.attackMana);
-    else if (action === "defend")
-      s.mana = Math.min(s.maxMana, s.mana + t.defendMana);
-    if (action === "potion") {
-      heal = Math.min(s.potionHeal, s.maxHp - s.hp);
-      s.hp += heal;
-      s.potions--;
-    } else if (action === "skill" && p.heal) {
-      heal = Math.min(p.heal, s.maxHp - s.hp);
-      s.hp += heal;
-    }
-    counterDamage =
-      action === "defend"
-        ? 0
-        : fatalMistake
-          ? s.hp
-          : Math.max(1, t.counterDamage);
-    s.hp = Math.max(fatalMistake ? 0 : 1, s.hp - counterDamage);
-    s.enemyHp = Math.max(1, s.enemyHp - actionDamage);
-    s.routeStep++;
-    s.floorStep++;
-    s.step = s.floorStep;
-  }
-
-  const floorEnded = t.floorStep + 1 === t.floor;
-  if (fatalMistake) {
-    s.status = "failed";
-    s.floor = t.floor;
-    s.failure = "Đòn chí tử đã hạ gục bạn.";
-    s.failureHint = s.failure;
-  } else if (floorEnded && mistakes.length) {
-    s.status = "failed";
-    s.floor = t.floor;
-    s.floorStep = t.floor;
-    s.step = t.floor;
-    s.failure = abstractFloorHint(mistakes);
-    s.failureHint = s.failure;
-  } else if (floorEnded && s.status !== "completed") {
-    s.cleared = t.floor;
-    s.enemyHp = c.floors[s.floor - 1].hp;
-    s.floorMistakes = [];
-    s.floorCheckpoint = floorCheckpoint(s);
-  } else {
-    s.cleared = s.status === "completed" ? 15 : s.floor - 1;
-  }
-  if (s.status === "completed") s.cleared = 15;
-  s.lastLog =
-    actionLabel(action, c) +
-    ": đã dùng bước " +
-    (t.floorStep + 1) +
-    "/" +
-    t.floor +
-    " của tầng.";
-  s.lastOutcome = { ...before, actionDamage, counterDamage, heal };
   return s;
 }
