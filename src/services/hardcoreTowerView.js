@@ -390,68 +390,52 @@ function generatedButton(
 function generatedEncounter(state, c) {
   const { encounter: e, transition: t } = engine.current(state, c);
   let text = "**" + e.name + "**\n";
-  if (t.type === "combat") text += healthBar(state.enemyHp, e.hp) + "\n";
-  text +=
-    t.type === "combat" && c.generatorVersion >= 4
-      ? "**Quy luật:** gây damage thật, quản lý MP và hạ quái trước khi nó hạ bạn."
-      : "**Tín hiệu:** " + t.clue;
+  if (t.type === "combat") text += healthBar(state.enemyHp, e.hp);
   if (t.type === "event")
-    text += "\n" + t.choices.map((x) => "• " + x.label).join("\n");
+    text += t.choices.map((x) => "• " + x.label).join("\n");
   else if (t.finisher)
-    text +=
-      "\n💀 **Ý định Hành quyết:** giáp cuối giảm 50% damage Tấn công thường; nếu quái còn sống sau hành động này, bạn sẽ tử trận.";
+    text += "\n💀 **Hành quyết** · Tấn công thường **−50% DMG**";
   else if (t.guardIntent)
     text +=
-      "\n🛡️ **Ý định Trọng kích:** nếu quái còn sống, đòn này gây **" +
+      "\n🛡️ **Trọng kích " +
       t.intentDamage +
-      " damage**; Phòng thủ giảm còn **" +
+      " DMG** · Phòng thủ còn **" +
       t.defendDamage +
-      " damage**.";
+      " DMG**";
   else
     text +=
       "\nÝ định: **" +
       t.intentDamage +
-      " damage " +
+      " DMG " +
       (t.counterType === "magic" ? "phép" : "vật lý") +
-      "**. Cơ chế class có thể chặn/giảm đòn; phản công áp dụng trước khi qua tầng.";
+      "**";
   return text;
 }
 function generatedStats(state, c) {
   const t = engine.current(state, c).transition;
   return (
     resources(state) +
-    SEP +
-    E.defense +
-    " **DEF " +
-    c.character.defense +
-    "**" +
-    SEP +
-    E.res +
-    " **RES " +
-    c.character.resistance +
-    "%**\n" +
+    "\n" +
     E.attack +
-    " **Tấn công: " +
+    " **Tấn công " +
     engine.damage(state, c, "attack") +
-    " damage · +" +
+    " DMG** · +" +
     t.attackMana +
-    " MP**\n" +
+    " MP\n" +
     SKILL_ICONS[c.classKey] +
     " **" +
     c.combat.skillName +
-    ": " +
+    " " +
     engine.damage(state, c, "skill") +
-    " damage · −" +
+    " DMG** · −" +
     t.skillCost +
-    " MP · một lần/tầng**\n" +
+    " MP\n" +
     E.defense +
-    " **Phòng thủ: dự kiến nhận " +
+    " **Phòng thủ · nhận " +
     engine.counter(state, c, "defend") +
-    " damage · +" +
+    " DMG** · +" +
     t.defendMana +
-    " MP**\n*Skill không kết liễu sẽ bị quái hấp thụ và hồi toàn bộ damage vừa nhận. Damage cố định, không Crit, không Miss. " +
-    c.classDescription +
-    "*"
+    " MP"
   );
 }
 function generatedEffects(state, c) {
@@ -509,27 +493,23 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
     .setColor(color(state, c))
     .setTitle("🗼 THÁP ĐỊNH MỆNH · " + c.weekLabel)
     .setDescription(
-      (row.user_id ? "👤 <@" + row.user_id + ">\n" : "") +
+      (row.user_id ? "👤 <@" + row.user_id + ">" + SEP : "") +
         "**" +
         c.character.name +
-        " · 15 tầng**" +
+        "**" +
+        SEP +
+        "Tầng **" +
+        state.floor +
+        "/15**" +
         (!live
           ? replayTarget
             ? "\n⏰ Challenge này đã đóng. Bấm Chơi Tháp hiện tại để mở tuần đang hoạt động."
             : "\n⏰ Challenge đã hết hạn. Chỉ xem kết quả."
           : ""),
-    )
-    .setFooter(footer(state, c));
+    );
   addTextFields(
     embed,
-    "⚔️ Thử thách sinh tử",
-    "Tầng **" +
-      state.floor +
-      "/15**\nHạ quái trước khi bị kết liễu. Tháp không tiết lộ số hành động còn lại.\nChỉ có **một lời giải duy nhất** để vượt đủ 15 tầng.",
-  );
-  addTextFields(
-    embed,
-    SKILL_ICONS[c.classKey] + " " + c.character.name,
+    "⚔️ Hành động",
     state.status === "playing" && e.type === "combat"
       ? generatedStats(state, c)
       : resources(state),
@@ -540,24 +520,25 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
       encounterIcon(e) + " " + (e.type === "combat" ? "Đối thủ" : "Tình huống"),
       generatedEncounter(state, c),
     );
-  addTextFields(
-    embed,
-    "📍 Tiến trình tuần",
-    "Đã vượt: **" +
-      state.cleared +
-      "/15**" +
-      SEP +
-      "Cao nhất: **" +
-      result.best_floor +
-      "/15**" +
-      SEP +
-      "Lần thử: **" +
-      (result.attempts + (state.status === "playing" ? 1 : 0)) +
-      "**",
-  );
-  addTextFields(embed, "🏆 Phần thưởng", rewardText(state, c, result));
-  if (state.lastLog)
-    addTextFields(embed, "📜 Lượt vừa rồi", turnText(state, c));
+  if (state.status !== "playing") {
+    addTextFields(
+      embed,
+      "📍 Tiến độ",
+      "Đã vượt **" +
+        state.cleared +
+        "/15**" +
+        SEP +
+        "Cao nhất **" +
+        result.best_floor +
+        "/15**" +
+        SEP +
+        "Lần thử **" +
+        result.attempts +
+        "**",
+    );
+    addTextFields(embed, "🏆 Phần thưởng", rewardText(state, c, result));
+  }
+  if (state.lastLog) addTextFields(embed, "📜 Lượt trước", turnText(state, c));
   if (state.status !== "playing")
     addTextFields(
       embed,
@@ -605,7 +586,7 @@ function payloadGenerated(row, state, c, result, now = Date.now()) {
       ...Object.entries(tabs).map(([tab, label]) =>
         generatedButton(row, state, c, "view_" + tab, label),
       ),
-      generatedButton(row, state, c, "top", "Bảng xếp hạng tuần"),
+      generatedButton(row, state, c, "top", "Xếp hạng"),
     ]),
   );
   return { embeds: [embed], components, allowedMentions: { parse: [] } };
