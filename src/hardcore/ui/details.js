@@ -14,6 +14,7 @@ module.exports = function createModule(dependencies) {
     world,
     emoji,
     E,
+    STAT_SEPARATOR,
     SKILL_ICONS,
     RIFT_ICONS,
     passiveIcon,
@@ -24,6 +25,8 @@ module.exports = function createModule(dependencies) {
     SHRINES,
   } = dependencies;
   const statLine = (...args) => dependencies.statLine(...args);
+  const coinPayoutDetails = (...args) =>
+    dependencies.coinPayoutDetails(...args);
   const checkpointPreview = (...args) =>
     dependencies.checkpointPreview(...args);
   const riftStatSummary = (...args) => dependencies.riftStatSummary(...args);
@@ -34,6 +37,8 @@ module.exports = function createModule(dependencies) {
     dependencies.formatPassiveText(...args);
   const passiveText = (...args) => dependencies.passiveText(...args);
   const equipmentSummary = (...args) => dependencies.equipmentSummary(...args);
+  const setProgressFields = (...args) =>
+    dependencies.setProgressFields(...args);
   const hasEncounterDetails = (...args) =>
     dependencies.hasEncounterDetails(...args);
   const viewTabs = (...args) => dependencies.viewTabs(...args);
@@ -63,14 +68,15 @@ module.exports = function createModule(dependencies) {
       .setColor(0x9b59b6)
       .setTitle(
         `SINH TỒN v${state.releaseVersion} · ${{ stats: "CHỈ SỐ", items: "TÚI ĐỒ", effects: "RIFT & HIỆU ỨNG", encounter: "CHI TIẾT" }[tab] || "CHI TIẾT"}`,
-      )
-      .setDescription(
+      );
+    if (tab !== "items")
+      e.setDescription(
         `${stats.CLASSES[state.classKey].emoji} ${stats.CLASSES[state.classKey].name} · Tầng ${state.floor}`,
       );
     if (["items"].includes(tab)) {
       e.addFields({
         name: "Vật tư & vé",
-        value: `${E.potion} **Bình**: **${state.potions}/${state.maxPotions}**\n${E.ticket} **Vé thoát**: **${state.escapeTokens}**\n${E.prayerTicket} **Vé cầu nguyện**: **${state.prayerBoost ? 1 : 0}** · RNGesus **${percent(core.rngesusPrayerChance(state))}**\n${E.reviveTicket} **Vé hồi sinh**: **${state.reviveTickets || 0}** · ${E.hp} **HP 50%**`,
+        value: `${E.potion} **Bình: ${state.potions}/${state.maxPotions}**${STAT_SEPARATOR}${E.ticket} **Vé thoát: ${state.escapeTokens}**${STAT_SEPARATOR}${E.prayerTicket} **Vé cầu nguyện: ${state.prayerBoost ? 1 : 0}**${STAT_SEPARATOR}${E.reviveTicket} **Vé hồi sinh: ${state.reviveTickets || 0}**`,
       });
     }
     if (tab === "items") {
@@ -91,9 +97,18 @@ module.exports = function createModule(dependencies) {
           covenant.progress(state).completed)
       )
         e.addFields({
-          name: "🧩 Bốn mảnh Chinh Phạt",
-          value: covenant.bagText(state),
+          name: `🧩 Mảnh Chinh Phạt (${covenant.progress(state).completed ? 4 : covenant.fragmentCount(state)}/4)`,
+          value: covenant.progress(state).completed
+            ? "Đã hợp nhất thành **Conqueror’s Covenant [LR]**."
+            : Object.entries(covenant.FRAGMENTS)
+                .map(([key, name]) =>
+                  covenant.progress(state).fragments?.[key] != null
+                    ? "✅ **" + name + "**"
+                    : "▫️ " + name,
+                )
+                .join("\n"),
         });
+      for (const field of setProgressFields(state)) e.addFields(field);
       for (const relic of state.relics || []) {
         const definition = core.RELIC_ITEMS[relic.id];
         if (definition)
@@ -134,6 +149,8 @@ module.exports = function createModule(dependencies) {
           effective: true,
         }),
       );
+      const deductions = coinPayoutDetails(state).trim();
+      if (deductions) addTextFields(e, `${E.coin} Thống kê xu`, deductions);
       addTextFields(
         e,
         `${E.backpack} Tổng hợp trang bị (${state.items.length})`,

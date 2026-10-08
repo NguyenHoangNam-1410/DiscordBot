@@ -221,7 +221,7 @@ critical.activeParadox = {
 const beforeCrit = critical.hp;
 core.act(critical, session, "attack", () => 0.1);
 const dealt = 1000 - critEnemy.hp;
-assert.equal(critical.hp, beforeCrit - Math.floor(dealt * 0.3));
+assert.equal(critical.hp, beforeCrit - Math.floor(dealt * 0.1));
 assert(critical.lastLog.includes("CRIT gián đoạn"));
 assert(!critical.lastLog.includes("Phản công lần hai"));
 const mage = state(11, "necromancer");
@@ -244,9 +244,9 @@ assert.equal(
     { dealt: 100, critical: true },
     core.hurt,
   ).recoil,
-  30,
+  10,
 );
-assert.equal(isolated.hp, 20);
+assert.equal(isolated.hp, 40);
 groups.push(
   "Crit suppresses normal/double counter but keeps actual-damage recoil; class blocking, DEF and RES cannot block recoil",
 );
@@ -426,7 +426,7 @@ for (const s of [robbed, ritual(state()), critical, noBlessing])
     if (tab === "effects" && s.grudge?.stage !== "completed")
       assert(text(p).includes("Dấu ấn oán hận"));
   }
-assert(text(privateTab(critical, "encounter")).includes("30%"));
+assert(text(privateTab(critical, "encounter")).includes("10% DMG thực tế"));
 assert(!text(privateTab(critical, "items")).includes("Dấu ấn oán hận"));
 assert(
   !JSON.stringify(view.embed(critical).toJSON()).includes(

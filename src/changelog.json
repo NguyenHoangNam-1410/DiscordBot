@@ -1,5 +1,47 @@
 [
   {
+    "id": "942d7e12-5cbb-4405-bba4-6166e399824a",
+    "updatedAt": "2026-10-07T10:38:15.497Z",
+    "auditedAt": "2026-10-07T10:38:15.497Z",
+    "title": "Tinh gọn Túi đồ Sinh tồn",
+    "changes": [
+      "Bỏ dòng class và tầng ở đầu Túi đồ; gộp bình và ba loại vé thành một dòng, bỏ mô tả tỷ lệ cầu nguyện và hồi sinh.",
+      "Rút gọn Mảnh Chinh Phạt thành tiến độ x/4 và danh sách mảnh.",
+      "Thêm tiến độ hai set Diệt Vương và Tinh Tú: món đang có, món còn thiếu và UR cần giải nguyền trước khi đổi di vật."
+    ]
+  },
+  {
+    "id": "0f96ee41-48e0-445f-a5b4-172a6b8ea500",
+    "updatedAt": "2026-10-07T09:56:19.015Z",
+    "auditedAt": "2026-10-07T09:56:19.015Z",
+    "title": "Tinh gọn mục Rút thưởng Sinh tồn",
+    "changes": [
+      "Chuyển thống kê xu đã trừ vì thuế, Goblin, event, mua đồ/dịch vụ và giảm thưởng do nguyền sang tab Chỉ số, mục Thống kê xu.",
+      "Mục Rút thưởng trên bảng chơi chỉ hiển thị xu thực nhận và kim cương; icon và số tiền vẫn giữ đầy đủ trong Chỉ số."
+    ]
+  },
+  {
+    "id": "1f6f72da-fb5d-4403-b40d-ae26c1415b12",
+    "updatedAt": "2026-10-07T09:43:53.902Z",
+    "auditedAt": "2026-10-07T09:43:53.902Z",
+    "title": "Giảm phản phệ Avarice Revenant",
+    "changes": [
+      "Avarice Revenant phản phệ 10% sát thương Tấn công/Skill thực tế gây lên boss, giảm từ 30%; làm tròn xuống, áp dụng cả đòn kết liễu.",
+      "Chi tiết, luật và log chiến đấu cập nhật mức 10%."
+    ]
+  },
+  {
+    "id": "7da75a03-1879-451b-a80e-333253861c96",
+    "updatedAt": "2026-10-07T09:18:55.975Z",
+    "auditedAt": "2026-10-07T09:18:55.975Z",
+    "title": "Đánh giá checkpoint cuối run Sinh tồn",
+    "changes": [
+      "Đã mô phỏng 14.000 run, 1.000 run/class/cấu hình, so sánh checkpoint hiện tại với phương án từ tầng 700: mỗi 10 tầng chọn +10 thuộc tính, hồi đầy HP và thêm 2 bình.",
+      "Trong chiến thuật cố định được đo, cả 7 class đều giảm tỷ lệ thắng; Barbarian 26,3% → 8,6%, Sorceress 51% → 31,1%, Druid 16,8% → 13,8%. Tổng điểm cuối run không tăng, số lần hồi HP/nhận bình giảm một nửa.",
+      "Đây là báo cáo thử nghiệm; luật checkpoint đang chơi vẫn giữ hiện tại. Báo cáo kèm kết quả từng class, thống kê sau tầng 700, khoảng tin cậy và dữ liệu để chạy lại."
+    ]
+  },
+  {
     "id": "c7cd1811-e68b-41cd-ae1e-2a223e66bf97",
     "updatedAt": "2026-10-07T09:18:17.882Z",
     "auditedAt": "2026-10-07T09:18:17.882Z",
@@ -539,7 +581,9 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "d5758e9b34d159db664e3015833351fe47278586",
     "title": "Sinh tồn: phân loại Mimic",
-    "changes": ["Ancient Mimic và Blood Mimic được phân loại là quái tinh anh."]
+    "changes": [
+      "Ancient Mimic và Blood Mimic được phân loại là quái tinh anh."
+    ]
   },
   {
     "id": "d95d1c0",
@@ -670,7 +714,9 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "a168a3c2f345cdb5328d125f8666d333aa73110b",
     "title": "Sinh tồn V2: khôi phục cách hiển thị cũ",
-    "changes": ["Khôi phục nút chiến đấu gọn và nhãn MP trong Sinh tồn V2."]
+    "changes": [
+      "Khôi phục nút chiến đấu gọn và nhãn MP trong Sinh tồn V2."
+    ]
   },
   {
     "id": "c305df0",
@@ -678,7 +724,9 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "c305df09cdc528e07a1cab6394419721960005d7",
     "title": "Tháp Định Mệnh: bỏ chỉ số bị lặp",
-    "changes": ["DEF và RES trên bảng nhân vật không còn hiển thị hai lần."]
+    "changes": [
+      "DEF và RES trên bảng nhân vật không còn hiển thị hai lần."
+    ]
   },
   {
     "id": "579168c",
@@ -706,7 +754,9 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "1df259eed83b7de93d44a8569f068a83f88f6b5f",
     "title": "Hồ sơ: nền tối",
-    "changes": ["Đổi các mảng màu pastel sáng trên hồ sơ sang bảng màu tối."]
+    "changes": [
+      "Đổi các mảng màu pastel sáng trên hồ sơ sang bảng màu tối."
+    ]
   },
   {
     "id": "e80316e",
@@ -714,7 +764,9 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "e80316ef864635027053c5ed3a66c08cd60ac477",
     "title": "Poker: giao diện kết thúc ván",
-    "changes": ["Ẩn mục Bài của bot sau khi ván poker đã kết thúc."]
+    "changes": [
+      "Ẩn mục Bài của bot sau khi ván poker đã kết thúc."
+    ]
   },
   {
     "id": "8f329df",
@@ -756,7 +808,9 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "62aca60056d54fb12c86f316f9a0ba582a413a5e",
     "title": "Sinh tồn: đồ nhận gần nhất ở đầu túi",
-    "changes": ["Các món vừa nhận được đẩy lên đầu danh sách túi đồ."]
+    "changes": [
+      "Các món vừa nhận được đẩy lên đầu danh sách túi đồ."
+    ]
   },
   {
     "id": "db27a0a",
@@ -764,7 +818,9 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "db27a0abbe2c5e41f47581a0b5478d8d94e95a35",
     "title": "Cò quay Nga: bỏ mục Lượt của bạn",
-    "changes": ["Bỏ nhãn lượt dư thừa khỏi giao diện Cò quay Nga."]
+    "changes": [
+      "Bỏ nhãn lượt dư thừa khỏi giao diện Cò quay Nga."
+    ]
   },
   {
     "id": "25a3b31",

@@ -49,6 +49,13 @@ function fields(s) {
   );
   return e.fields;
 }
+function deductions(s) {
+  const payload = view.privatePayload(s, "payout-test", "message", "stats");
+  const embed = payload.embeds[0].toJSON();
+  assert.ok(embed.fields.every((f) => f.value.length <= 1024));
+  assert.ok(JSON.stringify(embed).indexOf("undefined") < 0);
+  return embed.fields.find((f) => f.name.includes("Thống kê xu"))?.value || "";
+}
 function play(s, action) {
   const before = core.payout(s);
   core.act(s, session, action, rng);
@@ -109,12 +116,13 @@ for (const [encounter, action, rate] of [
   const f = fields(s);
   const withdrawal = f.find((x) => x.name.includes("Rút thưởng")).value;
   assert.ok(withdrawal.includes("Thực nhận: **" + money(core.payout(s))));
-  assert.ok(withdrawal.includes("Đã trừ:"));
+  assert.ok(!withdrawal.includes("Đã trừ:"));
+  assert.ok(deductions(s).includes("Đã trừ:"));
   assert.ok(
-    withdrawal.includes(money(r.payoutBefore.coins - r.payoutAfter.coins)),
+    deductions(s).includes(money(r.payoutBefore.coins - r.payoutAfter.coins)),
   );
   assert.equal(s.eventPayoutFactor, 1);
-  assert.ok(withdrawal.split("\n").length <= 2);
+  assert.equal(withdrawal.split("\n").length, 1);
   assert.equal(
     f.find((x) => x.name.includes("Trang bị")),
     undefined,
@@ -195,11 +203,7 @@ for (const [encounter, action, rate] of [
   const r = play(s, "buy_0");
   assert.equal(r.payoutAfter.coins - r.payoutBefore.coins, -500);
   assert.equal(s.payoutSpent, 500);
-  assert.ok(
-    fields(s)
-      .find((f) => f.name.includes("Rút thưởng"))
-      .value.includes("**500 🪙** đã chi"),
-  );
+  assert.ok(deductions(s).includes("**500 🪙** đã chi"));
 }
 {
   const s = create({ type: "empty", name: "Trống" });
@@ -520,7 +524,8 @@ for (const rule of view.ratesFields()) {
   );
   play(s, "next");
   const withdrawal = fields(s).find((f) => f.name.includes("Rút thưởng")).value;
-  assert.ok(withdrawal.includes("**164.759 " + coin + "** đã chi"));
+  assert.ok(!withdrawal.includes("đã chi"));
+  assert.ok(deductions(s).includes("**164.759 " + coin + "** đã chi"));
   assert.ok(s.lastLog.includes(coin + " **Thưởng xu · "));
   const old = JSON.parse(JSON.stringify(s));
   old.lastLog = old.lastLog.replace(

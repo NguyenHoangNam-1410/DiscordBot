@@ -1,0 +1,523 @@
+{
+  "amazon": {
+    "runs": 10,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "2.0.1",
+    "balanceProfile": {
+      "power": 2.09
+    },
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "gameplayVersion": "2.0.1",
+    "simulationSeed": "survival-checkpoints-pilot-2026-10-07",
+    "checkpointRule": {
+      "variant": "700-10x10",
+      "fromClearedFloor": 700,
+      "intervalBefore": 5,
+      "pointsBefore": 5,
+      "intervalAfter": 10,
+      "pointsAfter": 10,
+      "healAtCheckpoint": "Full HP and +2 potions, respecting the existing cap"
+    },
+    "stake": 100000,
+    "completedPercent": 40,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 100,
+        "count": 3
+      },
+      {
+        "floor": 50,
+        "count": 2
+      },
+      {
+        "floor": 949,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": null,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 10,
+    "passedFloor50": 8,
+    "passedFloor100": 5,
+    "passedFloor699": 5,
+    "passedFloor700": 5,
+    "passedFloor800": 5,
+    "passedFloor900": 5,
+    "reachedFinalBoss": 4,
+    "completed999": 4,
+    "runFloors": [999, 999, 49, 99, 999, 99, 99, 999, 948, 49],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": {
+      "maxHp": 3033,
+      "damageMax": 1257,
+      "defense": 383,
+      "potions": 7,
+      "resistance": 70
+    },
+    "finalBossMeans": {
+      "maxHp": 36506,
+      "damageMax": 1575,
+      "defense": 995
+    },
+    "estimatedCompletionPercent": null,
+    "maxFloor": 999,
+    "medianFloor": 948,
+    "meanFloor": 533.9
+  },
+  "barbarian": {
+    "runs": 10,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "2.0.1",
+    "balanceProfile": {
+      "power": 1.64
+    },
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "gameplayVersion": "2.0.1",
+    "simulationSeed": "survival-checkpoints-pilot-2026-10-07",
+    "checkpointRule": {
+      "variant": "700-10x10",
+      "fromClearedFloor": 700,
+      "intervalBefore": 5,
+      "pointsBefore": 5,
+      "intervalAfter": 10,
+      "pointsAfter": 10,
+      "healAtCheckpoint": "Full HP and +2 potions, respecting the existing cap"
+    },
+    "stake": 100000,
+    "completedPercent": 0,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 100,
+        "count": 3
+      },
+      {
+        "floor": 50,
+        "count": 2
+      },
+      {
+        "floor": 95,
+        "count": 1
+      },
+      {
+        "floor": 350,
+        "count": 1
+      },
+      {
+        "floor": 793,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": 25.8866,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 10,
+    "passedFloor50": 8,
+    "passedFloor100": 4,
+    "passedFloor699": 3,
+    "passedFloor700": 3,
+    "passedFloor800": 2,
+    "passedFloor900": 1,
+    "reachedFinalBoss": 0,
+    "completed999": 0,
+    "runFloors": [99, 94, 349, 99, 49, 899, 99, 948, 792, 49],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": null,
+    "finalBossMeans": null,
+    "estimatedCompletionPercent": null,
+    "maxFloor": 948,
+    "medianFloor": 99,
+    "meanFloor": 347.7
+  },
+  "assassin": {
+    "runs": 10,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "2.0.1",
+    "balanceProfile": {
+      "power": 1
+    },
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "gameplayVersion": "2.0.1",
+    "simulationSeed": "survival-checkpoints-pilot-2026-10-07",
+    "checkpointRule": {
+      "variant": "700-10x10",
+      "fromClearedFloor": 700,
+      "intervalBefore": 5,
+      "pointsBefore": 5,
+      "intervalAfter": 10,
+      "pointsAfter": 10,
+      "healAtCheckpoint": "Full HP and +2 potions, respecting the existing cap"
+    },
+    "stake": 100000,
+    "completedPercent": 20,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 50,
+        "count": 4
+      },
+      {
+        "floor": 100,
+        "count": 2
+      },
+      {
+        "floor": 55,
+        "count": 1
+      },
+      {
+        "floor": 726,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": null,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 10,
+    "passedFloor50": 6,
+    "passedFloor100": 3,
+    "passedFloor699": 3,
+    "passedFloor700": 3,
+    "passedFloor800": 2,
+    "passedFloor900": 2,
+    "reachedFinalBoss": 2,
+    "completed999": 2,
+    "runFloors": [49, 725, 999, 99, 49, 99, 54, 49, 999, 49],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": {
+      "maxHp": 2827,
+      "damageMax": 555,
+      "defense": 369,
+      "potions": 7,
+      "resistance": 70
+    },
+    "finalBossMeans": {
+      "maxHp": 36506,
+      "damageMax": 1585,
+      "defense": 1021
+    },
+    "estimatedCompletionPercent": null,
+    "maxFloor": 999,
+    "medianFloor": 99,
+    "meanFloor": 317.1
+  },
+  "sorceress": {
+    "runs": 10,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "2.0.1",
+    "balanceProfile": {
+      "power": 1.57
+    },
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "gameplayVersion": "2.0.1",
+    "simulationSeed": "survival-checkpoints-pilot-2026-10-07",
+    "checkpointRule": {
+      "variant": "700-10x10",
+      "fromClearedFloor": 700,
+      "intervalBefore": 5,
+      "pointsBefore": 5,
+      "intervalAfter": 10,
+      "pointsAfter": 10,
+      "healAtCheckpoint": "Full HP and +2 potions, respecting the existing cap"
+    },
+    "stake": 100000,
+    "completedPercent": 10,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 50,
+        "count": 2
+      },
+      {
+        "floor": 100,
+        "count": 1
+      },
+      {
+        "floor": 732,
+        "count": 1
+      },
+      {
+        "floor": 825,
+        "count": 1
+      },
+      {
+        "floor": 900,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": null,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 10,
+    "passedFloor50": 8,
+    "passedFloor100": 7,
+    "passedFloor699": 7,
+    "passedFloor700": 7,
+    "passedFloor800": 6,
+    "passedFloor900": 4,
+    "reachedFinalBoss": 1,
+    "completed999": 1,
+    "runFloors": [49, 899, 987, 731, 934, 49, 99, 824, 955, 999],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": {
+      "maxHp": 3620,
+      "damageMax": 428,
+      "defense": 319,
+      "potions": 4,
+      "resistance": 70
+    },
+    "finalBossMeans": {
+      "maxHp": 38907,
+      "damageMax": 1580,
+      "defense": 995
+    },
+    "estimatedCompletionPercent": null,
+    "maxFloor": 999,
+    "medianFloor": 899,
+    "meanFloor": 652.6
+  },
+  "druid": {
+    "runs": 10,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "2.0.1",
+    "balanceProfile": {
+      "power": 1.12
+    },
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "gameplayVersion": "2.0.1",
+    "simulationSeed": "survival-checkpoints-pilot-2026-10-07",
+    "checkpointRule": {
+      "variant": "700-10x10",
+      "fromClearedFloor": 700,
+      "intervalBefore": 5,
+      "pointsBefore": 5,
+      "intervalAfter": 10,
+      "pointsAfter": 10,
+      "healAtCheckpoint": "Full HP and +2 potions, respecting the existing cap"
+    },
+    "stake": 100000,
+    "completedPercent": 0,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 50,
+        "count": 6
+      },
+      {
+        "floor": 100,
+        "count": 2
+      },
+      {
+        "floor": 40,
+        "count": 1
+      },
+      {
+        "floor": 45,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": 25.8866,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 10,
+    "passedFloor50": 2,
+    "passedFloor100": 0,
+    "passedFloor699": 0,
+    "passedFloor700": 0,
+    "passedFloor800": 0,
+    "passedFloor900": 0,
+    "reachedFinalBoss": 0,
+    "completed999": 0,
+    "runFloors": [49, 49, 44, 39, 49, 99, 49, 49, 49, 99],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": null,
+    "finalBossMeans": null,
+    "estimatedCompletionPercent": null,
+    "maxFloor": 99,
+    "medianFloor": 49,
+    "meanFloor": 57.5
+  },
+  "necromancer": {
+    "runs": 10,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "2.0.1",
+    "balanceProfile": {
+      "power": 0.54
+    },
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "gameplayVersion": "2.0.1",
+    "simulationSeed": "survival-checkpoints-pilot-2026-10-07",
+    "checkpointRule": {
+      "variant": "700-10x10",
+      "fromClearedFloor": 700,
+      "intervalBefore": 5,
+      "pointsBefore": 5,
+      "intervalAfter": 10,
+      "pointsAfter": 10,
+      "healAtCheckpoint": "Full HP and +2 potions, respecting the existing cap"
+    },
+    "stake": 100000,
+    "completedPercent": 30,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 44,
+        "count": 3
+      },
+      {
+        "floor": 40,
+        "count": 1
+      },
+      {
+        "floor": 50,
+        "count": 1
+      },
+      {
+        "floor": 929,
+        "count": 1
+      },
+      {
+        "floor": 959,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": null,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 10,
+    "passedFloor50": 5,
+    "passedFloor100": 5,
+    "passedFloor699": 5,
+    "passedFloor700": 5,
+    "passedFloor800": 5,
+    "passedFloor900": 5,
+    "reachedFinalBoss": 3,
+    "completed999": 3,
+    "runFloors": [958, 43, 43, 999, 39, 49, 928, 999, 43, 999],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": {
+      "maxHp": 3004,
+      "damageMax": 155,
+      "defense": 320,
+      "potions": 10,
+      "resistance": 70
+    },
+    "finalBossMeans": {
+      "maxHp": 35064,
+      "damageMax": 1553,
+      "defense": 1051
+    },
+    "estimatedCompletionPercent": null,
+    "maxFloor": 999,
+    "medianFloor": 928,
+    "meanFloor": 510
+  },
+  "paladin": {
+    "runs": 10,
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "2.0.1",
+    "balanceProfile": {
+      "power": 1.67
+    },
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "gameplayVersion": "2.0.1",
+    "simulationSeed": "survival-checkpoints-pilot-2026-10-07",
+    "checkpointRule": {
+      "variant": "700-10x10",
+      "fromClearedFloor": 700,
+      "intervalBefore": 5,
+      "pointsBefore": 5,
+      "intervalAfter": 10,
+      "pointsAfter": 10,
+      "healAtCheckpoint": "Full HP and +2 potions, respecting the existing cap"
+    },
+    "stake": 100000,
+    "completedPercent": 0,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 100,
+        "count": 5
+      },
+      {
+        "floor": 50,
+        "count": 2
+      },
+      {
+        "floor": 200,
+        "count": 1
+      },
+      {
+        "floor": 716,
+        "count": 1
+      },
+      {
+        "floor": 929,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": 25.8866,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 10,
+    "passedFloor50": 8,
+    "passedFloor100": 3,
+    "passedFloor699": 2,
+    "passedFloor700": 2,
+    "passedFloor800": 1,
+    "passedFloor900": 1,
+    "reachedFinalBoss": 0,
+    "completed999": 0,
+    "runFloors": [99, 99, 99, 99, 199, 715, 49, 49, 99, 928],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": null,
+    "finalBossMeans": null,
+    "estimatedCompletionPercent": null,
+    "maxFloor": 928,
+    "medianFloor": 99,
+    "meanFloor": 243.5
+  }
+}
