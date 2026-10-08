@@ -375,6 +375,12 @@ try {
   assert.equal(migrated.items[0].level - migrated.items[0].cleansedLevels, 1);
   assert.equal(migrated.defense, 0);
   migrated.encounter = core.makeSurprise(migrated, () => 0.5, "purifier");
+  core.act(
+    migrated,
+    cleanSession,
+    "purifier_select_" + migrated.items[0].definition.id,
+    () => 0.5,
+  );
   core.act(migrated, cleanSession, "event_cleanse", () => 0.5);
   assert.equal(migrated.items[0].rarity, "cursed");
   assert.equal(migrated.items[0].level, migrated.items[0].cleansedLevels);

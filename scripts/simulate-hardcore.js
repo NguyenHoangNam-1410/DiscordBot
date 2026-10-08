@@ -444,6 +444,13 @@ function actionForV2(state, strategy) {
     if (e.kind === "duelist") return e.mode ? "hand_0" : "duel_stat";
     // Treasure-room colors are hidden outcomes; pick the public red reward.
     if (e.kind === "treasure_room") return "chest_red";
+    if (e.kind === "purifier" && v2.payout(state) < v2.purifierCost(state))
+      return "event_skip";
+    if (e.kind === "purifier")
+      return has("event_cleanse")
+        ? "event_cleanse"
+        : candidates.find((a) => a.action.startsWith("purifier_select_"))
+            ?.action || "event_skip";
     const choices = {
       healer: "event_heal",
       goblin: "event_catch",

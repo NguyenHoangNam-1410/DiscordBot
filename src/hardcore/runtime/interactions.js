@@ -72,8 +72,13 @@ module.exports = function createModule(dependencies) {
           discordCall(() => rawInteraction[method](...args));
     }
     let duplicateUpdateSkipped = false;
-    const [, sessionId, rawTurn, action, originMessageId] =
+    const [, sessionId, rawTurn, rawAction, originMessageId] =
       interaction.customId.split(":");
+    const action =
+      rawAction === "purifier_select"
+        ? "purifier_select_" +
+          (interaction.values?.length === 1 ? interaction.values[0] : "")
+        : rawAction;
     const detailAction =
       /^(?:view|page)_(stats|items|effects|encounter)_(\d{1,4})$/.exec(action);
     const openingDetails = Boolean(detailAction && !originMessageId);

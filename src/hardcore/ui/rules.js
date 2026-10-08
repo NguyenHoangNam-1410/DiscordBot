@@ -219,7 +219,7 @@ module.exports = function createModule(dependencies) {
         },
         {
           name: `${eventIcon("purifier")} Purifier · giải lời nguyền`,
-          value: `Chỉ xuất hiện khi có trang bị còn lời nguyền; không xuất hiện ở tầng 1. Trong nhóm event đặc biệt đủ điều kiện, Purifier có trọng số **gấp ${core.PURIFIER_EVENT_WEIGHT}** mỗi event thường (trọng số 1); Royal Invitation có trọng số 10 khi đủ điều kiện. Đây không phải tỷ lệ cố định trên mỗi tầng.\nBấm **Giải toàn bộ**: trả **${percent(core.PURIFIER_COST_RATE)} payout hiện tại**, làm tròn lên và tối thiểu 1 xu; gỡ mọi level lời nguyền của món được chỉ định, giữ nguyên UR, buff, level và nội tại.`,
+          value: `Chỉ xuất hiện khi có trang bị còn lời nguyền; không xuất hiện ở tầng 1. Trong nhóm event đặc biệt đủ điều kiện, Purifier có trọng số **gấp ${core.PURIFIER_EVENT_WEIGHT}** mỗi event thường (trọng số 1); Royal Invitation có trọng số 10 khi đủ điều kiện. Đây không phải tỷ lệ cố định trên mỗi tầng.\nChọn món còn nguyền trong menu để xem lời nguyền được gỡ, chỉ số trước → sau và giá. Bấm **Giải nguyền món này**: trả **${percent(core.PURIFIER_COST_RATE)} payout hiện tại**, làm tròn lên và tối thiểu 1 xu; gỡ mọi level lời nguyền của món đã chọn, giữ nguyên UR, buff, level và nội tại. Chỉ giải 1 món mỗi lần gặp; chọn hoặc đổi món không tốn xu và không qua tầng.`,
         },
         {
           name: `${eventIcon("diamond_shop")} Diamond Merchant`,

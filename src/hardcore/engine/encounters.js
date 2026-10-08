@@ -123,6 +123,10 @@ module.exports = function createModule(dependencies) {
     if (["blacksmith", "purifier", "horadric"].includes(kind)) {
       e.targetId = pick(itemPool, rng)?.definition.id;
       e.forgeStat = rng() < 0.5 ? "str" : "vit";
+      if (kind === "purifier") {
+        e.targetId = null;
+        e.purifierPage = 0;
+      }
     }
     if (kind === "adventurer") {
       e.rescueItem = randomItem(rng() < 0.3 ? "rare" : "common", rng);

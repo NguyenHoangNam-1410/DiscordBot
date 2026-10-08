@@ -156,6 +156,13 @@ function choose(s, build = "balanced") {
       .sort((a, b) => b.score - a.score);
     return offers[0]?.score > 0 ? offers[0].action : "event_skip";
   }
+  if (e.kind === "purifier" && v2.payout(s) < v2.purifierCost(s))
+    return "event_skip";
+  if (e.kind === "purifier")
+    return has("event_cleanse")
+      ? "event_cleanse"
+      : options.find((a) => a.action.startsWith("purifier_select_"))?.action ||
+          "event_skip";
   const decisions = {
     healer: "event_heal",
     goblin: "event_catch",

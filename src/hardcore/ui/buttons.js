@@ -1,4 +1,6 @@
 "use strict";
+const purifier = require("../events/purifier");
+const { StringSelectMenuBuilder } = require("discord.js");
 const bosses = require("../bosses/mechanics");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
@@ -114,7 +116,10 @@ module.exports = function createModule(dependencies) {
           ["open", "inspect", "sell", "leave"].indexOf(a.action) -
           ["open", "inspect", "sell", "leave"].indexOf(b.action),
       );
-    const buttons = actions.map((a) =>
+    const buttonActions = actions.filter(
+      (a) => !a.action.startsWith("purifier_select_"),
+    );
+    const buttons = buttonActions.map((a) =>
       button(
         prefix + a.action,
         state.phase === "severance" && a.action !== "sever_none"
@@ -197,6 +202,36 @@ module.exports = function createModule(dependencies) {
         ),
       );
     const result = chunkRows(buttons);
+    if (
+      state.phase === "encounter" &&
+      state.encounter.type === "surprise" &&
+      state.encounter.kind === "purifier" &&
+      purifier.items(state).length
+    ) {
+      const menu = new StringSelectMenuBuilder()
+        .setCustomId(prefix + "purifier_select")
+        .setPlaceholder(
+          "Chọn món cần giải nguyền · " +
+            (purifier.page(state) + 1) +
+            "/" +
+            purifier.pages(state),
+        )
+        .setMinValues(1)
+        .setMaxValues(1)
+        .addOptions(
+          purifier.pageItems(state).map((item) => ({
+            label: (item.name + " · Lv." + item.level).slice(0, 100),
+            value: item.definition.id,
+            description:
+              "Còn " +
+              (item.level - (item.cleansedLevels || 0)) +
+              " cấp nguyền",
+            default: item.definition.id === state.encounter.targetId,
+          })),
+        );
+      result.unshift(new ActionRowBuilder().addComponents(menu));
+    }
+
     result.push(
       new ActionRowBuilder().addComponents(
         viewTabs(state).map((tab) =>

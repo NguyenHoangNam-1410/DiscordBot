@@ -1,4 +1,5 @@
 "use strict";
+const purifier = require("../events/purifier");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -72,6 +73,28 @@ module.exports = function createModule(dependencies) {
       )
     )
       throw new Error("INVALID_ACTION");
+    if (
+      state.encounter.type === "surprise" &&
+      state.encounter.kind === "purifier"
+    ) {
+      if (action.startsWith("purifier_select_")) {
+        state.encounter.targetId = action.slice("purifier_select_".length);
+        state.encounter.purifierPage = Math.floor(
+          purifier
+            .items(state)
+            .findIndex(
+              (item) => item.definition.id === state.encounter.targetId,
+            ) / purifier.PAGE_SIZE,
+        );
+        return null;
+      }
+      if (action.startsWith("purifier_page_")) {
+        state.encounter.purifierPage = Number(
+          action.slice("purifier_page_".length),
+        );
+        return null;
+      }
+    }
     const before = statSnapshot(state);
     state.passiveCounterUsed = 0;
     delete state.passiveImmunityThisTurn;
@@ -106,7 +129,8 @@ module.exports = function createModule(dependencies) {
             : { ene: 10, maxMana: 1 };
       state.prophecy = { kind, floor: 333, awakened: false };
       addSource(state, effects, "prophecy");
-      state.lastLog = "🔺 Đã ghi nhớ ấn bạn chọn: quyết định cơ chế Kabraxis ở tầng 666. Xem Rift để biết phần thưởng thức tỉnh.";
+      state.lastLog =
+        "🔺 Đã ghi nhớ ấn bạn chọn: quyết định cơ chế Kabraxis ở tầng 666. Xem Rift để biết phần thưởng thức tỉnh.";
       completeFloor(state, session, rng, 0);
     } else if (state.encounter.type === "boss_gate") {
       state.encounter = state.encounter.enemy;

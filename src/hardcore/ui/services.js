@@ -1,4 +1,5 @@
 "use strict";
+const purifier = require("../events/purifier");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -98,9 +99,18 @@ module.exports = function createModule(dependencies) {
   }
 
   function purifierText(state, detailed = false) {
-    const target = state.items.find(
-      (item) => item.definition.id === state.encounter.targetId,
-    );
+    const target = purifier.selected(state);
+    if (!target && purifier.items(state).length)
+      return (
+        eventIcon("purifier") +
+        " **Purifier** · Giải nguyền **1 món mỗi lần gặp**.\nChọn món còn nguyền trong menu để xem lời nguyền được gỡ và chỉ số trước → sau.\n**Giá:** " +
+        E.coin +
+        " **" +
+        money(core.purifierCost(state)) +
+        " xu** (" +
+        percent(core.PURIFIER_COST_RATE) +
+        " payout hiện tại).\nChỉ trả phí khi bấm **Giải nguyền món này**."
+      );
     const curseLevels = target
       ? Math.max(0, target.level - (target.cleansedLevels || 0))
       : 0;
@@ -126,7 +136,7 @@ module.exports = function createModule(dependencies) {
         : "";
     const lines = [
       eventIcon("purifier") +
-        " **Purifier** · Giải toàn bộ lời nguyền của **1 trang bị**.",
+        " **Purifier** · Giải nguyền **1 món mỗi lần gặp**.",
       E.backpack +
         " **" +
         target.name +
@@ -177,7 +187,7 @@ module.exports = function createModule(dependencies) {
       );
     } else {
       lines.push(
-        "Xem **Chi tiết** để đọc buff, nội tại và điều kiện giải nguyền.",
+        "Đổi món trong menu để xem trước; bấm **Giải nguyền món này** để xác nhận. Xem **Chi tiết** để đọc buff và nội tại.",
       );
     }
     return lines.join("\n");

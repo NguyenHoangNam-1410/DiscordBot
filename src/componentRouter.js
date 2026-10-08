@@ -237,6 +237,16 @@ const ROUTES = Object.freeze([
   },
   { kind: "button", prefix: "poker:", handle: handlePokerButton },
   { kind: "button", prefix: "hardcore:", handle: handleHardcoreButton },
+  {
+    kind: "select",
+    prefix: "hardcore:",
+    handle: (interaction, logger) =>
+      interaction.isStringSelectMenu() &&
+      interaction.customId.split(":")[3] === "purifier_select"
+        ? handleHardcoreButton(interaction, logger)
+        : false,
+  },
+
   { kind: "button", prefix: "hardcore-setup:", handle: handleHardcoreSetup },
   { kind: "button", prefix: "mines:", handle: handleMinesButton },
   { kind: "button", prefix: "coquay:", handle: handleCoquayButton },

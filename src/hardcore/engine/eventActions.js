@@ -1,4 +1,5 @@
 "use strict";
+const purifier = require("../events/purifier");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -204,7 +205,7 @@ module.exports = function createModule(dependencies) {
       if (receipt) receipt.upgradedFromLevel = previousLevel;
       done(`🔨 ${item.name} Lv.${item.level}.`);
     } else if (k === "purifier") {
-      const target = itemById(e.targetId);
+      const target = purifier.selected(state);
       if (!target) throw new Error("NO_CURSE");
       charge(state, purifierCost(state));
       const purified = {

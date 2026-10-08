@@ -258,7 +258,7 @@ for (const bloodFactor of [null, -0.5, 0.5]) {
       Math.max(1, Math.ceil(core.payout(s) * 0.12)),
     );
     const action = core.actions(s).find((a) => a.action === "event_cleanse");
-    assert.equal(action.label, "Giải toàn bộ · " + cost + " xu");
+    assert.equal(action.label, "Giải nguyền món này");
     assert.equal(action.disabled, before < cost);
     const detail = JSON.stringify(
       view.privatePayload(s, "payout-test", "message", "encounter"),

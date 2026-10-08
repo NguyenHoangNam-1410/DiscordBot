@@ -1,4 +1,5 @@
 "use strict";
+const purifier = require("../events/purifier");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -30,6 +31,8 @@ module.exports = function createModule(dependencies) {
     const e = state.encounter,
       k = e.kind;
     if (k === "royal_invitation") return royal.choices(state);
+    if (k === "purifier")
+      return purifier.choices(state, purifierCost(state), payout(state));
     if (k.endsWith("_shop"))
       return e.offers.map((offer, i) => ({
         action: `buy_${i}`,
@@ -69,13 +72,6 @@ module.exports = function createModule(dependencies) {
             action: "event_smith",
             label: `Rèn · ${serviceCost(state, 0.12)} xu`,
             disabled: payout(state) < 1,
-          },
-        ],
-        purifier: [
-          {
-            action: "event_cleanse",
-            label: `Giải toàn bộ · ${purifierCost(state)} xu`,
-            disabled: payout(state) < purifierCost(state),
           },
         ],
         sacrifice: [
