@@ -1,5 +1,16 @@
 [
   {
+    "id": "d9dd0b87-3510-4aff-9687-dba562769220",
+    "updatedAt": "2026-10-08T07:23:03.786Z",
+    "auditedAt": "2026-10-08T07:23:03.786Z",
+    "title": "Tinh gọn giao diện Tháp Định Mệnh",
+    "changes": [
+      "Bảng chiến đấu chỉ giữ tầng hiện tại, HP/MP, damage và MP của ba hành động, HP/ý định quái cùng kết quả lượt trước.",
+      "Chuyển các giải thích về Skill, RNG, class và luật qua các tab chi tiết; ẩn tiến độ tuần, phần thưởng và mã challenge khi đang chiến đấu.",
+      "Rút gọn ý định Hành quyết, Trọng kích và nút Bảng xếp hạng để giao diện dễ đọc hơn."
+    ]
+  },
+  {
     "id": "c07a6793-315a-41e8-b207-33221f4508d2",
     "updatedAt": "2026-10-08T07:00:35.185Z",
     "auditedAt": "2026-10-08T07:00:35.185Z",

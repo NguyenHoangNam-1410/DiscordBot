@@ -714,12 +714,19 @@ async function main() {
         assert.ok(!board.includes(c.stepCount + " bước"));
         assert.ok(!board.includes("Bước **"));
         assert.ok(!board.includes("Hiệu ứng xuyên tầng"));
+        assert.ok(board.includes("⚔️ Hành động"));
+        assert.ok(board.includes("Xếp hạng"));
+        assert.ok(!board.includes("⚔️ Thử thách sinh tử"));
+        assert.ok(!board.includes("Quy luật:"));
+        assert.ok(!board.includes("Tiến trình tuần"));
+        assert.ok(!board.includes("🏆 Phần thưởng"));
+        assert.ok(!board.includes(c.challengeId));
         // Commitment belongs to the readonly rules panel after the battle UI cleanup.
-        assert.ok(
-          serialize(
-            view.privatePayload(r, s, c, "1234567890123456789", "rules"),
-          ).includes(c.seedCommitment),
+        const rulesBoard = serialize(
+          view.privatePayload(r, s, c, "1234567890123456789", "rules"),
         );
+        assert.ok(rulesBoard.includes(c.seedCommitment));
+        assert.ok(rulesBoard.includes("một lần mỗi tầng"));
         for (const tab of ["stats", "effects", "encounter", "rules"]) {
           const privateBoard = serialize(
             view.privatePayload(r, s, c, "1234567890123456789", tab),
