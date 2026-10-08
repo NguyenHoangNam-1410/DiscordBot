@@ -1,5 +1,15 @@
 [
   {
+    "id": "320f661e-e6a9-404c-8b43-6ddbe3d466f5",
+    "updatedAt": "2026-10-08T01:14:11.177Z",
+    "auditedAt": "2026-10-08T01:14:11.177Z",
+    "title": "Điều chỉnh mốc Gilded Soul",
+    "changes": [
+      "Gilded Soul tăng 10/20/30/40/50% DMG khi xu có thể rút trong run đạt 2/3/4/5/7 lần cược, thay cho 2/5/10/20/40.",
+      "Đồng bộ mô tả và luật; mức tăng vẫn chốt khi vào combat, trận đang diễn ra giữ mức đã chốt."
+    ]
+  },
+  {
     "id": "942d7e12-5cbb-4405-bba4-6166e399824a",
     "updatedAt": "2026-10-07T10:38:15.497Z",
     "auditedAt": "2026-10-07T10:38:15.497Z",
