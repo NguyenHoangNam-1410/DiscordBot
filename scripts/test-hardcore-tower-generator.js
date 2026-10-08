@@ -44,6 +44,7 @@ try {
     b = generator.generate(input);
   assert.equal(JSON.stringify(a.payload), JSON.stringify(b.payload));
   assert.equal(a.payload.stepCount, 81);
+  assert.equal(a.payload.contentVersion, 5);
   assert.equal(a.payload.floors.length, 15);
   assert.deepEqual(
     a.payload.floors.map((f) => f.stepCount),
@@ -59,6 +60,137 @@ try {
     solver.hash(id + "|4|" + a.canonicalSolution.join(",")),
   );
   assert.ok(!("canonicalSolution" in a.payload));
+  assert.ok(
+    a.payload.floors.every((floor) => {
+      const combat = a.payload.transitions.filter(
+        (t) => t.floor === floor.number && t.type === "combat",
+      );
+      return new Set(combat.map((t) => t.expectedAction)).size === 3;
+    }),
+  );
+  assert.ok(
+    a.payload.transitions.filter(
+      (t) => t.type === "combat" && t.expectedAction === "skill" && !t.finisher,
+    ).length >= 10,
+  );
+  assert.ok(
+    a.payload.floors.some(
+      (floor) =>
+        a.payload.transitions.filter(
+          (t) =>
+            t.floor === floor.number &&
+            t.type === "combat" &&
+            t.expectedAction === "skill",
+        ).length >= 2,
+    ),
+  );
+  assert.ok(
+    a.payload.transitions
+      .filter((t) => t.type === "combat")
+      .every(
+        (t) =>
+          !t.spellLocked &&
+          [t.physicalResist, t.magicResist].every(
+            (value) => value >= 0 && value <= 100 && value % 25 === 0,
+          ) &&
+          (t.echoDelay == null || [1, 2].includes(t.echoDelay)),
+      ),
+  );
+  assert.deepEqual(
+    a.payload.floors.slice(12).map((floor) => floor.phaseHps.length),
+    [2, 2, 3],
+  );
+  assert.ok(a.audit.lookaheadDepth >= 3);
+  assert.ok(a.audit.lookaheadBranches >= 10);
+  assert.ok(a.audit.nearMissBranches >= 3);
+  assert.ok(a.audit.echoWindows >= 4);
+  assert.ok(a.audit.partialResistanceWindows >= 15);
+  const skillIndex = a.payload.transitions.findIndex(
+      (t) => t.type === "combat" && !t.finisher && t.expectedAction === "skill",
+    ),
+    skillTransition = a.payload.transitions[skillIndex],
+    reusableState = {
+      ...solver.initial(a.payload),
+      routeStep: skillIndex,
+      floor: skillTransition.floor,
+      floorStep: skillTransition.floorStep,
+      mana: a.payload.character.maxMana,
+      enemyHp: a.payload.floors[skillTransition.floor - 1].hp,
+      skillUsed: true,
+    };
+  assert.ok(solver.options(a.payload, reusableState).includes("skill"));
+  const normalSkill = solver.combatOutcome(
+    a.payload,
+    reusableState,
+    skillTransition,
+    "skill",
+  );
+  assert.equal(normalSkill.enemyHeal, 0);
+  assert.ok(normalSkill.damage > 0);
+  const legacyPayload = { ...a.payload, contentVersion: 3 },
+    legacySkill = solver.combatOutcome(
+      legacyPayload,
+      reusableState,
+      skillTransition,
+      "skill",
+    );
+  assert.equal(legacySkill.enemyHeal, legacySkill.damage);
+  assert.ok(!solver.options(legacyPayload, reusableState).includes("skill"));
+  let mechanicsState = solver.initial(a.payload),
+    sawEchoResolve = false,
+    sawAdaptive = false,
+    sawBreakSpend = false;
+  while (mechanicsState.status === "playing") {
+    const transition = a.payload.transitions[mechanicsState.routeStep],
+      beforeBreak = mechanicsState.breakGauge,
+      action = transition.expectedAction;
+    if (transition.type === "combat") {
+      const outcome = solver.combatOutcome(
+        a.payload,
+        mechanicsState,
+        transition,
+        action,
+      );
+      if (action === "attack") {
+        assert.equal(outcome.adaptiveArmor, "physical");
+        assert.equal(outcome.breakGauge, Math.min(3, beforeBreak + 1));
+        sawAdaptive = true;
+      }
+      if (action === "skill") {
+        assert.equal(outcome.adaptiveArmor, "magic");
+        assert.equal(outcome.breakGauge, 0);
+        if (beforeBreak) sawBreakSpend = true;
+      }
+      if (outcome.echoDamage) sawEchoResolve = true;
+    }
+    mechanicsState = solver.apply(a.payload, mechanicsState, action);
+  }
+  assert.equal(sawAdaptive, true);
+  assert.equal(sawBreakSpend, true);
+  assert.equal(sawEchoResolve, true);
+  const firstPhaseEnd = a.payload.transitions.findIndex(
+      (t) => t.floor === 13 && t.phaseEnd,
+    ),
+    phaseProbe = solver.initial(a.payload);
+  let beforePhase = phaseProbe;
+  while (beforePhase.routeStep < firstPhaseEnd)
+    beforePhase = solver.apply(
+      a.payload,
+      beforePhase,
+      a.payload.transitions[beforePhase.routeStep].expectedAction,
+    );
+  const phaseTransition = a.payload.transitions[firstPhaseEnd],
+    overflowProbe = { ...beforePhase, phaseHp: 1 },
+    phaseOutcome = solver.combatOutcome(
+      a.payload,
+      overflowProbe,
+      phaseTransition,
+      phaseTransition.expectedAction,
+    );
+  assert.equal(phaseOutcome.damage, 1);
+  assert.equal(phaseOutcome.phaseEnded, true);
+  assert.equal(phaseOutcome.bossPhase, 1);
+  assert.equal(phaseOutcome.counter, 0);
   const broken = structuredClone(a.payload);
   broken.transitions[0].manaDelta = 200;
   assert.throws(() => solver.validate(broken));

@@ -1,21 +1,27 @@
 [
   {
-    "id": "a8fdf65d-83a5-473c-b57f-823d02f53808",
-    "updatedAt": "2026-10-08T08:27:11.713Z",
-    "auditedAt": "2026-10-08T08:27:11.713Z",
-    "title": "Làm rõ ký ức của tháp trong Rift",
+    "id": "d08c8ef0-7495-472c-8fbd-4fe564e210f2",
+    "updatedAt": "2026-10-08T08:16:47.020Z",
+    "auditedAt": "2026-10-08T08:16:47.020Z",
+    "title": "Tháp Định Mệnh: puzzle nhiều lớp",
     "changes": [
-      "Thêm định nghĩa Tower Remembers ngay trong mục ký ức ở UI Rift: tháp ghi nhớ lựa chọn để tạo phước lành, thử thách hoặc hậu quả về sau.",
-      "Lời tiên tri tầng 333 và log chọn ấn dùng tiếng Việt rõ nghĩa; Rift hiển thị ấn đã chọn, liên hệ với Kabraxis tầng 666, trạng thái chờ/thức tỉnh và chỉ số nhận thêm khi hạ boss."
+      "Thêm kháng vật lý/phép theo phần trăm và Giáp thích nghi tăng 25% kháng với loại damage vừa nhận.",
+      "Thêm Break 0–3: Tấn công và đỡ Trọng kích tích Break, Skill tiêu Break để tăng damage; Skill vẫn dùng tự do khi đủ MP.",
+      "Bảng chiến đấu hiển thị intent hiện tại và intent kế tiếp; Vọng âm lặp 50% damage sau một hoặc hai lượt.",
+      "Boss tầng 13–14 có hai phase, tầng 15 có ba phase; damage dư không xuyên phase và trạng thái được reset riêng từng tầng.",
+      "Solver loại puzzle thiếu chiều sâu: bắt buộc nhánh sai cần nhìn trước, nhánh gần thắng, đủ cửa sổ Vọng âm và đủ lượt kháng một phần. Luật mới chỉ áp dụng từ rotation kế tiếp."
     ]
   },
   {
-    "id": "b2336083-91cd-40f8-a320-d844f55a8beb",
-    "updatedAt": "2026-10-08T08:00:41.876Z",
-    "auditedAt": "2026-10-08T08:00:41.876Z",
-    "title": "Làm rõ cảnh báo Feedback của boss",
+    "id": "81204195-1b6f-4442-b2dc-6daf9945cdbf",
+    "updatedAt": "2026-10-08T07:47:10.029Z",
+    "auditedAt": "2026-10-08T07:47:10.029Z",
+    "title": "Tháp Định Mệnh: Skill tự do và puzzle khó hơn",
     "changes": [
-      "Master Control System: thay mô tả nối đất bằng Phòng thủ để chặn sát thương phản lại; Chi tiết nói rõ chặn toàn bộ sát thương Feedback."
+      "Từ rotation kế tiếp, Skill có thể dùng nhiều lần khi đủ MP, gây damage bình thường, không cần làm đòn kết liễu và quái không còn hồi lại damage Skill.",
+      "Mỗi lượt combat có trạng thái Kháng phép, Kháng vật lý hoặc Miễn nhiễm sát thương; chuỗi hành động được xáo trộn riêng từng tầng thay cho công thức cố định Thủ rồi Đánh rồi Skill.",
+      "Mỗi tầng bắt buộc kết hợp Tấn công, Skill và Phòng thủ; nhiều tầng cần Skill giữa tầng hoặc dùng Skill nhiều lần, nhưng solver vẫn xác nhận chỉ có một đường hoàn thành.",
+      "Tháp đang hoạt động giữ nguyên snapshot và luật cũ đến hết tuần."
     ]
   },
   {

@@ -356,6 +356,11 @@ async function main() {
     "floorStep",
     "flags",
     "classCharges",
+    "breakGauge",
+    "adaptiveArmor",
+    "delayedEffects",
+    "bossPhase",
+    "phaseHp",
     "paradox",
     "actionHistory",
   ])
@@ -685,7 +690,7 @@ async function main() {
   };
   try {
     let sawCombatBranchContinue = false,
-      sawSkillAbsorb = false;
+      sawReusableSkill = false;
     for (let i = 0; i < 7; i++) {
       now = catalog.ANCHOR + i * catalog.WEEK_MS + 1000;
       c = catalog.ensureWeekly(now, { secret, logger: quiet });
@@ -726,7 +731,14 @@ async function main() {
           view.privatePayload(r, s, c, "1234567890123456789", "rules"),
         );
         assert.ok(rulesBoard.includes(c.seedCommitment));
-        assert.ok(rulesBoard.includes("một lần mỗi tầng"));
+        assert.ok(rulesBoard.includes("Skill dùng tự do"));
+        assert.ok(!rulesBoard.includes("một lần mỗi tầng"));
+        if (t.type === "combat") {
+          assert.ok(board.includes("Giáp:"));
+          assert.ok(board.includes("Break"));
+          assert.ok(board.includes("Intent:"));
+          assert.ok(board.includes("Sau:"));
+        }
         for (const tab of ["stats", "effects", "encounter", "rules"]) {
           const privateBoard = serialize(
             view.privatePayload(r, s, c, "1234567890123456789", tab),
@@ -737,25 +749,28 @@ async function main() {
           .actions(s, c)
           .find((x) => x.action === "skill" && !x.disabled);
         if (
-          !sawSkillAbsorb &&
+          !sawReusableSkill &&
           t.type === "combat" &&
           !t.finisher &&
-          !t.guardIntent &&
+          t.expectedAction === "skill" &&
           skillOption
         ) {
           const branch = structuredClone(s),
             shownDamage = engine.damage(branch, c, "skill");
           engine.act(branch, c, "skill");
           assert.equal(branch.lastOutcome.actionDamage, shownDamage);
-          assert.equal(branch.lastOutcome.enemyHeal, shownDamage);
-          assert.equal(branch.enemyHp, s.enemyHp);
-          if (branch.status === "playing")
+          assert.equal(branch.lastOutcome.enemyHeal, 0);
+          assert.equal(branch.enemyHp, s.enemyHp - shownDamage);
+          assert.equal(branch.skillUsed, false);
+          if (branch.status === "playing") {
+            branch.mana = c.character.maxMana;
             assert.ok(
               engine
                 .actions(branch, c)
-                .find((x) => x.action === "skill" && x.disabled),
+                .find((x) => x.action === "skill" && !x.disabled),
             );
-          sawSkillAbsorb = true;
+          }
+          sawReusableSkill = true;
         }
         for (const option of engine
           .actions(s, c)
@@ -801,6 +816,11 @@ async function main() {
           assert.equal(s.skillUsed, false);
           assert.deepEqual(s.flags, []);
           assert.deepEqual(s.classCharges, { ward: 0 });
+          assert.equal(s.breakGauge, 0);
+          assert.equal(s.adaptiveArmor, null);
+          assert.deepEqual(s.delayedEffects, []);
+          assert.equal(s.bossPhase, 0);
+          assert.equal(s.phaseHp, c.floors[s.floor - 1].phaseHps[0]);
         } else {
           assert.equal(s.hp - before.hp, t.hpDelta);
           assert.equal(s.mana - before.mana, t.manaDelta);
@@ -825,7 +845,7 @@ async function main() {
       assert.equal(state(r).status, "completed");
     }
     assert.equal(sawCombatBranchContinue, true);
-    assert.equal(sawSkillAbsorb, true);
+    assert.equal(sawReusableSkill, true);
   } finally {
     Math.random = random;
   }
