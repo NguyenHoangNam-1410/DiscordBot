@@ -41,7 +41,7 @@ module.exports = function createModule(dependencies) {
     if (k === "merchant")
       return e.offers.map((offer, i) => ({
         action: `buy_${i}`,
-        label: `${{ potion: "Bình", heal: "Hồi đầy", luck: "Luck +1", item: "Item SR", ticket: "Vé thoát", chest: "Rương · mở ngay" }[offer.key]} · ${offer.price} xu`,
+        label: `${{ potion: "Bình", heal: "Hồi đầy HP/MP", luck: "Luck +1", item: "Item SR", ticket: "Vé thoát", chest: "Rương · mở ngay" }[offer.key]} · ${offer.price} xu`,
         disabled: payout(state) < offer.price,
       }));
     if (k === "duelist") {
@@ -57,7 +57,7 @@ module.exports = function createModule(dependencies) {
     }
     return (
       {
-        healer: [{ action: "event_heal", label: "Hồi máu +1 bình" }],
+        healer: [{ action: "event_heal", label: "Hồi HP/MP +1 bình" }],
         goblin: [
           {
             action: "event_catch",
@@ -307,7 +307,7 @@ module.exports = function createModule(dependencies) {
       ];
     if (e.type === "echo")
       return [
-        { action: "echo_pray", label: "Cầu nguyện · hồi 15% HP" },
+        { action: "echo_pray", label: "Cầu nguyện · hồi 15% HP/MP" },
         {
           action: "echo_rob",
           label: "Cướp · 50% oán niệm",

@@ -1,5 +1,16 @@
 [
   {
+    "id": "a47f9ca7-c452-4765-be78-9d3ec9a2c933",
+    "updatedAt": "2026-10-08T04:32:25.394Z",
+    "auditedAt": "2026-10-08T04:32:25.394Z",
+    "title": "Event hồi phục cả HP và MP",
+    "changes": [
+      "Các event hồi HP trong Sinh tồn nay hồi thêm MP theo cùng tỷ lệ Max MP, làm tròn lên và không vượt giới hạn; HP đã đầy vẫn hồi MP. Healer hồi 30% MP, Grave Echo hồi 15%; các nhánh hồi đầy cũng hồi đầy MP.",
+      "Áp dụng cho Healing Shrine, Blood Fountain, cửa sáng, Wrong Portal tốt, dịch vụ hồi phục của Rift Merchant, phần thưởng hồi phục Tower Remembers và Class Shrine của Druid (5% MP mỗi tầng hiệu lực).",
+      "Checkpoint vẫn chỉ hồi HP. Cập nhật nút, Chi tiết, luật và log HP/MP trước → sau; lời nguyền giảm hồi HP không giảm lượng MP hồi."
+    ]
+  },
+  {
     "id": "aaac3efc-3196-4aa1-afc5-e680c6b40dde",
     "updatedAt": "2026-10-08T03:08:00.089Z",
     "auditedAt": "2026-10-08T03:08:00.089Z",

@@ -25,6 +25,7 @@ module.exports = function createModule(dependencies) {
   const logPayoutChange = (...args) => dependencies.logPayoutChange(...args);
   const penalty = (...args) => dependencies.penalty(...args);
   const heal = (...args) => dependencies.heal(...args);
+  const healEvent = (...args) => dependencies.healEvent(...args);
   const receiveItem = (...args) => dependencies.receiveItem(...args);
   const receiveSnapshot = (...args) => dependencies.receiveSnapshot(...args);
   const completeFloor = (...args) => dependencies.completeFloor(...args);
@@ -153,15 +154,12 @@ module.exports = function createModule(dependencies) {
           target.name +
           "; giữ UR, level và nội tại.";
       } else {
-        const restored = heal(state, state.maxHp * 0.2);
+        const restored = healEvent(state, state.maxHp * 0.2);
         state.lastLog +=
           "\n" +
           memoryIcon("divine") +
-          " Không còn nguyền: hồi " +
-          restored +
-          " " +
-          E.hp +
-          " HP cho bạn.";
+          " Không còn nguyền: hồi phục HP/MP.\n" +
+          restored.log;
       }
     } else if (reward.coins > 0 || reward.family === "wealth") {
       const coins =
@@ -195,17 +193,14 @@ module.exports = function createModule(dependencies) {
     };
     if (key === "legacy") {
       if (debt.good && debt.action !== "event_rob") {
-        const restored = heal(state, state.maxHp * debt.healRate);
+        const restored = healEvent(state, state.maxHp * debt.healRate);
         state.bonus += Math.floor(state.stake * debt.bonusRate);
         done(
           memoryIcon("legacy") +
-            " Ký ức cũ: hồi " +
-            restored +
-            " " +
-            E.hp +
-            " HP; bonus +" +
+            " Ký ức cũ: hồi phục HP/MP; bonus +" +
             Math.floor(state.stake * debt.bonusRate).toLocaleString("vi-VN") +
-            " xu.",
+            " xu.\n" +
+            restored.log,
         );
       } else if (debt.kind === "tax") {
         penalty(state, 0.1);
@@ -225,22 +220,19 @@ module.exports = function createModule(dependencies) {
         );
       } else startFight();
     } else if (key === "blood") {
-      const restored = heal(state, state.maxHp * 0.2);
+      const restored = healEvent(state, state.maxHp * 0.2);
       const previous = state.potions;
       state.potions = Math.min(state.maxPotions, state.potions + 1);
       done(
         memoryIcon("blood") +
-          " Phúc lành hiến tế: hồi " +
-          restored +
-          " " +
-          E.hp +
-          " HP cho bạn; " +
+          " Phúc lành hiến tế: hồi phục HP/MP; " +
           E.potion +
           " bình " +
           previous +
           " → " +
           state.potions +
-          ".",
+          ".\n" +
+          restored.log,
       );
     } else if (action === "memory_decline") {
       done(

@@ -76,7 +76,7 @@ module.exports = function createModule(dependencies) {
           : "Chạm để nhận một hiệu ứng; 6 loại có tỷ lệ bằng nhau, mỗi loại 1/6 ≈ 16,7%.",
         [
           option("Chạm Shrine", [
-            [null, `**Healing:** hồi đầy ${E.hp} HP.`],
+            [null, `**Healing:** hồi đầy ${E.hp} HP/${E.mana} MP.`],
             [
               null,
               `**Armor:** +5 vào một thuộc tính: ${stats.ATTRIBUTES.map((key) => `${E[key]} ${key.toUpperCase()}`).join(" / ")} (mỗi chỉ số 25%).`,
@@ -135,7 +135,7 @@ module.exports = function createModule(dependencies) {
         "Mộ mất quyền nhận sau 30 phút không thao tác; đồ chỉ được tiết lộ khi nhận.",
         [
           `Class **${e.echo.profile.classKey}** · tử trận tầng ${e.echo.floor} · ${e.echo.kills} mạng.`,
-          `**Cầu nguyện:** hồi 15% Max ${E.hp} HP, giữ mộ.`,
+          `**Cầu nguyện:** hồi 15% Max ${E.hp} HP và 15% Max ${E.mana} MP (làm tròn lên), giữ mộ.`,
           option("Cướp mộ", [
             ["50%", "Nhận một món đồ, đi tiếp an toàn."],
             ["50%", "Nhận một món đồ; xem **Rift** để đọc Oán niệm."],
@@ -155,7 +155,7 @@ module.exports = function createModule(dependencies) {
             option("Vào portal · kết quả tốt", [
               [
                 percent((e.goodChance ?? 0.5) / 3),
-                `+10 ${E.hp} Max HP, hồi đầy ${E.hp} HP, +1 ${E.potion} bình máu.`,
+                `+10 ${E.hp} Max HP, hồi đầy ${E.hp} HP/${E.mana} MP, +1 ${E.potion} bình máu.`,
               ],
               [percent((e.goodChance ?? 0.5) / 3), "Bonus +50% cược."],
               [
@@ -265,10 +265,13 @@ module.exports = function createModule(dependencies) {
       case "fountain":
         return show(e.name, "Uống để hồi phục hoặc gặp Blood Mimic.", [
           option("Uống", [
-            [percent(e.healThreshold ?? 0.6), `Hồi đầy ${E.hp} HP.`],
+            [
+              percent(e.healThreshold ?? 0.6),
+              `Hồi đầy ${E.hp} HP/${E.mana} MP.`,
+            ],
             [
               percent((e.goodThreshold ?? 0.85) - (e.healThreshold ?? 0.6)),
-              `+15 ${E.hp} Max HP và hồi 15 ${E.hp} HP.`,
+              `+15 ${E.hp} Max HP; hồi 15 ${E.hp} HP và ${E.mana} MP theo tỷ lệ 15/Max HP mới (làm tròn lên).`,
             ],
             [
               percent(1 - (e.goodThreshold ?? 0.85)),
@@ -290,7 +293,7 @@ module.exports = function createModule(dependencies) {
             option("Cửa sáng", [
               [
                 percent(e.doorChances?.light ?? 0.7),
-                `Hồi đầy ${E.hp} HP, +1 ${E.potion} bình máu (tối đa ${s.maxPotions}).`,
+                `Hồi đầy ${E.hp} HP/${E.mana} MP, +1 ${E.potion} bình máu (tối đa ${s.maxPotions}).`,
               ],
               [
                 percent(1 - (e.doorChances?.light ?? 0.7)),

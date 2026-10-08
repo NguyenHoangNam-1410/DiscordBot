@@ -101,7 +101,7 @@ module.exports = function createModule(dependencies) {
     assassin: "Chắc chắn né một phản công.",
     sorceress: "Một skill miễn phí.",
     get druid() {
-      return `Hồi ${E.hp} **HP** cho bạn bằng **5% Max HP** mỗi tầng trong ba tầng kế tiếp, không vượt Max HP.`;
+      return `Hồi ${E.hp} **HP** cho bạn bằng **5% Max HP**, đồng thời hồi ${E.mana} **5% Max MP** (làm tròn lên) mỗi tầng trong ba tầng kế tiếp; không vượt giới hạn HP/MP.`;
     },
     necromancer: "Chặn một đòn phản công.",
     get paladin() {

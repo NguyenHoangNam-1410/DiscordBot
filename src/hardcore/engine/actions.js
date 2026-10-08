@@ -23,7 +23,7 @@ module.exports = function createModule(dependencies) {
   const taxCost = (...args) => dependencies.taxCost(...args);
   const payoutSnapshot = (...args) => dependencies.payoutSnapshot(...args);
   const penalty = (...args) => dependencies.penalty(...args);
-  const heal = (...args) => dependencies.heal(...args);
+  const healEvent = (...args) => dependencies.healEvent(...args);
   const hurt = (...args) => dependencies.hurt(...args);
   const receiveItem = (...args) => dependencies.receiveItem(...args);
   const receiveSnapshot = (...args) => dependencies.receiveSnapshot(...args);
@@ -268,7 +268,8 @@ module.exports = function createModule(dependencies) {
       } else if (e.type === "shrine") {
         upgradeTreasureShrine(state);
         if (action === "touch") {
-          if (e.kind === "healing") heal(state, state.maxHp);
+          const recovery =
+            e.kind === "healing" ? healEvent(state, state.maxHp) : null;
           if (e.kind === "armor") addSource(state, { [e.armorStat]: 5 });
           if (e.kind === "treasure") receiveItem(state, e.item);
           if (e.kind === "experience")
@@ -284,14 +285,16 @@ module.exports = function createModule(dependencies) {
             );
           }
           const outcomes = {
-            healing: "Healing: hồi phục HP",
+            healing: "Healing: hồi phục HP/MP",
             armor: `Armor: tăng ${E[e.armorStat]} ${e.armorStat?.toUpperCase()}`,
             treasure: "Treasure: đã nhận vật phẩm",
             experience: `Experience: bonus +25% cược (${Math.floor(state.stake * 0.25).toLocaleString("vi-VN")} xu), cộng vào thưởng của run`,
             corrupted: `Corrupted: tăng ${E[e.powerStat || mainStat(state)]} ${(e.powerStat || mainStat(state)).toUpperCase()}, giảm ${E.vit} VIT`,
             fake: `Fake: bẫy gây mất ${E.hp} HP, luôn chừa ít nhất **1 HP**`,
           };
-          state.lastLog = `${E.shrine} Shrine ${outcomes[e.kind]}.`;
+          state.lastLog =
+            `${E.shrine} Shrine ${outcomes[e.kind]}.` +
+            (recovery ? "\n" + recovery.log : "");
           if (state.pendingEventResult)
             state.pendingEventResult.name = `Shrine ${e.kind[0].toUpperCase()}${e.kind.slice(1)}`;
         } else state.lastLog = `Bỏ qua ${E.shrine} Shrine.`;
@@ -329,16 +332,19 @@ module.exports = function createModule(dependencies) {
           }
           completeFloor(state, session, rng, 0);
         } else if (e.good) {
+          let recovery;
           if (e.effect === "healing") {
             addSource(state, { maxHp: 10 });
-            heal(state, state.maxHp);
+            recovery = healEvent(state, state.maxHp);
             state.potions = Math.min(state.maxPotions, state.potions + 1);
           }
           if (e.effect === "treasure")
             state.bonus += Math.floor(state.stake * 0.5);
           if (e.effect === "blessing")
             addSource(state, { str: 6, ene: 6, luck: 1 });
-          state.lastLog = `Wrong Portal: ${{ healing: "nhận hồi phục và tiếp tế", treasure: "bonus +50% cược", blessing: "nhận phúc tăng thuộc tính" }[e.effect]}.`;
+          state.lastLog =
+            `Wrong Portal: ${{ healing: "hồi phục HP/MP và tiếp tế", treasure: "bonus +50% cược", blessing: "nhận phúc tăng thuộc tính" }[e.effect]}.` +
+            (recovery ? "\n" + recovery.log : "");
           completeFloor(state, session, rng, 0);
         } else {
           if (e.badEffect === "blood")
@@ -402,9 +408,13 @@ module.exports = function createModule(dependencies) {
           state.lastLog = "Mộ đã hết thời gian claim.";
           completeFloor(state, session, rng, 0);
         } else if (action === "echo_pray" || action === "echo_skip") {
-          if (action === "echo_pray") heal(state, state.maxHp * 0.15);
+          const recovery =
+            action === "echo_pray"
+              ? healEvent(state, state.maxHp * 0.15)
+              : null;
           echoes.release(session, e.echo.id);
-          state.lastLog = "Để mộ yên nghỉ.";
+          state.lastLog =
+            "Để mộ yên nghỉ." + (recovery ? "\n" + recovery.log : "");
           completeFloor(state, session, rng, 0);
         } else if (action === "echo_challenge") {
           state.encounter = e.challenger;
