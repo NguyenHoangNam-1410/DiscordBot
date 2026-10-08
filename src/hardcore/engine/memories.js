@@ -3,6 +3,7 @@
 module.exports = function createModule(dependencies) {
   const {
     covenant,
+    bosses,
     gilded,
     royal,
     monsterLoot,
@@ -16,6 +17,7 @@ module.exports = function createModule(dependencies) {
     recompute,
     randomItem,
   } = dependencies;
+  const addSource = (...args) => dependencies.addSource(...args);
   const effectStatKeys = (...args) => dependencies.effectStatKeys(...args);
   const markDirect = (...args) => dependencies.markDirect(...args);
   const payoutSnapshot = (...args) => dependencies.payoutSnapshot(...args);
@@ -47,6 +49,7 @@ module.exports = function createModule(dependencies) {
 
   function defeatEnemy(state, session, rng, e) {
     if (e.hp > 0 || state.hp <= 0 || e.defeatSettled) return;
+    if (bosses.advancePhase(state, e)) return;
     e.defeatSettled = true;
     monsterLoot.prepare(state, e);
     noteKill(state, e);
@@ -85,6 +88,25 @@ module.exports = function createModule(dependencies) {
           memories.title(reward.family),
         );
     }
+    if (bosses.on(e) && e.boss.id === "kabraxis" && !e.boss.rewardClaimed) {
+      e.boss.rewardClaimed = true;
+      receiveItem(state, e.boss.rewardItem);
+      state.bonus += Math.floor(state.stake * 0.666);
+      const kind = e.boss.seal;
+      const effects =
+        kind === "war"
+          ? { [dependencies.mainStat(state)]: 8 }
+          : kind === "protection"
+            ? { vit: 8, resistance: 3 }
+            : { ene: 8, maxMana: 1 };
+      addSource(state, effects, "prophecyAwakening");
+      state.prophecy ||= { kind, floor: 333, legacy: true };
+      state.prophecy.awakened = true;
+      state.lastLog +=
+        "\n🔺 Ấn " +
+        kind +
+        " thức tỉnh; nhận trang bị đã khóa và bonus 66,6% cược.";
+    }
     const dropRarity = monsterLoot.roll(state, e, rng);
     if (dropRarity) {
       const dropped = randomItem(dropRarity, rng);
@@ -92,12 +114,14 @@ module.exports = function createModule(dependencies) {
       state.lastLog += `\n${E.backpack} Nhặt được ${dropped.category === "consumable" ? "vật phẩm" : "trang bị"} từ ${e.name}.`;
     }
     if (monsterLoot.hasRegionBossChest(state, e)) {
-      const rarity = rng() < 0.7 ? "legendary" : "cursed";
+      const chestItem =
+        e.boss?.chestItem ||
+        randomItem(rng() < 0.7 ? "legendary" : "cursed", rng);
       state.pendingBossChest = {
         type: "boss_chest",
         name: "Rương boss",
         bossFloor: state.floor,
-        item: randomItem(rarity, rng),
+        item: chestItem,
       };
       state.lastLog += `\n${eventIcon("boss_chest")} Nhận rương boss: mở hoặc bán để tiếp tục.`;
     }

@@ -1,5 +1,17 @@
 [
   {
+    "id": "aaac3efc-3196-4aa1-afc5-e680c6b40dde",
+    "updatedAt": "2026-10-08T03:08:00.089Z",
+    "auditedAt": "2026-10-08T03:08:00.089Z",
+    "title": "Sinh tồn: 21 boss và Threefold Prophecy",
+    "changes": [
+      "Thay vòng 5 boss bằng 21 boss có cơ chế riêng tại các mốc 50 tầng, thêm Kabraxis tầng 666; hiển thị stack, cảnh báo và dự báo sát thương, xem toàn bộ cơ chế trong Chi tiết.",
+      "Tầng 333 chọn ấn War, Protection hoặc Arcane một lần. Tầng 666 cho rút thưởng trước cửa; khi vào trận không thể bỏ qua/rút. Hạ Kabraxis nhận trang bị SSR 66,6% hoặc UR có nguyền 33,4%, bonus 66,6% cược và thức tỉnh ấn.",
+      "Deimoss tầng 999 có ba thanh HP riêng 30/30/40%; sát thương dư không xuyên phase, chuyển phase không phản công, chỉ nhận thưởng khi phá thanh thứ ba.",
+      "Khóa phần thưởng từ lúc boss xuất hiện và giữ trạng thái khi tiếp tục; trận cũ đang đánh giữ cơ chế cũ, các boss tiếp theo dùng bộ mới. Tower không đổi."
+    ]
+  },
+  {
     "id": "320f661e-e6a9-404c-8b43-6ddbe3d466f5",
     "updatedAt": "2026-10-08T01:14:11.177Z",
     "auditedAt": "2026-10-08T01:14:11.177Z",

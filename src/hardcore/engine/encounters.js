@@ -3,6 +3,8 @@
 module.exports = function createModule(dependencies) {
   const {
     royal,
+    bosses,
+    ITEMS,
     stats,
     itemPassives,
     godRngesus,
@@ -269,6 +271,11 @@ module.exports = function createModule(dependencies) {
   }
 
   function generateEncounter(state, session, rng) {
+    if (
+      bosses.enabled(state) &&
+      (bosses.at(state.floor) || state.floor === 333)
+    )
+      return generateRawEncounter(state, session, rng);
     const god = godRngesus.tryEncounter(state, session, rng);
     if (god) return god;
     return itemPassives.prepareForecast(
@@ -279,6 +286,28 @@ module.exports = function createModule(dependencies) {
   }
 
   function generateRawEncounter(state, session, rng) {
+    if (bosses.enabled(state) && state.floor === 333 && !state.prophecy)
+      return { type: "prophecy", name: "Threefold Prophecy" };
+    if (bosses.enabled(state) && bosses.at(state.floor)) {
+      const enemy = world.makeEnemy(
+        state,
+        state.floor === 999 ? "final_boss" : "boss",
+        null,
+        rng,
+      );
+      if (bosses.CHEST_FLOORS.includes(state.floor))
+        enemy.boss.chestItem = randomItem(
+          rng() < 0.7 ? "legendary" : "cursed",
+          rng,
+        );
+      if (state.floor === 666) {
+        enemy.boss.rewardItem = structuredClone(
+          pick(ITEMS[rng() < 0.666 ? "legendary" : "cursed"], rng),
+        );
+        return { type: "boss_gate", name: enemy.name, enemy };
+      }
+      return enemy;
+    }
     if (state.floor === 999)
       return world.makeEnemy(state, "final_boss", null, rng);
     if (state.floor % 50 === 0)

@@ -203,6 +203,7 @@ module.exports = function createModule(dependencies) {
 
   function initialize(classKey, stake, session, rng) {
     const state = stats.createState(classKey, stake);
+    state.bossRosterVersion = 1;
     state.encounter = generateEncounter(state, session, rng);
     prepareParadoxCombat(state, rng);
     return state;

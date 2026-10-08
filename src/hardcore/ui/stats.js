@@ -1,4 +1,5 @@
 "use strict";
+const bosses = require("../bosses/mechanics");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -40,7 +41,7 @@ module.exports = function createModule(dependencies) {
     const lines = [
       `${healthBar(s.hp, s.maxHp)}${d("hp")}${d("maxHp", " MAX")}`,
       `${E.str} **STR** **${s.str}**${d("str")}${STAT_SEPARATOR}${E.dex} **DEX** **${s.dex}**${d("dex")}${STAT_SEPARATOR}${E.vit} **VIT** **${s.vit}**${d("vit")}${STAT_SEPARATOR}${E.ene} **ENE** **${s.ene}**${d("ene")}`,
-      `${E.mana} **MP** **${s.mana}/${s.maxMana}**${d("mana")}${d("maxMana", " MAX")}${options.includeSupplies === false ? "" : `${STAT_SEPARATOR}${E.potion} **Bình** ${s.potions}${d("potions")}${STAT_SEPARATOR}${E.ticket} **Vé thoát** ${s.escapeTokens}${d("escapeTokens")}`}`,
+      `${E.mana} **MP** **${s.mana}/${bosses.effectiveMaxMana(s)}**${d("mana")}${d("maxMana", " MAX")}${options.includeSupplies === false ? "" : `${STAT_SEPARATOR}${E.potion} **Bình** ${s.potions}${d("potions")}${STAT_SEPARATOR}${E.ticket} **Vé thoát** ${s.escapeTokens}${d("escapeTokens")}`}`,
       `${E.attack} **Vật lý** **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")}${STAT_SEPARATOR}${E.magic} **Phép** **${s.spellMin}–${s.spellMax}**${d("spellMin")}`,
       `${E.defense} **DEF** **${defense}**${inverse ? " (Paradox)" : d("defense")}${STAT_SEPARATOR}${E.res} **RES** **${resistance}%**${options.effective && resistance !== s.resistance ? ` (gốc ${s.resistance}%)` : d("resistance")}${STAT_SEPARATOR}${E.luck} **LUCK** **${s.luck}**${d("luck")}`,
     ];
@@ -58,21 +59,23 @@ module.exports = function createModule(dependencies) {
         ? (s.damageMin + s.damageMax) / 2
         : s.defense;
     const skill = core.skillDamagePreview(s);
-    const detail = {
-      amazon: `Hai phát vật lý, trúng/Crit riêng.${skill.extraShot ? " 20% thêm phát thứ ba." : ""}`,
-      barbarian: "Vật lý, có thể trượt/Crit.",
-      assassin: "Vật lý, có thể trượt/Crit; né phản công.",
-      sorceress: "Phép luôn trúng, không Crit.",
-      druid: `Vật lý, có thể trượt/Crit; hồi tối đa ${E.hp} **${money(core.healingAmount(s, s.maxHp * 0.12))} HP** cho bạn (**12% Max HP**${s.healingReduction ? " trước giảm hồi phục" : ""}).`,
-      necromancer: royal.freeMagic(s)
-        ? "Phép luôn trúng, không Crit; " +
-          (s.encounter?.astralGuardLastAction
-            ? "lượt này không chặn phản công."
-            : "lượt này chặn phản công.")
-        : "Phép luôn trúng, không Crit; chặn phản công.",
-      paladin: "Vật lý, có thể trượt/Crit; tự Phòng thủ.",
-    }[s.classKey];
-    return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${s.maxMana}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé thoát** **${s.escapeTokens}**\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${core.effectiveResistance(s)}%**${core.effectiveResistance(s) !== s.resistance ? ` (gốc ${s.resistance}%)` : ""}\n${SKILL_ICONS[s.classKey]} **${stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""}): ${skill.low}–${skill.high} DMG**\n${detail}\n`;
+    const detail = bosses.brainControl(s)
+      ? "DMG chuẩn 20% Max HP boss; không Crit, không mất MP."
+      : {
+          amazon: `Hai phát vật lý, trúng/Crit riêng.${skill.extraShot ? " 20% thêm phát thứ ba." : ""}`,
+          barbarian: "Vật lý, có thể trượt/Crit.",
+          assassin: "Vật lý, có thể trượt/Crit; né phản công.",
+          sorceress: "Phép luôn trúng, không Crit.",
+          druid: `Vật lý, có thể trượt/Crit; hồi tối đa ${E.hp} **${money(core.healingAmount(s, s.maxHp * 0.12))} HP** cho bạn (**12% Max HP**${s.healingReduction ? " trước giảm hồi phục" : ""}).`,
+          necromancer: royal.freeMagic(s)
+            ? "Phép luôn trúng, không Crit; " +
+              (s.encounter?.astralGuardLastAction
+                ? "lượt này không chặn phản công."
+                : "lượt này chặn phản công.")
+            : "Phép luôn trúng, không Crit; chặn phản công.",
+          paladin: "Vật lý, có thể trượt/Crit; tự Phòng thủ.",
+        }[s.classKey];
+    return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${bosses.effectiveMaxMana(s)}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé thoát** **${s.escapeTokens}**\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${core.effectiveResistance(s)}%**${core.effectiveResistance(s) !== s.resistance ? ` (gốc ${s.resistance}%)` : ""}\n${bosses.brainControl(s) ? "🧠" : SKILL_ICONS[s.classKey]} **${bosses.brainControl(s) ? "Brain Control" : stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""}): ${skill.low}–${skill.high} DMG**\n${detail}\n`;
   }
 
   function checkpointPreview(s, key) {

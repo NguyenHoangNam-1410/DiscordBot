@@ -175,14 +175,18 @@ function recordBoss(s, e) {
     e.hp > 0 ||
     s.hp <= 0 ||
     e.royalBossRecorded ||
-    !world.BOSSES.some((b) => b.name === e.name && b.mechanic === e.mechanic) ||
+    !(
+      e.boss?.version === 1 ||
+      world.BOSSES.some((b) => b.name === e.name && b.mechanic === e.mechanic)
+    ) ||
     e.echoId ||
     e.memoryDebt ||
     e.memoryFamily ||
     e.covenantTrial ||
     e.gildedTrial ||
     !(
-      (s.floor % 50 === 0 && e.rank === "boss") ||
+      ((s.floor % 50 === 0 || (s.floor === 666 && e.boss?.id === "kabraxis")) &&
+        e.rank === "boss") ||
       (s.floor === 999 && e.rank === "final_boss" && e.mechanic === "deimoss")
     )
   )

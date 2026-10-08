@@ -1,4 +1,5 @@
 "use strict";
+const bosses = require("../bosses/mechanics");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -152,7 +153,9 @@ module.exports = function createModule(dependencies) {
                 : a.action.startsWith("boss_")
                   ? eventIcon("boss_chest")
                   : a.action === "skill"
-                    ? SKILL_ICONS[state.classKey]
+                    ? bosses.brainControl(state)
+                      ? "🧠"
+                      : SKILL_ICONS[state.classKey]
                     : a.action.startsWith("forge_")
                       ? E[
                           a.action === "forge_main"
@@ -177,7 +180,11 @@ module.exports = function createModule(dependencies) {
                           : null,
       ),
     );
-    if (state.encounter.type !== "rngesus" && state.phase !== "boss_chest")
+    if (
+      state.encounter.type !== "rngesus" &&
+      state.phase !== "boss_chest" &&
+      !bosses.retreatLocked(state)
+    )
       buttons.push(
         button(
           prefix + "retreat",

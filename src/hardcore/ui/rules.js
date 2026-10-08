@@ -56,7 +56,7 @@ module.exports = function createModule(dependencies) {
         {
           name: `${eventIcon("boss")} Cơ chế boss`,
           value:
-            "- **The Butcher:** mỗi lần ra đòn tăng 8% DMG, tối đa 5 stack.\n- **Ascendant Riftwalker:** miễn sát thương ở lượt đầu của mỗi chu kỳ 3 lượt giao tranh.\n- **Assur:** EVA và Crit cao.\n- **Lucion:** hồi HP bằng 35% sát thương thực sự gây ra.\n- **Deimoss:** Abyssal Spires giảm 25% sát thương nhận; tầng 999 là phiên bản boss cuối.\nNút **Chi tiết** cho biết cơ chế và trạng thái của boss đang gặp.",
+            "- Sinh tồn có **21 boss riêng**: mỗi 50 tầng, Kabraxis 666 và Deimoss 999. Boss ưu tiên trước RNGesus, ký ức và event thường.\n- Tầng **333** chọn một ấn War/Protection/Arcane, lưu một lần; tầng **666** có cửa rút thưởng trước trận. Vào Kabraxis thì không rút/bỏ qua. Hạ nhận SSR 66,6% / UR có nguyền 33,4%, bonus 66,6% cược và thức tỉnh ấn; không thêm rương/drop LUCK.\n- **Deimoss:** ba thanh HP độc lập 30/30/40%, không xuyên damage dư, không phản công khi chuyển phase; chỉ trao thưởng sau Phase 3.\n- Bảng boss hiển thị cơ chế, stack, cảnh báo và dự báo damage. **Chi tiết** giải thích cách xử lý. Trận đã lưu giữ nguyên cơ chế; boss xuất hiện sau cập nhật dùng roster mới. Tower giữ luật riêng.",
         },
         {
           name: `${E.checkpoint} Checkpoint và ${E.rift} Rift`,

@@ -1,5 +1,6 @@
 "use strict";
 const { clamp } = require("./stats");
+const roster = require("../bosses/mechanics");
 const REGIONS = [
   [
     1,
@@ -135,11 +136,19 @@ function makeEnemy(state, rank = "normal", name = null, rng = Math.random) {
   const scaleDmg =
     1 + Math.min(floor, 100) * 0.04 + Math.max(0, floor - 100) * 0.038;
   const late = clamp((floor - 400) / 599, 0, 1);
-  const boss = ["boss", "final_boss"].includes(rank)
-    ? BOSSES[
-        rank === "final_boss" ? 4 : Math.max(0, Math.floor(floor / 50) - 1) % 5
-      ]
-    : null;
+  const scheduled =
+    roster.enabled(state) && !name && ["boss", "final_boss"].includes(rank)
+      ? roster.at(floor)
+      : null;
+  const boss = scheduled
+    ? { ...scheduled, mechanic: scheduled.id }
+    : ["boss", "final_boss"].includes(rank)
+      ? BOSSES[
+          rank === "final_boss"
+            ? 4
+            : Math.max(0, Math.floor(floor / 50) - 1) % 5
+        ]
+      : null;
   const factors = {
     normal: [1, 1],
     champion: [1.4, 1.15],
@@ -149,7 +158,9 @@ function makeEnemy(state, rank = "normal", name = null, rng = Math.random) {
     boss: [4, 1.6],
     final_boss: [7.2, 2],
   };
-  const [hpFactor, damageFactor] = factors[rank] || factors.normal;
+  const [hpFactor, damageFactor] = scheduled
+    ? roster.factors(floor)
+    : factors[rank] || factors.normal;
   const hp = Math.round(
     28 *
       scaleHp *
@@ -169,7 +180,7 @@ function makeEnemy(state, rank = "normal", name = null, rng = Math.random) {
   );
   const damageType = boss?.damageType || "mixed";
   const names = regionForFloor(floor).enemies;
-  return normalizeMimicEnemy({
+  const enemy = normalizeMimicEnemy({
     type: "combat",
     rank,
     name: name || boss?.name || names[Math.floor(rng() * names.length)],
@@ -200,6 +211,7 @@ function makeEnemy(state, rank = "normal", name = null, rng = Math.random) {
     drainCharges: Math.min(3, Math.ceil((mods.soul_drain || 0) / 4)),
     rewardMultiplier: rank === "normal" ? 1 : rank === "elite" ? 2 : 3,
   });
+  return scheduled ? roster.seed(state, enemy, scheduled, rng) : enemy;
 }
 function hitChance(accuracy, evasion, maxDodge = 0.45) {
   return (

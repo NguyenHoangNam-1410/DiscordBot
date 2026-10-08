@@ -1,3 +1,4 @@
+const bosses = require("../bosses/mechanics");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -135,7 +136,8 @@ module.exports = function createModule(dependencies) {
               );
             if (
               state.encounter.type === "rngesus" ||
-              (isV2(state) && state.phase === "boss_chest")
+              (isV2(state) &&
+                (state.phase === "boss_chest" || bosses.retreatLocked(state)))
             )
               return respond(
                 "Bạn phải xử lý tình huống hiện tại trước khi rút thưởng.",

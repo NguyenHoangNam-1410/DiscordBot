@@ -3,6 +3,7 @@
 module.exports = function createModule(dependencies) {
   const {
     covenant,
+    bosses,
     gilded,
     paradox,
     E,
@@ -53,7 +54,11 @@ module.exports = function createModule(dependencies) {
 
   function act(state, session, action, rng) {
     if (action === "retreat") {
-      if (state.encounter.type === "rngesus" || state.phase === "boss_chest")
+      if (
+        state.encounter.type === "rngesus" ||
+        state.phase === "boss_chest" ||
+        bosses.retreatLocked(state)
+      )
         throw new Error("CANNOT_RETREAT");
       return state.phase === "summit"
         ? "summit"
@@ -90,7 +95,25 @@ module.exports = function createModule(dependencies) {
         directKeys: [],
       };
     state.discardedTicketsThisTurn = 0;
-    if (
+    if (state.encounter.type === "prophecy") {
+      const kind = action.slice(9);
+      if (state.prophecy) throw new Error("INVALID_ACTION");
+      const effects =
+        kind === "war"
+          ? { [mainStat(state)]: 12, bossDamage: 0.08 }
+          : kind === "protection"
+            ? { vit: 12, resistance: 5 }
+            : { ene: 10, maxMana: 1 };
+      state.prophecy = { kind, floor: 333, awakened: false };
+      addSource(state, effects, "prophecy");
+      state.lastLog = "🔺 The Tower will remember your choice at floor 666.";
+      completeFloor(state, session, rng, 0);
+    } else if (state.encounter.type === "boss_gate") {
+      state.encounter = state.encounter.enemy;
+      state.lastLog =
+        "🔺 Kabraxis đã phong tỏa đường rút. Chỉ có thể thắng hoặc tử trận.";
+      prepareParadoxCombat(state, rng);
+    } else if (
       ["covenant_blessing", "royal_blessing"].includes(state.encounter.type) &&
       ["covenant_continue", "royal_continue"].includes(action)
     ) {
@@ -190,11 +213,30 @@ module.exports = function createModule(dependencies) {
           const doubleCounter =
             paradox.is(state, "time_debt") &&
             state.activeParadox.combatActionCount === 3;
-          state.lastLog += `\n${enemyTurn(state, rng, acted.defend, acted.dodge, action === "defend")}`;
+          if (
+            bosses.on(e) &&
+            e.boss.id === "kabraxis" &&
+            e.boss.seal === "war" &&
+            action === "skill"
+          )
+            state.lastLog +=
+              "\n🔺 Blood Revenge: " +
+              enemyTurn(
+                state,
+                rng,
+                acted.defend,
+                acted.dodge,
+                action === "defend",
+                true,
+              );
+          if (alive(state) && e.hp > 0)
+            state.lastLog += `\n${enemyTurn(state, rng, acted.defend, acted.dodge, action === "defend")}`;
           if (doubleCounter && alive(state) && e.hp > 0)
             state.lastLog += `\n⏳ Phản công lần hai: ${enemyTurn(state, rng, acted.defend, acted.dodge, action === "defend")}`;
           if (e.hp <= 0 && alive(state)) defeatEnemy(state, session, rng, e);
         }
+        if (state.encounter === e && e.hp > 0 && alive(state))
+          bosses.endAction(state, rng);
       } else if (e.type === "surprise") {
         actSurprise(state, session, action, rng);
         if (action !== "event_skip")
@@ -395,6 +437,7 @@ module.exports = function createModule(dependencies) {
     )
       defeatEnemy(state, session, rng, state.encounter);
     recompute(state);
+    state.mana = Math.min(state.mana, bosses.effectiveMaxMana(state));
     prepareParadoxCombat(state, rng);
     finishEventResult(state);
     if (state.discardedTicketsThisTurn)

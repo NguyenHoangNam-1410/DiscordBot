@@ -104,6 +104,7 @@ module.exports = function createModule(dependencies) {
       if (useV2()) {
         const fair = state.fair;
         state = hardcoreStats.createState(classKey, stake);
+        state.bossRosterVersion = 1;
         state.fair = fair;
         state.fairCounter = 0;
         state.playerName = String(playerName).slice(0, 80);

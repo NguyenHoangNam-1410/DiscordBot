@@ -1,7 +1,7 @@
 "use strict";
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
-  const { royal, paradox, world } = dependencies;
+  const { bosses, royal, paradox, world } = dependencies;
   const shrineActive = (...args) => dependencies.shrineActive(...args);
   const physicalRange = (...args) => dependencies.physicalRange(...args);
   const attackDamage = (...args) => dependencies.attackDamage(...args);
@@ -13,30 +13,31 @@ module.exports = function createModule(dependencies) {
       (e.hp < e.maxHp * 0.5
         ? 1 + world.effectiveStacks(state.modifiers.bloodlust || 0) * 0.06
         : 1) *
-      (e.mechanic === "butcher" ? 1 + Math.min(5, e.frenzy + 1) * 0.08 : 1);
+      (!bosses.on(e) && e.mechanic === "butcher"
+        ? 1 + Math.min(5, e.frenzy + 1) * 0.08
+        : 1);
+    const plan = bosses.counter(state);
+    if (plan.skip) return { low: 0, high: 0, chance: 0 };
+    if (plan.trueDamage)
+      return { low: plan.raw, high: plan.raw, chance: 1, trueDamage: true };
     const low = attackDamage(e, state, state, () => 0, {
-      magic: e.nextDamageType === "magic",
-      multiplier: factor,
+      magic: plan.magic,
+      multiplier: (plan.raw != null ? 1 : factor) * plan.multiplier,
       critical: false,
-      raw: e.damageMin,
+      raw: plan.raw ?? e.damageMin,
     }).damage;
     const high = attackDamage(e, state, state, () => 0, {
-      magic: e.nextDamageType === "magic",
-      multiplier: factor,
+      magic: plan.magic,
+      multiplier: (plan.raw != null ? 1 : factor) * plan.multiplier,
       critical: false,
-      raw: e.damageMax,
+      raw: plan.raw ?? e.damageMax,
     }).damage;
     return {
       low,
       high,
-      chance:
-        e.nextDamageType === "magic"
-          ? 1
-          : world.hitChance(
-              e.accuracy,
-              state.evasion,
-              state.evasionCap ?? 0.45,
-            ),
+      chance: plan.magic
+        ? 1
+        : world.hitChance(e.accuracy, state.evasion, state.evasionCap ?? 0.45),
     };
   }
 
@@ -55,7 +56,7 @@ module.exports = function createModule(dependencies) {
   }
 
   function skillManaCost(state) {
-    if (royal.freeMagic(state)) return 0;
+    if (bosses.brainControl(state) || royal.freeMagic(state)) return 0;
     const free = state.classKey === "sorceress" && shrineActive(state);
     return (
       paradox.manaCost(state, free) + (free ? 0 : state.skillManaExtra || 0)
@@ -95,6 +96,29 @@ module.exports = function createModule(dependencies) {
         ? state.eliteDamage
         : 0;
     const damage = (raw) => {
+      if (bosses.on(e)) {
+        const copy = {
+          ...state,
+          encounter: { ...e, boss: structuredClone(e.boss) },
+        };
+        bosses.beginAction(copy, action);
+        if (skill && skillHpCost(copy))
+          copy.hp = Math.max(1, copy.hp - skillHpCost(copy));
+        if (skill && bosses.brainControl(copy))
+          return Math.floor(e.maxHp * 0.2);
+        let total = 0;
+        for (let shot = 0; shot < shots; shot++) {
+          const h = attackDamage(copy, copy.encounter, copy, () => 0, {
+            player: true,
+            magic,
+            raw,
+            multiplier,
+            critical: false,
+          });
+          total += h.damage;
+        }
+        return Math.floor(total * (paradox.active(copy) ? 1 : 1 + bonus));
+      }
       const previewState =
         skill && skillHpCost(state)
           ? { ...state, hp: Math.max(1, state.hp - skillHpCost(state)) }

@@ -75,8 +75,14 @@ fairness.createFairness = () => {
     commit: fairness.commitment(serverSeed),
   };
 };
+const bossExperiment = process.env.HARDCORE_SIM_BOSS_ROSTER || "current";
+if (!["current", "previous"].includes(bossExperiment))
+  throw Error("INVALID_BOSS_EXPERIMENT");
+if (bossExperiment === "previous")
+  require("../src/hardcore/bosses/mechanics").enabled = () => false;
 const checkpointExperiment = require("./hardcore-checkpoint-experiment");
 checkpointExperiment.install();
+const bossPolicy = require("./hardcore-boss-policy");
 const hardcore = require("../src/services/hardcoreService");
 const balance = require("../src/services/hardcoreBalance");
 if (process.env.HARDCORE_SIM_POWER) {
@@ -400,6 +406,8 @@ function actionForV2(state, strategy) {
   }
   if (state.phase === "summit") return "retreat";
   const e = state.encounter;
+  const bossAction = bossPolicy.choose(state);
+  if (bossAction) return bossAction;
   if (e.type === "combat") {
     const preview = v2.incomingPreview(state);
     const dangerous = state.hp < Math.max(preview.high * 2, state.maxHp * 0.35);
@@ -625,6 +633,8 @@ for (const classKey of classesToRun) {
         : hardcore.RELEASE.version,
     simulationSeed,
     checkpointRule: checkpointExperiment.settings,
+    bossRoster: bossExperiment,
+    bossPolicy: "public telegraphs v" + bossPolicy.VERSION,
     stake,
     completedPercent: +(
       (100 * floors.filter((floor) => floor >= 999).length) /
