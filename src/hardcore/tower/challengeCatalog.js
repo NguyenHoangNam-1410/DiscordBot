@@ -56,6 +56,15 @@ function playable(c, now = Date.now()) {
   );
 }
 function readable(c, now = Date.now()) {
+  const current = active(now);
+  if (
+    c?.publicationStatus === "archived" &&
+    current &&
+    current.challengeId !== c.challengeId &&
+    current.isoYear === c.isoYear &&
+    current.isoWeek === c.isoWeek
+  )
+    return false;
   return (
     !!c &&
     now >= new Date(c.startsAt).getTime() &&
@@ -120,6 +129,48 @@ function publishWeek(
     repo.publishChallenge(generated.payload, audit, rotation.next_index, now),
   );
 }
+function resetCurrent(
+  now = Date.now(),
+  {
+    secret = process.env.TOWER_GENERATOR_SECRET,
+    generate = generator.generate,
+    validate = solver.validate,
+  } = {},
+) {
+  if (now < ANCHOR || !repo.activeChallenge(now))
+    throw Error("NO_ACTIVE_TOWER");
+  const week = weekAt(now),
+    rotation = repo.rotation(),
+    classKey = CLASS_ROTATION[rotation.next_index % CLASS_ROTATION.length],
+    id =
+      generator.challengeId(week.isoYear, week.isoWeek, classKey) +
+      ":r" +
+      rotation.next_index,
+    seed = generator.productionSeed(id, generator.CONTENT_VERSION, secret),
+    generated = generate({
+      ...week,
+      startsAt: now,
+      classKey,
+      challengeId: id,
+      seed,
+    });
+  if (
+    generated.payload.challengeId !== id ||
+    generated.payload.classKey !== classKey ||
+    generated.payload.isoYear !== week.isoYear ||
+    generated.payload.isoWeek !== week.isoWeek ||
+    generated.payload.startsAt !== now ||
+    generated.payload.endsAt !== week.endsAt ||
+    generated.payload.seedCommitment !== solver.hash(seed)
+  )
+    throw Error("INVALID_TOWER_RESET_METADATA");
+  const audit = validate(generated.payload);
+  if (audit.solutionHash !== generated.payload.solutionHash)
+    throw Error("TOWER_AUDIT_HASH_MISMATCH");
+  return fromRow(
+    repo.publishReset(generated.payload, audit, rotation.next_index, now),
+  );
+}
 function ensureWeekly(now = Date.now(), options = {}) {
   const logger = options.logger || console;
   if (now < ANCHOR) return null;
@@ -127,9 +178,8 @@ function ensureWeekly(now = Date.now(), options = {}) {
   // Snapshot only the active week. Generating the next week in advance would
   // freeze old Survival stats/items and miss balance changes made mid-week.
   const target = weekAt(now).startsAt;
-  let cursor =
-    repo.lastPublication(generator.GENERATOR_VERSION)?.starts_at + WEEK_MS ||
-    ANCHOR;
+  const last = repo.lastPublication(generator.GENERATOR_VERSION);
+  let cursor = last ? weekAt(last.ends_at - 1).startsAt + WEEK_MS : ANCHOR;
   // Rotation advances only after the new week's validated snapshot is committed.
   let generated = 0;
   while (cursor <= target && generated < 104) {
@@ -185,6 +235,7 @@ module.exports = {
   readable,
   playable,
   publishWeek,
+  resetCurrent,
   ensureWeekly,
   startWeeklyMaintenance,
 };

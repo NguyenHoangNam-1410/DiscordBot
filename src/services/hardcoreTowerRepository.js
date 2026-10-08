@@ -111,7 +111,7 @@ function challengeByWeek(year, week, generatorVersion = null) {
   return (
     db
       .prepare(
-        "SELECT * FROM hardcore_tower_challenges WHERE iso_year=? AND iso_week=? AND (? IS NULL OR generator_version=?) ORDER BY generator_version DESC LIMIT 1",
+        "SELECT * FROM hardcore_tower_challenges WHERE iso_year=? AND iso_week=? AND (? IS NULL OR generator_version=?) ORDER BY generator_version DESC,starts_at DESC,rotation_index DESC LIMIT 1",
       )
       .get(year, week, generatorVersion, generatorVersion) || null
   );
@@ -181,7 +181,7 @@ const publishChallenge = db.transaction((payload, audit, index, now) => {
   const catalog = require("../hardcore/tower/challengeCatalog"),
     previous = lastPublication(payload.generatorVersion),
     expectedStart = previous
-      ? previous.starts_at + catalog.WEEK_MS
+      ? catalog.weekAt(previous.ends_at - 1).startsAt + catalog.WEEK_MS
       : catalog.ANCHOR;
   if (
     payload.startsAt !== expectedStart ||
@@ -228,6 +228,71 @@ const publishChallenge = db.transaction((payload, audit, index, now) => {
   ).run();
   return challenge(payload.challengeId);
 });
+const publishReset = db.transaction((payload, audit, index, now) => {
+  const catalog = require("../hardcore/tower/challengeCatalog"),
+    week = catalog.weekAt(now),
+    current = activeChallenge(now);
+  if (!current) throw Error("NO_ACTIVE_TOWER");
+  if (rotation().next_index !== index) throw Error("STALE_TOWER_ROTATION");
+  if (
+    payload.isoYear !== week.isoYear ||
+    payload.isoWeek !== week.isoWeek ||
+    payload.startsAt !== now ||
+    payload.endsAt !== week.endsAt
+  )
+    throw Error("INVALID_TOWER_RESET_WINDOW");
+  const { CLASS_ROTATION } = require("../hardcore/tower/classProfiles"),
+    expectedClass = CLASS_ROTATION[index % CLASS_ROTATION.length],
+    expectedId =
+      require("../hardcore/tower/generator").challengeId(
+        week.isoYear,
+        week.isoWeek,
+        expectedClass,
+      ) +
+      ":r" +
+      index;
+  if (payload.classKey !== expectedClass || payload.challengeId !== expectedId)
+    throw Error("INVALID_TOWER_ROTATION");
+  const proof = require("../hardcore/tower/solver").validate(payload);
+  if (
+    proof.solutionHash !== payload.solutionHash ||
+    proof.solutionHash !== audit.solutionHash ||
+    proof.difficultyScore !== payload.difficultyScore
+  )
+    throw Error("INVALID_TOWER_AUDIT");
+  const { canonicalSolution, ...report } = proof;
+  db.prepare(
+    "UPDATE hardcore_tower_challenges SET status='archived' WHERE status='published' AND starts_at<=? AND ends_at>?",
+  ).run(now, now);
+  db.prepare(
+    "INSERT INTO hardcore_tower_challenges VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'validated',?,?,?,?)",
+  ).run(
+    payload.challengeId,
+    payload.isoYear,
+    payload.isoWeek,
+    index,
+    payload.classKey,
+    payload.generatorVersion,
+    payload.contentVersion,
+    payload.seedCommitment,
+    JSON.stringify(payload),
+    payload.stepCount,
+    payload.solutionHash,
+    payload.difficultyScore,
+    JSON.stringify(report),
+    payload.startsAt,
+    payload.endsAt,
+    now,
+    null,
+  );
+  db.prepare(
+    "UPDATE hardcore_tower_challenges SET status='published',published_at=? WHERE challenge_id=? AND status='validated'",
+  ).run(now, payload.challengeId);
+  db.prepare(
+    "UPDATE hardcore_tower_rotation SET next_index=next_index+1 WHERE id=1",
+  ).run();
+  return challenge(payload.challengeId);
+});
 Object.assign(module.exports, {
   challenge,
   challengeByWeek,
@@ -240,12 +305,31 @@ Object.assign(module.exports, {
   noteGenerationFailure,
   clearGenerationFailure,
   publishChallenge,
+  publishReset,
 });
 
 function beginAttempt(row, now) {
   db.prepare(
     "INSERT OR IGNORE INTO hardcore_tower_results(guild_id,user_id,challenge_id,attempts,best_floor,updated_at) VALUES(?,?,?,0,1,?)",
   ).run(row.guild_id, row.user_id, row.challenge_id, now);
+  const tower = challenge(row.challenge_id);
+  if (tower)
+    db.prepare(
+      `UPDATE hardcore_tower_results SET reward_claimed_at=(
+       SELECT MAX(r.reward_claimed_at) FROM hardcore_tower_results r
+       JOIN hardcore_tower_challenges c ON c.challenge_id=r.challenge_id
+       WHERE r.guild_id=? AND r.user_id=? AND c.iso_year=? AND c.iso_week=? AND r.challenge_id<>?
+       ) WHERE guild_id=? AND user_id=? AND challenge_id=? AND reward_claimed_at IS NULL`,
+    ).run(
+      row.guild_id,
+      row.user_id,
+      tower.iso_year,
+      tower.iso_week,
+      row.challenge_id,
+      row.guild_id,
+      row.user_id,
+      row.challenge_id,
+    );
   // The v1 fixture is superseded mid-week: carry its reward claim, preventing
   // an additional weekly payout while leaving the old attempt untouched.
   if (row.challenge_id === "tower:2026:W41:sorceress:g3")

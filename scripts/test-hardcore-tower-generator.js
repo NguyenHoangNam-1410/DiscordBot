@@ -328,8 +328,57 @@ try {
       });
       assert.equal(solver.validate(r.payload).winningPaths, 1);
     }
+  const resetAt = at + 5000,
+    oldTower = catalog.active(resetAt),
+    resetIndex = repo.rotation().next_index;
+  assert.ok(oldTower);
+  repo.beginAttempt(
+    {
+      guild_id: "manual-reset",
+      user_id: "claimed",
+      challenge_id: oldTower.challengeId,
+    },
+    resetAt - 1,
+  );
+  db.prepare(
+    "UPDATE hardcore_tower_results SET reward_claimed_at=? WHERE guild_id=? AND user_id=? AND challenge_id=?",
+  ).run(resetAt - 1, "manual-reset", "claimed", oldTower.challengeId);
+  const resetTower = catalog.resetCurrent(resetAt, { secret });
+  assert.notEqual(resetTower.challengeId, oldTower.challengeId);
+  assert.equal(resetTower.challengeId.endsWith(":r" + resetIndex), true);
+  assert.equal(resetTower.startsAt, resetAt);
+  assert.equal(resetTower.endsAt, catalog.weekAt(resetAt).endsAt);
+  assert.equal(resetTower.classKey, CLASS_ROTATION[resetIndex % 7]);
+  assert.equal(repo.challenge(oldTower.challengeId).status, "archived");
+  assert.equal(
+    catalog.readable(catalog.get(oldTower.challengeId), resetAt),
+    false,
+  );
+  assert.equal(catalog.active(resetAt).challengeId, resetTower.challengeId);
+  assert.equal(repo.rotation().next_index, resetIndex + 1);
+  repo.beginAttempt(
+    {
+      guild_id: "manual-reset",
+      user_id: "claimed",
+      challenge_id: resetTower.challengeId,
+    },
+    resetAt,
+  );
+  assert.equal(
+    repo.result("manual-reset", "claimed", resetTower.challengeId)
+      .reward_claimed_at,
+    resetAt - 1,
+  );
+  const nextMonday = resetTower.endsAt,
+    scheduled = catalog.ensureWeekly(nextMonday, {
+      secret,
+      logger: silent,
+    });
+  assert.equal(scheduled.startsAt, nextMonday);
+  assert.equal(scheduled.endsAt, nextMonday + catalog.WEEK_MS);
+  assert.equal(repo.rotation().next_index, resetIndex + 2);
   console.log(
-    "Tower v4 generator: deterministic combat, hidden action counts, 7-class rotation, 70 diverse seeds, unique lethal paths, resource mechanics, audit rejection, immutable publication and UTC+7 rollover passed.",
+    "Tower v4 generator: deterministic combat, manual reset, Monday schedule, weekly reward lock, 7-class rotation, 70 diverse seeds, unique lethal paths, immutable publication and UTC+7 rollover passed.",
   );
 } finally {
   Math.random = rng;

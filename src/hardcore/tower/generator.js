@@ -76,6 +76,7 @@ function candidate(
     seed,
     startsAt,
     endsAt,
+    challengeId: requestedChallengeId,
     contentVersion = CONTENT_VERSION,
   },
   nonce,
@@ -619,7 +620,8 @@ function candidate(
     delete t.manaBefore;
   }
   const payload = {
-    challengeId: challengeId(isoYear, isoWeek, classKey),
+    challengeId:
+      requestedChallengeId || challengeId(isoYear, isoWeek, classKey),
     isoYear,
     isoWeek,
     generatorVersion: GENERATOR_VERSION,
