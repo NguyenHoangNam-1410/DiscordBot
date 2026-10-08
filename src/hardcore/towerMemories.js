@@ -265,7 +265,7 @@ function fields(state) {
           : "Bounty Hunter đã tìm đến. Chiến đấu hoặc trả một lần 20% payout hiện tại.";
     if (key === "legacy" && debt.action === "event_rob")
       detail =
-        "Hậu quả cướp từ run cũ: " +
+        "Hậu quả cướp: " +
         (debt.kind === "tax"
           ? "trừ một lần 10% payout hiện tại."
           : "Bounty Hunter tinh anh.") +
