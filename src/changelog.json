@@ -1,5 +1,14 @@
 [
   {
+    "id": "b2336083-91cd-40f8-a320-d844f55a8beb",
+    "updatedAt": "2026-10-08T08:00:41.876Z",
+    "auditedAt": "2026-10-08T08:00:41.876Z",
+    "title": "Làm rõ cảnh báo Feedback của boss",
+    "changes": [
+      "Master Control System: thay mô tả nối đất bằng Phòng thủ để chặn sát thương phản lại; Chi tiết nói rõ chặn toàn bộ sát thương Feedback."
+    ]
+  },
+  {
     "id": "d9dd0b87-3510-4aff-9687-dba562769220",
     "updatedAt": "2026-10-08T07:23:03.786Z",
     "auditedAt": "2026-10-08T07:23:03.786Z",

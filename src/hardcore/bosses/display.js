@@ -10,7 +10,7 @@ const RULES = {
   assur:
     "Sau 2 phản công thường: cảnh báo Flamefront. Phòng thủ ở lượt cảnh báo chặn Flamefront, đòn gây DMG tiếp theo +30%. Nếu không xử lý: Flamefront phép ×2, giảm bởi RES.",
   control:
-    "Plasma Shield giữ ít nhất 1 HP cho đến khi Feedback được xử lý. Ghi DMG sau giảm trừ của 2 hành động Tấn công/Skill (kể cả phần hấp thụ bởi Shield). Vòng tiếp theo phản 25% dưới dạng phép, chịu RES; Phòng thủ nối đất và vô hiệu hóa. Xử lý xong reset bộ nhớ. Shield bật lại khi đủ 2 hành động tiếp theo.",
+    "Plasma Shield giữ ít nhất 1 HP cho đến khi Feedback được xử lý. Ghi DMG sau giảm trừ của 2 hành động Tấn công/Skill (kể cả phần hấp thụ bởi Shield). Vòng tiếp theo phản 25% dưới dạng phép, chịu RES; Phòng thủ chặn toàn bộ sát thương Feedback. Xử lý xong reset bộ nhớ. Shield bật lại khi đủ 2 hành động tiếp theo.",
   necrobot:
     "Mỗi vòng đổi Plating ↔ Energy Barrier. Plating: DEF ×1,4, RES −15; DMG vật lý của bạn ×0,7. Barrier: DEF ×0,7, RES +20 (tối đa 75%); DMG phép của bạn ×0,7. Không miễn nhiễm; loại phản công đổi cố định vật lý/phép.",
   quov: "Mythal: mỗi phản công trúng giảm RES của bạn 5 điểm %, tối đa 20. Phòng thủ xóa 5 điểm và ngăn stack mới trong lượt đó. Chỉ tồn tại trong trận này.",
@@ -71,7 +71,7 @@ function status(s) {
       "/2 · ghi " +
       Math.floor(b.damageMemory) +
       " DMG" +
-      (b.feedback ? " · ⚠️ Feedback lượt này: Phòng thủ để nối đất." : "") +
+      (b.feedback ? " · ⚠️ Feedback lượt này: Phòng thủ để chặn sát thương phản lại." : "") +
       (!b.feedbackResolved ? " · 🛡️ Plasma Shield: chưa thể hạ boss." : ""),
     necrobot:
       round % 2 === 0
