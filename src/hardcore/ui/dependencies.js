@@ -60,6 +60,9 @@ module.exports = function createModule(dependencies) {
     effectStatLabel,
     passiveIcon,
     ticketIcon,
+    monsterIcon,
+    relicIcon,
+    fragmentIcon,
   } = require("../shared/icons");
 
   const rarityLabel = (r) =>
@@ -153,6 +156,9 @@ module.exports = function createModule(dependencies) {
     effectStatLabel,
     passiveIcon,
     ticketIcon,
+    monsterIcon,
+    relicIcon,
+    fragmentIcon,
     rarityLabel,
     percent,
     money,

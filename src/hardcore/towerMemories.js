@@ -1,6 +1,6 @@
 "use strict";
 const world = require("../services/hardcoreWorld");
-const { E, memoryIcon } = require("../services/hardcoreIcons");
+const { E, memoryIcon, eventIcon, sealIcon } = require("../services/hardcoreIcons");
 
 const { mainStat } = require("./engine/stats");
 
@@ -227,9 +227,9 @@ function fields(state) {
       arcane: "+8 " + E.ene + " ENE, +1 " + E.mana + " Max MP cho bạn",
     }[kind];
     output.push({
-      name: "🔺 The Tower Remembers · Threefold Prophecy",
+      name: eventIcon("prophecy") + " The Tower Remembers · Threefold Prophecy",
       value:
-        "**Nguồn:** chọn ấn **" +
+        "**Nguồn:** chọn ấn " + sealIcon(kind) + " **" +
         seal +
         "** tại tầng **333**.\n**Tầng 666:** ấn quyết định cơ chế của Kabraxis; xem **Chi tiết** khi gặp boss.\n" +
         (state.prophecy.awakened

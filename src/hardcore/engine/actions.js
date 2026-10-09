@@ -10,6 +10,8 @@ module.exports = function createModule(dependencies) {
     E,
     RIFT_ICONS,
     eventIcon,
+    sealIcon,
+    monsterIcon,
     echoes,
     recompute,
     mainStat,
@@ -130,12 +132,12 @@ module.exports = function createModule(dependencies) {
       state.prophecy = { kind, floor: 333, awakened: false };
       addSource(state, effects, "prophecy");
       state.lastLog =
-        "🔺 Đã ghi nhớ ấn bạn chọn: quyết định cơ chế Kabraxis ở tầng 666. Xem Rift để biết phần thưởng thức tỉnh.";
+        sealIcon(kind) + " Đã ghi nhớ ấn bạn chọn: quyết định cơ chế Kabraxis ở tầng 666. Xem Rift để biết phần thưởng thức tỉnh.";
       completeFloor(state, session, rng, 0);
     } else if (state.encounter.type === "boss_gate") {
       state.encounter = state.encounter.enemy;
       state.lastLog =
-        "🔺 Kabraxis đã phong tỏa đường rút. Chỉ có thể thắng hoặc tử trận.";
+        monsterIcon(state.encounter) + " Kabraxis đã phong tỏa đường rút. Chỉ có thể thắng hoặc tử trận.";
       prepareParadoxCombat(state, rng);
     } else if (
       ["covenant_blessing", "royal_blessing"].includes(state.encounter.type) &&
@@ -143,8 +145,8 @@ module.exports = function createModule(dependencies) {
     ) {
       state.lastLog =
         state.encounter.type === "royal_blessing"
-          ? "💠 Tiếp tục khám phá sau phước lành Hoàng Gia."
-          : "💠 Tiếp tục khám phá sau phước lành Chinh Phạt.";
+          ? eventIcon("royal_invitation") + " Tiếp tục khám phá sau phước lành Hoàng Gia."
+          : eventIcon("covenant") + " Tiếp tục khám phá sau phước lành Chinh Phạt.";
       finishEventResult(state);
       nextMilestone(state, session, rng);
     } else if (
@@ -152,7 +154,7 @@ module.exports = function createModule(dependencies) {
       action === "god_continue"
     ) {
       state.lastLog =
-        "✨ Tiếp tục tầng " +
+        eventIcon("god_rngesus") + " Tiếp tục tầng " +
         state.floor +
         " sau phước lành của God of RNGesus.";
       state.encounter = generateEncounter(state, session, rng);
@@ -244,7 +246,7 @@ module.exports = function createModule(dependencies) {
             action === "skill"
           )
             state.lastLog +=
-              "\n🔺 Blood Revenge: " +
+              "\n" + sealIcon("war") + " Blood Revenge: " +
               enemyTurn(
                 state,
                 rng,

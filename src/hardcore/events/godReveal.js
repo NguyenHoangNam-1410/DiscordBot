@@ -1,4 +1,5 @@
 "use strict";
+const { eventIcon } = require("../shared/icons");
 const { EmbedBuilder } = require("discord.js");
 const { setTimeout: delay } = require("node:timers/promises");
 const god = require("./godRngesus");
@@ -11,8 +12,8 @@ function frame(state, userId, stage = 0) {
     return covenantReveal.frame(state, userId, stage);
   if (state.encounter?.type !== "god_rngesus") return null;
   const texts = [
-    "…\nKhông gian quanh bạn đột ngột im lặng.\n🎲 Một ánh mắt dừng lại trên số phận của bạn.",
-    "🎲 Những con số ngừng chuyển động.\nMột quyền năng vượt trên RNGesus đang hiện diện…",
+    "…\nKhông gian quanh bạn đột ngột im lặng.\n" + eventIcon("god_rngesus") + " Một ánh mắt dừng lại trên số phận của bạn.",
+    eventIcon("god_rngesus") + " Những con số ngừng chuyển động.\nMột quyền năng vượt trên RNGesus đang hiện diện…",
   ];
   return {
     content: "",

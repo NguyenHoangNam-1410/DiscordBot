@@ -35,6 +35,8 @@ module.exports = function createModule(dependencies) {
     memoryIcon,
     treasureChestIcon,
     passiveIcon,
+    monsterIcon,
+    sealIcon,
   } = require("../shared/icons");
 
   const world = require("./world");
@@ -214,6 +216,8 @@ module.exports = function createModule(dependencies) {
     memoryIcon,
     treasureChestIcon,
     passiveIcon,
+    monsterIcon,
+    sealIcon,
     world,
     echoes,
     ITEMS,

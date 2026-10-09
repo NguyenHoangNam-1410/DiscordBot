@@ -2,7 +2,14 @@
 const world = require("../engine/world");
 const { RELIC_ITEMS } = require("../itemRelics");
 const records = require("../storage/relicRecords");
-const { E, memoryIcon, eventIcon } = require("../shared/icons");
+const {
+  E,
+  memoryIcon,
+  eventIcon,
+  relicIcon,
+  monsterIcon,
+  passiveIcon,
+} = require("../shared/icons");
 const RELIC_ID = "gilded_soul";
 const BOSS_MECHANIC = "avarice_revenant";
 const BOSS_NAME = "Avarice Revenant";
@@ -75,7 +82,7 @@ function summon(state, rng) {
   state.encounter = enemy;
   state.lastLog =
     eventIcon("ritual") +
-    " **Nghi lễ Oán Hận** đã triệu hồi **" +
+    " **Nghi lễ Oán Hận** đã triệu hồi " + monsterIcon(enemy) + " **" +
     BOSS_NAME +
     "**. Bạn hành động trước; xem Chi tiết.";
 }
@@ -150,7 +157,7 @@ function grant(state, enemy, session) {
   state.evCount = (state.evCount || 0) + 1;
   state.evKinds = Array.from(new Set([...(state.evKinds || []), RELIC_ID]));
   state.lastLog +=
-    "\n💠 Nhận **Gilded Soul [LR]**" +
+    "\n" + relicIcon(RELIC_ID) + " Nhận **Gilded Soul [LR]**" +
     (active(state)
       ? ": tăng DMG Tấn công/Skill theo xu có thể rút trong run, chốt khi vào mỗi combat."
       : ": chưa kích hoạt vì đã có nội tại LR khác hoạt động.") +
@@ -204,7 +211,7 @@ const BOSS_RULES =
 function details(state) {
   if (isBoss(state.encounter))
     return (
-      eventIcon("ritual") +
+      monsterIcon(state.encounter) +
       " **Avarice Revenant · Cơ chế**\n" +
       BOSS_RULES +
       "\n\n**Thưởng chắc chắn:** Gilded Soul [LR] nếu hạ boss và sống sót. Không có phước lành; chỉ một nội tại LR hoạt động/run."
@@ -222,7 +229,7 @@ function status(state) {
   if (!active(state)) return "";
   const snapshot = state.encounter?.gildedSoulSnapshot;
   return snapshot
-    ? "\n**Combat hiện tại:** +" +
+    ? "\n" + passiveIcon("runWealthDamage") + " **Combat hiện tại:** +" +
         Math.round(snapshot.bonus * 100) +
         "% DMG cho bạn · chốt theo **" +
         Math.floor(snapshot.coins).toLocaleString("vi-VN") +

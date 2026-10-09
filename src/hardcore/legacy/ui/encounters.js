@@ -1,4 +1,5 @@
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
+const { monsterIcon } = require("../../shared/icons");
 module.exports = function createModule(dependencies) {
   const {
     formatCoins,
@@ -152,7 +153,7 @@ module.exports = function createModule(dependencies) {
     const servicePreview = equipmentServicePreview(state);
     if (servicePreview) return servicePreview;
     if (e.type === "combat")
-      return `👹 **${e.name}** · ${rankLabel(e.rank)}\n${healthBar(e.hp, e.maxHp)}\n${STAT_EMOJI.attack} ATK ${formatCoins(e.damageMin)}–${formatCoins(e.damageMax)} · ${enemyDamageType(e) === "magic" ? "Phép" : enemyDamageType(e) === "physical" ? "Vật lý" : "Hỗn hợp"} · ${STAT_EMOJI.defense} DEF ${formatCoins(e.defense)}\nĐòn kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}**`;
+      return `${monsterIcon(e)} **${e.name}** · ${rankLabel(e.rank)}\n${healthBar(e.hp, e.maxHp)}\n${STAT_EMOJI.attack} ATK ${formatCoins(e.damageMin)}–${formatCoins(e.damageMax)} · ${enemyDamageType(e) === "magic" ? "Phép" : enemyDamageType(e) === "physical" ? "Vật lý" : "Hỗn hợp"} · ${STAT_EMOJI.defense} DEF ${formatCoins(e.defense)}\nĐòn kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}**`;
     if (e.type === "chest")
       return `📦 **Hòm bí ẩn** · ${e.revealed ? "😈 Đã phát hiện Mimic" : e.inspected ? "Đã kiểm tra" : "Chưa kiểm tra"}`;
     if (e.type === "rngesus")

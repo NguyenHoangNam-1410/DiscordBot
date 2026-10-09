@@ -2,7 +2,14 @@
 const world = require("../engine/world");
 const { RELIC_ITEMS } = require("../itemRelics");
 const { restore } = require("./blessing");
-const { E } = require("../shared/icons");
+const {
+  E,
+  eventIcon,
+  relicIcon,
+  fragmentIcon,
+  monsterIcon,
+  passiveIcon,
+} = require("../shared/icons");
 const records = require("../storage/relicRecords");
 const RELIC_ID = "conquerors_covenant";
 const FRAGMENTS = Object.freeze({
@@ -81,7 +88,7 @@ function recordKill(state, enemy) {
     const current = bonus(state);
     if (current > previous)
       state.lastLog +=
-        "\n💠 Conqueror’s Covenant: thưởng xu +" +
+        "\n" + passiveIcon("killPayoutGrowth") + " Conqueror’s Covenant: thưởng xu +" +
         (previous * 100).toFixed(1) +
         "% → **+" +
         (current * 100).toFixed(1) +
@@ -92,7 +99,7 @@ function recordKill(state, enemy) {
     return false;
   quest.fragments[key] = state.floor;
   state.lastLog +=
-    "\n🧩 Nhận **" + FRAGMENTS[key] + "** (" + fragmentCount(state) + "/4).";
+    "\n" + fragmentIcon(key) + " Nhận **" + FRAGMENTS[key] + "** (" + fragmentCount(state) + "/4).";
   if (canEnter(state))
     state.lastLog += " Wrong Portal tiếp theo mở cửa tầng hầm; xem Túi.";
   return true;
@@ -115,7 +122,7 @@ function beginTrial(state, rng) {
   state.covenant.stage = "trial";
   state.encounter = enemy;
   state.lastLog =
-    "🗝️ Xuống tầng hầm: **Covenant Guardian** chặn đường. Bốn mảnh vẫn được giữ cho đến khi bạn thắng.";
+    eventIcon("covenant") + " Xuống tầng hầm: " + monsterIcon(enemy) + " **Covenant Guardian** chặn đường. Bốn mảnh vẫn được giữ cho đến khi bạn thắng.";
 }
 function grant(state, enemy, session) {
   if (
@@ -146,7 +153,7 @@ function grant(state, enemy, session) {
     new Set([...(state.evKinds || []), "conquerors_covenant"]),
   );
   state.lastLog +=
-    "\n✨ **Phước lành Chinh Phạt:** " +
+    "\n" + eventIcon("covenant") + " **Phước lành Chinh Phạt:** " +
     E.hp +
     " **HP " +
     blessing.hpBefore +
@@ -158,7 +165,7 @@ function grant(state, enemy, session) {
     blessing.manaBefore +
     " → " +
     blessing.manaAfter +
-    "**; giải mọi nguyền UR, xóa mọi ấn Rift.\n💠 Hợp nhất bốn mảnh, nhận **Conqueror’s Covenant [LR]**" +
+    "**; giải mọi nguyền UR, xóa mọi ấn Rift.\n" + relicIcon(RELIC_ID) + " Hợp nhất bốn mảnh, nhận **Conqueror’s Covenant [LR]**" +
     (active(state)
       ? ": mỗi quái hạ từ bây giờ tăng 0,2 điểm % thưởng xu, tối đa +100%."
       : ": chưa kích hoạt vì đã có nội tại LR khác hoạt động.");
@@ -174,13 +181,13 @@ function grant(state, enemy, session) {
 function bagText(state) {
   const quest = progress(state);
   if (quest.completed)
-    return "Đã hợp nhất bốn mảnh thành **Conqueror’s Covenant [LR]**.";
+    return relicIcon(RELIC_ID) + " Đã hợp nhất bốn mảnh thành **Conqueror’s Covenant [LR]**.";
   return (
     Object.entries(FRAGMENTS)
       .map(([key, name]) =>
         quest.fragments?.[key] != null
-          ? "✅ **" + name + "** · tầng " + quest.fragments[key]
-          : "▫️ " + name,
+          ? fragmentIcon(key) + " **" + name + "** · Đã có, tầng " + quest.fragments[key]
+          : fragmentIcon(key) + " " + name + " · Chưa có",
       )
       .join("\n") +
     "\n**" +
@@ -198,13 +205,13 @@ function combatDetails(state) {
   const enemy = state.encounter;
   if (!enabled(state)) return "";
   if (enemy.covenantTrial)
-    return "\n🗝️ **Thử thách tầng hầm:** một Tinh anh có HP ×1,25 và DMG ×1,10 so với Tinh anh cùng tầng/Rift. Hạ quái bảo đảm tiêu thụ bốn mảnh, nhận Conqueror’s Covenant [LR], hồi đầy HP/MP, giải mọi nguyền UR và xóa ấn Rift; giữ Paradox/Contract. Không có roll thưởng thêm. Hồi sinh vẫn ở lại đánh; rút thưởng hoặc tử trận kết thúc chuỗi của run.";
+    return "\n" + eventIcon("covenant") + " **Thử thách tầng hầm:** một Tinh anh có HP ×1,25 và DMG ×1,10 so với Tinh anh cùng tầng/Rift. Hạ quái bảo đảm tiêu thụ bốn mảnh, nhận Conqueror’s Covenant [LR], hồi đầy HP/MP, giải mọi nguyền UR và xóa ấn Rift; giữ Paradox/Contract. Không có roll thưởng thêm. Hồi sinh vẫn ở lại đánh; rút thưởng hoặc tử trận kết thúc chuỗi của run.";
   const key = source(enemy);
   return key &&
     !progress(state).completed &&
     !owns(state) &&
     progress(state).fragments?.[key] == null
-    ? "\n🧩 **Mảnh LR:** hạ quái này bảo đảm nhận " +
+    ? "\n" + fragmentIcon(key) + " **Mảnh LR:** hạ quái này bảo đảm nhận " +
         FRAGMENTS[key] +
         " (lần đầu trong run), độc lập với drop LUCK; thưởng cũ giữ nguyên."
     : "";

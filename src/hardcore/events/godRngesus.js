@@ -7,7 +7,7 @@ const {
   formatGodChance,
 } = require("./rngesus");
 const { RELIC_ITEMS } = require("../item");
-const { E, eventIcon } = require("../shared/icons");
+const { E, eventIcon, relicIcon } = require("../shared/icons");
 
 function favor(guildId, userId) {
   return (
@@ -129,7 +129,7 @@ function tryEncounter(state, session, rng) {
     " → " +
     state.mana +
     "**; giải toàn bộ nguyền UR, xóa mọi ấn Rift.\n" +
-    "💠 Nhận **Fatebreaker Seal [LR]**" +
+    relicIcon("fatebreaker_seal") + " Nhận **Fatebreaker Seal [LR]**" +
     (state.activeRelic === definition.id
       ? ": không gặp RNGesus trong phần còn lại của run."
       : ": đang có nội tại LR khác hoạt động.") +

@@ -1,6 +1,7 @@
 "use strict";
 const boss = require("./mechanics");
-const { E } = require("../shared/icons");
+const { E, eventIcon, monsterIcon, sealIcon } = require("../shared/icons");
+const { mainStat } = require("../engine/stats");
 const names = ["", "Abyssal Spires", "Flesh Feast", "Dimensional Collapse"];
 const RULES = {
   butcher:
@@ -114,7 +115,7 @@ function status(s) {
       "🌀 Void: nhận +50% DMG → Matter",
     ][round % 3],
     kabraxis:
-      "🔺 Ấn " +
+      sealIcon(b.seal) + " Ấn " +
       b.seal +
       " · Phase " +
       b.phase +
@@ -208,10 +209,10 @@ function details(s) {
 }
 function special(s) {
   if (s.encounter.type === "prophecy")
-    return "🔺 **THREEFOLD PROPHECY · TẦNG 333**\nChọn một ấn: **War** +12 stat chính, +8% DMG boss; **Protection** +12 VIT, +5 RES; **Arcane** +10 ENE, +1 Max MP.\nẤn bạn chọn quyết định cơ chế Kabraxis ở tầng 666. Xem **Rift** để biết hiệu lực của ký ức này.";
+    return `${eventIcon("prophecy")} **THREEFOLD PROPHECY · TẦNG 333**\nChọn một ấn:\n- ${sealIcon("war")} **War:** ${E[mainStat(s)]} **${mainStat(s).toUpperCase()} +12** • ${E.bossDamage} **DMG Boss +8%**.\n- ${sealIcon("protection")} **Protection:** ${E.vit} **VIT +12** • ${E.res} **RES +5 điểm %**.\n- ${sealIcon("arcane")} **Arcane:** ${E.ene} **ENE +10** • ${E.mana} **Max MP +1**.\nẤn bạn chọn quyết định cơ chế Kabraxis ở tầng 666. Xem **Rift** để biết hiệu lực của ký ức này.`;
   if (s.encounter.type === "boss_gate")
     return (
-      "🔺 **KABRAXIS · TẦNG 666**\nBạn có thể rút thưởng ngay tại cửa. Bước vào sẽ khóa rút thưởng; phải thắng hoặc tử trận.\nXem **Chi tiết** để biết cơ chế của ấn " +
+      eventIcon("boss_gate") + " " + monsterIcon(s.encounter.enemy) + " **KABRAXIS · TẦNG 666**\nBạn có thể rút thưởng ngay tại cửa. Bước vào sẽ khóa rút thưởng; phải thắng hoặc tử trận.\nXem **Chi tiết** để biết cơ chế của ấn " +
       s.encounter.enemy.boss.seal +
       "."
     );

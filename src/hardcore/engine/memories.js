@@ -12,6 +12,8 @@ module.exports = function createModule(dependencies) {
     E,
     eventIcon,
     memoryIcon,
+    monsterIcon,
+    sealIcon,
     world,
     echoes,
     recompute,
@@ -61,7 +63,7 @@ module.exports = function createModule(dependencies) {
       state.bonus += Math.floor(state.stake * (0.25 + 0.1 * e.echo.kills));
       echoes.consume(session, e.echoId);
     }
-    state.lastLog += `\n🏆 Hạ ${e.name}.`;
+    state.lastLog += `\n${monsterIcon(e)} Hạ **${e.name}**.`;
     covenant.recordKill(state, e);
     royal.recordBoss(state, e);
     if (paradox.is(state, "hunger"))
@@ -104,7 +106,7 @@ module.exports = function createModule(dependencies) {
       state.prophecy ||= { kind, floor: 333, legacy: true };
       state.prophecy.awakened = true;
       state.lastLog +=
-        "\n🔺 Ấn " +
+        "\n" + sealIcon(kind) + " Ấn " +
         kind +
         " thức tỉnh; nhận trang bị đã khóa và bonus 66,6% cược.";
     }

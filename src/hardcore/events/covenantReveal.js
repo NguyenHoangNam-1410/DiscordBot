@@ -1,4 +1,5 @@
 "use strict";
+const { eventIcon, relicIcon } = require("../shared/icons");
 const { db } = require("../../db");
 const { EmbedBuilder } = require("discord.js");
 const { setTimeout: delay } = require("node:timers/promises");
@@ -9,8 +10,8 @@ function frame(state, userId, stage = 0) {
   )
     return null;
   const texts = [
-    "🧩 Bốn mảnh bắt đầu cộng hưởng.\nNanh giả, cổ ấn, huyết tâm và ảnh gương cùng tan vào một luồng sáng…",
-    "✨ Tầng hầm rung chuyển.\nMột khế ước cổ xưa công nhận người đã chinh phục cả bốn thử thách…",
+    eventIcon("covenant") + " Bốn mảnh bắt đầu cộng hưởng.\nNanh giả, cổ ấn, huyết tâm và ảnh gương cùng tan vào một luồng sáng…",
+    relicIcon("conquerors_covenant") + " Tầng hầm rung chuyển.\nMột khế ước cổ xưa công nhận người đã chinh phục cả bốn thử thách…",
   ];
   return {
     content: "",

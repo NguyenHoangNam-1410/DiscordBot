@@ -10,6 +10,7 @@ const {
 } = require("discord.js");
 const { db } = require("../../db");
 const { RELIC_ITEMS } = require("../itemRelics");
+const { relicIcon, monsterIcon } = require("../shared/icons");
 const relicRecords = require("../storage/relicRecords");
 const godRngesus = require("../events/godRngesus");
 const { godRngesusChance, formatGodChance } = require("../events/rngesus");
@@ -242,7 +243,7 @@ function tabEmbed(guildId, user, tab, page, overview) {
               : "Chưa được ban phước."),
         },
         ...relicRecords.IDS.map((id) => ({
-          name: "💠 " + RELIC_ITEMS[id].name + " [LR]",
+          name: relicIcon(id) + " " + RELIC_ITEMS[id].name + " [LR]",
           value:
             "Đã lưu: **" +
             s.relicTotals[id] +
@@ -284,11 +285,11 @@ function tabEmbed(guildId, user, tab, page, overview) {
   if (tab === "fights") {
     const killers =
       s.killers
-        .map((k, i) => `${i + 1}. ${k.name} — ${k.count} lần`)
+        .map((k, i) => `${i + 1}. ${monsterIcon(k.name)} ${k.name} — ${k.count} lần`)
         .join("\n") || "Chưa tử trận ván nào.";
     const bosses =
       s.bosses
-        .map((b, i) => `${i + 1}. ${b.name} — ${b.count} lần`)
+        .map((b, i) => `${i + 1}. ${monsterIcon(b.name)} ${b.name} — ${b.count} lần`)
         .join("\n") || "Chưa hạ boss nào.";
     const floors =
       s.deathFloors.map((f) => `Tầng ${f.floor}: ${f.count} lần`).join(" · ") ||
@@ -316,7 +317,7 @@ function tabEmbed(guildId, user, tab, page, overview) {
   const lines = rows.map(
     (r) =>
       `<t:${Math.floor(r.ended_at / 1000)}:d> **${classLabel(r.class_key)}** · tầng ${r.cleared} · ${REASONS[r.reason] || r.reason}` +
-      ` · cược ${formatCoins(r.stake)} → ${formatCoins(r.payout)} · ${r.turns} lượt${r.killed_by ? ` · bởi ${r.killed_by}` : ""}`,
+      ` · cược ${formatCoins(r.stake)} → ${formatCoins(r.payout)} · ${r.turns} lượt${r.killed_by ? ` · bởi ${monsterIcon(r.killed_by)} ${r.killed_by}` : ""}`,
   );
   return embed
     .setTitle("📜 SINH TỒN · LỊCH SỬ VÁN")

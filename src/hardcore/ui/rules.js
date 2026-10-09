@@ -12,6 +12,8 @@ module.exports = function createModule(dependencies) {
     E,
     SKILL_ICONS,
     eventIcon,
+    relicIcon,
+    monsterIcon,
     treasureChestIcon,
     memoryIcon,
     percent,
@@ -66,7 +68,7 @@ module.exports = function createModule(dependencies) {
       ],
       loot: [
         {
-          name: "🧩 Chuỗi bốn mảnh · Conqueror’s Covenant [LR]",
+          name: relicIcon("conquerors_covenant") + " Chuỗi bốn mảnh · Conqueror’s Covenant [LR]",
           value:
             "Mimic, Ancient Mimic, Blood Mimic và Clone từ ký ức sau khi phá Mirror of Fate: mỗi nguồn cho 100% một mảnh ở lần hạ hợp lệ đầu tiên trong run, độc lập LUCK; giữ thưởng cũ. Đủ 4 mảnh: Wrong Portal tiếp theo bảo đảm có cửa tầng hầm, vẫn giữ nút vào/bỏ qua. Thắng Covenant Guardian (Tinh anh HP ×1,25, DMG ×1,10 cùng tầng/Rift) mới tiêu thụ mảnh và nhận LR; bạn hành động trước, có thể hồi sinh để đánh tiếp. Nhận di vật kèm animation, hồi đầy HP/MP, giải mọi nguyền UR, xóa ấn Rift; giữ Paradox/Contract. Mỗi quái hạ sau kích hoạt cộng 0,2 điểm % thưởng xu, tối đa +100%; nhân một lần trước trần 10 triệu và chi phí/phạt, không tăng kim cương. Chỉ 1 LR hoạt động/run, không đổi giữa run. Mảnh/di vật mất khi run kết thúc; không gacha, shop hay roll drop LR.",
         },
@@ -95,12 +97,12 @@ module.exports = function createModule(dependencies) {
             "Trang bị có lời nguyền rút HP áp dụng **sau khi vượt tầng**, dựa trên Max HP và số level chưa giải nguyền. Tổng lượng rút luôn chừa ít nhất **1 HP**; đang có 1 HP thì không mất thêm.\nĐiều này chỉ bảo vệ trước hiệu ứng rút HP của trang bị và Shrine Fake. Quái hoặc các event có nhánh tử trận vẫn có thể giết bạn. Giải nguyền hoặc chuyển hóa level bị nguyền có thể gỡ hiệu ứng theo công dụng dịch vụ.",
         },
         {
-          name: `${E.chest} Phần thưởng Ancient Mimic`,
+          name: `${monsterIcon("Ancient Mimic")} Phần thưởng Ancient Mimic`,
           value:
             "Ancient Mimic là **quái Tinh anh**, hưởng bonus sát thương lên Tinh anh. Hạ quái nhận ngay **1 vật phẩm**: **50% SR · 30% SSR · 20% UR**. UR có thể là trang bị có nguyền hoặc Vé thoát; trang bị trùng tăng level. Vật phẩm được nhận ngay trong run và hiển thị ở **Lượt vừa rồi**. Tỷ lệ cố định, không chịu Luck/pity; phần thưởng này không làm thay đổi bộ đếm bảo hiểm hòm. Mimic thường không có phần thưởng này.",
         },
         {
-          name: `${E.chest} Phần thưởng Blood Mimic`,
+          name: `${monsterIcon("Blood Mimic")} Phần thưởng Blood Mimic`,
           value:
             "Blood Mimic từ event Blood Fountain là **quái Tinh anh**, hưởng bonus sát thương lên Tinh anh. Hạ quái nhận ngay **1 trang bị**: **60% SR · 40% SSR**. Đồ trùng tăng level và áp dụng hiệu ứng ngay trong run. Tỷ lệ cố định, không chịu Luck/pity và không làm đổi bộ đếm bảo hiểm hòm. Vẫn nhận bonus xu khi vượt tầng; Mimic thường từ hòm không có phần thưởng trang bị này.",
         },
@@ -166,7 +168,7 @@ module.exports = function createModule(dependencies) {
           value: `- **Cứu:** trả một bình, nhận R 70% / SR 30% và một lần bảo hộ trong cùng khu vực. Chết bởi RNGesus → hồi sinh 50% HP, sang tầng kế; chết khi đánh quái → hồi sinh 50% HP, ở lại đánh tiếp. Ưu tiên trước ${E.reviveTicket} **Vé hồi sinh**, hết hiệu lực khi dùng hoặc sang khu vực khác; không tạo hậu quả hẹn.\n- **Cướp:** nhận **SSR 75% / UR 25%** (trang bị có nguyền hoặc Vé thoát). Sau **10–30 tầng**: **50% mất 10% payout**, **50% gặp Bounty Hunter (Elite)**, có thể bồi thường 20% payout để tránh đánh. Không có nhánh hồi máu/bonus. Tối đa 8 hậu quả đang chờ; kết quả khóa khi ghi nhận.`,
         },
         {
-          name: "🕯️ Nghi lễ Oán Hận · Gilded Soul [LR]",
+          name: eventIcon("ritual") + " Nghi lễ Oán Hận · Gilded Soul [LR]",
           value:
             "Cướp Lost Adventurer vẫn giữ hậu quả 50% mất 10% payout / 50% Bounty Hunter, đồng thời thêm dấu ấn riêng trong Rift. Từ tầng cướp +10, Shrine có 7 nhánh ngang nhau: nghi lễ 1/7. Cướp thêm không lùi mốc; bỏ qua giữ dấu ấn.\nTriệu hồi Avarice Revenant (Boss), bạn hành động trước. Dưới 40% Max HP không dùng bình. Đòn Tấn công/Skill gây phản phệ 10% DMG thực tế (làm tròn xuống), không né/chặn/Crit, kể cả đòn kết liễu. Không tấn công một lượt: boss chờ; hai lượt liên tiếp trở đi: boss đánh. CRIT gián đoạn đòn thường nhưng vẫn chịu phản phệ.\nHạ boss và sống sót: nhận Gilded Soul, không ban phước hồi HP/MP/giải nguyền. DMG Tấn công/Skill +10/20/30/40/50% khi xu có thể rút trong run đạt 2/3/4/5/7 lần cược; chốt mỗi combat, tối đa +50%. Chỉ một nội tại LR hoạt động/run. Ghi nhận thành tích và thành tựu.",
         },

@@ -18,6 +18,10 @@ module.exports = function createModule(dependencies) {
     SKILL_ICONS,
     RIFT_ICONS,
     passiveIcon,
+    relicIcon,
+    fragmentIcon,
+    eventIcon,
+    formatStatText,
     rarityLabel,
     percent,
     addTextFields,
@@ -97,14 +101,14 @@ module.exports = function createModule(dependencies) {
           covenant.progress(state).completed)
       )
         e.addFields({
-          name: `🧩 Mảnh Chinh Phạt (${covenant.progress(state).completed ? 4 : covenant.fragmentCount(state)}/4)`,
+          name: `${eventIcon("covenant")} Mảnh Chinh Phạt (${covenant.progress(state).completed ? 4 : covenant.fragmentCount(state)}/4)`,
           value: covenant.progress(state).completed
-            ? "Đã hợp nhất thành **Conqueror’s Covenant [LR]**."
+            ? relicIcon("conquerors_covenant") + " Đã hợp nhất thành **Conqueror’s Covenant [LR]**."
             : Object.entries(covenant.FRAGMENTS)
                 .map(([key, name]) =>
                   covenant.progress(state).fragments?.[key] != null
-                    ? "✅ **" + name + "**"
-                    : "▫️ " + name,
+                    ? fragmentIcon(key) + " **" + name + "** · Đã có"
+                    : fragmentIcon(key) + " " + name + " · Chưa có",
                 )
                 .join("\n"),
         });
@@ -113,7 +117,7 @@ module.exports = function createModule(dependencies) {
         const definition = core.RELIC_ITEMS[relic.id];
         if (definition)
           e.addFields({
-            name: "💠 " + definition.name + " [LR]",
+            name: relicIcon(relic.id) + " " + definition.name + " [LR]",
             value:
               (state.activeRelic === relic.id
                 ? "**Đang hoạt động**"
@@ -121,7 +125,7 @@ module.exports = function createModule(dependencies) {
               " · Nhận tại tầng " +
               relic.acquiredFloor +
               "\n" +
-              definition.text,
+              passiveIcon(definition.relicPassive.kind) + " " + formatStatText(definition.text),
           });
       }
     } else if (tab === "stats") {
@@ -129,8 +133,8 @@ module.exports = function createModule(dependencies) {
       if (activeRelic)
         addTextFields(
           e,
-          "💠 Nội tại LR · " + activeRelic.name,
-          activeRelic.text +
+          passiveIcon(activeRelic.relicPassive.kind) + " Nội tại LR · " + activeRelic.name,
+          formatStatText(activeRelic.text) +
             gilded.status(state) +
             royal.status(state) +
             (covenant.active(state)

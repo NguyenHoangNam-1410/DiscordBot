@@ -1,5 +1,16 @@
 [
   {
+    "id": "c034cdf0-e5d5-4185-91f7-159c044aee51",
+    "updatedAt": "2026-10-09T03:45:55.022Z",
+    "auditedAt": "2026-10-09T03:45:55.022Z",
+    "title": "Chuẩn hóa icon di vật LR, event và quái Sinh tồn",
+    "changes": [
+      "Di vật LR có icon riêng cho món đồ và nội tại; chuẩn hóa trong Túi, Chỉ số, phần thưởng và hồ sơ.",
+      "Mỗi loài quái và boss có icon nhận diện trên bảng chiến đấu, Chi tiết và kết quả hạ quái, gồm quái từ event và Tower.",
+      "Bổ sung icon cho God of RNGesus, Royal Invitation, Nghi lễ Oán Hận, chuỗi Chinh Phạt, bốn mảnh LR, Threefold Prophecy và các ấn."
+    ]
+  },
+  {
     "id": "c438a444-ede8-466c-b374-7a109fe7ba6d",
     "updatedAt": "2026-10-08T10:39:33.564Z",
     "auditedAt": "2026-10-08T10:39:33.564Z",

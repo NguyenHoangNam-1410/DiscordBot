@@ -10,6 +10,7 @@ module.exports = function createModule(dependencies) {
     effectStatLabel,
     passiveIcon,
     ticketIcon,
+    relicIcon,
     percent,
     highlightStat,
     formatStatText,
@@ -142,7 +143,7 @@ module.exports = function createModule(dependencies) {
       );
       const exchanged = (state.relics || []).some((r) => r.id === id);
       const status = exchanged
-        ? "💠 Đã quy đổi."
+        ? relicIcon(id) + " Đã quy đổi."
         : royal.ended(state)
           ? state.royalInvitation.status === "declined"
             ? "Thư mời đã từ chối."
@@ -154,7 +155,7 @@ module.exports = function createModule(dependencies) {
               : "";
       return {
         name:
-          (id === "kingslayers_testament" ? "👑" : "✨") +
+          relicIcon(id) +
           " Set " +
           set.name +
           " (" +

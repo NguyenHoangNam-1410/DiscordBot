@@ -18,6 +18,8 @@ module.exports = function createModule(dependencies) {
     eventIcon,
     memoryIcon,
     passiveIcon,
+    monsterIcon,
+    relicIcon,
     rarityLabel,
     percent,
     money,
@@ -54,7 +56,7 @@ module.exports = function createModule(dependencies) {
     if (e.type === "covenant_blessing") {
       const b = e.blessing;
       return (
-        "✨ **PHƯỚC LÀNH CHINH PHẠT**\n" +
+        eventIcon("covenant") + " **PHƯỚC LÀNH CHINH PHẠT**\n" +
         E.hp +
         " **HP " +
         b.hpBefore +
@@ -70,9 +72,9 @@ module.exports = function createModule(dependencies) {
         b.cleansedLevels +
         "** lớp nguyền UR và xóa **" +
         b.removedRiftStacks +
-        "** ấn Rift. Giữ UR, level, Paradox và Contract.\n💠 **Conqueror’s Covenant [LR]** · " +
+        "** ấn Rift. Giữ UR, level, Paradox và Contract.\n" + relicIcon("conquerors_covenant") + " **Conqueror’s Covenant [LR]** · " +
         (covenant.active(s)
-          ? "Đang hoạt động: mỗi quái hạ từ bây giờ tăng 0,2 điểm % thưởng xu, tối đa +100%."
+          ? passiveIcon("killPayoutGrowth") + " Đang hoạt động: mỗi quái hạ từ bây giờ tăng 0,2 điểm % thưởng xu, tối đa +100%."
           : "Đã nhận; chưa kích hoạt vì đã có nội tại LR khác hoạt động.") +
         "\nĐã tiêu thụ bốn mảnh và vượt tầng thử thách. Bấm Tiếp tục để xử lý checkpoint hoặc tầng kế tiếp."
       );
@@ -101,9 +103,9 @@ module.exports = function createModule(dependencies) {
         "** lớp nguyền UR và xóa **" +
         b.removedRiftStacks +
         "** ấn Rift. Giữ UR, level, Paradox và Contract.\n" +
-        "💠 **Fatebreaker Seal [LR]** · " +
+        relicIcon("fatebreaker_seal") + " **Fatebreaker Seal [LR]** · " +
         (s.activeRelic === "fatebreaker_seal"
-          ? "Đang hoạt động: không gặp RNGesus trong phần còn lại của run."
+          ? passiveIcon("preventRngesusEncounter") + " Đang hoạt động: không gặp RNGesus trong phần còn lại của run."
           : "Đã nhận; đang có nội tại LR khác hoạt động.") +
         "\nTỷ lệ God đã reset về **0,0001%**. Thành tích đã được lưu.\nTiếp tục khám phá để xử lý tầng hiện tại; không bỏ qua boss."
       );
@@ -120,7 +122,7 @@ module.exports = function createModule(dependencies) {
         deimoss: "Abyssal Spires giảm 25% sát thương nhận.",
       };
       return (
-        `**${e.name}** · ${e.rank}\n${E.hp} ${e.hp}/${e.maxHp} · ${E.attack} ${e.damageMin}–${e.damageMax} · ${E.defense} ${e.defense} · ${E.res} RES ${e.resistance}%\n` +
+        `${monsterIcon(e)} **${e.name}** · ${e.rank}\n${E.hp} ${e.hp}/${e.maxHp} · ${E.attack} ${e.damageMin}–${e.damageMax} · ${E.defense} ${e.defense} · ${E.res} RES ${e.resistance}%\n` +
         `Đòn quái kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}** · Dự báo nhận **${p.low}–${p.high} HP** · Quái đánh trúng bạn **${percent(p.chance)}** *(chưa Crit/chưa Thủ)*\n` +
         `Bạn đánh vật lý trúng quái **${percent(world.hitChance(s.accuracy, e.evasion))}**; trượt gây 0 DMG nhưng vẫn hồi MP khi đánh thường. Skill phép luôn trúng.\n` +
         (gilded.isBoss(e)
@@ -202,13 +204,13 @@ module.exports = function createModule(dependencies) {
         }[world.mimicKind(e) ? "elite" : e.rank] || e.rank;
       const preview = core.incomingPreview(s);
       if (e.boss)
-        return `${eventIcon("boss")} **${e.name}** · Tầng ${s.floor}${["anomaly", "kabraxis"].includes(e.boss.id) ? " · Phase " + e.boss.phase : ""}
+        return `${monsterIcon(e)} **${e.name}** · Tầng ${s.floor}${["anomaly", "kabraxis"].includes(e.boss.id) ? " · Phase " + e.boss.phase : ""}
 ${bossDisplay.bars(s) || healthBar(e.hp, e.maxHp)}
 ${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%
 ${bossDisplay.status(s)}
 🎯 **Đòn kế tiếp:** ${preview.trueDamage ? "DMG chuẩn" : e.nextDamageType === "magic" ? E.magic + " Phép" : E.attack + " Vật lý"}
 📉 **Dự báo nhận:** **${preview.low}–${preview.high} DMG** · ${percent(preview.chance)} trúng bạn *(chưa CRIT)*`;
-      return `${e.memoryFamily ? memoryIcon(e.memoryFamily) : ["boss", "final_boss"].includes(e.rank) ? eventIcon("boss") : "👹"} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Tỷ lệ vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **${gilded.isBoss(e) ? "Dự báo đòn thường" : "Dự báo nhận"}:** **${preview.low}–${preview.high} DMG** · ${E.evasion} **${percent(preview.chance)}** trúng bạn *(chưa Crit/DEF${gilded.isBoss(e) ? "/phản phệ" : ""})*`;
+      return `${monsterIcon(e)} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Tỷ lệ vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **${gilded.isBoss(e) ? "Dự báo đòn thường" : "Dự báo nhận"}:** **${preview.low}–${preview.high} DMG** · ${E.evasion} **${percent(preview.chance)}** trúng bạn *(chưa Crit/DEF${gilded.isBoss(e) ? "/phản phệ" : ""})*`;
     }
 
     if (e.kind === "royal_invitation")
@@ -364,7 +366,7 @@ ${bossDisplay.status(s)}
     if (e.type === "prophecy") return bossDisplay.special(s);
     if (e.type === "combat") {
       if (e.boss)
-        return `${eventIcon("boss")} **${e.name} · Chi tiết chiến đấu**\n${bossDisplay.details(s)}\n\n${monsterLootDetails(s)}`;
+        return `${monsterIcon(e)} **${e.name} · Chi tiết chiến đấu**\n${bossDisplay.details(s)}\n\n${monsterLootDetails(s)}`;
       const mechanism =
         {
           butcher: `Frenzy: mỗi lần phản công tăng 8% sát thương, tối đa 5 stack. Hiện **${e.frenzy}/5**; phản công kế dùng **${Math.min(5, e.frenzy + 1)}/5** stack.`,
@@ -375,7 +377,7 @@ ${bossDisplay.status(s)}
           deimoss:
             "Abyssal Spires giảm **25% sát thương bạn gây ra**, áp dụng mọi đòn. Dự báo skill trên bảng chính đã tính giảm trừ này.",
         }[e.mechanic] || "Quái này không có chu kỳ kích hoạt riêng.";
-      return `${eventIcon("boss")} **${e.name} · Chi tiết chiến đấu**\n${gilded.isBoss(e) ? gilded.details(s) : mechanism}\n\n${monsterLootDetails(s)}${covenant.combatDetails(s)}${e.drainCharges > 0 ? `\nSoul Drain: **quái** còn **${e.drainCharges} lần hút**; mỗi phản công trúng rút **1** ${E.mana} **MP** của **bạn**.` : ""}`;
+      return `${monsterIcon(e)} **${e.name} · Chi tiết chiến đấu**\n${gilded.isBoss(e) ? gilded.details(s) : mechanism}\n\n${monsterLootDetails(s)}${covenant.combatDetails(s)}${e.drainCharges > 0 ? `\nSoul Drain: **quái** còn **${e.drainCharges} lần hút**; mỗi phản công trúng rút **1** ${E.mana} **MP** của **bạn**.` : ""}`;
     }
     if (e.type === "chest")
       return encounterText(s).replace(

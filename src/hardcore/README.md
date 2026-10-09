@@ -45,6 +45,12 @@
 - `events/covenantReveal.js`: claim animation một lần trên encounter/turn đã lưu; `events/godReveal.js` điều phối cả hai animation.
 - Mảnh và nội tại thuộc state JSON của run; thu mảnh không tiêu thụ RNG. Thử thách hoàn thành tầng trước khi ban phước, rồi tạm dừng trước milestone/tầng mới để giữ checkpoint/boss và nhận LR trước lần roll God tiếp theo.
 
+## Icon Sinh tồn
+
+- `shared/icons.js` ánh xạ tên quái/boss, ID di vật LR, nội tại, mảnh Chinh Phạt và ấn Prophecy sang tên application emoji. Tra emoji lúc render, sau khi registry được tải; thiếu emoji dùng biểu tượng dự phòng.
+- Upload PNG bằng đúng tên file, không đổi hoa/thường: `monster_*`, `relic_*`, `passive_*`, `fragment_*`, `event_*`, `seal_*`, `tower_remember_grudge`. Khởi động lại bot để tải registry mới. Quái cùng loài ở rank khác nhau dùng cùng icon; boss có ID được ánh xạ rõ ràng, không suy ra tên emoji từ tên người chơi/Echo.
+- Ảnh và gói upload chỉ lưu trong `output/survival-ui-icons/` đã được Git bỏ qua. Server chỉ cần mapping tên emoji, không cần file ảnh. Icon dự phòng cho Veil of the Absolute không kích hoạt di vật đang chờ triển khai.
+
 ## Cách nối module
 
 `engine/index.js`, `ui/index.js`, `runtime/index.js` và các entry trong `legacy/` tạo một bộ dependencies duy nhất khi module được require lần đầu. `dependencies.js` chứa import, hằng số và trạng thái dùng chung; các file nghiệp vụ nhận đúng dependencies cần dùng.
