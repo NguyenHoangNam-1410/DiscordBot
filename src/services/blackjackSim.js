@@ -2,6 +2,7 @@ const crypto = require("node:crypto");
 const {
   handScore,
   handType,
+  isXiBang,
   evaluateHand,
   initialResult,
   createShoe,
@@ -74,6 +75,7 @@ function playRound(deck, strategy, winMultiplier = REGULAR_WIN_MULTIPLIER) {
   }
   while (
     handScore(dealer).total < DEALER_MIN_STAND &&
+    !isXiBang(dealer) &&
     handType(dealer) !== "ngulinh"
   )
     dealer.push(draw());

@@ -84,7 +84,7 @@ Các game cược tiếp tục dùng seed và HMAC-SHA256 nội bộ để tạo
 - Ở bàn nhiều người, bài mỗi người được giữ kín: bấm **Xem bài của tôi** để xem bài và Rút bài/Dừng trong bảng riêng (chỉ bạn thấy); bot nhắc người đến lượt trong kênh và bài chỉ lộ khi ván kết thúc.
 - Với prefix: `!xidach <số xu> [bot|nguoichoi]` (mặc định bot).
 
-Trong ván với nhà cái bot, thắng thường nhận 2× tổng cược, Xì dách tự nhiên nhận 2,5×. Người chơi chỉ được Dừng khi có ít nhất 16 điểm nhà cái rút đến khi có ít nhất 15 điểm. Người chơi quắc trên 21 thua, nhưng nếu nhà cái cũng quắc thì **hòa** và hoàn cược; khi quắc mọi nút thao tác bị khóa. Luật 16/15 và cùng quắc = hòa áp dụng cho cả bàn nhiều người và đấu người (đấu người vốn đã hòa khi cả hai quắc). Lưu ý cân bằng: với hệ số 2× và luật mới, mô phỏng cho RTP khoảng 108% với chiến thuật cơ bản (người chơi có lợi); hạ `REGULAR_WIN_MULTIPLIER` xuống 1,8 để về khoảng 99%. Ngũ linh (đủ 5 lá không quắc) thắng nhà cái không có Ngũ linh. Trong ván 1v1, mỗi người xem tay bài bằng nút riêng, sau đó chọn Rút bài hoặc Dừng. Người có tay gần 21 nhất thắng toàn bộ tiền cược; Xì dách tự nhiên được ưu tiên cao nhất. Nếu ván hết hạn, cược được hoàn cho cả hai.
+Trong ván với nhà cái bot, thắng thường nhận 2× tổng cược, Xì dách hoặc Xì bàng tự nhiên nhận 2,5×. **Xì bàng (đúng 2 lá A) là bộ mạnh nhất**, tự động dừng và thắng cả Ngũ linh lẫn Xì dách; cùng Xì bàng thì hòa. Người chơi chỉ được Dừng khi có ít nhất 16 điểm nhà cái rút đến khi có ít nhất 15 điểm. Người chơi quắc trên 21 thua, nhưng nếu nhà cái cũng quắc thì **hòa** và hoàn cược; khi quắc mọi nút thao tác bị khóa. Luật 16/15 và cùng quắc = hòa áp dụng cho cả bàn nhiều người và đấu người (đấu người vốn đã hòa khi cả hai quắc). Lưu ý cân bằng: với hệ số 2× và luật mới, mô phỏng cho RTP khoảng 108% với chiến thuật cơ bản (người chơi có lợi); hạ `REGULAR_WIN_MULTIPLIER` xuống 1,8 để về khoảng 99%. Ngũ linh (đủ 5 lá không quắc) thắng nhà cái không có Ngũ linh hoặc Xì bàng. Trong ván 1v1, mỗi người xem tay bài bằng nút riêng, sau đó chọn Rút bài hoặc Dừng. Người có tay gần 21 nhất thắng toàn bộ tiền cược; Xì bàng được ưu tiên cao nhất, rồi đến Xì dách tự nhiên. Nếu ván hết hạn, cược được hoàn cho cả hai.
 
 ### Poker
 
@@ -157,7 +157,7 @@ Số xu là **thay đổi ròng** (tiền nhận về − tiền cược): thắ
 
 | Game | Mặc định | Phạm vi áp dụng |
 |---|---|---|
-| Xì dách (với bot) | x2 | Thắng thường và Ngũ linh; Xì dách tự nhiên = hệ số + 0,5 |
+| Xì dách (với bot) | x2 | Thắng thường và Ngũ linh; Xì dách/Xì bàng tự nhiên = hệ số + 0,5 |
 | Chinchiro | x1,8 | Thắng bằng điểm cao hơn nhà cái; Shigoro, Bão, Pin-Zoro giữ nguyên |
 | Cò quay Nga | x2 | Hạ Bot về 0 máu |
 | Tài xỉu | x2 | Cửa Tài/Xỉu/Chẵn/Lẻ (ra bộ ba vẫn thua); Bộ ba và Tổng cụ thể giữ nguyên |

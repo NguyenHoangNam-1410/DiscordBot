@@ -22,6 +22,7 @@ const { getGameBetLimit } = require("./gameBetLimitService");
 const {
   createShoe,
   handScore,
+  isXiBang,
   isBlackjack,
   getSessionByUser,
   PLAYER_MIN_STAND,
@@ -146,6 +147,7 @@ function draw(state) {
 
 function playerResult(player) {
   const score = handScore(player.cards).total;
+  if (isXiBang(player.cards)) return { value: 23, score, label: "Xì bàng (2 A)" };
   if (score > 21) return { value: -1, score, label: "Quắc" };
   if (isBlackjack(player.cards)) return { value: 22, score, label: "Xì dách" };
   return { value: score, score, label: `${score} điểm` };
@@ -259,9 +261,15 @@ const acceptTx = db.transaction((id, actorId, now, forcedDeck) => {
     state.players[duel.challenger_id].cards.push(draw(state));
     state.players[duel.opponent_id].cards.push(draw(state));
   }
-  if (isBlackjack(state.players[duel.challenger_id].cards))
+  if (
+    isXiBang(state.players[duel.challenger_id].cards) ||
+    isBlackjack(state.players[duel.challenger_id].cards)
+  )
     state.players[duel.challenger_id].status = "stand";
-  if (isBlackjack(state.players[duel.opponent_id].cards))
+  if (
+    isXiBang(state.players[duel.opponent_id].cards) ||
+    isBlackjack(state.players[duel.opponent_id].cards)
+  )
     state.players[duel.opponent_id].status = "stand";
   db.prepare(
     "UPDATE blackjack_duels SET state_json = ?, status = 'playing', expires_at = ?, updated_at = ? WHERE id = ?",
@@ -303,7 +311,7 @@ const playTx = db.transaction((id, actorId, action, now) => {
     const score = handScore(player.cards).total;
     if (score >= 21) player.status = score > 21 ? "bust" : "stand";
   } else if (action === "stand") {
-    if (handScore(player.cards).total < PLAYER_MIN_STAND)
+    if (!isXiBang(player.cards) && handScore(player.cards).total < PLAYER_MIN_STAND)
       throw new Error("MUST_HIT");
     player.status = "stand";
   } else throw new Error("INVALID_ACTION");
@@ -466,7 +474,7 @@ function blackjackDuelEmbed(duel) {
           : "Lời thách đấu không được chấp nhận kịp thời.",
     });
   return embed.setFooter({
-    text: `Mã trận ${duel.id} · Mục tiêu: gần 21 nhất, Xì dách ưu tiên cao nhất`,
+    text: `Mã trận ${duel.id} · Xì bàng (2 A) > Xì dách > điểm thường · Cùng Xì bàng: hòa`,
   });
 }
 

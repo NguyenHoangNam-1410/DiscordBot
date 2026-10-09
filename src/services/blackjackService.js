@@ -83,12 +83,19 @@ function handScore(cards) {
 }
 
 function canStand(cards) {
-  return handScore(cards).total >= PLAYER_MIN_STAND;
+  return isXiBang(cards) || handScore(cards).total >= PLAYER_MIN_STAND;
+}
+function isXiBang(cards) {
+  return cards.length === 2 && cards.every((card) => rank(card) === "A");
+}
+function handValueText(cards) {
+  return isXiBang(cards) ? "Xì bàng · 2 A" : `${handScore(cards).total} điểm`;
 }
 function isBlackjack(cards) {
   return cards.length === 2 && handScore(cards).total === 21;
 }
 function handType(cards) {
+  if (isXiBang(cards)) return "xibang";
   const score = handScore(cards).total;
   if (score > 21) return "bust";
   if (cards.length === 5) return "ngulinh";
@@ -159,6 +166,25 @@ function setMessageId(id, messageId) {
 
 // Hệ số thắng mặc định; mỗi server có thể chỉnh bằng /quantri hesothang và hệ số được khóa vào ván lúc bắt đầu.
 function initialResult(state, winMultiplier = REGULAR_WIN_MULTIPLIER) {
+  const playerXiBang = isXiBang(state.hands[0].cards);
+  const dealerXiBang = isXiBang(state.dealer);
+  if (playerXiBang || dealerXiBang)
+    return {
+      outcome:
+        playerXiBang && dealerXiBang ? "draw" : playerXiBang ? "win" : "loss",
+      payout:
+        playerXiBang && dealerXiBang
+          ? state.hands[0].bet
+          : playerXiBang
+            ? Math.floor(state.hands[0].bet * (winMultiplier + 0.5))
+            : 0,
+      reason:
+        playerXiBang && dealerXiBang
+          ? "Cả hai cùng Xì bàng (2 A)"
+          : playerXiBang
+            ? "Xì bàng (2 A) · Bộ bài mạnh nhất"
+            : "Thua · Nhà cái Xì bàng (2 A)",
+    };
   const playerBlackjack = isBlackjack(state.hands[0].cards);
   const dealerBlackjack = isBlackjack(state.dealer);
   if (!playerBlackjack && !dealerBlackjack) return null;
@@ -305,7 +331,14 @@ function evaluateHand(
     payout: Math.floor(bet * winMultiplier),
   });
   let result;
-  if (playerType === "bust")
+  if (playerType === "xibang")
+    result =
+      dealerType === "xibang"
+        ? { label: "Xì bàng · Hòa", payout: bet }
+        : { label: "Xì bàng · Thắng", payout: Math.floor(bet * winMultiplier) };
+  else if (dealerType === "xibang")
+    result = { label: "Thua · Nhà cái Xì bàng", payout: 0 };
+  else if (playerType === "bust")
     result =
       dealer > 21
         ? { label: "Quắc · Hòa (cả hai quắc)", payout: bet }
@@ -339,6 +372,7 @@ function evaluateHand(
 function dealerPlay(state) {
   while (
     handScore(state.dealer).total < DEALER_MIN_STAND &&
+    !isXiBang(state.dealer) &&
     handType(state.dealer) !== "ngulinh"
   )
     state.dealer.push(draw(state));
@@ -504,7 +538,10 @@ const actionTx = db.transaction(
       if (rank(first) === "A")
         for (const splitHand of state.hands) splitHand.status = "stand";
     } else throw new Error("INVALID_ACTION");
-    if (hand.status === "playing" && handType(hand.cards) === "ngulinh")
+    if (
+      hand.status === "playing" &&
+      ["xibang", "ngulinh"].includes(handType(hand.cards))
+    )
       hand.status = "stand";
     if (["playing", "redraw"].includes(state.hands[state.active]?.status)) {
       saveState(session, state);
@@ -525,14 +562,13 @@ function largeCards(cards) {
   return cardsText(cards);
 }
 function handText(hand, index, active, result = null) {
-  const score = handScore(hand.cards).total;
   const marker = active === index && !result ? "👉 " : "";
   const outcome = result
     ? ` • **${result.label}**`
     : hand.status === "bust"
       ? " • **BUST**"
       : "";
-  return `${marker}**Tay ${index + 1}:** ${cardText(hand.cards)} — **${score} điểm** • Cược ${formatCoins(hand.bet)} :coin:${outcome}`;
+  return `${marker}**Tay ${index + 1}:** ${cardText(hand.cards)} — **${handValueText(hand.cards)}** • Cược ${formatCoins(hand.bet)} :coin:${outcome}`;
 }
 
 function blackjackEmbed(state, userId, result = null, sessionId = null) {
@@ -540,7 +576,7 @@ function blackjackEmbed(state, userId, result = null, sessionId = null) {
     ? largeCards(state.dealer)
     : `${largeCards([state.dealer[0]])}　${hiddenCards(state, 1, sessionId)}`;
   const dealerScore = result
-    ? ` · **${handScore(state.dealer).total} điểm**`
+    ? ` · **${handValueText(state.dealer)}**`
     : "";
   const hands = state.hands
     .map((hand, index) =>
@@ -574,7 +610,7 @@ function blackjackEmbed(state, userId, result = null, sessionId = null) {
   }
   if (sessionId && !result)
     embed.setFooter({
-      text: `Mã ván: ${sessionId} • Thắng ${formatMultiplier(state.winMultiplier ?? REGULAR_WIN_MULTIPLIER)} • Dừng từ 16 điểm • Nhà cái rút đến 15 • Cùng quắc = hòa • Xì dách tự nhiên +50% • Không thu phí mở ván`,
+      text: `Mã ván: ${sessionId} • Thắng ${formatMultiplier(state.winMultiplier ?? REGULAR_WIN_MULTIPLIER)} • Xì bàng (2 A) mạnh nhất • Dừng từ 16 điểm • Nhà cái rút đến 15 • Cùng quắc = hòa • Xì dách/Xì bàng tự nhiên +50% • Không thu phí mở ván`,
     });
   return embed;
 }
@@ -767,7 +803,9 @@ function tableStatusResult(player, dealer, dealerNatural) {
   const dealerType = handType(dealer);
   let outcome = "loss";
   const dealerScore = handScore(dealer).total;
-  if (playerType === "bust") outcome = dealerScore > 21 ? "draw" : "loss";
+  if (playerType === "xibang") outcome = dealerType === "xibang" ? "draw" : "win";
+  else if (dealerType === "xibang") outcome = "loss";
+  else if (playerType === "bust") outcome = dealerScore > 21 ? "draw" : "loss";
   else if (playerType === "ngulinh" && dealerType !== "ngulinh")
     outcome = "win";
   else if (dealerType === "ngulinh" && playerType !== "ngulinh")
@@ -779,19 +817,23 @@ function tableStatusResult(player, dealer, dealerNatural) {
   else if (natural || dealerScore > 21 || score > dealerScore) outcome = "win";
   else if (score === dealerScore) outcome = "draw";
   const label =
-    playerType === "ngulinh"
-      ? `Ngũ linh ${outcome === "win" ? "thắng" : outcome === "draw" ? "hòa" : "thua"}`
-      : natural
-        ? `Xì dách ${outcome === "win" ? "thắng" : outcome === "draw" ? "hòa" : "thua"}`
-        : playerType === "bust"
-          ? outcome === "draw"
-            ? "Quắc · hòa (cả hai quắc)"
-            : "Quắc · thua"
-          : outcome === "win"
-            ? "Thắng"
-            : outcome === "draw"
-              ? "Hòa"
-              : "Thua";
+    playerType === "xibang"
+      ? `Xì bàng ${outcome === "win" ? "thắng" : "hòa"}`
+      : dealerType === "xibang"
+        ? "Thua · Nhà cái Xì bàng"
+        : playerType === "ngulinh"
+          ? `Ngũ linh ${outcome === "win" ? "thắng" : outcome === "draw" ? "hòa" : "thua"}`
+          : natural
+            ? `Xì dách ${outcome === "win" ? "thắng" : outcome === "draw" ? "hòa" : "thua"}`
+            : playerType === "bust"
+              ? outcome === "draw"
+                ? "Quắc · hòa (cả hai quắc)"
+                : "Quắc · thua"
+              : outcome === "win"
+                ? "Thắng"
+                : outcome === "draw"
+                  ? "Hòa"
+                  : "Thua";
   return {
     userId: player.id,
     score,
@@ -866,6 +908,7 @@ function settleTableTx(table, state, now = Date.now()) {
   if (!dealerNatural)
     while (
       handScore(state.dealer).total < DEALER_MIN_STAND &&
+      !isXiBang(state.dealer) &&
       handType(state.dealer) !== "ngulinh"
     )
       state.dealer.push(tableDraw(state));
@@ -947,11 +990,15 @@ function beginBlackjackTableTx(table, now = Date.now()) {
     state.dealer.push(tableDraw(state));
   }
   for (const player of state.players)
-    if (isBlackjack(player.cards)) player.status = "stand";
+    if (isXiBang(player.cards) || isBlackjack(player.cards))
+      player.status = "stand";
   state.phase = "playing";
   state.turn = state.players.findIndex((player) => player.status === "playing");
   saveTable(table, state, "playing", now + TABLE_PLAY_MS, now);
-  if (state.players.every((player) => player.status !== "playing"))
+  if (
+    isXiBang(state.dealer) ||
+    state.players.every((player) => player.status !== "playing")
+  )
     return settleTableTx(getBlackjackTable(table.id), state, now);
   return state;
 }
@@ -1138,7 +1185,7 @@ function blackjackTableEmbed(table, state = tableState(table)) {
     embed.addFields(
       {
         name: "🏦 Bài nhà cái",
-        value: `${dealerCards}${complete ? ` · ${handScore(state.dealer).total} điểm` : ""}`,
+        value: `${dealerCards}${complete ? ` · ${handValueText(state.dealer)}` : ""}`,
       },
       {
         name: "👥 Người chơi",
@@ -1155,11 +1202,10 @@ function blackjackTableEmbed(table, state = tableState(table)) {
                   : "✅ Đã xong lượt";
               return `<@${player.id}> · ${status} · ${hiddenCards(state, player.cards.length, table.id)}`;
             }
-            const score = handScore(player.cards).total;
             const result = state.results?.find(
               (item) => item.userId === player.id,
             );
-            const cardsLineText = `${cardsText(player.cards)} · ${score} điểm${handType(player.cards) === "ngulinh" ? " · **NGŨ LINH**" : ""}${result ? ` · **${result.label}**` : ""}`;
+            const cardsLineText = `${cardsText(player.cards)} · ${handValueText(player.cards)}${handType(player.cards) === "ngulinh" ? " · **NGŨ LINH**" : ""}${result ? ` · **${result.label}**` : ""}`;
             return `<@${player.id}>${state.players[state.turn]?.id === player.id && !complete ? " · 👉 Đến lượt" : ""}\n${cardsLineText}${result ? `\n${resultBlock({ userId: player.id, outcome: result.outcome, stake: player.stake, payout: result.payout, result })}` : ""}`;
           })
           .join("\n\n"),
@@ -1238,8 +1284,7 @@ function tablePrivateText(table, state, userId) {
     return table.dealer_id === String(userId)
       ? "🏦 Bạn là nhà cái của bàn này; bài nhà cái được chia tự động và giữ kín cho đến khi kết thúc."
       : "Bạn không ngồi ở bàn này.";
-  const score = handScore(player.cards).total;
-  const hand = `🃏 **Bài của bạn:** ${largeCards(player.cards)} — **${score} điểm**${handType(player.cards) === "ngulinh" ? " · **NGŨ LINH**" : ""}\n🏦 Nhà cái đang lộ: ${table.status === "completed" ? cardsText(state.dealer) : `${cardFace(state.dealer[0])}　${hiddenCards(state, 1, table.id)}`}`;
+  const hand = `🃏 **Bài của bạn:** ${largeCards(player.cards)} — **${handValueText(player.cards)}**${handType(player.cards) === "ngulinh" ? " · **NGŨ LINH**" : ""}\n🏦 Nhà cái đang lộ: ${table.status === "completed" ? cardsText(state.dealer) : `${cardFace(state.dealer[0])}　${hiddenCards(state, 1, table.id)}`}`;
   const result = state.results?.find((item) => item.userId === player.id);
   if (result)
     return `${hand}\n\n🏆 **${result.label}**\n${resultBlock({ userId: player.id, outcome: result.outcome, stake: player.stake, payout: result.payout, result })}`;
@@ -1557,6 +1602,7 @@ module.exports = {
   expireBlackjackTableTx,
   getBlackjackTable,
   handScore,
+  isXiBang,
   isBlackjack,
   handType,
   evaluateHand,

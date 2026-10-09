@@ -1,5 +1,16 @@
 [
   {
+    "id": "efc85496-a55e-496c-930d-e10ef2cd18c7",
+    "updatedAt": "2026-10-09T06:13:02.363Z",
+    "auditedAt": "2026-10-09T06:13:02.363Z",
+    "title": "Sửa Xì bàng trong Xì dách",
+    "changes": [
+      "Hai lá A được tính là Xì bàng, bộ bài mạnh nhất ở chế độ bot, bàn nhiều người và đấu tay đôi; cùng Xì bàng thì hòa.",
+      "Xì bàng tự động dừng; nhà cái không rút thêm khi có hai lá A. UI và luật chơi hiển thị đúng tên bộ bài.",
+      "Xì bàng từ hai lá đầu khi thắng bot nhận cùng hệ số với Xì dách tự nhiên: mặc định 2,5 lần cược."
+    ]
+  },
+  {
     "id": "c034cdf0-e5d5-4185-91f7-159c044aee51",
     "updatedAt": "2026-10-09T03:45:55.022Z",
     "auditedAt": "2026-10-09T03:45:55.022Z",
