@@ -248,11 +248,11 @@ module.exports = function createModule(dependencies) {
       if (e.boss)
         return `${monsterIcon(e)} **${e.name}** · Tầng ${s.floor}${["anomaly", "kabraxis"].includes(e.boss.id) ? " · Phase " + e.boss.phase : ""}
 ${bossDisplay.bars(s) || healthBar(e.hp, e.maxHp)}
-${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG${e.boss?.version === 2 ? " " + { physical: "Vật lý", magic: "Phép", mixed: "Hỗn hợp" }[e.damageType] : ""} · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%
-${bossDisplay.status(s)}
+${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG${e.boss?.version === 2 ? " " + { physical: "Vật lý", magic: "Phép", mixed: "Hỗn hợp" }[e.damageType] : ""} · ${E.defense} DEF ${money(require("../rift").enemyDefense(s, e.defense))} · ${E.res} RES ${e.resistance}%
+${bossDisplay.status(s)}${require("../rift").battle(s)}
 🎯 **Đòn kế tiếp:** ${preview.trueDamage ? "DMG chuẩn" : e.nextDamageType === "magic" ? E.magic + " Phép" : E.attack + " Vật lý"}
 📉 **Dự báo nhận:** **${preview.low}–${preview.high} DMG** · ${percent(preview.chance)} trúng bạn *(chưa CRIT)*`;
-      return `${monsterIcon(e)} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Tỷ lệ vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **${gilded.isBoss(e) ? "Dự báo đòn thường" : "Dự báo nhận"}:** **${preview.low}–${preview.high} DMG** · ${E.evasion} **${percent(preview.chance)}** trúng bạn *(chưa Crit/DEF${gilded.isBoss(e) ? "/phản phệ" : ""})*`;
+      return `${monsterIcon(e)} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(require("../rift").enemyDefense(s, e.defense))} · ${E.res} RES ${e.resistance}%${require("../rift").battle(s)}\n${E.accuracy} Tỷ lệ vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **${gilded.isBoss(e) ? "Dự báo đòn thường" : "Dự báo nhận"}:** **${preview.low}–${preview.high} DMG** · ${E.evasion} **${percent(preview.chance)}** trúng bạn *(chưa Crit/DEF${gilded.isBoss(e) ? "/phản phệ" : ""})*`;
     }
 
     if (e.kind === "royal_invitation")

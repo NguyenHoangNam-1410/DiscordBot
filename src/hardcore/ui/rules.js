@@ -73,7 +73,7 @@ module.exports = function createModule(dependencies) {
         {
           name: `${E.checkpoint} Checkpoint và ${E.rift} Rift`,
           value:
-            "- Sau mỗi **5 tầng:** hồi đầy HP, +2 bình (cơ bản 5, nội tại tăng tối đa 10), chọn **+5 STR/DEX/VIT/ENE**. Bảng hiển thị chỉ số hiện tại và dự báo từng lựa chọn.\n- Sau mỗi **10 tầng:** thêm 1 stack Rift; nhận đủ 8 loại trước khi lặp. Icon ×N là số stack của từng loại; nút Rift giải thích hiệu ứng.\n- Sau mỗi **25 tầng:** chọn Paradox có hiệu lực 5 tầng. Paradox v2 chọn đều một trong **4 cặp cố định**, hiệu lực từ tầng mốc +1 đến hết +5, sau nâng thuộc tính. Không đổi payout hoặc stat gốc; mở UI không roll lại.\n- Sau tầng **199/399/699/899:** xóa toàn bộ stack một Rift có hại, trừ Unstable Rift.",
+            "- Sau mỗi **5 tầng:** hồi đầy HP, +2 bình (cơ bản 5, nội tại tăng tối đa 10), chọn **+5 STR/DEX/VIT/ENE**. Bảng hiển thị chỉ số hiện tại và dự báo từng lựa chọn.\n- Run V3 mới: mỗi **10 tầng**, từ **10–960**, phát 1 stack từ túi xáo đủ 8 loại đã lưu; hết túi mới xáo lại. Không phát ở **970/980/990**. Mỗi loại tối đa **×12**; ×1–4 Rift I, ×5–8 Rift II, ×9–12 Rift III. Hạ boss/xử lý việc bắt buộc trước khi nhận. Run cũ giữ luật đã lưu. Icon ×N là số stack của từng loại; nút Rift giải thích hiệu ứng.\n- Sau mỗi **25 tầng:** chọn Paradox có hiệu lực 5 tầng. Paradox v2 chọn đều một trong **4 cặp cố định**, hiệu lực từ tầng mốc +1 đến hết +5, sau nâng thuộc tính. Không đổi payout hoặc stat gốc; mở UI không roll lại.\n- Sau tầng **199/399/699/899:** xóa toàn bộ stack một Rift có hại, trừ Unstable Rift.",
         },
       ],
       loot: [

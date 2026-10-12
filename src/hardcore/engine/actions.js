@@ -223,7 +223,11 @@ module.exports = function createModule(dependencies) {
     } else if (state.phase === "severance") {
       const key = action.slice(6);
       const removed = state.modifiers[key] || 0;
-      if (action !== "sever_none") delete state.modifiers[key];
+      if (action !== "sever_none") {
+        if (require("../rift").enabled(state))
+          require("../rift").sever(state, key);
+        else delete state.modifiers[key];
+      }
       state.lastLog = `${eventIcon("severance")} Rift Severance: ${action === "sever_none" ? "không có modifier phù hợp để xóa" : `đã xóa ${RIFT_ICONS[key] || E.rift} ×${removed}, hiệu ứng của loại Rift này không còn áp dụng`}.`;
       nextMilestone(state, session, rng);
     } else {
@@ -238,6 +242,8 @@ module.exports = function createModule(dependencies) {
         } else if (e.echoId) echoes.renew(session, e.echoId);
         prepareItemCombat(state, rng);
         delete e.awakeningShadowGranted;
+        require("../rift").beginAction(state, action);
+        const beforeEnemyHp = e.hp;
         const acted =
           action === "ritual_claim"
             ? { log: "", dealt: 0, critical: false }
@@ -254,6 +260,8 @@ module.exports = function createModule(dependencies) {
                   return acted;
                 })()
               : playerAttack(state, action, rng);
+        require("../rift").thresholds(state, beforeEnemyHp, e.hp);
+        require("../rift").endAction(state, acted.dealt || 0);
         if (action !== "ritual_claim") paradox.afterAction(state, action);
         state.lastLog += acted.log;
         state.lastLog += bosses.beforeResolution(state, { hurt });
@@ -305,6 +313,8 @@ module.exports = function createModule(dependencies) {
             heal: dependencies.heal,
             addSource,
           });
+        if (state.encounter === e)
+          require("../rift").thresholds(state, beforeEnemyHp, e.hp);
       } else if (e.type === "surprise") {
         actSurprise(state, session, action, rng);
         if (action !== "event_skip")
@@ -520,6 +530,8 @@ module.exports = function createModule(dependencies) {
       alive(state)
     )
       defeatEnemy(state, session, rng, state.encounter);
+    if (require("../rift").encounter(state) && state.encounter.boss)
+      require("../rift").nextCounter(state, rng, bosses.counter(state));
     delete state.encounter?.awakeningGroundThisAction;
     recompute(state);
     state.mana = Math.min(state.mana, bosses.effectiveMaxMana(state));

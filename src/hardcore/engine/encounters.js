@@ -297,6 +297,7 @@ module.exports = function createModule(dependencies) {
             ? {
                 chest: makeChest(state, rng, false, {
                   deferAffinity: equipmentRules.enabled(state),
+                  riftEligible: false,
                 }),
               }
             : {}),
@@ -360,6 +361,10 @@ module.exports = function createModule(dependencies) {
     if (build === "vit") enemy.defense += 12;
     if (build === "str") enemy.critChance += 0.1;
     if (build === "ene") enemy.damageType = enemy.nextDamageType = "magic";
+    if (require("../rift").enabled(state)) {
+      delete enemy.rift;
+      require("../rift").snapshot(state, enemy);
+    }
     return enemy;
   }
 
@@ -452,7 +457,9 @@ module.exports = function createModule(dependencies) {
         };
       }
     }
-    const extra = Math.min(0.16, (state.modifiers.unstable_rift || 0) * 0.02),
+    const extra = require("../rift").enabled(state)
+        ? require("../rift").unstable(state).encounter
+        : Math.min(0.16, (state.modifiers.unstable_rift || 0) * 0.02),
       roll = rng();
     if (roll < 0.53 - extra) return world.makeEnemy(state, "normal", null, rng);
     if (roll < 0.65 - extra) return world.makeEnemy(state, "elite", null, rng);

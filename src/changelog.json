@@ -1,5 +1,17 @@
 [
   {
+    "id": "081e6e66-6093-42a1-a03c-cea6938578b7",
+    "updatedAt": "2026-10-12T08:15:10.334Z",
+    "auditedAt": "2026-10-12T08:15:10.334Z",
+    "title": "Sinh tồn V3: làm mới tám Rift",
+    "changes": [
+      "Phát Rift theo túi đủ 8 loại, mỗi 10 tầng đến tầng 960; tối đa 12 stack mỗi loại, có ba cấp hiệu lực và thông báo tăng cấp.",
+      "Stone Skin có giáp riêng; Bloodlust chỉ tăng một phản công; Fortified và Swift tạo lợi thế cho lượt gây sát thương kế tiếp. Soul Drain giới hạn lượt hút MP và có hồi MP bù khi đánh thường.",
+      "Điều chỉnh Elemental Dominion, Unstable Rift và Cursed Ground; cập nhật chỉ số hiệu lực, dự báo sát thương và chi tiết Rift theo cơ chế mới.",
+      "Lưu thứ tự túi và trạng thái combat qua khởi động lại; giữ luật của run cũ và Tower. Severance hoặc phước lành không đổi thứ tự túi."
+    ]
+  },
+  {
     "id": "55f1495e-3e4f-4447-b20f-76303fd7341f",
     "updatedAt": "2026-10-12T07:36:41.080Z",
     "auditedAt": "2026-10-12T07:36:41.080Z",

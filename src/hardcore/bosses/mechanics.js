@@ -16,11 +16,21 @@ module.exports = {
         })()
       : legacy.seed(s, e, d, rng),
   applyDamage: (s, damage) => {
-    if (modern.on(s.encounter)) return modern.applyDamage(s, damage);
-    const e = s.encounter,
-      dealt = Math.min(Math.max(0, e.hp - legacy.floorHp(s)), damage);
-    e.hp = Math.max(legacy.floorHp(s), e.hp - damage);
-    return dealt;
+    const rift = require("../rift");
+    if (
+      rift.enabled(s) &&
+      (modern.on(s.encounter)
+        ? modern.previewDamage(s, damage) <= 0
+        : s.encounter.hp <= legacy.floorHp(s))
+    )
+      return 0;
+    return rift.damage(s, damage, (damage) => {
+      if (modern.on(s.encounter)) return modern.applyDamage(s, damage);
+      const e = s.encounter,
+        dealt = Math.min(Math.max(0, e.hp - legacy.floorHp(s)), damage);
+      e.hp = Math.max(legacy.floorHp(s), e.hp - damage);
+      return dealt;
+    });
   },
   previewDamage: (s, damage) =>
     modern.on(s.encounter) ? modern.previewDamage(s, damage) : damage,

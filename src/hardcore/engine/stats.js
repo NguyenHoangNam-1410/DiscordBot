@@ -301,6 +301,7 @@ function createState(
     lastLog: `Run Sinh tồn ${RELEASE.version} bắt đầu.`,
   };
   if (gameplayVersion === 3) {
+    require("../rift").activate(state);
     state.classAwakeningVersion = 1;
     state.statSystemVersion = statsV3.VERSION;
     state.classMasteryVersion = statsV3.MASTERY_VERSION;

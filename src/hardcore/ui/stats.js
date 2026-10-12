@@ -23,6 +23,25 @@ module.exports = function createModule(dependencies) {
   const classShrineActive = (...args) =>
     dependencies.classShrineActive(...args);
 
+  function counterDefense(s, base) {
+    const r = require("../rift");
+    const raw =
+      r.encounter(s)?.lockedCounterType === "physical"
+        ? r.defense(s, base)
+        : base;
+    const bonus =
+      classShrineActive(s) &&
+      s.classKey === "barbarian" &&
+      s.hp <= s.maxHp * 0.3
+        ? 8
+        : 0;
+    return Math.floor(
+      (raw + bonus) *
+        bosses.defenseFactor(s) *
+        require("../awakening").incomingDefense(s),
+    );
+  }
+
   function statLine(s, changes = false, compact = false, options = {}) {
     const d = (key, suffix) => (changes ? delta(s, key, suffix) : "");
     const inverse = s.paradox?.kind === "inverse";
@@ -37,13 +56,24 @@ module.exports = function createModule(dependencies) {
         : 0);
     const defense = options.effective
       ? Math.floor(
-          baseDefense *
-            bosses.defenseFactor(s) *
-            require("../awakening").incomingDefense(s),
+          require("../rift").enabled(s)
+            ? counterDefense(
+                s,
+                inverse ? (s.damageMin + s.damageMax) / 2 : s.defense,
+              )
+            : baseDefense *
+                bosses.defenseFactor(s) *
+                require("../awakening").incomingDefense(s),
         )
       : baseDefense;
     const resistance = options.effective
-      ? core.effectiveResistance(s)
+      ? core.effectiveResistance(
+          s,
+          s.resistance,
+          false,
+          !require("../rift").enabled(s) ||
+            require("../rift").encounter(s)?.lockedCounterType === "magic",
+        )
       : s.resistance;
     const lines = [
       `${healthBar(s.hp, s.maxHp)}${d("hp")}${d("maxHp", " MAX")}`,
@@ -61,13 +91,20 @@ module.exports = function createModule(dependencies) {
 
   function battleStats(s) {
     const attack = core.attackDamagePreview(s);
-    const defense = Math.floor(
-      (s.paradox?.kind === "inverse"
-        ? (s.damageMin + s.damageMax) / 2
-        : s.defense) *
-        bosses.defenseFactor(s) *
-        require("../awakening").incomingDefense(s),
-    );
+    const defense = require("../rift").enabled(s)
+      ? counterDefense(
+          s,
+          s.paradox?.kind === "inverse"
+            ? (s.damageMin + s.damageMax) / 2
+            : s.defense,
+        )
+      : Math.floor(
+          (s.paradox?.kind === "inverse"
+            ? (s.damageMin + s.damageMax) / 2
+            : s.defense) *
+            bosses.defenseFactor(s) *
+            require("../awakening").incomingDefense(s),
+        );
     const skill = core.skillDamagePreview(s);
     const detail = bosses.brainControl(s)
       ? "DMG chuẩn 20% Max HP boss; không Crit, không mất MP."
@@ -85,7 +122,7 @@ module.exports = function createModule(dependencies) {
             : "Phép luôn trúng, không Crit; chặn phản công.",
           paladin: "Vật lý, có thể trượt/Crit; tự Phòng thủ.",
         }[s.classKey];
-    return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${bosses.effectiveMaxMana(s)}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé thoát** **${s.escapeTokens}**\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${core.effectiveResistance(s)}%**${core.effectiveResistance(s) !== s.resistance ? ` (gốc ${s.resistance}%)` : ""}\n${bosses.brainControl(s) ? "🧠" : SKILL_ICONS[s.classKey]} **${bosses.brainControl(s) ? "Brain Control" : stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""}): ${skill.low}–${skill.high} DMG**\n${detail}\n`;
+    return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${bosses.effectiveMaxMana(s)}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé thoát** **${s.escapeTokens}**\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${core.effectiveResistance(s, s.resistance, false, !require("../rift").enabled(s) || require("../rift").encounter(s)?.lockedCounterType === "magic")}%**${core.effectiveResistance(s, s.resistance, false, !require("../rift").enabled(s) || require("../rift").encounter(s)?.lockedCounterType === "magic") !== s.resistance ? ` (gốc ${s.resistance}%)` : ""}\n${bosses.brainControl(s) ? "🧠" : SKILL_ICONS[s.classKey]} **${bosses.brainControl(s) ? "Brain Control" : stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""}): ${skill.low}–${skill.high} DMG**\n${detail}\n`;
   }
 
   function checkpointPreview(s, key) {
@@ -171,6 +208,60 @@ module.exports = function createModule(dependencies) {
   function riftStatSummary(state) {
     const lines = [];
     for (const [key, count] of Object.entries(state.modifiers || {})) {
+      if (require("../rift").enabled(state)) {
+        if (count <= 0) continue;
+        const r = require("../rift"),
+          effects = {
+            stone_skin:
+              "Quái: Stone Armor " +
+              count * 1.5 +
+              "% Max HP; vỡ giáp → DEF −" +
+              [0, 8, 12, 16][r.tier(count)] +
+              "%",
+            fortified:
+              "Quái: Max HP +" +
+              count * 3 +
+              "%; Exposed: bạn +" +
+              [0, 10, 15, 20][r.tier(count)] +
+              "% DMG",
+            elemental_dominion:
+              "Quái: phép +" +
+              count * 1.25 +
+              "% DMG; hỗn hợp +" +
+              count * 2 +
+              " điểm % phép",
+            bloodlust:
+              "Quái: phản công sau ngưỡng 50% HP +" +
+              (12 + count * 2) +
+              "% DMG",
+            swift_horror:
+              "Quái: vật lý +" +
+              count +
+              " điểm % trúng; né tự nhiên → bạn +" +
+              [0, 8, 12, 16][r.tier(count)] +
+              "% DMG và vật lý chắc chắn trúng",
+            cursed_ground:
+              "Bạn: DEF hiệu lực −" +
+              count * 2 +
+              "% khi nhận vật lý; RES −" +
+              count * 1.5 +
+              " điểm % khi nhận phép",
+            soul_drain:
+              "Bạn: MP −1 khi trúng phản công; Phòng thủ giữ MP; đánh thường sau hút hồi thêm 1 MP",
+          };
+        if (effects[key])
+          lines.push(
+            (RIFT_ICONS[key] || E.rift) +
+              " **" +
+              world.RIFT_MODIFIERS[key].name +
+              " ×" +
+              count +
+              "** · " +
+              effects[key] +
+              ".",
+          );
+        continue;
+      }
       if (count <= 0) continue;
       const bonus = riftStatBonus(key, count);
       if (bonus)

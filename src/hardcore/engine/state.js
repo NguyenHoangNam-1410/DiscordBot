@@ -126,6 +126,7 @@ module.exports = function createModule(dependencies) {
       throw new Error("UNSUPPORTED_HARDCORE_VERSION");
     if (!["2.0.0", "2.0.1", "3.0.0"].includes(state.releaseVersion))
       throw new Error("UNSUPPORTED_HARDCORE_VERSION");
+    require("../rift").normalize(state);
     const awakening = require("../awakening");
     if (
       state.classAwakeningVersion != null &&

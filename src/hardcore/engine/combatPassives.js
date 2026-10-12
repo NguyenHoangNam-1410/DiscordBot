@@ -14,6 +14,11 @@ module.exports = function createModule(dependencies) {
     monsterLoot.prepare(state, e);
     state.passiveCombatFloor = state.floor;
     require("../awakening").prepare(state);
+    const rift = require("../rift");
+    if (rift.enabled(state)) {
+      rift.snapshot(state, e);
+      rift.prepare(state, bosses.counter(state));
+    }
     if (e.passiveCombatStarted) return;
     e.passiveCombatStarted = true;
     affinity.prepare(state);
@@ -75,7 +80,12 @@ module.exports = function createModule(dependencies) {
     }
     if (raw <= 0) return "";
     let damage = Math.floor(
-      raw * (1 - world.defenseReduction(e.defense, state.floor)),
+      raw *
+        (1 -
+          world.defenseReduction(
+            require("../rift").enemyDefense(state, e.defense),
+            state.floor,
+          )),
     );
     if (
       e.mechanic === "riftwalker" &&
