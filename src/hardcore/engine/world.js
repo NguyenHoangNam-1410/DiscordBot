@@ -127,7 +127,19 @@ function normalizeMimicEnemy(enemy) {
   if (kind === "ancient_mimic") enemy.name = "Ancient Mimic";
   return enemy;
 }
-function makeEnemy(state, rank = "normal", name = null, rng = Math.random) {
+function makeEnemy(
+  state,
+  rank = "normal",
+  name = null,
+  rng = Math.random,
+  fixtureBoss = null,
+) {
+  if (
+    fixtureBoss &&
+    (state.bossRosterVersion !== 2 ||
+      require("../bosses/catalogV2").CATALOG[fixtureBoss.id] !== fixtureBoss)
+  )
+    throw Error("INVALID_BOSS_FIXTURE");
   const floor = state.floor,
     mods = state.modifiers || {};
   const stacks = (key) => effectiveStacks(mods[key] || 0);
@@ -137,8 +149,13 @@ function makeEnemy(state, rank = "normal", name = null, rng = Math.random) {
     1 + Math.min(floor, 100) * 0.04 + Math.max(0, floor - 100) * 0.038;
   const late = clamp((floor - 400) / 599, 0, 1);
   const scheduled =
-    roster.enabled(state) && !name && ["boss", "final_boss"].includes(rank)
-      ? roster.at(floor)
+    roster.enabled(state) &&
+    roster.at(floor) &&
+    !name &&
+    ["boss", "final_boss"].includes(rank)
+      ? state.bossRosterVersion === 2
+        ? fixtureBoss || require("../bosses/catalogV2").choose(state, rng)
+        : roster.at(floor)
       : null;
   const boss = scheduled
     ? { ...scheduled, mechanic: scheduled.id }
@@ -194,9 +211,10 @@ function makeEnemy(state, rank = "normal", name = null, rng = Math.random) {
     evasion:
       Math.min(100, 5 + floor * 0.08) +
       stacks("swift_horror") * 1.5 +
-      (boss?.mechanic === "assur" ? 18 : 0),
+      (state.bossRosterVersion !== 2 && boss?.mechanic === "assur" ? 18 : 0),
     resistance: Math.min(60, Math.floor(floor * 0.06)),
-    critChance: boss?.mechanic === "assur" ? 0.2 : 0.06,
+    critChance:
+      state.bossRosterVersion !== 2 && boss?.mechanic === "assur" ? 0.2 : 0.06,
     critDamage: 1.75,
     damageType,
     magicChance,

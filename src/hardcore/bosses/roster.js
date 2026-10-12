@@ -1,5 +1,6 @@
 "use strict";
-const VERSION = 1;
+const VERSION = 2;
+const LEGACY_VERSION = 1;
 const ROSTER = Object.freeze(
   [
     [50, "The Butcher", "butcher", "physical"],
@@ -31,7 +32,7 @@ const CHEST_FLOORS = Object.freeze([100, 200, 300, 400, 500, 700, 900]);
 function enabled(s) {
   return (
     [2, 3].includes(s?.gameplayVersion) &&
-    s.bossRosterVersion === VERSION &&
+    [LEGACY_VERSION, VERSION].includes(s.bossRosterVersion) &&
     !s.mode?.startsWith("tower") &&
     !s.towerChallengeId
   );
@@ -54,4 +55,12 @@ function factors(floor) {
               ? [4.4, 1.7]
               : [4, 1.6];
 }
-module.exports = { VERSION, ROSTER, CHEST_FLOORS, enabled, at, factors };
+module.exports = {
+  VERSION,
+  LEGACY_VERSION,
+  ROSTER,
+  CHEST_FLOORS,
+  enabled,
+  at,
+  factors,
+};

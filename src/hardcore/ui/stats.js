@@ -27,7 +27,7 @@ module.exports = function createModule(dependencies) {
     const d = (key, suffix) => (changes ? delta(s, key, suffix) : "");
     const inverse = s.paradox?.kind === "inverse";
     const range = core.physicalRange(s);
-    const defense =
+    const baseDefense =
       (inverse ? (s.damageMin + s.damageMax) / 2 : s.defense) +
       (options.effective &&
       classShrineActive(s) &&
@@ -35,6 +35,9 @@ module.exports = function createModule(dependencies) {
       s.hp <= s.maxHp * 0.3
         ? 8
         : 0);
+    const defense = options.effective
+      ? Math.floor(baseDefense * bosses.defenseFactor(s))
+      : baseDefense;
     const resistance = options.effective
       ? core.effectiveResistance(s)
       : s.resistance;
@@ -47,17 +50,18 @@ module.exports = function createModule(dependencies) {
     ];
     if (!compact)
       lines.push(
-        `${E.accuracy} **ACC** **${s.accuracy}**${d("accuracy")}${STAT_SEPARATOR}${E.evasion} **EVA** **${s.evasion}**${d("evasion")}${STAT_SEPARATOR}${E.crit} **CRIT** **${percent(s.critChance)}**${d("critChance", "%")}\n${E.potionPower} **Hiệu lực bình** **${percent(paradox.potionRate(s) * (1 - (s.healingReduction || 0)))}** Max HP`,
+        `${E.accuracy} **ACC** **${s.accuracy}**${d("accuracy")}${STAT_SEPARATOR}${E.evasion} **EVA** **${s.evasion}**${d("evasion")}${STAT_SEPARATOR}${E.crit} **CRIT** **${percent(options.effective ? bosses.playerCrit(s, s.critChance) : s.critChance)}**${d("critChance", "%")}\n${E.potionPower} **Hiệu lực bình** **${percent(paradox.potionRate(s) * (1 - (s.healingReduction || 0)) * bosses.healingFactor(s))}** Max HP`,
       );
     return lines.join("\n");
   }
 
   function battleStats(s) {
     const attack = core.attackDamagePreview(s);
-    const defense =
-      s.paradox?.kind === "inverse"
+    const defense = Math.floor(
+      (s.paradox?.kind === "inverse"
         ? (s.damageMin + s.damageMax) / 2
-        : s.defense;
+        : s.defense) * bosses.defenseFactor(s),
+    );
     const skill = core.skillDamagePreview(s);
     const detail = bosses.brainControl(s)
       ? "DMG chuẩn 20% Max HP boss; không Crit, không mất MP."

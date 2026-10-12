@@ -1,5 +1,17 @@
 [
   {
+    "id": "0d4143d5-5f37-442a-bcba-db18af88d9f0",
+    "updatedAt": "2026-10-12T04:03:03.705Z",
+    "auditedAt": "2026-10-12T04:03:03.705Z",
+    "title": "Sinh tồn V3: roster 39 boss",
+    "changes": [
+      "Run V3 mới roll đều 39 boss ở mỗi mốc 50–950, với cơ chế và ba mức Depth theo tầng.",
+      "Làm mới Kabraxis với Resonance và Corrupted Seal; Deimoss có Spire, Flesh Core và Plane qua ba phase.",
+      "Chọn mục tiêu, Ward và Plane bằng menu không tốn lượt; Chi tiết hiển thị cơ chế, cảnh báo và cách đối phó.",
+      "Hiệu chỉnh sát thương đấu boss riêng cho từng class theo mục tiêu hoàn thành tầng 999 là 3–5% trong mô phỏng chuẩn. Run đang chơi tiếp tục dùng roster đã lưu."
+    ]
+  },
+  {
     "id": "17a7b19c-8eb1-4ba4-8e45-28e705e14276",
     "updatedAt": "2026-10-12T01:23:54.852Z",
     "auditedAt": "2026-10-12T01:23:54.852Z",
@@ -737,9 +749,7 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "d5758e9b34d159db664e3015833351fe47278586",
     "title": "Sinh tồn: phân loại Mimic",
-    "changes": [
-      "Ancient Mimic và Blood Mimic được phân loại là quái tinh anh."
-    ]
+    "changes": ["Ancient Mimic và Blood Mimic được phân loại là quái tinh anh."]
   },
   {
     "id": "d95d1c0",
@@ -870,9 +880,7 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "a168a3c2f345cdb5328d125f8666d333aa73110b",
     "title": "Sinh tồn V2: khôi phục cách hiển thị cũ",
-    "changes": [
-      "Khôi phục nút chiến đấu gọn và nhãn MP trong Sinh tồn V2."
-    ]
+    "changes": ["Khôi phục nút chiến đấu gọn và nhãn MP trong Sinh tồn V2."]
   },
   {
     "id": "c305df0",
@@ -880,9 +888,7 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "c305df09cdc528e07a1cab6394419721960005d7",
     "title": "Tháp Định Mệnh: bỏ chỉ số bị lặp",
-    "changes": [
-      "DEF và RES trên bảng nhân vật không còn hiển thị hai lần."
-    ]
+    "changes": ["DEF và RES trên bảng nhân vật không còn hiển thị hai lần."]
   },
   {
     "id": "579168c",
@@ -910,9 +916,7 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "1df259eed83b7de93d44a8569f068a83f88f6b5f",
     "title": "Hồ sơ: nền tối",
-    "changes": [
-      "Đổi các mảng màu pastel sáng trên hồ sơ sang bảng màu tối."
-    ]
+    "changes": ["Đổi các mảng màu pastel sáng trên hồ sơ sang bảng màu tối."]
   },
   {
     "id": "e80316e",
@@ -920,9 +924,7 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "e80316ef864635027053c5ed3a66c08cd60ac477",
     "title": "Poker: giao diện kết thúc ván",
-    "changes": [
-      "Ẩn mục Bài của bot sau khi ván poker đã kết thúc."
-    ]
+    "changes": ["Ẩn mục Bài của bot sau khi ván poker đã kết thúc."]
   },
   {
     "id": "8f329df",
@@ -964,9 +966,7 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "62aca60056d54fb12c86f316f9a0ba582a413a5e",
     "title": "Sinh tồn: đồ nhận gần nhất ở đầu túi",
-    "changes": [
-      "Các món vừa nhận được đẩy lên đầu danh sách túi đồ."
-    ]
+    "changes": ["Các món vừa nhận được đẩy lên đầu danh sách túi đồ."]
   },
   {
     "id": "db27a0a",
@@ -974,9 +974,7 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "db27a0abbe2c5e41f47581a0b5478d8d94e95a35",
     "title": "Cò quay Nga: bỏ mục Lượt của bạn",
-    "changes": [
-      "Bỏ nhãn lượt dư thừa khỏi giao diện Cò quay Nga."
-    ]
+    "changes": ["Bỏ nhãn lượt dư thừa khỏi giao diện Cò quay Nga."]
   },
   {
     "id": "25a3b31",

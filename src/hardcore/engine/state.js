@@ -106,7 +106,7 @@ module.exports = function createModule(dependencies) {
       !state.mode?.startsWith("tower") &&
       !state.towerChallengeId
     )
-      state.bossRosterVersion ??= bosses.VERSION;
+      state.bossRosterVersion ??= 1;
     // Older runs downgraded fully cleansed UR equipment; rarity belongs to its design.
     for (const item of [
       ...(state.items || []),
@@ -118,6 +118,12 @@ module.exports = function createModule(dependencies) {
         "giải toàn bộ curse; giữ level và buff, chuyển SSR.",
         "giải toàn bộ lời nguyền; giữ UR, level, buff và nội tại.",
       );
+    bosses.validate(
+      state,
+      state.encounter?.type === "boss_gate"
+        ? state.encounter.enemy
+        : state.encounter,
+    );
     recompute(state);
     state.mana = Math.min(state.mana, bosses.effectiveMaxMana(state));
     // Convert historical event multipliers into a fixed loss without changing cashout.

@@ -56,7 +56,8 @@ module.exports = function createModule(dependencies) {
     if (e.type === "covenant_blessing") {
       const b = e.blessing;
       return (
-        eventIcon("covenant") + " **PHƯỚC LÀNH CHINH PHẠT**\n" +
+        eventIcon("covenant") +
+        " **PHƯỚC LÀNH CHINH PHẠT**\n" +
         E.hp +
         " **HP " +
         b.hpBefore +
@@ -72,9 +73,12 @@ module.exports = function createModule(dependencies) {
         b.cleansedLevels +
         "** lớp nguyền UR và xóa **" +
         b.removedRiftStacks +
-        "** ấn Rift. Giữ UR, level, Paradox và Contract.\n" + relicIcon("conquerors_covenant") + " **Conqueror’s Covenant [LR]** · " +
+        "** ấn Rift. Giữ UR, level, Paradox và Contract.\n" +
+        relicIcon("conquerors_covenant") +
+        " **Conqueror’s Covenant [LR]** · " +
         (covenant.active(s)
-          ? passiveIcon("killPayoutGrowth") + " Đang hoạt động: mỗi quái hạ từ bây giờ tăng 0,2 điểm % thưởng xu, tối đa +100%."
+          ? passiveIcon("killPayoutGrowth") +
+            " Đang hoạt động: mỗi quái hạ từ bây giờ tăng 0,2 điểm % thưởng xu, tối đa +100%."
           : "Đã nhận; chưa kích hoạt vì đã có nội tại LR khác hoạt động.") +
         "\nĐã tiêu thụ bốn mảnh và vượt tầng thử thách. Bấm Tiếp tục để xử lý checkpoint hoặc tầng kế tiếp."
       );
@@ -103,9 +107,11 @@ module.exports = function createModule(dependencies) {
         "** lớp nguyền UR và xóa **" +
         b.removedRiftStacks +
         "** ấn Rift. Giữ UR, level, Paradox và Contract.\n" +
-        relicIcon("fatebreaker_seal") + " **Fatebreaker Seal [LR]** · " +
+        relicIcon("fatebreaker_seal") +
+        " **Fatebreaker Seal [LR]** · " +
         (s.activeRelic === "fatebreaker_seal"
-          ? passiveIcon("preventRngesusEncounter") + " Đang hoạt động: không gặp RNGesus trong phần còn lại của run."
+          ? passiveIcon("preventRngesusEncounter") +
+            " Đang hoạt động: không gặp RNGesus trong phần còn lại của run."
           : "Đã nhận; đang có nội tại LR khác hoạt động.") +
         "\nTỷ lệ God đã reset về **0,0001%**. Thành tích đã được lưu.\nTiếp tục khám phá để xử lý tầng hiện tại; không bỏ qua boss."
       );
@@ -206,7 +212,7 @@ module.exports = function createModule(dependencies) {
       if (e.boss)
         return `${monsterIcon(e)} **${e.name}** · Tầng ${s.floor}${["anomaly", "kabraxis"].includes(e.boss.id) ? " · Phase " + e.boss.phase : ""}
 ${bossDisplay.bars(s) || healthBar(e.hp, e.maxHp)}
-${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%
+${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG${e.boss?.version === 2 ? " " + { physical: "Vật lý", magic: "Phép", mixed: "Hỗn hợp" }[e.damageType] : ""} · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%
 ${bossDisplay.status(s)}
 🎯 **Đòn kế tiếp:** ${preview.trueDamage ? "DMG chuẩn" : e.nextDamageType === "magic" ? E.magic + " Phép" : E.attack + " Vật lý"}
 📉 **Dự báo nhận:** **${preview.low}–${preview.high} DMG** · ${percent(preview.chance)} trúng bạn *(chưa CRIT)*`;

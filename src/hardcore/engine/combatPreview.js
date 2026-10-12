@@ -58,8 +58,9 @@ module.exports = function createModule(dependencies) {
   function skillManaCost(state) {
     if (bosses.brainControl(state) || royal.freeMagic(state)) return 0;
     const free = state.classKey === "sorceress" && shrineActive(state);
-    return (
-      paradox.manaCost(state, free) + (free ? 0 : state.skillManaExtra || 0)
+    return bosses.skillCost(
+      state,
+      paradox.manaCost(state, free) + (free ? 0 : state.skillManaExtra || 0),
     );
   }
 
@@ -67,7 +68,7 @@ module.exports = function createModule(dependencies) {
     const curse = state.skillHpCost
       ? Math.max(1, Math.floor(state.maxHp * state.skillHpCost))
       : 0;
-    return paradox.hpCost(state) + curse;
+    return paradox.hpCost(state) + curse + bosses.skillHpCost(state);
   }
 
   function outgoingDamagePreview(state, action) {
@@ -117,7 +118,10 @@ module.exports = function createModule(dependencies) {
           });
           total += h.damage;
         }
-        return Math.floor(total * (paradox.active(copy) ? 1 : 1 + bonus));
+        return bosses.previewDamage(
+          copy,
+          Math.floor(total * (paradox.active(copy) ? 1 : 1 + bonus)),
+        );
       }
       const previewState =
         skill && skillHpCost(state)

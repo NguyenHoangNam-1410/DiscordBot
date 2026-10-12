@@ -1,0 +1,346 @@
+{
+  "tests": 64,
+  "passed": 56,
+  "failed": 8,
+  "results": [
+    {
+      "file": "scripts/test-hardcore-stats-v3.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-purifier.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-event-recovery.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-boss-roster.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-boss-roster-v2.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-gilded-soul.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-conqueror.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-rates-pagination.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-module-boundaries.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-god-rngesus.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-ticket-rarity.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-discord-backup.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-database-recovery.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-shutdown-backup.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-latency.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-changelog.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-tower-memories.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-blood-merchant.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-monster-loot.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-item-curses.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-item-passives.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-paradox-v2.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-tower-week1.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-tower-generator.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-tower-runtime.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-card-display.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-loadout.js",
+      "passed": false,
+      "status": 1,
+      "diagnostic": "AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:\n+ actual - expected\n\n+ 'combat'\n- 'rngesus'\n\n    at run (D:\\DiscordBot\\scripts\\test-hardcore-loadout.js:512:14)\n    at Object.<anonymous> (D:\\DiscordBot\\scripts\\test-hardcore-loadout.js:1162:1)\n    at Module._compile (node:internal/modules/cjs/loader:1688:14)\n    at Object..js (node:internal/modules/cjs/loader:1820:10)\n    at Module.load (node:internal/modules/cjs/loader:1423:32)\n    at Function._load (node:internal/modules/cjs/loader:1246:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: 'combat',\n  expected: 'rngesus',\n  operator: 'strictEqual'\n}\n",
+      "alsoFailsOnBaseline": "fed7d49"
+    },
+    {
+      "file": "scripts/test-hardcore-rngesus-cycle.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-payout-display.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-healing-log.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-v2.js",
+      "passed": true,
+      "status": 0,
+      "initialDiagnostic": "Error: INVALID_BOSS_STATE\n    at Object.validate (D:\\DiscordBot\\src\\hardcore\\bosses\\runtimeV2.js:359:11)\n    at Object.validate (D:\\DiscordBot\\src\\hardcore\\bosses\\mechanics.js:41:12)\n    at Object.normalize (D:\\DiscordBot\\src\\hardcore\\engine\\state.js:121:12)\n    at Object.parseState (D:\\DiscordBot\\src\\hardcore\\runtime\\state.js:32:25)\n    at parseState (D:\\DiscordBot\\src\\hardcore\\runtime\\actions.js:34:48)\n    at D:\\DiscordBot\\src\\hardcore\\runtime\\actions.js:54:21\n    at sqliteTransaction (D:\\DiscordBot\\node_modules\\better-sqlite3\\lib\\methods\\transaction.js:65:24)\n    at Object.playHardcore (D:\\DiscordBot\\src\\hardcore\\runtime\\actions.js:469:12)\n    at play (D:\\DiscordBot\\scripts\\test-hardcore-v2.js:37:18)\n    at main (D:\\DiscordBot\\scripts\\test-hardcore-v2.js:710:21)\n",
+      "rerun": "Passed after explicitly selecting roster 1 for legacy Deimoss HP mutation fixtures."
+    },
+    {
+      "file": "scripts/test-profile-card.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-avatar-ring-achievements.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-item-order.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-use-pagination.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-shrine.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-chest.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-surprise.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-trap.js",
+      "passed": false,
+      "status": 1,
+      "diagnostic": "node:internal/assert/utils:272\r\n    throw err;\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: tax thiếu \"**85,0%** · Mất thuế\"\r\n    at Object.<anonymous> (D:\\DiscordBot\\scripts\\test-hardcore-trap.js:52:119)\r\n    at Module._compile (node:internal/modules/cjs/loader:1688:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1820:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1423:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1246:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49 {\r\n  generatedMessage: false,\r\n  code: 'ERR_ASSERTION',\r\n  actual: false,\r\n  expected: true,\r\n  operator: '=='\r\n}\r\n\r\nNode.js v22.18.0\r\n",
+      "alsoFailsOnBaseline": "fed7d49"
+    },
+    {
+      "file": "scripts/test-kiemtra-panel.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-achievements.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-mines-achievements.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-chinchiro-achievements.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-poker-achievements.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-horse-achievements.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-baucua-achievements.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-survival-achievements.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-vua-colors.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-profile.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-hardcore-profile-live.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-oantuti-removal.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-win-multiplier.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-game-bot.js",
+      "passed": false,
+      "status": 1,
+      "diagnostic": "node:assert:95\r\n  throw new AssertionError(obj);\r\n  ^\r\n\r\nAssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\r\n+ actual - expected\r\n\r\n  [\r\n    'batdau',\r\n    'trogiup',\r\n    'huongdan',\r\n+   'changelog',\r\n+   'baucua',\r\n+   'taixiu',\r\n+   'chinchiro',\r\n+   'xidach',\r\n+   'poker',\r\n+   'duangua',\r\n+   'domin',\r\n+   'coquay',\r\n+   'sinhton',\r\n-   'choi',\r\n    'luat',\r\n    'hoso',\r\n    'xu',\r\n    'vatpham',\r\n    'nhiemvu',\r\n\r\n    at Object.<anonymous> (D:\\DiscordBot\\scripts\\test-game-bot.js:26:8)\r\n    at Module._compile (node:internal/modules/cjs/loader:1688:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1820:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1423:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1246:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49 {\r\n  generatedMessage: true,\r\n  code: 'ERR_ASSERTION',\r\n  actual: [\r\n    'batdau',    'trogiup', 'huongdan',\r\n    'changelog', 'baucua',  'taixiu',\r\n    'chinchiro', 'xidach',  'poker',\r\n    'duangua',   'domin',   'coquay',\r\n    'sinhton',   'luat',    'hoso',\r\n    'xu',        'vatpham', 'nhiemvu',\r\n    'xephang',   'anxin',   'quantri',\r\n    'gacha',     'vtv'\r\n  ],\r\n  expected: [\r\n    'batdau',   'trogiup',\r\n    'huongdan', 'choi',\r\n    'luat',     'hoso',\r\n    'xu',       'vatpham',\r\n    'nhiemvu',  'xephang',\r\n    'anxin',    'quantri',\r\n    'gacha',    'vtv'\r\n  ],\r\n  operator: 'deepStrictEqual'\r\n}\r\n\r\nNode.js v22.18.0\r\n",
+      "alsoFailsOnBaseline": "fed7d49"
+    },
+    {
+      "file": "scripts/test-hardcore.js",
+      "passed": false,
+      "status": 1,
+      "diagnostic": "node:internal/assert/utils:272\r\n    throw err;\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: Each stage must scale linearly\r\n    at Object.<anonymous> (D:\\DiscordBot\\scripts\\test-hardcore.js:94:3)\r\n    at Module._compile (node:internal/modules/cjs/loader:1688:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1820:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1423:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1246:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49 {\r\n  generatedMessage: false,\r\n  code: 'ERR_ASSERTION',\r\n  actual: false,\r\n  expected: true,\r\n  operator: '=='\r\n}\r\n\r\nNode.js v22.18.0\r\n",
+      "alsoFailsOnBaseline": "fed7d49"
+    },
+    {
+      "file": "scripts/test-operations.js",
+      "passed": false,
+      "status": 1,
+      "diagnostic": "AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n+ actual - expected\n... Skipped lines\n\n  [\n    1,\n    2,\n    3,\n    4,\n...\n    33,\n+   34,\n+   35,\n+   36,\n+   37,\n+   38,\n+   39,\n+   40,\n+   41,\n+   42,\n+   43\n  ]\n\n    at main (D:\\DiscordBot\\scripts\\test-operations.js:109:10)\n    at Object.<anonymous> (D:\\DiscordBot\\scripts\\test-operations.js:174:1)\n    at Module._compile (node:internal/modules/cjs/loader:1688:14)\n    at Object..js (node:internal/modules/cjs/loader:1820:10)\n    at Module.load (node:internal/modules/cjs/loader:1423:32)\n    at Function._load (node:internal/modules/cjs/loader:1246:12)\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\n    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\n    at node:internal/main/run_main_module:36:49 {\n  generatedMessage: true,\n  code: 'ERR_ASSERTION',\n  actual: [Array],\n  expected: [Array],\n  operator: 'deepStrictEqual'\n}\n",
+      "alsoFailsOnBaseline": "fed7d49"
+    },
+    {
+      "file": "scripts/test-item-effects.js",
+      "passed": false,
+      "status": 1,
+      "diagnostic": "node:internal/assert/utils:272\r\n    throw err;\r\n    ^\r\n\r\nAssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:\r\n\r\n  assert(\r\n    giveAndUse(\r\n      vuaGuild,\r\n      \"alice\",\r\n      vuaChannel,\r\n      \"vietnamese_word_count\",\r\n    ).message.includes(`**${syllables.length} tiếng**`),\r\n  )\r\n\r\n    at Object.<anonymous> (D:\\DiscordBot\\scripts\\test-item-effects.js:231:1)\r\n    at Module._compile (node:internal/modules/cjs/loader:1688:14)\r\n    at Object..js (node:internal/modules/cjs/loader:1820:10)\r\n    at Module.load (node:internal/modules/cjs/loader:1423:32)\r\n    at Function._load (node:internal/modules/cjs/loader:1246:12)\r\n    at TracingChannel.traceSync (node:diagnostics_channel:322:14)\r\n    at wrapModuleLoad (node:internal/modules/cjs/loader:235:24)\r\n    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:171:5)\r\n    at node:internal/main/run_main_module:36:49 {\r\n  generatedMessage: true,\r\n  code: 'ERR_ASSERTION',\r\n  actual: false,\r\n  expected: true,\r\n  operator: '=='\r\n}\r\n\r\nNode.js v22.18.0\r\n",
+      "alsoFailsOnBaseline": "fed7d49"
+    },
+    {
+      "file": "scripts/test-session-lifecycle.js",
+      "passed": false,
+      "status": 1,
+      "diagnostic": "AssertionError [ERR_ASSERTION]: chạm Shrine giả khi gần chết phải kết thúc run\n\nfalse !== true\n\n    at D:\\DiscordBot\\scripts\\test-session-lifecycle.js:642:10 {\n  generatedMessage: false,\n  code: 'ERR_ASSERTION',\n  actual: false,\n  expected: true,\n  operator: 'strictEqual'\n}\n",
+      "alsoFailsOnBaseline": "fed7d49"
+    },
+    {
+      "file": "scripts/test-blackjack-sim.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-poker-bot.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-coquay.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-reward-text.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-vua-dictionary.js",
+      "passed": true,
+      "status": 0
+    },
+    {
+      "file": "scripts/test-command-handlers.js",
+      "passed": false,
+      "status": 1,
+      "diagnostic": "Error: INVALID_BUFF_TYPE\n    at setBuff (D:\\DiscordBot\\src\\services\\gameBuffService.js:42:41)\n    at Object.execute (D:\\DiscordBot\\src\\commands\\game.js:822:20)\n    at Object.execute (D:\\DiscordBot\\src\\commands\\quantri.js:478:25)\n    at run (D:\\DiscordBot\\scripts\\test-command-handlers.js:86:44)\n",
+      "alsoFailsOnBaseline": "fed7d49"
+    },
+    {
+      "file": "scripts/audit-command-security.js",
+      "passed": true,
+      "status": 0
+    }
+  ],
+  "auditedAt": "2026-10-12T04:05:29.515Z"
+}

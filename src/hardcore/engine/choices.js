@@ -240,7 +240,12 @@ module.exports = function createModule(dependencies) {
             paradox.potionLocked(state) ||
             gilded.potionLocked(state),
         },
-      ];
+      ]
+        .map((a) => ({
+          ...a,
+          disabled: !!a.disabled || bosses.blocked(state, a.action),
+        }))
+        .concat(bosses.choices(state));
     if (e.type === "surprise" && e.kind === "royal_invitation")
       return [
         ...royal.choices(state),

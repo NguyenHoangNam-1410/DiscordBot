@@ -47,6 +47,7 @@ const RULES = {
     "Ba thanh HP độc lập 30% / 30% / 40% tổng HP. Damage dư không xuyên phase; chuyển phase không phản công và không trao thưởng. Phase 1: nhận DMG ×0,75, đổi phản công vật lý/phép mỗi 3 vòng. Phase 2: hồi 15% DMG thực tế gây lên bạn, Phòng thủ chặn hồi; mỗi bình +1 Flesh (tối đa 3), mỗi Flesh +10% DMG. Phase 3: không hồi/không giảm 25%, +30% DMG và +10 điểm % CRIT. Chỉ Phase 3 chết mới hoàn thành tầng.",
 };
 function status(s) {
+  if (s.encounter?.boss?.version === 2) return require("./displayV2").status(s);
   const e = s.encounter,
     b = boss.bstate(s);
   if (!b) return "";
@@ -72,7 +73,9 @@ function status(s) {
       "/2 · ghi " +
       Math.floor(b.damageMemory) +
       " DMG" +
-      (b.feedback ? " · ⚠️ Feedback lượt này: Phòng thủ để chặn sát thương phản lại." : "") +
+      (b.feedback
+        ? " · ⚠️ Feedback lượt này: Phòng thủ để chặn sát thương phản lại."
+        : "") +
       (!b.feedbackResolved ? " · 🛡️ Plasma Shield: chưa thể hạ boss." : ""),
     necrobot:
       round % 2 === 0
@@ -115,7 +118,8 @@ function status(s) {
       "🌀 Void: nhận +50% DMG → Matter",
     ][round % 3],
     kabraxis:
-      sealIcon(b.seal) + " Ấn " +
+      sealIcon(b.seal) +
+      " Ấn " +
       b.seal +
       " · Phase " +
       b.phase +
@@ -204,15 +208,31 @@ function bars(s) {
   );
 }
 function details(s) {
+  if (s.encounter?.boss?.version === 2)
+    return require("./displayV2").details(s);
   const b = boss.bstate(s);
   return b ? RULES[b.id] + "\n\n**Hiện tại:** " + status(s) : "";
 }
 function special(s) {
+  if (s.encounter.type === "prophecy" && s.bossRosterVersion === 2)
+    return (
+      eventIcon("prophecy") +
+      " **THREEFOLD PROPHECY · TẦNG 333**\nChọn ấn; buff giữ đến hết run:\n- " +
+      sealIcon("war") +
+      " **War:** +12 stat chính, +8% DMG Boss. Kabraxis: gây DMG +1 Resonance, CRIT thêm +1.\n- " +
+      sealIcon("protection") +
+      " **Protection:** +12 VIT, +5 RES. Kabraxis: sống qua phản công +1; giảm/chặn ≥40% dự báo thêm +1.\n- " +
+      sealIcon("arcane") +
+      " **Arcane:** +10 ENE, +1 Max MP. Kabraxis: lượt có tiêu hoặc hồi MP +1 Resonance, kể cả tiêu rồi hồi về mức cũ.\nResonance chỉ bắt đầu ở tầng 666, tối đa 2/lượt. Xem **Rift**."
+    );
   if (s.encounter.type === "prophecy")
     return `${eventIcon("prophecy")} **THREEFOLD PROPHECY · TẦNG 333**\nChọn một ấn:\n- ${sealIcon("war")} **War:** ${E[mainStat(s)]} **${mainStat(s).toUpperCase()} +12** • ${E.bossDamage} **DMG Boss +8%**.\n- ${sealIcon("protection")} **Protection:** ${E.vit} **VIT +12** • ${E.res} **RES +5 điểm %**.\n- ${sealIcon("arcane")} **Arcane:** ${E.ene} **ENE +10** • ${E.mana} **Max MP +1**.\nẤn bạn chọn quyết định cơ chế Kabraxis ở tầng 666. Xem **Rift** để biết hiệu lực của ký ức này.`;
   if (s.encounter.type === "boss_gate")
     return (
-      eventIcon("boss_gate") + " " + monsterIcon(s.encounter.enemy) + " **KABRAXIS · TẦNG 666**\nBạn có thể rút thưởng ngay tại cửa. Bước vào sẽ khóa rút thưởng; phải thắng hoặc tử trận.\nXem **Chi tiết** để biết cơ chế của ấn " +
+      eventIcon("boss_gate") +
+      " " +
+      monsterIcon(s.encounter.enemy) +
+      " **KABRAXIS · TẦNG 666**\nBạn có thể rút thưởng ngay tại cửa. Bước vào sẽ khóa rút thưởng; phải thắng hoặc tử trận.\nXem **Chi tiết** để biết cơ chế của ấn " +
       s.encounter.enemy.boss.seal +
       "."
     );

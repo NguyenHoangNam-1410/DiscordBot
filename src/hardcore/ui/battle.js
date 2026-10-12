@@ -115,7 +115,7 @@ module.exports = function createModule(dependencies) {
           .slice(0, 1024),
       });
     return e.setFooter({
-      text: `${sessionId ? `Mã ván: ${sessionId} • ` : ""}Lượt ${state.turn} • Cược ${money(state.stake)} xu`,
+      text: `${sessionId ? `Mã ván: ${sessionId} • ` : ""}Lượt ${state.turn - (state.bossSelectorRevisions || 0)} • Cược ${money(state.stake)} xu`,
     });
   }
   return { embed };

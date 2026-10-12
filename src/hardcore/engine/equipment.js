@@ -18,7 +18,11 @@ module.exports = function createModule(dependencies) {
   function healingAmount(state, amount) {
     return Math.max(
       0,
-      Math.floor(amount * (1 - (state.healingReduction || 0))),
+      Math.floor(
+        amount *
+          (1 - (state.healingReduction || 0)) *
+          bosses.healingFactor(state),
+      ),
     );
   }
 
@@ -27,7 +31,7 @@ module.exports = function createModule(dependencies) {
     const actual = Math.max(
       0,
       Math.min(
-        state.maxHp - state.hp,
+        (checkpoint ? state.maxHp : bosses.healingLimit(state)) - state.hp,
         checkpoint ? Math.floor(amount) : healingAmount(state, amount),
       ),
     );

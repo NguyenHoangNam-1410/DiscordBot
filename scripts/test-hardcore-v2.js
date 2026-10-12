@@ -6,6 +6,8 @@ const fs = require("node:fs"),
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), "hardcore-v2-"));
 process.env.DB_PATH = path.join(temp, "test.sqlite");
 delete process.env.HARDCORE_GAMEPLAY_VERSION;
+// V2 regression fixtures mutate legacy Deimoss HP; the rotating roster has its own suite.
+process.env.HARDCORE_BOSS_ROSTER_VERSION = "1";
 const { db } = require("../src/db");
 const service = require("../src/services/hardcoreService");
 const stats = require("../src/services/hardcoreStats");

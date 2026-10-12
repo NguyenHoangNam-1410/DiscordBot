@@ -78,7 +78,11 @@ module.exports = function createModule(dependencies) {
       rawAction === "purifier_select"
         ? "purifier_select_" +
           (interaction.values?.length === 1 ? interaction.values[0] : "")
-        : rawAction;
+        : rawAction === "boss_select" || rawAction.startsWith("boss_select_")
+          ? interaction.values?.length === 1
+            ? interaction.values[0]
+            : "invalid_boss_selection"
+          : rawAction;
     const detailAction =
       /^(?:view|page)_(stats|items|effects|encounter)_(\d{1,4})$/.exec(action);
     const openingDetails = Boolean(detailAction && !originMessageId);

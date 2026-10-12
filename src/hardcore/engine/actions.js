@@ -97,6 +97,18 @@ module.exports = function createModule(dependencies) {
         return null;
       }
     }
+    if (bosses.isFree(state, action)) {
+      const decision = bosses.actComponent(state, action, {
+        hurt,
+        heal: dependencies.heal,
+        addSource,
+      });
+      if (action.includes("__core_"))
+        state.lastLog += (state.lastLog ? "\n" : "") + decision.log;
+      state.bossSelectorRevisions = (state.bossSelectorRevisions || 0) + 1;
+      bosses.refresh(state);
+      return null;
+    }
     const before = statSnapshot(state);
     state.passiveCounterUsed = 0;
     delete state.passiveImmunityThisTurn;
@@ -132,12 +144,14 @@ module.exports = function createModule(dependencies) {
       state.prophecy = { kind, floor: 333, awakened: false };
       addSource(state, effects, "prophecy");
       state.lastLog =
-        sealIcon(kind) + " Đã ghi nhớ ấn bạn chọn: quyết định cơ chế Kabraxis ở tầng 666. Xem Rift để biết phần thưởng thức tỉnh.";
+        sealIcon(kind) +
+        " Đã ghi nhớ ấn bạn chọn: quyết định cơ chế Kabraxis ở tầng 666. Xem Rift để biết phần thưởng thức tỉnh.";
       completeFloor(state, session, rng, 0);
     } else if (state.encounter.type === "boss_gate") {
       state.encounter = state.encounter.enemy;
       state.lastLog =
-        monsterIcon(state.encounter) + " Kabraxis đã phong tỏa đường rút. Chỉ có thể thắng hoặc tử trận.";
+        monsterIcon(state.encounter) +
+        " Kabraxis đã phong tỏa đường rút. Chỉ có thể thắng hoặc tử trận.";
       prepareParadoxCombat(state, rng);
     } else if (
       ["covenant_blessing", "royal_blessing"].includes(state.encounter.type) &&
@@ -145,8 +159,10 @@ module.exports = function createModule(dependencies) {
     ) {
       state.lastLog =
         state.encounter.type === "royal_blessing"
-          ? eventIcon("royal_invitation") + " Tiếp tục khám phá sau phước lành Hoàng Gia."
-          : eventIcon("covenant") + " Tiếp tục khám phá sau phước lành Chinh Phạt.";
+          ? eventIcon("royal_invitation") +
+            " Tiếp tục khám phá sau phước lành Hoàng Gia."
+          : eventIcon("covenant") +
+            " Tiếp tục khám phá sau phước lành Chinh Phạt.";
       finishEventResult(state);
       nextMilestone(state, session, rng);
     } else if (
@@ -154,7 +170,8 @@ module.exports = function createModule(dependencies) {
       action === "god_continue"
     ) {
       state.lastLog =
-        eventIcon("god_rngesus") + " Tiếp tục tầng " +
+        eventIcon("god_rngesus") +
+        " Tiếp tục tầng " +
         state.floor +
         " sau phước lành của God of RNGesus.";
       state.encounter = generateEncounter(state, session, rng);
@@ -219,9 +236,22 @@ module.exports = function createModule(dependencies) {
         const acted =
           action === "ritual_claim"
             ? { log: "", dealt: 0, critical: false }
-            : playerAttack(state, action, rng);
+            : action.startsWith("boss_") && state.encounter.boss?.version === 2
+              ? (() => {
+                  bosses.beginAction(state, action);
+                  const v = bosses.actComponent(state, action, {
+                    hurt,
+                    heal: dependencies.heal,
+                    addSource,
+                  });
+                  const acted = { ...v, dealt: v.dealt || 0, critical: false };
+                  bosses.afterPlayer(state, action, acted);
+                  return acted;
+                })()
+              : playerAttack(state, action, rng);
         if (action !== "ritual_claim") paradox.afterAction(state, action);
         state.lastLog += acted.log;
+        state.lastLog += bosses.beforeResolution(state, { hurt });
         const ritual = gilded.afterAction(state, action, acted, hurt);
         state.lastLog += ritual.log;
         if (
@@ -241,12 +271,15 @@ module.exports = function createModule(dependencies) {
             state.activeParadox.combatActionCount === 3;
           if (
             bosses.on(e) &&
+            e.boss.version === 1 &&
             e.boss.id === "kabraxis" &&
             e.boss.seal === "war" &&
             action === "skill"
           )
             state.lastLog +=
-              "\n" + sealIcon("war") + " Blood Revenge: " +
+              "\n" +
+              sealIcon("war") +
+              " Blood Revenge: " +
               enemyTurn(
                 state,
                 rng,
@@ -262,7 +295,11 @@ module.exports = function createModule(dependencies) {
           if (e.hp <= 0 && alive(state)) defeatEnemy(state, session, rng, e);
         }
         if (state.encounter === e && e.hp > 0 && alive(state))
-          bosses.endAction(state, rng);
+          bosses.endAction(state, rng, {
+            hurt,
+            heal: dependencies.heal,
+            addSource,
+          });
       } else if (e.type === "surprise") {
         actSurprise(state, session, action, rng);
         if (action !== "event_skip")

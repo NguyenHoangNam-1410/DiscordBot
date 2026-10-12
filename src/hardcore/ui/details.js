@@ -1,4 +1,5 @@
 "use strict";
+const bosses = require("../bosses/mechanics");
 const statsV3 = require("../shared/statsV3");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
@@ -159,6 +160,40 @@ module.exports = function createModule(dependencies) {
           effective: true,
         }),
       );
+      if (state.encounter.boss?.version === 2) {
+        const b = state.encounter.boss,
+          m = b.mechanicState;
+        const lines = [
+          "Vật lý ×" +
+            bosses.playerFactor(state, false).toFixed(2) +
+            " · Phép ×" +
+            bosses.playerFactor(state, true).toFixed(2) +
+            " (cơ chế boss, trước giảm trừ).",
+        ];
+        if (bosses.healingLimit(state) < state.maxHp)
+          lines.push(
+            "Hồi HP không vượt " +
+              bosses.healingLimit(state) +
+              "/" +
+              state.maxHp +
+              " trong hiệu ứng hiện tại.",
+          );
+        if (m.curses?.length)
+          lines.push(
+            "Flesh Curse: " +
+              m.curses
+                .map(
+                  (v) =>
+                    ({
+                      damageTaken: "+5% DMG nhận",
+                      skillHpCost: "Skill trả thêm 1% Max HP",
+                      healingReduction: "−15% hồi HP",
+                    })[v.type],
+                )
+                .join(" · "),
+          );
+        addTextFields(e, "⚔️ Ảnh hưởng từ boss lên bạn", lines.join("\n"));
+      }
       if (state.gameplayVersion === 3) {
         addTextFields(e, "✨ Mastery của class", statsV3.description(state, E));
         const b = state.damageBreakdown;

@@ -86,7 +86,7 @@ module.exports = function createModule(dependencies) {
     );
     if (damage <= 0) return "";
     state.passiveCounterUsed = (state.passiveCounterUsed || 0) + damage;
-    e.hp -= damage;
+    damage = bosses.applyDamage(state, damage);
     bosses.hit(state, damage, true);
     return (
       "\n" +

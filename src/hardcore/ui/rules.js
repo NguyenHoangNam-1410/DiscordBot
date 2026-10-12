@@ -63,7 +63,7 @@ module.exports = function createModule(dependencies) {
         {
           name: `${eventIcon("boss")} Cơ chế boss`,
           value:
-            "- Sinh tồn có **21 boss riêng**: mỗi 50 tầng, Kabraxis 666 và Deimoss 999. Boss ưu tiên trước RNGesus, ký ức và event thường.\n- Tầng **333** chọn một ấn War/Protection/Arcane, lưu một lần; tầng **666** có cửa rút thưởng trước trận. Vào Kabraxis thì không rút/bỏ qua. Hạ nhận SSR 66,6% / UR có nguyền 33,4%, bonus 66,6% cược và thức tỉnh ấn; không thêm rương/drop LUCK.\n- **Deimoss:** ba thanh HP độc lập 30/30/40%, không xuyên damage dư, không phản công khi chuyển phase; chỉ trao thưởng sau Phase 3.\n- Bảng boss hiển thị cơ chế, stack, cảnh báo và dự báo damage. **Chi tiết** giải thích cách xử lý. Trận đã lưu giữ nguyên cơ chế; boss xuất hiện sau cập nhật dùng roster mới. Tower giữ luật riêng.",
+            "- Run V3 mới dùng roster xoay tua: mỗi mốc **50–950** roll đều từ **39 boss**, có thể lặp; Depth I/II/III theo tầng. Giữ 333/666/999 cố định. Boss ưu tiên trước RNGesus, ký ức và event thường.\n- Tầng **333** chọn một ấn War/Protection/Arcane, lưu một lần; tầng **666** có cửa rút thưởng trước trận. Vào Kabraxis thì không rút/bỏ qua. Hạ nhận SSR 66,6% / UR có nguyền 33,4%, bonus 66,6% cược và thức tỉnh ấn; không thêm rương/drop LUCK.\n- **Deimoss:** ba thanh HP độc lập 30/30/40%, không xuyên damage dư, không phản công khi chuyển phase; chỉ trao thưởng sau Phase 3.\n- Bảng boss hiển thị cơ chế, stack, cảnh báo và dự báo damage. **Chi tiết** giải thích cách xử lý. Chọn mục tiêu/Ward/Plane không tốn lượt; hành động boss tốn 1 lượt. Run bắt đầu trước cập nhật giữ roster cũ đến hết run; Tower giữ luật riêng.",
         },
         {
           name: `${E.checkpoint} Checkpoint và ${E.rift} Rift`,

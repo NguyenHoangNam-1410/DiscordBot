@@ -82,13 +82,20 @@ module.exports = function createModule(dependencies) {
       player &&
       bosses.on(defender) &&
       (bosses.vanished(state) ||
-        (defender.boss.id === "giyua" &&
+        (defender.boss.version === 1 &&
+          defender.boss.id === "giyua" &&
           defender.boss.action === "attack" &&
           defender.boss.nests > 0))
     )
       return { damage: 0, hit: false, crit: false };
     const crit =
-      !magic && !defend && (critical ?? rng() < (attacker.critChance || 0));
+      !magic &&
+      !defend &&
+      (critical ??
+        rng() <
+          (player
+            ? bosses.playerCrit(state, attacker.critChance || 0)
+            : attacker.critChance || 0));
     const range = player
       ? physicalRange(state)
       : [attacker.damageMin, attacker.damageMax];
@@ -130,7 +137,13 @@ module.exports = function createModule(dependencies) {
           defense += 8;
       }
       damage *=
-        1 - world.defenseReduction(defense * (defend ? 2 : 1), state.floor);
+        1 -
+        world.defenseReduction(
+          defense *
+            (player ? 1 : bosses.defenseFactor(state)) *
+            (defend ? 2 : 1),
+          state.floor,
+        );
     }
     if (!player)
       damage *=
@@ -165,7 +178,10 @@ module.exports = function createModule(dependencies) {
     const physical = !plan.magic;
     enemy.nextDamageType = plan.magic ? "magic" : "physical";
     if (plan.skip) {
-      const log = bosses.afterCounter(state, 0, false, defend);
+      const log =
+        enemy.boss?.version === 2
+          ? ""
+          : bosses.afterCounter(state, 0, false, defend);
       return (
         "✨ Cơ chế đã được xử lý: boss không phản công." +
         (log ? "\n" + log : "")
@@ -268,6 +284,10 @@ module.exports = function createModule(dependencies) {
     prepareItemCombat(state, rng);
     const e = state.encounter;
     bosses.beginAction(state, action);
+    if (e.boss?.version === 2) {
+      const p = dependencies.incomingPreview(state);
+      e.boss.predictedCounter = (p.low + p.high) / 2;
+    }
     state.passiveImmunityThisTurn = bosses.on(e)
       ? bosses.vanished(state)
       : e.mechanic === "riftwalker" && e.combatTurn % 3 === 0;
@@ -326,6 +346,7 @@ module.exports = function createModule(dependencies) {
       )
         state.classShrine.consumed = true;
       state.mana -= cost;
+      if (e.boss?.version === 2 && cost > 0) e.boss.mpChanged = true;
       if (bosses.brainControl(state)) {
         royal.limitGuard(state, action, false);
         const dealt = Math.min(e.hp, Math.floor(e.maxHp * 0.2));
@@ -413,19 +434,19 @@ module.exports = function createModule(dependencies) {
     )
       damage = Math.max(1, Math.floor(damage * 0.75));
     e.combatTurn++;
-    const dealt = Math.min(Math.max(0, e.hp - bosses.floorHp(state)), damage);
-    e.hp = Math.max(bosses.floorHp(state), e.hp - damage);
+    const dealt = bosses.applyDamage(state, damage);
     healingLog += playerManaLeech(state, dealt, rng);
     const landed = hits.filter((hit) => hit.hit).length;
     const actionName =
       action === "skill"
         ? `${SKILL_ICONS[state.classKey]} ${stats.CLASSES[state.classKey].skill}`
         : `${E.attack} Tấn công`;
+    const reportedDamage = e.boss?.version === 2 ? dealt : damage;
     const outcome = !landed
       ? "Đánh trượt — 0 DMG."
       : immune
         ? "Riftwalker miễn sát thương lượt này — 0 DMG."
-        : `${damage} DMG${hits.some((h) => h.crit) ? ` · ${E.crit} Critical` : ""}.`;
+        : `${reportedDamage} DMG${hits.some((h) => h.crit) ? ` · ${E.crit} Critical` : ""}.`;
     const shots =
       hits.length > 1 ? ` Trúng ${landed}/${hits.length} phát.` : "";
     const acted = {

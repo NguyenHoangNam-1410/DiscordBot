@@ -122,7 +122,7 @@ module.exports = function createModule(dependencies) {
           ["open", "inspect", "sell", "leave"].indexOf(b.action),
       );
     const buttonActions = actions.filter(
-      (a) => !a.action.startsWith("purifier_select_"),
+      (a) => !a.action.startsWith("purifier_select_") && !a.menu,
     );
     const buttons = buttonActions.map((a) =>
       button(
@@ -207,6 +207,32 @@ module.exports = function createModule(dependencies) {
         ),
       );
     const result = chunkRows(buttons);
+    const menuKinds = [
+      ...new Set(
+        actions.filter((a) => a.menu && !a.disabled).map((a) => a.menu),
+      ),
+    ];
+    for (const menu of menuKinds) {
+      const bossMenu = actions.filter((a) => a.menu === menu && !a.disabled);
+      if (bossMenu.length)
+        result.unshift(
+          new ActionRowBuilder().addComponents(
+            new StringSelectMenuBuilder()
+              .setCustomId(prefix + "boss_select_" + menu)
+              .setPlaceholder(
+                bossMenu.every((a) => a.kind === "selector")
+                  ? "Chọn mục tiêu / Ward — không tốn lượt"
+                  : "Hành động boss — tốn 1 lượt",
+              )
+              .addOptions(
+                bossMenu.map((a) => ({
+                  label: a.label.slice(0, 100),
+                  value: a.action,
+                })),
+              ),
+          ),
+        );
+    }
     if (
       state.phase === "encounter" &&
       state.encounter.type === "surprise" &&
