@@ -192,6 +192,55 @@ async function main() {
       }
     repo.deleteSession(run.session.id);
   });
+
+  await test("Lilith details show exact HP costs, per-depth damage bonuses, duration and heal cap with standard icons", () => {
+    const run = runBoss("lilith"),
+      s = run.state,
+      m = s.encounter.boss.mechanicState;
+    const { E } = require("../src/hardcore/shared/icons");
+    for (const floor of [150, 450, 750]) {
+      s.encounter.boss.floor = floor;
+      const power = catalog.config("lilith", floor).power;
+      const before = JSON.stringify(s),
+        text = display.details(s);
+      for (const [i, rate] of [0.05, 0.1, 0.2].entries()) {
+        assert(text.includes(Math.ceil(s.maxHp * rate) + " HP"));
+        assert(
+          text.includes("DMG +" + Math.round(power * (i + 1) * 100) + "%"),
+        );
+        assert(text.includes(i + 1 + " lượt kế tiếp"));
+      }
+      assert(text.includes(E.hp));
+      assert(text.includes(E.attack));
+      assert.doesNotMatch(text, /Bargain 0|trần 3|ngân sách hồi|tăng cửa sổ/);
+      assert.equal(JSON.stringify(s), before);
+    }
+    m.bargain = 3;
+    m.bargainBonus = 0.3;
+    m.healDebt = 89;
+    const before = JSON.stringify(s),
+      text = display.status(s);
+    assert(text.includes("DMG của bạn +30%"));
+    assert(text.includes(s.maxHp - 89 + "/" + s.maxHp + " HP"));
+    assert(text.includes("3 lượt"));
+    for (const e of view
+      .privatePayload(s, run.session.id, "public", "encounter")
+      .embeds.map((e) => e.toJSON())) {
+      assert((e.fields || []).every((f) => f.value.length <= 1024));
+      assert(
+        (e.title || "").length +
+          (e.description || "").length +
+          (e.fields || []).reduce(
+            (n, f) => n + f.name.length + f.value.length,
+            0,
+          ) <=
+          6000,
+      );
+    }
+    assert.equal(JSON.stringify(s), before);
+    repo.deleteSession(run.session.id);
+  });
+
   console.log(
     groups + " deterministic boss menu/display groups passed; no simulations.",
   );

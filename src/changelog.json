@@ -1,5 +1,15 @@
 [
   {
+    "id": "c82f7f85-6919-430d-9f78-b0f76fcd54d8",
+    "updatedAt": "2026-10-12T08:45:18.732Z",
+    "auditedAt": "2026-10-12T08:45:18.732Z",
+    "title": "Làm rõ hiến máu của Lilith",
+    "changes": [
+      "Chi tiết Lilith liệt kê ba mức hiến máu với lượng HP thực tế, phần trăm DMG Tấn công/Skill tăng cho người chơi và số lượt hiệu lực theo Depth.",
+      "Dùng icon HP/DMG chuẩn; hiển thị bonus đang có và mức HP tối đa có thể hồi khi còn hiệu ứng hiến máu. Bỏ thông tin chu kỳ, trần và ngân sách hồi không cần thiết khỏi chi tiết Lilith."
+    ]
+  },
+  {
     "id": "84356550-50a3-4389-a2ab-fc0b8e58debb",
     "updatedAt": "2026-10-12T08:33:26.246Z",
     "auditedAt": "2026-10-12T08:33:26.246Z",

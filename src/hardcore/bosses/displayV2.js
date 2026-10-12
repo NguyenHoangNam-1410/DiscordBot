@@ -1,4 +1,5 @@
 "use strict";
+const { E } = require("../shared/icons");
 const mech = require("./mechanicsV2"),
   { CATALOG, config } = require("./catalogV2");
 const labels = ["◇", "△", "○"],
@@ -413,11 +414,24 @@ function status(s) {
       break;
     case "lilith":
       text =
-        "Bargain " +
-        Math.max(0, m.bargain) +
-        "/3 lượt · HP chưa hồi được " +
-        m.healDebt +
-        ". Hiến nhiều tăng cửa sổ, phải đủ HP sống.";
+        m.bargain > 0
+          ? E.attack +
+            " **DMG của bạn +" +
+            Math.round(m.bargainBonus * 100) +
+            "%** · còn **" +
+            m.bargain +
+            " lượt**.\n" +
+            E.hp +
+            " Chỉ hồi đến **" +
+            Math.max(0, s.maxHp - m.healDebt) +
+            "/" +
+            s.maxHp +
+            " HP**; " +
+            m.healDebt +
+            " HP đã hiến bị khóa hồi đến khi hiệu ứng hết."
+          : "Chưa hiến máu. Có thể tấn công bình thường hoặc hiến để tăng " +
+            E.attack +
+            " **DMG của bạn**.";
       break;
     case "nemesis":
       text =
@@ -616,6 +630,43 @@ function status(s) {
 }
 function details(s) {
   const x = mech.current(s);
+  if (x.b.id === "lilith") {
+    const offers = [0.05, 0.1, 0.2]
+      .map(
+        (rate, i) =>
+          "- " +
+          E.hp +
+          " **" +
+          Math.round(rate * 100) +
+          "% Max HP** (" +
+          Math.ceil(s.maxHp * rate) +
+          " HP) → " +
+          E.attack +
+          " **DMG +" +
+          Math.round(x.c.power * (i + 1) * 100) +
+          "%**, **" +
+          (i + 1) +
+          " lượt kế tiếp**.",
+      )
+      .join("\n");
+    return (
+      "Hiến máu để tăng " +
+      E.attack +
+      " **DMG Tấn công/Skill của bạn**:\n" +
+      offers +
+      "\nMỗi lần hiến tốn **1 lượt**, boss vẫn phản công; bạn phải còn ít nhất **1 HP** sau khi hiến. Không bắt buộc hiến." +
+      "\nPhần " +
+      E.hp +
+      " **HP đã hiến không thể hồi** bằng bình/Skill khi hiệu ứng còn; không thể hiến thêm trước khi hiệu ứng hết." +
+      "\n\n**Hiện tại**\n" +
+      status(s) +
+      "\n" +
+      E.attack +
+      " Hệ số DMG của bạn khi đánh boss: **×" +
+      (x.b.playerDamageScale || 1).toFixed(2).replace(".", ",") +
+      "**."
+    );
+  }
   return (
     (x.b.id === "death_projector" && mech.randomBeam(x)
       ? "Tia bắn mỗi lượt, giữ một vùng trong 2 lượt rồi chọn ngẫu nhiên một trong hai vùng còn lại. UI báo chính xác vùng đang bị bắn và số lượt còn lại; hướng đã chọn được lưu khi mở lại. Attack ở vùng an toàn; chuyển vùng tốn lượt và vẫn chịu tia nếu đến vùng đang bị quét."
