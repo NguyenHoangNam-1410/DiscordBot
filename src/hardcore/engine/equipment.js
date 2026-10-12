@@ -92,11 +92,16 @@ module.exports = function createModule(dependencies) {
 
   function hurt(state, amount, hostile = true, nonlethal = false) {
     markDirect(state, ["hp"]);
+    const awakening = require("../awakening");
+    const before = state.hp;
+    if (hostile && state.encounter?.type === "combat")
+      amount = awakening.absorb(state, Math.max(0, Math.floor(amount)));
     const actual = Math.max(
       0,
       Math.min(state.hp - (nonlethal ? 1 : 0), Math.floor(amount)),
     );
     state.hp -= actual;
+    if (state.encounter?.type === "combat") awakening.hpChanged(state, before);
     if (hostile && state.paradox?.kind === "blood")
       state.paradox.bloodFactor = clamp(
         state.paradox.bloodFactor + actual / state.maxHp,

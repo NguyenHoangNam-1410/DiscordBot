@@ -126,6 +126,50 @@ module.exports = function createModule(dependencies) {
       throw new Error("UNSUPPORTED_HARDCORE_VERSION");
     if (!["2.0.0", "2.0.1", "3.0.0"].includes(state.releaseVersion))
       throw new Error("UNSUPPORTED_HARDCORE_VERSION");
+    const awakening = require("../awakening");
+    if (
+      state.classAwakeningVersion != null &&
+      (state.classAwakeningVersion !== 1 || state.gameplayVersion !== 3)
+    )
+      throw Error("UNSUPPORTED_CLASS_AWAKENING");
+    if (state.classAwakening) {
+      const a = state.classAwakening;
+      if (
+        !awakening.active(state) ||
+        a.artifact !== awakening.ARTIFACTS[state.classKey][0] ||
+        a.awakenedFloor !== 100
+      )
+        throw Error("INVALID_CLASS_AWAKENING");
+      for (const [k, max] of [
+        ["focus", 2],
+        ["shadow", 2],
+        ["echo", 1],
+        ["echoProgress", 2],
+        ["totems", 2],
+        ["bark", Number.MAX_SAFE_INTEGER],
+      ])
+        if (!Number.isSafeInteger(a[k]) || a[k] < 0 || a[k] > max)
+          throw Error("INVALID_AWAKENING_RESOURCE");
+      a.bark = Math.min(a.bark, Math.floor(state.maxHp * 0.2));
+      const c = state.encounter?.awakeningCombat;
+      if (
+        c &&
+        (c.version !== 1 ||
+          !Number.isInteger(c.fury) ||
+          c.fury < 0 ||
+          c.fury > 3 ||
+          !Number.isSafeInteger(c.barrier) ||
+          c.barrier < 0 ||
+          !Number.isInteger(c.ground) ||
+          c.ground < 0 ||
+          c.ground > 2 ||
+          !Array.isArray(c.crossed) ||
+          c.crossed.some((v) => ![0.75, 0.5, 0.25].includes(v)) ||
+          new Set(c.crossed).size !== c.crossed.length)
+      )
+        throw Error("INVALID_AWAKENING_COMBAT");
+    }
+
     if (
       [2, 3].includes(state.gameplayVersion) &&
       !state.mode?.startsWith("tower") &&

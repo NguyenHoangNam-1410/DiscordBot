@@ -1,4 +1,5 @@
 "use strict";
+const awakening = require("../awakening");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const { bosses, royal, paradox, world } = dependencies;
@@ -18,8 +19,20 @@ module.exports = function createModule(dependencies) {
         : 1);
     const plan = bosses.counter(state);
     if (plan.skip) return { low: 0, high: 0, chance: 0 };
+    const shield = awakening.active(state)
+      ? Math.min(
+          state.classAwakening.bark || 0,
+          Math.floor(state.maxHp * 0.2),
+        ) + (awakening.combat(state)?.barrier || 0)
+      : 0;
+    const afterShield = (n) => Math.max(0, n - shield);
     if (plan.trueDamage)
-      return { low: plan.raw, high: plan.raw, chance: 1, trueDamage: true };
+      return {
+        low: afterShield(plan.raw),
+        high: afterShield(plan.raw),
+        chance: 1,
+        trueDamage: true,
+      };
     const low = attackDamage(e, state, state, () => 0, {
       magic: plan.magic,
       multiplier: (plan.raw != null ? 1 : factor) * plan.multiplier,
@@ -33,8 +46,8 @@ module.exports = function createModule(dependencies) {
       raw: plan.raw ?? e.damageMax,
     }).damage;
     return {
-      low,
-      high,
+      low: afterShield(low),
+      high: afterShield(high),
       chance: plan.magic
         ? 1
         : world.hitChance(e.accuracy, state.evasion, state.evasionCap ?? 0.45),
@@ -57,6 +70,7 @@ module.exports = function createModule(dependencies) {
 
   function skillManaCost(state) {
     if (bosses.brainControl(state) || royal.freeMagic(state)) return 0;
+    if (awakening.empowered(state)) return 1;
     const free = state.classKey === "sorceress" && shrineActive(state);
     return bosses.skillCost(
       state,
@@ -76,17 +90,21 @@ module.exports = function createModule(dependencies) {
     const skill = action === "skill";
     const magic =
       skill && ["sorceress", "necromancer"].includes(state.classKey);
-    const multiplier = skill
-      ? {
-          amazon: 0.85,
-          barbarian: 1.65,
-          assassin: 1.3,
-          sorceress: 2.1,
-          druid: 1.35,
-          necromancer: 1.55,
-          paladin: 1.4,
-        }[state.classKey]
-      : 1;
+    const multiplier =
+      (skill
+        ? {
+            amazon: 0.85,
+            barbarian: 1.65,
+            assassin: 1.3,
+            sorceress: 2.1,
+            druid: 1.35,
+            necromancer: 1.55,
+            paladin: 1.4,
+          }[state.classKey]
+        : 1) *
+      (skill && state.classKey === "barbarian"
+        ? 1 + 0.15 * awakening.fury(state)
+        : 1);
     const shots = skill && state.classKey === "amazon" ? 2 : 1;
     const range = magic
       ? [state.spellMin, state.spellMax]
@@ -96,6 +114,41 @@ module.exports = function createModule(dependencies) {
       : e.rank === "elite"
         ? state.eliteDamage
         : 0;
+    const extraDamage = (copy, hit, total, raw) => {
+      if (!awakening.active(copy) || !hit.hit || total <= 0) return total;
+      const a = copy.classAwakening;
+      if (skill && copy.classKey === "amazon" && a.focus === 2) {
+        const focus = attackDamage(copy, copy.encounter, copy, () => 0, {
+          player: true,
+          raw,
+          multiplier: 0.7,
+          critical: false,
+        });
+        total = Math.floor(
+          (hit.damage * 2 + focus.damage) *
+            (paradox.active(copy) ? 1 : 1 + bonus),
+        );
+        if (
+          !bosses.on(copy.encounter) &&
+          !paradox.active(copy) &&
+          copy.encounter.mechanic === "deimoss"
+        )
+          total = Math.max(1, Math.floor(total * 0.75));
+      }
+      if (skill && copy.classKey === "sorceress" && a.echo)
+        total += Math.floor(total * 0.5);
+      if (skill && copy.classKey === "necromancer" && a.totems === 2)
+        total += Math.floor(total * 0.6);
+      if (copy.classKey === "paladin" && awakening.ground(copy))
+        total += Math.floor(
+          Math.max(
+            copy.defense * 0.25,
+            hit.preCritDamage * (paradox.active(copy) ? 1 : 1 + bonus) * 0.15,
+          ) *
+            (1 - world.defenseReduction(e.defense, copy.floor)),
+        );
+      return total;
+    };
     const damage = (raw) => {
       if (bosses.on(e)) {
         const copy = {
@@ -107,7 +160,8 @@ module.exports = function createModule(dependencies) {
           copy.hp = Math.max(1, copy.hp - skillHpCost(copy));
         if (skill && bosses.brainControl(copy))
           return Math.floor(e.maxHp * 0.2);
-        let total = 0;
+        let total = 0,
+          lastHit;
         for (let shot = 0; shot < shots; shot++) {
           const h = attackDamage(copy, copy.encounter, copy, () => 0, {
             player: true,
@@ -117,10 +171,16 @@ module.exports = function createModule(dependencies) {
             critical: false,
           });
           total += h.damage;
+          lastHit = h;
         }
         return bosses.previewDamage(
           copy,
-          Math.floor(total * (paradox.active(copy) ? 1 : 1 + bonus)),
+          extraDamage(
+            copy,
+            lastHit,
+            Math.floor(total * (paradox.active(copy) ? 1 : 1 + bonus)),
+            raw,
+          ),
         );
       }
       const previewState =
@@ -140,7 +200,7 @@ module.exports = function createModule(dependencies) {
       if (e.mechanic === "riftwalker" && e.combatTurn % 3 === 0) n = 0;
       if (!paradox.active(state) && e.mechanic === "deimoss" && n > 0)
         n = Math.max(1, Math.floor(n * 0.75));
-      return n;
+      return n > 0 ? extraDamage(previewState, hit, n, raw) : n;
     };
     return {
       low: damage(range[0]),

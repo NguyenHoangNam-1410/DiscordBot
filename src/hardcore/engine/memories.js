@@ -55,6 +55,9 @@ module.exports = function createModule(dependencies) {
     if (e.hp > 0 || state.hp <= 0 || e.defeatSettled) return;
     if (bosses.advancePhase(state, e)) return;
     e.defeatSettled = true;
+    delete e.awakeningCombat;
+    delete e.awakeningGroundThisAction;
+    require("../awakening").grant(state, e);
     monsterLoot.prepare(state, e);
     noteKill(state, e);
     if (e.rank === "final_boss" && e.mechanic === "deimoss")

@@ -26,6 +26,11 @@ module.exports = function createModule(dependencies) {
     const fields = {
       combat: [
         {
+          name: "✨ Class Awakening · tầng 100",
+          value:
+            "Run V3 mới: hạ boss tầng 100 và sống sót nhận một Class Artifact riêng của class, trước rương boss. Nội tại tồn tại đến hết run, không chiếm trang bị/LR, không rèn/nghiền/giải nguyền, không mất hay bị sao chép bởi event. Xem Chỉ số để đọc nội tại và tài nguyên hiện tại. Run cũ giữ luật đã lưu.",
+        },
+        {
           name: "✨ Hệ chỉ số v3",
           value:
             "Run mới lưu mastery và công thức riêng của class. DEX vẫn tăng ACC; Assassin chuyển DEX thành né/Crit tốt hơn. VIT/STR/ENE chuyển thành HP, DEF, RES, MP và sát thương theo class; xem Chỉ số để đọc hệ số và trần hiện tại. Sát thương tách class, điểm phân bổ và item/hấp thụ; sát thương cộng thẳng từ item không bị nhân bởi hệ số sát thương chung. Skill, checkpoint, item, Forge và các event giữ quy tắc hiện tại. Run V2 đang chơi tiếp tục dùng công thức đã lưu.",

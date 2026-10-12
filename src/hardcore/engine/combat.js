@@ -1,5 +1,6 @@
 "use strict";
 const affinity = require("../equipment/affinityEffects");
+const awakening = require("../awakening");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -52,6 +53,7 @@ module.exports = function createModule(dependencies) {
       resistance -
       world.effectiveStacks(state.modifiers.cursed_ground || 0) * 3;
     if (shrineActive(state) && state.classKey === "paladin") res += 10;
+    res += awakening.incomingRes(state);
     if (defend) res += 15;
     return paradox.effectiveRes(state, res - bosses.resPenalty(state));
   }
@@ -68,6 +70,8 @@ module.exports = function createModule(dependencies) {
       player = false,
       critical = null,
       raw = null,
+      critBonus = 0,
+      critMultiplierBonus = 0,
     } = {},
   ) {
     const hit =
@@ -95,14 +99,19 @@ module.exports = function createModule(dependencies) {
       (critical ??
         rng() <
           (player
-            ? bosses.playerCrit(state, attacker.critChance || 0)
+            ? bosses.playerCrit(state, attacker.critChance || 0) + critBonus
             : attacker.critChance || 0));
     const range = player
       ? physicalRange(state)
       : [attacker.damageMin, attacker.damageMax];
     let damage = raw ?? int(...range, rng);
     damage *=
-      multiplier * (crit ? (player ? royal.critMultiplier(state) : 1.75) : 1);
+      multiplier *
+      (crit
+        ? player
+          ? royal.critMultiplier(state) + critMultiplierBonus
+          : 1.75
+        : 1);
     damage *= player
       ? affinity.outgoing(state, magic, crit)
       : affinity.incoming(state);
@@ -123,6 +132,13 @@ module.exports = function createModule(dependencies) {
           : 0;
       damage *= (1 + bonus) * paradox.outgoing(state);
     }
+    const preCritDamage =
+      damage /
+      (crit
+        ? player
+          ? royal.critMultiplier(state) + critMultiplierBonus
+          : 1.75
+        : 1);
     if (magic) {
       const res = player
         ? clamp(defender.resistance, -50, 75)
@@ -144,7 +160,10 @@ module.exports = function createModule(dependencies) {
         1 -
         world.defenseReduction(
           defense *
-            (player ? 1 : bosses.defenseFactor(state)) *
+            (player
+              ? 1
+              : bosses.defenseFactor(state) *
+                awakening.incomingDefense(state)) *
             (defend ? 2 : 1),
           state.floor,
         );
@@ -162,10 +181,15 @@ module.exports = function createModule(dependencies) {
       if (!bosses.on(defender) && defender.mechanic === "deimoss")
         damage *= 0.75;
       if (player) bosses.hit(state, damage);
-      return { damage: Math.max(1, damage), hit: true, crit };
+      return { damage: Math.max(1, damage), hit: true, crit, preCritDamage };
     }
     if (player) bosses.hit(state, damage);
-    return { damage: Math.max(1, Math.floor(damage)), hit: true, crit };
+    return {
+      damage: Math.max(1, Math.floor(damage)),
+      hit: true,
+      crit,
+      preCritDamage,
+    };
   }
 
   function enemyTurn(
@@ -236,7 +260,18 @@ module.exports = function createModule(dependencies) {
           critical: plan.critical,
           defend,
         });
+    if (!hit.hit && physical) awakening.shadow(state);
+    const shieldBefore = awakening.active(state)
+      ? (state.classAwakening.bark || 0) +
+        (awakening.combat(state)?.barrier || 0)
+      : 0;
     const actual = hurt(state, hit.damage);
+    const shieldUsed =
+      shieldBefore -
+      (awakening.active(state)
+        ? (state.classAwakening.bark || 0) +
+          (awakening.combat(state)?.barrier || 0)
+        : 0);
     if (!alive(state))
       state.lastDeathCause = `${enemy.name} gây ${actual} DMG ${enemy.nextDamageType === "magic" ? "phép" : "vật lý"}, khiến HP về 0.`;
     if (hit.hit && enemy.drainCharges > 0) {
@@ -270,6 +305,9 @@ module.exports = function createModule(dependencies) {
       (hit.hit
         ? `${hit.crit ? `${E.crit} Critical! ` : ""}Bạn nhận ${actual} DMG${defend ? " (đã phòng thủ)" : ""}.`
         : `${E.evasion} Quái đánh trượt.`) +
+      (shieldUsed > 0
+        ? "\n🛡️ Nội tại: lá chắn hấp thụ " + shieldUsed + " DMG."
+        : "") +
       reflected +
       (bossLog ? "\n" + bossLog : "")
     );
@@ -300,6 +338,12 @@ module.exports = function createModule(dependencies) {
   function playerAttack(state, action, rng) {
     prepareItemCombat(state, rng);
     const e = state.encounter;
+    if (awakening.combat(state)) state.encounter.awakeningShadowGranted = false;
+    const awakeningAtStart = awakening.active(state)
+      ? { fury: awakening.fury(state), shadowStep: awakening.empowered(state) }
+      : null;
+    if (awakening.combat(state))
+      e.awakeningGroundThisAction = awakening.combat(state).ground > 0;
     bosses.beginAction(state, action);
     if (e.boss?.version === 2) {
       const p = dependencies.incomingPreview(state);
@@ -378,6 +422,19 @@ module.exports = function createModule(dependencies) {
         state.classShrine.consumed = true;
       state.mana -= cost;
       if (e.boss?.version === 2 && cost > 0) e.boss.mpChanged = true;
+      if (awakening.active(state) && !bosses.brainControl(state)) {
+        const a = state.classAwakening,
+          c = awakening.combat(state);
+        if (state.classKey === "barbarian") {
+          e.awakeningFurySpent = awakeningAtStart.fury;
+          c.fury = Math.max(0, c.fury - e.awakeningFurySpent);
+          c.barrier += Math.floor(state.maxHp * 0.05 * e.awakeningFurySpent);
+        }
+        if (awakeningAtStart.shadowStep) {
+          a.shadow = 0;
+          e.awakeningShadowStep = true;
+        }
+      }
       if (bosses.brainControl(state)) {
         royal.limitGuard(state, action, false);
         const dealt = Math.min(e.hp, Math.floor(e.maxHp * 0.2));
@@ -410,32 +467,68 @@ module.exports = function createModule(dependencies) {
         dodge = state.classKey === "necromancer";
       } else if (state.classKey === "amazon") {
         const shots = shrineActive(state) && rng() < 0.2 ? 3 : 2;
+        const focusShot =
+          awakening.active(state) && state.classAwakening.focus === 2;
+        if (focusShot) state.classAwakening.focus = 0;
         hits = Array.from({ length: shots }, () =>
           attackDamage(state, e, state, rng, {
             player: true,
             multiplier: 0.85,
           }),
         );
+        if (focusShot)
+          hits.push(
+            attackDamage(state, e, state, rng, {
+              player: true,
+              multiplier: 0.7,
+            }),
+          );
       } else {
         hits = [
           attackDamage(state, e, state, rng, {
             player: true,
-            multiplier: {
-              barbarian: 1.65,
-              assassin: 1.3,
-              druid: 1.35,
-              paladin: 1.4,
-            }[state.classKey],
+            multiplier:
+              {
+                barbarian: 1.65,
+                assassin: 1.3,
+                druid: 1.35,
+                paladin: 1.4,
+              }[state.classKey] *
+              (state.classKey === "barbarian"
+                ? 1 + 0.15 * (e.awakeningFurySpent || 0)
+                : 1),
+            critBonus: e.awakeningShadowStep ? 0.2 : 0,
+            critMultiplierBonus: e.awakeningShadowStep ? 0.25 : 0,
           }),
         ];
         dodge = state.classKey === "assassin";
         defend = state.classKey === "paladin";
         if (state.classKey === "druid") {
           const hpBefore = state.hp;
+          const healPotential = dependencies.healingAmount(
+            state,
+            state.maxHp * 0.12 * affinity.healing(state),
+          );
           const gained = heal(
             state,
             state.maxHp * 0.12 * affinity.healing(state),
           );
+          if (awakening.active(state)) {
+            const a = state.classAwakening;
+            const efficiency = Math.max(
+              0,
+              (1 - (state.healingReduction || 0)) * bosses.healingFactor(state),
+            );
+            const surplus = Math.max(
+              0,
+              healPotential - (state.maxHp - hpBefore),
+            );
+            a.bark = Math.min(
+              Math.floor(state.maxHp * 0.2),
+              a.bark +
+                Math.floor(state.maxHp * 0.04 * efficiency + surplus * 0.5),
+            );
+          }
           healingLog += `\n${SKILL_ICONS.druid} Hồi ${E.hp} **${gained} HP** cho bạn: ${hpBefore} → **${state.hp}**.`;
         }
       }
@@ -468,8 +561,74 @@ module.exports = function createModule(dependencies) {
     )
       damage = Math.max(1, Math.floor(damage * 0.75));
     e.combatTurn++;
-    const dealt = bosses.applyDamage(state, damage);
-    healingLog += playerManaLeech(state, dealt, rng);
+    let dealt = bosses.applyDamage(state, damage);
+    const mainDealt = dealt;
+    if (awakening.active(state)) {
+      const a = state.classAwakening,
+        c = awakening.combat(state);
+      const extraHit = (label, amount) => {
+        if (immune || amount <= 0 || e.hp <= 0) return;
+        const extra = bosses.applyDamage(state, Math.floor(amount));
+        dealt += extra;
+        healingLog += "\n✨ " + label + ": +" + extra + " DMG.";
+      };
+      if (state.classKey === "paladin") {
+        if (c.ground > 0 && mainDealt > 0) {
+          for (const h of hits.filter((h) => h.hit && h.damage > 0)) {
+            const beforeCrit =
+              h.preCritDamage * (paradox.active(state) ? 1 : 1 + bonus);
+            const holy =
+              Math.max(state.defense * 0.25, beforeCrit * 0.15) *
+              (1 - world.defenseReduction(e.defense, state.floor));
+            extraHit("Consecration", holy);
+          }
+          c.ground--;
+        }
+        if (action === "skill" && mainDealt > 0) {
+          c.ground = 2;
+          e.awakeningGroundThisAction = true;
+        }
+      }
+      if (state.classKey === "amazon" && action === "attack" && mainDealt > 0)
+        a.focus = Math.min(2, a.focus + 1);
+      if (
+        state.classKey === "assassin" &&
+        mainDealt > 0 &&
+        hits.some((h) => h.crit)
+      )
+        awakening.shadow(state);
+      if (state.classKey === "sorceress" && action === "skill") {
+        if (a.echo) {
+          a.echo = 0;
+          extraHit("Arcane Echo", mainDealt * 0.5);
+        } else if (paidMana > 0) {
+          a.echoProgress += paidMana;
+          if (a.echoProgress >= 3) {
+            a.echoProgress -= 3;
+            a.echo = 1;
+          }
+          a.echoProgress = Math.min(2, a.echoProgress);
+        }
+      }
+      if (state.classKey === "necromancer" && action === "skill") {
+        a.totems++;
+        if (a.totems === 3) {
+          a.totems = 0;
+          extraHit("Grave Nova", mainDealt * 0.6);
+          const beforeMana = state.mana;
+          state.mana = Math.min(bosses.effectiveMaxMana(state), state.mana + 1);
+          healingLog +=
+            "\n" +
+            E.mana +
+            " Grave Nova: hồi " +
+            (state.mana - beforeMana) +
+            " MP.";
+        }
+      }
+      delete e.awakeningFurySpent;
+      delete e.awakeningShadowStep;
+    }
+    healingLog += playerManaLeech(state, mainDealt, rng);
     const landed = hits.filter((hit) => hit.hit && hit.damage > 0).length;
     healingLog += affinity.afterAttack(state, {
       landed: dealt > 0 ? landed : 0,

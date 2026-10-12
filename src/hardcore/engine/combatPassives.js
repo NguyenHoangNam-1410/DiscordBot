@@ -13,6 +13,7 @@ module.exports = function createModule(dependencies) {
     gilded.prepareCombat(state, payout(state));
     monsterLoot.prepare(state, e);
     state.passiveCombatFloor = state.floor;
+    require("../awakening").prepare(state);
     if (e.passiveCombatStarted) return;
     e.passiveCombatStarted = true;
     affinity.prepare(state);

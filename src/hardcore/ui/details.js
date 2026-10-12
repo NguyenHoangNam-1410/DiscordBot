@@ -196,6 +196,8 @@ module.exports = function createModule(dependencies) {
           );
         addTextFields(e, "⚔️ Ảnh hưởng từ boss lên bạn", lines.join("\n"));
       }
+      const awakeningText = require("../awakening").description(state);
+      if (awakeningText) addTextFields(e, "✨ Class Awakening", awakeningText);
       if (state.gameplayVersion === 3) {
         addTextFields(e, "✨ Mastery của class", statsV3.description(state, E));
         const b = state.damageBreakdown;

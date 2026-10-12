@@ -1,5 +1,17 @@
 [
   {
+    "id": "55f1495e-3e4f-4447-b20f-76303fd7341f",
+    "updatedAt": "2026-10-12T07:36:41.080Z",
+    "auditedAt": "2026-10-12T07:36:41.080Z",
+    "title": "Class Awakening cho Sinh tồn V3",
+    "changes": [
+      "Run V3 mới: hạ boss tầng 100 và sống sót sẽ nhận Class Artifact và nội tại riêng cho 7 class, trước rương boss.",
+      "Thêm Focus, Fury, Shadow, Arcane Echo, Bark Barrier, Bone Totem và Consecration; xem mô tả và tài nguyên hiện tại trong Chỉ số.",
+      "Class Artifact riêng của run, không chiếm trang bị hay nội tại LR, không rèn/nghiền/giải nguyền và không bị event lấy mất. Run đang chơi giữ luật đã lưu.",
+      "Hit phụ không sinh chuỗi kích hoạt hoặc hút MP; lưu tài nguyên khi tiếp tục run và bảo vệ trước thao tác lặp. Chưa chạy simulate cân bằng."
+    ]
+  },
+  {
     "id": "e3774561-40e4-437c-9ba6-1f51b05426e6",
     "updatedAt": "2026-10-12T07:11:29.090Z",
     "auditedAt": "2026-10-12T07:11:29.090Z",

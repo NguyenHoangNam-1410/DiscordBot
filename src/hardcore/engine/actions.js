@@ -237,6 +237,7 @@ module.exports = function createModule(dependencies) {
             "Mộ đã hết thời gian claim; trận đấu tiếp tục, không còn loot từ mộ.\n";
         } else if (e.echoId) echoes.renew(session, e.echoId);
         prepareItemCombat(state, rng);
+        delete e.awakeningShadowGranted;
         const acted =
           action === "ritual_claim"
             ? { log: "", dealt: 0, critical: false }
@@ -519,6 +520,7 @@ module.exports = function createModule(dependencies) {
       alive(state)
     )
       defeatEnemy(state, session, rng, state.encounter);
+    delete state.encounter?.awakeningGroundThisAction;
     recompute(state);
     state.mana = Math.min(state.mana, bosses.effectiveMaxMana(state));
     prepareParadoxCombat(state, rng);

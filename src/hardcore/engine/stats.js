@@ -227,6 +227,11 @@ function derive(state) {
 }
 function recompute(state) {
   Object.assign(state, derive(state));
+  if (require("../awakening").active(state))
+    state.classAwakening.bark = Math.min(
+      state.classAwakening.bark || 0,
+      Math.floor(state.maxHp * 0.2),
+    );
   if (typeof state.hp === "number") state.hp = clamp(state.hp, 0, state.maxHp);
   if (typeof state.mana === "number")
     state.mana = clamp(state.mana, 0, state.maxMana);
@@ -296,6 +301,7 @@ function createState(
     lastLog: `Run Sinh tồn ${RELEASE.version} bắt đầu.`,
   };
   if (gameplayVersion === 3) {
+    state.classAwakeningVersion = 1;
     state.statSystemVersion = statsV3.VERSION;
     state.classMasteryVersion = statsV3.MASTERY_VERSION;
     state.statProfile = statsV3.snapshot(

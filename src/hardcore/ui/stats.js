@@ -36,7 +36,11 @@ module.exports = function createModule(dependencies) {
         ? 8
         : 0);
     const defense = options.effective
-      ? Math.floor(baseDefense * bosses.defenseFactor(s))
+      ? Math.floor(
+          baseDefense *
+            bosses.defenseFactor(s) *
+            require("../awakening").incomingDefense(s),
+        )
       : baseDefense;
     const resistance = options.effective
       ? core.effectiveResistance(s)
@@ -60,7 +64,9 @@ module.exports = function createModule(dependencies) {
     const defense = Math.floor(
       (s.paradox?.kind === "inverse"
         ? (s.damageMin + s.damageMax) / 2
-        : s.defense) * bosses.defenseFactor(s),
+        : s.defense) *
+        bosses.defenseFactor(s) *
+        require("../awakening").incomingDefense(s),
     );
     const skill = core.skillDamagePreview(s);
     const detail = bosses.brainControl(s)
