@@ -1,5 +1,6 @@
 "use strict";
 const { RELEASE } = require("../shared/version");
+const equipmentRules = require("../equipment/rules");
 const balance = require("../shared/balance");
 const statsV3 = require("../shared/statsV3");
 const emoji = require("../../discordEmojiMap");
@@ -113,15 +114,20 @@ function sumEffects(state) {
       else totals[key] = (totals[key] || 0) + value * level;
     }
   };
-  for (const source of Object.values(state.sources || {})) add(source);
+  for (const [key, source] of Object.entries(state.sources || {}))
+    if (key !== "absorbed" || !equipmentRules.enabled(state)) add(source);
   let curseFactor = 1;
   for (const item of state.items || []) {
-    add(item.definition.effects, item.level);
+    add(item.definition.effects, equipmentRules.itemScale(state, item));
     const curses = Math.max(0, item.level - (item.cleansedLevels || 0));
     if (curses) {
-      add(item.definition.curse?.effects, curses);
+      add(
+        item.definition.curse?.effects,
+        equipmentRules.curseScale(state, item),
+      );
       curseFactor *=
-        (1 - (item.definition.curse?.effects.bonusPenalty || 0)) ** curses;
+        (1 - (item.definition.curse?.effects.bonusPenalty || 0)) **
+        equipmentRules.curseScale(state, item);
     }
   }
   return { totals, curseFactor };
@@ -301,6 +307,11 @@ function createState(
     state.balanceProfile = { ...state.statProfile.powers };
   }
   state.lastLog = "Run Sinh tồn " + state.releaseVersion + " bắt đầu.";
+  if (
+    gameplayVersion === 3 &&
+    process.env.HARDCORE_EQUIPMENT_RULES_VERSION === "1"
+  )
+    equipmentRules.activate(state);
   recompute(state);
   state.hp = state.maxHp;
   state.mana = state.maxMana;

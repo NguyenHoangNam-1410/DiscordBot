@@ -38,6 +38,23 @@ module.exports = function createModule(dependencies) {
   const randomEventText = (...args) => dependencies.randomEventText(...args);
 
   function encounterText(s) {
+    if (s.phase === "boss_chest" && s.encounter.offers)
+      return (
+        "🎁 Rương boss · chọn 1 trong 3 món hoặc bán (+100% cược).\n" +
+        s.encounter.offers
+          .map(
+            (d, i) =>
+              "**" +
+              (i + 1) +
+              ". " +
+              d.name +
+              " [" +
+              rarityLabel(d.rarity) +
+              "]**\n" +
+              itemText(d, 1, s),
+          )
+          .join("\n\n")
+      );
     if (s.phase === "boss_chest")
       return `${eventIcon("boss_chest")} **RƯƠNG BOSS · TẦNG ${s.encounter.bossFloor}**\nPhần thưởng sau boss cuối khu vực. Chọn **mở hoặc bán** để tiếp tục.\n\n**Mở rương**\n- **70%:** nhận trang bị **SSR**.\n- **30%:** nhận **UR**: trang bị có nguyền hoặc Vé thoát.\nĐồ trùng tên tăng level. Tỷ lệ cố định, không bị Luck/pity thay đổi.\n\n**Bán rương**\n- Cộng **100% cược ban đầu (${money(s.stake)} xu)** vào thưởng của run.\nPhải xử lý rương trước khi rút thưởng hoặc đi tiếp.`;
     if (s.phase === "upgrade")
@@ -149,10 +166,29 @@ module.exports = function createModule(dependencies) {
     if (k === "blacksmith") return blacksmithText(s, true);
     if (k === "purifier") return purifierText(s, true);
     if (k.endsWith("_shop"))
-      return `${eventIcon(e.kind)} **${e.name}** · mua tối đa **một món**. Giá và offer đã khóa.\n${e.offers.map((offer, i) => `**${i + 1}. ${offer.item.name} [${rarityLabel(offer.item.rarity)}] · ${shopPrice(k, offer)}**\n${itemText(offer.item)}`).join("\n")}\n${k === "blood_shop" ? "Giảm Max HP trong suốt run; phải còn ít nhất 1 Max HP sau trả giá. HP hiện tại chỉ hạ xuống nếu vượt Max HP mới." : k === "diamond_shop" ? "Kim cương bị trừ ngay khi mua, kể cả run sau đó tử trận." : "Giá chốt theo payout hiện tại lúc gặp; bao gồm Paradox và các khoản đã chi."}`;
+      return `${eventIcon(e.kind)} **${e.name}** · mua tối đa **một món**. Giá và offer đã khóa.\n${e.offers.map((offer, i) => `**${i + 1}. ${offer.item.name} [${rarityLabel(offer.item.rarity)}] · ${shopPrice(k, offer)}**\n${itemText(offer.item, 1, s)}`).join("\n")}\n${k === "blood_shop" ? "Giảm Max HP trong suốt run; phải còn ít nhất 1 Max HP sau trả giá. HP hiện tại chỉ hạ xuống nếu vượt Max HP mới." : k === "diamond_shop" ? "Kim cương bị trừ ngay khi mua, kể cả run sau đó tử trận." : "Giá chốt theo payout hiện tại lúc gặp; bao gồm Paradox và các khoản đã chi."}`;
     if (k === "merchant")
       return `${eventIcon(k)} **${e.name}**\nMua tối đa **một món** bằng xu payout:\n${e.offers.map((o) => `- **${merchantOffer(o).name}** · **${money(o.price)} ${icon("coin", "🪙")}**`).join("\n")}\nXem **Chi tiết** để đọc công dụng và điều kiện mua.`;
     const target = s.items.find((x) => x.definition.id === e.targetId);
+    if (k === "horadric" && e.forge) {
+      if (e.forge.stage === "boon")
+        return (
+          "🔨 Đã nghiền 1 level. Chọn đúng một boon đã khóa: " +
+          e.forge.boons
+            .map((b) => "+" + b.amount + " " + b.key.toUpperCase())
+            .join(" / ") +
+          ". Không giữ lại chỉ số của level đã nghiền."
+        );
+      return (
+        "🔨 Horadric Forge · " +
+        target.name +
+        " Lv." +
+        target.level +
+        " → " +
+        (target.level - 1) +
+        ".\nTiêu hao 1 level và gỡ buff/nguyền tương ứng theo đường cong level; nếu hết level thì mất cả nội tại và affinity. Sau đó chọn 1 boon cố định. Không hấp thụ chỉ số. Có thể bỏ qua trước khi nghiền."
+      );
+    }
     if (k === "horadric" && target) {
       const retained = Object.fromEntries(
         Object.entries(target.definition.effects).filter(
@@ -391,7 +427,7 @@ ${bossDisplay.status(s)}
         chestPityText(s, e, true),
       );
     if (e.type === "surprise" && e.kind.endsWith("_shop"))
-      return `${eventIcon(e.kind)} **Công dụng các món đang bán**\n${e.offers.map((offer, i) => `${i + 1}. **${E.backpack} ${offer.item.name} [${rarityLabel(offer.item.rarity)}]**\n${itemText(offer.item)}`).join("\n\n")}\n\nMua tối đa **một món** trong lần gặp. ${e.kind === "blood_shop" ? "Trả bằng cách giảm Max HP trong suốt run, phải còn ít nhất 1 Max HP trước khi cộng vật phẩm. HP hiện tại chỉ hạ xuống nếu vượt Max HP mới." : e.kind === "diamond_shop" ? "Kim cương trừ ngay khi mua, không hoàn lại khi run kết thúc." : "Trả từ payout hiện tại; giá chốt lúc gặp, bao gồm Paradox và các khoản đã chi."}`;
+      return `${eventIcon(e.kind)} **Công dụng các món đang bán**\n${e.offers.map((offer, i) => `${i + 1}. **${E.backpack} ${offer.item.name} [${rarityLabel(offer.item.rarity)}]**\n${itemText(offer.item, 1, s)}`).join("\n\n")}\n\nMua tối đa **một món** trong lần gặp. ${e.kind === "blood_shop" ? "Trả bằng cách giảm Max HP trong suốt run, phải còn ít nhất 1 Max HP trước khi cộng vật phẩm. HP hiện tại chỉ hạ xuống nếu vượt Max HP mới." : e.kind === "diamond_shop" ? "Kim cương trừ ngay khi mua, không hoàn lại khi run kết thúc." : "Trả từ payout hiện tại; giá chốt lúc gặp, bao gồm Paradox và các khoản đã chi."}`;
     if (e.type === "surprise" && e.kind === "merchant")
       return `${eventIcon("merchant")} **Công dụng hàng hóa**\n${e.offers.map((o) => `**${merchantOffer(o).name}**\n${merchantOffer(o).detail}`).join("\n\n")}\nChỉ mua một món; giá chốt theo payout hiện tại lúc gặp, gồm Paradox và các khoản đã chi. Cần đủ payout hiện tại để mua.`;
     return encounterText(s);

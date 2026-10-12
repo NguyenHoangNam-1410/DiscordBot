@@ -49,6 +49,38 @@ module.exports = function createModule(dependencies) {
     };
     const itemById = (id) =>
       state.items.find((item) => item.definition.id === id);
+    if (k === "horadric" && e.forge) {
+      const f = e.forge;
+      if (f.version !== 1) throw Error("INVALID_FORGE_VERSION");
+      if (action === "forge_grind" && f.stage === "grind") {
+        const target = itemById(f.targetId);
+        if (!target) throw Error("NO_FORGE_ITEM");
+        f.removed = { id: target.definition.id, level: target.level };
+        grind(state, target);
+        f.stage = "boon";
+        state.lastLog = "🔨 Đã nghiền 1 level. Chọn một boon để tiếp tục.";
+        return;
+      }
+      if (
+        /^forge_boon_[0-2]$/.test(action) &&
+        f.stage === "boon" &&
+        !f.claimed
+      ) {
+        const boon = f.boons[Number(action.slice(-1))];
+        f.claimed = true;
+        addSource(state, { [boon.key]: boon.amount }, "forgeBoon");
+        done(
+          "🔨 Forge: +" +
+            boon.amount +
+            " " +
+            boon.key.toUpperCase() +
+            " cho bạn.",
+        );
+        return;
+      }
+      if (f.stage === "boon" || action !== "event_skip")
+        throw Error("STALE_ACTION");
+    }
     if (k === "royal_invitation") {
       if (action === "event_skip") {
         royal.decline(state);
@@ -148,6 +180,7 @@ module.exports = function createModule(dependencies) {
         completeFloor(state, session, rng, 0);
       } else if (e.wins >= 3 || e.round >= 5) {
         if (e.wins >= 3) {
+          e.reward ||= randomItem(e.rewardRarity, rng, state, "duelist");
           receiveItem(state, e.reward);
           state.lastLog += ` Nhận ${e.reward.name}.`;
         } else {
@@ -175,7 +208,12 @@ module.exports = function createModule(dependencies) {
       if (e.roll < goblinCatchChance(state)) {
         state.bonus += Math.floor(state.stake * GOBLIN_REWARDS.bonusRate);
         // Saved Goblins keep their catch roll and use the existing independent loot roll.
-        e.goblinItem ||= randomItem(goblinRewardRarity(e.roll2 ?? rng()), rng);
+        e.goblinItem ||= randomItem(
+          goblinRewardRarity(e.roll2 ?? rng()),
+          rng,
+          state,
+          "goblin",
+        );
         receiveItem(state, e.goblinItem);
         done(
           `${eventIcon("goblin")} Bắt được Treasure Goblin: bonus +25% cược và nhận trang bị.`,
@@ -213,6 +251,7 @@ module.exports = function createModule(dependencies) {
         rarity: target.rarity,
         level: target.level,
         curseLevels: Math.max(0, target.level - (target.cleansedLevels || 0)),
+        cleansedLevels: target.cleansedLevels || 0,
         curseEffects: structuredClone(target.definition.curse?.effects || {}),
         maxPotionsBefore: state.maxPotions,
       };
@@ -371,7 +410,10 @@ module.exports = function createModule(dependencies) {
           state.potions = Math.min(state.maxPotions, state.potions + 1);
         }
         if (door === "gold") state.bonus += Math.floor(state.stake * 0.5);
-        if (door === "dark") receiveItem(state, e.item);
+        if (door === "dark") {
+          e.item ||= randomItem("legendary", rng, state, "doors");
+          receiveItem(state, e.item);
+        }
         done(
           `${eventIcon("doors")} Cửa ${{ light: "sáng", gold: "vàng", dark: "tối" }[door]}: ${door === "light" ? `hồi đầy ${E.hp} HP/${E.mana} MP và tiếp tế ${E.potion} bình máu` : door === "gold" ? `bonus +50% cược (${Math.floor(state.stake * 0.5).toLocaleString("vi-VN")} xu)` : "nhận trang bị SSR"}.` +
             (recovery ? "\n" + recovery.log : ""),

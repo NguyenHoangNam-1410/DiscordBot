@@ -250,6 +250,22 @@ module.exports = function createModule(dependencies) {
         },
       ],
     };
+    if (process.env.HARDCORE_EQUIPMENT_RULES_VERSION === "1") {
+      fields.loot.unshift({
+        name: "Trang bị V3 · affinity",
+        value:
+          "55% hợp class · 25% Universal · 20% lệch build. Sau 3 nguồn thưởng liên tiếp thiếu món hợp class, nguồn tiếp theo bảo đảm một lựa chọn hợp class. Offer nhiều món chỉ tính một lượt; vé/LR/đồ cố định/snapshot mộ không tính. Mọi trang bị sở hữu đều hoạt động; lệch build vẫn nhận hiệu ứng chung.",
+      });
+      fields.combat.push({
+        name: "Level trang bị V3",
+        value:
+          "Level không giới hạn. Tổng hiệu lực Lv.1–5: 100/160/200/230/250%; các cấp sau tiến dần đến 270%. Nội tại/affinity tính một lần mỗi ID. Buff và nguyền chưa giải dùng cùng đường cong. Run cũ giữ luật đã lưu.",
+      });
+      const forge = fields.rewards.find((f) => f.name.includes("Horadric"));
+      if (forge)
+        forge.value =
+          "Luật trang bị mới: nghiền 1 level, gỡ buff/nguyền tương ứng; hết level thì mất nội tại/affinity. Chọn trực tiếp một boon cố định +1 thuộc tính chính, +1 VIT hoặc +1 chỉ số phụ theo class. Không giữ chỉ số hấp thụ; không tốn xu, không reroll. Run cũ giữ Forge cũ.";
+    }
     return category
       ? fields[category] || fields.combat
       : Object.values(fields).flat();

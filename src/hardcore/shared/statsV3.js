@@ -1,4 +1,5 @@
 "use strict";
+const equipmentRules = require("../equipment/rules");
 // Stat-only V3 rules. Skills, items, drops, Forge and checkpoints keep their existing mechanics.
 const VERSION = 3;
 const MASTERY_VERSION = 1;
@@ -201,18 +202,29 @@ function layers(state) {
     equipment = {};
   const add = (target, values, level = 1) => {
     for (const [key, value] of Object.entries(values || {})) {
-      if (key === "defenseSet") target[key] = value;
-      else target[key] = (target[key] || 0) + value * level;
+      if (key === "defenseSet") {
+        if (level > 0 || !equipmentRules.enabled(state)) target[key] = value;
+      } else target[key] = (target[key] || 0) + value * level;
     }
   };
   for (const [key, values] of Object.entries(state.sources || {}))
-    add(key === "absorbed" ? equipment : allocated, values);
+    if (key !== "absorbed" || !equipmentRules.enabled(state))
+      add(key === "absorbed" ? equipment : allocated, values);
   for (const item of state.items || []) {
-    add(equipment, item.definition.effects, item.level);
+    add(
+      equipment,
+      item.definition.effects,
+      equipmentRules.itemScale(state, item),
+    );
+    if (
+      item.level > (item.cleansedLevels || 0) &&
+      item.definition.curse?.effects.defenseSet != null
+    )
+      equipment.defenseSet = item.definition.curse.effects.defenseSet;
     add(
       equipment,
       item.definition.curse?.effects,
-      Math.max(0, item.level - (item.cleansedLevels || 0)),
+      equipmentRules.curseScale(state, item),
     );
   }
   return { allocated, equipment };

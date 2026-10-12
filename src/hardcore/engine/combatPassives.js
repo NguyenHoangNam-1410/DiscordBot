@@ -1,4 +1,5 @@
 "use strict";
+const affinity = require("../equipment/affinityEffects");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const { bosses, gilded, itemPassives, monsterLoot, E, passiveIcon, world } =
@@ -14,6 +15,7 @@ module.exports = function createModule(dependencies) {
     state.passiveCombatFloor = state.floor;
     if (e.passiveCombatStarted) return;
     e.passiveCombatStarted = true;
+    affinity.prepare(state);
     if (alive(state) && state.combatManaLoss > 0) {
       const before = state.mana;
       state.mana = Math.max(0, state.mana - state.combatManaLoss);
@@ -57,8 +59,11 @@ module.exports = function createModule(dependencies) {
       ? (state.spellMin + state.spellMax) / 2
       : (state.damageMin + state.damageMax) / 2;
     const budget = Math.floor(basic * 0.5);
+    if (naturalMiss) affinity.dodge(state);
     let raw = actual * (p.thorns + (defend ? p.guardReflect : 0));
-    const triggered = [];
+    const affinityRaw = affinity.reflection(state, actual, defend, basic);
+    raw += affinityRaw;
+    const triggered = affinityRaw > 0 ? ["✨ **Affinity**"] : [];
     if (actual > 0 && p.thorns > 0)
       triggered.push(`${passiveIcon("thorns")} **Gai**`);
     if (actual > 0 && defend && p.guardReflect > 0)

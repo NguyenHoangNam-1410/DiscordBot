@@ -1,4 +1,6 @@
 "use strict";
+const equipmentRules = require("../equipment/rules");
+const affinityLoot = require("../equipment/loot");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -113,8 +115,13 @@ module.exports = function createModule(dependencies) {
       roll: rng(),
       roll2: rng(),
     };
-    if (kind === "goblin")
-      e.goblinItem = randomItem(goblinRewardRarity(e.roll2), rng);
+    if (kind === "goblin" && !equipmentRules.enabled(state))
+      e.goblinItem = randomItem(
+        goblinRewardRarity(e.roll2),
+        rng,
+        state,
+        "goblin",
+      );
     const itemPool = state.items.filter(
       (x) =>
         kind !== "purifier" ||
@@ -123,14 +130,45 @@ module.exports = function createModule(dependencies) {
     if (["blacksmith", "purifier", "horadric"].includes(kind)) {
       e.targetId = pick(itemPool, rng)?.definition.id;
       e.forgeStat = rng() < 0.5 ? "str" : "vit";
+      if (kind === "horadric" && equipmentRules.enabled(state))
+        e.forge = require("../equipment/forge").prepare(state, e.targetId);
       if (kind === "purifier") {
         e.targetId = null;
         e.purifierPage = 0;
       }
     }
     if (kind === "adventurer") {
-      e.rescueItem = randomItem(rng() < 0.3 ? "rare" : "common", rng);
-      e.robItem = randomItem(rng() < 0.25 ? "cursed" : "legendary", rng);
+      if (equipmentRules.enabled(state)) {
+        const plan = [
+          {
+            key: "rescueItem",
+            rarity: rng() < 0.3 ? "rare" : "common",
+            eligible: state.potions > 0,
+          },
+          {
+            key: "robItem",
+            rarity: rng() < 0.25 ? "cursed" : "legendary",
+            eligible: dependencies.memories.canQueue(state),
+          },
+        ];
+        const slots = plan.filter((x) => x.eligible);
+        const selected = slots.length
+          ? affinityLoot.offers(
+              state,
+              slots.map((x) => x.rarity),
+              rng,
+              "adventurer",
+            )
+          : [];
+        slots.forEach((x, i) => (e[x.key] = selected[i]));
+        for (const x of plan.filter((x) => !x.eligible))
+          e[x.key] = structuredClone(
+            pick(require("../item").V3_POOLS[x.rarity], rng),
+          );
+      } else {
+        e.rescueItem = randomItem(rng() < 0.3 ? "rare" : "common", rng);
+        e.robItem = randomItem(rng() < 0.25 ? "cursed" : "legendary", rng);
+      }
     }
     if (kind === "fountain") {
       e.goodThreshold = itemPassives.goodChance(state, 0.85);
@@ -156,8 +194,11 @@ module.exports = function createModule(dependencies) {
       e.mimicColor = pick(["red", "blue", "gold"], rng);
       e.enemy = world.makeEnemy(state, "mimic", "Treasure Room Mimic", rng);
     }
-    if (kind === "contract" || kind === "doors")
-      e.item = randomItem("legendary", rng);
+    if (
+      (kind === "contract" || kind === "doors") &&
+      !equipmentRules.enabled(state)
+    )
+      e.item = randomItem("legendary", rng, state, kind);
     if (kind === "doors") {
       e.doors = {
         light: rng() < itemPassives.goodChance(state, 0.7),
@@ -175,7 +216,10 @@ module.exports = function createModule(dependencies) {
     if (kind === "duelist") {
       e.hands = Array.from({ length: 5 }, () => int(0, 2, rng));
       e.penalty = Array.from({ length: 6 }, () => pick(stats.ATTRIBUTES, rng));
-      e.reward = randomItem(rng() < 0.75 ? "legendary" : "cursed", rng);
+      e.rewardRarity = rng() < 0.75 ? "legendary" : "cursed";
+      e.reward = equipmentRules.enabled(state)
+        ? null
+        : randomItem(e.rewardRarity, rng);
       e.lossItemId = pick(
         state.items.filter((x) => x.rarity !== "cursed"),
         rng,
@@ -209,8 +253,24 @@ module.exports = function createModule(dependencies) {
             : kind === "blood_shop"
               ? Math.max(1, Math.ceil(maxHp * BLOOD_PRICES[rarity]))
               : DIAMOND_PRICES[rarity];
-        return { item: randomItem(rarity, rng), price };
+        return {
+          item: equipmentRules.enabled(state) ? null : randomItem(rarity, rng),
+          rarity,
+          price,
+        };
       });
+      if (equipmentRules.enabled(state)) {
+        const items = affinityLoot.offers(
+          state,
+          e.offers.map((o) => o.rarity),
+          rng,
+          kind,
+        );
+        e.offers.forEach((o, i) => {
+          o.item = items[i];
+          delete o.rarity;
+        });
+      }
       state.shopCounts[kind] = (state.shopCounts[kind] || 0) + 1;
       state.shopLast[kind] = state.floor;
       if (kind === "diamond_shop") e.priceVersion = 2;
@@ -227,9 +287,38 @@ module.exports = function createModule(dependencies) {
         e.offers.push({
           ...offer,
           price: serviceCost(state, offer.fraction),
-          item: offer.key === "item" ? randomItem("rare", rng) : null,
-          ...(offer.key === "chest" ? { chest: makeChest(state, rng) } : {}),
+          item:
+            offer.key === "item"
+              ? equipmentRules.enabled(state)
+                ? null
+                : randomItem("rare", rng)
+              : null,
+          ...(offer.key === "chest"
+            ? {
+                chest: makeChest(state, rng, false, {
+                  deferAffinity: equipmentRules.enabled(state),
+                }),
+              }
+            : {}),
         });
+      }
+      if (equipmentRules.enabled(state)) {
+        const slots = e.offers.filter(
+          (o) =>
+            o.key === "item" || (o.chest?.kind === "safe" && o.chest.rarity),
+        );
+        if (slots.length) {
+          const items = affinityLoot.offers(
+            state,
+            slots.map((o) => (o.key === "item" ? "rare" : o.chest.rarity)),
+            rng,
+            "merchant",
+          );
+          slots.forEach((o, i) => {
+            if (o.key === "item") o.item = items[i];
+            else o.chest.item = items[i];
+          });
+        }
       }
       e.priceVersion = 2;
     }
@@ -299,15 +388,25 @@ module.exports = function createModule(dependencies) {
         null,
         rng,
       );
-      if (bosses.CHEST_FLOORS.includes(state.floor))
+      if (
+        bosses.CHEST_FLOORS.includes(state.floor) &&
+        !equipmentRules.enabled(state)
+      )
         enemy.boss.chestItem = randomItem(
           rng() < 0.7 ? "legendary" : "cursed",
           rng,
         );
       if (state.floor === 666) {
-        enemy.boss.rewardItem = structuredClone(
-          pick(ITEMS[rng() < 0.666 ? "legendary" : "cursed"], rng),
-        );
+        enemy.boss.rewardItem = equipmentRules.enabled(state)
+          ? null
+          : structuredClone(
+              pick(
+                require("../item").LEGACY_ITEMS[
+                  rng() < 0.666 ? "legendary" : "cursed"
+                ],
+                rng,
+              ),
+            );
         return { type: "boss_gate", name: enemy.name, enemy };
       }
       return enemy;
@@ -325,7 +424,9 @@ module.exports = function createModule(dependencies) {
         fleeSuccess: rng() < rngesusFleeChance(state),
         prayerChance: rngesusPrayerChance(state),
         prayerSuccess: rng() < rngesusPrayerChance(state),
-        prayerItem: randomItem("cursed", rng),
+        prayerItem: equipmentRules.enabled(state)
+          ? null
+          : randomItem("cursed", rng),
       };
     const due = state.debts.findIndex(
       (debt) =>

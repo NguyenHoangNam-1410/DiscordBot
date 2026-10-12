@@ -119,7 +119,12 @@ module.exports = function createModule(dependencies) {
         const contract = state.contract;
         const payoutBefore = payoutSnapshot(state);
         state.contract = null;
-        if (contract.kind === "potion") receiveItem(state, contract.item);
+        if (contract.kind === "potion")
+          receiveItem(
+            state,
+            contract.item ||
+              dependencies.randomItem("legendary", rng, state, "contract"),
+          );
         else if (contract.kind === "skill")
           state.bonus += Math.floor(state.stake * 0.5);
         else addSource(state, { [mainStat(state)]: 10 });

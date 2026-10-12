@@ -60,7 +60,12 @@ module.exports = function createModule(dependencies) {
     };
   }
 
-  function makeChest(state, rng, treasure = false) {
+  function makeChest(
+    state,
+    rng,
+    treasure = false,
+    { deferAffinity = false } = {},
+  ) {
     const guaranteed = state.pityRare >= 5;
     const unstable = state.modifiers.unstable_rift || 0;
     const ancient = clamp(0.03 + unstable * 0.01, 0, 0.15),
@@ -97,7 +102,17 @@ module.exports = function createModule(dependencies) {
       rarity,
       guaranteed,
       odds: chestOdds(state, treasure),
-      item: rarity ? randomItem(rarity, rng) : null,
+      item:
+        rarity &&
+        !deferAffinity &&
+        (kind === "safe" || !require("../equipment/rules").enabled(state))
+          ? randomItem(
+              rarity,
+              rng,
+              state,
+              treasure ? "treasure_chest" : "chest",
+            )
+          : null,
       inspected: false,
       revealed: false,
       detectionChance: Math.min(

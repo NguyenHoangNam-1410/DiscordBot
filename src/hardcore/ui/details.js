@@ -89,11 +89,7 @@ module.exports = function createModule(dependencies) {
       for (const item of state.items.slice(page * 5, page * 5 + 5))
         e.addFields({
           name: `${item.name} Lv.${item.level} [${rarityLabel(item.rarity)}]`,
-          value:
-            `${effectText(item.definition.effects, item.level)}${passiveText(item.definition)}${item.definition.curse ? `\n☣️ ${item.level > (item.cleansedLevels || 0) ? effectText(item.definition.curse.effects, item.level - (item.cleansedLevels || 0)) : "Đã giải toàn bộ curse"}` : ""}`.slice(
-              0,
-              1024,
-            ),
+          value: dependencies.ownedItemText(state, item).slice(0, 1024),
         });
       if (!state.items.length)
         e.addFields({ name: `${E.backpack} Trang bị`, value: "Chưa có." });
@@ -134,6 +130,12 @@ module.exports = function createModule(dependencies) {
           });
       }
     } else if (tab === "stats") {
+      if (require("../equipment/rules").enabled(state))
+        addTextFields(
+          e,
+          "✨ Affinity trang bị",
+          require("../equipment/affinityEffects").summary(state),
+        );
       const activeRelic = core.RELIC_ITEMS[state.activeRelic];
       if (activeRelic)
         addTextFields(

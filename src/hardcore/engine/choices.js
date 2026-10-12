@@ -30,6 +30,8 @@ module.exports = function createModule(dependencies) {
   function surpriseActions(state) {
     const e = state.encounter,
       k = e.kind;
+    if (k === "horadric" && e.forge)
+      return require("../equipment/forge").choices(e.forge);
     if (k === "royal_invitation") return royal.choices(state);
     if (k === "purifier")
       return purifier.choices(state, purifierCost(state), payout(state));
@@ -169,6 +171,14 @@ module.exports = function createModule(dependencies) {
       ];
     if (state.encounter?.type === "boss_gate")
       return [{ action: "enter_kabraxis", label: "Bước vào trận Kabraxis" }];
+    if (state.phase === "boss_chest" && state.encounter.offers)
+      return [
+        ...state.encounter.offers.map((item, i) => ({
+          action: "boss_pick_" + i,
+          label: item.name + " · " + item.typeCode,
+        })),
+        { action: "boss_sell", label: "Bán rương · +100% cược" },
+      ];
     if (state.phase === "boss_chest")
       return [
         { action: "boss_open", label: "Mở rương · SSR 70% / UR 30%" },
@@ -254,7 +264,9 @@ module.exports = function createModule(dependencies) {
     if (e.type === "surprise")
       return [
         ...surpriseActions(state),
-        ...(e.kind === "treasure_room" || (e.kind === "duelist" && e.mode)
+        ...(e.forge?.stage === "boon" ||
+        e.kind === "treasure_room" ||
+        (e.kind === "duelist" && e.mode)
           ? []
           : [{ action: "event_skip", label: "Bỏ qua" }]),
       ];

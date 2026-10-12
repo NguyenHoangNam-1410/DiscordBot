@@ -482,6 +482,7 @@ function candidate(
     }
   }
   const damagePayload = {
+    towerClassProfileSnapshot: structuredClone(p),
     generatorVersion: GENERATOR_VERSION,
     contentVersion,
     classKey,
@@ -627,6 +628,7 @@ function candidate(
     generatorVersion: GENERATOR_VERSION,
     contentVersion,
     classKey,
+    ...require("./snapshots").capture(classKey, p),
     seedCommitment: solver.hash(seed),
     name: p.name + " · Mortal Equation",
     weekLabel: "TUẦN " + isoWeek,

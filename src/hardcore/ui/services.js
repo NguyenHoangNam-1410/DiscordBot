@@ -38,7 +38,12 @@ module.exports = function createModule(dependencies) {
       Object.entries(effects).filter(([key]) => !instantKeys.includes(key)),
     );
     const instant = Object.fromEntries(
-      Object.entries(effects).filter(([key]) => instantKeys.includes(key)),
+      Object.entries(effects).filter(
+        ([key]) =>
+          instantKeys.includes(key) &&
+          (!require("../equipment/rules").enabled(state) ||
+            target.definition.receipt?.onDuplicate),
+      ),
     );
     const curseLevels = Math.max(
       0,
@@ -59,7 +64,7 @@ module.exports = function createModule(dependencies) {
         "**",
       Object.keys(buffs).length
         ? "**Buff trang bị:**\n" +
-          itemEffectChanges(buffs, target.level, target.level + 1)
+          itemEffectChanges(buffs, target.level, target.level + 1, state)
         : "",
     ].filter(Boolean);
     if (Object.keys(instant).length)
@@ -74,8 +79,14 @@ module.exports = function createModule(dependencies) {
           ? "☣️ **Lời nguyền:**\n" +
               itemEffectChanges(
                 target.definition.curse.effects,
-                curseLevels,
-                curseLevels + 1,
+                require("../equipment/rules").enabled(state)
+                  ? target.level
+                  : curseLevels,
+                require("../equipment/rules").enabled(state)
+                  ? target.level + 1
+                  : curseLevels + 1,
+                state,
+                target.cleansedLevels || 0,
               )
           : "☣️ **Đã giải toàn bộ nguyền:** rèn không thêm lời nguyền.",
       );
@@ -148,7 +159,15 @@ module.exports = function createModule(dependencies) {
       "**Lời nguyền sẽ gỡ · " +
         curseLevels +
         " cấp chưa giải:**\n" +
-        itemEffectChanges(target.definition.curse.effects, curseLevels, 0),
+        itemEffectChanges(
+          target.definition.curse.effects,
+          require("../equipment/rules").enabled(state)
+            ? target.level
+            : curseLevels,
+          0,
+          state,
+          target.cleansedLevels || 0,
+        ),
     ];
     const statChanges = [changes, capacity]
       .filter(Boolean)

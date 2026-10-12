@@ -1,5 +1,28 @@
 [
   {
+    "id": "e3774561-40e4-437c-9ba6-1f51b05426e6",
+    "updatedAt": "2026-10-12T07:11:29.090Z",
+    "auditedAt": "2026-10-12T07:11:29.090Z",
+    "title": "Hoàn thiện pool affinity Sinh tồn V3",
+    "changes": [
+      "Phoenix Blood thêm affinity Sorceress; Hollow Crown thêm Druid để mỗi class có đủ lựa chọn hợp class trong offer ba món, giữ nguyên hiệu ứng chung.",
+      "Bảo đảm affinity tại Lost Adventurer chỉ dựa trên các lựa chọn người chơi có thể thực hiện; phần thưởng ẩn không làm đổi pity khi mở lại giao diện.",
+      "Luật trang bị mới vẫn là cấu hình thử nghiệm cho run mới; run cũ và Tower đã tạo giữ snapshot. Chưa chốt cân bằng tỷ lệ thắng."
+    ]
+  },
+  {
+    "id": "4f6ca00c-3704-4b3b-bad1-7fa70745b3b7",
+    "updatedAt": "2026-10-12T06:58:15.887Z",
+    "auditedAt": "2026-10-12T06:58:15.887Z",
+    "title": "Chuẩn bị rework trang bị Sinh tồn V3",
+    "changes": [
+      "Bổ sung catalog 100 trang bị, affinity theo class và bảo đảm lựa chọn hợp class sau 3 nguồn thưởng liên tiếp không phù hợp.",
+      "Luật mới có level giảm dần hiệu lực, giải nguyền theo từng phần level, và Forge nghiền một cấp để chọn một boon thay vì giữ chỉ số hấp thụ.",
+      "Bổ sung nội tại affinity cho 7 class, lựa chọn 1 trong 3 món từ rương boss và thông tin trang bị trong Túi/Chỉ số.",
+      "Run cũ và Tower đã tạo giữ dữ liệu đã lưu. Rework trang bị hiện bật qua cấu hình thử nghiệm, chưa chốt cân bằng hoặc tỷ lệ thắng."
+    ]
+  },
+  {
     "id": "0d4143d5-5f37-442a-bcba-db18af88d9f0",
     "updatedAt": "2026-10-12T04:03:03.705Z",
     "auditedAt": "2026-10-12T04:03:03.705Z",

@@ -1,4 +1,6 @@
 "use strict";
+const rules = require("../equipment/rules");
+const affinity = require("../equipment/affinityEffects");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -98,13 +100,58 @@ module.exports = function createModule(dependencies) {
     return text ? "\n" + formatPassiveText(text) : "";
   }
 
-  function itemText(item, level = 1) {
+  function itemText(item, level = 1, state = null) {
     if (item.category === "consumable")
-      return `${ticketIcon(item.id)} **Vật phẩm:** ${item.text}`;
-    return `${effectText(item.effects, level)}${passiveText(item)}${item.curse ? `\n☣️ Curse: ${effectText(item.curse.effects, level)}` : ""}`;
+      return ticketIcon(item.id) + " **Vật phẩm:** " + item.text;
+    const scale = item.catalogVersion === 3 ? rules.scale(level) : level;
+    return (
+      effectText(item.effects, scale) +
+      passiveText(item) +
+      (item.curse
+        ? "\n☣️ " +
+          (item.catalogVersion === 3 ? "Nguyền: " : "Curse: ") +
+          effectText(item.curse.effects, scale)
+        : "") +
+      affinity.text(item, state?.classKey)
+    );
+  }
+  function ownedItemText(state, item) {
+    const scale = rules.itemScale(state, item),
+      curse = rules.curseScale(state, item);
+    return (
+      effectText(item.definition.effects, scale) +
+      passiveText(item.definition) +
+      (item.definition.curse
+        ? "\n☣️ " +
+          (item.level > (item.cleansedLevels || 0)
+            ? effectText(item.definition.curse.effects, curse)
+            : rules.enabled(state)
+              ? "Đã giải toàn bộ nguyền"
+              : "Đã giải toàn bộ curse")
+        : "") +
+      affinity.text(item.definition, state.classKey) +
+      (rules.enabled(state)
+        ? "\nTổng hiệu lực: " +
+          (scale * 100).toFixed(1) +
+          "% Lv.1; nội tại không nhân level."
+        : "")
+    );
   }
 
-  function itemEffectChanges(effects, beforeLevel, afterLevel) {
+  function itemEffectChanges(
+    effects,
+    beforeLevel,
+    afterLevel,
+    state = null,
+    cleansedLevels = 0,
+  ) {
+    if (rules.enabled(state)) {
+      beforeLevel = rules.scale(beforeLevel) - rules.scale(cleansedLevels);
+      afterLevel =
+        afterLevel === 0
+          ? 0
+          : rules.scale(afterLevel) - rules.scale(cleansedLevels);
+    }
     return Object.entries(effects)
       .map(([key, value]) => {
         const label = highlightStat(effectStatLabel(key));
@@ -154,13 +201,7 @@ module.exports = function createModule(dependencies) {
               ? "✅ Đủ set, sẵn sàng nhận thư mời."
               : "";
       return {
-        name:
-          relicIcon(id) +
-          " Set " +
-          set.name +
-          " (" +
-          count +
-          "/5)",
+        name: relicIcon(id) + " Set " + set.name + " (" + count + "/5)",
         value:
           "→ **" +
           core.RELIC_ITEMS[id].name +
@@ -201,11 +242,8 @@ module.exports = function createModule(dependencies) {
       }
     };
     for (const item of state.items) {
-      add(item.definition.effects, item.level);
-      add(
-        item.definition.curse?.effects,
-        Math.max(0, item.level - (item.cleansedLevels || 0)),
-      );
+      add(item.definition.effects, rules.itemScale(state, item));
+      add(item.definition.curse?.effects, rules.curseScale(state, item));
     }
     const active = Object.fromEntries(
       Object.entries(totals).filter(
@@ -221,6 +259,7 @@ module.exports = function createModule(dependencies) {
     formatPassiveText,
     passiveText,
     itemText,
+    ownedItemText,
     itemEffectChanges,
     equipmentSummary,
     setProgressFields,

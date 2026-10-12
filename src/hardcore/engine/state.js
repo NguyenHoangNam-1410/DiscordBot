@@ -97,6 +97,31 @@ module.exports = function createModule(dependencies) {
   }
 
   function normalize(state) {
+    const rules = require("../equipment/rules");
+    const ITEMS = rules.enabled(state)
+      ? require("../item").ITEMS_V3
+      : require("../item").LEGACY_ITEMS;
+    if (state.equipmentRulesVersion != null && !rules.enabled(state))
+      throw Error("UNSUPPORTED_EQUIPMENT_RULES");
+    if (rules.enabled(state)) {
+      if (
+        state.catalogVersion !== 3 ||
+        state.affinityPity?.version !== 1 ||
+        !Number.isInteger(state.affinityPity.missStreak) ||
+        state.affinityPity.missStreak < 0 ||
+        state.affinityPity.missStreak > 3
+      )
+        throw Error("INVALID_AFFINITY_PITY");
+      for (const i of state.items || [])
+        if (
+          !Number.isSafeInteger(i.level) ||
+          i.level < 1 ||
+          !Number.isSafeInteger(i.cleansedLevels || 0) ||
+          (i.cleansedLevels || 0) < 0 ||
+          (i.cleansedLevels || 0) > i.level
+        )
+          throw Error("INVALID_ITEM_LEVEL");
+    }
     if ((state.gameplayVersion === 3) !== (state.releaseVersion === "3.0.0"))
       throw new Error("UNSUPPORTED_HARDCORE_VERSION");
     if (!["2.0.0", "2.0.1", "3.0.0"].includes(state.releaseVersion))
@@ -197,6 +222,7 @@ module.exports = function createModule(dependencies) {
     }
     if (
       state.encounter?.type === "rngesus" &&
+      !rules.enabled(state) &&
       state.encounter.prayerItem?.rarity !== "cursed"
     ) {
       // Upgrade a pending old reward deterministically so reopening cannot reroll it.

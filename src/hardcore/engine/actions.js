@@ -60,6 +60,7 @@ module.exports = function createModule(dependencies) {
       if (
         state.encounter.type === "rngesus" ||
         state.phase === "boss_chest" ||
+        state.encounter.forge?.stage === "boon" ||
         bosses.retreatLocked(state)
       )
         throw new Error("CANNOT_RETREAT");
@@ -176,7 +177,10 @@ module.exports = function createModule(dependencies) {
         " sau phước lành của God of RNGesus.";
       state.encounter = generateEncounter(state, session, rng);
     } else if (state.phase === "boss_chest") {
-      if (action === "boss_open") {
+      if (state.encounter.offers && /^boss_pick_[0-2]$/.test(action)) {
+        receiveItem(state, state.encounter.offers[Number(action.slice(-1))]);
+        state.lastLog = "🎁 Đã chọn một vật phẩm từ rương boss.";
+      } else if (action === "boss_open") {
         receiveItem(state, state.encounter.item);
         state.lastLog = `${eventIcon("boss_chest")} Đã mở rương boss tầng ${state.encounter.bossFloor}.`;
       } else {
@@ -461,6 +465,12 @@ module.exports = function createModule(dependencies) {
             return die(
               `Cầu nguyện RNGesus thất bại (nhánh ${Math.round((1 - (e.prayerChance ?? rngesusPrayerChance(state))) * 100)}%).`,
             );
+          e.prayerItem ||= dependencies.randomItem(
+            "cursed",
+            rng,
+            state,
+            "rngesus_prayer",
+          );
           receiveItem(state, e.prayerItem);
           state.lastLog = `${eventIcon("rngesus")} RNGesus: cầu nguyện thành công, đã nhận **${e.prayerItem.name} [UR]**${e.prayerItem.curse ? " kèm lời nguyền" : ""}.`;
           remember(state, "pray_rngesus", rng);

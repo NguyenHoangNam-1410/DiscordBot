@@ -1,4 +1,5 @@
 "use strict";
+const affinity = require("../equipment/affinityEffects");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -73,7 +74,7 @@ module.exports = function createModule(dependencies) {
       magic ||
       rng() <
         world.hitChance(
-          attacker.accuracy,
+          attacker.accuracy + (player ? affinity.accuracy(state) : 0),
           defender.evasion,
           player ? 0.45 : (state.evasionCap ?? 0.45),
         );
@@ -102,6 +103,9 @@ module.exports = function createModule(dependencies) {
     let damage = raw ?? int(...range, rng);
     damage *=
       multiplier * (crit ? (player ? royal.critMultiplier(state) : 1.75) : 1);
+    damage *= player
+      ? affinity.outgoing(state, magic, crit)
+      : affinity.incoming(state);
     if (player && defender.rank === "normal")
       damage *= 1 - (state.normalDamagePenalty || 0);
     if (player)
@@ -188,10 +192,16 @@ module.exports = function createModule(dependencies) {
       );
     }
     if (dodge) {
+      let reflection = "";
+      if (state.classKey === "necromancer") {
+        affinity.block(state);
+        reflection = passiveCounter(state, rng, 0, false, false);
+      }
       const log = bosses.afterCounter(state, 0, false, defend);
       return (
         `${E.evasion} Bạn chặn/né hoàn toàn phản công.` +
-        (log ? "\n" + log : "")
+        (log ? "\n" + log : "") +
+        reflection
       );
     }
     if (
@@ -199,8 +209,15 @@ module.exports = function createModule(dependencies) {
       ["assassin", "necromancer"].includes(state.classKey)
     ) {
       state.classShrine.consumed = true;
+      let reflection = "";
+      if (state.classKey === "necromancer") {
+        affinity.block(state);
+        reflection = passiveCounter(state, rng, 0, false, false);
+      }
       const log = bosses.afterCounter(state, 0, false, defend);
-      return "✨ Class Shrine chặn phản công." + (log ? "\n" + log : "");
+      return (
+        "✨ Class Shrine chặn phản công." + (log ? "\n" + log : "") + reflection
+      );
     }
     const blood =
       enemy.hp < enemy.maxHp * 0.5
@@ -294,8 +311,17 @@ module.exports = function createModule(dependencies) {
     let dodge = false,
       defend = false,
       healingLog = "",
+      paidMana = 0,
       hits = [];
     if (action === "defend") {
+      affinity.defend(state);
+      const affinityHeal =
+        state.classKey === "druid" && affinity.strength(state) > 0
+          ? heal(
+              state,
+              state.maxHp * Math.min(0.02, affinity.strength(state) * 0.1),
+            )
+          : 0;
       royal.limitGuard(state, action, false);
       state.mana = Math.min(bosses.effectiveMaxMana(state), state.mana + 1);
       const acted = {
@@ -303,6 +329,9 @@ module.exports = function createModule(dependencies) {
         dodge: false,
         log: `${E.defense} Phòng thủ và hồi 1 ${E.mana} MP.`,
       };
+      if (affinityHeal)
+        acted.log +=
+          "\n" + E.hp + " Affinity: hồi " + affinityHeal + " HP cho bạn.";
       bosses.afterPlayer(state, action, acted);
       return acted;
     }
@@ -317,7 +346,8 @@ module.exports = function createModule(dependencies) {
       if (!saved) state.potions--;
       const gained = heal(
         state,
-        Math.max(20, state.maxHp * paradox.potionRate(state)),
+        Math.max(20, state.maxHp * paradox.potionRate(state)) *
+          affinity.healing(state),
       );
       const acted = {
         defend: false,
@@ -329,6 +359,7 @@ module.exports = function createModule(dependencies) {
     }
     if (action === "skill") {
       const cost = skillManaCost(state);
+      paidMana = cost;
       if (state.mana < cost) throw new Error("NO_ENERGY");
       const hpCost = skillHpCost(state);
       if (state.hp - hpCost < 1) throw new Error("INSUFFICIENT_SKILL_HP");
@@ -401,7 +432,10 @@ module.exports = function createModule(dependencies) {
         defend = state.classKey === "paladin";
         if (state.classKey === "druid") {
           const hpBefore = state.hp;
-          const gained = heal(state, state.maxHp * 0.12);
+          const gained = heal(
+            state,
+            state.maxHp * 0.12 * affinity.healing(state),
+          );
           healingLog += `\n${SKILL_ICONS.druid} Hồi ${E.hp} **${gained} HP** cho bạn: ${hpBefore} → **${state.hp}**.`;
         }
       }
@@ -436,7 +470,16 @@ module.exports = function createModule(dependencies) {
     e.combatTurn++;
     const dealt = bosses.applyDamage(state, damage);
     healingLog += playerManaLeech(state, dealt, rng);
-    const landed = hits.filter((hit) => hit.hit).length;
+    const landed = hits.filter((hit) => hit.hit && hit.damage > 0).length;
+    healingLog += affinity.afterAttack(state, {
+      landed: dealt > 0 ? landed : 0,
+      critical: dealt > 0 && hits.some((h) => h.crit),
+      magic:
+        action === "skill" &&
+        ["sorceress", "necromancer"].includes(state.classKey),
+      maxMana: bosses.effectiveMaxMana(state),
+      paidMana,
+    });
     const actionName =
       action === "skill"
         ? `${SKILL_ICONS[state.classKey]} ${stats.CLASSES[state.classKey].skill}`

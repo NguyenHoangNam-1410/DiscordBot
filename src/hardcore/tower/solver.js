@@ -132,7 +132,7 @@ function apply(p, s, action) {
   return next;
 }
 function combatOutcome(payload, state, transition, action) {
-  const p = require("./classProfiles").profile(payload.classKey),
+  const p = require("./snapshots").read(payload),
     fractured = state.flags.includes("mana_fracture"),
     skillCost = fractured ? Math.max(1, p.skillCost - 1) : p.skillCost,
     attackMana = fractured ? 0 : p.attackMana;
@@ -280,7 +280,7 @@ function stateKey(s) {
   ].join("|");
 }
 function maximumRemainingDamage(payload, state) {
-  const p = require("./classProfiles").profile(payload.classKey);
+  const p = require("./snapshots").read(payload);
   if (advancedPuzzle(payload)) {
     const attack = Math.floor(
         p.attackDamage * (p.mechanic === "rage" ? 1.5 : 1),
@@ -623,7 +623,7 @@ function validate(payload, options = {}) {
   )
     throw Error("TOWER_DIFFICULTY_REJECTED");
 
-  const p = require("./classProfiles").profile(payload.classKey);
+  const p = require("./snapshots").read(payload);
   if (
     payload.character.maxHp !== p.maxHp ||
     payload.character.maxMana !== p.maxMana ||

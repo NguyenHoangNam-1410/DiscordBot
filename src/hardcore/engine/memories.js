@@ -1,4 +1,5 @@
 "use strict";
+const equipmentRules = require("../equipment/rules");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -71,11 +72,11 @@ module.exports = function createModule(dependencies) {
     if (world.mimicKind(e) === "ancient_mimic") {
       const roll = rng();
       const rarity = roll < 0.5 ? "rare" : roll < 0.8 ? "legendary" : "cursed";
-      receiveItem(state, randomItem(rarity, rng));
+      receiveItem(state, randomItem(rarity, rng, state, world.mimicKind(e)));
       state.lastLog += `\n${E.chest} Phần thưởng hạ Ancient Mimic: đã nhận vật phẩm.`;
     } else if (world.mimicKind(e) === "blood_mimic") {
       const rarity = rng() < 0.6 ? "rare" : "legendary";
-      receiveItem(state, randomItem(rarity, rng));
+      receiveItem(state, randomItem(rarity, rng, state, world.mimicKind(e)));
       state.lastLog += `\n${E.chest} Phần thưởng hạ Blood Mimic: đã nhận trang bị.`;
     }
     if (e.memoryReward) {
@@ -93,7 +94,17 @@ module.exports = function createModule(dependencies) {
     }
     if (bosses.on(e) && e.boss.id === "kabraxis" && !e.boss.rewardClaimed) {
       e.boss.rewardClaimed = true;
-      receiveItem(state, e.boss.rewardItem);
+      receiveItem(
+        state,
+        e.boss.rewardItem ||
+          randomItem(
+            rng() < 0.666 ? "legendary" : "cursed",
+            rng,
+            state,
+            "kabraxis",
+            { consumables: false },
+          ),
+      );
       state.bonus += Math.floor(state.stake * 0.666);
       const kind = e.boss.seal;
       const effects =
@@ -106,25 +117,39 @@ module.exports = function createModule(dependencies) {
       state.prophecy ||= { kind, floor: 333, legacy: true };
       state.prophecy.awakened = true;
       state.lastLog +=
-        "\n" + sealIcon(kind) + " Ấn " +
+        "\n" +
+        sealIcon(kind) +
+        " Ấn " +
         kind +
         " thức tỉnh; nhận trang bị đã khóa và bonus 66,6% cược.";
     }
     const dropRarity = monsterLoot.roll(state, e, rng);
     if (dropRarity) {
-      const dropped = randomItem(dropRarity, rng);
+      const dropped = randomItem(dropRarity, rng, state, "monster_drop");
       receiveItem(state, dropped);
       state.lastLog += `\n${E.backpack} Nhặt được ${dropped.category === "consumable" ? "vật phẩm" : "trang bị"} từ ${e.name}.`;
     }
     if (monsterLoot.hasRegionBossChest(state, e)) {
-      const chestItem =
-        e.boss?.chestItem ||
-        randomItem(rng() < 0.7 ? "legendary" : "cursed", rng);
+      const offers = equipmentRules.enabled(state)
+        ? require("../equipment/loot").offers(
+            state,
+            Array.from({ length: 3 }, () =>
+              rng() < 0.7 ? "legendary" : "cursed",
+            ),
+            rng,
+            "boss_chest",
+          )
+        : null;
+      const chestItem = offers
+        ? null
+        : e.boss?.chestItem ||
+          randomItem(rng() < 0.7 ? "legendary" : "cursed", rng);
       state.pendingBossChest = {
         type: "boss_chest",
         name: "Rương boss",
         bossFloor: state.floor,
         item: chestItem,
+        ...(offers ? { offers } : {}),
       };
       state.lastLog += `\n${eventIcon("boss_chest")} Nhận rương boss: mở hoặc bán để tiếp tục.`;
     }
