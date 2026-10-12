@@ -501,8 +501,15 @@ function elementPlan(x) {
     ? [first, x.m.pattern[(x.b.round + 1) % 3]]
     : [first];
 }
+const randomBeam = (x) =>
+  x.s.gameplayVersion === 3 &&
+  !x.s.mode?.startsWith("tower") &&
+  !x.s.towerChallengeId;
+const beamCycle = (x) => (randomBeam(x) ? 2 : x.c.cycle);
 const beamZone = (x) =>
-  (Math.floor(x.b.round / x.c.cycle) * (x.c.amount || 1)) % 3;
+  randomBeam(x) && x.m.beamZone != null
+    ? x.m.beamZone
+    : (Math.floor(x.b.round / x.c.cycle) * (x.c.amount || 1)) % 3;
 const arrowZone = (x) => (x.m.pattern[0] + (x.m.arrow || 0)) % 3;
 const stormNear = (x) => Math.floor(x.b.round / x.c.cycle) % 2 === 0;
 function resolveHeat(s, ops) {
@@ -533,6 +540,16 @@ function endAction(s, rng, ops) {
     if (gain) s.lastLog += "\n" + e.name + " hồi " + gain + " HP.";
   };
   switch (b.id) {
+    case "death_projector":
+      if (randomBeam(x)) {
+        const currentZone = beamZone(x);
+        // Preserve the announced direction through both counters; lock the next after resolution.
+        m.beamZone =
+          (r + 1) % 2 === 0
+            ? (currentZone + 1 + Math.floor(rng() * 2)) % 3
+            : currentZone;
+      }
+      break;
     case "butcher":
       if (m.distance === 0) m.stack = Math.min(c.cap, m.stack + 1);
       m.distance = Math.max(0, m.distance - 1);
@@ -846,6 +863,8 @@ module.exports = {
   advancePhase,
   elementPlan,
   beamZone,
+  beamCycle,
+  randomBeam,
   arrowZone,
   stormNear,
   vanished: () => false,

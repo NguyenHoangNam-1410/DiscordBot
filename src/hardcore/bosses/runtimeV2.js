@@ -178,6 +178,12 @@ function seed(s, e, d, rng) {
       break;
     case "death_projector":
       m.zone = 0;
+      if (
+        s.gameplayVersion === 3 &&
+        !s.mode?.startsWith("tower") &&
+        !s.towerChallengeId
+      )
+        m.beamZone = Math.floor(rng() * 3);
       break;
     case "akarat":
       units(x, ["Mercy", "Wrath", "Faith"]);
@@ -363,7 +369,7 @@ function validate(s, e = s.encounter) {
     throw Error("INVALID_BOSS_STATE");
   if (m.targets && Object.keys(m.targets).length !== 3)
     throw Error("INVALID_BOSS_STATE");
-  for (const k of ["zone", "ward", "plane", "verdict", "siegeZone"])
+  for (const k of ["zone", "ward", "plane", "verdict", "siegeZone", "beamZone"])
     if (m[k] != null && (!Number.isInteger(m[k]) || m[k] < 0 || m[k] > 2))
       throw Error("INVALID_BOSS_STATE");
   for (const k of ["stack", "nests", "golem", "corruption", "rage"])

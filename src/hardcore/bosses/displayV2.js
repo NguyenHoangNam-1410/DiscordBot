@@ -327,9 +327,10 @@ function status(s) {
         " · ⚠ Tia vào " +
         ["A", "B", "C"][mech.beamZone(x)] +
         " lượt này; đổi hướng sau " +
-        (c.cycle - (b.round % c.cycle)) +
-        " lượt, kế " +
-        ["A", "B", "C"][(mech.beamZone(x) + c.amount) % 3] +
+        (mech.beamCycle(x) - (b.round % mech.beamCycle(x))) +
+        (mech.randomBeam(x)
+          ? " lượt; hướng tiếp theo chọn ngẫu nhiên"
+          : " lượt, kế " + ["A", "B", "C"][(mech.beamZone(x) + c.amount) % 3]) +
         ". Chuyển khỏi vùng bị quét.";
       break;
     case "buyard":
@@ -607,11 +608,13 @@ function status(s) {
 function details(s) {
   const x = mech.current(s);
   return (
-    RULES[x.b.id] +
+    (x.b.id === "death_projector" && mech.randomBeam(x)
+      ? "Tia bắn mỗi lượt, giữ một vùng trong 2 lượt rồi chọn ngẫu nhiên một trong hai vùng còn lại. UI báo chính xác vùng đang bị bắn và số lượt còn lại; hướng đã chọn được lưu khi mở lại. Attack ở vùng an toàn; chuyển vùng tốn lượt và vẫn chịu tia nếu đến vùng đang bị quét."
+      : RULES[x.b.id]) +
     "\n\n" +
     status(s) +
     "\n\nChu kỳ " +
-    x.c.cycle +
+    (x.b.id === "death_projector" ? mech.beamCycle(x) : x.c.cycle) +
     "; trần " +
     x.c.cap +
     "; DMG Tấn công/Skill của bạn khi đánh boss ×" +

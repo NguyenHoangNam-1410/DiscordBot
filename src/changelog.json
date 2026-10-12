@@ -1,5 +1,15 @@
 [
   {
+    "id": "df1cca02-5d35-4186-9198-ac33b2eb85d3",
+    "updatedAt": "2026-10-12T08:24:00.961Z",
+    "auditedAt": "2026-10-12T08:24:00.961Z",
+    "title": "Death Projector: hướng bắn ngẫu nhiên",
+    "changes": [
+      "Trong Sinh tồn V3, Death Projector giữ hướng bắn A/B/C trong 2 lượt, rồi chọn ngẫu nhiên một trong hai vùng còn lại ở mọi Depth, thay cho thứ tự cố định.",
+      "UI báo vùng đang bị quét và thời gian đổi hướng; hướng bắn được lưu, không đổi khi mở giao diện hoặc khởi động lại bot."
+    ]
+  },
+  {
     "id": "081e6e66-6093-42a1-a03c-cea6938578b7",
     "updatedAt": "2026-10-12T08:15:10.334Z",
     "auditedAt": "2026-10-12T08:15:10.334Z",
