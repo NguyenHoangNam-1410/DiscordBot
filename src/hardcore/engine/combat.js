@@ -436,6 +436,7 @@ module.exports = function createModule(dependencies) {
           amount > 0
         )
           amount = Math.max(1, Math.floor(amount * 0.75));
+        h.reportedDamage = bosses.damageStrength(state, amount);
         h.dealt = bosses.applyDamage(state, amount);
       }
       return h;
@@ -520,7 +521,8 @@ module.exports = function createModule(dependencies) {
       }
       if (bosses.brainControl(state)) {
         royal.limitGuard(state, action, false);
-        const dealt = Math.min(e.hp, Math.floor(e.maxHp * 0.2));
+        const damage = Math.floor(e.maxHp * 0.2);
+        const dealt = Math.min(e.hp, damage);
         e.hp -= dealt;
         healingLog += playerManaLeech(state, dealt, rng);
         const acted = {
@@ -530,7 +532,7 @@ module.exports = function createModule(dependencies) {
           critical: false,
           log:
             "🧠 Brain Control: " +
-            dealt +
+            damage +
             " DMG chuẩn; Scales mất hiệu lực trong 2 đòn gây sát thương tiếp theo." +
             healingLog,
         };
@@ -644,18 +646,24 @@ module.exports = function createModule(dependencies) {
     )
       damage = Math.max(1, Math.floor(damage * 0.75));
     e.combatTurn++;
+    const baseStrength = bosses.damageStrength(state, damage);
     let dealt = rift.enabled(state)
       ? hits.reduce((n, h) => n + (h.dealt || 0), 0)
       : bosses.applyDamage(state, damage);
+    let reportedDamage = rift.enabled(state)
+      ? hits.reduce((n, h) => n + (h.reportedDamage || 0), 0)
+      : baseStrength;
     const mainDealt = dealt;
     if (awakening.active(state)) {
       const a = state.classAwakening,
         c = awakening.combat(state);
       const extraHit = (label, amount) => {
         if (immune || amount <= 0 || e.hp <= 0) return;
+        const strength = bosses.damageStrength(state, Math.floor(amount));
         const extra = bosses.applyDamage(state, Math.floor(amount));
+        reportedDamage += strength;
         dealt += extra;
-        healingLog += "\n✨ " + label + ": +" + extra + " DMG.";
+        healingLog += "\n✨ " + label + ": +" + strength + " DMG.";
       };
       if (state.classKey === "paladin") {
         if (c.ground > 0 && mainDealt > 0) {
@@ -735,8 +743,6 @@ module.exports = function createModule(dependencies) {
       action === "skill"
         ? `${SKILL_ICONS[state.classKey]} ${stats.CLASSES[state.classKey].skill}`
         : `${E.attack} Tấn công`;
-    const reportedDamage =
-      rift.enabled(state) || e.boss?.version === 2 ? dealt : damage;
     const outcome = !landed
       ? "Đánh trượt — 0 DMG."
       : immune

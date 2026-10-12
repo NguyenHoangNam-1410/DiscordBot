@@ -15,6 +15,12 @@ function options(s) {
       disabled,
       kind,
       menu,
+      selected:
+        kind === "selector" &&
+        (cmd === "target_" + m.target ||
+          cmd === "ward" + m.ward ||
+          cmd === "plane" + m.plane ||
+          cmd === "verdict" + m.verdict),
     });
   const select = (cmd, label, disabled = false) =>
     add(cmd, label, disabled, "selector", "target");

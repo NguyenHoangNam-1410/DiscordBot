@@ -136,7 +136,7 @@ module.exports = function createModule(dependencies) {
         bosses.beginAction(copy, action);
         rift.beginAction(copy, action);
         if (skill && bosses.brainControl(copy))
-          return Math.min(target.hp, Math.floor(target.maxHp * 0.2));
+          return Math.floor(target.maxHp * 0.2);
         if (
           bosses.on(target)
             ? bosses.vanished(copy)
@@ -153,7 +153,8 @@ module.exports = function createModule(dependencies) {
           copy.classAwakening?.focus === 2
         )
           rolls.push(0.7);
-        let dealt = 0;
+        let dealt = 0,
+          strength = 0;
         const hits = [];
         for (const m of rolls) {
           const h = attackDamage(copy, target, copy, () => 0, {
@@ -171,6 +172,7 @@ module.exports = function createModule(dependencies) {
             n > 0
           )
             n = Math.max(1, Math.floor(n * 0.75));
+          strength += bosses.damageStrength(copy, n);
           const actual = bosses.applyDamage(copy, n);
           dealt += actual;
           hits.push(h);
@@ -179,8 +181,10 @@ module.exports = function createModule(dependencies) {
           a = copy.classAwakening;
         if (awakening.active(copy)) {
           const extra = (amount) => {
-            if (target.hp > 0)
+            if (target.hp > 0) {
+              strength += bosses.damageStrength(copy, Math.floor(amount));
               dealt += bosses.applyDamage(copy, Math.floor(amount));
+            }
           };
           if (skill && copy.classKey === "sorceress" && a.echo)
             extra(main * 0.5);
@@ -206,7 +210,7 @@ module.exports = function createModule(dependencies) {
             }
           }
         }
-        return dealt;
+        return strength;
       };
       return {
         low: forecast(range[0]),
@@ -276,7 +280,7 @@ module.exports = function createModule(dependencies) {
           total += h.damage;
           lastHit = h;
         }
-        return bosses.previewDamage(
+        return bosses.damageStrength(
           copy,
           extraDamage(
             copy,

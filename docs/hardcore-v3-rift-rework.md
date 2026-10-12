@@ -34,6 +34,6 @@
 
 ## Kiểm chứng
 
-`npm run test:hardcore:rift`: 22 nhóm xác định, gồm 96 lần phát theo túi, resume/stale action, các tương tác nhiều hit/Echo/Nova, Barrier, boss và giới hạn Discord. Không chạy mô phỏng tỷ lệ thắng.
+`npm run test:hardcore:rift`: 23 nhóm xác định, gồm 96 lần phát theo túi, resume/stale action, các tương tác nhiều hit/Echo/Nova, Barrier, boss và giới hạn Discord. Không chạy mô phỏng tỷ lệ thắng.
 
 Miễn nhiễm của boss được xử lý trước Stone Armor: hit bị vô hiệu không phá giáp.

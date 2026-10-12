@@ -229,6 +229,7 @@ module.exports = function createModule(dependencies) {
                 bossMenu.map((a) => ({
                   label: a.label.slice(0, 100),
                   value: a.action,
+                  default: Boolean(a.selected),
                 })),
               ),
           ),

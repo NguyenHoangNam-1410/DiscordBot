@@ -1,5 +1,16 @@
 [
   {
+    "id": "63bb5c72-5c6b-4bf9-9963-3a548119b86d",
+    "updatedAt": "2026-10-12T11:46:40.873Z",
+    "auditedAt": "2026-10-12T11:46:40.873Z",
+    "title": "Sửa sát thương hiển thị và lựa chọn boss",
+    "changes": [
+      "Dự báo và log đòn đánh Sinh tồn V3 hiển thị sức sát thương sau kháng thay vì giới hạn theo HP còn lại; HP thực trừ và các hiệu ứng chiến đấu giữ nguyên.",
+      "Menu lựa chọn boss đánh dấu mục đang chọn; Necrobot Alpha ghi rõ mục tiêu, tác dụng từng bộ phận và tiến độ mở Core.",
+      "Rút gọn log rèn và các dòng chỉ số trước→sau để tránh khoảng trống do danh sách dài bị tách ô."
+    ]
+  },
+  {
     "id": "159f17cc-7925-412e-8569-9ab6104c32f3",
     "updatedAt": "2026-10-12T10:09:12.579Z",
     "auditedAt": "2026-10-12T10:09:12.579Z",

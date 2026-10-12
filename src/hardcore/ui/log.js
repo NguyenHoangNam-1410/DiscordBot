@@ -207,7 +207,15 @@ module.exports = function createModule(dependencies) {
         0,
         details.join("\n"),
       );
-    return lines.join("\n");
+    const text = lines.join("\n");
+    // Compact forging receipts so Discord does not split the stat list into a continuation field.
+    return receipt?.kind === "blacksmith" ||
+      received.some((item) => item.upgradedFromLevel != null)
+      ? text
+          .replace(/\*\*/g, "")
+          .replace(/ *→ */g, "→")
+          .replace(/\n\s*\n/g, "\n")
+      : text;
   }
 
   function coinPayoutDetails(state) {

@@ -32,6 +32,15 @@ module.exports = {
       return dealt;
     });
   },
+  // Display attack strength without capping it to remaining HP. Settlement still uses dealt.
+  damageStrength: (s, damage) => {
+    if (s.encounter.hp <= 0) return 0;
+    if (modern.on(s.encounter) && modern.previewDamage(s, damage) <= 0)
+      return 0;
+    if (!modern.on(s.encounter) && s.encounter.hp <= legacy.floorHp(s))
+      return 0;
+    return Math.max(0, Math.floor(damage));
+  },
   previewDamage: (s, damage) =>
     modern.on(s.encounter) ? modern.previewDamage(s, damage) : damage,
   choices: (s) => (modern.on(s.encounter) ? modern.dec.options(s) : []),

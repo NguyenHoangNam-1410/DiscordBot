@@ -125,6 +125,60 @@ async function main() {
     assert.equal(live.encounter.boss.round, 0);
     assert.notEqual(live.encounter.boss.mechanicState.target, "boss");
     assert.equal(input.responses.errors.length, 0);
+    assert.equal(input.responses.updates.length, 1);
+    const updatedMenu = input.responses.updates[0].components
+      .flatMap((row) => row.toJSON().components)
+      .find((c) => c.type === 3);
+    assert.equal(
+      updatedMenu.options.find((o) => o.value === value).default,
+      true,
+    );
+    repo.deleteSession(run.session.id);
+  });
+
+  await test("Necrobot selector publishes current target and forging stat receipt stays in one field", async () => {
+    const run = runBoss("necrobot"),
+      s = run.state,
+      m = menu(s, run.session.id);
+    const selected = m.options.find((o) => o.value.endsWith("target_Barrier"));
+    const input = mock(run.session.id, s.turn, m.custom_id.split(":")[3], [
+      selected.value,
+    ]);
+    await route(input);
+    const live = repo.parseState(repo.getSession(run.session.id));
+    assert.equal(live.encounter.boss.round, 0);
+    assert.equal(live.encounter.boss.mechanicState.target, "Barrier");
+    assert.equal(input.responses.updates.length, 1);
+    assert.match(
+      JSON.stringify(input.responses.updates[0].embeds),
+      /Mục tiêu:.*Barrier/,
+    );
+    const option = input.responses.updates[0].components
+      .flatMap((row) => row.toJSON().components)
+      .find((c) => c.type === 3)
+      .options.find((o) => o.value === selected.value);
+    assert.equal(option.default, true);
+    const gear = Object.values(core.ITEMS)
+      .flat()
+      .find((i) => i.name === "Astral Mail");
+    assert(gear);
+    core.receiveItem(s, gear);
+    s.bonus = 1000000;
+    s.encounter = core.makeSurprise(s, () => 0.5, "blacksmith");
+    s.encounter.targetId = gear.id;
+    core.act(s, run.session, "event_smith", () => 0.5);
+    const embed = view.embed(s, "u").toJSON();
+    const index = embed.fields.findIndex((f) =>
+      f.name.includes("Lượt vừa rồi"),
+    );
+    assert(index >= 0);
+    assert(
+      index === embed.fields.length - 1 ||
+        embed.fields[index + 1].name !== "\u200b",
+      "forge receipt must not split into blank continuation field",
+    );
+    assert.match(embed.fields[index].value, /Rèn:/);
+    assert.doesNotMatch(embed.fields[index].value, /\n\s*\n/);
     repo.deleteSession(run.session.id);
   });
   await test("Invalid menu values return a response and contextual error log, without changing state", async () => {

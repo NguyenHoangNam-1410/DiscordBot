@@ -545,6 +545,33 @@ try {
     }
   });
 
+  test("Lethal attacks and skills display post-resistance strength while HP loss stays capped", () => {
+    for (const key of Object.keys(stats.CLASSES))
+      for (const action of ["attack", "skill"]) {
+        const s = state({}, key);
+        s.encounter.hp = 1;
+        s.encounter.resistance = 20;
+        s.mana = s.maxMana;
+        const snapshot = JSON.stringify(s);
+        const preview =
+          action === "skill"
+            ? core.skillDamagePreview(s)
+            : core.attackDamagePreview(s);
+        assert(preview.low > 1, key + " " + action + " uncapped forecast");
+        assert.equal(JSON.stringify(s), snapshot);
+        const result = core.playerAttack(s, action, () => 0.5);
+        assert.equal(result.dealt, 1);
+        assert.equal(s.encounter.hp, 0);
+        const amount = Number(result.log.match(/: (\d+) DMG/)[1]);
+        assert(amount > 1, key + " " + action + " uncapped log");
+      }
+    const s = state({ stone_skin: 1 }, "sorceress");
+    s.encounter.hp = 1;
+    s.mana = s.maxMana;
+    const result = core.playerAttack(s, "skill", () => 0.5);
+    assert.equal(result.dealt, 16);
+    assert(Number(result.log.match(/: (\d+) DMG/)[1]) > 16);
+  });
   console.log(groups + " deterministic Rift groups passed; no simulations.");
 } finally {
   db.close();

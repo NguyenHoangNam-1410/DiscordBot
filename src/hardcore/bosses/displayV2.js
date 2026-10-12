@@ -21,7 +21,7 @@ const RULES = {
   control:
     "Shield giữ ít nhất 1 HP boss. Mỗi hành động gây hit cho một manh mối loại trừ Alpha/Beta/Gamma (hai manh mối đủ xác định). Nhập đúng làm Shield sập 2 lượt combat, không phản công khi nhập; sai gây minefield DMG chuẩn và thêm manh mối. Tần số mới theo vòng đã khóa; không roll khi mở bảng.",
   necrobot:
-    "Plating tăng DEF, Barrier tăng RES, Weapon tăng phản công; phá mỗi module tăng hai module còn sống. Menu chọn module không tốn lượt. Đã phá hai module có thể chọn Core/Boss; không cần đổi sang loại DMG khác. HP module nằm trong tổng HP boss, không cấp phần thưởng/drop riêng.",
+    "Chọn bộ phận rồi dùng Tấn công/Skill để phá: Plating (Giáp) tăng DEF boss; Barrier (Khiên phép) tăng RES boss; Weapon (Vũ khí) tăng DMG phản công của boss. Phá một bộ phận sẽ làm các bộ phận còn sống mạnh hơn. Phá ít nhất 2/3 bộ phận để mở mục tiêu Boss (Core). Đổi mục tiêu không tốn lượt và không gây sát thương. HP bộ phận đã tính trong tổng HP boss; phá bộ phận không nhận thưởng riêng.",
   quov: "Chọn một Ward không tốn lượt. Đúng nguyên tố kế tiếp giảm mạnh phản công và ghi Absorb của nguyên tố đó. Đủ ba Absorb khác nhau giảm RES boss đến hết trận. Depth III có đòn hai nguyên tố; Ward khớp một nguyên tố vẫn bảo vệ. Không cần MP để đổi Ward.",
   lucion:
     "Mệnh lệnh có manh mối ba biểu tượng theo vòng. Chọn đáp án ứng với biểu tượng báo trước: tăng Will; đủ 3 Will phá Scales cho 2 lượt, phản công của lựa chọn đúng bị chặn. Sai gây Flame/HP chuẩn và hồi boss 3%. Ngoài cửa sổ Scales, boss nhận 30% DMG; không khóa cứng build.",
@@ -185,7 +185,15 @@ function status(s) {
       break;
     case "necrobot":
       text =
-        "Plating tăng DEF · Barrier tăng RES · Weapon tăng phản công. Core mở khi đã phá hai module; chọn mục tiêu trước đánh.";
+        "Mục tiêu: **" +
+        (m.target === "boss" ? "Boss (Core)" : m.target) +
+        "** · đã phá **" +
+        (3 - mech.aliveUnits(x).length) +
+        "/3** bộ phận.\n" +
+        "Plating: DEF boss ↑ · Barrier: RES boss ↑ · Weapon: DMG phản công boss ↑.\n" +
+        (mech.aliveUnits(x).length <= 1
+          ? "Core đã mở: có thể chọn Boss để kết liễu."
+          : "Phá 2 bộ phận để mở Core; chọn mục tiêu không tốn lượt.");
       break;
     case "akarat":
       text =
@@ -658,7 +666,7 @@ function status(s) {
             (name === m.target ? "▶ " : "") + name + " " + v.hp + "/" + v.maxHp,
         )
         .join(" · ") +
-      (m.wave ? " · Wave " + m.wave + "/" + m.waves : "");
+      (m.waves > 1 ? " · Đợt " + m.wave + "/" + m.waves : "");
   if (m.curses?.length)
     text +=
       "\nFlesh Curse · " +
