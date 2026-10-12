@@ -16,7 +16,7 @@ const BOSS_NAME = "Avarice Revenant";
 const DELAY = 10;
 function enabled(state) {
   return (
-    state.gameplayVersion === 2 &&
+    [2, 3].includes(state.gameplayVersion) &&
     !state.mode?.startsWith("tower") &&
     !state.towerChallengeId
   );

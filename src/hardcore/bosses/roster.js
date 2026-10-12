@@ -30,7 +30,7 @@ const ROSTER = Object.freeze(
 const CHEST_FLOORS = Object.freeze([100, 200, 300, 400, 500, 700, 900]);
 function enabled(s) {
   return (
-    s?.gameplayVersion === 2 &&
+    [2, 3].includes(s?.gameplayVersion) &&
     s.bossRosterVersion === VERSION &&
     !s.mode?.startsWith("tower") &&
     !s.towerChallengeId

@@ -49,7 +49,7 @@ const rng = () => 0.5;
 const groups = [];
 async function main() {
   // Independently checked formulas, attribute sources and caps.
-  const barbarian = stats.createState("barbarian", 10);
+  const barbarian = stats.createState("barbarian", 10, { gameplayVersion: 2 });
   assert.deepEqual(
     [barbarian.str, barbarian.dex, barbarian.vit, barbarian.ene],
     [30, 14, 28, 8],
@@ -58,19 +58,21 @@ async function main() {
   assert.equal(barbarian.damageMin, 27);
   assert.equal(barbarian.spellMax, 12);
   assert.equal(barbarian.defense, 13);
-  const sorceress = stats.createState("sorceress", 10);
+  const sorceress = stats.createState("sorceress", 10, { gameplayVersion: 2 });
   assert.equal(sorceress.maxHp, 94);
   assert.equal(sorceress.spellMin, 37);
   assert.equal(sorceress.maxMana, 3);
   assert.equal(world.hitChance(100, 100), 0.55);
   assert.equal(world.hitChance(100, 0), 0.95);
   assert.equal(world.defenseReduction(150, 100), 0.5);
-  const inversePreview = stats.createState("barbarian", 10);
+  const inversePreview = stats.createState("barbarian", 10, {
+    gameplayVersion: 2,
+  });
   inversePreview.paradox = { kind: "inverse" };
   assert.deepEqual(core.physicalRange(inversePreview), [11, 16]);
   assert(view.statLine(inversePreview).includes("**11–16** (Paradox)"));
   assert(view.statLine(inversePreview).includes("**DEF** **29.5** (Paradox)"));
-  const depleted = stats.createState("barbarian", 10);
+  const depleted = stats.createState("barbarian", 10, { gameplayVersion: 2 });
   stats.addSource(depleted, { str: -999, dex: -999, ene: -999 });
   assert.deepEqual(
     [
@@ -623,7 +625,7 @@ async function main() {
     message: { id: "public" },
     deferReply: async () => {},
     editReply: async (p) =>
-      assert(p.embeds[0].toJSON().title.includes("2.0.1")),
+      assert(p.embeds[0].toJSON().title.includes("3.0.0")),
   });
   assert.equal(repo.getSession(ui.session.id).state_json, original);
   const rapid = start();
@@ -686,7 +688,7 @@ async function main() {
         "SELECT release_version FROM hardcore_run_archive WHERE session_id=?",
       )
       .get(ui.session.id).release_version,
-    "2.0.1",
+    "3.0.0",
   );
   const noBalance = JSON.stringify(
     service
@@ -767,7 +769,7 @@ async function main() {
   const legacyAction = play(legacy, "continue");
   assert.equal(legacyAction.state.cleared, 1);
   const newlyStarted = start();
-  assert.equal(newlyStarted.state.releaseVersion, "2.0.1");
+  assert.equal(newlyStarted.state.releaseVersion, "3.0.0");
   db.prepare("UPDATE hardcore_sessions SET updated_at=? WHERE id=?").run(
     Date.now() - 8 * 24 * 60 * 60 * 1000,
     newlyStarted.session.id,
@@ -789,7 +791,7 @@ async function main() {
     "forfeit",
   );
   groups.push("legacy coexistence and rollback");
-  console.log(JSON.stringify({ ok: true, release: "2.0.1", groups }));
+  console.log(JSON.stringify({ ok: true, release: "3.0.0", groups }));
 }
 main()
   .catch((err) => {

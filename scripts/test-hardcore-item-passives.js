@@ -157,11 +157,11 @@ try {
     "alchemist_belt",
   ]);
   stats.addSource(cap, { dex: 10000 });
-  assert.equal(cap.critChance, 0.75);
-  assert.equal(cap.evasionCap, 0.6);
+  assert.equal(cap.critChance, 0.55); // Barbarian V3 cap 40% + unchanged passive 15pp.
+  assert(Math.abs(cap.evasionCap - 0.45) < 1e-12); // Barbarian V3 cap 30% + passive 15pp.
   assert.equal(cap.maxPotions, 10);
   assert.equal(world.hitChance(1, 10000), 0.55);
-  assert.equal(world.hitChance(1, 10000, cap.evasionCap), 0.4);
+  assert.equal(world.hitChance(1, 10000, cap.evasionCap), 0.55);
   cap.encounter.nextDamageType = "magic";
   assert.equal(core.incomingPreview(cap).chance, 1);
   cap.potions = 9;
@@ -297,7 +297,7 @@ try {
   core.act(win, session, "defend", () => 0.1);
   assert.equal(win.cleared, 11);
   assert.equal(win.kills, 1);
-  assert.match(win.lastLog, /Hạ Test/);
+  assert.match(win.lastLog, /Hạ \*\*Test\*\*/);
   groups.push(
     "guard versus Paladin guard, actual HP loss, natural dodge, immunity, combined budget and counter kill settlement",
   );

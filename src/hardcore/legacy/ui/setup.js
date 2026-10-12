@@ -27,7 +27,7 @@ module.exports = function createModule(dependencies) {
       .setColor(0x9b59b6)
       .setTitle("⚔️ SINH TỒN · CHUẨN BỊ RUN")
       .setDescription(
-        context.gameplayVersion === 2
+        [2, 3].includes(context.gameplayVersion)
           ? "**1. Chọn nhân vật** để xem chỉ số và kỹ năng.\n**2. Nhập xu** để đặt mức cược.\n**3. Tiếp** để chọn đồ/vé, xem chỉ số rồi xác nhận Bắt đầu."
           : "**1. Chọn nhân vật** để xem chỉ số và kỹ năng.\n**2. Nhập xu** để đặt mức cược.\n**3. Bắt đầu** khi đã chọn xong; xu được giữ cho run lúc xác nhận.",
       )
@@ -49,7 +49,7 @@ module.exports = function createModule(dependencies) {
     if (character) {
       embed.addFields(
         {
-          name: `${context.gameplayVersion === 2 ? require("../../engine/stats").CLASSES[draft.classKey].emoji : character.emoji} ${character.name}`,
+          name: `${[2, 3].includes(context.gameplayVersion) ? require("../../engine/stats").CLASSES[draft.classKey].emoji : character.emoji} ${character.name}`,
           value: CLASS_PROFILES[draft.classKey].role,
         },
         {
@@ -61,7 +61,7 @@ module.exports = function createModule(dependencies) {
           value: CLASS_PROFILES[draft.classKey].effect,
         },
       );
-      if (context.gameplayVersion === 2) {
+      if ([2, 3].includes(context.gameplayVersion)) {
         const preview = require("../../ui/index").setupPreview(draft.classKey);
         const fields = embed.data.fields.filter(
           (field) =>
@@ -94,7 +94,7 @@ module.exports = function createModule(dependencies) {
           )
           .join("\n"),
       });
-    if (!character && context.gameplayVersion === 2) {
+    if (!character && [2, 3].includes(context.gameplayVersion)) {
       const fields = embed.data.fields.filter(
         (field) => field.name !== "🧙Chọn một trong 7 nhân vật",
       );
@@ -115,13 +115,12 @@ module.exports = function createModule(dependencies) {
     embed
       .addFields({
         name: "📖 Ký hiệu",
-        value:
-          context.gameplayVersion === 2
-            ? `${icon("STR")} STR: vật lý/DEF · ${icon("DEX")} DEX: trúng/né/Crit\n${icon("VIT")} VIT: HP/bình máu · ${icon("ENE")} ENE: phép/RES/Max Mana\n${icon("HP", "❤️")} HP · ${icon("MANA", "💧")} Mana · ${icon("DEF", "🛡️")} DEF · ${icon("potion", "🧪")} Bình. ENE là thuộc tính; Mana dùng skill.\nChọn nhân vật để xem hướng build và cơ chế từng hành động. Mỗi 5 tầng: hồi đầy HP, thêm 2 bình, chọn +5 thuộc tính. Rút thưởng mới nhận xu/gem; tử trận mất toàn bộ.`
-            : "❤️ HP · ⚔️ ATK · 🛡️ DEF · 🎯 ACC · 💨 EVA · 💥 CRIT · 🔮 RES · ✨ ENE · 🍀 LUCK · 🧪 POT · 🎫 vé.\nRút thưởng để chốt xu và kim cương tạm giữ; tử trận mất toàn bộ. Mỗi 5 tầng có checkpoint hồi đầy HP.",
+        value: [2, 3].includes(context.gameplayVersion)
+          ? `${icon("STR")} STR: vật lý/DEF · ${icon("DEX")} DEX: trúng/né/Crit\n${icon("VIT")} VIT: HP/bình máu · ${icon("ENE")} ENE: phép/RES/Max Mana\n${icon("HP", "❤️")} HP · ${icon("MANA", "💧")} Mana · ${icon("DEF", "🛡️")} DEF · ${icon("potion", "🧪")} Bình. ENE là thuộc tính; Mana dùng skill.\nChọn nhân vật để xem hướng build và cơ chế từng hành động. Mỗi 5 tầng: hồi đầy HP, thêm 2 bình, chọn +5 thuộc tính. Rút thưởng mới nhận xu/gem; tử trận mất toàn bộ.`
+          : "❤️ HP · ⚔️ ATK · 🛡️ DEF · 🎯 ACC · 💨 EVA · 💥 CRIT · 🔮 RES · ✨ ENE · 🍀 LUCK · 🧪 POT · 🎫 vé.\nRút thưởng để chốt xu và kim cương tạm giữ; tử trận mất toàn bộ. Mỗi 5 tầng có checkpoint hồi đầy HP.",
       })
       .setFooter({
-        text: `Sinh tồn ${context.gameplayVersion === 2 ? "v2.0.1 · " : "legacy · "}Bảng chuẩn bị hết hạn sau 5 phút không thao tác.`,
+        text: `Sinh tồn ${[2, 3].includes(context.gameplayVersion) ? "v3.0.0 · " : "legacy · "}Bảng chuẩn bị hết hạn sau 5 phút không thao tác.`,
       });
     const customId = (action) =>
       `hardcore-setup:${draft.id}:${draft.version}:${action}`;
@@ -132,14 +131,12 @@ module.exports = function createModule(dependencies) {
         Object.entries(classes).map(([value, entry]) => ({
           label: entry.name,
           value,
-          emoji:
-            context.gameplayVersion === 2
-              ? require("../../engine/stats").CLASSES[value].emoji
-              : entry.emoji,
-          description:
-            context.gameplayVersion === 2
-              ? require("../../ui/index").setupPreview(value).role
-              : CLASS_PROFILES[value].role,
+          emoji: [2, 3].includes(context.gameplayVersion)
+            ? require("../../engine/stats").CLASSES[value].emoji
+            : entry.emoji,
+          description: [2, 3].includes(context.gameplayVersion)
+            ? require("../../ui/index").setupPreview(value).role
+            : CLASS_PROFILES[value].role,
           default: value === draft.classKey,
         })),
       );
@@ -156,9 +153,13 @@ module.exports = function createModule(dependencies) {
             .setStyle(ButtonStyle.Primary),
           new ButtonBuilder()
             .setCustomId(
-              customId(context.gameplayVersion === 2 ? "next" : "start"),
+              customId(
+                [2, 3].includes(context.gameplayVersion) ? "next" : "start",
+              ),
             )
-            .setLabel(context.gameplayVersion === 2 ? "Tiếp" : "Bắt đầu")
+            .setLabel(
+              [2, 3].includes(context.gameplayVersion) ? "Tiếp" : "Bắt đầu",
+            )
             .setEmoji("⚔️")
             .setStyle(ButtonStyle.Success)
             .setDisabled(!character || !validStake),

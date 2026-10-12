@@ -56,9 +56,9 @@ function buildRatesEmbed(category = null) {
   if (require("../shared/version").useV2()) {
     return new EmbedBuilder()
       .setColor(0xe67e22)
-      .setTitle("🎰 SINH TỒN v2.0.1 · TỶ LỆ VÀ CƠ CHẾ")
+      .setTitle("🎰 SINH TỒN v3.0.0 · TỶ LỆ VÀ CƠ CHẾ")
       .setDescription(
-        "Run mới dùng v2.0.1. Kết quả ẩn được lưu; mở lại UI/restart không roll lại. Run cũ tiếp tục theo luật legacy.",
+        "Run mới dùng v3.0.0. Kết quả ẩn được lưu; mở lại UI/restart không roll lại. Run cũ tiếp tục theo luật legacy.",
       )
       .addFields(splitRuleFields(require("./index").ratesFields(category)));
   }
@@ -161,7 +161,7 @@ function ratesPages(category = "encounters") {
     RATE_CATEGORIES.find((item) => item.id === category) || RATE_CATEGORIES[0];
   const pages = paginateRuleEmbed(
     buildRatesEmbed(selected.id).setTitle(
-      `🎰 SINH TỒN ${require("../shared/version").useV2() ? "v2.0.1" : "legacy"} · ${selected.name.toUpperCase()}`,
+      `🎰 SINH TỒN ${require("../shared/version").useV2() ? "v3.0.0" : "legacy"} · ${selected.name.toUpperCase()}`,
     ),
   );
   return pages.map((page, index) =>

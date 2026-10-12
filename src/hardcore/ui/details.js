@@ -1,4 +1,5 @@
 "use strict";
+const statsV3 = require("../shared/statsV3");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -103,7 +104,8 @@ module.exports = function createModule(dependencies) {
         e.addFields({
           name: `${eventIcon("covenant")} Mảnh Chinh Phạt (${covenant.progress(state).completed ? 4 : covenant.fragmentCount(state)}/4)`,
           value: covenant.progress(state).completed
-            ? relicIcon("conquerors_covenant") + " Đã hợp nhất thành **Conqueror’s Covenant [LR]**."
+            ? relicIcon("conquerors_covenant") +
+              " Đã hợp nhất thành **Conqueror’s Covenant [LR]**."
             : Object.entries(covenant.FRAGMENTS)
                 .map(([key, name]) =>
                   covenant.progress(state).fragments?.[key] != null
@@ -125,7 +127,9 @@ module.exports = function createModule(dependencies) {
               " · Nhận tại tầng " +
               relic.acquiredFloor +
               "\n" +
-              passiveIcon(definition.relicPassive.kind) + " " + formatStatText(definition.text),
+              passiveIcon(definition.relicPassive.kind) +
+              " " +
+              formatStatText(definition.text),
           });
       }
     } else if (tab === "stats") {
@@ -133,7 +137,9 @@ module.exports = function createModule(dependencies) {
       if (activeRelic)
         addTextFields(
           e,
-          passiveIcon(activeRelic.relicPassive.kind) + " Nội tại LR · " + activeRelic.name,
+          passiveIcon(activeRelic.relicPassive.kind) +
+            " Nội tại LR · " +
+            activeRelic.name,
           formatStatText(activeRelic.text) +
             gilded.status(state) +
             royal.status(state) +
@@ -153,6 +159,29 @@ module.exports = function createModule(dependencies) {
           effective: true,
         }),
       );
+      if (state.gameplayVersion === 3) {
+        addTextFields(e, "✨ Mastery của class", statsV3.description(state, E));
+        const b = state.damageBreakdown;
+        const line = (name, x) =>
+          name +
+          ": class **" +
+          Number(x.base.toFixed(2)).toLocaleString("vi-VN") +
+          "** · điểm phân bổ **" +
+          Number(x.attributes.toFixed(2)).toLocaleString("vi-VN") +
+          "** · item/hấp thụ **" +
+          Number(x.equipment.toFixed(2)).toLocaleString("vi-VN") +
+          "** → **" +
+          x.total +
+          " DMG**.";
+        addTextFields(
+          e,
+          "Nguồn sát thương",
+          line(E.attack + " Vật lý", b.physical) +
+            "\n" +
+            line(E.magic + " Phép", b.spell) +
+            "\nTrước hệ số Skill, nội tại/Rift và giảm trừ của quái. Các hệ số Skill hiện tại giữ nguyên.",
+        );
+      }
       const deductions = coinPayoutDetails(state).trim();
       if (deductions) addTextFields(e, `${E.coin} Thống kê xu`, deductions);
       addTextFields(

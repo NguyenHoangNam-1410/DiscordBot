@@ -1,14 +1,15 @@
 "use strict";
 const RELEASE = Object.freeze({
-  version: "2.0.1",
-  gameplay: 2,
+  version: "3.0.0",
+  gameplay: 3,
   catalog: 2,
-  date: "2026-10-03",
+  date: "2026-10-12",
   legacyCommit: "c0c6213",
   legacyRunVersion: 4,
 });
 function isV2(state) {
-  return state?.gameplayVersion === 2;
+  // Compatibility name for saved V2 and new V3 runs using the same engine.
+  return [2, 3].includes(state?.gameplayVersion);
 }
 function useV2() {
   return process.env.HARDCORE_GAMEPLAY_VERSION !== "legacy";

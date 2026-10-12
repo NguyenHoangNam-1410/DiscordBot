@@ -97,10 +97,12 @@ module.exports = function createModule(dependencies) {
   }
 
   function normalize(state) {
-    if (!["2.0.0", "2.0.1"].includes(state.releaseVersion))
+    if ((state.gameplayVersion === 3) !== (state.releaseVersion === "3.0.0"))
+      throw new Error("UNSUPPORTED_HARDCORE_VERSION");
+    if (!["2.0.0", "2.0.1", "3.0.0"].includes(state.releaseVersion))
       throw new Error("UNSUPPORTED_HARDCORE_VERSION");
     if (
-      state.gameplayVersion === 2 &&
+      [2, 3].includes(state.gameplayVersion) &&
       !state.mode?.startsWith("tower") &&
       !state.towerChallengeId
     )

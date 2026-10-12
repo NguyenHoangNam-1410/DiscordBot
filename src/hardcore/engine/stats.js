@@ -1,6 +1,7 @@
 "use strict";
 const { RELEASE } = require("../shared/version");
 const balance = require("../shared/balance");
+const statsV3 = require("../shared/statsV3");
 const emoji = require("../../discordEmojiMap");
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const ATTRIBUTES = ["str", "dex", "vit", "ene"];
@@ -127,7 +128,7 @@ function sumEffects(state) {
 }
 const itemPassives = require("../itemPassives");
 const itemCurses = require("../itemCurses");
-function derive(state) {
+function deriveV2(state) {
   const c = CLASSES[state.classKey];
   if (!c) throw new Error("INVALID_CLASS");
   const { totals: t, curseFactor } = sumEffects(state);
@@ -199,6 +200,25 @@ function derive(state) {
   d.payoutFactor = (state.eventPayoutFactor ?? 1) * curseFactor;
   return d;
 }
+function derive(state) {
+  if (state.gameplayVersion !== 3) return deriveV2(state);
+  const p = statsV3.profile(state);
+  // Reuse unchanged supply/curse/payout rules, then replace only character stats.
+  const legacy = {
+    ...state,
+    balanceVersion: balance.VERSION,
+    balanceProfile: { power: p.powers.basePower },
+  };
+  const d = deriveV2(legacy);
+  const { totals } = sumEffects(state);
+  statsV3.apply(state, d, totals, itemPassives.aggregate(state), clamp);
+  d.potionRate = clamp(
+    0.35 + Math.min(0.15, d.vit * 0.0005) + d.potionPower,
+    0.1,
+    0.75,
+  );
+  return d;
+}
 function recompute(state) {
   Object.assign(state, derive(state));
   if (typeof state.hp === "number") state.hp = clamp(state.hp, 0, state.maxHp);
@@ -222,10 +242,16 @@ function mainStat(state) {
       ? "dex"
       : "str";
 }
-function createState(classKey, stake) {
+function createState(
+  classKey,
+  stake,
+  { gameplayVersion = RELEASE.gameplay } = {},
+) {
+  if (![2, 3].includes(gameplayVersion))
+    throw new Error("UNSUPPORTED_HARDCORE_VERSION");
   const state = {
-    gameplayVersion: 2,
-    releaseVersion: RELEASE.version,
+    gameplayVersion,
+    releaseVersion: gameplayVersion === 3 ? RELEASE.version : "2.0.1",
     balanceVersion: balance.VERSION,
     balanceProfile: balance.forClass(classKey),
     catalogVersion: 2,
@@ -263,6 +289,18 @@ function createState(classKey, stake) {
     runDiamonds: 0,
     lastLog: `Run Sinh tồn ${RELEASE.version} bắt đầu.`,
   };
+  if (gameplayVersion === 3) {
+    state.statSystemVersion = statsV3.VERSION;
+    state.classMasteryVersion = statsV3.MASTERY_VERSION;
+    state.statProfile = statsV3.snapshot(
+      classKey,
+      CLASSES[classKey],
+      state.balanceProfile.power,
+    );
+    state.balanceVersion = statsV3.BALANCE_VERSION;
+    state.balanceProfile = { ...state.statProfile.powers };
+  }
+  state.lastLog = "Run Sinh tồn " + state.releaseVersion + " bắt đầu.";
   recompute(state);
   state.hp = state.maxHp;
   state.mana = state.maxMana;
@@ -278,6 +316,7 @@ module.exports = {
   ATTRIBUTES,
   clamp,
   derive,
+  deriveV2,
   recompute,
   addSource,
   mainStat,

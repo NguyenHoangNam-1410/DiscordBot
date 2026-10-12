@@ -48,7 +48,7 @@ module.exports = function createModule(dependencies) {
     const hp = heal(state, amount);
     let mp = 0;
     if (
-      state.gameplayVersion === 2 &&
+      [2, 3].includes(state.gameplayVersion) &&
       !state.mode?.startsWith("tower") &&
       !state.towerChallengeId
     ) {

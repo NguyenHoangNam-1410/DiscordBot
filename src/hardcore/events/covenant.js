@@ -20,7 +20,7 @@ const FRAGMENTS = Object.freeze({
 });
 function enabled(state) {
   return (
-    state.gameplayVersion === 2 &&
+    [2, 3].includes(state.gameplayVersion) &&
     !state.mode?.startsWith("tower") &&
     !state.towerChallengeId
   );

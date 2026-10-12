@@ -1,5 +1,16 @@
 [
   {
+    "id": "17a7b19c-8eb1-4ba4-8e45-28e705e14276",
+    "updatedAt": "2026-10-12T01:23:54.852Z",
+    "auditedAt": "2026-10-12T01:23:54.852Z",
+    "title": "Sinh tồn v3: chỉ số và bản sắc class",
+    "changes": [
+      "Run mới dùng v3.0.0: mỗi class chuyển STR/DEX/VIT/ENE theo mastery riêng; Assassin tăng né và Crit tốt hơn, các class khác có hướng sát thương/chống chịu riêng.",
+      "Tách sát thương nền class, điểm phân bổ và item/hấp thụ; sát thương cộng thẳng từ item không còn bị nhân hệ số sát thương chung. Tab Chỉ số hiển thị hệ số, trần và đóng góp từng nguồn.",
+      "Run v2 đang chơi giữ công thức cũ. Giữ nguyên kỹ năng, item/level/nguyền, Forge, drop, checkpoint, boss, event, payout và Tháp Định Mệnh."
+    ]
+  },
+  {
     "id": "efc85496-a55e-496c-930d-e10ef2cd18c7",
     "updatedAt": "2026-10-09T06:13:02.363Z",
     "auditedAt": "2026-10-09T06:13:02.363Z",

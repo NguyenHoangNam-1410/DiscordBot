@@ -29,7 +29,9 @@ module.exports = function createModule(dependencies) {
 
   function setupContext(draft) {
     return {
-      gameplayVersion: useV2() ? 2 : 1,
+      gameplayVersion: useV2()
+        ? require("../shared/version").RELEASE.gameplay
+        : 1,
       balance: getAccount(draft.guildId, draft.userId).balance,
       maxBet: Math.min(MAX_BET, getGameBetLimit(draft.guildId, "hardcore")),
     };
@@ -37,7 +39,7 @@ module.exports = function createModule(dependencies) {
 
   function setupPayload(draft) {
     const context = setupContext(draft);
-    return context.gameplayVersion === 2 &&
+    return [2, 3].includes(context.gameplayVersion) &&
       ["loadout", "review"].includes(draft.stage)
       ? hardcoreInventoryView.setupPayload(draft, context)
       : hardcoreView.hardcoreSetupPayload(draft, CLASSES, context);

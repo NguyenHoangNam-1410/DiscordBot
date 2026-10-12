@@ -141,7 +141,7 @@ try {
   assert.equal(loaded.hp, paid);
   assert.equal(loaded.phase, "upgrade");
   core.act(loaded, session, "upgrade_vit", () => 0.5);
-  assert.equal(loaded.maxHp, paid + 15);
+  assert.equal(loaded.maxHp, paid + 20);
   groups.push(
     "capacity loss persists through cleanse, save/resume, healing and checkpoint; later VIT still adds HP",
   );
@@ -154,7 +154,7 @@ try {
   buy(growth);
   assert.equal(
     growth.maxHp,
-    100 - 25 + hpItem.effects.vit * 3 + (hpItem.effects.maxHp || 0),
+    100 - 25 + hpItem.effects.vit * 4 + (hpItem.effects.maxHp || 0),
   );
   assert(growth.lastLog.includes("100 → **75**"));
   groups.push(
