@@ -34,7 +34,7 @@ function runBoss(id) {
   });
   service.setMessageId(run.session.id, "public");
   const s = run.state;
-  s.floor = 150;
+  s.floor = id === "kabraxis" ? 666 : id === "deimoss" ? 999 : 150;
   s.cleared = 149;
   s.sources.event.vit = 10000;
   core.normalize(s);
@@ -239,6 +239,46 @@ async function main() {
     }
     assert.equal(JSON.stringify(s), before);
     repo.deleteSession(run.session.id);
+  });
+
+  await test("Azmodan explains both explosion targets and all 39 boss details fit Discord", () => {
+    for (const id of Object.keys(catalog.CATALOG)) {
+      const run = runBoss(id),
+        s = run.state;
+      const before = JSON.stringify(s),
+        text = display.details(s);
+      assert.doesNotMatch(
+        text,
+        /Chu kỳ \d; trần|Đổi mục tiêu\/Ward\/Plane|undefined/,
+      );
+      if (id === "azmodan") {
+        assert.match(text, /Ấn máu: tự nổ sau 3 lượt/);
+        assert.match(display.status(s), /DMG chuẩn.*cho bạn/);
+        s.encounter.boss.mechanicState.reflected = true;
+        assert.match(display.status(s), /boss mất.*5% Max HP/);
+        s.encounter.boss.mechanicState.reflected = false;
+      }
+      for (const embed of view
+        .privatePayload(s, run.session.id, "public", "encounter")
+        .embeds.map((e) => e.toJSON())) {
+        assert(
+          (embed.fields || []).every((f) => f.value.length <= 1024),
+          id + " field too long",
+        );
+        assert(
+          (embed.title || "").length +
+            (embed.description || "").length +
+            (embed.fields || []).reduce(
+              (n, f) => n + f.name.length + f.value.length,
+              0,
+            ) <=
+            6000,
+          id + " message too long",
+        );
+      }
+      assert.equal(JSON.stringify(s), before);
+      repo.deleteSession(run.session.id);
+    }
   });
 
   console.log(

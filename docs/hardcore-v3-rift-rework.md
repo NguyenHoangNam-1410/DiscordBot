@@ -14,7 +14,7 @@
 
 | Rift               | Quy tắc mỗi stack / ngưỡng                                                                                                                                                                                                                      |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Stone Skin         | Stone Armor bằng 1,5% Max HP, tối đa 18%. Mỗi hit phá riêng; dư trừ HP ngay. Vỡ giáp giảm DEF quái 8/12/16% theo tier đến hết trận. Hồi HP/chuyển phase không hồi giáp.                                                                         |
+| Stone Skin         | Stone Armor bằng 1,5% Max HP, tối đa 18%. Mỗi hit phá riêng; dư trừ HP ngay. Vỡ giáp giảm DEF/RES quái 8/12/16% theo tier đến hết trận. Hồi HP/chuyển phase không hồi giáp.                                                                     |
 | Elemental Dominion | Quái hỗn hợp +2 điểm % phản công phép; phản công phép +1,25% DMG. Không tăng vật lý, DMG chuẩn hoặc cố định. Loại phản công khóa trước lượt.                                                                                                    |
 | Bloodlust          | Lần đầu HP quái xuống dưới 50%: phản công tiếp +12% +2% × stack DMG. Phòng thủ giảm một nửa bonus; né/chặn vẫn tiêu trạng thái. Một lần/thanh HP.                                                                                               |
 | Unstable Rift      | Hòm/kho báu +0,75 điểm %, lấy từ quái thường; SSR kho báu an toàn +2 điểm %, Mimic +1,5 điểm %, Ancient Mimic +0,5 điểm %. Giữ pity và cap, không áp dụng rương boss/goblin/phần thưởng sự kiện.                                                |
@@ -34,6 +34,6 @@
 
 ## Kiểm chứng
 
-`npm run test:hardcore:rift`: 21 nhóm xác định, gồm 96 lần phát theo túi, resume/stale action, các tương tác nhiều hit/Echo/Nova, Barrier, boss và giới hạn Discord. Không chạy mô phỏng tỷ lệ thắng.
+`npm run test:hardcore:rift`: 22 nhóm xác định, gồm 96 lần phát theo túi, resume/stale action, các tương tác nhiều hit/Echo/Nova, Barrier, boss và giới hạn Discord. Không chạy mô phỏng tỷ lệ thắng.
 
 Miễn nhiễm của boss được xử lý trước Stone Armor: hit bị vô hiệu không phá giáp.

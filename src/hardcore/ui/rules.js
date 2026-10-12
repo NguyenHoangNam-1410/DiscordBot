@@ -255,7 +255,8 @@ module.exports = function createModule(dependencies) {
         },
       ],
     };
-    if (process.env.HARDCORE_EQUIPMENT_RULES_VERSION === "1") {
+    {
+      // New Survival V3 runs always use the reworked equipment rules.
       fields.loot.unshift({
         name: "Trang bị V3 · affinity",
         value:

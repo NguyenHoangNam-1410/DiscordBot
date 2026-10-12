@@ -509,6 +509,42 @@ try {
     assert.equal(resumed.encounter.rift.stoneArmor, 0);
   });
 
+  test("Broken Armor reduces physical DEF and magical RES by tier, with clear shield HP UI", () => {
+    for (const [stack, rate] of [
+      [1, 0.08],
+      [5, 0.12],
+      [9, 0.16],
+    ]) {
+      const s = state({ stone_skin: stack }, "sorceress");
+      s.encounter.defense = 100;
+      s.encounter.resistance = 50;
+      s.encounter.rift.stoneArmor = s.encounter.rift.stoneArmorMax = 2;
+      const before = core.attackDamage(s, s.encounter, s, () => 0.1, {
+        player: true,
+        magic: true,
+        raw: 100,
+        critical: false,
+      }).damage;
+      assert.equal(before, 50);
+      bosses.applyDamage(s, 3);
+      assert.equal(rift.enemyDefense(s, 100), Math.floor(100 * (1 - rate)));
+      assert.equal(rift.enemyResistance(s, 50), 50 * (1 - rate));
+      const after = core.attackDamage(s, s.encounter, s, () => 0.1, {
+        player: true,
+        magic: true,
+        raw: 100,
+        critical: false,
+      }).damage;
+      assert.equal(after, Math.round(100 * (1 - (50 * (1 - rate)) / 100)));
+      assert.equal(s.encounter.resistance, 50);
+      assert.match(
+        rift.battle(s),
+        /Lá chắn đá \*\*2 HP\*\* · còn \*\*0 HP\*\*/,
+      );
+      assert.match(rift.description("stone_skin", stack, s), /RES/);
+    }
+  });
+
   console.log(groups + " deterministic Rift groups passed; no simulations.");
 } finally {
   db.close();

@@ -158,7 +158,7 @@ module.exports = function createModule(dependencies) {
         : 1);
     if (magic) {
       const res = player
-        ? clamp(defender.resistance, -50, 75)
+        ? clamp(rift.enemyResistance(state, defender.resistance), -50, 75)
         : effectiveResistance(state, defender.resistance, defend);
       damage *= 1 - res / 100;
     } else {

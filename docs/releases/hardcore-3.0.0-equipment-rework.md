@@ -4,9 +4,9 @@ Triển khai theo tài liệu ngày 12/10/2026. Boss roster, mastery và công t
 
 ## Bật luật mới
 
-Đặt HARDCORE_EQUIPMENT_RULES_VERSION=1 trong môi trường bot rồi khởi động lại. Mặc định chưa bật: đặc tả yêu cầu xác nhận cân bằng trước phát hành, và người dùng chưa yêu cầu chạy simulate.
+Luật trang bị mới đã bật trực tiếp trong code cho run Sinh tồn V3 mới, không cần biến môi trường. Run cũ giữ phiên bản trang bị đã lưu. Chưa chạy mô phỏng cân bằng mới.
 
-Khi bật, run mới lưu catalogVersion=3, equipmentRulesVersion=1, affinityVersion=1, itemLevelCurveVersion=1 và affinityPity.version=1. V2/V3 đã bắt đầu giữ definition, curve tuyến tính và Forge cũ; không tự gắn affinity vào snapshot cũ. Không sửa/archive lại Tower đã publish.
+Run V3 mới lưu catalogVersion=3, equipmentRulesVersion=1, affinityVersion=1, itemLevelCurveVersion=1 và affinityPity.version=1. V2/V3 đã bắt đầu giữ definition, curve tuyến tính và Forge cũ; không tự gắn affinity vào snapshot cũ. Không sửa/archive lại Tower đã publish.
 
 ## Catalog và nguồn thưởng
 

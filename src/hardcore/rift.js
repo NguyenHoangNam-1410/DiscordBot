@@ -1,4 +1,5 @@
 "use strict";
+const { E } = require("./shared/icons");
 // Rules version 2 is snapshotted only for new Survival V3 runs.
 const KEYS = [
   "stone_skin",
@@ -309,6 +310,35 @@ function enemyDefense(s, base) {
       )
     : base;
 }
+function enemyResistance(s, base) {
+  const r = encounter(s);
+  return r?.brokenArmor
+    ? Math.round(
+        base * (1 - [0, 0.08, 0.12, 0.16][tier(r.stacks.stone_skin)]) * 100,
+      ) / 100
+    : base;
+}
+function stoneStatus(s) {
+  const r = encounter(s);
+  if (!r) return "";
+  return (
+    E.defense +
+    " Lá chắn đá **" +
+    r.stoneArmorMax +
+    " HP** · còn **" +
+    r.stoneArmor +
+    " HP**" +
+    (r.brokenArmor
+      ? " · đã vỡ: " +
+        E.defense +
+        " DEF/" +
+        E.res +
+        " RES −" +
+        [0, 8, 12, 16][tier(r.stacks.stone_skin)] +
+        "%"
+      : "")
+  );
+}
 function beginAction(s, action) {
   const r = encounter(s);
   if (!r) return;
@@ -367,7 +397,13 @@ function damage(s, amount, apply) {
     r.brokenArmor = true;
     s.lastLog =
       (s.lastLog || "") +
-      "\n🛡️ Stone Armor đã vỡ: DEF quái giảm " +
+      "\n" +
+      E.defense +
+      " Lá chắn đá đã vỡ: " +
+      E.defense +
+      " DEF và " +
+      E.res +
+      " RES quái giảm " +
       [0, 8, 12, 16][tier(r.stacks.stone_skin)] +
       "%.";
   }
@@ -396,9 +432,15 @@ function description(k, n, s) {
     fmt = (x) => Number(x.toFixed(2)).toLocaleString("vi-VN");
   const lines = {
     stone_skin:
-      "Quái nhận Stone Armor " +
+      "Quái nhận lá chắn đá bằng " +
       fmt(n * 1.5) +
-      "% Max HP khi xuất hiện. Vật lý/phép phá giáp; sát thương dư trừ HP. Giáp vỡ: DEF quái −" +
+      "% " +
+      E.hp +
+      " Max HP khi xuất hiện. Lá chắn hấp thụ DMG vật lý/phép; sát thương dư trừ HP quái. Vỡ lá chắn: " +
+      E.defense +
+      " DEF và " +
+      E.res +
+      " RES quái −" +
       [0, 8, 12, 16][t] +
       "% đến hết combat. Không hồi giáp khi boss hồi HP/chuyển phase.",
     elemental_dominion:
@@ -448,13 +490,7 @@ function description(k, n, s) {
   };
   let text =
     "**Rift " + ["", "I", "II", "III"][t] + " · ×" + n + "**\n" + lines[k];
-  if (k === "stone_skin" && r)
-    text +=
-      "\nTrận này: Armor " +
-      r.stoneArmor +
-      "/" +
-      r.stoneArmorMax +
-      (r.brokenArmor ? " · Broken Armor" : "");
+  if (k === "stone_skin" && r) text += "\nTrận này: " + stoneStatus(s);
   if (k === "soul_drain" && r)
     text +=
       "\nTrận này: " +
@@ -476,16 +512,7 @@ function battle(s) {
   const lines = [];
   if (bossOwnDrain(s) && r.stacks.soul_drain > 0)
     lines.push("👻 Hút MP riêng của boss thay thế Soul Drain.");
-  if (r.stoneArmorMax > 0)
-    lines.push(
-      "🛡️ Stone Armor " +
-        r.stoneArmor +
-        "/" +
-        r.stoneArmorMax +
-        (r.brokenArmor
-          ? " · DEF −" + [0, 8, 12, 16][tier(r.stacks.stone_skin)] + "%"
-          : ""),
-    );
+  if (r.stoneArmorMax > 0) lines.push(stoneStatus(s));
   if (r.bloodlustReady)
     lines.push(
       "🩸 Bloodlust +" +
@@ -528,6 +555,8 @@ module.exports = {
   resistancePenalty,
   hitChance,
   enemyDefense,
+  enemyResistance,
+  stoneStatus,
   beginAction,
   outgoing,
   guaranteedHit,

@@ -1353,11 +1353,7 @@ for (const [oldId, targetId] of Object.entries(ITEM_ALIASES))
   if (definitions.has(oldId) || !definitions.has(targetId))
     throw new Error("INVALID_HARDCORE_ITEM_ALIAS:" + oldId);
 function resolveItemId(id) {
-  return process.env.HARDCORE_EQUIPMENT_RULES_VERSION === "1"
-    ? id
-    : Object.hasOwn(ITEM_ALIASES, id)
-      ? ITEM_ALIASES[id]
-      : id;
+  return id;
 }
 for (const pool of Object.values(ITEMS)) {
   for (const item of pool) {
@@ -1431,12 +1427,8 @@ const V3_POOLS = Object.fromEntries(
   ]),
 );
 module.exports = {
-  ITEMS:
-    process.env.HARDCORE_EQUIPMENT_RULES_VERSION === "1" ? ITEMS_V3 : ITEMS,
-  ITEM_POOLS:
-    process.env.HARDCORE_EQUIPMENT_RULES_VERSION === "1"
-      ? V3_POOLS
-      : ITEM_POOLS,
+  ITEMS: ITEMS_V3,
+  ITEM_POOLS: V3_POOLS,
   LEGACY_ITEMS: ITEMS,
   LEGACY_ITEM_POOLS: ITEM_POOLS,
   ITEMS_V3,
@@ -1447,11 +1439,7 @@ module.exports = {
   TYPE_CODES,
   ITEM_ALIASES,
   resolveItemId,
-  validateItems: (
-    catalog = process.env.HARDCORE_EQUIPMENT_RULES_VERSION === "1"
-      ? ITEMS_V3
-      : ITEMS,
-  ) =>
+  validateItems: (catalog = ITEMS_V3) =>
     catalog.common?.[0]?.catalogVersion === 3
       ? require("./equipment/catalogV3").validate(catalog)
       : validateItems(catalog),

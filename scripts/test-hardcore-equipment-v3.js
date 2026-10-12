@@ -4,7 +4,7 @@ const assert = require("node:assert/strict"),
 require.cache[require.resolve("better-sqlite3")].exports = function () {
   return new Database(":memory:");
 };
-process.env.HARDCORE_EQUIPMENT_RULES_VERSION = "1";
+delete process.env.HARDCORE_EQUIPMENT_RULES_VERSION;
 const { db } = require("../src/db");
 require.cache[require.resolve("better-sqlite3")].exports = Database;
 const stats = require("../src/hardcore/engine/stats"),
@@ -66,6 +66,16 @@ function combat(k) {
   return s;
 }
 try {
+  test("Equipment V3 is enabled without env; old saved markers remain unchanged", () => {
+    delete process.env.HARDCORE_EQUIPMENT_RULES_VERSION;
+    const fresh = stats.createState("amazon", 10000);
+    assert(rules.enabled(fresh));
+    assert.equal(fresh.catalogVersion, 3);
+    process.env.HARDCORE_EQUIPMENT_RULES_VERSION = "0";
+    assert(rules.enabled(stats.createState("amazon", 10000)));
+    delete process.env.HARDCORE_EQUIPMENT_RULES_VERSION;
+  });
+
   test("100 definitions preserve current 63; matrix complete", () => {
     assert.deepEqual(
       Object.values(catalog.ITEMS_V3).map((p) => p.length),
@@ -209,7 +219,7 @@ try {
     core.cleanse(s, s.items[0]);
     assert(s.defense > 0);
   });
-  test("Receipt opt-in and snapshot exclusion; fixed items do not change pity", () => {
+  test("Receipt rules and snapshot exclusion; fixed items do not change pity", () => {
     const s = state("druid"),
       d = structuredClone(get("field_bandage"));
     d.effects = { heal: 10 };
@@ -230,7 +240,7 @@ try {
     stats.recompute(s);
     assert.deepEqual(s.affinityPity, pity);
   });
-  test("Legacy V2 and V3 keep linear contributions and Forge absorption under opt-in env", () => {
+  test("Legacy V2 and V3 keep saved linear contributions and Forge absorption", () => {
     for (const gameplayVersion of [2, 3]) {
       const s = stats.createState("barbarian", 10000, { gameplayVersion });
       if (gameplayVersion === 3) {

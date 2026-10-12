@@ -213,9 +213,9 @@ module.exports = function createModule(dependencies) {
         const r = require("../rift"),
           effects = {
             stone_skin:
-              "Quái: Stone Armor " +
+              "Quái: Lá chắn đá " +
               count * 1.5 +
-              "% Max HP; vỡ giáp → DEF −" +
+              "% Max HP; vỡ giáp → DEF/RES −" +
               [0, 8, 12, 16][r.tier(count)] +
               "%",
             fortified:

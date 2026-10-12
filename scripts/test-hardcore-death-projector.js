@@ -91,7 +91,7 @@ try {
     assert.match(ui, /Tia vào C/);
     assert.match(ui, /ngẫu nhiên/);
     assert.doesNotMatch(details, /A→B→C|tiến hai khu/);
-    assert.match(details, /Chu kỳ 2/);
+    assert.match(details, /giữ một vùng trong 2 lượt/);
     assert.equal(JSON.stringify(s), before);
     const resumed = structuredClone(s);
     core.normalize(resumed);

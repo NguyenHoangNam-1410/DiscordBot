@@ -93,9 +93,43 @@ const RULES = {
   deimoss:
     "Ba HP bar 30/30/40%; dư DMG không xuyên Spire/bar, chuyển phase không phản công. P1: Ruin tăng vật lý boss, Silence tăng 1 MP Skill mỗi chu kỳ (không vượt Max MP), Hunger hồi 12% DMG thực nhận; menu chọn Spire miễn lượt. P2: Core ở 75/50/25%, khóa stat +8 và curse trước chọn; thiêu −1 MP, cấy nhận STR/ENE/VIT kèm curse +5% DMG nhận/+1% Max HP chi phí Skill/−15% hồi, bỏ mặc hồi boss 2,5% bar trong hai lượt. Chọn Core không mất lượt. P3: chọn Plane miễn lượt cho 3 combat; Material vật lý hai phía +25%/phép −25%, Arcane ngược lại; Void bạn +15% DMG, DEF ×0,75 và RES −20 hai phía, không hồi HP. Ý định 3 đòn kế công khai. Chỉ P3 chết mới nhận thưởng.",
 };
+function statText(text) {
+  const keys = {
+    "Max HP": "hp",
+    HP: "hp",
+    "Max MP": "mana",
+    MP: "mana",
+    DEF: "defense",
+    RES: "res",
+    CRIT: "crit",
+    DMG: "attack",
+    STR: "str",
+    DEX: "dex",
+    VIT: "vit",
+    ENE: "ene",
+  };
+  return text
+    .replace(
+      /\b(Max HP|HP|Max MP|MP|DEF|RES|CRIT|DMG|STR|DEX|VIT|ENE)\b/gi,
+      (label) => {
+        const normalized = label.toUpperCase().replace("MAX", "Max");
+        return E[keys[normalized]] + " **" + normalized + "**";
+      },
+    )
+    .replaceAll("hai phía", "bạn và boss")
+    .replaceAll("Cửa sổ ", "Hiệu ứng kéo dài ");
+}
+function readableRules(text) {
+  return text
+    .split(/\.\s+/)
+    .filter(Boolean)
+    .map((line) => "- " + statText(line))
+    .join("\n");
+}
+
 function status(s) {
   const x = mech.current(s),
-    { b, m, c } = x;
+    { b, m, c, e } = x;
   const names = ["Alpha", "Beta", "Gamma"],
     active = mech.isOpen(x),
     pattern = m.pattern;
@@ -445,11 +479,29 @@ function status(s) {
       break;
     case "azmodan":
       text =
-        "⚠ Fireblood nổ sau " +
+        "⚠ **Ấn máu nổ sau " +
         m.mark +
-        " lượt · " +
-        (m.reflected ? "đã phản sang boss" : "chưa xử lý") +
-        ". Phản −1 MP hoặc dập −1 bình.";
+        " lượt**.\n" +
+        (m.reflected
+          ? "Đã phản ấn: boss mất " +
+            E.hp +
+            " **" +
+            Math.floor(e.maxHp * 0.05) +
+            " HP (5% Max HP)** khi nổ; ấn không gây DMG cho bạn."
+          : "Chưa xử lý: ấn gây " +
+            E.attack +
+            " **" +
+            Math.floor(s.maxHp * c.power) +
+            " DMG chuẩn** cho bạn (" +
+            E.hp +
+            " **" +
+            Math.round(c.power * 100) +
+            "% Max HP**).\n" +
+            "Chọn **Phản ấn** (" +
+            E.mana +
+            " −1 MP) hoặc **Dập lửa** (" +
+            E.potion +
+            " −1 bình).");
       break;
     case "dark_star_dragon":
       text =
@@ -625,11 +677,38 @@ function status(s) {
     CATALOG[b.id].mechanic +
     (b.depth ? " · Depth " + ["", "I", "II", "III"][b.depth] : "") +
     "\n" +
-    text
+    (["lilith", "azmodan"].includes(b.id) ? text : statText(text))
   );
 }
 function details(s) {
   const x = mech.current(s);
+  if (x.b.id === "azmodan") {
+    return (
+      "**Ấn máu: tự nổ sau 3 lượt**\n" +
+      "- Bỏ mặc: bạn nhận " +
+      E.attack +
+      " **DMG chuẩn bằng " +
+      Math.round(x.c.power * 100) +
+      "%** " +
+      E.hp +
+      " **Max HP của bạn**.\n" +
+      "- **Phản ấn:** tốn " +
+      E.mana +
+      " **1 MP**; giữ thời gian đếm. Khi nổ, boss mất " +
+      E.hp +
+      " **5% Max HP của boss**; bạn không nhận DMG từ ấn.\n" +
+      "- **Dập lửa:** tốn " +
+      E.potion +
+      " **1 bình**, không hồi HP; hủy ấn hiện tại và đặt ấn mới với **3 lượt**.\n" +
+      "Mỗi lựa chọn tốn **1 lượt**; boss vẫn phản công thường. Sau khi nổ, một ấn mới bắt đầu đếm 3 lượt.\n\n**Hiện tại**\n" +
+      status(s) +
+      "\n" +
+      E.attack +
+      " DMG Tấn công/Skill của bạn khi đánh boss **×" +
+      (x.b.playerDamageScale || 1).toFixed(2).replace(".", ",") +
+      "**."
+    );
+  }
   if (x.b.id === "lilith") {
     const offers = [0.05, 0.1, 0.2]
       .map(
@@ -670,18 +749,14 @@ function details(s) {
   return (
     (x.b.id === "death_projector" && mech.randomBeam(x)
       ? "Tia bắn mỗi lượt, giữ một vùng trong 2 lượt rồi chọn ngẫu nhiên một trong hai vùng còn lại. UI báo chính xác vùng đang bị bắn và số lượt còn lại; hướng đã chọn được lưu khi mở lại. Attack ở vùng an toàn; chuyển vùng tốn lượt và vẫn chịu tia nếu đến vùng đang bị quét."
-      : RULES[x.b.id]) +
+      : readableRules(RULES[x.b.id])) +
     "\n\n" +
     status(s) +
-    "\n\nChu kỳ " +
-    (x.b.id === "death_projector" ? mech.beamCycle(x) : x.c.cycle) +
-    "; trần " +
-    x.c.cap +
-    "; DMG Tấn công/Skill của bạn khi đánh boss ×" +
-    (x.b.playerDamageScale || 1).toFixed(2) +
-    "; ngân sách hồi boss còn " +
-    x.b.healBudget +
-    " HP. Đổi mục tiêu/Ward/Plane không tốn lượt. Mỗi hành động riêng của boss tốn một lượt."
+    "\n\n" +
+    E.attack +
+    " DMG Tấn công/Skill của bạn khi đánh boss **×" +
+    (x.b.playerDamageScale || 1).toFixed(2).replace(".", ",") +
+    "**."
   );
 }
 module.exports = { RULES, status, details };

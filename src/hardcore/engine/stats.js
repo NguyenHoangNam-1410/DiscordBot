@@ -314,11 +314,7 @@ function createState(
     state.balanceProfile = { ...state.statProfile.powers };
   }
   state.lastLog = "Run Sinh tồn " + state.releaseVersion + " bắt đầu.";
-  if (
-    gameplayVersion === 3 &&
-    process.env.HARDCORE_EQUIPMENT_RULES_VERSION === "1"
-  )
-    equipmentRules.activate(state);
+  if (gameplayVersion === 3) equipmentRules.activate(state);
   recompute(state);
   state.hp = state.maxHp;
   state.mana = state.maxMana;

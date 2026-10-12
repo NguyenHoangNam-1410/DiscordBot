@@ -138,7 +138,7 @@ try {
   incoherent.gameplayVersion = 2;
   assert.throws(
     () => core.normalize(incoherent),
-    /UNSUPPORTED_HARDCORE_VERSION/,
+    /UNSUPPORTED_EQUIPMENT_RULES/,
   );
   groups.push(
     "missing, mismatched or corrupt stat snapshots fail without silently migrating",
@@ -200,8 +200,15 @@ try {
     "equal-stat/equal-gear Assassin Crit and dodge separation, Amazon accuracy, class caps and UI limits",
   );
   for (const key of keys) {
-    const s = stats.createState(key, 10),
-      before = stats.derive(s);
+    const s = stats.createState(key, 10);
+    // Saved V3 runs retain the original linear equipment formula.
+    for (const key of [
+      "equipmentRulesVersion",
+      "itemLevelCurveVersion",
+      "affinityVersion",
+    ])
+      delete s[key];
+    const before = stats.derive(s);
     s.items = [flatItem("flat", { physical: 10, spell: 10 })];
     stats.recompute(s);
     assert.equal(

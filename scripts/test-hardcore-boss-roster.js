@@ -20,6 +20,13 @@ const groups = [];
 function state(floor = 50, key = "sorceress") {
   const s = stats.createState(key, 10000);
   s.bossRosterVersion = 1;
+  // Exercise saved legacy roster rewards with their original equipment rules.
+  for (const key of [
+    "equipmentRulesVersion",
+    "itemLevelCurveVersion",
+    "affinityVersion",
+  ])
+    delete s[key];
   s.floor = floor;
   s.cleared = floor - 1;
   stats.addSource(
@@ -285,6 +292,12 @@ for (const [roll, rarity] of [
 ]) {
   const run = stats.createState("barbarian", 10000);
   Object.assign(run, { bossRosterVersion: 1, floor: 666 });
+  for (const key of [
+    "equipmentRulesVersion",
+    "itemLevelCurveVersion",
+    "affinityVersion",
+  ])
+    delete run[key];
   const gate = core.generateEncounter(run, session, () => roll);
   assert.equal(gate.enemy.boss.rewardItem.rarity, rarity);
   assert.notEqual(gate.enemy.boss.rewardItem.category, "consumable");
