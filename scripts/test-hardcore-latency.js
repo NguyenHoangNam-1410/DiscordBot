@@ -334,6 +334,9 @@ async function main() {
   const samples = [];
   for (let n = 0; n < 200; n++) {
     const s = save(benchmark, (s) => {
+      // This CPU fixture skips milestone menus; settle any locked Rift award first.
+      require("../src/hardcore/rift").claimPending(s);
+      s.pendingMilestones = [];
       s.phase = "encounter";
       s.encounter = { type: "empty", name: "Trống" };
     });

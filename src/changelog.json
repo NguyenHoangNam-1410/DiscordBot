@@ -1,5 +1,16 @@
 [
   {
+    "id": "84356550-50a3-4389-a2ab-fc0b8e58debb",
+    "updatedAt": "2026-10-12T08:33:26.246Z",
+    "auditedAt": "2026-10-12T08:33:26.246Z",
+    "title": "Sửa menu hành động boss và dấu hiệu Gharbad",
+    "changes": [
+      "Menu hành động và chọn mục tiêu của boss Sinh tồn đã nhận tương tác đúng, khắc phục lỗi chọn menu nhưng Discord không phản hồi.",
+      "Gharbad hiển thị biểu tượng kèm tên hình, trạng thái đầu hàng thật hoặc giả và lựa chọn tương ứng, thay cho mô tả dấu hiệu khó nhận biết.",
+      "Bổ sung thông tin menu trong log lỗi xử lý tương tác để dễ xác định lỗi phát sinh."
+    ]
+  },
+  {
     "id": "df1cca02-5d35-4186-9198-ac33b2eb85d3",
     "updatedAt": "2026-10-12T08:24:00.961Z",
     "auditedAt": "2026-10-12T08:24:00.961Z",

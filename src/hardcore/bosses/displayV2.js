@@ -239,14 +239,23 @@ function status(s) {
           .join(" · ") || "trống") +
         ". Bẻ Echo nguy hiểm.";
       break;
-    case "gharbad":
+    case "gharbad": {
+      const signs = ["🔷 Hình thoi (◇)", "🔺 Tam giác (△)", "⚪ Hình tròn (○)"];
+      const genuine = m.sign === m.surrenderRule;
       text =
-        "Quy luật: dấu " +
-        labels[m.surrenderRule] +
-        " là thật. Hiện " +
-        labels[m.sign] +
-        ". Thật: chấp nhận/khám xét; giả: tấn công.";
+        "**Dấu hiện tại: " +
+        signs[m.sign] +
+        " — " +
+        (genuine ? "✅ Đầu hàng thật" : "❌ Đầu hàng giả") +
+        "**\n" +
+        (genuine
+          ? "Chọn **Chấp nhận** hoặc **Khám xét**."
+          : "Chọn **Tấn công lời đầu hàng**.") +
+        "\nDấu thật suốt trận: **" +
+        signs[m.surrenderRule] +
+        "**.";
       break;
+    }
     case "phoboss":
       text =
         "Dream " +

@@ -258,7 +258,15 @@ module.exports = function createModule(dependencies) {
         } catch (error) {
           if (error.message !== "STALE_ACTION")
             logger?.error?.(
-              { err: error, sessionId, action, originMessageId },
+              {
+                err: error,
+                sessionId,
+                action,
+                rawAction,
+                originMessageId,
+                componentId: interaction.customId,
+                sourceMessageId: interaction.message?.id,
+              },
               "hardcore interaction failed",
             );
           if (detailAction)
