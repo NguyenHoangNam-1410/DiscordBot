@@ -30,7 +30,9 @@ module.exports = function createModule(dependencies) {
     const character =
       state.phase === "encounter" && state.encounter.type === "combat"
         ? battleStats(state, compact)
-        : statLine(state, false, state.phase !== "upgrade");
+        : statLine(state, false, state.phase !== "upgrade", {
+            battleResources: compact,
+          });
     const e = new EmbedBuilder()
       .setColor(
         result
@@ -64,7 +66,7 @@ module.exports = function createModule(dependencies) {
       ...(state.prayerBoost && state.encounter.type === "rngesus"
         ? [`${E.prayerTicket} **Vé cầu nguyện ×1** · RNGesus **60%**`]
         : []),
-      ...(state.reviveTickets
+      ...(!compact && state.reviveTickets
         ? [
             `${E.reviveTicket} **Vé hồi sinh ×${state.reviveTickets}** · ${E.hp} **HP 50%**`,
           ]

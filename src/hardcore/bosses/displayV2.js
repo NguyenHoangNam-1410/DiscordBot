@@ -549,12 +549,22 @@ function status(s) {
       break;
     case "belial":
       text =
-        "Manh mối: bóng thật có rune " +
-        labels[pattern[Math.floor(b.round / c.cycle) % 3]] +
-        "; bóng 1/2/3 mang ◇/△/○. Deception " +
+        (active
+          ? "Boss đã lộ: dùng Tấn công/Skill để kết liễu."
+          : "Bóng thật: **" +
+            (pattern[Math.floor(b.round / c.cycle) % 3] + 1) +
+            " " +
+            labels[pattern[Math.floor(b.round / c.cycle) % 3]] +
+            "** → chọn nút **Đánh bóng " +
+            (pattern[Math.floor(b.round / c.cycle) % 3] + 1) +
+            "**.") +
+        "\nLừa dối " +
         m.deception +
-        "/5 · " +
-        (active ? "Boss đã lộ" : "chọn đúng bóng");
+        "/5: " +
+        E.attack +
+        " DMG boss +" +
+        Math.round(m.deception * c.power * 100) +
+        "%.";
       break;
     case "atanna":
       text =
@@ -690,6 +700,27 @@ function status(s) {
 }
 function details(s) {
   const x = mech.current(s);
+  if (x.b.id === "belial") {
+    return (
+      "**Tìm bóng thật để kết liễu Belial**\n- Ba nút tương ứng: bóng 1 ◇, bóng 2 △, bóng 3 ○. Bảng chơi chỉ rõ bóng thật; dấu hiệu đổi mỗi " +
+      x.c.cycle +
+      " lượt.\n- Chọn đúng: tốn 1 lượt, boss không phản công lượt đó và lộ diện trong 2 lượt kế tiếp. Dùng Tấn công/Skill khi boss đang lộ để kết liễu.\n- Chọn sai: tốn 1 lượt, bạn nhận " +
+      E.attack +
+      " DMG chuẩn bằng " +
+      Math.round(x.c.power * 100) +
+      "% " +
+      E.hp +
+      " Max HP và boss vẫn phản công. Mỗi lần sai tăng 1 Lừa dối (tối đa 5), mỗi điểm tăng " +
+      Math.round(x.c.power * 100) +
+      "% DMG boss.\n- Khi chưa lộ, bạn vẫn gây DMG nhưng không thể hạ boss; Skill không thay thế việc chọn bóng thật.\n\n**Hiện tại**\n" +
+      status(s) +
+      "\n" +
+      E.attack +
+      " DMG Tấn công/Skill của bạn khi đánh boss ×" +
+      (x.b.playerDamageScale || 1).toFixed(2) +
+      "."
+    );
+  }
   if (x.b.id === "azmodan") {
     return (
       "**Ấn máu: tự nổ sau 3 lượt**\n" +

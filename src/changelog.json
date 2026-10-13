@@ -1,5 +1,16 @@
 [
   {
+    "id": "e873c2d1-f1b2-4541-bd68-4db3a0e53cb6",
+    "updatedAt": "2026-10-13T03:21:10.535Z",
+    "auditedAt": "2026-10-13T03:21:10.535Z",
+    "title": "Gọn tài nguyên Battle UI và làm rõ Belial",
+    "changes": [
+      "HP và MP cùng một hàng với icon, bỏ nhãn HP/MP; không hiển thị bình máu trên bảng vì đã có trên nút. Dòng vé chỉ xuất hiện khi có vé thoát hoặc hồi sinh, không lặp lại vé hồi sinh.",
+      "Bỏ chi phí Mana ở dòng tên Skill trên Battle UI; nút Skill giữ nguyên.",
+      "Belial chỉ rõ số và biểu tượng bóng thật, các nút đánh bóng có biểu tượng tương ứng; Chi tiết giải thích chọn đúng mở hai lượt kết liễu, chọn sai mất HP và tăng DMG boss."
+    ]
+  },
+  {
     "id": "ff8c940e-e3b6-43ad-b5e3-6547872eb313",
     "updatedAt": "2026-10-13T03:10:11.669Z",
     "auditedAt": "2026-10-13T03:10:11.669Z",

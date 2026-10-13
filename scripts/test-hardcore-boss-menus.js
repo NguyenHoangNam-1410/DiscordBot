@@ -371,6 +371,19 @@ async function main() {
       assert(foe.includes("25% CRIT"));
       assert(p.high < 120, "Counter is reduced by the character's defenses");
       assert.equal(JSON.stringify(s), before);
+      const resourceLine = embed.description.split("\n")[1];
+      assert(resourceLine.includes(E.hp) && resourceLine.includes(E.mana));
+      assert.doesNotMatch(
+        embed.description,
+        /\*\*HP\*\*|\*\*MP\*\*|Bình|Vé thoát|Vé hồi sinh|\(\d+ MP/,
+      );
+      s.escapeTokens = 1;
+      s.reviveTickets = 1;
+      const withTickets = JSON.stringify(view.embed(s, "u").toJSON());
+      assert.equal((withTickets.match(/Vé thoát/g) || []).length, 1);
+      assert.equal((withTickets.match(/Vé hồi sinh/g) || []).length, 1);
+      s.escapeTokens = 0;
+      s.reviveTickets = 0;
       s.encounter.nextDamageType = "magic";
       require("../src/hardcore/rift").encounter(s).lockedCounterType = "magic";
       assert.equal(core.incomingPreview(s).critChance, 0);
@@ -445,6 +458,30 @@ async function main() {
         .toJSON()
         .fields.some((f) => f.name.includes("Necromancer")),
     );
+  });
+
+  await test("Belial gives a numbered symbol, matching buttons and exact consequences", () => {
+    const run = runBoss("belial"),
+      s = run.state,
+      m = s.encounter.boss.mechanicState;
+    for (let i = 0; i < 3; i++) {
+      m.pattern = [i, i, i];
+      const text = display.status(s),
+        choices = core.actions(s);
+      assert(
+        text.includes("Bóng thật: **" + (i + 1) + " " + ["◇", "△", "○"][i]),
+      );
+      assert(
+        choices.some((a) =>
+          a.label.includes("Đánh bóng " + (i + 1) + " " + ["◇", "△", "○"][i]),
+        ),
+      );
+    }
+    const detail = display.details(s);
+    assert(detail.includes("không thể hạ boss"));
+    assert(detail.includes("boss vẫn phản công"));
+    assert(detail.includes("2 lượt kế tiếp"));
+    repo.deleteSession(run.session.id);
   });
 
   console.log(

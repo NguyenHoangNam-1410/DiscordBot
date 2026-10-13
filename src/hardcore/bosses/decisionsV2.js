@@ -218,7 +218,7 @@ function options(s) {
       );
       break;
     case "belial":
-      trio("lie", ["Đánh bóng 1", "Đánh bóng 2", "Đánh bóng 3"]);
+      trio("lie", ["Đánh bóng 1 ◇", "Đánh bóng 2 △", "Đánh bóng 3 ○"]);
       break;
     case "atanna":
       if (!m.erased)
