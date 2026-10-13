@@ -516,6 +516,141 @@ async function main() {
     assert.equal(JSON.stringify(s), before);
   });
 
+  await test("Event selectors route Rift, checkpoint, shops and Forge once and publish the new UI", async () => {
+    const gear = Object.values(core.ITEMS)
+      .flat()
+      .find((i) => i.rarity === "common");
+    const cases = [
+      [
+        "severance",
+        (s) => {
+          s.phase = "severance";
+          s.encounter = { type: "severance" };
+          s.modifiers.stone_skin = 1;
+          s.modifiers.bloodlust = 1;
+        },
+        (s) => assert.equal(s.modifiers.stone_skin, 0),
+      ],
+      [
+        "checkpoint",
+        (s) => {
+          s.phase = "upgrade";
+          s.encounter = { type: "upgrade" };
+        },
+        (s) => assert(s.sources.checkpoint.str >= 5),
+      ],
+      [
+        "merchant",
+        (s) => {
+          s.phase = "encounter";
+          s.floor = 151;
+          s.cleared = 150;
+          s.encounter = core.makeSurprise(s, () => 0.5, "merchant");
+        },
+        (s) => assert.equal(s.floor, 152),
+      ],
+      [
+        "payout_shop",
+        (s) => {
+          s.phase = "encounter";
+          s.floor = 151;
+          s.cleared = 150;
+          s.encounter = core.makeSurprise(s, () => 0.5, "payout_shop");
+        },
+        (s) => assert.equal(s.floor, 152),
+      ],
+      [
+        "forge",
+        (s) => {
+          core.receiveItem(s, gear, 2);
+          s.phase = "encounter";
+          s.floor = 151;
+          s.cleared = 150;
+          s.encounter = core.makeSurprise(s, () => 0.5, "horadric");
+          core.act(
+            s,
+            { guild_id: "boss-menus", user_id: "u" },
+            "forge_grind",
+            () => 0.5,
+          );
+        },
+        (s) => assert.equal(s.floor, 152),
+      ],
+    ];
+    for (const [name, setup, check] of cases) {
+      const run = runBoss("lilith"),
+        s = run.state;
+      setup(s);
+      repo.saveState(run.session, s);
+      const rows = view.rows(run.session.id, s).map((r) => r.toJSON()),
+        components = rows.flatMap((r) => r.components),
+        menu = components.find((c) => c.custom_id?.endsWith(":event_select"));
+      assert(menu, name);
+      assert(rows.length <= 5);
+      assert(menu.options.length <= 25);
+      for (const o of menu.options)
+        assert(
+          !components.some(
+            (c) => c.type === 2 && c.custom_id?.endsWith(":" + o.value),
+          ),
+          "choice duplicated as a button",
+        );
+      const value =
+        name === "severance"
+          ? "sever_stone_skin"
+          : name === "checkpoint"
+            ? "upgrade_str"
+            : menu.options[0].value;
+      const input = mock(run.session.id, s.turn, "event_select", [value]);
+      await route(input);
+      assert.equal(input.responses.acks, 1);
+      assert.equal(input.responses.updates.length, 1, name);
+      assert.equal(input.responses.errors.length, 0, name);
+      const live = repo.parseState(repo.getSession(run.session.id));
+      assert.equal(live.turn, s.turn + 1);
+      check(live);
+      const after = repo.getSession(run.session.id).state_json;
+      await route(mock(run.session.id, s.turn, "event_select", [value]));
+      assert.equal(repo.getSession(run.session.id).state_json, after);
+      repo.deleteSession(run.session.id);
+    }
+  });
+  await test("Event selectors reject disabled, forged and malformed choices; keep combat buttons and Tower intact", async () => {
+    const run = runBoss("lilith"),
+      s = run.state;
+    s.phase = "encounter";
+    s.floor = 151;
+    s.cleared = 150;
+    s.payoutSpent = 100000000;
+    s.encounter = core.makeSurprise(s, () => 0.5, "payout_shop");
+    repo.saveState(run.session, s);
+    const menu = view
+      .rows(run.session.id, s)
+      .flatMap((r) => r.toJSON().components)
+      .find((c) => c.custom_id?.endsWith(":event_select"));
+    assert(menu.disabled);
+    const before = repo.getSession(run.session.id).state_json;
+    for (const values of [[], ["attack"], ["buy_0"], ["buy_0", "buy_1"]]) {
+      const input = mock(run.session.id, s.turn, "event_select", values);
+      await route(input);
+      assert.equal(input.responses.errors.length, 1);
+      assert.equal(repo.getSession(run.session.id).state_json, before);
+    }
+    s.mode = "tower";
+    assert.equal(view.eventMenuActions(s).length, 0);
+    delete s.mode;
+    s.encounter = world.makeEnemy(s, "normal", null, () => 0.5);
+    assert.equal(view.eventMenuActions(s).length, 0);
+    const buttons = view
+      .rows(run.session.id, s)
+      .flatMap((r) => r.toJSON().components);
+    for (const action of ["attack", "defend", "skill", "potion"])
+      assert(
+        buttons.some((c) => c.type === 2 && c.custom_id.endsWith(":" + action)),
+      );
+    repo.deleteSession(run.session.id);
+  });
+
   console.log(
     groups + " deterministic boss menu/display groups passed; no simulations.",
   );

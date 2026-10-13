@@ -303,7 +303,7 @@ ${bossDisplay.status(s)}${require("../rift").battle(s)}
         echo: "Chọn cách tương tác với mộ.",
         surprise: e.healerReturn
           ? "Healer đã trở lại. Nhận hồi phục và phúc ấn."
-          : "Chọn một hành động bằng nút bên dưới.",
+          : "Chọn một hành động bên dưới.",
       };
       const target = s.items.find((item) => item.definition.id === e.targetId);
       const context =

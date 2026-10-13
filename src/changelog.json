@@ -1,5 +1,16 @@
 [
   {
+    "id": "f2908063-56b5-4116-a334-5839bb584d87",
+    "updatedAt": "2026-10-13T04:12:08.059Z",
+    "auditedAt": "2026-10-13T04:12:08.059Z",
+    "title": "Menu chọn cho event nhiều lựa chọn",
+    "changes": [
+      "Các event có nhiều lựa chọn trên Battle UI Sinh tồn V3 dùng menu thay cho dãy nút: xóa Rift, shop, phúc lành Forge, checkpoint, chọn trang bị rương boss và các tình huống tương tự.",
+      "Menu giữ tên, giá, icon và dấu hiệu Tiên tri; lựa chọn không đủ điều kiện không thể thực hiện. Bỏ qua, bán rương, rút thưởng và các nút chiến đấu vẫn dễ truy cập.",
+      "Chọn menu cập nhật bảng chơi và giữ nguyên quy tắc lượt, chi phí, phần thưởng; lựa chọn cũ hoặc gửi lặp không được xử lý lại."
+    ]
+  },
+  {
     "id": "3137a5c7-e628-4ccc-a07d-baeac4ee35a8",
     "updatedAt": "2026-10-13T03:51:41.553Z",
     "auditedAt": "2026-10-13T03:51:41.553Z",

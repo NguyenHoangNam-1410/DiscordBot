@@ -104,6 +104,43 @@ module.exports = function createModule(dependencies) {
     return rows;
   }
 
+  function eventMenuActions(state, actions = core.actions(state)) {
+    if (
+      state.gameplayVersion !== 3 ||
+      state.mode?.startsWith("tower") ||
+      state.towerChallengeId ||
+      ["combat", "rngesus"].includes(state.encounter.type) ||
+      state.encounter.kind === "purifier"
+    )
+      return [];
+    const separate = new Set([
+      "event_skip",
+      "skip",
+      "leave",
+      "boss_sell",
+      "retreat",
+      "sever_none",
+    ]);
+    const candidates = actions.filter(
+      (a) =>
+        !a.menu && !separate.has(a.action) && !a.action.startsWith("purifier_"),
+    );
+    return candidates.length >= 3 ||
+      (candidates.length >= 2 &&
+        (actions.length >= 3 ||
+          state.phase === "severance" ||
+          state.encounter.kind?.endsWith("_shop") ||
+          state.encounter.kind === "merchant"))
+      ? candidates
+      : [];
+  }
+  function menuEmoji(value) {
+    const match = value.match(/^<(a?):(\w+):(\d+)>$/);
+    return match
+      ? { name: match[2], id: match[3], animated: Boolean(match[1]) }
+      : { name: value };
+  }
+
   function rows(sessionId, state, disabled = false) {
     if (disabled)
       return chunkRows([
@@ -121,8 +158,13 @@ module.exports = function createModule(dependencies) {
           ["open", "inspect", "sell", "leave"].indexOf(a.action) -
           ["open", "inspect", "sell", "leave"].indexOf(b.action),
       );
+    const eventChoices = eventMenuActions(state, actions);
+    const menuIds = new Set(eventChoices.map((a) => a.action));
     const buttonActions = actions.filter(
-      (a) => !a.action.startsWith("purifier_select_") && !a.menu,
+      (a) =>
+        !a.action.startsWith("purifier_select_") &&
+        !a.menu &&
+        !menuIds.has(a.action),
     );
     const buttons = buttonActions.map((a) =>
       button(
@@ -208,6 +250,71 @@ module.exports = function createModule(dependencies) {
         ),
       );
     const result = chunkRows(buttons);
+    if (eventChoices.length) {
+      const available = eventChoices.filter((a) => !a.disabled);
+      const choices = available.length ? available : eventChoices;
+      const placeholder = !available.length
+        ? "Không đủ điều kiện cho các lựa chọn này"
+        : state.phase === "severance"
+          ? "Chọn Rift muốn xóa"
+          : state.phase === "upgrade"
+            ? "Chọn thuộc tính muốn tăng"
+            : state.phase === "boss_chest"
+              ? "Chọn một trang bị từ rương boss"
+              : state.encounter.kind === "horadric"
+                ? "Chọn phúc lành của Forge"
+                : state.encounter.kind?.endsWith("_shop") ||
+                    state.encounter.kind === "merchant"
+                  ? "Chọn món muốn mua"
+                  : "Chọn cách xử lý tình huống";
+      result.unshift(
+        new ActionRowBuilder().addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(prefix + "event_select")
+            .setPlaceholder(placeholder)
+            .setMinValues(1)
+            .setMaxValues(1)
+            .setDisabled(!available.length)
+            .addOptions(
+              choices.map((a) => ({
+                label: (
+                  (itemPassives.forecastLabel(state.encounter, a.action)
+                    ? itemPassives.forecastLabel(state.encounter, a.action) +
+                      " · "
+                    : "") + a.label
+                ).slice(0, 100),
+                value: a.action,
+                emoji: menuEmoji(
+                  state.phase === "severance"
+                    ? RIFT_ICONS[a.action.slice(6)] || E.rift
+                    : a.action.startsWith("upgrade_")
+                      ? E[a.action.slice(8)]
+                      : a.action.startsWith("forge_boon_")
+                        ? E[
+                            {
+                              accuracy: "accuracy",
+                              resistance: "res",
+                              defense: "defense",
+                            }[
+                              state.encounter.forge.boons[
+                                Number(a.action.slice(-1))
+                              ].key
+                            ] ||
+                              state.encounter.forge.boons[
+                                Number(a.action.slice(-1))
+                              ].key
+                          ] || E.shrine
+                        : a.action.startsWith("buy_")
+                          ? icon("shopping_cart", "🛒")
+                          : eventIcon(
+                              state.encounter.kind || state.encounter.type,
+                            ),
+                ),
+              })),
+            ),
+        ),
+      );
+    }
     const menuKinds = [
       ...new Set(
         actions.filter((a) => a.menu && !a.disabled).map((a) => a.menu),
@@ -274,5 +381,5 @@ module.exports = function createModule(dependencies) {
     );
     return result;
   }
-  return { button, chunkRows, rows };
+  return { button, chunkRows, rows, eventMenuActions };
 };

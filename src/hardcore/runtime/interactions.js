@@ -78,7 +78,9 @@ module.exports = function createModule(dependencies) {
       rawAction === "purifier_select"
         ? "purifier_select_" +
           (interaction.values?.length === 1 ? interaction.values[0] : "")
-        : rawAction === "boss_select" || rawAction.startsWith("boss_select_")
+        : rawAction === "event_select" ||
+            rawAction === "boss_select" ||
+            rawAction.startsWith("boss_select_")
           ? interaction.values?.length === 1
             ? interaction.values[0]
             : "invalid_boss_selection"
@@ -132,6 +134,17 @@ module.exports = function createModule(dependencies) {
             return await respond(
               "Bảng Sinh tồn này đã cũ. Dùng `/sinhton tieptuc` để mở bảng hiện tại.",
             );
+          }
+          if (rawAction === "event_select") {
+            const state = parseState(session);
+            if (state.turn !== Number(rawTurn)) throw Error("STALE_ACTION");
+            if (
+              !rawInteraction.isStringSelectMenu?.() ||
+              !hardcoreV2View
+                .eventMenuActions(state)
+                .some((a) => a.action === action && !a.disabled)
+            )
+              throw Error("INVALID_ACTION");
           }
           if (privateRetreat) {
             const state = parseState(session);
