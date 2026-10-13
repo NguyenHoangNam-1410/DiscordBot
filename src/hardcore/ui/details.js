@@ -196,6 +196,8 @@ module.exports = function createModule(dependencies) {
           );
         addTextFields(e, "⚔️ Ảnh hưởng từ boss lên bạn", lines.join("\n"));
       }
+      const innateText = require("../innate").description(state);
+      if (innateText) addTextFields(e, "✨ Class Innate · tầng 1", innateText);
       const awakeningText = require("../awakening").description(state);
       if (awakeningText) addTextFields(e, "✨ Class Awakening", awakeningText);
       if (state.gameplayVersion === 3) {

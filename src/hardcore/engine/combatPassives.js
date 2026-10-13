@@ -14,6 +14,7 @@ module.exports = function createModule(dependencies) {
     monsterLoot.prepare(state, e);
     state.passiveCombatFloor = state.floor;
     require("../awakening").prepare(state);
+    require("../innate").prepare(state);
     const rift = require("../rift");
     if (rift.enabled(state)) {
       rift.snapshot(state, e);

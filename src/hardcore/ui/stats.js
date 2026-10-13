@@ -28,8 +28,8 @@ module.exports = function createModule(dependencies) {
     const r = require("../rift");
     const raw =
       r.encounter(s)?.lockedCounterType === "physical"
-        ? r.defense(s, base)
-        : base;
+        ? r.defense(s, base * require("../innate").defenseFactor(s))
+        : base * require("../innate").defenseFactor(s);
     const bonus =
       classShrineActive(s) &&
       s.classKey === "barbarian" &&

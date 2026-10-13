@@ -224,7 +224,7 @@ try {
     core.playerAttack(s, "defend", () => 0.1);
     assert(s.encounter.rift.fortifiedExposed);
     const next = core.playerAttack(s, "skill", () => 0.1);
-    assert.equal(next.dealt, 194);
+    assert.equal(next.dealt, 224); // Fortified Exposed and V3.1 Bloodlust boost every Barrage hit.
     assert(!s.encounter.rift.fortifiedExposed);
   });
   test("Swift natural dodge guarantees all next physical hits; safe dodge excludes it", () => {
@@ -404,7 +404,7 @@ try {
       const s = state({ swift_horror: 8, stone_skin: 1 }, key);
       awakened(s);
       if (key === "sorceress") s.classAwakening.echo = 1;
-      else s.classAwakening.totems = 2;
+      else s.classAwakening.totems = awake.tuning(s).totems - 1;
       s.encounter.rift.swiftExposed = true;
       s.mana = 10;
       s.maxMana = 10;

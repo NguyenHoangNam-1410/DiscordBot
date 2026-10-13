@@ -29,6 +29,8 @@ module.exports = function createModule(dependencies) {
   const penalty = (...args) => dependencies.penalty(...args);
   const healEvent = (...args) => dependencies.healEvent(...args);
   const hurt = (...args) => dependencies.hurt(...args);
+  const mechanicHurt = (s, amount, hostile = true, nonlethal = false) =>
+    hurt(s, amount, hostile, nonlethal, !require("../innate").enabled(s));
   const receiveItem = (...args) => dependencies.receiveItem(...args);
   const receiveSnapshot = (...args) => dependencies.receiveSnapshot(...args);
   const remember = (...args) => dependencies.remember(...args);
@@ -57,6 +59,7 @@ module.exports = function createModule(dependencies) {
   const resolveMemory = (...args) => dependencies.resolveMemory(...args);
 
   function act(state, session, action, rng) {
+    const previousEncounter = state.encounter;
     if (action === "retreat") {
       if (
         state.encounter.type === "rngesus" ||
@@ -65,6 +68,12 @@ module.exports = function createModule(dependencies) {
         bosses.retreatLocked(state)
       )
         throw new Error("CANNOT_RETREAT");
+      require("../innate").finish(
+        state,
+        state.encounter,
+        dependencies.heal,
+        bosses.effectiveMaxMana(state),
+      );
       return state.phase === "summit"
         ? "summit"
         : state.cleared
@@ -250,6 +259,7 @@ module.exports = function createModule(dependencies) {
             ? { log: "", dealt: 0, critical: false }
             : action.startsWith("boss_") && state.encounter.boss?.version === 2
               ? (() => {
+                  require("../innate").begin(state, action);
                   bosses.beginAction(state, action);
                   const v = bosses.actComponent(state, action, {
                     hurt,
@@ -263,10 +273,13 @@ module.exports = function createModule(dependencies) {
               : playerAttack(state, action, rng);
         require("../rift").thresholds(state, beforeEnemyHp, e.hp);
         require("../rift").endAction(state, acted.dealt || 0);
+        const innateFrame = require("../innate").combat(state);
+        if (innateFrame && state.classKey === "sorceress")
+          innateFrame.counterSkillCost = dependencies.skillManaCost(state);
         if (action !== "ritual_claim") paradox.afterAction(state, action);
         state.lastLog += acted.log;
-        state.lastLog += bosses.beforeResolution(state, { hurt });
-        const ritual = gilded.afterAction(state, action, acted, hurt);
+        state.lastLog += bosses.beforeResolution(state, { hurt: mechanicHurt });
+        const ritual = gilded.afterAction(state, action, acted, mechanicHurt);
         state.lastLog += ritual.log;
         if (
           state.contract &&
@@ -560,6 +573,17 @@ module.exports = function createModule(dependencies) {
     if (require("../rift").encounter(state) && state.encounter.boss)
       require("../rift").nextCounter(state, rng, bosses.counter(state));
     delete state.encounter?.awakeningGroundThisAction;
+    if (
+      previousEncounter !== state.encounter &&
+      previousEncounter.type === "combat"
+    )
+      require("../innate").finish(
+        state,
+        previousEncounter,
+        dependencies.heal,
+        state.maxMana,
+      );
+    require("../innate").endAction(state);
     recompute(state);
     state.mana = Math.min(state.mana, bosses.effectiveMaxMana(state));
     prepareParadoxCombat(state, rng);

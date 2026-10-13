@@ -46,7 +46,7 @@ function bounds(payload) {
   assert(total <= 6000, "Discord embed length: " + total);
 }
 try {
-  assert.equal(RELEASE.version, "3.0.0");
+  assert.equal(RELEASE.version, "3.1.0");
   assert.equal(RELEASE.catalog, 2);
   for (const key of keys) {
     const s = stats.createState(key, 10000),
@@ -56,7 +56,7 @@ try {
     assert(isV2(old));
     assert.equal(s.statSystemVersion, 3);
     assert.equal(s.classMasteryVersion, 1);
-    assert.equal(s.balanceVersion, "3.0.0");
+    assert.equal(s.balanceVersion, "3.1.0");
     assert.equal(s.statProfile.powers.equipmentPower, 1);
     for (const field of [
       "str",
@@ -75,7 +75,9 @@ try {
       "critChance",
       "resistance",
     ])
-      assert.equal(s[field], old[field], key + " initial " + field);
+      if (field === "maxHp" && ["amazon", "assassin"].includes(key))
+        assert.equal(s.maxHp, key === "amazon" ? 110 : 118);
+      else assert.equal(s[field], old[field], key + " initial " + field);
     const resumed = clone(s);
     resumed.encounter = { type: "empty", name: "Test" };
     core.normalize(resumed);
@@ -119,7 +121,7 @@ try {
     assert(!saved.statProfile);
   }
   groups.push(
-    "28 golden V2 formulas, unchanged class starting stats and snapshotted V3 resume",
+    "28 golden V2 formulas, V3.1 Amazon/Assassin starting HP and snapshotted V3 resume",
   );
   for (const mutation of [
     (s) => delete s.statProfile,

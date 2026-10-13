@@ -92,11 +92,11 @@ module.exports = function createModule(dependencies) {
     };
   }
 
-  function hurt(state, amount, hostile = true, nonlethal = false) {
+  function hurt(state, amount, hostile = true, nonlethal = false, shields = true) {
     markDirect(state, ["hp"]);
     const awakening = require("../awakening");
     const before = state.hp;
-    if (hostile && state.encounter?.type === "combat")
+    if (hostile && shields && state.encounter?.type === "combat")
       amount = awakening.absorb(state, Math.max(0, Math.floor(amount)));
     const actual = Math.max(
       0,

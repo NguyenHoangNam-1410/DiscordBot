@@ -120,7 +120,7 @@ module.exports = function createModule(dependencies) {
           : "❤️ HP · ⚔️ ATK · 🛡️ DEF · 🎯 ACC · 💨 EVA · 💥 CRIT · 🔮 RES · ✨ ENE · 🍀 LUCK · 🧪 POT · 🎫 vé.\nRút thưởng để chốt xu và kim cương tạm giữ; tử trận mất toàn bộ. Mỗi 5 tầng có checkpoint hồi đầy HP.",
       })
       .setFooter({
-        text: `Sinh tồn ${[2, 3].includes(context.gameplayVersion) ? "v3.0.0 · " : "legacy · "}Bảng chuẩn bị hết hạn sau 5 phút không thao tác.`,
+        text: `Sinh tồn ${[2, 3].includes(context.gameplayVersion) ? `${context.mode?.startsWith("tower") || context.towerChallengeId ? "v3.0.0" : "v3.1.0"} · ` : "legacy · "}Bảng chuẩn bị hết hạn sau 5 phút không thao tác.`,
       });
     const customId = (action) =>
       `hardcore-setup:${draft.id}:${draft.version}:${action}`;

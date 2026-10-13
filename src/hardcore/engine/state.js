@@ -123,11 +123,12 @@ module.exports = function createModule(dependencies) {
         )
           throw Error("INVALID_ITEM_LEVEL");
     }
-    if ((state.gameplayVersion === 3) !== (state.releaseVersion === "3.0.0"))
+    if ((state.gameplayVersion === 3) !== (["3.0.0", "3.1.0"].includes(state.releaseVersion)))
       throw new Error("UNSUPPORTED_HARDCORE_VERSION");
-    if (!["2.0.0", "2.0.1", "3.0.0"].includes(state.releaseVersion))
+    if (!["2.0.0", "2.0.1", "3.0.0", "3.1.0"].includes(state.releaseVersion))
       throw new Error("UNSUPPORTED_HARDCORE_VERSION");
     require("../rift").normalize(state);
+    require("../innate").validate(state);
     const awakening = require("../awakening");
     if (
       state.classAwakeningVersion != null &&
@@ -147,12 +148,12 @@ module.exports = function createModule(dependencies) {
         ["shadow", 2],
         ["echo", 1],
         ["echoProgress", 2],
-        ["totems", 2],
+        ["totems", awakening.tuning(state).totems - 1],
         ["bark", Number.MAX_SAFE_INTEGER],
       ])
         if (!Number.isSafeInteger(a[k]) || a[k] < 0 || a[k] > max)
           throw Error("INVALID_AWAKENING_RESOURCE");
-      a.bark = Math.min(a.bark, Math.floor(state.maxHp * 0.2));
+      a.bark = Math.min(a.bark, Math.floor(state.maxHp * awakening.tuning(state).barkCap));
       const c = state.encounter?.awakeningCombat;
       if (
         c &&

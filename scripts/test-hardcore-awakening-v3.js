@@ -42,6 +42,14 @@ function enemy() {
 }
 function state(k, awakened = true) {
   const s = stats.createState(k, 10000);
+  // These fixtures verify the saved V3.0 Awakening contract; V3.1 has its own suite.
+  s.releaseVersion = s.balanceVersion = "3.0.0";
+  delete s.classInnateVersion;
+  delete s.statProfile.initialVitHp;
+  if (k === "amazon") Object.assign(s.statProfile.mastery, { hp: 3, evasion: 0.3 });
+  if (k === "assassin") { s.statProfile.mastery.hp = 3; s.statProfile.core.baseHp = 38; }
+  stats.recompute(s);
+  s.hp = s.maxHp;
   s.floor = 100;
   s.encounter = { ...enemy(), rank: "boss", hp: 0 };
   if (awakened) assert(awake.grant(s, s.encounter));

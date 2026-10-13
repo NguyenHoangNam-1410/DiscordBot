@@ -230,7 +230,7 @@ function recompute(state) {
   if (require("../awakening").active(state))
     state.classAwakening.bark = Math.min(
       state.classAwakening.bark || 0,
-      Math.floor(state.maxHp * 0.2),
+      Math.floor(state.maxHp * require("../awakening").tuning(state).barkCap),
     );
   if (typeof state.hp === "number") state.hp = clamp(state.hp, 0, state.maxHp);
   if (typeof state.mana === "number")
@@ -308,6 +308,7 @@ function createState(
   if (gameplayVersion === 3) {
     require("../rift").activate(state);
     state.classAwakeningVersion = 1;
+    state.classInnateVersion = 1;
     state.statSystemVersion = statsV3.VERSION;
     state.classMasteryVersion = statsV3.MASTERY_VERSION;
     state.statProfile = statsV3.snapshot(

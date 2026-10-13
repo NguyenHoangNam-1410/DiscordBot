@@ -1,6 +1,7 @@
 "use strict";
 const awakening = require("../awakening");
 const rift = require("../rift");
+const innate = require("../innate");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const { bosses, royal, paradox, world } = dependencies;
@@ -24,18 +25,22 @@ module.exports = function createModule(dependencies) {
     const shield = awakening.active(state)
       ? Math.min(
           state.classAwakening.bark || 0,
-          Math.floor(state.maxHp * 0.2),
+          Math.floor(state.maxHp * awakening.tuning(state).barkCap),
         ) + (awakening.combat(state)?.barrier || 0)
       : 0;
-    const afterShield = (n) => Math.max(0, n - shield);
+    const afterShield = (n) => {
+      const remaining = Math.max(0, n - shield);
+      return remaining - innate.manaShieldAmount(state, remaining, skillManaCost(state));
+    };
+    const trueAmount = (n) => innate.enabled(state) ? n : afterShield(n);
     if (plan.trueDamage)
       return {
-        low: afterShield(
+        low: trueAmount(
           Math.floor(
             plan.raw * require("../events/explorationMarks").incoming(state, e),
           ),
         ),
-        high: afterShield(
+        high: trueAmount(
           Math.floor(
             plan.raw * require("../events/explorationMarks").incoming(state, e),
           ),
@@ -66,14 +71,14 @@ module.exports = function createModule(dependencies) {
       low: afterShield(low),
       high: afterShield(high),
       magic: Boolean(plan.magic),
-      critChance: plan.magic
+      critChance: plan.magic || innate.combat(state)?.titan
         ? 0
         : plan.critical == null
           ? e.critChance || 0
           : plan.critical
             ? 1
             : 0,
-      chance: plan.magic
+      chance: (plan.magic
         ? 1
         : rift.hitChance(
             state,
@@ -82,7 +87,7 @@ module.exports = function createModule(dependencies) {
               state.evasion,
               state.evasionCap ?? 0.45,
             ),
-          ),
+          )) * (1 - innate.avoidChance(state)),
     };
   }
 
@@ -180,6 +185,7 @@ module.exports = function createModule(dependencies) {
             magic,
             raw,
             multiplier: m,
+            innateMultiplier: innate.multiplier(state, action),
             critical: false,
           });
           let n = Math.floor(h.damage * factor);
@@ -195,7 +201,7 @@ module.exports = function createModule(dependencies) {
           dealt += actual;
           hits.push(h);
         }
-        const main = dealt,
+        const main = innate.enabled(copy) ? strength : dealt,
           a = copy.classAwakening;
         if (awakening.active(copy)) {
           const extra = (amount) => {
@@ -205,9 +211,9 @@ module.exports = function createModule(dependencies) {
             }
           };
           if (skill && copy.classKey === "sorceress" && a.echo)
-            extra(main * 0.5);
-          if (skill && copy.classKey === "necromancer" && a.totems === 2)
-            extra(main * 0.6);
+            extra(main * awakening.tuning(copy).echo);
+          if (skill && copy.classKey === "necromancer" && a.totems === awakening.tuning(copy).totems - 1)
+            extra(main * awakening.tuning(copy).nova);
           if (
             copy.classKey === "paladin" &&
             awakening.ground(copy) &&
@@ -216,7 +222,7 @@ module.exports = function createModule(dependencies) {
             for (const h of hits.filter((h) => h.hit && h.damage > 0)) {
               const holy =
                 Math.max(
-                  copy.defense * 0.25 * rift.outgoing(copy),
+                  copy.defense * 0.25 * rift.outgoing(copy) * innate.multiplier(state, action),
                   h.preCritDamage * factor * 0.15,
                 ) *
                 (1 -
@@ -247,6 +253,7 @@ module.exports = function createModule(dependencies) {
           player: true,
           raw,
           multiplier: 0.7,
+          innateMultiplier: innate.multiplier(state, action),
           critical: false,
         });
         total = Math.floor(
@@ -261,9 +268,9 @@ module.exports = function createModule(dependencies) {
           total = Math.max(1, Math.floor(total * 0.75));
       }
       if (skill && copy.classKey === "sorceress" && a.echo)
-        total += Math.floor(total * 0.5);
-      if (skill && copy.classKey === "necromancer" && a.totems === 2)
-        total += Math.floor(total * 0.6);
+        total += Math.floor(total * awakening.tuning(copy).echo);
+      if (skill && copy.classKey === "necromancer" && a.totems === awakening.tuning(copy).totems - 1)
+        total += Math.floor(total * awakening.tuning(copy).nova);
       if (copy.classKey === "paladin" && awakening.ground(copy))
         total += Math.floor(
           Math.max(
@@ -293,6 +300,7 @@ module.exports = function createModule(dependencies) {
             magic,
             raw,
             multiplier,
+            innateMultiplier: innate.multiplier(state, action),
             critical: false,
           });
           total += h.damage;
@@ -317,6 +325,7 @@ module.exports = function createModule(dependencies) {
         magic,
         raw,
         multiplier,
+        innateMultiplier: innate.multiplier(state, action),
         critical: false,
       });
       let n = Math.floor(

@@ -55,6 +55,7 @@ module.exports = function createModule(dependencies) {
     if (e.hp > 0 || state.hp <= 0 || e.defeatSettled) return;
     if (bosses.advancePhase(state, e)) return;
     e.defeatSettled = true;
+    state.lastLog += require("../innate").finish(state, e, heal, bosses.effectiveMaxMana(state));
     delete e.awakeningCombat;
     delete e.awakeningGroundThisAction;
     require("../awakening").grant(state, e);

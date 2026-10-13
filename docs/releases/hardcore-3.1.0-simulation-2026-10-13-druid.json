@@ -1,0 +1,85 @@
+{
+  "druid": {
+    "runs": 800,
+    "completed999": 18,
+    "completedPercent": 2.25,
+    "gameplayVersion": "3.1.0",
+    "balanceVersion": "3.1.0",
+    "codeFingerprint": "126ad0b7b1019bb2d5a95146b0a51c36129993d019693609082879760b98ed75",
+    "policy": "balanced",
+    "simulationSeed": "survival-current-holdout-2026-10-13",
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "measurement": "confirmed progress checkpoints; stopped early at user request",
+    "includedRunIndexRanges": [
+      [
+        0,
+        399
+      ],
+      [
+        500,
+        899
+      ]
+    ],
+    "shards": [
+      {
+        "startRunOffset": 0,
+        "confirmedRuns": 400,
+        "wins": 10
+      },
+      {
+        "startRunOffset": 500,
+        "confirmedRuns": 400,
+        "wins": 8
+      }
+    ],
+    "timeouts": null,
+    "meanFloor": null,
+    "reachedFinalBoss": null,
+    "deathFloors": null,
+    "deathBosses": null,
+    "limitations": "No final per-run file was emitted before interrupt. Floor distribution, timeouts, reached-final counts and build means are unavailable. Work after the last confirmed 100-run checkpoint is excluded.",
+    "progressEvidence": [
+      {
+        "c": "druid",
+        "b": 1,
+        "output": "balanced/druid: 600/500 runs, 1 wins\n"
+      },
+      {
+        "c": "druid",
+        "b": 0,
+        "output": "balanced/druid: 100/500 runs, 2 wins\n"
+      },
+      {
+        "c": "druid",
+        "b": 1,
+        "output": "balanced/druid: 700/500 runs, 1 wins\n"
+      },
+      {
+        "c": "druid",
+        "b": 0,
+        "output": "balanced/druid: 200/500 runs, 5 wins\n"
+      },
+      {
+        "c": "druid",
+        "b": 1,
+        "output": "balanced/druid: 800/500 runs, 3 wins\n"
+      },
+      {
+        "c": "druid",
+        "b": 0,
+        "output": "balanced/druid: 300/500 runs, 7 wins\n"
+      },
+      {
+        "c": "druid",
+        "b": 1,
+        "output": "balanced/druid: 900/500 runs, 8 wins\n"
+      },
+      {
+        "c": "druid",
+        "b": 0,
+        "output": "balanced/druid: 400/500 runs, 10 wins\n"
+      }
+    ]
+  }
+}

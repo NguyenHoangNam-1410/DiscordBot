@@ -1,5 +1,18 @@
 [
   {
+    "id": "6d4b4306-df57-4c1b-859b-c28f5831e919",
+    "updatedAt": "2026-10-13T11:09:45.766Z",
+    "auditedAt": "2026-10-13T11:09:45.766Z",
+    "title": "Sinh tồn v3.1.0: Nội tại class và buff thức tỉnh",
+    "changes": [
+      "Bổ sung nội tại riêng cho 7 class từ tầng 1; xem mô tả trong Chỉ số.",
+      "Amazon tăng HP/VIT lên 3,5 và EVA/DEX lên 0,45; Assassin tăng HP nền lên 46, HP/VIT lên 4, sát thương đánh boss từ ×0,84 lên ×0,94; Druid từ ×0,48 lên ×0,55.",
+      "Titan tăng 25% DEF và chặn chí mạng ở phản công kế tiếp; Fury tạo Barrier bằng 6% Max HP mỗi điểm; Mark of the Wild tăng 15% DMG.",
+      "Bone Nova kích hoạt sau 2 Ward, gây 65% DMG; Arcane Echo gây 65% DMG và tạo khiên 10% Max HP.",
+      "Buff combat giữ qua phase và hết khi kết thúc trận; sát thương chuẩn, chi phí HP và phản phệ không bị né hoặc chặn bởi nội tại mới. Run v3.0 đang chơi giữ cơ chế cũ."
+    ]
+  },
+  {
     "id": "b07b887f-dd95-433f-9672-582c01142e0f",
     "updatedAt": "2026-10-13T08:36:25.871Z",
     "auditedAt": "2026-10-13T08:36:25.871Z",

@@ -3,16 +3,16 @@ const equipmentRules = require("../equipment/rules");
 // Stat-only V3 rules. Skills, items, drops, Forge and checkpoints keep their existing mechanics.
 const VERSION = 3;
 const MASTERY_VERSION = 1;
-const BALANCE_VERSION = "3.0.0";
+const BALANCE_VERSION = "3.1.0";
 const PROFILES = Object.freeze({
   amazon: {
     name: "Marksmanship",
     accuracy: 1.35,
-    evasion: 0.3,
+    evasion: 0.45,
     crit: 0.0006,
     critCap: 0.5,
     evasionCap: 0.4,
-    hp: 3,
+    hp: 3.5,
     strDefense: 0.2,
     vitDefense: 0.15,
     res: 0.1,
@@ -48,7 +48,7 @@ const PROFILES = Object.freeze({
     crit: 0.0018,
     critCap: 0.65,
     evasionCap: 0.55,
-    hp: 3,
+    hp: 4,
     strDefense: 0.15,
     vitDefense: 0.1,
     res: 0.1,
@@ -153,7 +153,8 @@ function snapshot(classKey, core, basePower) {
     version: VERSION,
     masteryVersion: MASTERY_VERSION,
     classKey,
-    core: Object.fromEntries(NUMERIC_CORE.map((key) => [key, core[key]])),
+    core: { ...Object.fromEntries(NUMERIC_CORE.map((key) => [key, core[key]])), ...(classKey === "assassin" ? { baseHp: 46 } : {}) },
+    initialVitHp: classKey === "amazon" ? 3.5 : classKey === "assassin" ? 4 : 3,
     mastery: { ...mastery },
     powers: { basePower, attributePower: 1, equipmentPower: 1, skillPower: 1 },
   };
@@ -163,7 +164,7 @@ function profile(state) {
   if (
     state.statSystemVersion !== VERSION ||
     state.classMasteryVersion !== MASTERY_VERSION ||
-    state.balanceVersion !== BALANCE_VERSION ||
+    !["3.0.0", BALANCE_VERSION].includes(state.balanceVersion) ||
     p?.version !== VERSION ||
     p.masteryVersion !== MASTERY_VERSION ||
     p.classKey !== state.classKey
@@ -195,6 +196,7 @@ function profile(state) {
     p.mastery.evasionCap > 0.6
   )
     throw new Error("INVALID_HARDCORE_STATS");
+  if (state.balanceVersion === BALANCE_VERSION && (!Number.isFinite(p.initialVitHp) || p.initialVitHp < 1 || p.initialVitHp > 5)) throw Error("INVALID_HARDCORE_STATS");
   return p;
 }
 function layers(state) {
@@ -243,7 +245,7 @@ function apply(state, d, totals, passives, clamp) {
   d.maxHp = Math.max(
     1,
     Math.floor(
-      c.baseHp + c.vit * 3 + extra("vit") * m.hp + (totals.maxHp || 0),
+      c.baseHp + c.vit * (state.statProfile.initialVitHp || 3) + extra("vit") * m.hp + (totals.maxHp || 0),
     ),
   );
   const physical = (value) =>

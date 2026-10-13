@@ -71,7 +71,7 @@ function survivalRules() {
     const pages = [
       new EmbedBuilder()
         .setColor(0x9b59b6)
-        .setTitle("📖 SINH TỒN v3.0.0 · CÁCH CHƠI")
+        .setTitle("📖 SINH TỒN v3.1.0 · CÁCH CHƠI")
         .setDescription(
           "Chọn nhân vật, đặt cược rồi xử lý từng tầng. Mục tiêu là sống sót và quyết định lúc **Rút thưởng**. Xu và kim cương trên bảng là **thưởng tạm giữ**; chỉ được cộng vào tài khoản khi rút. Chết, bỏ run hoặc hết hạn mất cược và toàn bộ thưởng tạm giữ.",
         )
@@ -100,7 +100,7 @@ function survivalRules() {
         (category) =>
           new EmbedBuilder()
             .setColor(0x9b59b6)
-            .setTitle(`📖 SINH TỒN v3.0.0 · ${sections[category]}`)
+            .setTitle(`📖 SINH TỒN v3.1.0 · ${sections[category]}`)
             .addFields(splitRuleFields(view.ratesFields(category))),
       ),
     ];

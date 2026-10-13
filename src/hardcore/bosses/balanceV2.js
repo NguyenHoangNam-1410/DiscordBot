@@ -5,9 +5,9 @@ const TARGET = Object.freeze({ min: 0.03, max: 0.05 });
 const FACTORS = Object.freeze({
   amazon: 3.5,
   barbarian: 0.95,
-  assassin: 0.84,
+  assassin: 0.94,
   sorceress: 1.6,
-  druid: 0.48,
+  druid: 0.55,
   necromancer: 0.49,
   paladin: 0.9,
 });

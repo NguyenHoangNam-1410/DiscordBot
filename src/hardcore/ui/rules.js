@@ -25,6 +25,7 @@ module.exports = function createModule(dependencies) {
   function ratesFields(category) {
     const fields = {
       combat: [
+        { name: "✨ Class Innate · từ tầng 1", value: "V3.1: mỗi class có nội tại ngay từ tầng 1, không cần item và không mất sau thức tỉnh. Xem Chỉ số để đọc hiệu ứng, cooldown và tài nguyên. Buff trong combat giữ qua phase, hết khi kết thúc trận; né/chặn không ngăn DMG chuẩn, chi phí HP, bẫy hoặc phản phệ." },
         {
           name: "✨ Class Awakening · tầng 100",
           value:
@@ -261,7 +262,7 @@ module.exports = function createModule(dependencies) {
         {
           name: "Rút thưởng và mất thưởng",
           value:
-            "- Sau khi vượt ít nhất một tầng, **Rút thưởng** kết thúc run và nhận thưởng theo bảng. Rút trước tầng đầu là bỏ run, mất cược. RNGesus và rương boss chưa xử lý không cho rút.\n- Payout là **tổng thưởng xu**, không phải tiền lãi. Hệ số từ vượt tầng dừng tăng sau 100. Bonus event tính theo cược ban đầu; event cược thưởng theo khoản đã đặt. Phạt event trừ một lần theo payout hiện tại, không giảm hệ số thưởng. Giới hạn 10 triệu xu. Các khoản mua đồ/dịch vụ trong run làm giảm payout theo giá đã xác nhận.\n- Chết, bỏ run hoặc hết hạn: mất cược và toàn bộ xu/kim cương tạm giữ. Trang bị trong run cũng không chuyển vào túi Gacha.\n- Run mới dùng v3.0.0; run cũ tiếp tục theo phiên bản đã lưu.",
+            "- Sau khi vượt ít nhất một tầng, **Rút thưởng** kết thúc run và nhận thưởng theo bảng. Rút trước tầng đầu là bỏ run, mất cược. RNGesus và rương boss chưa xử lý không cho rút.\n- Payout là **tổng thưởng xu**, không phải tiền lãi. Hệ số từ vượt tầng dừng tăng sau 100. Bonus event tính theo cược ban đầu; event cược thưởng theo khoản đã đặt. Phạt event trừ một lần theo payout hiện tại, không giảm hệ số thưởng. Giới hạn 10 triệu xu. Các khoản mua đồ/dịch vụ trong run làm giảm payout theo giá đã xác nhận.\n- Chết, bỏ run hoặc hết hạn: mất cược và toàn bộ xu/kim cương tạm giữ. Trang bị trong run cũng không chuyển vào túi Gacha.\n- Run mới dùng v3.1.0; run cũ tiếp tục theo phiên bản đã lưu.",
         },
         {
           name: "Kim cương theo mốc",
