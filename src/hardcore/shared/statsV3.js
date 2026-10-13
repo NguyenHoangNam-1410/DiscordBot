@@ -329,59 +329,32 @@ function apply(state, d, totals, passives, clamp) {
 }
 function description(state, icons = {}) {
   const { core: c, mastery: m } = profile(state),
-    f = (n) => Number(n.toFixed(1)).toLocaleString("vi-VN");
-  return (
-    "**" +
-    m.name +
-    "** · mỗi điểm tăng thêm:\n" +
-    (icons.dex || "DEX") +
-    " DEX → ACC +" +
-    f(m.accuracy) +
-    ", EVA +" +
-    f(m.evasion) +
-    ", CRIT +" +
-    f(m.crit * 100) +
-    " điểm %.\n" +
-    (icons.vit || "VIT") +
-    " VIT → Max HP +" +
-    f(m.hp) +
-    ", DEF +" +
-    f(m.vitDefense) +
-    ".\n" +
-    (icons.str || "STR") +
-    " STR → DEF +" +
-    f(m.strDefense) +
-    ". " +
-    (icons.ene || "ENE") +
-    " ENE → RES +" +
-    f(m.res) +
-    " điểm %, Max MP +" +
-    f(m.mana) +
-    ".\n" +
-    "DMG từ điểm phân bổ: vật lý (STR ×" +
-    f(c.strWeight) +
-    " + DEX ×" +
-    f(1 - c.strWeight) +
-    ") ×0,6 ×" +
-    f(m.physicalPower) +
-    "; phép ENE ×0,75 ×" +
-    f(m.spellPower) +
-    "." +
-    (m.vitPhysical || m.enePhysical
-      ? " Vật lý thêm VIT ×" +
-        f(m.vitPhysical) +
-        " + ENE ×" +
-        f(m.enePhysical) +
-        "."
-      : "") +
-    (m.vitSpell ? " Phép thêm VIT ×" + f(m.vitSpell) + "." : "") +
-    "\n" +
-    "Trần cơ bản: CRIT " +
-    f(m.critCap * 100) +
-    "% · né vật lý " +
-    f(m.evasionCap * 100) +
-    "%; nội tại trang bị có thể nâng trần (tối đa 75%/60%). Các chỉ số nguyên được làm tròn xuống sau khi cộng."
-  );
+    f = (n) => Number(n.toFixed(1)).toLocaleString("vi-VN"),
+    icon = (key, fallback) => icons[key] || fallback,
+    gain = (key, label, amount, suffix = "") =>
+      `${icon(key, label)} ${label} +${f(amount)}${suffix}`;
+  const physical = [
+    ...(c.strWeight ? [`STR +${f(c.strWeight * 60 * m.physicalPower)}`] : []),
+    ...(c.strWeight < 1 ? [`DEX +${f((1 - c.strWeight) * 60 * m.physicalPower)}`] : []),
+    ...(m.vitPhysical ? [`VIT +${f(m.vitPhysical * 100)}`] : []),
+    ...(m.enePhysical ? [`ENE +${f(m.enePhysical * 100)}`] : []),
+  ];
+  const magic = [
+    `ENE +${f(75 * m.spellPower)}`,
+    ...(m.vitSpell ? [`VIT +${f(m.vitSpell * 100)}`] : []),
+  ];
+  return [
+    `**${m.name}** · Quy đổi mỗi **+100 điểm** thuộc tính:`,
+    `${icon("dex", "DEX")} **DEX** → ${gain("accuracy", "ACC", m.accuracy * 100)} · ${gain("evasion", "EVA", m.evasion * 100)} · ${gain("crit", "CRIT", m.crit * 10000, " điểm %")}`,
+    `${icon("vit", "VIT")} **VIT** → ${gain("hp", "Max HP", m.hp * 100)} · ${gain("defense", "DEF", m.vitDefense * 100)}`,
+    `${icon("str", "STR")} **STR** → ${gain("defense", "DEF", m.strDefense * 100)}`,
+    `${icon("ene", "ENE")} **ENE** → ${gain("res", "RES", m.res * 100, " điểm %")} · ${gain("mana", "Max MP", m.mana * 100)}`,
+    "**DMG từ +100 điểm phân bổ** (trước hệ số cân bằng):",
+    `${icon("attack", "⚔️")} Vật lý: ${physical.join(" · ")}`,
+    `${icon("magic", "🔮")} Phép: ${magic.join(" · ")}`,
+    `${icon("crit", "CRIT")} Trần CRIT **${f(m.critCap * 100)}%** · ${icon("evasion", "EVA")} Trần né vật lý **${f(m.evasionCap * 100)}%**; trang bị có thể nâng tới 75%/60%. Max MP tối đa 10.`,
+    "Cộng từng điểm theo tỷ lệ trên; số hiển thị làm tròn 1 chữ số thập phân, chỉ số nguyên làm tròn xuống sau khi cộng. DMG trang bị tính riêng.",
+  ].join("\n");
 }
 module.exports = {
   VERSION,
