@@ -1,5 +1,14 @@
 [
   {
+    "id": "c55584b1-7661-47d5-93dc-ada02431e858",
+    "updatedAt": "2026-10-13T03:47:36.942Z",
+    "auditedAt": "2026-10-13T03:47:36.942Z",
+    "title": "Chuẩn hóa icon DEF/RES",
+    "changes": [
+      "Hiệu ứng điều chỉnh chung DEF và RES dùng icon DEFRES cùng nhãn DEF/RES, áp dụng vào log vỡ lá chắn đá, trạng thái combat, mô tả Rift và Chi tiết boss. DEF và RES riêng vẫn giữ icon riêng."
+    ]
+  },
+  {
     "id": "2c24b2d6-9d90-4e59-89ec-3d9078023fd1",
     "updatedAt": "2026-10-13T03:41:54.774Z",
     "auditedAt": "2026-10-13T03:41:54.774Z",

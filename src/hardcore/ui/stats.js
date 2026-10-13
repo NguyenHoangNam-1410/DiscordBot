@@ -243,7 +243,9 @@ module.exports = function createModule(dependencies) {
             stone_skin:
               "Quái: Lá chắn đá " +
               count * 1.5 +
-              "% Max HP; vỡ giáp → DEF/RES −" +
+              "% Max HP; vỡ giáp → " +
+              E.defres +
+              " DEF/RES giảm " +
               [0, 8, 12, 16][r.tier(count)] +
               "%",
             fortified:

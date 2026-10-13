@@ -330,10 +330,8 @@ function stoneStatus(s) {
     " HP**" +
     (r.brokenArmor
       ? " · đã vỡ: " +
-        E.defense +
-        " DEF/" +
-        E.res +
-        " RES −" +
+        E.defres +
+        " DEF/RES giảm " +
         [0, 8, 12, 16][tier(r.stacks.stone_skin)] +
         "%"
       : "")
@@ -400,10 +398,8 @@ function damage(s, amount, apply) {
       "\n" +
       E.defense +
       " Lá chắn đá đã vỡ: " +
-      E.defense +
-      " DEF và " +
-      E.res +
-      " RES quái giảm " +
+      E.defres +
+      " DEF/RES quái giảm " +
       [0, 8, 12, 16][tier(r.stacks.stone_skin)] +
       "%.";
   }
@@ -429,7 +425,7 @@ function unstable(s) {
 function description(k, n, s) {
   const r = encounter(s),
     t = tier(n),
-    fmt = (x) => Number(x.toFixed(2)).toLocaleString("vi-VN");
+    fmt = (x) => Number(x.toFixed(1)).toLocaleString("vi-VN");
   const lines = {
     stone_skin:
       "Quái nhận lá chắn đá bằng " +
@@ -437,10 +433,8 @@ function description(k, n, s) {
       "% " +
       E.hp +
       " Max HP khi xuất hiện. Lá chắn hấp thụ DMG vật lý/phép; sát thương dư trừ HP quái. Vỡ lá chắn: " +
-      E.defense +
-      " DEF và " +
-      E.res +
-      " RES quái −" +
+      E.defres +
+      " DEF/RES quái giảm " +
       [0, 8, 12, 16][t] +
       "% đến hết combat. Không hồi giáp khi boss hồi HP/chuyển phase.",
     elemental_dominion:

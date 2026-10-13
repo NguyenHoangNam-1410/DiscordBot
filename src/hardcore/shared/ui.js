@@ -22,6 +22,7 @@ function formatStatText(text) {
     DEX: E.dex,
     VIT: E.vit,
     ENE: E.ene,
+    "DEF/RES": E.defres,
     DEF: E.defense,
     RES: E.res,
     ACC: E.accuracy,
@@ -38,7 +39,7 @@ function formatStatText(text) {
       index % 2
         ? part
         : part.replace(
-            /(?<![\p{L}\p{N}_])(Sức chứa bình|Max HP|Max MP|DMG vật lý|DMG phép|HP|MP|STR|DEX|VIT|ENE|DEF|RES|ACC|EVA|CRIT|LUCK|DMG|Payout)(?![\p{L}\p{N}_])/gu,
+            /(?<![\p{L}\p{N}_])(Sức chứa bình|Max HP|Max MP|DMG vật lý|DMG phép|HP|MP|STR|DEX|VIT|ENE|DEF\/RES|DEF|RES|ACC|EVA|CRIT|LUCK|DMG|Payout)(?![\p{L}\p{N}_])/gu,
             (label) => highlightStat(`${labels[label]} ${label}`),
           ),
     )

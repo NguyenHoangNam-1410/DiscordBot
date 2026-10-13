@@ -99,6 +99,7 @@ function statText(text) {
     HP: "hp",
     "Max MP": "mana",
     MP: "mana",
+    "DEF/RES": "defres",
     DEF: "defense",
     RES: "res",
     CRIT: "crit",
@@ -110,7 +111,7 @@ function statText(text) {
   };
   return text
     .replace(
-      /\b(Max HP|HP|Max MP|MP|DEF|RES|CRIT|DMG|STR|DEX|VIT|ENE)\b/gi,
+      /\b(Max HP|HP|Max MP|MP|DEF\/RES|DEF|RES|CRIT|DMG|STR|DEX|VIT|ENE)\b/gi,
       (label) => {
         const normalized = label.toUpperCase().replace("MAX", "Max");
         return E[keys[normalized]] + " **" + normalized + "**";
