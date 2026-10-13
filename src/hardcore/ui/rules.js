@@ -148,12 +148,12 @@ module.exports = function createModule(dependencies) {
         {
           name: `${eventIcon("tax")} Tax Collector · V3`,
           value:
-            "Nộp thuế: trừ 15% payout hiện tại, làm tròn lên; không đổi hệ số payout. Lucky Break = min(30%, LUCK ×1,5%) giúp tránh thuế. Chống trả: không nộp thuế; Royal Outlaw đến hết run loại Tax Collector khỏi roster, Boss/Final Boss gây thêm 20% DMG lên bạn. Không cộng dồn; xem Rift.",
+            "Nộp thuế: trừ 15% payout hiện tại, làm tròn lên; không đổi hệ số payout. Lucky Break = min(50%, LUCK ×0,25%); đạt trần ở 200 LUCK giúp tránh thuế. Chống trả: không nộp thuế; Royal Outlaw đến hết run loại Tax Collector khỏi roster, Boss/Final Boss gây thêm 20% DMG lên bạn. Không cộng dồn; xem Rift.",
         },
         {
           name: `${eventIcon("potion_thief")} The Thief · V3`,
           value:
-            "Chấp nhận: Lucky Break = min(30%, LUCK ×1,5%) tránh mất mát; nếu thất bại, 50% mất 10% payout hiện tại / 50% mất nửa bình hiện có, làm tròn lên (0 bình không mất). Đánh đuổi: đánh The Thief (Elite) tại tầng này, bạn đi trước. Hạ nhận +20% cược và Underworld Lead: miễn phí Diamond Merchant/Rift Merchant, giữ một món/lần gặp và Diamond Merchant hai lần/run. Không gặp lại The Thief; Elite gây thêm 30% DMG lên bạn đến hết run. Không cộng dồn; xem Rift.",
+            "Chấp nhận: Lucky Break = min(50%, LUCK ×0,25%); đạt trần ở 200 LUCK tránh mất mát; nếu thất bại, 50% mất 10% payout hiện tại / 50% mất nửa bình hiện có, làm tròn lên (0 bình không mất). Đánh đuổi: đánh The Thief (Elite) tại tầng này, bạn đi trước. Hạ nhận +20% cược và Underworld Lead: miễn phí Diamond Merchant/Rift Merchant, giữ một món/lần gặp và Diamond Merchant hai lần/run. Không gặp lại The Thief; Elite gây thêm 30% DMG lên bạn đến hết run. Không cộng dồn; xem Rift.",
         },
         {
           name: `${E.luck} Wrong Portal`,

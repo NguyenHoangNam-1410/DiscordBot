@@ -515,7 +515,7 @@ module.exports = function createModule(dependencies) {
                 ? "The Thief"
                 : "Potion Thief",
         kind,
-        lucky: rng() < Math.min(0.3, state.luck * 0.015),
+        lucky: rng() < stats.luckyBreakChance(state),
         good:
           rng() <
           (kind === "portal" ? itemPassives.goodChance(state, 0.5) : 0.5),

@@ -115,7 +115,7 @@ function buildRatesEmbed(category = null) {
       {
         name: "Luck",
         value:
-          "SSR +Luck×0,2%; phát hiện Mimic = min(95%,25%+Luck×3%+item); Goblin = min(90%,min(80%,60%+Luck×1%)+item). Lucky Break = min(30%,Luck×1,5%), chỉ né Tax Collector/The Thief. Không tác động Wrong Portal.",
+          "SSR +Luck×0,2%; phát hiện Mimic = min(95%,25%+Luck×3%+item); Goblin = min(90%,min(80%,60%+Luck×1%)+item). Lucky Break = min(50%,Luck×0,25%), đạt trần ở 200 LUCK, chỉ né Tax Collector/The Thief. Không tác động Wrong Portal.",
       },
       {
         name: "Wrong Portal",

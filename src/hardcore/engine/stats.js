@@ -246,6 +246,11 @@ function addSource(state, effects, source = "event") {
     state.sources[source][key] = (state.sources[source][key] || 0) + value;
   return recompute(state);
 }
+function luckyBreakChance(state) {
+  const luck = Math.max(0, Number(state.luck) || 0);
+  const modern = state.gameplayVersion === 3 && !state.mode?.startsWith("tower");
+  return modern ? Math.min(0.5, luck * 0.0025) : Math.min(0.3, luck * 0.015);
+}
 function mainStat(state) {
   return ["sorceress", "necromancer"].includes(state.classKey)
     ? "ene"
@@ -334,6 +339,7 @@ module.exports = {
   recompute,
   addSource,
   mainStat,
+  luckyBreakChance,
   createState,
   preview,
   sumEffects,

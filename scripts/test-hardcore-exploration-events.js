@@ -72,6 +72,32 @@ function detail(s) {
     view.privatePayload(s, session.id, "public", "encounter"),
   );
 }
+test("Lucky Break: linear scaling to 50% at 200 LUCK, with legacy isolation", () => {
+  for (const [luck, chance] of [[-1, 0], [0, 0], [20, 0.05], [100, 0.25], [199, 0.4975], [200, 0.5], [400, 0.5]]) {
+    const s = fresh(2);
+    s.luck = luck;
+    assert.equal(stats.luckyBreakChance(s), chance);
+    for (const kind of ["tax", "potion_thief"]) {
+      trap(s, kind);
+      assert(detail(s).includes("200 LUCK"));
+      assert(detail(s).includes("50%"));
+    }
+    for (const [roll, expected] of [[chance, false], [Math.max(0, chance - 0.00001), chance > 0]]) {
+      s.encounter = { type: "empty" };
+      const calls = [0.9, 0, roll, 0.5, 0.5];
+      const e = core.generateEncounter(s, session, () => calls.shift() ?? 0.5);
+      assert.equal(e.kind, "tax");
+      assert.equal(e.lucky, expected, `LUCK ${luck}, roll ${roll}`);
+    }
+  }
+  const old = fresh();
+  old.luck = 20;
+  old.gameplayVersion = 2;
+  assert.equal(stats.luckyBreakChance(old), 0.3);
+  old.gameplayVersion = 3;
+  old.mode = "tower";
+  assert.equal(stats.luckyBreakChance(old), 0.3);
+});
 test("Tax: current payout, Lucky Break and permanent outlaw", () => {
   const s = fresh();
   trap(s, "tax");

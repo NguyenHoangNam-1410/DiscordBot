@@ -198,11 +198,11 @@ module.exports = function createModule(dependencies) {
               : []),
           ],
         );
-      const lucky = Math.min(0.3, s.luck * 0.015);
+      const lucky = stats.luckyBreakChance(s);
       if (require("../events/explorationMarks").enabled(s))
         return show(
           e.name,
-          `${E.luck} LUCK: Lucky Break ${percent(lucky)} (tối đa 30%).`,
+          `${E.luck} LUCK: Lucky Break ${percent(lucky)} (LUCK ×0,25%, tối đa 50% ở 200 LUCK).`,
           e.kind === "tax"
             ? [
                 option("Nộp thuế", [
