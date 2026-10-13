@@ -351,12 +351,8 @@ module.exports = function createModule(dependencies) {
         const recovery = healEvent(state, state.maxHp);
         done("🩸 Blood Fountain đã hồi phục HP/MP cho bạn.\n" + recovery.log);
       } else if (e.roll < (e.goodThreshold ?? 0.85)) {
-        addSource(state, { maxHp: 15 });
-        const recovery = healEvent(state, 15);
-        done(
-          "🩸 Blood Fountain đã tăng sinh lực và hồi HP/MP cho bạn.\n" +
-            recovery.log,
-        );
+        addSource(state, { vit: 10 });
+        done(`🩸 Blood Fountain: nhận +10 ${E.vit} VIT trong run.`);
       } else combat(e.enemy, "Blood Mimic xuất hiện!");
     } else if (k === "horadric") {
       const target = itemById(e.targetId);

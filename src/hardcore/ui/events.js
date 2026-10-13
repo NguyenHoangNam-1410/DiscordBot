@@ -294,7 +294,7 @@ module.exports = function createModule(dependencies) {
           "Xem **Rift** để đọc Ân nghĩa và Truy nã.",
         ]);
       case "fountain":
-        return show(e.name, "Uống để hồi phục hoặc gặp Blood Mimic.", [
+        return show(e.name, "Uống để hồi phục, tăng VIT hoặc gặp Blood Mimic.", [
           option("Uống", [
             [
               percent(e.healThreshold ?? 0.6),
@@ -302,7 +302,7 @@ module.exports = function createModule(dependencies) {
             ],
             [
               percent((e.goodThreshold ?? 0.85) - (e.healThreshold ?? 0.6)),
-              `+15 ${E.hp} Max HP; hồi 15 ${E.hp} HP và ${E.mana} MP theo tỷ lệ 15/Max HP mới (làm tròn lên).`,
+              `+10 ${E.vit} VIT trong run.`,
             ],
             [
               percent(1 - (e.goodThreshold ?? 0.85)),

@@ -1,5 +1,15 @@
 [
   {
+    "id": "d711ea6f-d631-418c-83e1-ddf974502ae4",
+    "updatedAt": "2026-10-13T04:53:45.262Z",
+    "auditedAt": "2026-10-13T04:53:45.262Z",
+    "title": "Blood Fountain: thưởng VIT",
+    "changes": [
+      "Nhánh 25% cơ bản khi uống Blood Fountain đổi từ +15 Max HP và hồi phục sang +10 VIT trong run; các nhánh khác giữ nguyên.",
+      "Cập nhật Chi tiết Blood Fountain để hiển thị đúng phần thưởng mới."
+    ]
+  },
+  {
     "id": "3dda3484-4d39-4eb8-898a-baaa09a432f4",
     "updatedAt": "2026-10-13T04:45:07.437Z",
     "auditedAt": "2026-10-13T04:45:07.437Z",
