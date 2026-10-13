@@ -386,7 +386,13 @@ async function main() {
           .embed(s, "u")
           .toJSON()
           .fields.find((f) => f.name.includes("Đối thủ"))
-          .value.includes("0% CRIT"),
+          .value.split("Đòn kế tiếp:")[1]
+          .includes("trúng bạn") === false &&
+          !view
+            .embed(s, "u")
+            .toJSON()
+            .fields.find((f) => f.name.includes("Đối thủ"))
+            .value.includes("CRIT"),
       );
     }
     const run = runBoss("bul_kathos"),

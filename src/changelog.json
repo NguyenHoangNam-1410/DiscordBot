@@ -1,5 +1,14 @@
 [
   {
+    "id": "ff8c940e-e3b6-43ad-b5e3-6547872eb313",
+    "updatedAt": "2026-10-13T03:10:11.669Z",
+    "auditedAt": "2026-10-13T03:10:11.669Z",
+    "title": "Rút gọn dự báo đòn phép",
+    "changes": [
+      "Đòn kế tiếp là phép chỉ hiển thị loại đòn và DMG cuối cùng sau giảm trừ; bỏ tỷ lệ đánh trúng và CRIT."
+    ]
+  },
+  {
     "id": "d0a0116a-60d1-4d9e-865a-d2a66049da59",
     "updatedAt": "2026-10-13T03:07:29.658Z",
     "auditedAt": "2026-10-13T03:07:29.658Z",
