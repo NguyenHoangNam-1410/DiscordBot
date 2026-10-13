@@ -1,4 +1,5 @@
 "use strict";
+const { statNumber } = require("../shared/ui");
 const bosses = require("../bosses/mechanics");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
@@ -77,10 +78,10 @@ module.exports = function createModule(dependencies) {
       : s.resistance;
     const lines = [
       `${healthBar(s.hp, s.maxHp)}${d("hp")}${d("maxHp", " MAX")}`,
-      `${E.str} **STR** **${s.str}**${d("str")}${STAT_SEPARATOR}${E.dex} **DEX** **${s.dex}**${d("dex")}${STAT_SEPARATOR}${E.vit} **VIT** **${s.vit}**${d("vit")}${STAT_SEPARATOR}${E.ene} **ENE** **${s.ene}**${d("ene")}`,
-      `${E.mana} **MP** **${s.mana}/${bosses.effectiveMaxMana(s)}**${d("mana")}${d("maxMana", " MAX")}${options.includeSupplies === false ? "" : `${STAT_SEPARATOR}${E.potion} **Bình** ${s.potions}${d("potions")}${STAT_SEPARATOR}${E.ticket} **Vé thoát** ${s.escapeTokens}${d("escapeTokens")}`}`,
-      `${E.attack} **Vật lý** **${range[0]}–${range[1]}**${inverse ? " (Paradox)" : d("damageMin")}${STAT_SEPARATOR}${E.magic} **Phép** **${s.spellMin}–${s.spellMax}**${d("spellMin")}`,
-      `${E.defense} **DEF** **${defense}**${inverse ? " (Paradox)" : d("defense")}${STAT_SEPARATOR}${E.res} **RES** **${resistance}%**${options.effective && resistance !== s.resistance ? ` (gốc ${s.resistance}%)` : d("resistance")}${STAT_SEPARATOR}${E.luck} **LUCK** **${s.luck}**${d("luck")}`,
+      `${E.str} **STR** **${statNumber(s.str)}**${d("str")}${STAT_SEPARATOR}${E.dex} **DEX** **${statNumber(s.dex)}**${d("dex")}${STAT_SEPARATOR}${E.vit} **VIT** **${statNumber(s.vit)}**${d("vit")}${STAT_SEPARATOR}${E.ene} **ENE** **${statNumber(s.ene)}**${d("ene")}`,
+      `${E.mana} **MP** **${statNumber(s.mana)}/${bosses.effectiveMaxMana(s)}**${d("mana")}${d("maxMana", " MAX")}${options.includeSupplies === false ? "" : `${STAT_SEPARATOR}${E.potion} **Bình** ${s.potions}${d("potions")}${STAT_SEPARATOR}${E.ticket} **Vé thoát** ${s.escapeTokens}${d("escapeTokens")}`}`,
+      `${E.attack} **Vật lý** **${statNumber(range[0])}–${statNumber(range[1])}**${inverse ? " (Paradox)" : d("damageMin")}${STAT_SEPARATOR}${E.magic} **Phép** **${statNumber(s.spellMin)}–${statNumber(s.spellMax)}**${d("spellMin")}`,
+      `${E.defense} **DEF** **${statNumber(defense)}**${inverse ? " (Paradox)" : d("defense")}${STAT_SEPARATOR}${E.res} **RES** **${statNumber(resistance)}%**${options.effective && resistance !== s.resistance ? ` (gốc ${statNumber(s.resistance)}%)` : d("resistance")}${STAT_SEPARATOR}${E.luck} **LUCK** **${statNumber(s.luck)}**${d("luck")}`,
     ];
     if (options.battleResources) {
       lines[0] = battleResources(s);
@@ -88,7 +89,7 @@ module.exports = function createModule(dependencies) {
     }
     if (!compact)
       lines.push(
-        `${E.accuracy} **ACC** **${s.accuracy}**${d("accuracy")}${STAT_SEPARATOR}${E.evasion} **EVA** **${s.evasion}**${d("evasion")}${STAT_SEPARATOR}${E.crit} **CRIT** **${percent(options.effective ? bosses.playerCrit(s, s.critChance) : s.critChance)}**${d("critChance", "%")}\n${E.potionPower} **Hiệu lực bình** **${percent(paradox.potionRate(s) * (1 - (s.healingReduction || 0)) * bosses.healingFactor(s))}** Max HP`,
+        `${E.accuracy} **ACC** **${statNumber(s.accuracy)}**${d("accuracy")}${STAT_SEPARATOR}${E.evasion} **EVA** **${statNumber(s.evasion)}**${d("evasion")}${STAT_SEPARATOR}${E.crit} **CRIT** **${percent(options.effective ? bosses.playerCrit(s, s.critChance) : s.critChance)}**${d("critChance", "%")}\n${E.potionPower} **Hiệu lực bình** **${percent(paradox.potionRate(s) * (1 - (s.healingReduction || 0)) * bosses.healingFactor(s))}** Max HP`,
       );
     return lines.join("\n");
   }
@@ -102,7 +103,7 @@ module.exports = function createModule(dependencies) {
         ? [`${E.reviveTicket} **Vé hồi sinh ×${s.reviveTickets}**`]
         : []),
     ];
-    return `${healthBar(s.hp, s.maxHp).replace(" **HP**", "")}${STAT_SEPARATOR}${E.mana} **${s.mana}/${bosses.effectiveMaxMana(s)}**${tickets.length ? "\n" + tickets.join(STAT_SEPARATOR) : ""}`;
+    return `${healthBar(s.hp, s.maxHp).replace(" **HP**", "")}${STAT_SEPARATOR}${E.mana} **${statNumber(s.mana)}/${bosses.effectiveMaxMana(s)}**${tickets.length ? "\n" + tickets.join(STAT_SEPARATOR) : ""}`;
   }
   function battleStats(s, compact = false) {
     const attack = core.attackDamagePreview(s);
@@ -148,8 +149,8 @@ module.exports = function createModule(dependencies) {
         }[s.classKey];
     const resources = compact
       ? battleResources(s)
-      : `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${bosses.effectiveMaxMana(s)}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé thoát** **${s.escapeTokens}**`;
-    return `${resources}\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${core.effectiveResistance(s, s.resistance, false, !require("../rift").enabled(s) || require("../rift").encounter(s)?.lockedCounterType === "magic")}%**${core.effectiveResistance(s, s.resistance, false, !require("../rift").enabled(s) || require("../rift").encounter(s)?.lockedCounterType === "magic") !== s.resistance ? ` (gốc ${s.resistance}%)` : ""}\n${bosses.brainControl(s) ? "🧠" : SKILL_ICONS[s.classKey]} **${bosses.brainControl(s) ? "Brain Control" : stats.CLASSES[s.classKey].skill}${compact ? "" : ` (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""})`}: ${skill.low}–${skill.high} DMG**\n${compact ? `${E.accuracy} Tỷ lệ vật lý đánh trúng quái: **${percent(physicalChance)}**` : detail}\n`;
+      : `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${statNumber(s.mana)}/${bosses.effectiveMaxMana(s)}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé thoát** **${s.escapeTokens}**`;
+    return `${resources}\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${statNumber(defense)}**${STAT_SEPARATOR}${E.res} **RES** **${statNumber(core.effectiveResistance(s, s.resistance, false, !require("../rift").enabled(s) || require("../rift").encounter(s)?.lockedCounterType === "magic"))}%**${core.effectiveResistance(s, s.resistance, false, !require("../rift").enabled(s) || require("../rift").encounter(s)?.lockedCounterType === "magic") !== s.resistance ? ` (gốc ${statNumber(s.resistance)}%)` : ""}\n${bosses.brainControl(s) ? "🧠" : SKILL_ICONS[s.classKey]} **${bosses.brainControl(s) ? "Brain Control" : stats.CLASSES[s.classKey].skill}${compact ? "" : ` (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""})`}: ${skill.low}–${skill.high} DMG**\n${compact ? `${E.accuracy} Tỷ lệ vật lý đánh trúng quái: **${percent(physicalChance)}**` : detail}\n`;
   }
 
   function checkpointPreview(s, key) {
@@ -175,17 +176,17 @@ module.exports = function createModule(dependencies) {
         );
     };
     for (const key of stats.ATTRIBUTES)
-      add(`${E[key]} ${key.toUpperCase()}`, [key], (s) => s[key]);
-    add(`${E.hp} Max HP`, ["maxHp"], (s) => s.maxHp);
+      add(`${E[key]} ${key.toUpperCase()}`, [key], (s) => statNumber(s[key]));
+    add(`${E.hp} Max HP`, ["maxHp"], (s) => statNumber(s.maxHp));
     add(
       `${E.attack} Vật lý`,
       ["damageMin", "damageMax"],
-      (s) => `${s.damageMin}–${s.damageMax}`,
+      (s) => `${statNumber(s.damageMin)}–${statNumber(s.damageMax)}`,
     );
     add(
       `${E.magic} Phép`,
       ["spellMin", "spellMax"],
-      (s) => `${s.spellMin}–${s.spellMax}`,
+      (s) => `${statNumber(s.spellMin)}–${statNumber(s.spellMax)}`,
     );
     for (const [key, label] of [
       ["defense", `${E.defense} DEF`],
@@ -193,9 +194,9 @@ module.exports = function createModule(dependencies) {
       ["evasion", `${E.evasion} EVA`],
       ["maxMana", `${E.mana} Max MP`],
     ])
-      add(label, [key], (s) => s[key]);
+      add(label, [key], (s) => statNumber(s[key]));
     add(`${E.crit} CRIT`, ["critChance"], (s) => percent(s.critChance));
-    add(`${E.res} RES`, ["resistance"], (s) => `${s.resistance}%`);
+    add(`${E.res} RES`, ["resistance"], (s) => `${statNumber(s.resistance)}%`);
     add(`${E.potion} Bình`, ["potionRate"], (s) =>
       percent(paradox.potionRate(s)),
     );
@@ -207,7 +208,7 @@ module.exports = function createModule(dependencies) {
         ["potions", `${E.potion} Bình máu`],
         ["escapeTokens", `${E.ticket} Vé thoát`],
       ])
-        add(label, [key], (s) => s[key]);
+        add(label, [key], (s) => statNumber(s[key]));
     }
     return (
       parts.join(STAT_SEPARATOR) ||
@@ -218,7 +219,7 @@ module.exports = function createModule(dependencies) {
   function riftStatBonus(key, count) {
     const stacks = world.effectiveStacks(count);
     const stat = (label, value) => `${highlightStat(label)} **${value}**`;
-    const amount = (n) => (Math.round(n * 1000) / 1000).toLocaleString("vi-VN");
+    const amount = (n) => statNumber(n).toLocaleString("vi-VN");
     return {
       stone_skin: stat(`${E.defense} DEF`, `+${amount(stacks * 8)}%`),
       elemental_dominion: `${stat(`${E.attack} DMG`, `+${amount(stacks * 3)}%`)}; ${E.magic} **Tỷ lệ đòn phép** **+${amount(stacks * 3)} điểm phần trăm** (quái đánh hỗn hợp)`,
@@ -315,11 +316,11 @@ module.exports = function createModule(dependencies) {
         incoming = paradox.incoming(state, false);
       if (outgoing !== 1)
         effects.push(
-          `${E.attack} DMG gây ra ×${outgoing.toLocaleString("vi-VN")}`,
+          `${E.attack} DMG gây ra ×${statNumber(outgoing).toLocaleString("vi-VN")}`,
         );
       if (incoming !== 1)
         effects.push(
-          `${E.attack} DMG vật lý nhận ×${incoming.toLocaleString("vi-VN")}`,
+          `${E.attack} DMG vật lý nhận ×${statNumber(incoming).toLocaleString("vi-VN")}`,
         );
       if (["inverted_armor", "inverted_magic"].includes(p.id))
         effects.push(

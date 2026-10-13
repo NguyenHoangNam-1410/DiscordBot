@@ -1,5 +1,15 @@
 [
   {
+    "id": "2c24b2d6-9d90-4e59-89ec-3d9078023fd1",
+    "updatedAt": "2026-10-13T03:41:54.774Z",
+    "auditedAt": "2026-10-13T03:41:54.774Z",
+    "title": "Chuẩn hóa một chữ số thập phân cho chỉ số",
+    "changes": [
+      "Chỉ số trên Battle UI, túi đồ, tab Chỉ số, Chi tiết và log trước → sau hiển thị tối đa một chữ số thập phân; ví dụ 381.200000000005 thành 381.2.",
+      "Các hệ số hiển thị cũng được làm tròn; giữ nguyên độ chính xác tính toán và cách hiển thị xu."
+    ]
+  },
+  {
     "id": "e873c2d1-f1b2-4541-bd68-4db3a0e53cb6",
     "updatedAt": "2026-10-13T03:21:10.535Z",
     "auditedAt": "2026-10-13T03:21:10.535Z",

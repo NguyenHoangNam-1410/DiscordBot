@@ -167,9 +167,9 @@ module.exports = function createModule(dependencies) {
           m = b.mechanicState;
         const lines = [
           "Vật lý ×" +
-            bosses.playerFactor(state, false).toFixed(2) +
+            bosses.playerFactor(state, false).toFixed(1) +
             " · Phép ×" +
-            bosses.playerFactor(state, true).toFixed(2) +
+            bosses.playerFactor(state, true).toFixed(1) +
             " (cơ chế boss, trước giảm trừ).",
         ];
         if (bosses.healingLimit(state) < state.maxHp)
@@ -204,11 +204,11 @@ module.exports = function createModule(dependencies) {
         const line = (name, x) =>
           name +
           ": class **" +
-          Number(x.base.toFixed(2)).toLocaleString("vi-VN") +
+          Number(x.base.toFixed(1)).toLocaleString("vi-VN") +
           "** · điểm phân bổ **" +
-          Number(x.attributes.toFixed(2)).toLocaleString("vi-VN") +
+          Number(x.attributes.toFixed(1)).toLocaleString("vi-VN") +
           "** · item/hấp thụ **" +
-          Number(x.equipment.toFixed(2)).toLocaleString("vi-VN") +
+          Number(x.equipment.toFixed(1)).toLocaleString("vi-VN") +
           "** → **" +
           x.total +
           " DMG**.";
@@ -266,7 +266,7 @@ module.exports = function createModule(dependencies) {
         },
         {
           name: `${E.attack} Tấn công`,
-          value: `- ${E.attack} **Vật lý**: 1 đòn, có thể trượt hoặc ${E.crit} **CRIT ×${royal.critMultiplier(state).toLocaleString("vi-VN")}**.\n- ${E.mana} **MP +${core.attackManaGain(state)}**, kể cả trượt (tối đa Max MP).\nQuái còn sống sẽ đánh trả.`,
+          value: `- ${E.attack} **Vật lý**: 1 đòn, có thể trượt hoặc ${E.crit} **CRIT ×${Number(royal.critMultiplier(state).toFixed(1)).toLocaleString("vi-VN")}**.\n- ${E.mana} **MP +${core.attackManaGain(state)}**, kể cả trượt (tối đa Max MP).\nQuái còn sống sẽ đánh trả.`,
         },
         {
           name: `${E.defense} Phòng thủ`,

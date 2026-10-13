@@ -253,7 +253,7 @@ module.exports = function createModule(dependencies) {
       if (compact) {
         const next = preview.skip
           ? "🎯 **Đòn kế tiếp:** Không phản công lượt này."
-          : `🎯 **Đòn kế tiếp:** ${preview.trueDamage ? "DMG chuẩn" : preview.magic ? E.magic + " Phép" : E.attack + " Vật lý"} **${money(preview.low)}–${money(preview.high)} DMG**${preview.magic ? "" : ` · ${E.evasion} **${percent(preview.chance)}** trúng bạn · ${E.crit} **${percent(preview.critChance)} CRIT** (×1,75)`}`;
+          : `🎯 **Đòn kế tiếp:** ${preview.trueDamage ? "DMG chuẩn" : preview.magic ? E.magic + " Phép" : E.attack + " Vật lý"} **${money(preview.low)}–${money(preview.high)} DMG**${preview.magic ? "" : ` · ${E.evasion} **${percent(preview.chance)}** trúng bạn · ${E.crit} **${percent(preview.critChance)} CRIT** (×1,8)`}`;
         return `${monsterIcon(e)} **${e.name}** · ${e.boss ? "Tầng " + s.floor + (["anomaly", "kabraxis"].includes(e.boss.id) ? " · Phase " + e.boss.phase : "") : rank}\n${(e.boss && bossDisplay.bars(s)) || healthBar(e.hp, e.maxHp)}${e.boss ? "\n" + bossDisplay.status(s) : ""}${require("../rift").battle(s)}${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? "\n🛡️ Quái miễn sát thương lượt này" : ""}\n${next}`;
       }
       if (e.boss)

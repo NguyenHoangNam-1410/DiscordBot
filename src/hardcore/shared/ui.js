@@ -1,6 +1,7 @@
 "use strict";
 const { E, passiveIcon } = require("./icons");
 const money = (n) => Math.floor(n).toLocaleString("vi-VN");
+const statNumber = (n) => Number(Number(n).toFixed(1));
 const STAT_SEPARATOR = "  •  ";
 function highlightStat(label) {
   const match = label.match(
@@ -51,7 +52,7 @@ function healthBar(hp, maxHp) {
       : ratio > 0
         ? Math.max(1, Math.min(9, Math.round(ratio * 10)))
         : 0;
-  return `${E.hp} **HP** \`${"█".repeat(filled)}${"░".repeat(10 - filled)}\` **${money(hp)}/${money(maxHp)}**`;
+  return `${E.hp} **HP** \`${"█".repeat(filled)}${"░".repeat(10 - filled)}\` **${statNumber(hp).toLocaleString("vi-VN")}/${statNumber(maxHp).toLocaleString("vi-VN")}**`;
 }
 function addTextFields(embed, name, text, inline = false) {
   const limit = 1024;
@@ -88,6 +89,7 @@ function addTextFields(embed, name, text, inline = false) {
 }
 
 module.exports = {
+  statNumber,
   healthBar,
   addTextFields,
   highlightStat,

@@ -717,7 +717,7 @@ function details(s) {
       "\n" +
       E.attack +
       " DMG Tấn công/Skill của bạn khi đánh boss ×" +
-      (x.b.playerDamageScale || 1).toFixed(2) +
+      (x.b.playerDamageScale || 1).toFixed(1) +
       "."
     );
   }
@@ -744,7 +744,7 @@ function details(s) {
       "\n" +
       E.attack +
       " DMG Tấn công/Skill của bạn khi đánh boss **×" +
-      (x.b.playerDamageScale || 1).toFixed(2).replace(".", ",") +
+      (x.b.playerDamageScale || 1).toFixed(1).replace(".", ",") +
       "**."
     );
   }
@@ -781,7 +781,7 @@ function details(s) {
       "\n" +
       E.attack +
       " Hệ số DMG của bạn khi đánh boss: **×" +
-      (x.b.playerDamageScale || 1).toFixed(2).replace(".", ",") +
+      (x.b.playerDamageScale || 1).toFixed(1).replace(".", ",") +
       "**."
     );
   }
@@ -794,7 +794,7 @@ function details(s) {
     "\n\n" +
     E.attack +
     " DMG Tấn công/Skill của bạn khi đánh boss **×" +
-    (x.b.playerDamageScale || 1).toFixed(2).replace(".", ",") +
+    (x.b.playerDamageScale || 1).toFixed(1).replace(".", ",") +
     "**."
   );
 }

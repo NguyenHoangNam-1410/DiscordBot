@@ -19,7 +19,7 @@ module.exports = function createModule(dependencies) {
   function rngesusLabel(state) {
     const chance = state.encounter.encounterChance ?? state.lastChaosChance;
     return Number.isFinite(chance) && chance > 0 && chance <= 1
-      ? `RNGesus (${(chance * 100).toLocaleString("vi-VN", { maximumFractionDigits: 2 })}%)`
+      ? `RNGesus (${(chance * 100).toLocaleString("vi-VN", { maximumFractionDigits: 1 })}%)`
       : "RNGesus";
   }
 

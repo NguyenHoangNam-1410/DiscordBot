@@ -112,10 +112,11 @@ module.exports = function createModule(dependencies) {
     },
   };
 
+  const { statNumber } = require("../shared/ui");
   const delta = (state, key, suffix = "") => {
     const n = state.lastStatChanges?.[key] || 0;
     return n
-      ? ` (${n > 0 ? "+" : ""}${key === "critChance" ? Math.round(n * 1000) / 10 : n}${suffix})`
+      ? ` (${n > 0 ? "+" : ""}${key === "critChance" ? statNumber(n * 100) : statNumber(n)}${suffix})`
       : "";
   };
   return {

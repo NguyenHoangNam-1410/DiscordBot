@@ -484,6 +484,40 @@ async function main() {
     repo.deleteSession(run.session.id);
   });
 
+  await test("Decimal stats round once for battle, item receipts and private tabs without mutating state", () => {
+    const stats = require("../src/hardcore/engine/stats"),
+      { statNumber } = require("../src/hardcore/shared/ui");
+    assert.equal(statNumber(381.200000000005), 381.2);
+    assert.equal(statNumber(127.46), 127.5);
+    const s = stats.createState("sorceress", 10000);
+    s.floor = 6;
+    s.cleared = 5;
+    s.encounter = { type: "empty" };
+    const item = Object.values(core.ITEMS)
+      .flat()
+      .find((i) => i.id === "angelic_engine");
+    assert(item);
+    s.lastReceivedItems = [];
+    for (let i = 0; i < 4; i++) core.receiveItem(s, item);
+    s.lastReceivedItems[0].before.ene = 375.8;
+    s.lastReceivedItems[0].after.ene = 381.200000000005;
+    s.ene = 381.200000000005;
+    s.vit = 127.46;
+    const before = JSON.stringify(s),
+      battle = view.embed(s, "u").toJSON();
+    const log = battle.fields.find((f) =>
+      f.name.includes("Lượt vừa rồi"),
+    ).value;
+    assert(log.includes("375.8 → **381.2**"));
+    assert(!JSON.stringify(battle).includes("381.200000"));
+    assert(battle.description.includes("127.5"));
+    for (const tab of ["stats", "items"]) {
+      const text = JSON.stringify(view.privatePayload(s, "id", "public", tab));
+      assert(!text.includes("381.200000"));
+    }
+    assert.equal(JSON.stringify(s), before);
+  });
+
   console.log(
     groups + " deterministic boss menu/display groups passed; no simulations.",
   );

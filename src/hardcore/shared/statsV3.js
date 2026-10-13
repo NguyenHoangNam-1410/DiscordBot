@@ -329,7 +329,7 @@ function apply(state, d, totals, passives, clamp) {
 }
 function description(state, icons = {}) {
   const { core: c, mastery: m } = profile(state),
-    f = (n) => Number(n.toFixed(3)).toLocaleString("vi-VN");
+    f = (n) => Number(n.toFixed(1)).toLocaleString("vi-VN");
   return (
     "**" +
     m.name +

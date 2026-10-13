@@ -44,7 +44,7 @@ module.exports = function createModule(dependencies) {
           if (curseText) return formatPassiveText(curseText);
           if (key === "defenseSet") return `${E.defense} **DEF** = 0`;
           if (key === "bonusPenalty")
-            return `${highlightStat(effectStatLabel(key))} ×${(1 - value).toFixed(2)} mỗi cấp chưa giải`;
+            return `${highlightStat(effectStatLabel(key))} ×${(1 - value).toFixed(1)} mỗi cấp chưa giải`;
           if (key === "potions")
             return `${E.potion} **Bình máu** +${value} khi nhận mỗi cấp`;
           if (key === "escapeTokens")
@@ -54,7 +54,7 @@ module.exports = function createModule(dependencies) {
           const n = value * level;
           if (key === "floorHpLoss")
             return `${E.floorHpLoss} **HP mất/tầng:** cuối tầng giảm HP hiện tại một lượng bằng ${percent(n)} Max HP (luôn còn ít nhất 1 HP)`;
-          return `${highlightStat(effectStatLabel(key))} ${n > 0 ? "+" : ""}${percentages.includes(key) ? percent(n) : Math.round(n * 100) / 100}`;
+          return `${highlightStat(effectStatLabel(key))} ${n > 0 ? "+" : ""}${percentages.includes(key) ? percent(n) : Number(n.toFixed(1))}`;
         })
         .join(STAT_SEPARATOR) || "Không có"
     );
@@ -157,7 +157,7 @@ module.exports = function createModule(dependencies) {
         const label = highlightStat(effectStatLabel(key));
         const describe = (level) =>
           key === "bonusPenalty"
-            ? label + " ×" + Math.pow(1 - value, level).toFixed(3)
+            ? label + " ×" + Math.pow(1 - value, level).toFixed(1)
             : effectText({ [key]: value }, level, { compactCurses: true });
         const before = describe(beforeLevel);
         if (afterLevel === 0) return "- " + before + " → **Đã gỡ**";
