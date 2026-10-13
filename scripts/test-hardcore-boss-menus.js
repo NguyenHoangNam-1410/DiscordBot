@@ -675,6 +675,20 @@ async function main() {
         const snapshot = JSON.stringify(s),
           detail = display.details(s),
           status = display.status(s);
+        assert(detail.startsWith("**Mục tiêu:**"), id + " objective");
+        assert(detail.includes("**Cơ chế**"), id + " mechanics");
+        assert(detail.includes("**Hiện tại**"), id + " current state");
+        if (id === "inarius") {
+          const c = catalog.config(id, s.floor);
+          assert(detail.includes(`**${c.cycle} lượt**`));
+          assert(detail.includes(`**${Number((c.power * 100).toFixed(1))} HP mỗi lượt**`));
+          assert(detail.includes("vẫn gây sát thương"));
+          assert(status.includes("ô 1") && status.includes("ô 3") && status.includes("ô 2"));
+          assert(status.includes("Đang bật"));
+          s.encounter.boss.mechanicState.openUntil = s.encounter.boss.round + 2;
+          assert(display.status(s).includes("Đang tắt"));
+          s.encounter.boss.mechanicState.openUntil = 0;
+        }
         assert.doesNotMatch(
           detail,
           /\{[A-Z_]+\}|undefined|HP chuẩn|theo Depth|khóa cứng build|ngân sách hữu hạn/,

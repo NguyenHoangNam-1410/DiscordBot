@@ -94,6 +94,274 @@ const RULES = {
     "Boss có 3 thanh HP nối tiếp, tương ứng 30%/30%/40% tổng HP. DMG dư không chuyển sang mục tiêu hoặc thanh kế; đổi phase không có phản công.\nPhase 1: chọn trụ miễn lượt rồi dùng Tấn công/Skill. Ruin tăng 15% DMG vật lý boss; Silence thêm 1 MP vào chi phí Skill của bạn ở lượt tác động (không vượt Max MP); Hunger hồi boss 12% DMG thực gây lên bạn. Phá trụ để gỡ hiệu ứng.\nPhase 2: khi HP boss xuống 75%, 50%, 25%, phải xử lý một Lõi thịt trước khi đánh tiếp. Thiêu tốn 1 MP; Cấy nhận +8 STR/ENE/VIT đã ghi cùng lời nguyền; Bỏ mặc hồi boss tối đa 2,5% Max HP mỗi lượt trong 2 lượt. Chọn xử lý không tốn lượt.\nLời nguyền do Cấy có thể là DMG bạn nhận +5%, Skill của bạn trả thêm 1% Max HP hoặc hồi HP của bạn giảm 15%; từng lõi báo rõ trước khi chọn.\nPhase 3: chọn không gian miễn lượt, giữ 3 lượt chiến đấu. Material: DMG vật lý của cả bạn và boss +25%, phép −25%; Arcane ngược lại.\nVoid: DMG của bạn +15%; DEF của bạn và boss giảm 25%, RES của cả hai giảm 20 điểm %; bạn không được hồi HP. Hạ hết thanh Phase 3 mới nhận thưởng.",
 };
 
+const GOALS = {
+  "butcher": "Giãn khoảng cách để hạn chế Cuồng nộ rồi hạ Butcher.",
+  "machine": "Kiểm soát nhiệt để tăng sát thương và tránh quá tải.",
+  "assur": "Thanh tẩy ấn bảo hộ rồi kết liễu Assur khi ấn tắt.",
+  "control": "Tìm đúng tần số để tắt lá chắn và kết liễu boss.",
+  "necrobot": "Phá ít nhất hai bộ phận, chọn lõi rồi hạ boss.",
+  "quov": "Dùng Ward đúng nguyên tố để giảm sát thương nhận và hạ boss.",
+  "lucion": "Trả lời đúng mệnh lệnh để mở lớp vảy và kết liễu boss.",
+  "bul_kathos": "Đỡ đúng thế đánh để làm boss choáng rồi tấn công.",
+  "giyua": "Kiểm soát số Tổ để hạn chế sức mạnh boss.",
+  "riftwalker": "Theo dõi Dư âm, xử lý những Dư âm nguy hiểm rồi hạ boss.",
+  "gharbad": "Nhận biết đầu hàng thật/giả và chọn đúng cách xử lý.",
+  "phoboss": "Cân bằng lợi thế sát thương và nguy hiểm từ Mộng.",
+  "anomaly": "Thu thập ba mảnh, dùng Overload rồi tận dụng lúc boss mất phòng thủ.",
+  "zakarum": "Cướp Halo để gỡ sức mạnh boss và nhận hiệu ứng có lợi.",
+  "justicar": "Chọn phán quyết phù hợp cho mỗi nhóm ba lượt rồi hạ boss.",
+  "uldyssian": "Đổi nhịp hành động để kiểm soát Bản sao boss tạo ra.",
+  "lazarus": "Phá Totem nguy hiểm hoặc đánh thẳng boss để kết liễu.",
+  "xazax": "Xử lý Portal để hạn chế sức mạnh boss.",
+  "samael": "Xử lý điểm sáng trước khi tích đủ năm điểm.",
+  "death_projector": "Đứng ngoài vùng tia bắn và hạ boss.",
+  "akarat": "Hạ cả ba Apostle rồi kết liễu boss.",
+  "buyard": "Giữ nhiệt trong khoảng 40–70 để đánh boss hiệu quả.",
+  "bartuc": "Cắt liên kết để giải phóng sát thương bị giữ ở Golem.",
+  "jitan": "Chọn đúng cổng để mở đường gây sát thương và kết liễu boss.",
+  "greater_riftwalker": "Đứng đúng vị trí khi bão đến rồi hạ boss.",
+  "athulua": "Tránh vùng bị ngắm để giảm sát thương nhận.",
+  "lilith": "Hạ Lilith; có thể hiến máu để đổi lấy sát thương.",
+  "nemesis": "Tránh lặp cặp hành động để không bị boss sao chép.",
+  "azmodan": "Xử lý ấn máu trước khi nổ rồi hạ Azmodan.",
+  "dark_star_dragon": "Nấp sau trụ khi tia lớn đến rồi tiếp tục đánh boss.",
+  "juris_khan": "Chọn vị trí phù hợp để điều chỉnh sát thương hai bên.",
+  "manoruk": "Hạ hai đợt lính rồi kết liễu boss.",
+  "baal": "Thanh tẩy đúng hiệu ứng đang gây hại rồi hạ Baal.",
+  "belial": "Chọn bóng thật, tận dụng lúc Belial lộ diện để kết liễu.",
+  "astrogha": "Chọn mục tiêu và vị trí phù hợp để kiểm soát Totem.",
+  "atanna": "Đọc chuỗi giấc, xóa giấc nguy hiểm rồi hạ boss.",
+  "inarius": "Giữ Lilith sống và hạ Inarius.",
+  "sescheron": "Đọc đủ ba biểu tượng, nhập đúng mã để tạo cơ hội tấn công.",
+  "nithogur": "Dùng Neo/Tua đúng lúc để sống sót và hạ boss trước khi Cuồng nộ quá cao.",
+  "kabraxis": "Tích Điểm cộng hưởng, xử lý Ấn nguyền và hạ Kabraxis qua ba phase.",
+  "deimoss": "Phá trụ, xử lý Lõi thịt và hạ cả ba thanh HP."
+};
+const RULE_LABELS = {
+  "butcher": [
+    "Khoảng cách",
+    "Áp sát",
+    "Lùi / Chặt xích",
+    "Chi phí lượt"
+  ],
+  "machine": [
+    "Tăng nhiệt",
+    "Quá tải",
+    "Xả nhiệt",
+    "Quá tải chủ động"
+  ],
+  "assur": [
+    "Ấn bảo hộ",
+    "Chọn màu",
+    "Purify",
+    "Kết liễu"
+  ],
+  "control": [
+    "Lá chắn",
+    "Tần số đúng",
+    "Nhập sai",
+    "Kết liễu"
+  ],
+  "necrobot": [
+    "Chọn mục tiêu",
+    "Ba bộ phận",
+    "Mở lõi",
+    "Sau khi phá"
+  ],
+  "quov": [
+    "Đổi Ward",
+    "Ward đúng",
+    "Đủ ba nguyên tố",
+    "Đòn hai nguyên tố"
+  ],
+  "lucion": [
+    "Chọn đáp án",
+    "Đáp án đúng",
+    "Lớp vảy",
+    "Đáp án sai"
+  ],
+  "bul_kathos": [
+    "Thế đánh",
+    "Đỡ đúng",
+    "Hòa / thua",
+    "Chi phí lượt"
+  ],
+  "giyua": [
+    "Tổ quái",
+    "Phá / Phong ấn Nest",
+    "Khai thác Nest",
+    "Chi phí lượt"
+  ],
+  "riftwalker": [
+    "Dư âm",
+    "Khi Dư âm kích hoạt",
+    "Bẻ Echo",
+    "Theo dõi"
+  ],
+  "gharbad": [
+    "Dấu hiệu",
+    "Chọn đúng",
+    "Chọn sai",
+    "Chi phí lượt"
+  ],
+  "phoboss": [
+    "Điểm Mộng",
+    "Thức tỉnh",
+    "Khóa Skill",
+    "Lưu ý"
+  ],
+  "anomaly": [
+    "Đổi dạng",
+    "Ổn định",
+    "Overload",
+    "Chi phí lượt"
+  ],
+  "zakarum": [
+    "Ba Halo",
+    "Cướp Halo",
+    "Phần thưởng",
+    "Chi phí lượt"
+  ],
+  "justicar": [
+    "Chọn phán quyết",
+    "Steel / Arcane",
+    "Silence",
+    "Lịch đòn"
+  ],
+  "uldyssian": [
+    "Ghi nhớ hành động",
+    "Bản sao",
+    "Xóa ký ức",
+    "Lưu ý"
+  ],
+  "lazarus": [
+    "Chọn mục tiêu",
+    "Totem còn sống",
+    "Hồi sinh Totem",
+    "Đánh boss"
+  ],
+  "xazax": [
+    "Sinh Portal",
+    "Đóng / Chiếm Portal",
+    "Bước vào Portal",
+    "Chi phí lượt"
+  ],
+  "samael": [
+    "Điểm sáng",
+    "Dập / Cướp ấn",
+    "Hiệu ứng cướp",
+    "Chi phí lượt"
+  ],
+  "death_projector": [
+    "Vùng tia bắn",
+    "Di chuyển",
+    "Lịch tia"
+  ],
+  "akarat": [
+    "Mở mục tiêu boss",
+    "Ba Apostle",
+    "Thứ tự hạ",
+    "Phần thưởng"
+  ],
+  "buyard": [
+    "Vùng nhiệt có lợi",
+    "Nhiệt quá cao",
+    "Điều chỉnh nhiệt",
+    "Nhiệt tự tăng"
+  ],
+  "bartuc": [
+    "Liên kết Golem",
+    "Cắt liên kết",
+    "Giải phóng sát thương",
+    "Phần thưởng"
+  ],
+  "jitan": [
+    "Chọn cổng",
+    "Khi cổng đóng",
+    "Chọn sai",
+    "Chi phí lượt"
+  ],
+  "greater_riftwalker": [
+    "Màu bão",
+    "Đổi vị trí",
+    "Bão đến",
+    "Phòng thủ"
+  ],
+  "athulua": [
+    "Vùng bị ngắm",
+    "Vị trí Giữa",
+    "Di chuyển",
+    "Khóa vùng"
+  ],
+  "nemesis": [
+    "Cặp hành động",
+    "Khi lặp cặp",
+    "Cách tránh"
+  ],
+  "dark_star_dragon": [
+    "Tia lớn",
+    "Nấp trụ",
+    "Khi không nấp",
+    "Phòng thủ"
+  ],
+  "juris_khan": [
+    "Vị trí",
+    "Tiến / Lùi",
+    "Đứng yên"
+  ],
+  "manoruk": [
+    "Chọn mục tiêu",
+    "Ba loại lính",
+    "Mở lõi boss",
+    "Phần thưởng"
+  ],
+  "baal": [
+    "Chu kỳ",
+    "Hiệu ứng",
+    "Thanh tẩy",
+    "Hồi điểm"
+  ],
+  "astrogha": [
+    "Chọn mục tiêu",
+    "Phá Totem",
+    "Vị trí",
+    "Phần thưởng"
+  ],
+  "atanna": [
+    "Chuỗi giấc",
+    "Hiệu ứng giấc",
+    "Xóa giấc",
+    "Chuỗi mới"
+  ],
+  "sescheron": [
+    "Đọc mã",
+    "Nhập đúng",
+    "Nhập sai",
+    "Mã mới"
+  ],
+  "nithogur": [
+    "Neo / Tua",
+    "Giới hạn",
+    "Không hoàn lại",
+    "Cuồng nộ"
+  ],
+  "kabraxis": [
+    "Ba phase",
+    "Điểm cộng hưởng",
+    "Xử lý Ấn",
+    "Phase 3",
+    "Hậu quả Ấn phá",
+    "Phase 2"
+  ],
+  "deimoss": [
+    "Ba thanh HP",
+    "Phase 1",
+    "Phase 2",
+    "Nguyền từ lõi",
+    "Phase 3",
+    "Void"
+  ]
+};
 const MECHANIC_TITLES = {
   butcher: "Khoảng cách và Cuồng nộ",
   machine: "Nhiệt và lá chắn",
@@ -131,7 +399,7 @@ const MECHANIC_TITLES = {
   belial: "Chọn bóng thật để kết liễu",
   astrogha: "Phá Totem và chọn vị trí",
   atanna: "Chọn một giấc để xóa",
-  inarius: "Giữ Lilith sống và mở lá chắn",
+  inarius: "Giữ Lilith sống và mở kết giới",
   sescheron: "Đọc và nhập đúng ba biểu tượng",
   nithogur: "Neo và tua HP/MP",
   kabraxis: "Tích điểm và xử lý ấn nguyền",
@@ -237,7 +505,7 @@ function readableRules(text, x) {
   return renderRule(text, x)
     .split(/\n+/)
     .filter(Boolean)
-    .map((line) => "- " + statText(line))
+    .map((line, i) => "- " + (RULE_LABELS[x.b.id]?.[i] ? "**" + RULE_LABELS[x.b.id][i] + ":** " : "") + statText(line))
     .join("\n");
 }
 
@@ -705,19 +973,11 @@ function status(s) {
         (m.erased ? "đã dùng quyền xóa" : "xóa được một giấc");
       break;
     case "inarius":
-      text =
-        "Vị trí Inarius: vùng " +
-        (m.inarius + 1) +
-        " · Lilith: vùng " +
-        (m.lilith + 1) +
-        " · Vòng Ritual: vùng " +
-        (m.ritual + 1) +
-        ".\n⚠ HP Lilith **" +
-        Number(m.lilithHp.toFixed(1)) +
-        "/100**. " +
-        (m.lilithHp <= c.power * 100
-          ? "Che chở ngay để tránh Lilith tử trận."
-          : "Kéo để mở lá chắn; Che chở để hồi HP/bảo vệ Lilith.");
+      text = [
+        `Vị trí: Inarius **ô ${m.inarius + 1}** · Lilith **ô ${m.lilith + 1}** · Ritual **ô ${m.ritual + 1}**`,
+        `${E.hp} Lilith: **${Number(m.lilithHp.toFixed(1))}/100 HP**${m.protectUntil > b.round ? ` · Được che chở **${m.protectUntil - b.round} lượt**` : ` · Mất **${Number((c.power * 100).toFixed(1))} HP/lượt** nếu không che chở`}`,
+        `${E.defense} Kết giới Inarius: ${active ? `**Đang tắt** · còn **${m.openUntil - b.round} lượt** để kết liễu.` : "**Đang bật** · vẫn nhận sát thương nhưng không thể bị kết liễu; chọn Kéo Inarius vào Ritual."}`,
+      ].join("\n");
       break;
     case "sescheron":
       text =
@@ -824,16 +1084,29 @@ function status(s) {
             })[v.type],
         )
         .join(" · ");
-  if (active) text += " · Hiệu ứng còn " + (m.openUntil - b.round) + " lượt.";
+  if (active && b.id !== "inarius") text += " · Hiệu ứng còn " + (m.openUntil - b.round) + " lượt.";
   return (
     (MECHANIC_TITLES[b.id] || CATALOG[b.id].mechanic) +
     (b.depth ? " · Độ khó " + ["", "I", "II", "III"][b.depth] : "") +
     "\n" +
-    (["lilith", "azmodan"].includes(b.id) ? text : statText(plainStatus(text)))
+    (["lilith", "azmodan", "inarius"].includes(b.id) ? text : statText(plainStatus(text)))
   );
 }
 function details(s) {
   const x = mech.current(s);
+  if (x.b.id === "inarius") {
+    return [
+      "- **Kết giới:** bạn vẫn gây sát thương, nhưng Inarius luôn còn ít nhất 1 HP khi chưa mở thời gian kết liễu.",
+      "- **Kéo Inarius vào Ritual:** tốn **1 lượt**, đưa Inarius và Lilith vào vị trí vòng Ritual; cho phép kết liễu boss trong **2 lượt kế tiếp**, kể cả khi vòng đổi vị trí. Boss vẫn phản công.",
+      `- **Che chở Lilith:** tốn **1 lượt**, hồi ${E.hp} **15 HP** cho Lilith (tối đa 100); ngăn cô ấy mất HP trong lượt chọn và **2 lượt kế tiếp**. Boss vẫn phản công người chơi.`,
+      `- **Không được che chở:** Lilith mất ${E.hp} **${Number((x.c.power * 100).toFixed(1))} HP mỗi lượt**.`,
+      `- **Di chuyển:** cứ mỗi **${x.c.cycle} lượt**, vòng Ritual và Inarius sang ô kế tiếp trong vòng 1 → 2 → 3 → 1. Lilith không tự di chuyển.`,
+      `- **Thất bại:** Lilith về ${E.hp} **0 HP** khiến bạn thất bại ngay, dù nhân vật còn HP.`,
+      "",
+      "**Hiện tại**",
+      status(s),
+    ].join("\n");
+  }
   if (x.b.id === "belial") {
     return (
       "**Tìm bóng thật để kết liễu Belial**\n- Ba nút tương ứng: bóng 1 ◇, bóng 2 △, bóng 3 ○. Bảng chơi chỉ rõ bóng thật; dấu hiệu đổi mỗi " +
@@ -921,9 +1194,9 @@ function details(s) {
   }
   return (
     (x.b.id === "death_projector" && mech.randomBeam(x)
-      ? "Tia bắn mỗi lượt vào vùng A/B/C đang báo trên bảng. Tia giữ một vùng trong 2 lượt rồi chuyển ngẫu nhiên sang một trong hai vùng khác. Ở vùng an toàn có thể Tấn công/Skill; chọn Sang A/B/C tốn 1 lượt và vẫn nhận tia nếu đến vùng đang bị bắn."
+      ? "- **Tia bắn:** mỗi lượt bắn vào vùng A/B/C đang báo trên bảng. Tia giữ một vùng trong 2 lượt rồi chuyển ngẫu nhiên sang một trong hai vùng khác.\n- **Tấn công:** đứng ngoài vùng tia để Tấn công/Skill an toàn.\n- **Sang A/B/C:** tốn **1 lượt**, không có phản công thường; bạn vẫn nhận tia nếu đến vùng đang bị bắn."
       : readableRules(RULES[x.b.id], x)) +
-    "\n\n" +
+    "\n\n**Hiện tại**\n" +
     status(s) +
     "\n\n" +
     E.attack +
@@ -933,7 +1206,8 @@ function details(s) {
   );
 }
 function explainedDetails(s) {
-  const text = details(s);
+  const x = mech.current(s);
+  const text = "**Mục tiêu:** " + GOALS[x.b.id] + "\n\n**Cơ chế**\n" + details(s);
   return text.includes("DMG chuẩn")
     ? text +
         "\n\n" +

@@ -1,5 +1,16 @@
 [
   {
+    "id": "99f69b35-d81e-4bcc-ac7a-9e285921fdb5",
+    "updatedAt": "2026-10-13T08:26:20.815Z",
+    "auditedAt": "2026-10-13T08:26:20.815Z",
+    "title": "Boss: chuẩn hóa hướng dẫn chiến đấu",
+    "changes": [
+      "Chuẩn hóa Chi tiết của 41 boss theo bố cục Mục tiêu, Cơ chế và Hiện tại; tách hành động, chi phí lượt và hậu quả bằng các mục dễ đọc.",
+      "Inarius hiển thị vị trí ô, HP và thời gian che chở Lilith, trạng thái kết giới; giải thích rõ kết giới ngăn kết liễu và lấy mức mất HP/chu kỳ Ritual theo độ khó.",
+      "Giữ nguyên cơ chế và cân bằng chiến đấu."
+    ]
+  },
+  {
     "id": "d4ee225a-31c0-4a67-a670-ed331302a832",
     "updatedAt": "2026-10-13T05:55:17.719Z",
     "auditedAt": "2026-10-13T05:55:17.719Z",
