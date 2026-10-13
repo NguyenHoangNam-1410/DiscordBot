@@ -359,16 +359,12 @@ async function main() {
             "** · <@u>",
         ),
       );
-      assert.equal(
-        (JSON.stringify(embed).match(/Tỷ lệ vật lý đánh trúng quái/g) || [])
-          .length,
-        1,
-      );
+      assert.equal((JSON.stringify(embed).match(/ACC:/g) || []).length, 1);
       assert(!embed.description.includes("Phép luôn trúng"));
       const foe = embed.fields.find((f) => f.name.includes("Đối thủ")).value;
       assert.doesNotMatch(foe, /Dự báo|DEF|RES|Tỷ lệ vật lý trúng/);
       assert(foe.includes(p.low + "–" + p.high + " DMG"));
-      assert(foe.includes("25% CRIT"));
+      assert(foe.includes(E.crit + " **25%**"));
       assert(p.high < 120, "Counter is reduced by the character's defenses");
       assert.equal(JSON.stringify(s), before);
       const resourceLine = embed.description.split("\n")[1];
@@ -392,7 +388,7 @@ async function main() {
           .embed(s, "u")
           .toJSON()
           .fields.find((f) => f.name.includes("Đối thủ"))
-          .value.includes(E.magic + " Phép"),
+          .value.includes(E.magic + " **"),
       );
       assert(
         view
@@ -417,7 +413,9 @@ async function main() {
         .embed(s, "u")
         .toJSON()
         .fields.find((f) => f.name.includes("Đối thủ"))
-        .value.includes("100% CRIT"),
+        .value.includes(
+          require("../src/hardcore/shared/icons").E.crit + " **100%**",
+        ),
     );
     s.encounter.boss.mechanicState.skipCounter = true;
     assert(

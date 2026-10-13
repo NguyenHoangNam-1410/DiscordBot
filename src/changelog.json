@@ -1,5 +1,14 @@
 [
   {
+    "id": "3137a5c7-e628-4ccc-a07d-baeac4ee35a8",
+    "updatedAt": "2026-10-13T03:51:41.553Z",
+    "auditedAt": "2026-10-13T03:51:41.553Z",
+    "title": "Rút gọn ACC và đòn kế tiếp",
+    "changes": [
+      "Battle UI đổi nhãn tỷ lệ đánh vật lý trúng quái thành ACC. Đòn kế tiếp dùng icon loại sát thương, DMG, icon ACC và CRIT kèm tỷ lệ; bỏ các chữ Vật lý, trúng bạn và CRIT dư. Đòn phép vẫn chỉ hiển thị icon và DMG cuối cùng."
+    ]
+  },
+  {
     "id": "c55584b1-7661-47d5-93dc-ada02431e858",
     "updatedAt": "2026-10-13T03:47:36.942Z",
     "auditedAt": "2026-10-13T03:47:36.942Z",
