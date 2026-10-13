@@ -39,6 +39,23 @@ module.exports = function createModule(dependencies) {
   const randomEventText = (...args) => dependencies.randomEventText(...args);
 
   function encounterText(s) {
+    if (s.phase === "boss_chest" && s.encounter.offers)
+      return (
+        "🎁 Rương boss · chọn 1 trong 3 món hoặc bán (+100% cược).\n" +
+        s.encounter.offers
+          .map(
+            (d, i) =>
+              "**" +
+              (i + 1) +
+              ". " +
+              d.name +
+              " [" +
+              rarityLabel(d.rarity) +
+              "]**\n" +
+              itemText(d, 1, s),
+          )
+          .join("\n\n")
+      );
     if (s.phase === "boss_chest")
       return `${eventIcon("boss_chest")} **RƯƠNG BOSS · TẦNG ${s.encounter.bossFloor}**\nPhần thưởng sau boss cuối khu vực. Chọn **mở hoặc bán** để tiếp tục.\n\n**Mở rương**\n- **70%:** nhận trang bị **SSR**.\n- **30%:** nhận **UR**: trang bị có nguyền hoặc Vé thoát.\nĐồ trùng tên tăng level. Tỷ lệ cố định, không bị Luck/pity thay đổi.\n\n**Bán rương**\n- Cộng **100% cược ban đầu (${money(s.stake)} xu)** vào thưởng của run.\nPhải xử lý rương trước khi rút thưởng hoặc đi tiếp.`;
     if (s.phase === "upgrade")
@@ -57,7 +74,8 @@ module.exports = function createModule(dependencies) {
     if (e.type === "covenant_blessing") {
       const b = e.blessing;
       return (
-        eventIcon("covenant") + " **PHƯỚC LÀNH CHINH PHẠT**\n" +
+        eventIcon("covenant") +
+        " **PHƯỚC LÀNH CHINH PHẠT**\n" +
         E.hp +
         " **HP " +
         b.hpBefore +
@@ -73,9 +91,12 @@ module.exports = function createModule(dependencies) {
         b.cleansedLevels +
         "** lớp nguyền UR và xóa **" +
         b.removedRiftStacks +
-        "** ấn Rift. Giữ UR, level, Paradox và Contract.\n" + relicIcon("conquerors_covenant") + " **Conqueror’s Covenant [LR]** · " +
+        "** ấn Rift. Giữ UR, level, Paradox và Contract.\n" +
+        relicIcon("conquerors_covenant") +
+        " **Conqueror’s Covenant [LR]** · " +
         (covenant.active(s)
-          ? passiveIcon("killPayoutGrowth") + " Đang hoạt động: mỗi quái hạ từ bây giờ tăng 0,2 điểm % thưởng xu, tối đa +100%."
+          ? passiveIcon("killPayoutGrowth") +
+            " Đang hoạt động: mỗi quái hạ từ bây giờ tăng 0,2 điểm % thưởng xu, tối đa +100%."
           : "Đã nhận; chưa kích hoạt vì đã có nội tại LR khác hoạt động.") +
         "\nĐã tiêu thụ bốn mảnh và vượt tầng thử thách. Bấm Tiếp tục để xử lý checkpoint hoặc tầng kế tiếp."
       );
@@ -104,9 +125,11 @@ module.exports = function createModule(dependencies) {
         "** lớp nguyền UR và xóa **" +
         b.removedRiftStacks +
         "** ấn Rift. Giữ UR, level, Paradox và Contract.\n" +
-        relicIcon("fatebreaker_seal") + " **Fatebreaker Seal [LR]** · " +
+        relicIcon("fatebreaker_seal") +
+        " **Fatebreaker Seal [LR]** · " +
         (s.activeRelic === "fatebreaker_seal"
-          ? passiveIcon("preventRngesusEncounter") + " Đang hoạt động: không gặp RNGesus trong phần còn lại của run."
+          ? passiveIcon("preventRngesusEncounter") +
+            " Đang hoạt động: không gặp RNGesus trong phần còn lại của run."
           : "Đã nhận; đang có nội tại LR khác hoạt động.") +
         "\nTỷ lệ God đã reset về **0,0001%**. Thành tích đã được lưu.\nTiếp tục khám phá để xử lý tầng hiện tại; không bỏ qua boss."
       );
@@ -123,7 +146,7 @@ module.exports = function createModule(dependencies) {
         deimoss: "Abyssal Spires giảm 25% sát thương nhận.",
       };
       return (
-        `${monsterIcon(e)} **${e.name}** · ${e.rank}\n${E.hp} ${e.hp}/${e.maxHp} · ${E.attack} ${e.damageMin}–${e.damageMax} · ${E.defense} ${e.defense} · ${E.res} RES ${e.resistance}%\n` +
+        `${monsterIcon(e)} **${e.name}** · ${e.rank}\n${E.hp} ${e.hp}/${e.maxHp} · ${E.attack} ${e.damageMin}–${e.damageMax} · ${E.defense} ${e.defense} · ${E.res} RES ${require("../rift").enemyResistance(s, e.resistance)}%\n` +
         `Đòn quái kế tiếp: **${e.nextDamageType === "magic" ? "Phép" : "Vật lý"}** · Dự báo nhận **${p.low}–${p.high} HP** · Quái đánh trúng bạn **${percent(p.chance)}** *(chưa Crit/chưa Thủ)*\n` +
         `Bạn đánh vật lý trúng quái **${percent(world.hitChance(s.accuracy, e.evasion))}**; trượt gây 0 DMG nhưng vẫn hồi MP khi đánh thường. Skill phép luôn trúng.\n` +
         (gilded.isBoss(e)
@@ -144,10 +167,37 @@ module.exports = function createModule(dependencies) {
     if (k === "blacksmith") return blacksmithText(s, true);
     if (k === "purifier") return purifierText(s, true);
     if (k.endsWith("_shop"))
-      return `${eventIcon(e.kind)} **${e.name}** · mua tối đa **một món**. Giá và offer đã khóa.\n${e.offers.map((offer, i) => `**${i + 1}. ${offer.item.name} [${rarityLabel(offer.item.rarity)}] · ${shopPrice(k, offer)}**\n${itemText(offer.item)}`).join("\n")}\n${k === "blood_shop" ? "Giảm Max HP trong suốt run; phải còn ít nhất 1 Max HP sau trả giá. HP hiện tại chỉ hạ xuống nếu vượt Max HP mới." : k === "diamond_shop" ? "Kim cương bị trừ ngay khi mua, kể cả run sau đó tử trận." : "Giá chốt theo payout hiện tại lúc gặp; bao gồm Paradox và các khoản đã chi."}`;
+      return `${eventIcon(e.kind)} **${e.name}** · mua tối đa **một món**. Giá và offer đã khóa.\n${e.offers.map((offer, i) => `**${i + 1}. ${offer.item.name} [${rarityLabel(offer.item.rarity)}] · ${shopPrice(k, offer)}**\n${itemText(offer.item, 1, s)}`).join("\n")}\n${k === "blood_shop" ? "Giảm Max HP trong suốt run; phải còn ít nhất 1 Max HP sau trả giá. HP hiện tại chỉ hạ xuống nếu vượt Max HP mới." : k === "diamond_shop" ? "Kim cương bị trừ ngay khi mua, kể cả run sau đó tử trận." : "Giá chốt theo payout hiện tại lúc gặp; bao gồm Paradox và các khoản đã chi."}`;
     if (k === "merchant")
       return `${eventIcon(k)} **${e.name}**\nMua tối đa **một món** bằng xu payout:\n${e.offers.map((o) => `- **${merchantOffer(o).name}** · **${money(o.price)} ${icon("coin", "🪙")}**`).join("\n")}\nXem **Chi tiết** để đọc công dụng và điều kiện mua.`;
     const target = s.items.find((x) => x.definition.id === e.targetId);
+    if (k === "horadric" && e.forge) {
+      if (e.forge.stage === "boon")
+        return (
+          "🔨 Đã nghiền 1 level. Chọn đúng một boon đã khóa: " +
+          e.forge.boons
+            .map((b) => "+" + b.amount + " " + b.key.toUpperCase())
+            .join(" / ") +
+          ". Không giữ lại chỉ số của level đã nghiền."
+        );
+      const cursedLevels = target.level - (target.cleansedLevels || 0);
+      const curseRemoval =
+        cursedLevels > 0 && itemCurses.defenseReduction(target)
+          ? cursedLevels > 1
+            ? `\nCòn cấp nguyền: ${E.defense} **DEF −${itemCurses.defenseLoss(target) ?? 0}** đã lưu giữ nguyên.`
+            : `\nGỡ cấp nguyền cuối: hoàn trả ${E.defense} **DEF +${itemCurses.defenseLoss(target) ?? 0}** đã trừ.`
+          : "";
+      return (
+        "🔨 Horadric Forge · " +
+        target.name +
+        " Lv." +
+        target.level +
+        " → " +
+        (target.level - 1) +
+        ".\nTiêu hao 1 level và gỡ buff/nguyền tương ứng theo đường cong level; nếu hết level thì mất cả nội tại và affinity. Sau đó chọn 1 boon cố định. Không hấp thụ chỉ số. Có thể bỏ qua trước khi nghiền." +
+        curseRemoval
+      );
+    }
     if (k === "horadric" && target) {
       const retained = Object.fromEntries(
         Object.entries(target.definition.effects).filter(
@@ -178,7 +228,12 @@ module.exports = function createModule(dependencies) {
       return `${eventIcon(k)} **HORADRIC FORGE · LÒ CHUYỂN HÓA**\nTiêu hao **1 level trang bị** để giữ hiệu ứng có lợi trong run và chọn thêm một phần thưởng. Không tốn xu.\n\n**${E.backpack} Trang bị dùng để chuyển hóa**\n${E.backpack} **${target.name} [${rarityLabel(target.rarity)}] · Lv.${target.level}**\n- Sau khi dùng: ${target.level === 1 ? "món này biến mất khỏi trang bị" : `level **${target.level}→${target.level - 1}**`}.\n- **Giữ nguyên hiệu ứng của level đã tiêu hao:** ${effectText(retained)}. Đây là hiệu ứng được giữ lại, không cộng thêm lần nữa.\n${curseRemoval}- Không nhận lại ${E.potion} bình máu, ${E.ticket} Vé thoát hoặc ${E.hp} HP hồi khi nhặt đồ.\n\n**Chọn một phần thưởng thêm**\n- ${E[main]} **${main.toUpperCase()} +6**.\n- ${E[guard]} **${guard.toUpperCase()} +7**.\n- ${E.vit} **VIT +4**.${["legendary", "cursed"].includes(target.rarity) ? `\n- ${E.ticket} **Nhận 1 vé thoát** (giữ tối đa 1).` : ""}\n\n**Bỏ qua:** giữ nguyên trang bị, không nhận phần thưởng.`;
     }
     const descriptions = {
-      healer: `**Hồi phục:** hồi ${E.hp} HP bằng 30% Max HP, ít nhất 20; hồi 30% Max ${E.mana} MP (làm tròn lên); +1 ${E.potion} bình máu (theo giới hạn bình của bạn). Miễn phí.`,
+      healer: e.healerReturn
+        ? `**Healer trở lại:** hồi đầy ${E.hp} HP/${E.mana} MP; Vulnerable chuyển thành Vital Benediction: ${E.luck} LUCK +40, ${E.str} STR/${E.dex} DEX/${E.vit} VIT/${E.ene} ENE mỗi chỉ số +10 đến hết run. Chỉ một lần/run.`
+        : (require("../events/explorationMarks").enabled(s)
+            ? `**Hiến máu:** giao 70% ${E.hp} HP hiện tại (làm tròn lên, giữ ≥1), không nhận trị liệu/bình. Nhận Vulnerable: checkpoint không hồi HP cho đến hết 10 tầng kế tiếp; vẫn nhận bình và chọn thuộc tính. Sau đó Healer trở lại ở tình huống hợp lệ kế tiếp, hồi đầy HP/MP và trao ${E.luck} LUCK +40, ${E.str} STR/${E.dex} DEX/${E.vit} VIT/${E.ene} ENE mỗi chỉ số +10 đến hết run. Xem Tower Remembers trong Rift.\n`
+            : "") +
+          `**Trị liệu:** hồi ${E.hp} HP bằng 30% Max HP, ít nhất 20; hồi 30% Max ${E.mana} MP (làm tròn lên); +1 ${E.potion} bình máu (theo giới hạn bình của bạn). Miễn phí.`,
       sacrifice: `**Hiến HP:** mất tối đa 20% Max ${E.hp} HP (giữ ≥1) → +6 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\n**Hiến payout:** trả 10% payout hiện tại → +6 ${E.vit} VIT. Hiến HP không cộng bonus Blood Paradox.`,
       contract: `Trong 3 tầng, chọn một điều kiện:\n- **Không dùng ${E.potion} bình:** nhận đồ [SSR].\n- **Không dùng skill:** bonus +50% cược.\n- **Không phòng thủ:** +10 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\nVi phạm chỉ hủy thưởng.`,
       class_shrine: `Hiệu lực ba tầng tiếp theo: ${SHRINES[s.classKey]}`,
@@ -186,7 +241,7 @@ module.exports = function createModule(dependencies) {
     return `${eventIcon(e.kind)} **${e.name}**\n${descriptions[k] || "Chọn một hành động."}`;
   }
 
-  function encounterSummary(s) {
+  function encounterSummary(s, compact = false) {
     if (s.phase === "upgrade")
       return `${E.checkpoint} **CHECKPOINT**\nChọn +5 STR, DEX, VIT hoặc ENE. Xem **Chi tiết** để đọc dự báo chỉ số.`;
     if (s.phase === "boss_chest")
@@ -214,14 +269,20 @@ module.exports = function createModule(dependencies) {
           ancient_mimic: "Ancient Mimic",
         }[world.mimicKind(e) ? "elite" : e.rank] || e.rank;
       const preview = core.incomingPreview(s);
+      if (compact) {
+        const next = preview.skip
+          ? "🎯 **Đòn kế tiếp:** Không phản công lượt này."
+          : `🎯 **Đòn kế tiếp:** ${preview.trueDamage ? "DMG chuẩn" : preview.magic ? E.magic : E.attack} **${money(preview.low)}–${money(preview.high)} DMG**${preview.magic ? "" : ` · ${E.accuracy} **${percent(preview.chance)}** · ${E.crit} **${percent(preview.critChance)}** (×1,8)`}`;
+        return `${monsterIcon(e)} **${e.name}** · ${e.boss ? "Tầng " + s.floor + (["anomaly", "kabraxis"].includes(e.boss.id) ? " · Phase " + e.boss.phase : "") : rank}\n${(e.boss && bossDisplay.bars(s)) || healthBar(e.hp, e.maxHp)}${e.boss ? "\n" + bossDisplay.status(s) : ""}${require("../rift").battle(s)}${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? "\n🛡️ Quái miễn sát thương lượt này" : ""}\n${next}`;
+      }
       if (e.boss)
         return `${monsterIcon(e)} **${e.name}** · Tầng ${s.floor}${["anomaly", "kabraxis"].includes(e.boss.id) ? " · Phase " + e.boss.phase : ""}
 ${bossDisplay.bars(s) || healthBar(e.hp, e.maxHp)}
-${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%
-${bossDisplay.status(s)}
+${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG${e.boss?.version === 2 ? " " + { physical: "Vật lý", magic: "Phép", mixed: "Hỗn hợp" }[e.damageType] : ""} · ${E.defense} DEF ${money(require("../rift").enemyDefense(s, e.defense))} · ${E.res} RES ${require("../rift").enemyResistance(s, e.resistance)}%
+${bossDisplay.status(s)}${require("../rift").battle(s)}
 🎯 **Đòn kế tiếp:** ${preview.trueDamage ? "DMG chuẩn" : e.nextDamageType === "magic" ? E.magic + " Phép" : E.attack + " Vật lý"}
 📉 **Dự báo nhận:** **${preview.low}–${preview.high} DMG** · ${percent(preview.chance)} trúng bạn *(chưa CRIT)*`;
-      return `${monsterIcon(e)} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(e.defense)} · ${E.res} RES ${e.resistance}%\n${E.accuracy} Tỷ lệ vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **${gilded.isBoss(e) ? "Dự báo đòn thường" : "Dự báo nhận"}:** **${preview.low}–${preview.high} DMG** · ${E.evasion} **${percent(preview.chance)}** trúng bạn *(chưa Crit/DEF${gilded.isBoss(e) ? "/phản phệ" : ""})*`;
+      return `${monsterIcon(e)} **${e.name}** · ${rank}\n${healthBar(e.hp, e.maxHp)}\n${E.attack} ${money(e.damageMin)}–${money(e.damageMax)} DMG · ${E.defense} DEF ${money(require("../rift").enemyDefense(s, e.defense))} · ${E.res} RES ${require("../rift").enemyResistance(s, e.resistance)}%${require("../rift").battle(s)}\n${E.accuracy} Tỷ lệ vật lý trúng: **${percent(world.hitChance(s.accuracy, e.evasion))}**${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? " · 🛡️ Quái miễn sát thương lượt này" : ""}\n🎯 **Đòn kế tiếp:** ${e.nextDamageType === "magic" ? `${E.magic} Phép` : `${E.attack} Vật lý`}\n📉 **${gilded.isBoss(e) ? "Dự báo đòn thường" : "Dự báo nhận"}:** **${preview.low}–${preview.high} DMG** · ${E.evasion} **${percent(preview.chance)}** trúng bạn *(chưa Crit/DEF${gilded.isBoss(e) ? "/phản phệ" : ""})*`;
     }
 
     if (e.kind === "royal_invitation")
@@ -253,9 +314,15 @@ ${bossDisplay.status(s)}
             ? covenant.canEnter(s)
               ? "Đủ bốn mảnh: cửa tầng hầm đã mở. Chọn vào portal, bỏ qua hoặc thử thách tầng hầm."
               : "Chọn vào portal hoặc bỏ qua để vượt tầng."
-            : "Đi tiếp để xử lý tình huống.",
+            : require("../events/explorationMarks").enabled(s)
+              ? e.kind === "tax"
+                ? "Chọn nộp thuế hoặc chống trả."
+                : "Chọn chấp nhận hoặc đánh đuổi."
+              : "Đi tiếp để xử lý tình huống.",
         echo: "Chọn cách tương tác với mộ.",
-        surprise: "Chọn một hành động bằng nút bên dưới.",
+        surprise: e.healerReturn
+          ? "Healer đã trở lại. Nhận hồi phục và phúc ấn."
+          : "Chọn một hành động bên dưới.",
       };
       const target = s.items.find((item) => item.definition.id === e.targetId);
       const context =
@@ -396,7 +463,7 @@ ${bossDisplay.status(s)}
         chestPityText(s, e, true),
       );
     if (e.type === "surprise" && e.kind.endsWith("_shop"))
-      return `${eventIcon(e.kind)} **Công dụng các món đang bán**\n${e.offers.map((offer, i) => `${i + 1}. **${E.backpack} ${offer.item.name} [${rarityLabel(offer.item.rarity)}]**\n${itemText(offer.item)}`).join("\n\n")}\n\nMua tối đa **một món** trong lần gặp. ${e.kind === "blood_shop" ? "Trả bằng cách giảm Max HP trong suốt run, phải còn ít nhất 1 Max HP trước khi cộng vật phẩm. HP hiện tại chỉ hạ xuống nếu vượt Max HP mới." : e.kind === "diamond_shop" ? "Kim cương trừ ngay khi mua, không hoàn lại khi run kết thúc." : "Trả từ payout hiện tại; giá chốt lúc gặp, bao gồm Paradox và các khoản đã chi."}`;
+      return `${eventIcon(e.kind)} **Công dụng các món đang bán**\n${e.offers.map((offer, i) => `${i + 1}. **${E.backpack} ${offer.item.name} [${rarityLabel(offer.item.rarity)}]**\n${itemText(offer.item, 1, s)}`).join("\n\n")}\n\nMua tối đa **một món** trong lần gặp. ${e.kind === "blood_shop" ? "Trả bằng cách giảm Max HP trong suốt run, phải còn ít nhất 1 Max HP trước khi cộng vật phẩm. HP hiện tại chỉ hạ xuống nếu vượt Max HP mới." : e.kind === "diamond_shop" ? "Kim cương trừ ngay khi mua, không hoàn lại khi run kết thúc." : "Trả từ payout hiện tại; giá chốt lúc gặp, bao gồm Paradox và các khoản đã chi."}`;
     if (e.type === "surprise" && e.kind === "merchant")
       return `${eventIcon("merchant")} **Công dụng hàng hóa**\n${e.offers.map((o) => `**${merchantOffer(o).name}**\n${merchantOffer(o).detail}`).join("\n\n")}\nChỉ mua một món; giá chốt theo payout hiện tại lúc gặp, gồm Paradox và các khoản đã chi. Cần đủ payout hiện tại để mua.`;
     return encounterText(s);

@@ -3,6 +3,7 @@ const purifier = require("../events/purifier");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
+    world,
     covenant,
     bosses,
     gilded,
@@ -28,6 +29,8 @@ module.exports = function createModule(dependencies) {
   const penalty = (...args) => dependencies.penalty(...args);
   const healEvent = (...args) => dependencies.healEvent(...args);
   const hurt = (...args) => dependencies.hurt(...args);
+  const mechanicHurt = (s, amount, hostile = true, nonlethal = false) =>
+    hurt(s, amount, hostile, nonlethal, !require("../innate").enabled(s));
   const receiveItem = (...args) => dependencies.receiveItem(...args);
   const receiveSnapshot = (...args) => dependencies.receiveSnapshot(...args);
   const remember = (...args) => dependencies.remember(...args);
@@ -56,13 +59,21 @@ module.exports = function createModule(dependencies) {
   const resolveMemory = (...args) => dependencies.resolveMemory(...args);
 
   function act(state, session, action, rng) {
+    const previousEncounter = state.encounter;
     if (action === "retreat") {
       if (
         state.encounter.type === "rngesus" ||
         state.phase === "boss_chest" ||
+        state.encounter.forge?.stage === "boon" ||
         bosses.retreatLocked(state)
       )
         throw new Error("CANNOT_RETREAT");
+      require("../innate").finish(
+        state,
+        state.encounter,
+        dependencies.heal,
+        bosses.effectiveMaxMana(state),
+      );
       return state.phase === "summit"
         ? "summit"
         : state.cleared
@@ -96,6 +107,18 @@ module.exports = function createModule(dependencies) {
         );
         return null;
       }
+    }
+    if (bosses.isFree(state, action)) {
+      const decision = bosses.actComponent(state, action, {
+        hurt,
+        heal: dependencies.heal,
+        addSource,
+      });
+      if (action.includes("__core_"))
+        state.lastLog += (state.lastLog ? "\n" : "") + decision.log;
+      state.bossSelectorRevisions = (state.bossSelectorRevisions || 0) + 1;
+      bosses.refresh(state);
+      return null;
     }
     const before = statSnapshot(state);
     state.passiveCounterUsed = 0;
@@ -132,12 +155,14 @@ module.exports = function createModule(dependencies) {
       state.prophecy = { kind, floor: 333, awakened: false };
       addSource(state, effects, "prophecy");
       state.lastLog =
-        sealIcon(kind) + " Đã ghi nhớ ấn bạn chọn: quyết định cơ chế Kabraxis ở tầng 666. Xem Rift để biết phần thưởng thức tỉnh.";
+        sealIcon(kind) +
+        " Đã ghi nhớ ấn bạn chọn: quyết định cơ chế Kabraxis ở tầng 666. Xem Rift để biết phần thưởng thức tỉnh.";
       completeFloor(state, session, rng, 0);
     } else if (state.encounter.type === "boss_gate") {
       state.encounter = state.encounter.enemy;
       state.lastLog =
-        monsterIcon(state.encounter) + " Kabraxis đã phong tỏa đường rút. Chỉ có thể thắng hoặc tử trận.";
+        monsterIcon(state.encounter) +
+        " Kabraxis đã phong tỏa đường rút. Chỉ có thể thắng hoặc tử trận.";
       prepareParadoxCombat(state, rng);
     } else if (
       ["covenant_blessing", "royal_blessing"].includes(state.encounter.type) &&
@@ -145,8 +170,10 @@ module.exports = function createModule(dependencies) {
     ) {
       state.lastLog =
         state.encounter.type === "royal_blessing"
-          ? eventIcon("royal_invitation") + " Tiếp tục khám phá sau phước lành Hoàng Gia."
-          : eventIcon("covenant") + " Tiếp tục khám phá sau phước lành Chinh Phạt.";
+          ? eventIcon("royal_invitation") +
+            " Tiếp tục khám phá sau phước lành Hoàng Gia."
+          : eventIcon("covenant") +
+            " Tiếp tục khám phá sau phước lành Chinh Phạt.";
       finishEventResult(state);
       nextMilestone(state, session, rng);
     } else if (
@@ -154,12 +181,16 @@ module.exports = function createModule(dependencies) {
       action === "god_continue"
     ) {
       state.lastLog =
-        eventIcon("god_rngesus") + " Tiếp tục tầng " +
+        eventIcon("god_rngesus") +
+        " Tiếp tục tầng " +
         state.floor +
         " sau phước lành của God of RNGesus.";
       state.encounter = generateEncounter(state, session, rng);
     } else if (state.phase === "boss_chest") {
-      if (action === "boss_open") {
+      if (state.encounter.offers && /^boss_pick_[0-2]$/.test(action)) {
+        receiveItem(state, state.encounter.offers[Number(action.slice(-1))]);
+        state.lastLog = "🎁 Đã chọn một vật phẩm từ rương boss.";
+      } else if (action === "boss_open") {
         receiveItem(state, state.encounter.item);
         state.lastLog = `${eventIcon("boss_chest")} Đã mở rương boss tầng ${state.encounter.bossFloor}.`;
       } else {
@@ -202,7 +233,11 @@ module.exports = function createModule(dependencies) {
     } else if (state.phase === "severance") {
       const key = action.slice(6);
       const removed = state.modifiers[key] || 0;
-      if (action !== "sever_none") delete state.modifiers[key];
+      if (action !== "sever_none") {
+        if (require("../rift").enabled(state))
+          require("../rift").sever(state, key);
+        else delete state.modifiers[key];
+      }
       state.lastLog = `${eventIcon("severance")} Rift Severance: ${action === "sever_none" ? "không có modifier phù hợp để xóa" : `đã xóa ${RIFT_ICONS[key] || E.rift} ×${removed}, hiệu ứng của loại Rift này không còn áp dụng`}.`;
       nextMilestone(state, session, rng);
     } else {
@@ -216,13 +251,35 @@ module.exports = function createModule(dependencies) {
             "Mộ đã hết thời gian claim; trận đấu tiếp tục, không còn loot từ mộ.\n";
         } else if (e.echoId) echoes.renew(session, e.echoId);
         prepareItemCombat(state, rng);
+        delete e.awakeningShadowGranted;
+        require("../rift").beginAction(state, action);
+        const beforeEnemyHp = e.hp;
         const acted =
           action === "ritual_claim"
             ? { log: "", dealt: 0, critical: false }
-            : playerAttack(state, action, rng);
+            : action.startsWith("boss_") && state.encounter.boss?.version === 2
+              ? (() => {
+                  require("../innate").begin(state, action);
+                  bosses.beginAction(state, action);
+                  const v = bosses.actComponent(state, action, {
+                    hurt,
+                    heal: dependencies.heal,
+                    addSource,
+                  });
+                  const acted = { ...v, dealt: v.dealt || 0, critical: false };
+                  bosses.afterPlayer(state, action, acted);
+                  return acted;
+                })()
+              : playerAttack(state, action, rng);
+        require("../rift").thresholds(state, beforeEnemyHp, e.hp);
+        require("../rift").endAction(state, acted.dealt || 0);
+        const innateFrame = require("../innate").combat(state);
+        if (innateFrame && state.classKey === "sorceress")
+          innateFrame.counterSkillCost = dependencies.skillManaCost(state);
         if (action !== "ritual_claim") paradox.afterAction(state, action);
         state.lastLog += acted.log;
-        const ritual = gilded.afterAction(state, action, acted, hurt);
+        state.lastLog += bosses.beforeResolution(state, { hurt: mechanicHurt });
+        const ritual = gilded.afterAction(state, action, acted, mechanicHurt);
         state.lastLog += ritual.log;
         if (
           state.contract &&
@@ -241,12 +298,15 @@ module.exports = function createModule(dependencies) {
             state.activeParadox.combatActionCount === 3;
           if (
             bosses.on(e) &&
+            e.boss.version === 1 &&
             e.boss.id === "kabraxis" &&
             e.boss.seal === "war" &&
             action === "skill"
           )
             state.lastLog +=
-              "\n" + sealIcon("war") + " Blood Revenge: " +
+              "\n" +
+              sealIcon("war") +
+              " Blood Revenge: " +
               enemyTurn(
                 state,
                 rng,
@@ -262,7 +322,13 @@ module.exports = function createModule(dependencies) {
           if (e.hp <= 0 && alive(state)) defeatEnemy(state, session, rng, e);
         }
         if (state.encounter === e && e.hp > 0 && alive(state))
-          bosses.endAction(state, rng);
+          bosses.endAction(state, rng, {
+            hurt,
+            heal: dependencies.heal,
+            addSource,
+          });
+        if (state.encounter === e)
+          require("../rift").thresholds(state, beforeEnemyHp, e.hp);
       } else if (e.type === "surprise") {
         actSurprise(state, session, action, rng);
         if (action !== "event_skip")
@@ -340,6 +406,19 @@ module.exports = function createModule(dependencies) {
           state.lastLog =
             "Bỏ qua Wrong Portal: không nhận thưởng hoặc chịu hiệu ứng của portal.";
           completeFloor(state, session, rng, 0);
+        } else if (e.kind === "tax" && action === "tax_resist") {
+          require("../events/explorationMarks").ensure(state).outlaw = true;
+          state.lastLog =
+            eventIcon("tax") +
+            " Chống trả Tax Collector: nhận Royal Outlaw đến hết run. Không còn gặp Tax Collector; Boss gây thêm 20% DMG. Xem Rift.";
+          completeFloor(state, session, rng, 0);
+        } else if (e.kind === "potion_thief" && action === "thief_fight") {
+          state.encounter = world.makeEnemy(state, "elite", "The Thief", rng);
+          state.encounter.thiefTrial = true;
+          state.lastLog =
+            "The Thief · Tinh anh: hạ để nhận bonus 20% cược và Underworld Lead. Bạn hành động trước.";
+          finishEventResult(state);
+          prepareItemCombat(state, rng);
         } else if (e.kind !== "portal") {
           if (e.lucky) state.lastLog = `${E.luck} Lucky Break: tránh bẫy.`;
           else if (e.kind === "tax") {
@@ -349,6 +428,19 @@ module.exports = function createModule(dependencies) {
             state.lastLog = cost
               ? `${eventIcon("tax")} Tax Collector: đã thu một lần 15% payout hiện tại.`
               : `${eventIcon("tax")} Tax Collector: không có payout để thu thuế.`;
+          } else if (require("../events/explorationMarks").enabled(state)) {
+            if (e.good) {
+              penalty(state, 0.1);
+              state.lastLog = "The Thief: mất 10% payout hiện tại.";
+            } else {
+              const stolen = Math.ceil(state.potions / 2);
+              state.potions -= stolen;
+              state.lastLog =
+                "The Thief: mất " +
+                stolen +
+                " bình máu" +
+                (stolen ? " (một nửa, làm tròn lên)." : ": túi đã hết bình.");
+            }
           } else {
             const stolen = Math.min(1, state.potions);
             state.potions -= stolen;
@@ -424,6 +516,12 @@ module.exports = function createModule(dependencies) {
             return die(
               `Cầu nguyện RNGesus thất bại (nhánh ${Math.round((1 - (e.prayerChance ?? rngesusPrayerChance(state))) * 100)}%).`,
             );
+          e.prayerItem ||= dependencies.randomItem(
+            "cursed",
+            rng,
+            state,
+            "rngesus_prayer",
+          );
           receiveItem(state, e.prayerItem);
           state.lastLog = `${eventIcon("rngesus")} RNGesus: cầu nguyện thành công, đã nhận **${e.prayerItem.name} [UR]**${e.prayerItem.curse ? " kèm lời nguyền" : ""}.`;
           remember(state, "pray_rngesus", rng);
@@ -472,6 +570,20 @@ module.exports = function createModule(dependencies) {
       alive(state)
     )
       defeatEnemy(state, session, rng, state.encounter);
+    if (require("../rift").encounter(state) && state.encounter.boss)
+      require("../rift").nextCounter(state, rng, bosses.counter(state));
+    delete state.encounter?.awakeningGroundThisAction;
+    if (
+      previousEncounter !== state.encounter &&
+      previousEncounter.type === "combat"
+    )
+      require("../innate").finish(
+        state,
+        previousEncounter,
+        dependencies.heal,
+        state.maxMana,
+      );
+    require("../innate").endAction(state);
     recompute(state);
     state.mana = Math.min(state.mana, bosses.effectiveMaxMana(state));
     prepareParadoxCombat(state, rng);

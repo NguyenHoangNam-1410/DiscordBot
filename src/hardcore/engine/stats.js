@@ -1,6 +1,8 @@
 "use strict";
 const { RELEASE } = require("../shared/version");
+const equipmentRules = require("../equipment/rules");
 const balance = require("../shared/balance");
+const statsV3 = require("../shared/statsV3");
 const emoji = require("../../discordEmojiMap");
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const ATTRIBUTES = ["str", "dex", "vit", "ene"];
@@ -112,10 +114,11 @@ function sumEffects(state) {
       else totals[key] = (totals[key] || 0) + value * level;
     }
   };
-  for (const source of Object.values(state.sources || {})) add(source);
+  for (const [key, source] of Object.entries(state.sources || {}))
+    if (key !== "absorbed" || !equipmentRules.enabled(state)) add(source);
   let curseFactor = 1;
   for (const item of state.items || []) {
-    add(item.definition.effects, item.level);
+    add(item.definition.effects, equipmentRules.itemScale(state, item));
     const curses = Math.max(0, item.level - (item.cleansedLevels || 0));
     if (curses) {
       const effects = { ...item.definition.curse?.effects };
@@ -126,16 +129,17 @@ function sumEffects(state) {
         totals.defense =
           (totals.defense || 0) - (itemCurses.defenseLoss(item) || 0);
       }
-      add(effects, curses);
+      add(effects, equipmentRules.curseScale(state, item));
       curseFactor *=
-        (1 - (item.definition.curse?.effects.bonusPenalty || 0)) ** curses;
+        (1 - (item.definition.curse?.effects.bonusPenalty || 0)) **
+        equipmentRules.curseScale(state, item);
     }
   }
   return { totals, curseFactor };
 }
 const itemPassives = require("../itemPassives");
 const itemCurses = require("../itemCurses");
-function derive(state) {
+function deriveV2(state) {
   const c = CLASSES[state.classKey];
   if (!c) throw new Error("INVALID_CLASS");
   const { totals: t, curseFactor } = sumEffects(state);
@@ -207,6 +211,25 @@ function derive(state) {
   d.payoutFactor = (state.eventPayoutFactor ?? 1) * curseFactor;
   return d;
 }
+function derive(state) {
+  if (state.gameplayVersion !== 3) return deriveV2(state);
+  const p = statsV3.profile(state);
+  // Reuse unchanged supply/curse/payout rules, then replace only character stats.
+  const legacy = {
+    ...state,
+    balanceVersion: balance.VERSION,
+    balanceProfile: { power: p.powers.basePower },
+  };
+  const d = deriveV2(legacy);
+  const { totals } = sumEffects(state);
+  statsV3.apply(state, d, totals, itemPassives.aggregate(state), clamp);
+  d.potionRate = clamp(
+    0.35 + Math.min(0.15, d.vit * 0.0005) + d.potionPower,
+    0.1,
+    0.75,
+  );
+  return d;
+}
 function recompute(state) {
   const pending = [];
   for (const item of state.items || []) {
@@ -226,6 +249,11 @@ function recompute(state) {
     }
   }
   Object.assign(state, derive(state));
+  if (require("../awakening").active(state))
+    state.classAwakening.bark = Math.min(
+      state.classAwakening.bark || 0,
+      Math.floor(state.maxHp * require("../awakening").tuning(state).barkCap),
+    );
   if (typeof state.hp === "number") state.hp = clamp(state.hp, 0, state.maxHp);
   if (typeof state.mana === "number")
     state.mana = clamp(state.mana, 0, state.maxMana);
@@ -240,6 +268,11 @@ function addSource(state, effects, source = "event") {
     state.sources[source][key] = (state.sources[source][key] || 0) + value;
   return recompute(state);
 }
+function luckyBreakChance(state) {
+  const luck = Math.max(0, Number(state.luck) || 0);
+  const modern = state.gameplayVersion === 3 && !state.mode?.startsWith("tower");
+  return modern ? Math.min(0.5, luck * 0.0025) : Math.min(0.3, luck * 0.015);
+}
 function mainStat(state) {
   return ["sorceress", "necromancer"].includes(state.classKey)
     ? "ene"
@@ -247,10 +280,16 @@ function mainStat(state) {
       ? "dex"
       : "str";
 }
-function createState(classKey, stake) {
+function createState(
+  classKey,
+  stake,
+  { gameplayVersion = RELEASE.gameplay } = {},
+) {
+  if (![2, 3].includes(gameplayVersion))
+    throw new Error("UNSUPPORTED_HARDCORE_VERSION");
   const state = {
-    gameplayVersion: 2,
-    releaseVersion: RELEASE.version,
+    gameplayVersion,
+    releaseVersion: gameplayVersion === 3 ? RELEASE.version : "2.0.1",
     balanceVersion: balance.VERSION,
     balanceProfile: balance.forClass(classKey),
     catalogVersion: 2,
@@ -288,6 +327,22 @@ function createState(classKey, stake) {
     runDiamonds: 0,
     lastLog: `Run Sinh tồn ${RELEASE.version} bắt đầu.`,
   };
+  if (gameplayVersion === 3) {
+    require("../rift").activate(state);
+    state.classAwakeningVersion = 1;
+    state.classInnateVersion = 1;
+    state.statSystemVersion = statsV3.VERSION;
+    state.classMasteryVersion = statsV3.MASTERY_VERSION;
+    state.statProfile = statsV3.snapshot(
+      classKey,
+      CLASSES[classKey],
+      state.balanceProfile.power,
+    );
+    state.balanceVersion = statsV3.BALANCE_VERSION;
+    state.balanceProfile = { ...state.statProfile.powers };
+  }
+  state.lastLog = "Run Sinh tồn " + state.releaseVersion + " bắt đầu.";
+  if (gameplayVersion === 3) equipmentRules.activate(state);
   recompute(state);
   state.hp = state.maxHp;
   state.mana = state.maxMana;
@@ -303,9 +358,11 @@ module.exports = {
   ATTRIBUTES,
   clamp,
   derive,
+  deriveV2,
   recompute,
   addSource,
   mainStat,
+  luckyBreakChance,
   createState,
   preview,
   sumEffects,

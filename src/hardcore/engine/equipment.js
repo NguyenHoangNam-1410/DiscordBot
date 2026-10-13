@@ -1,4 +1,5 @@
 "use strict";
+const equipmentRules = require("../equipment/rules");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -18,16 +19,22 @@ module.exports = function createModule(dependencies) {
   function healingAmount(state, amount) {
     return Math.max(
       0,
-      Math.floor(amount * (1 - (state.healingReduction || 0))),
+      Math.floor(
+        amount *
+          (1 - (state.healingReduction || 0)) *
+          bosses.healingFactor(state),
+      ),
     );
   }
 
   function heal(state, amount, { checkpoint = false } = {}) {
+    if (checkpoint && require("../events/explorationMarks").vulnerable(state))
+      return 0;
     if (!checkpoint) markDirect(state, ["hp"]);
     const actual = Math.max(
       0,
       Math.min(
-        state.maxHp - state.hp,
+        (checkpoint ? state.maxHp : bosses.healingLimit(state)) - state.hp,
         checkpoint ? Math.floor(amount) : healingAmount(state, amount),
       ),
     );
@@ -48,7 +55,7 @@ module.exports = function createModule(dependencies) {
     const hp = heal(state, amount);
     let mp = 0;
     if (
-      state.gameplayVersion === 2 &&
+      [2, 3].includes(state.gameplayVersion) &&
       !state.mode?.startsWith("tower") &&
       !state.towerChallengeId
     ) {
@@ -85,13 +92,18 @@ module.exports = function createModule(dependencies) {
     };
   }
 
-  function hurt(state, amount, hostile = true, nonlethal = false) {
+  function hurt(state, amount, hostile = true, nonlethal = false, shields = true) {
     markDirect(state, ["hp"]);
+    const awakening = require("../awakening");
+    const before = state.hp;
+    if (hostile && shields && state.encounter?.type === "combat")
+      amount = awakening.absorb(state, Math.max(0, Math.floor(amount)));
     const actual = Math.max(
       0,
       Math.min(state.hp - (nonlethal ? 1 : 0), Math.floor(amount)),
     );
     state.hp -= actual;
+    if (state.encounter?.type === "combat") awakening.hpChanged(state, before);
     if (hostile && state.paradox?.kind === "blood")
       state.paradox.bloodFactor = clamp(
         state.paradox.bloodFactor + actual / state.maxHp,
@@ -101,10 +113,17 @@ module.exports = function createModule(dependencies) {
     return actual;
   }
 
-  function receiveItem(state, definition, levels = 1, cleansedLevels = 0) {
+  function receiveItem(
+    state,
+    definition,
+    levels = 1,
+    cleansedLevels = 0,
+    { receipt = true } = {},
+  ) {
     if (
       !definition ||
-      definition.catalogVersion !== 2 ||
+      ![2, 3].includes(definition.catalogVersion) ||
+      (definition.catalogVersion === 3 && !equipmentRules.enabled(state)) ||
       !Number.isSafeInteger(levels) ||
       levels < 1
     )
@@ -145,6 +164,8 @@ module.exports = function createModule(dependencies) {
       (x) => x.definition.id === definition.id,
     );
     let item = state.items[index];
+    if (!Number.isSafeInteger((item?.level || 0) + levels))
+      throw new Error("INVALID_ITEM_LEVEL");
     if (!item) {
       item = {
         name: definition.name,
@@ -160,12 +181,44 @@ module.exports = function createModule(dependencies) {
     state.items.unshift(item);
     // Existing runs keep the saved design when receiving another level of the same ID.
     definition = item.definition;
+
+    const previousLevel = item.level;
     item.level += levels;
     item.cleansedLevels += Math.min(levels, Math.max(0, cleansedLevels));
     item.rarity = definition.rarity;
     recompute(state);
     definition = item.definition;
-    for (let i = 0; i < levels; i++) {
+    const copies = !receipt
+      ? 0
+      : !equipmentRules.enabled(state)
+        ? levels
+        : definition.receipt?.onDuplicate
+          ? levels
+          : previousLevel === 0
+            ? 1
+            : 0;
+    if (equipmentRules.enabled(state)) {
+      const e = definition.effects;
+      if (e.heal && healingAmount(state, e.heal) > 0)
+        for (
+          let i = 0;
+          i < copies && state.hp < bosses.healingLimit(state);
+          i++
+        )
+          heal(state, e.heal);
+      if (e.potions)
+        state.potions = Math.min(
+          state.maxPotions,
+          state.potions + e.potions * copies,
+        );
+      if (e.escapeTokens && copies) {
+        const total = state.escapeTokens + e.escapeTokens * copies;
+        state.escapeTokens = Math.min(1, total);
+        state.discardedTicketsThisTurn =
+          (state.discardedTicketsThisTurn || 0) + Math.max(0, total - 1);
+      }
+    }
+    for (let i = 0; !equipmentRules.enabled(state) && i < copies; i++) {
       const e = definition.effects;
       if (e.heal) heal(state, e.heal);
       if (e.potions)
@@ -184,6 +237,18 @@ module.exports = function createModule(dependencies) {
         rarity: item.rarity,
         level: item.level,
         levels,
+        effectScale: equipmentRules.enabled(state)
+          ? equipmentRules.scale(item.level) -
+            equipmentRules.scale(previousLevel)
+          : levels,
+        curseScale: equipmentRules.enabled(state)
+          ? equipmentRules.curseScale(state, item) -
+            (equipmentRules.scale(previousLevel) -
+              equipmentRules.scale(
+                (item.cleansedLevels || 0) -
+                  Math.min(levels, Math.max(0, cleansedLevels)),
+              ))
+          : Math.max(0, levels - cleansedLevels),
         definition: structuredClone(definition),
         curseLevels: Math.max(0, levels - cleansedLevels),
         curseEffects: structuredClone(item.curseEffects || {}),
@@ -206,6 +271,7 @@ module.exports = function createModule(dependencies) {
       snapshot.definition,
       snapshot.level,
       snapshot.cleansedLevels || 0,
+      { receipt: !equipmentRules.enabled(state) },
     );
   }
 
@@ -219,7 +285,13 @@ module.exports = function createModule(dependencies) {
   }
 
   function grind(state, item) {
-    if (!item) throw new Error("NO_FORGE_ITEM");
+    if (
+      !item ||
+      !state.items.includes(item) ||
+      !Number.isSafeInteger(item.level) ||
+      item.level < 1
+    )
+      throw new Error("NO_FORGE_ITEM");
     if (item.level > (item.cleansedLevels || 0))
       markDirect(state, effectStatKeys(item.definition.curse?.effects));
     const effects = { ...item.definition.effects };
@@ -235,7 +307,8 @@ module.exports = function createModule(dependencies) {
     item.level--;
     item.cleansedLevels = Math.min(item.level, item.cleansedLevels || 0);
     if (item.level === 0) state.items = state.items.filter((x) => x !== item);
-    addSource(state, effects, "absorbed");
+    if (equipmentRules.enabled(state)) recompute(state);
+    else addSource(state, effects, "absorbed");
   }
 
   function remember(state, action, rng, data = {}) {

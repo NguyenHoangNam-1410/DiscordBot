@@ -12,7 +12,7 @@ function record(session, state, relicId, floor, now = Date.now()) {
     !session?.id ||
     !session.guild_id ||
     !session.user_id ||
-    state.gameplayVersion !== 2 ||
+    ![2, 3].includes(state.gameplayVersion) ||
     state.mode?.startsWith("tower") ||
     state.towerChallengeId ||
     !Number.isSafeInteger(floor) ||

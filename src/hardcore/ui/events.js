@@ -19,7 +19,7 @@ module.exports = function createModule(dependencies) {
   function rngesusLabel(state) {
     const chance = state.encounter.encounterChance ?? state.lastChaosChance;
     return Number.isFinite(chance) && chance > 0 && chance <= 1
-      ? `RNGesus (${(chance * 100).toLocaleString("vi-VN", { maximumFractionDigits: 2 })}%)`
+      ? `RNGesus (${(chance * 100).toLocaleString("vi-VN", { maximumFractionDigits: 1 })}%)`
       : "RNGesus";
   }
 
@@ -192,12 +192,43 @@ module.exports = function createModule(dependencies) {
             "**Bỏ qua:** vượt tầng, không nhận thưởng hoặc chịu hiệu ứng của portal, không gặp Elite đánh phủ đầu. Tiên tri (nếu có) đánh dấu nút **Vào portal**.",
             ...(covenant.canEnter(s)
               ? [
-                  eventIcon("covenant") + " **Cửa thứ ba · Tầng hầm:** đủ bốn mảnh, bảo đảm mở cửa, không roll thêm. Đánh Covenant Guardian (Tinh anh, HP ×1,25, DMG ×1,10 so với cùng tầng/Rift), bạn hành động trước. Thắng mới tiêu thụ mảnh và nhận **Conqueror’s Covenant [LR]** cùng phước lành hồi đầy HP/MP, giải mọi nguyền UR, xóa ấn Rift; giữ Paradox/Contract. Chỉ một nội tại LR hoạt động/run. Vào portal thường hoặc bỏ qua vẫn giữ mảnh để dùng ở portal sau.",
+                  eventIcon("covenant") +
+                    " **Cửa thứ ba · Tầng hầm:** đủ bốn mảnh, bảo đảm mở cửa, không roll thêm. Đánh Covenant Guardian (Tinh anh, HP ×1,25, DMG ×1,10 so với cùng tầng/Rift), bạn hành động trước. Thắng mới tiêu thụ mảnh và nhận **Conqueror’s Covenant [LR]** cùng phước lành hồi đầy HP/MP, giải mọi nguyền UR, xóa ấn Rift; giữ Paradox/Contract. Chỉ một nội tại LR hoạt động/run. Vào portal thường hoặc bỏ qua vẫn giữ mảnh để dùng ở portal sau.",
                 ]
               : []),
           ],
         );
-      const lucky = Math.min(0.3, s.luck * 0.015);
+      const lucky = stats.luckyBreakChance(s);
+      if (require("../events/explorationMarks").enabled(s))
+        return show(
+          e.name,
+          `${E.luck} LUCK: Lucky Break ${percent(lucky)} (LUCK ×0,25%, tối đa 50% ở 200 LUCK).`,
+          e.kind === "tax"
+            ? [
+                option("Nộp thuế", [
+                  [percent(lucky), "Lucky Break: không mất xu."],
+                  [
+                    percent(1 - lucky),
+                    `Trừ 15% payout hiện tại (${money(core.taxCost(s))} ${E.coin}), làm tròn lên; không đổi hệ số payout.`,
+                  ],
+                ]),
+                "**Chống trả:** không nộp thuế; nhận Royal Outlaw đến hết run: không gặp lại Tax Collector, Boss/Final Boss gây thêm 20% DMG lên bạn. Xem Tower Remembers trong Rift.",
+              ]
+            : [
+                option("Chấp nhận", [
+                  [percent(lucky), "Lucky Break: không mất gì."],
+                  [
+                    percent((1 - lucky) / 2),
+                    "Mất 10% payout hiện tại, không đổi hệ số payout.",
+                  ],
+                  [
+                    percent((1 - lucky) / 2),
+                    `Mất một nửa ${E.potion} bình đang có, làm tròn lên; hết bình thì không mất.`,
+                  ],
+                ]),
+                "**Đánh đuổi:** chiến đấu The Thief (Tinh anh) ngay tại tầng này, bạn đi trước. Hạ nhận +20% cược và Underworld Lead: miễn phí Diamond Merchant/Rift Merchant, giữ giới hạn mua hiện tại; không gặp lại The Thief, Elite gây thêm 30% DMG lên bạn đến hết run. Xem Rift.",
+              ],
+        );
       return show(e.name, `${E.luck} Luck ${s.luck} quyết định Lucky Break.`, [
         option("Chấp nhận số phận", [
           [percent(lucky), "Lucky Break: tránh bẫy."],
@@ -263,7 +294,7 @@ module.exports = function createModule(dependencies) {
           "Xem **Rift** để đọc Ân nghĩa và Truy nã.",
         ]);
       case "fountain":
-        return show(e.name, "Uống để hồi phục hoặc gặp Blood Mimic.", [
+        return show(e.name, "Uống để hồi phục, tăng VIT hoặc gặp Blood Mimic.", [
           option("Uống", [
             [
               percent(e.healThreshold ?? 0.6),
@@ -271,7 +302,7 @@ module.exports = function createModule(dependencies) {
             ],
             [
               percent((e.goodThreshold ?? 0.85) - (e.healThreshold ?? 0.6)),
-              `+15 ${E.hp} Max HP; hồi 15 ${E.hp} HP và ${E.mana} MP theo tỷ lệ 15/Max HP mới (làm tròn lên).`,
+              `+10 ${E.vit} VIT trong run.`,
             ],
             [
               percent(1 - (e.goodThreshold ?? 0.85)),

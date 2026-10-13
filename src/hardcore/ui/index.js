@@ -17,6 +17,7 @@ Object.assign(dependencies, require("./rules")(dependencies));
 const {
   embed,
   rows,
+  eventMenuActions,
   privatePayload,
   setupPreview,
   ratesFields,
@@ -30,6 +31,7 @@ const {
 module.exports = {
   embed,
   rows,
+  eventMenuActions,
   privatePayload,
   setupPreview,
   ratesFields,

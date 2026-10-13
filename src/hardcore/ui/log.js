@@ -33,9 +33,16 @@ module.exports = function createModule(dependencies) {
           "] · Lv." +
           purified.level +
           "**\n" +
-          itemEffectChanges(purified.curseEffects, purified.curseLevels, 0, {
-            defenseLoss: purified.defenseLoss ?? null,
-          }),
+          itemEffectChanges(
+            purified.curseEffects,
+            require("../equipment/rules").enabled(state)
+              ? purified.level
+              : purified.curseLevels,
+            0,
+            state,
+            purified.cleansedLevels || 0,
+            { defenseLoss: purified.defenseLoss ?? null },
+          ),
       );
       if (purified.maxPotionsBefore !== purified.maxPotionsAfter)
         details.push(
@@ -110,7 +117,7 @@ module.exports = function createModule(dependencies) {
       }
       if (!item.before || !item.after) {
         details.push(
-          `${receivedTitles[index]}: ${effectText(item.definition.effects, item.levels)}${item.definition.curse && item.curseLevels ? `\n☣️ Lời nguyền: ${effectText(item.definition.curse.effects, item.curseLevels)}` : ""}`,
+          `${receivedTitles[index]}: ${effectText(item.definition.effects, item.effectScale ?? item.levels)}${item.definition.curse && item.curseLevels ? `\n☣️ Lời nguyền: ${effectText(item.definition.curse.effects, item.curseScale ?? item.curseLevels)}` : ""}`,
         );
         return;
       }
@@ -131,7 +138,7 @@ module.exports = function createModule(dependencies) {
         ),
       );
       details.push(
-        `${receivedTitles[index]}${direct ? `: ${direct}` : ""}${Object.keys(extraEffects).length ? `\n${effectText(extraEffects, item.levels)}` : ""}${item.curseLevels && Object.keys(extraCurse).length ? `\n☣️ Lời nguyền: ${effectText(extraCurse, item.curseLevels)}` : ""}`,
+        `${receivedTitles[index]}${direct ? `: ${direct}` : ""}${Object.keys(extraEffects).length ? `\n${effectText(extraEffects, item.effectScale ?? item.levels)}` : ""}${item.curseLevels && Object.keys(extraCurse).length ? `\n☣️ Lời nguyền: ${effectText(extraCurse, item.curseScale ?? item.curseLevels)}` : ""}`,
       );
       if (!receipt || item.inEventResult === false) {
         const secondary = statTransitions(item.before, item.after, true, {
@@ -201,7 +208,15 @@ module.exports = function createModule(dependencies) {
         0,
         details.join("\n"),
       );
-    return lines.join("\n");
+    const text = lines.join("\n");
+    // Compact forging receipts so Discord does not split the stat list into a continuation field.
+    return receipt?.kind === "blacksmith" ||
+      received.some((item) => item.upgradedFromLevel != null)
+      ? text
+          .replace(/\*\*/g, "")
+          .replace(/ *→ */g, "→")
+          .replace(/\n\s*\n/g, "\n")
+      : text;
   }
 
   function coinPayoutDetails(state) {

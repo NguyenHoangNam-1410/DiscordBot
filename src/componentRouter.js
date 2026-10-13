@@ -240,11 +240,7 @@ const ROUTES = Object.freeze([
   {
     kind: "select",
     prefix: "hardcore:",
-    handle: (interaction, logger) =>
-      interaction.isStringSelectMenu() &&
-      interaction.customId.split(":")[3] === "purifier_select"
-        ? handleHardcoreButton(interaction, logger)
-        : false,
+    handle: handleHardcoreButton,
   },
 
   { kind: "button", prefix: "hardcore-setup:", handle: handleHardcoreSetup },

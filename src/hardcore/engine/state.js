@@ -98,14 +98,88 @@ module.exports = function createModule(dependencies) {
   }
 
   function normalize(state) {
-    if (!["2.0.0", "2.0.1"].includes(state.releaseVersion))
+    require("../events/explorationMarks").normalize(state);
+    const rules = require("../equipment/rules");
+    const ITEMS = rules.enabled(state)
+      ? require("../item").ITEMS_V3
+      : require("../item").LEGACY_ITEMS;
+    if (state.equipmentRulesVersion != null && !rules.enabled(state))
+      throw Error("UNSUPPORTED_EQUIPMENT_RULES");
+    if (rules.enabled(state)) {
+      if (
+        state.catalogVersion !== 3 ||
+        state.affinityPity?.version !== 1 ||
+        !Number.isInteger(state.affinityPity.missStreak) ||
+        state.affinityPity.missStreak < 0 ||
+        state.affinityPity.missStreak > 3
+      )
+        throw Error("INVALID_AFFINITY_PITY");
+      for (const i of state.items || [])
+        if (
+          !Number.isSafeInteger(i.level) ||
+          i.level < 1 ||
+          !Number.isSafeInteger(i.cleansedLevels || 0) ||
+          (i.cleansedLevels || 0) < 0 ||
+          (i.cleansedLevels || 0) > i.level
+        )
+          throw Error("INVALID_ITEM_LEVEL");
+    }
+    if ((state.gameplayVersion === 3) !== (["3.0.0", "3.1.0"].includes(state.releaseVersion)))
       throw new Error("UNSUPPORTED_HARDCORE_VERSION");
+    if (!["2.0.0", "2.0.1", "3.0.0", "3.1.0"].includes(state.releaseVersion))
+      throw new Error("UNSUPPORTED_HARDCORE_VERSION");
+    require("../rift").normalize(state);
+    require("../innate").validate(state);
+    const awakening = require("../awakening");
     if (
-      state.gameplayVersion === 2 &&
+      state.classAwakeningVersion != null &&
+      (state.classAwakeningVersion !== 1 || state.gameplayVersion !== 3)
+    )
+      throw Error("UNSUPPORTED_CLASS_AWAKENING");
+    if (state.classAwakening) {
+      const a = state.classAwakening;
+      if (
+        !awakening.active(state) ||
+        a.artifact !== awakening.ARTIFACTS[state.classKey][0] ||
+        a.awakenedFloor !== 100
+      )
+        throw Error("INVALID_CLASS_AWAKENING");
+      for (const [k, max] of [
+        ["focus", 2],
+        ["shadow", 2],
+        ["echo", 1],
+        ["echoProgress", 2],
+        ["totems", awakening.tuning(state).totems - 1],
+        ["bark", Number.MAX_SAFE_INTEGER],
+      ])
+        if (!Number.isSafeInteger(a[k]) || a[k] < 0 || a[k] > max)
+          throw Error("INVALID_AWAKENING_RESOURCE");
+      a.bark = Math.min(a.bark, Math.floor(state.maxHp * awakening.tuning(state).barkCap));
+      const c = state.encounter?.awakeningCombat;
+      if (
+        c &&
+        (c.version !== 1 ||
+          !Number.isInteger(c.fury) ||
+          c.fury < 0 ||
+          c.fury > 3 ||
+          !Number.isSafeInteger(c.barrier) ||
+          c.barrier < 0 ||
+          !Number.isInteger(c.ground) ||
+          c.ground < 0 ||
+          c.ground > 2 ||
+          !Array.isArray(c.crossed) ||
+          c.crossed.some((v) => ![0.75, 0.5, 0.25].includes(v)) ||
+          new Set(c.crossed).size !== c.crossed.length)
+      )
+        throw Error("INVALID_AWAKENING_COMBAT");
+    }
+
+    if (
+      [2, 3].includes(state.gameplayVersion) &&
       !state.mode?.startsWith("tower") &&
       !state.towerChallengeId
     )
-      state.bossRosterVersion ??= bosses.VERSION;
+      state.bossRosterVersion ??= 1;
     // Older runs downgraded fully cleansed UR equipment; rarity belongs to its design.
     for (const item of [
       ...(state.items || []),
@@ -117,6 +191,12 @@ module.exports = function createModule(dependencies) {
         "giải toàn bộ curse; giữ level và buff, chuyển SSR.",
         "giải toàn bộ lời nguyền; giữ UR, level, buff và nội tại.",
       );
+    bosses.validate(
+      state,
+      state.encounter?.type === "boss_gate"
+        ? state.encounter.enemy
+        : state.encounter,
+    );
     recompute(state);
     state.mana = Math.min(state.mana, bosses.effectiveMaxMana(state));
     // Convert historical event multipliers into a fixed loss without changing cashout.
@@ -190,6 +270,7 @@ module.exports = function createModule(dependencies) {
     }
     if (
       state.encounter?.type === "rngesus" &&
+      !rules.enabled(state) &&
       state.encounter.prayerItem?.rarity !== "cursed"
     ) {
       // Upgrade a pending old reward deterministically so reopening cannot reroll it.

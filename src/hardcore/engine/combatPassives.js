@@ -1,4 +1,5 @@
 "use strict";
+const affinity = require("../equipment/affinityEffects");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const { bosses, gilded, itemPassives, monsterLoot, E, passiveIcon, world } =
@@ -12,8 +13,16 @@ module.exports = function createModule(dependencies) {
     gilded.prepareCombat(state, payout(state));
     monsterLoot.prepare(state, e);
     state.passiveCombatFloor = state.floor;
+    require("../awakening").prepare(state);
+    require("../innate").prepare(state);
+    const rift = require("../rift");
+    if (rift.enabled(state)) {
+      rift.snapshot(state, e);
+      rift.prepare(state, bosses.counter(state));
+    }
     if (e.passiveCombatStarted) return;
     e.passiveCombatStarted = true;
+    affinity.prepare(state);
     if (alive(state) && state.combatManaLoss > 0) {
       const before = state.mana;
       state.mana = Math.max(0, state.mana - state.combatManaLoss);
@@ -57,8 +66,11 @@ module.exports = function createModule(dependencies) {
       ? (state.spellMin + state.spellMax) / 2
       : (state.damageMin + state.damageMax) / 2;
     const budget = Math.floor(basic * 0.5);
+    if (naturalMiss) affinity.dodge(state);
     let raw = actual * (p.thorns + (defend ? p.guardReflect : 0));
-    const triggered = [];
+    const affinityRaw = affinity.reflection(state, actual, defend, basic);
+    raw += affinityRaw;
+    const triggered = affinityRaw > 0 ? ["✨ **Affinity**"] : [];
     if (actual > 0 && p.thorns > 0)
       triggered.push(`${passiveIcon("thorns")} **Gai**`);
     if (actual > 0 && defend && p.guardReflect > 0)
@@ -69,7 +81,12 @@ module.exports = function createModule(dependencies) {
     }
     if (raw <= 0) return "";
     let damage = Math.floor(
-      raw * (1 - world.defenseReduction(e.defense, state.floor)),
+      raw *
+        (1 -
+          world.defenseReduction(
+            require("../rift").enemyDefense(state, e.defense),
+            state.floor,
+          )),
     );
     if (
       e.mechanic === "riftwalker" &&
@@ -86,7 +103,7 @@ module.exports = function createModule(dependencies) {
     );
     if (damage <= 0) return "";
     state.passiveCounterUsed = (state.passiveCounterUsed || 0) + damage;
-    e.hp -= damage;
+    damage = bosses.applyDamage(state, damage);
     bosses.hit(state, damage, true);
     return (
       "\n" +

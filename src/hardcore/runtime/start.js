@@ -104,7 +104,17 @@ module.exports = function createModule(dependencies) {
       if (useV2()) {
         const fair = state.fair;
         state = hardcoreStats.createState(classKey, stake);
-        state.bossRosterVersion = 1;
+        state.bossRosterVersion =
+          process.env.HARDCORE_BOSS_ROSTER_VERSION === "1"
+            ? 1
+            : state.gameplayVersion === 3 ||
+                process.env.HARDCORE_BOSS_ROSTER_VERSION === "2"
+              ? 2
+              : 1;
+        if (state.bossRosterVersion === 2)
+          state.bossDamageProfile = require("../bosses/balanceV2").snapshot(
+            classKey,
+          );
         state.fair = fair;
         state.fairCounter = 0;
         state.playerName = String(playerName).slice(0, 80);

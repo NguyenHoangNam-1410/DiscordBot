@@ -1,6 +1,7 @@
 "use strict";
 const { clamp } = require("./stats");
 const roster = require("../bosses/mechanics");
+const rift = require("../rift");
 const REGIONS = [
   [
     1,
@@ -127,7 +128,19 @@ function normalizeMimicEnemy(enemy) {
   if (kind === "ancient_mimic") enemy.name = "Ancient Mimic";
   return enemy;
 }
-function makeEnemy(state, rank = "normal", name = null, rng = Math.random) {
+function makeEnemy(
+  state,
+  rank = "normal",
+  name = null,
+  rng = Math.random,
+  fixtureBoss = null,
+) {
+  if (
+    fixtureBoss &&
+    (state.bossRosterVersion !== 2 ||
+      require("../bosses/catalogV2").CATALOG[fixtureBoss.id] !== fixtureBoss)
+  )
+    throw Error("INVALID_BOSS_FIXTURE");
   const floor = state.floor,
     mods = state.modifiers || {};
   const stacks = (key) => effectiveStacks(mods[key] || 0);
@@ -137,8 +150,13 @@ function makeEnemy(state, rank = "normal", name = null, rng = Math.random) {
     1 + Math.min(floor, 100) * 0.04 + Math.max(0, floor - 100) * 0.038;
   const late = clamp((floor - 400) / 599, 0, 1);
   const scheduled =
-    roster.enabled(state) && !name && ["boss", "final_boss"].includes(rank)
-      ? roster.at(floor)
+    roster.enabled(state) &&
+    roster.at(floor) &&
+    !name &&
+    ["boss", "final_boss"].includes(rank)
+      ? state.bossRosterVersion === 2
+        ? fixtureBoss || require("../bosses/catalogV2").choose(state, rng)
+        : roster.at(floor)
       : null;
   const boss = scheduled
     ? { ...scheduled, mechanic: scheduled.id }
@@ -161,20 +179,26 @@ function makeEnemy(state, rank = "normal", name = null, rng = Math.random) {
   const [hpFactor, damageFactor] = scheduled
     ? roster.factors(floor)
     : factors[rank] || factors.normal;
-  const hp = Math.round(
+  const baseHp = Math.round(
     28 *
       scaleHp *
       hpFactor *
-      (1 + stacks("fortified") * 0.08) *
+      (rift.enabled(state) ? 1 : 1 + stacks("fortified") * 0.08) *
       (1 + late * 0.5),
   );
+  const hp = rift.enabled(state)
+    ? Math.round(baseHp * (1 + rift.count(state, "fortified") * 0.03))
+    : baseHp;
   const damage =
     scaleDmg *
     damageFactor *
-    (1 + stacks("elemental_dominion") * 0.03) *
+    (rift.enabled(state) ? 1 : 1 + stacks("elemental_dominion") * 0.03) *
     (1 + late * 0.9);
   const magicChance = clamp(
-    0.12 + stacks("elemental_dominion") * 0.03,
+    0.12 +
+      (rift.enabled(state)
+        ? rift.count(state, "elemental_dominion") * 0.02
+        : stacks("elemental_dominion") * 0.03),
     0,
     0.75,
   );
@@ -183,20 +207,35 @@ function makeEnemy(state, rank = "normal", name = null, rng = Math.random) {
   const enemy = normalizeMimicEnemy({
     type: "combat",
     rank,
-    name: name || boss?.name || names[Math.floor(rng() * names.length)],
+    name:
+      name ||
+      boss?.name ||
+      (require("../events/explorationMarks").enabled(state) && rank === "mimic"
+        ? "Mimic"
+        : require("../events/explorationMarks").enabled(state) &&
+            rank === "ancient_mimic"
+          ? "Ancient Mimic"
+          : names[Math.floor(rng() * names.length)]),
     mechanic: boss?.mechanic || null,
     hp,
     maxHp: hp,
     damageMin: Math.max(1, Math.floor(5 * damage)),
     damageMax: Math.max(1, Math.floor(9 * damage)),
-    defense: Math.round((5 + floor * 0.65) * (1 + stacks("stone_skin") * 0.08)),
-    accuracy: 75 + floor * 0.25 + stacks("swift_horror") * 3,
+    defense: Math.round(
+      (5 + floor * 0.65) *
+        (rift.enabled(state) ? 1 : 1 + stacks("stone_skin") * 0.08),
+    ),
+    accuracy:
+      75 +
+      floor * 0.25 +
+      (rift.enabled(state) ? 0 : stacks("swift_horror") * 3),
     evasion:
       Math.min(100, 5 + floor * 0.08) +
-      stacks("swift_horror") * 1.5 +
-      (boss?.mechanic === "assur" ? 18 : 0),
+      (rift.enabled(state) ? 0 : stacks("swift_horror") * 1.5) +
+      (state.bossRosterVersion !== 2 && boss?.mechanic === "assur" ? 18 : 0),
     resistance: Math.min(60, Math.floor(floor * 0.06)),
-    critChance: boss?.mechanic === "assur" ? 0.2 : 0.06,
+    critChance:
+      state.bossRosterVersion !== 2 && boss?.mechanic === "assur" ? 0.2 : 0.06,
     critDamage: 1.75,
     damageType,
     magicChance,
@@ -211,7 +250,8 @@ function makeEnemy(state, rank = "normal", name = null, rng = Math.random) {
     drainCharges: Math.min(3, Math.ceil((mods.soul_drain || 0) / 4)),
     rewardMultiplier: rank === "normal" ? 1 : rank === "elite" ? 2 : 3,
   });
-  return scheduled ? roster.seed(state, enemy, scheduled, rng) : enemy;
+  const result = scheduled ? roster.seed(state, enemy, scheduled, rng) : enemy;
+  return rift.snapshot(state, result);
 }
 function hitChance(accuracy, evasion, maxDodge = 0.45) {
   return (

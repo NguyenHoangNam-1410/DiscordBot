@@ -1,6 +1,7 @@
 "use strict";
 const { E, passiveIcon } = require("./icons");
 const money = (n) => Math.floor(n).toLocaleString("vi-VN");
+const statNumber = (n) => Number(Number(n).toFixed(1));
 const STAT_SEPARATOR = "  •  ";
 function highlightStat(label) {
   const match = label.match(
@@ -21,6 +22,7 @@ function formatStatText(text) {
     DEX: E.dex,
     VIT: E.vit,
     ENE: E.ene,
+    "DEF/RES": E.defres,
     DEF: E.defense,
     RES: E.res,
     ACC: E.accuracy,
@@ -37,7 +39,7 @@ function formatStatText(text) {
       index % 2
         ? part
         : part.replace(
-            /(?<![\p{L}\p{N}_])(Sức chứa bình|Max HP|Max MP|DMG vật lý|DMG phép|HP|MP|STR|DEX|VIT|ENE|DEF|RES|ACC|EVA|CRIT|LUCK|DMG|Payout)(?![\p{L}\p{N}_])/gu,
+            /(?<![\p{L}\p{N}_])(Sức chứa bình|Max HP|Max MP|DMG vật lý|DMG phép|HP|MP|STR|DEX|VIT|ENE|DEF\/RES|DEF|RES|ACC|EVA|CRIT|LUCK|DMG|Payout)(?![\p{L}\p{N}_])/gu,
             (label) => highlightStat(`${labels[label]} ${label}`),
           ),
     )
@@ -51,7 +53,7 @@ function healthBar(hp, maxHp) {
       : ratio > 0
         ? Math.max(1, Math.min(9, Math.round(ratio * 10)))
         : 0;
-  return `${E.hp} **HP** \`${"█".repeat(filled)}${"░".repeat(10 - filled)}\` **${money(hp)}/${money(maxHp)}**`;
+  return `${E.hp} **HP** \`${"█".repeat(filled)}${"░".repeat(10 - filled)}\` **${statNumber(hp).toLocaleString("vi-VN")}/${statNumber(maxHp).toLocaleString("vi-VN")}**`;
 }
 function addTextFields(embed, name, text, inline = false) {
   const limit = 1024;
@@ -88,6 +90,7 @@ function addTextFields(embed, name, text, inline = false) {
 }
 
 module.exports = {
+  statNumber,
   healthBar,
   addTextFields,
   highlightStat,

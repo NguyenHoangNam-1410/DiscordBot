@@ -1,0 +1,772 @@
+{
+  "note": "Calibration samples; final verification results are separate. Initial prepared matrix using legacy-modified stats was discarded. Counts below preserve completed calibration jobs before removing bulky scratch outputs.",
+  "records": [
+    {
+      "source": "hardcore-3-boss-calibration-refined-amazon.json",
+      "sha256": "e93aa38001fdb1d4a4ed9c17f641bcb1d619cf9deac4d4450b7c33ba52041c89",
+      "classes": {
+        "amazon": {
+          "runs": 500,
+          "completed999": 20,
+          "completedPercent": 4,
+          "seed": "survival-boss-holdout-2026-10-12",
+          "bossDamageExperiment": {
+            "amazon": 3.5
+          },
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        }
+      }
+    },
+    {
+      "source": "hardcore-3-boss-calibration-refined-assassin.json",
+      "sha256": "a1d6c25b0919358acec1a44a6ca19a05c05e30ff008d1e2a558a97020879d10d",
+      "classes": {
+        "assassin": {
+          "runs": 500,
+          "completed999": 26,
+          "completedPercent": 5.2,
+          "seed": "survival-boss-holdout-2026-10-12",
+          "bossDamageExperiment": {
+            "assassin": 0.88
+          },
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        }
+      }
+    },
+    {
+      "source": "hardcore-3-boss-calibration-refined-barbarian.json",
+      "sha256": "9e97c43ddd184a6a2ffe471bc806d889342fab7e5ddbcdfdc6cf56e7f5fba55d",
+      "classes": {
+        "barbarian": {
+          "runs": 500,
+          "completed999": 16,
+          "completedPercent": 3.2,
+          "seed": "survival-boss-holdout-2026-10-12",
+          "bossDamageExperiment": {
+            "barbarian": 0.95
+          },
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        }
+      }
+    },
+    {
+      "source": "hardcore-3-boss-holdout-amazon.json",
+      "sha256": "86e7d0ae7a1b3b431a19fe196e26c7258b72336e08a53965855c9594cff57223",
+      "classes": {
+        "amazon": {
+          "runs": 500,
+          "completed999": 13,
+          "completedPercent": 2.6,
+          "seed": "survival-boss-holdout-2026-10-12",
+          "bossDamageExperiment": {
+            "amazon": 3
+          },
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        }
+      }
+    },
+    {
+      "source": "hardcore-3-boss-holdout-assassin.json",
+      "sha256": "ebb70afa9fdfa5cbea3ef8a8110c29ced2020980c18db70dc34c9cff88de179d",
+      "classes": {
+        "assassin": {
+          "runs": 500,
+          "completed999": 25,
+          "completedPercent": 5,
+          "seed": "survival-boss-holdout-2026-10-12",
+          "bossDamageExperiment": {
+            "assassin": 0.9
+          },
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        }
+      }
+    },
+    {
+      "source": "hardcore-3-boss-holdout-barbarian.json",
+      "sha256": "7140bf42c5075dc2f7d479f245412751a86386f3b4656376a4cb3713146a46db",
+      "classes": {
+        "barbarian": {
+          "runs": 500,
+          "completed999": 31,
+          "completedPercent": 6.2,
+          "seed": "survival-boss-holdout-2026-10-12",
+          "bossDamageExperiment": {
+            "barbarian": 1.02
+          },
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        }
+      }
+    },
+    {
+      "source": "hardcore-3-boss-holdout-druid.json",
+      "sha256": "a3cb7b492631c9e935a3392c6ae16c493e24334beba77d5a8b9930dbc5245156",
+      "classes": {
+        "druid": {
+          "runs": 500,
+          "completed999": 13,
+          "completedPercent": 2.6,
+          "seed": "survival-boss-holdout-2026-10-12",
+          "bossDamageExperiment": {
+            "druid": 0.45
+          },
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        }
+      }
+    },
+    {
+      "source": "hardcore-3-boss-holdout-necromancer.json",
+      "sha256": "94f05a4ad3538ed04b11b3e630e96f50585ac59a81f9648a614fe10c3c6c9888",
+      "classes": {
+        "necromancer": {
+          "runs": 500,
+          "completed999": 23,
+          "completedPercent": 4.6,
+          "seed": "survival-boss-holdout-2026-10-12",
+          "bossDamageExperiment": {
+            "necromancer": 0.5
+          },
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        }
+      }
+    },
+    {
+      "source": "hardcore-3-boss-holdout-paladin.json",
+      "sha256": "b0761f03c623393ad4b36fe9d5fff86cb36c5711f55b7a60c43f56c3f91d2be0",
+      "classes": {
+        "paladin": {
+          "runs": 500,
+          "completed999": 11,
+          "completedPercent": 2.2,
+          "seed": "survival-boss-holdout-2026-10-12",
+          "bossDamageExperiment": {
+            "paladin": 0.85
+          },
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        }
+      }
+    },
+    {
+      "source": "hardcore-3-boss-holdout-sorceress.json",
+      "sha256": "302f5fef79c1cf852c13953318cdf1ceb5dec2103bd8bad91e1c4bf146462b9f",
+      "classes": {
+        "sorceress": {
+          "runs": 500,
+          "completed999": 17,
+          "completedPercent": 3.4,
+          "seed": "survival-boss-holdout-2026-10-12",
+          "bossDamageExperiment": {
+            "sorceress": 1.5
+          },
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        }
+      }
+    },
+    {
+      "source": "hardcore-3-boss-roster-v2-calibration-1.json",
+      "sha256": "4628341f60e3a2b00c49b514f737a1394867507cfba37313d98a6a75dd7472b2",
+      "classes": {
+        "amazon": {
+          "runs": 100,
+          "completed999": 0,
+          "completedPercent": 0,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {
+            "amazon": 1.25,
+            "barbarian": 1.05,
+            "assassin": 0.9,
+            "sorceress": 1.04,
+            "druid": 0.75,
+            "necromancer": 0.7,
+            "paladin": 0.95
+          },
+          "backend": "memory"
+        },
+        "barbarian": {
+          "runs": 100,
+          "completed999": 8,
+          "completedPercent": 8,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {
+            "amazon": 1.25,
+            "barbarian": 1.05,
+            "assassin": 0.9,
+            "sorceress": 1.04,
+            "druid": 0.75,
+            "necromancer": 0.7,
+            "paladin": 0.95
+          },
+          "backend": "memory"
+        },
+        "assassin": {
+          "runs": 100,
+          "completed999": 5,
+          "completedPercent": 5,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {
+            "amazon": 1.25,
+            "barbarian": 1.05,
+            "assassin": 0.9,
+            "sorceress": 1.04,
+            "druid": 0.75,
+            "necromancer": 0.7,
+            "paladin": 0.95
+          },
+          "backend": "memory"
+        },
+        "sorceress": {
+          "runs": 100,
+          "completed999": 1,
+          "completedPercent": 1,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {
+            "amazon": 1.25,
+            "barbarian": 1.05,
+            "assassin": 0.9,
+            "sorceress": 1.04,
+            "druid": 0.75,
+            "necromancer": 0.7,
+            "paladin": 0.95
+          },
+          "backend": "memory"
+        },
+        "druid": {
+          "runs": 100,
+          "completed999": 8,
+          "completedPercent": 8,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {
+            "amazon": 1.25,
+            "barbarian": 1.05,
+            "assassin": 0.9,
+            "sorceress": 1.04,
+            "druid": 0.75,
+            "necromancer": 0.7,
+            "paladin": 0.95
+          },
+          "backend": "memory"
+        },
+        "necromancer": {
+          "runs": 100,
+          "completed999": 11,
+          "completedPercent": 11,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {
+            "amazon": 1.25,
+            "barbarian": 1.05,
+            "assassin": 0.9,
+            "sorceress": 1.04,
+            "druid": 0.75,
+            "necromancer": 0.7,
+            "paladin": 0.95
+          },
+          "backend": "memory"
+        },
+        "paladin": {
+          "runs": 100,
+          "completed999": 7,
+          "completedPercent": 7,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {
+            "amazon": 1.25,
+            "barbarian": 1.05,
+            "assassin": 0.9,
+            "sorceress": 1.04,
+            "druid": 0.75,
+            "necromancer": 0.7,
+            "paladin": 0.95
+          },
+          "backend": "memory"
+        }
+      }
+    },
+    {
+      "source": "hardcore-3-boss-roster-v2-calibration-2.json",
+      "sha256": "819c862e0c7f9ef7f6fc172d8d4a8029d6638bba3573f06e3b5b1f90dcce671a",
+      "classes": {
+        "amazon": {
+          "runs": 100,
+          "completed999": 4,
+          "completedPercent": 4,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {
+            "amazon": 3,
+            "barbarian": 1.02,
+            "assassin": 0.9,
+            "sorceress": 1.25,
+            "druid": 0.5,
+            "necromancer": 0.4,
+            "paladin": 0.95
+          },
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        },
+        "barbarian": {
+          "runs": 100,
+          "completed999": 3,
+          "completedPercent": 3,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {
+            "amazon": 3,
+            "barbarian": 1.02,
+            "assassin": 0.9,
+            "sorceress": 1.25,
+            "druid": 0.5,
+            "necromancer": 0.4,
+            "paladin": 0.95
+          },
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        },
+        "assassin": {
+          "runs": 100,
+          "completed999": 5,
+          "completedPercent": 5,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {
+            "amazon": 3,
+            "barbarian": 1.02,
+            "assassin": 0.9,
+            "sorceress": 1.25,
+            "druid": 0.5,
+            "necromancer": 0.4,
+            "paladin": 0.95
+          },
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        },
+        "sorceress": {
+          "runs": 100,
+          "completed999": 2,
+          "completedPercent": 2,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {
+            "amazon": 3,
+            "barbarian": 1.02,
+            "assassin": 0.9,
+            "sorceress": 1.25,
+            "druid": 0.5,
+            "necromancer": 0.4,
+            "paladin": 0.95
+          },
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        },
+        "druid": {
+          "runs": 100,
+          "completed999": 6,
+          "completedPercent": 6,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {
+            "amazon": 3,
+            "barbarian": 1.02,
+            "assassin": 0.9,
+            "sorceress": 1.25,
+            "druid": 0.5,
+            "necromancer": 0.4,
+            "paladin": 0.95
+          },
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        },
+        "necromancer": {
+          "runs": 100,
+          "completed999": 2,
+          "completedPercent": 2,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {
+            "amazon": 3,
+            "barbarian": 1.02,
+            "assassin": 0.9,
+            "sorceress": 1.25,
+            "druid": 0.5,
+            "necromancer": 0.4,
+            "paladin": 0.95
+          },
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        },
+        "paladin": {
+          "runs": 100,
+          "completed999": 7,
+          "completedPercent": 7,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {
+            "amazon": 3,
+            "barbarian": 1.02,
+            "assassin": 0.9,
+            "sorceress": 1.25,
+            "druid": 0.5,
+            "necromancer": 0.4,
+            "paladin": 0.95
+          },
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        }
+      }
+    },
+    {
+      "source": "hardcore-3-boss-roster-v2-calibration-amazon-2.json",
+      "sha256": "9a0dde4fcfa1e2d3f28970893abd28442ea373d9878039b8ff335ad1124d2cf0",
+      "classes": {
+        "amazon": {
+          "runs": 100,
+          "completed999": 1,
+          "completedPercent": 1,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {
+            "amazon": 2
+          },
+          "backend": "memory",
+          "resumeValidation": "each_action"
+        }
+      }
+    },
+    {
+      "source": "hardcore-3-boss-roster-v2-full-runs.json",
+      "sha256": "fe772b19392fe888cd53c76fe9a74baeb7a5485701d763cef21dadfab3f053aa",
+      "classes": {
+        "amazon": {
+          "runs": 100,
+          "completed999": 0,
+          "completedPercent": 0,
+          "seed": "survival-holdout-2026-10-02",
+          "backend": "memory"
+        },
+        "barbarian": {
+          "runs": 100,
+          "completed999": 2,
+          "completedPercent": 2,
+          "seed": "survival-holdout-2026-10-02",
+          "backend": "memory"
+        },
+        "assassin": {
+          "runs": 100,
+          "completed999": 7,
+          "completedPercent": 7,
+          "seed": "survival-holdout-2026-10-02",
+          "backend": "memory"
+        },
+        "sorceress": {
+          "runs": 100,
+          "completed999": 0,
+          "completedPercent": 0,
+          "seed": "survival-holdout-2026-10-02",
+          "backend": "memory"
+        },
+        "druid": {
+          "runs": 100,
+          "completed999": 24,
+          "completedPercent": 24,
+          "seed": "survival-holdout-2026-10-02",
+          "backend": "memory"
+        },
+        "necromancer": {
+          "runs": 100,
+          "completed999": 19,
+          "completedPercent": 19,
+          "seed": "survival-holdout-2026-10-02",
+          "backend": "memory"
+        },
+        "paladin": {
+          "runs": 100,
+          "completed999": 6,
+          "completedPercent": 6,
+          "seed": "survival-holdout-2026-10-02",
+          "backend": "memory"
+        }
+      }
+    },
+    {
+      "source": "hardcore-3-boss-roster-v2-initial-full-runs.json",
+      "sha256": "cf815ce4784bbe5ff078beae323a0e538d26452520825aca13e7bbf85d73a180",
+      "classes": {
+        "amazon": {
+          "runs": 100,
+          "completed999": 1,
+          "completedPercent": 1,
+          "seed": "survival-holdout-2026-10-02",
+          "backend": "memory"
+        },
+        "barbarian": {
+          "runs": 100,
+          "completed999": 7,
+          "completedPercent": 7,
+          "seed": "survival-holdout-2026-10-02",
+          "backend": "memory"
+        },
+        "assassin": {
+          "runs": 100,
+          "completed999": 11,
+          "completedPercent": 11,
+          "seed": "survival-holdout-2026-10-02",
+          "backend": "memory"
+        },
+        "sorceress": {
+          "runs": 100,
+          "completed999": 3,
+          "completedPercent": 3,
+          "seed": "survival-holdout-2026-10-02",
+          "backend": "memory"
+        },
+        "druid": {
+          "runs": 100,
+          "completed999": 32,
+          "completedPercent": 32,
+          "seed": "survival-holdout-2026-10-02",
+          "backend": "memory"
+        },
+        "necromancer": {
+          "runs": 100,
+          "completed999": 30,
+          "completedPercent": 30,
+          "seed": "survival-holdout-2026-10-02",
+          "backend": "memory"
+        },
+        "paladin": {
+          "runs": 100,
+          "completed999": 9,
+          "completedPercent": 9,
+          "seed": "survival-holdout-2026-10-02",
+          "backend": "memory"
+        }
+      }
+    },
+    {
+      "source": "hardcore-3-boss-roster-v2-progression-probe.json",
+      "sha256": "32d6187b7e306cd9d1be1ffb0f8a700a024a2c3a5fcd70249c2a51c279b7cd57",
+      "matrix": {
+        "trials": 1,
+        "gearProfile": "progression",
+        "noWinningBuild": 0,
+        "summary": {
+          "amazon": {
+            "fights": 936,
+            "wins": 765,
+            "timeouts": 0
+          },
+          "barbarian": {
+            "fights": 936,
+            "wins": 791,
+            "timeouts": 0
+          },
+          "assassin": {
+            "fights": 936,
+            "wins": 884,
+            "timeouts": 0
+          },
+          "sorceress": {
+            "fights": 936,
+            "wins": 872,
+            "timeouts": 0
+          },
+          "druid": {
+            "fights": 936,
+            "wins": 900,
+            "timeouts": 0
+          },
+          "necromancer": {
+            "fights": 936,
+            "wins": 913,
+            "timeouts": 0
+          },
+          "paladin": {
+            "fights": 936,
+            "wins": 860,
+            "timeouts": 0
+          }
+        }
+      }
+    },
+    {
+      "source": "hardcore-3-boss-roster-v2-validation-fast.json",
+      "sha256": "8d59d2242b69b39289fee2ad5ffd4fe114675b78a01f839afb4efa396b2be212",
+      "classes": {
+        "amazon": {
+          "runs": 10,
+          "completed999": 0,
+          "completedPercent": 0,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {},
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        },
+        "barbarian": {
+          "runs": 10,
+          "completed999": 0,
+          "completedPercent": 0,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {},
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        },
+        "assassin": {
+          "runs": 10,
+          "completed999": 0,
+          "completedPercent": 0,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {},
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        },
+        "sorceress": {
+          "runs": 10,
+          "completed999": 0,
+          "completedPercent": 0,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {},
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        },
+        "druid": {
+          "runs": 10,
+          "completed999": 1,
+          "completedPercent": 10,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {},
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        },
+        "necromancer": {
+          "runs": 10,
+          "completed999": 1,
+          "completedPercent": 10,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {},
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        },
+        "paladin": {
+          "runs": 10,
+          "completed999": 0,
+          "completedPercent": 0,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {},
+          "backend": "memory",
+          "resumeValidation": "once_per_run"
+        }
+      }
+    },
+    {
+      "source": "hardcore-3-boss-roster-v2-validation-normal.json",
+      "sha256": "603f8eaee9d373730631c949a4222355d60d011dd8ba215782fc4aabaac88aee",
+      "classes": {
+        "amazon": {
+          "runs": 10,
+          "completed999": 0,
+          "completedPercent": 0,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {},
+          "backend": "memory",
+          "resumeValidation": "each_action"
+        },
+        "barbarian": {
+          "runs": 10,
+          "completed999": 0,
+          "completedPercent": 0,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {},
+          "backend": "memory",
+          "resumeValidation": "each_action"
+        },
+        "assassin": {
+          "runs": 10,
+          "completed999": 0,
+          "completedPercent": 0,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {},
+          "backend": "memory",
+          "resumeValidation": "each_action"
+        },
+        "sorceress": {
+          "runs": 10,
+          "completed999": 0,
+          "completedPercent": 0,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {},
+          "backend": "memory",
+          "resumeValidation": "each_action"
+        },
+        "druid": {
+          "runs": 10,
+          "completed999": 1,
+          "completedPercent": 10,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {},
+          "backend": "memory",
+          "resumeValidation": "each_action"
+        },
+        "necromancer": {
+          "runs": 10,
+          "completed999": 1,
+          "completedPercent": 10,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {},
+          "backend": "memory",
+          "resumeValidation": "each_action"
+        },
+        "paladin": {
+          "runs": 10,
+          "completed999": 0,
+          "completedPercent": 0,
+          "seed": "survival-holdout-2026-10-02",
+          "bossDamageExperiment": {},
+          "backend": "memory",
+          "resumeValidation": "each_action"
+        }
+      }
+    },
+    {
+      "source": "first independent verification sorceress; profile 1.5",
+      "classes": {
+        "sorceress": {
+          "runs": 500,
+          "completed999": 14,
+          "completedPercent": 2.8,
+          "seed": "survival-boss-verification-2026-10-12",
+          "codeFingerprint": "7a9078b34f4724b2a321fed39aa4f15ad580304c85e79b5093f139fe4e388e40",
+          "actualBossDamage": 1.5
+        }
+      }
+    }
+  ],
+  "resumeValidationParity": {
+    "amazon": {
+      "runs": 10,
+      "identicalRunFloors": true
+    },
+    "barbarian": {
+      "runs": 10,
+      "identicalRunFloors": true
+    },
+    "assassin": {
+      "runs": 10,
+      "identicalRunFloors": true
+    },
+    "sorceress": {
+      "runs": 10,
+      "identicalRunFloors": true
+    },
+    "druid": {
+      "runs": 10,
+      "identicalRunFloors": true
+    },
+    "necromancer": {
+      "runs": 10,
+      "identicalRunFloors": true
+    },
+    "paladin": {
+      "runs": 10,
+      "identicalRunFloors": true
+    }
+  }
+}

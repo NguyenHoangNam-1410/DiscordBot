@@ -1,5 +1,306 @@
 [
   {
+    "id": "e2d6cf82-1b8a-4322-a418-1f87f62c94a8",
+    "updatedAt": "2026-10-13T15:25:39.602Z",
+    "auditedAt": "2026-10-13T15:25:39.602Z",
+    "title": "Đồng bộ lời nguyền Glass Cannon với Sinh tồn 3.x",
+    "changes": [
+      "Giữ khoản trừ 50% DEF đã lưu của Glass Cannon khi dùng công thức chỉ số và đường cong level Sinh tồn 3.x; tăng level hoặc cộng chỉ số không trừ DEF thêm.",
+      "Túi đồ, rèn, giải nguyền và Horadric Forge của bản 3.x hiển thị đúng khoản DEF cố định và phân biệt gỡ một cấp với gỡ hết nguyền."
+    ]
+  },
+  {
+    "id": "6d4b4306-df57-4c1b-859b-c28f5831e919",
+    "updatedAt": "2026-10-13T11:09:45.766Z",
+    "auditedAt": "2026-10-13T11:09:45.766Z",
+    "title": "Sinh tồn v3.1.0: Nội tại class và buff thức tỉnh",
+    "changes": [
+      "Bổ sung nội tại riêng cho 7 class từ tầng 1; xem mô tả trong Chỉ số.",
+      "Amazon tăng HP/VIT lên 3,5 và EVA/DEX lên 0,45; Assassin tăng HP nền lên 46, HP/VIT lên 4, sát thương đánh boss từ ×0,84 lên ×0,94; Druid từ ×0,48 lên ×0,55.",
+      "Titan tăng 25% DEF và chặn chí mạng ở phản công kế tiếp; Fury tạo Barrier bằng 6% Max HP mỗi điểm; Mark of the Wild tăng 15% DMG.",
+      "Bone Nova kích hoạt sau 2 Ward, gây 65% DMG; Arcane Echo gây 65% DMG và tạo khiên 10% Max HP.",
+      "Buff combat giữ qua phase và hết khi kết thúc trận; sát thương chuẩn, chi phí HP và phản phệ không bị né hoặc chặn bởi nội tại mới. Run v3.0 đang chơi giữ cơ chế cũ."
+    ]
+  },
+  {
+    "id": "b07b887f-dd95-433f-9672-582c01142e0f",
+    "updatedAt": "2026-10-13T08:36:25.871Z",
+    "auditedAt": "2026-10-13T08:36:25.871Z",
+    "title": "Boss: diễn giải theo hướng dẫn",
+    "changes": [
+      "Viết lại mô tả 41 boss theo tài liệu hướng dẫn: cơ chế chính, lựa chọn, cách xử lý và điều cần nhớ; vẫn hiển thị thông tin hiện tại của trận.",
+      "Các câu trong tài liệu khác cơ chế đang chạy được diễn giải đúng gameplay; giữ Lilith 50/50 HP và các thông số theo độ khó."
+    ]
+  },
+  {
+    "id": "b04e2ec3-a5e6-4688-94dc-f93e837ccb79",
+    "updatedAt": "2026-10-13T08:31:52.288Z",
+    "auditedAt": "2026-10-13T08:31:52.288Z",
+    "title": "Inarius: Lilith còn 50 HP",
+    "changes": [
+      "Lilith trong trận Inarius bắt đầu với 50/50 HP; Che chở vẫn hồi 15 HP nhưng tối đa 50. Run đang lưu có HP Lilith vượt 50 được giới hạn về 50, không hồi thêm HP.",
+      "Cập nhật mô tả và trạng thái Lilith theo giới hạn mới; giữ nguyên chu kỳ Ritual, lượng HP mất mỗi lượt và cơ chế kết giới."
+    ]
+  },
+  {
+    "id": "99f69b35-d81e-4bcc-ac7a-9e285921fdb5",
+    "updatedAt": "2026-10-13T08:26:20.815Z",
+    "auditedAt": "2026-10-13T08:26:20.815Z",
+    "title": "Boss: chuẩn hóa hướng dẫn chiến đấu",
+    "changes": [
+      "Chuẩn hóa Chi tiết của 41 boss theo bố cục Mục tiêu, Cơ chế và Hiện tại; tách hành động, chi phí lượt và hậu quả bằng các mục dễ đọc.",
+      "Inarius hiển thị vị trí ô, HP và thời gian che chở Lilith, trạng thái kết giới; giải thích rõ kết giới ngăn kết liễu và lấy mức mất HP/chu kỳ Ritual theo độ khó.",
+      "Giữ nguyên cơ chế và cân bằng chiến đấu."
+    ]
+  },
+  {
+    "id": "d4ee225a-31c0-4a67-a670-ed331302a832",
+    "updatedAt": "2026-10-13T05:55:17.719Z",
+    "auditedAt": "2026-10-13T05:55:17.719Z",
+    "title": "Mastery: hiển thị dễ đọc hơn",
+    "changes": [
+      "Mastery hiển thị hiệu ứng theo mốc +100 điểm thuộc tính, dùng icon chỉ số chuẩn và tách riêng DMG vật lý/phép cùng các mức trần; tránh các giá trị nhỏ bị hiển thị thành +0.",
+      "Đây là thay đổi cách trình bày; hệ số Mastery và cách tính chỉ số giữ nguyên."
+    ]
+  },
+  {
+    "id": "872eea0c-e811-4712-a2ff-a7463513ee3a",
+    "updatedAt": "2026-10-13T04:57:54.672Z",
+    "auditedAt": "2026-10-13T04:57:54.672Z",
+    "title": "Lucky Break: trần 50% tại 200 LUCK",
+    "changes": [
+      "Lucky Break trong Sinh tồn V3 tăng 0,25 điểm % mỗi LUCK, tối đa 50% khi đạt 200 LUCK; áp dụng cho nộp thuế và chấp nhận The Thief.",
+      "Cập nhật mô tả event, luật và bảng tỷ lệ theo công thức mới."
+    ]
+  },
+  {
+    "id": "d711ea6f-d631-418c-83e1-ddf974502ae4",
+    "updatedAt": "2026-10-13T04:53:45.262Z",
+    "auditedAt": "2026-10-13T04:53:45.262Z",
+    "title": "Blood Fountain: thưởng VIT",
+    "changes": [
+      "Nhánh 25% cơ bản khi uống Blood Fountain đổi từ +15 Max HP và hồi phục sang +10 VIT trong run; các nhánh khác giữ nguyên.",
+      "Cập nhật Chi tiết Blood Fountain để hiển thị đúng phần thưởng mới."
+    ]
+  },
+  {
+    "id": "3dda3484-4d39-4eb8-898a-baaa09a432f4",
+    "updatedAt": "2026-10-13T04:45:07.437Z",
+    "auditedAt": "2026-10-13T04:45:07.437Z",
+    "title": "Làm rõ mô tả toàn bộ boss V3",
+    "changes": [
+      "Rà lại 39 boss trong pool cùng Kabraxis và Deimoss: Chi tiết nói rõ thao tác, chi phí, thời hạn, điều kiện kết liễu và chỉ số ảnh hưởng đến bạn hay boss; thay thuật ngữ khó hiểu bằng lời giải thích.",
+      "Bảng chiến đấu chỉ dẫn rõ các bước giải đố của Assur, Master Control, Lucion, Bul-Kathos, Anomaly, Jitan và Sescheron; tên cơ chế và trạng thái được diễn giải bằng tiếng Việt.",
+      "Sửa diễn giải Assur theo số lượt mở ấn thực tế ở từng độ khó; bỏ mô tả buff không có của Gharbad; làm rõ Deimoss, các chi phí và DMG chuẩn. Giữ nguyên cơ chế và cân bằng chiến đấu."
+    ]
+  },
+  {
+    "id": "f2908063-56b5-4116-a334-5839bb584d87",
+    "updatedAt": "2026-10-13T04:12:08.059Z",
+    "auditedAt": "2026-10-13T04:12:08.059Z",
+    "title": "Menu chọn cho event nhiều lựa chọn",
+    "changes": [
+      "Các event có nhiều lựa chọn trên Battle UI Sinh tồn V3 dùng menu thay cho dãy nút: xóa Rift, shop, phúc lành Forge, checkpoint, chọn trang bị rương boss và các tình huống tương tự.",
+      "Menu giữ tên, giá, icon và dấu hiệu Tiên tri; lựa chọn không đủ điều kiện không thể thực hiện. Bỏ qua, bán rương, rút thưởng và các nút chiến đấu vẫn dễ truy cập.",
+      "Chọn menu cập nhật bảng chơi và giữ nguyên quy tắc lượt, chi phí, phần thưởng; lựa chọn cũ hoặc gửi lặp không được xử lý lại."
+    ]
+  },
+  {
+    "id": "3137a5c7-e628-4ccc-a07d-baeac4ee35a8",
+    "updatedAt": "2026-10-13T03:51:41.553Z",
+    "auditedAt": "2026-10-13T03:51:41.553Z",
+    "title": "Rút gọn ACC và đòn kế tiếp",
+    "changes": [
+      "Battle UI đổi nhãn tỷ lệ đánh vật lý trúng quái thành ACC. Đòn kế tiếp dùng icon loại sát thương, DMG, icon ACC và CRIT kèm tỷ lệ; bỏ các chữ Vật lý, trúng bạn và CRIT dư. Đòn phép vẫn chỉ hiển thị icon và DMG cuối cùng."
+    ]
+  },
+  {
+    "id": "c55584b1-7661-47d5-93dc-ada02431e858",
+    "updatedAt": "2026-10-13T03:47:36.942Z",
+    "auditedAt": "2026-10-13T03:47:36.942Z",
+    "title": "Chuẩn hóa icon DEF/RES",
+    "changes": [
+      "Hiệu ứng điều chỉnh chung DEF và RES dùng icon DEFRES cùng nhãn DEF/RES, áp dụng vào log vỡ lá chắn đá, trạng thái combat, mô tả Rift và Chi tiết boss. DEF và RES riêng vẫn giữ icon riêng."
+    ]
+  },
+  {
+    "id": "2c24b2d6-9d90-4e59-89ec-3d9078023fd1",
+    "updatedAt": "2026-10-13T03:41:54.774Z",
+    "auditedAt": "2026-10-13T03:41:54.774Z",
+    "title": "Chuẩn hóa một chữ số thập phân cho chỉ số",
+    "changes": [
+      "Chỉ số trên Battle UI, túi đồ, tab Chỉ số, Chi tiết và log trước → sau hiển thị tối đa một chữ số thập phân; ví dụ 381.200000000005 thành 381.2.",
+      "Các hệ số hiển thị cũng được làm tròn; giữ nguyên độ chính xác tính toán và cách hiển thị xu."
+    ]
+  },
+  {
+    "id": "e873c2d1-f1b2-4541-bd68-4db3a0e53cb6",
+    "updatedAt": "2026-10-13T03:21:10.535Z",
+    "auditedAt": "2026-10-13T03:21:10.535Z",
+    "title": "Gọn tài nguyên Battle UI và làm rõ Belial",
+    "changes": [
+      "HP và MP cùng một hàng với icon, bỏ nhãn HP/MP; không hiển thị bình máu trên bảng vì đã có trên nút. Dòng vé chỉ xuất hiện khi có vé thoát hoặc hồi sinh, không lặp lại vé hồi sinh.",
+      "Bỏ chi phí Mana ở dòng tên Skill trên Battle UI; nút Skill giữ nguyên.",
+      "Belial chỉ rõ số và biểu tượng bóng thật, các nút đánh bóng có biểu tượng tương ứng; Chi tiết giải thích chọn đúng mở hai lượt kết liễu, chọn sai mất HP và tăng DMG boss."
+    ]
+  },
+  {
+    "id": "ff8c940e-e3b6-43ad-b5e3-6547872eb313",
+    "updatedAt": "2026-10-13T03:10:11.669Z",
+    "auditedAt": "2026-10-13T03:10:11.669Z",
+    "title": "Rút gọn dự báo đòn phép",
+    "changes": [
+      "Đòn kế tiếp là phép chỉ hiển thị loại đòn và DMG cuối cùng sau giảm trừ; bỏ tỷ lệ đánh trúng và CRIT."
+    ]
+  },
+  {
+    "id": "d0a0116a-60d1-4d9e-865a-d2a66049da59",
+    "updatedAt": "2026-10-13T03:07:29.658Z",
+    "auditedAt": "2026-10-13T03:07:29.658Z",
+    "title": "Tinh gọn Battle UI Sinh tồn V3",
+    "changes": [
+      "Tiêu đề hiển thị tầng và khu vực; class và người chơi cùng một dòng. Thay mô tả skill trên bảng bằng tỷ lệ vật lý đánh trúng quái.",
+      "Bỏ dòng chỉ số gốc của đối thủ và dự báo nhận riêng; Đòn kế tiếp gộp loại sát thương, DMG sau DEF/RES và giảm trừ, tỷ lệ đánh trúng cùng tỷ lệ CRIT. Dải DMG chưa nhân CRIT.",
+      "Vé cầu nguyện chỉ hiển thị trên Battle UI khi đang gặp RNGesus; vẫn xem vé trong túi đồ."
+    ]
+  },
+  {
+    "id": "1744a440-779d-4e00-a2d9-30c0c69b6f16",
+    "updatedAt": "2026-10-13T02:48:28.168Z",
+    "auditedAt": "2026-10-13T02:48:28.168Z",
+    "title": "Lựa chọn mới cho Tax Collector, Healer và The Thief",
+    "changes": [
+      "Tax Collector: thêm Chống trả để nhận Royal Outlaw, không gặp lại người thu thuế nhưng Boss gây thêm 20% sát thương đến hết run; Nộp thuế và Lucky Break giữ nguyên.",
+      "Healer: thêm Hiến 70% HP hiện tại, khóa hồi HP tại checkpoint trong 10 tầng tiếp theo; Healer trở lại hồi đầy HP/MP và trao phúc ấn LUCK +40, STR/DEX/VIT/ENE mỗi chỉ số +10.",
+      "The Thief: Chấp nhận có Lucky Break, nếu thất bại chia đều mất 10% payout hiện tại hoặc nửa bình; Đánh đuổi Elite nhận thưởng 20% cược và Underworld Lead, miễn phí Diamond/Rift Merchant theo giới hạn cũ, không gặp lại Thief nhưng Elite gây thêm 30% sát thương.",
+      "Mimic mở rương xuất hiện đúng tên và icon tại cùng phòng. Hạ cả Mimic và Ancient Mimic tăng gấp đôi trọng số Blood Fountain/Mirror of Fate và tỷ lệ Blood Mimic trong Blood Fountain; giữ các phần thưởng cũ.",
+      "Các ấn mới lưu theo run và hiển thị tại Tower Remembers trong Rift; Chi tiết và trang tỷ lệ giải thích các lựa chọn mới. Chỉ áp dụng Sinh tồn V3."
+    ]
+  },
+  {
+    "id": "63bb5c72-5c6b-4bf9-9963-3a548119b86d",
+    "updatedAt": "2026-10-12T11:46:40.873Z",
+    "auditedAt": "2026-10-12T11:46:40.873Z",
+    "title": "Sửa sát thương hiển thị và lựa chọn boss",
+    "changes": [
+      "Dự báo và log đòn đánh Sinh tồn V3 hiển thị sức sát thương sau kháng thay vì giới hạn theo HP còn lại; HP thực trừ và các hiệu ứng chiến đấu giữ nguyên.",
+      "Menu lựa chọn boss đánh dấu mục đang chọn; Necrobot Alpha ghi rõ mục tiêu, tác dụng từng bộ phận và tiến độ mở Core.",
+      "Rút gọn log rèn và các dòng chỉ số trước→sau để tránh khoảng trống do danh sách dài bị tách ô."
+    ]
+  },
+  {
+    "id": "159f17cc-7925-412e-8569-9ab6104c32f3",
+    "updatedAt": "2026-10-12T10:09:12.579Z",
+    "auditedAt": "2026-10-12T10:09:12.579Z",
+    "title": "Tinh gọn mô tả boss và sửa lá chắn đá",
+    "changes": [
+      "Stone Skin: phá lá chắn giảm cả DEF và RES quái 8%/12%/16% theo bậc Rift; UI hiển thị HP lá chắn ban đầu và còn lại.",
+      "Mô tả boss được chia thành ý ngắn và dùng icon chỉ số; Azmodan ghi rõ ấn máu nổ sau bao nhiêu lượt, sát thương lên ai và cách phản ấn/dập lửa.",
+      "Luật trang bị mới bật trực tiếp cho run Sinh tồn V3 mới, không cần HARDCORE_EQUIPMENT_RULES_VERSION; run đã lưu giữ phiên bản trang bị của mình."
+    ]
+  },
+  {
+    "id": "c82f7f85-6919-430d-9f78-b0f76fcd54d8",
+    "updatedAt": "2026-10-12T08:45:18.732Z",
+    "auditedAt": "2026-10-12T08:45:18.732Z",
+    "title": "Làm rõ hiến máu của Lilith",
+    "changes": [
+      "Chi tiết Lilith liệt kê ba mức hiến máu với lượng HP thực tế, phần trăm DMG Tấn công/Skill tăng cho người chơi và số lượt hiệu lực theo Depth.",
+      "Dùng icon HP/DMG chuẩn; hiển thị bonus đang có và mức HP tối đa có thể hồi khi còn hiệu ứng hiến máu. Bỏ thông tin chu kỳ, trần và ngân sách hồi không cần thiết khỏi chi tiết Lilith."
+    ]
+  },
+  {
+    "id": "84356550-50a3-4389-a2ab-fc0b8e58debb",
+    "updatedAt": "2026-10-12T08:33:26.246Z",
+    "auditedAt": "2026-10-12T08:33:26.246Z",
+    "title": "Sửa menu hành động boss và dấu hiệu Gharbad",
+    "changes": [
+      "Menu hành động và chọn mục tiêu của boss Sinh tồn đã nhận tương tác đúng, khắc phục lỗi chọn menu nhưng Discord không phản hồi.",
+      "Gharbad hiển thị biểu tượng kèm tên hình, trạng thái đầu hàng thật hoặc giả và lựa chọn tương ứng, thay cho mô tả dấu hiệu khó nhận biết.",
+      "Bổ sung thông tin menu trong log lỗi xử lý tương tác để dễ xác định lỗi phát sinh."
+    ]
+  },
+  {
+    "id": "df1cca02-5d35-4186-9198-ac33b2eb85d3",
+    "updatedAt": "2026-10-12T08:24:00.961Z",
+    "auditedAt": "2026-10-12T08:24:00.961Z",
+    "title": "Death Projector: hướng bắn ngẫu nhiên",
+    "changes": [
+      "Trong Sinh tồn V3, Death Projector giữ hướng bắn A/B/C trong 2 lượt, rồi chọn ngẫu nhiên một trong hai vùng còn lại ở mọi Depth, thay cho thứ tự cố định.",
+      "UI báo vùng đang bị quét và thời gian đổi hướng; hướng bắn được lưu, không đổi khi mở giao diện hoặc khởi động lại bot."
+    ]
+  },
+  {
+    "id": "081e6e66-6093-42a1-a03c-cea6938578b7",
+    "updatedAt": "2026-10-12T08:15:10.334Z",
+    "auditedAt": "2026-10-12T08:15:10.334Z",
+    "title": "Sinh tồn V3: làm mới tám Rift",
+    "changes": [
+      "Phát Rift theo túi đủ 8 loại, mỗi 10 tầng đến tầng 960; tối đa 12 stack mỗi loại, có ba cấp hiệu lực và thông báo tăng cấp.",
+      "Stone Skin có giáp riêng; Bloodlust chỉ tăng một phản công; Fortified và Swift tạo lợi thế cho lượt gây sát thương kế tiếp. Soul Drain giới hạn lượt hút MP và có hồi MP bù khi đánh thường.",
+      "Điều chỉnh Elemental Dominion, Unstable Rift và Cursed Ground; cập nhật chỉ số hiệu lực, dự báo sát thương và chi tiết Rift theo cơ chế mới.",
+      "Lưu thứ tự túi và trạng thái combat qua khởi động lại; giữ luật của run cũ và Tower. Severance hoặc phước lành không đổi thứ tự túi."
+    ]
+  },
+  {
+    "id": "55f1495e-3e4f-4447-b20f-76303fd7341f",
+    "updatedAt": "2026-10-12T07:36:41.080Z",
+    "auditedAt": "2026-10-12T07:36:41.080Z",
+    "title": "Class Awakening cho Sinh tồn V3",
+    "changes": [
+      "Run V3 mới: hạ boss tầng 100 và sống sót sẽ nhận Class Artifact và nội tại riêng cho 7 class, trước rương boss.",
+      "Thêm Focus, Fury, Shadow, Arcane Echo, Bark Barrier, Bone Totem và Consecration; xem mô tả và tài nguyên hiện tại trong Chỉ số.",
+      "Class Artifact riêng của run, không chiếm trang bị hay nội tại LR, không rèn/nghiền/giải nguyền và không bị event lấy mất. Run đang chơi giữ luật đã lưu.",
+      "Hit phụ không sinh chuỗi kích hoạt hoặc hút MP; lưu tài nguyên khi tiếp tục run và bảo vệ trước thao tác lặp. Chưa chạy simulate cân bằng."
+    ]
+  },
+  {
+    "id": "e3774561-40e4-437c-9ba6-1f51b05426e6",
+    "updatedAt": "2026-10-12T07:11:29.090Z",
+    "auditedAt": "2026-10-12T07:11:29.090Z",
+    "title": "Hoàn thiện pool affinity Sinh tồn V3",
+    "changes": [
+      "Phoenix Blood thêm affinity Sorceress; Hollow Crown thêm Druid để mỗi class có đủ lựa chọn hợp class trong offer ba món, giữ nguyên hiệu ứng chung.",
+      "Bảo đảm affinity tại Lost Adventurer chỉ dựa trên các lựa chọn người chơi có thể thực hiện; phần thưởng ẩn không làm đổi pity khi mở lại giao diện.",
+      "Luật trang bị mới vẫn là cấu hình thử nghiệm cho run mới; run cũ và Tower đã tạo giữ snapshot. Chưa chốt cân bằng tỷ lệ thắng."
+    ]
+  },
+  {
+    "id": "4f6ca00c-3704-4b3b-bad1-7fa70745b3b7",
+    "updatedAt": "2026-10-12T06:58:15.887Z",
+    "auditedAt": "2026-10-12T06:58:15.887Z",
+    "title": "Chuẩn bị rework trang bị Sinh tồn V3",
+    "changes": [
+      "Bổ sung catalog 100 trang bị, affinity theo class và bảo đảm lựa chọn hợp class sau 3 nguồn thưởng liên tiếp không phù hợp.",
+      "Luật mới có level giảm dần hiệu lực, giải nguyền theo từng phần level, và Forge nghiền một cấp để chọn một boon thay vì giữ chỉ số hấp thụ.",
+      "Bổ sung nội tại affinity cho 7 class, lựa chọn 1 trong 3 món từ rương boss và thông tin trang bị trong Túi/Chỉ số.",
+      "Run cũ và Tower đã tạo giữ dữ liệu đã lưu. Rework trang bị hiện bật qua cấu hình thử nghiệm, chưa chốt cân bằng hoặc tỷ lệ thắng."
+    ]
+  },
+  {
+    "id": "0d4143d5-5f37-442a-bcba-db18af88d9f0",
+    "updatedAt": "2026-10-12T04:03:03.705Z",
+    "auditedAt": "2026-10-12T04:03:03.705Z",
+    "title": "Sinh tồn V3: roster 39 boss",
+    "changes": [
+      "Run V3 mới roll đều 39 boss ở mỗi mốc 50–950, với cơ chế và ba mức Depth theo tầng.",
+      "Làm mới Kabraxis với Resonance và Corrupted Seal; Deimoss có Spire, Flesh Core và Plane qua ba phase.",
+      "Chọn mục tiêu, Ward và Plane bằng menu không tốn lượt; Chi tiết hiển thị cơ chế, cảnh báo và cách đối phó.",
+      "Hiệu chỉnh sát thương đấu boss riêng cho từng class theo mục tiêu hoàn thành tầng 999 là 3–5% trong mô phỏng chuẩn. Run đang chơi tiếp tục dùng roster đã lưu."
+    ]
+  },
+  {
+    "id": "17a7b19c-8eb1-4ba4-8e45-28e705e14276",
+    "updatedAt": "2026-10-12T01:23:54.852Z",
+    "auditedAt": "2026-10-12T01:23:54.852Z",
+    "title": "Sinh tồn v3: chỉ số và bản sắc class",
+    "changes": [
+      "Run mới dùng v3.0.0: mỗi class chuyển STR/DEX/VIT/ENE theo mastery riêng; Assassin tăng né và Crit tốt hơn, các class khác có hướng sát thương/chống chịu riêng.",
+      "Tách sát thương nền class, điểm phân bổ và item/hấp thụ; sát thương cộng thẳng từ item không còn bị nhân hệ số sát thương chung. Tab Chỉ số hiển thị hệ số, trần và đóng góp từng nguồn.",
+      "Run v2 đang chơi giữ công thức cũ. Giữ nguyên kỹ năng, item/level/nguyền, Forge, drop, checkpoint, boss, event, payout và Tháp Định Mệnh."
+    ]
+  },
+  {
     "id": "d3ab00eb-9d62-477b-9260-bec000d23843",
     "updatedAt": "2026-10-11T13:47:04.142Z",
     "auditedAt": "2026-10-11T13:47:04.142Z",

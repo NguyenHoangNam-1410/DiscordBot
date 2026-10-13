@@ -3,7 +3,7 @@
 const boss = require("../src/hardcore/bosses/mechanics");
 const core = require("../src/hardcore/engine");
 function choose(s) {
-  if (s.gameplayVersion !== 2) return null;
+  if (![2, 3].includes(s.gameplayVersion)) return null;
   const e = s.encounter,
     options = core.actions(s).filter((a) => !a.disabled),
     has = (a) => options.some((o) => o.action === a);

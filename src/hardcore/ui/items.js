@@ -1,4 +1,6 @@
 "use strict";
+const rules = require("../equipment/rules");
+const affinity = require("../equipment/affinityEffects");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -47,7 +49,7 @@ module.exports = function createModule(dependencies) {
           if (key === "defenseReduction" || key === "defenseSet")
             return `${E.defense} **DEF** −${percent(key === "defenseSet" ? 0.5 : value)} lúc nhận nguyền${defenseLoss !== null ? ` (đã trừ **${defenseLoss}**)` : ""}${compactCurses ? "" : "; không cộng dồn theo cấp"}`;
           if (key === "bonusPenalty")
-            return `${highlightStat(effectStatLabel(key))} ×${(1 - value).toFixed(2)} mỗi cấp chưa giải`;
+            return `${highlightStat(effectStatLabel(key))} ×${(1 - value).toFixed(1)} mỗi cấp chưa giải`;
           if (key === "potions")
             return `${E.potion} **Bình máu** +${value} khi nhận mỗi cấp`;
           if (key === "escapeTokens")
@@ -57,7 +59,7 @@ module.exports = function createModule(dependencies) {
           const n = value * level;
           if (key === "floorHpLoss")
             return `${E.floorHpLoss} **HP mất/tầng:** cuối tầng giảm HP hiện tại một lượng bằng ${percent(n)} Max HP (luôn còn ít nhất 1 HP)`;
-          return `${highlightStat(effectStatLabel(key))} ${n > 0 ? "+" : ""}${percentages.includes(key) ? percent(n) : Math.round(n * 100) / 100}`;
+          return `${highlightStat(effectStatLabel(key))} ${n > 0 ? "+" : ""}${percentages.includes(key) ? percent(n) : Number(n.toFixed(1))}`;
         })
         .join(STAT_SEPARATOR) || "Không có"
     );
@@ -103,25 +105,74 @@ module.exports = function createModule(dependencies) {
     return text ? "\n" + formatPassiveText(text) : "";
   }
 
-  function itemText(item, level = 1) {
+  function itemText(item, level = 1, state = null) {
     if (item.category === "consumable")
-      return `${ticketIcon(item.id)} **Vật phẩm:** ${item.text}`;
-    return `${effectText(item.effects, level)}${passiveText(item)}${item.curse ? `\n☣️ Curse: ${effectText(item.curse.effects, level)}` : ""}`;
+      return ticketIcon(item.id) + " **Vật phẩm:** " + item.text;
+    const scale = item.catalogVersion === 3 ? rules.scale(level) : level;
+    return (
+      effectText(item.effects, scale) +
+      passiveText(item) +
+      (item.curse
+        ? "\n☣️ " +
+          (item.catalogVersion === 3 ? "Nguyền: " : "Curse: ") +
+          effectText(item.curse.effects, scale)
+        : "") +
+      affinity.text(item, state?.classKey)
+    );
+  }
+  function ownedItemText(state, item) {
+    const scale = rules.itemScale(state, item),
+      curse = rules.curseScale(state, item);
+    return (
+      effectText(item.definition.effects, scale) +
+      passiveText(item.definition) +
+      (item.definition.curse
+        ? "\n☣️ " +
+          (item.level > (item.cleansedLevels || 0)
+            ? effectText(item.definition.curse.effects, curse, {
+                defenseLoss: itemCurses.defenseLoss(item),
+              })
+            : rules.enabled(state)
+              ? "Đã giải toàn bộ nguyền"
+              : "Đã giải toàn bộ curse")
+        : "") +
+      affinity.text(item.definition, state.classKey) +
+      (rules.enabled(state)
+        ? "\nTổng hiệu lực: " +
+          (scale * 100).toFixed(1) +
+          "% Lv.1; nội tại không nhân level."
+        : "")
+    );
   }
 
-  function itemEffectChanges(effects, beforeLevel, afterLevel, options = {}) {
+  function itemEffectChanges(
+    effects,
+    beforeLevel,
+    afterLevel,
+    state = null,
+    cleansedLevels = 0,
+    options = {},
+  ) {
+    const removed = afterLevel === 0;
+    if (rules.enabled(state)) {
+      beforeLevel = rules.scale(beforeLevel) - rules.scale(cleansedLevels);
+      afterLevel =
+        afterLevel === 0
+          ? 0
+          : rules.scale(afterLevel) - rules.scale(cleansedLevels);
+    }
     return Object.entries(effects)
       .map(([key, value]) => {
         const label = highlightStat(effectStatLabel(key));
         const describe = (level) =>
           key === "bonusPenalty"
-            ? label + " ×" + Math.pow(1 - value, level).toFixed(3)
+            ? label + " ×" + Math.pow(1 - value, level).toFixed(1)
             : effectText({ [key]: value }, level, {
                 ...options,
                 compactCurses: true,
               });
         const before = describe(beforeLevel);
-        if (afterLevel === 0) return "- " + before + " → **Đã gỡ**";
+        if (removed) return "- " + before + " → **Đã gỡ**";
         const after = describe(afterLevel);
         if (before === after) return "- " + after + " (không đổi)";
         const prefix = label + " ";
@@ -162,13 +213,7 @@ module.exports = function createModule(dependencies) {
               ? "✅ Đủ set, sẵn sàng nhận thư mời."
               : "";
       return {
-        name:
-          relicIcon(id) +
-          " Set " +
-          set.name +
-          " (" +
-          count +
-          "/5)",
+        name: relicIcon(id) + " Set " + set.name + " (" + count + "/5)",
         value:
           "→ **" +
           core.RELIC_ITEMS[id].name +
@@ -209,10 +254,13 @@ module.exports = function createModule(dependencies) {
       }
     };
     for (const item of state.items) {
-      add(item.definition.effects, item.level);
-      const levels = Math.max(0, item.level - (item.cleansedLevels || 0));
+      add(item.definition.effects, rules.itemScale(state, item));
+      const levels = rules.curseScale(state, item);
       const effects = { ...item.definition.curse?.effects };
-      if (levels && itemCurses.defenseReduction(item)) {
+      if (
+        item.level > (item.cleansedLevels || 0) &&
+        itemCurses.defenseReduction(item)
+      ) {
         delete effects.defenseReduction;
         delete effects.defenseSet;
         totals.defense =
@@ -234,6 +282,7 @@ module.exports = function createModule(dependencies) {
     formatPassiveText,
     passiveText,
     itemText,
+    ownedItemText,
     itemEffectChanges,
     equipmentSummary,
     setProgressFields,

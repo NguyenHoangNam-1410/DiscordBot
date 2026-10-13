@@ -375,7 +375,12 @@ try {
   assert.equal(migrated.items[0].level - migrated.items[0].cleansedLevels, 1);
   assert.equal(
     migrated.defense,
-    Math.ceil(Math.floor(migrated.str * 0.3 + migrated.vit * 0.15) / 2),
+    Math.ceil(
+      stats.derive({
+        ...migrated,
+        items: migrated.items.map((item) => ({ ...item, cleansedLevels: item.level })),
+      }).defense / 2,
+    ),
   );
   migrated.encounter = core.makeSurprise(migrated, () => 0.5, "purifier");
   core.act(

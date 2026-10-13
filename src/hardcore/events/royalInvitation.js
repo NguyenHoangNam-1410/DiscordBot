@@ -10,7 +10,7 @@ const WEIGHT = 10;
 const { SETS } = require("./royalSets");
 function enabled(s) {
   return (
-    s.gameplayVersion === 2 &&
+    [2, 3].includes(s.gameplayVersion) &&
     !s.mode?.startsWith("tower") &&
     !s.towerChallengeId
   );

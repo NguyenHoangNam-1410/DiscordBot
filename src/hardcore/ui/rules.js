@@ -25,9 +25,20 @@ module.exports = function createModule(dependencies) {
   function ratesFields(category) {
     const fields = {
       combat: [
+        { name: "✨ Class Innate · từ tầng 1", value: "V3.1: mỗi class có nội tại ngay từ tầng 1, không cần item và không mất sau thức tỉnh. Xem Chỉ số để đọc hiệu ứng, cooldown và tài nguyên. Buff trong combat giữ qua phase, hết khi kết thúc trận; né/chặn không ngăn DMG chuẩn, chi phí HP, bẫy hoặc phản phệ." },
+        {
+          name: "✨ Class Awakening · tầng 100",
+          value:
+            "Run V3 mới: hạ boss tầng 100 và sống sót nhận một Class Artifact riêng của class, trước rương boss. Nội tại tồn tại đến hết run, không chiếm trang bị/LR, không rèn/nghiền/giải nguyền, không mất hay bị sao chép bởi event. Xem Chỉ số để đọc nội tại và tài nguyên hiện tại. Run cũ giữ luật đã lưu.",
+        },
+        {
+          name: "✨ Hệ chỉ số v3",
+          value:
+            "Run mới lưu mastery và công thức riêng của class. DEX vẫn tăng ACC; Assassin chuyển DEX thành né/Crit tốt hơn. VIT/STR/ENE chuyển thành HP, DEF, RES, MP và sát thương theo class; xem Chỉ số để đọc hệ số và trần hiện tại. Sát thương tách class, điểm phân bổ và item/hấp thụ; sát thương cộng thẳng từ item không bị nhân bởi hệ số sát thương chung. Skill, checkpoint, item, Forge và các event giữ quy tắc hiện tại. Run V2 đang chơi tiếp tục dùng công thức đã lưu.",
+        },
         {
           name: `${E.attack} Tấn công và sát thương`,
-          value: `**${E.attack} Đánh thường:** Gây **vật lý**: có thể trượt (0 DMG) hoặc Crit ×1,75; ${E.defense} của quái giảm sát thương.\n- **Sát thương phép** luôn trúng, không Crit; chịu giảm trừ từ RES.\n- Dải DMG trên bảng giao tranh đã tính ${E.defense} của quái hiện tại, chưa tính Crit và giả định đòn vật lý trúng. Chỉ số đầy đủ hiển thị sức mạnh trước giảm trừ.\n- Đánh thường hồi MP ngay cả khi trượt: Sorceress/Necromancer hồi 70% Max MP, class khác 40%; làm tròn xuống, ít nhất 1, không vượt Max MP.\n- Quái còn sống sẽ phản công sau hành động, trừ khi skill chặn/né đòn đó.`,
+          value: `**${E.attack} Đánh thường:** Gây **vật lý**: có thể trượt (0 DMG) hoặc Crit ×1,8; ${E.defense} của quái giảm sát thương.\n- **Sát thương phép** luôn trúng, không Crit; chịu giảm trừ từ RES.\n- Dải DMG trên bảng giao tranh đã tính ${E.defense} của quái hiện tại, chưa tính Crit và giả định đòn vật lý trúng. Chỉ số đầy đủ hiển thị sức mạnh trước giảm trừ.\n- Đánh thường hồi MP ngay cả khi trượt: Sorceress/Necromancer hồi 70% Max MP, class khác 40%; làm tròn xuống, ít nhất 1, không vượt Max MP.\n- Quái còn sống sẽ phản công sau hành động, trừ khi skill chặn/né đòn đó.`,
         },
         {
           name: `${E.defense} Phòng thủ và ${E.potion} bình máu`,
@@ -58,17 +69,19 @@ module.exports = function createModule(dependencies) {
         {
           name: `${eventIcon("boss")} Cơ chế boss`,
           value:
-            "- Sinh tồn có **21 boss riêng**: mỗi 50 tầng, Kabraxis 666 và Deimoss 999. Boss ưu tiên trước RNGesus, ký ức và event thường.\n- Tầng **333** chọn một ấn War/Protection/Arcane, lưu một lần; tầng **666** có cửa rút thưởng trước trận. Vào Kabraxis thì không rút/bỏ qua. Hạ nhận SSR 66,6% / UR có nguyền 33,4%, bonus 66,6% cược và thức tỉnh ấn; không thêm rương/drop LUCK.\n- **Deimoss:** ba thanh HP độc lập 30/30/40%, không xuyên damage dư, không phản công khi chuyển phase; chỉ trao thưởng sau Phase 3.\n- Bảng boss hiển thị cơ chế, stack, cảnh báo và dự báo damage. **Chi tiết** giải thích cách xử lý. Trận đã lưu giữ nguyên cơ chế; boss xuất hiện sau cập nhật dùng roster mới. Tower giữ luật riêng.",
+            "- Run V3 mới dùng roster xoay tua: mỗi mốc **50–950** roll đều từ **39 boss**, có thể lặp; Depth I/II/III theo tầng. Giữ 333/666/999 cố định. Boss ưu tiên trước RNGesus, ký ức và event thường.\n- Tầng **333** chọn một ấn War/Protection/Arcane, lưu một lần; tầng **666** có cửa rút thưởng trước trận. Vào Kabraxis thì không rút/bỏ qua. Hạ nhận SSR 66,6% / UR có nguyền 33,4%, bonus 66,6% cược và thức tỉnh ấn; không thêm rương/drop LUCK.\n- **Deimoss:** ba thanh HP độc lập 30/30/40%, không xuyên damage dư, không phản công khi chuyển phase; chỉ trao thưởng sau Phase 3.\n- Bảng boss hiển thị cơ chế, stack, cảnh báo và dự báo damage. **Chi tiết** giải thích cách xử lý. Chọn mục tiêu/Ward/Plane không tốn lượt; hành động boss tốn 1 lượt. Run bắt đầu trước cập nhật giữ roster cũ đến hết run; Tower giữ luật riêng.",
         },
         {
           name: `${E.checkpoint} Checkpoint và ${E.rift} Rift`,
           value:
-            "- Sau mỗi **5 tầng:** hồi đầy HP, +2 bình (cơ bản 5, nội tại tăng tối đa 10), chọn **+5 STR/DEX/VIT/ENE**. Bảng hiển thị chỉ số hiện tại và dự báo từng lựa chọn.\n- Sau mỗi **10 tầng:** thêm 1 stack Rift; nhận đủ 8 loại trước khi lặp. Icon ×N là số stack của từng loại; nút Rift giải thích hiệu ứng.\n- Sau mỗi **25 tầng:** chọn Paradox có hiệu lực 5 tầng. Paradox v2 chọn đều một trong **4 cặp cố định**, hiệu lực từ tầng mốc +1 đến hết +5, sau nâng thuộc tính. Không đổi payout hoặc stat gốc; mở UI không roll lại.\n- Sau tầng **199/399/699/899:** xóa toàn bộ stack một Rift có hại, trừ Unstable Rift.",
+            "- Sau mỗi **5 tầng:** hồi đầy HP, +2 bình (cơ bản 5, nội tại tăng tối đa 10), chọn **+5 STR/DEX/VIT/ENE**. Bảng hiển thị chỉ số hiện tại và dự báo từng lựa chọn.\n- Run V3 mới: mỗi **10 tầng**, từ **10–960**, phát 1 stack từ túi xáo đủ 8 loại đã lưu; hết túi mới xáo lại. Không phát ở **970/980/990**. Mỗi loại tối đa **×12**; ×1–4 Rift I, ×5–8 Rift II, ×9–12 Rift III. Hạ boss/xử lý việc bắt buộc trước khi nhận. Run cũ giữ luật đã lưu. Icon ×N là số stack của từng loại; nút Rift giải thích hiệu ứng.\n- Sau mỗi **25 tầng:** chọn Paradox có hiệu lực 5 tầng. Paradox v2 chọn đều một trong **4 cặp cố định**, hiệu lực từ tầng mốc +1 đến hết +5, sau nâng thuộc tính. Không đổi payout hoặc stat gốc; mở UI không roll lại.\n- Sau tầng **199/399/699/899:** xóa toàn bộ stack một Rift có hại, trừ Unstable Rift.",
         },
       ],
       loot: [
         {
-          name: relicIcon("conquerors_covenant") + " Chuỗi bốn mảnh · Conqueror’s Covenant [LR]",
+          name:
+            relicIcon("conquerors_covenant") +
+            " Chuỗi bốn mảnh · Conqueror’s Covenant [LR]",
           value:
             "Mimic, Ancient Mimic, Blood Mimic và Clone từ ký ức sau khi phá Mirror of Fate: mỗi nguồn cho 100% một mảnh ở lần hạ hợp lệ đầu tiên trong run, độc lập LUCK; giữ thưởng cũ. Đủ 4 mảnh: Wrong Portal tiếp theo bảo đảm có cửa tầng hầm, vẫn giữ nút vào/bỏ qua. Thắng Covenant Guardian (Tinh anh HP ×1,25, DMG ×1,10 cùng tầng/Rift) mới tiêu thụ mảnh và nhận LR; bạn hành động trước, có thể hồi sinh để đánh tiếp. Nhận di vật kèm animation, hồi đầy HP/MP, giải mọi nguyền UR, xóa ấn Rift; giữ Paradox/Contract. Mỗi quái hạ sau kích hoạt cộng 0,2 điểm % thưởng xu, tối đa +100%; nhân một lần trước trần 10 triệu và chi phí/phạt, không tăng kim cương. Chỉ 1 LR hoạt động/run, không đổi giữa run. Mảnh/di vật mất khi run kết thúc; không gacha, shop hay roll drop LR.",
         },
@@ -138,17 +151,32 @@ module.exports = function createModule(dependencies) {
           value: `${E.dex} **DEX:** Amazon, Assassin.\n${E.ene} **ENE:** Sorceress, Necromancer.\n${E.str} **STR:** Barbarian, Druid, Paladin.\nCorrupted tăng +12 thuộc tính phù hợp class và giảm 8 ${E.vit} VIT.`,
         },
         {
-          name: `${E.luck} Bẫy và Lucky Break`,
-          value: `- **Thu thuế:** trừ một lần 15% số xu có thể rút tại lúc xử lý event (làm tròn lên 1 xu); không đổi hệ số payout và không đánh thuế phần thưởng tăng thêm sau đó. **Trộm bình:** lấy 1 ${E.potion} bình nếu còn. Lucky Break có thể tránh hai hậu quả này: mỗi Luck cho 1,5 điểm %, tối đa 30%.\n- **Wrong Portal:** cơ bản 50% tốt / 50% xấu; LUCK không tác động, nội tại may mắn sự kiện có thể tăng nhánh tốt. Chọn **Vào portal** để nhận kết quả; nhánh xấu gọi Elite đánh phủ đầu, phải hạ Elite mới vượt tầng. **Bỏ qua** để vượt tầng mà không nhận thưởng, chịu hiệu ứng portal hoặc gặp Elite. Tiên tri (nếu có) đánh dấu nút vào portal.\n- Phòng trống cho phép đi tiếp hoặc rút thưởng.`,
+          name: `${eventIcon("tax")} Tax Collector · V3`,
+          value:
+            "Nộp thuế: trừ 15% payout hiện tại, làm tròn lên; không đổi hệ số payout. Lucky Break = min(50%, LUCK ×0,25%); đạt trần ở 200 LUCK giúp tránh thuế. Chống trả: không nộp thuế; Royal Outlaw đến hết run loại Tax Collector khỏi roster, Boss/Final Boss gây thêm 20% DMG lên bạn. Không cộng dồn; xem Rift.",
+        },
+        {
+          name: `${eventIcon("potion_thief")} The Thief · V3`,
+          value:
+            "Chấp nhận: Lucky Break = min(50%, LUCK ×0,25%); đạt trần ở 200 LUCK tránh mất mát; nếu thất bại, 50% mất 10% payout hiện tại / 50% mất nửa bình hiện có, làm tròn lên (0 bình không mất). Đánh đuổi: đánh The Thief (Elite) tại tầng này, bạn đi trước. Hạ nhận +20% cược và Underworld Lead: miễn phí Diamond Merchant/Rift Merchant, giữ một món/lần gặp và Diamond Merchant hai lần/run. Không gặp lại The Thief; Elite gây thêm 30% DMG lên bạn đến hết run. Không cộng dồn; xem Rift.",
+        },
+        {
+          name: `${E.luck} Wrong Portal`,
+          value:
+            "Cơ bản 50% tốt / 50% xấu; LUCK không tác động, nội tại may mắn event có thể tăng nhánh tốt. Vào portal nhận kết quả; nhánh xấu gọi Elite đánh phủ đầu, hạ Elite mới vượt tầng. Bỏ qua để vượt tầng không nhận thưởng, chịu hiệu ứng portal hoặc gặp Elite. Tiên tri đánh dấu nút vào portal. Phòng trống cho phép đi tiếp hoặc rút thưởng.",
         },
         {
           name: `${eventIcon("goblin")} Treasure Goblin`,
           value: `Tỷ lệ bắt = **60% + LUCK ×1 điểm % + buff bắt Goblin**, tối đa **90%**.\n- **Bắt được:** bonus bằng **25% tiền cược** và **1 ${E.backpack} vật phẩm**. Độ hiếm khi bắt thành công: **60% SR / 35% SSR / 5% UR** (trang bị có nguyền hoặc Vé thoát). Buff bắt chỉ tăng cơ hội bắt; tỷ lệ độ hiếm giữ nguyên, không dùng pity của hòm. Đồ trùng tăng 1 level.\n- **Goblin thoát:** trừ một lần **5% payout hiển thị hiện tại**, làm tròn lên 1 xu. Khoản này không giảm hệ số payout hoặc thưởng tăng thêm về sau.\n- Phần thưởng được khóa khi event xuất hiện; mở lại bảng không roll lại. Item và thay đổi chỉ số hiển thị ở **Lượt vừa rồi**.`,
         },
         {
+          name: `${eventIcon("healer")} Healer · Hiến máu (V3)`,
+          value: `**Trị liệu:** hồi 30% Max ${E.hp} HP (ít nhất 20), 30% Max ${E.mana} MP làm tròn lên, +1 ${E.potion} bình. **Hiến máu:** mất 70% HP hiện tại làm tròn lên, còn ít nhất 1; không trị liệu/tiếp tế. Nhận Vulnerable: checkpoint không hồi HP đến hết 10 tầng kế tiếp; bình và chọn thuộc tính giữ nguyên. Sau đó Healer trở lại ở tình huống hợp lệ kế tiếp (sau ưu tiên boss/RNGesus/ký ức/mộ), hồi đầy HP/MP và chuyển thành Vital Benediction: ${E.luck} LUCK +40, ${E.str} STR/${E.dex} DEX/${E.vit} VIT/${E.ene} ENE mỗi chỉ số +10 đến hết run. Hiến máu một lần/run. Xem các ấn trong Rift.`,
+        },
+        {
           name: "Các sự kiện đặc biệt",
           value:
-            "Healer · Treasure Goblin · Blacksmith · Purifier · Sacrificial Altar · Cursed Gambler · Lost Adventurer · Fountain · Horadric Forge · Rift Merchant · Mirror · Treasure Room · Contract · Class Shrine · Strange Doors · Duelist · Payout Shop · Blood Shop · Diamond Shop.\n\nChỉ những event đủ điều kiện mới được chọn. Các lựa chọn có thể đổi HP/MP, thuộc tính, trang bị, payout hoặc tạo hiệu ứng tạm thời. Event hồi HP cũng hồi MP theo cùng tỷ lệ Max MP, làm tròn lên, không vượt Max MP; HP đã đầy vẫn hồi MP. Checkpoint chỉ hồi HP. Lời nguyền giảm hồi HP không giảm MP hồi. Không phải event nào cũng miễn phí hoặc an toàn; đọc giá, tỷ lệ và điều kiện trên bảng trước khi xác nhận.",
+            "Healer · Treasure Goblin · Blacksmith · Purifier · Sacrificial Altar · Cursed Gambler · Lost Adventurer · Fountain · Horadric Forge · Rift Merchant · Mirror · Treasure Room · Contract · Class Shrine · Strange Doors · Duelist · Payout Shop · Blood Shop · Diamond Shop.\n\nPurifier trọng số 3, Royal Invitation đủ điều kiện trọng số 10, các event khác 1. Hạ cả Mimic và Ancient Mimic trong cùng run: Blood Fountain/Mirror trọng số 2 và nhánh Blood Mimic ×2 (tối đa 100%). Chỉ những event đủ điều kiện mới được chọn. Các lựa chọn có thể đổi HP/MP, thuộc tính, trang bị, payout hoặc tạo hiệu ứng tạm thời. Event hồi HP cũng hồi MP theo cùng tỷ lệ Max MP, làm tròn lên, không vượt Max MP; HP đã đầy vẫn hồi MP. Checkpoint chỉ hồi HP. Lời nguyền giảm hồi HP không giảm MP hồi. Không phải event nào cũng miễn phí hoặc an toàn; đọc giá, tỷ lệ và điều kiện trên bảng trước khi xác nhận.",
         },
         {
           name: `${eventIcon("treasure_room")} Treasure Room`,
@@ -208,7 +236,7 @@ module.exports = function createModule(dependencies) {
         {
           name: "✨ Nội tại trang bị",
           value:
-            "Mỗi món có một nội tại, không tăng theo level. Các món khác nhau cùng loại cộng rồi áp trần: cuồng chiến 40%, hút MP 35%, phản thủ 40%, gai 20%, phản khi né 50%, giá xu −20%, event tốt +10 điểm % (nhánh tốt ≤95%), thêm tối đa 5 bình (tổng 10), trần CRIT 75% và né vật lý 60%, khởi động MP 75%, nghỉ chân 5% Max HP, giữ bình 25%, chống bẫy 25%. Phản sát thương chung mỗi lượt ≤50% sát thương cơ bản trung bình của class, chịu DEF/miễn giảm quái; không crit/kích hoạt nội tại. Tiên tri tối đa 2 lựa chọn/event, khóa khi tạo, chỉ báo an toàn/nguy hiểm tức thời, không áp dụng RNGesus. Giải nguyền giữ nội tại; chuyển hóa level cuối làm mất nội tại, phần chỉ số giữ lại không mang nội tại.",
+            "Mỗi món có một nội tại, không tăng theo level. Các món khác nhau cùng loại cộng rồi áp trần: cuồng chiến 40%, hút MP 35%, phản thủ 40%, gai 20%, phản khi né 50%, giá xu −20%, event tốt +10 điểm % (nhánh tốt ≤95%), thêm tối đa 5 bình (tổng 10), nâng trần CRIT/né theo class (tối đa 75%/60%), khởi động MP 75%, nghỉ chân 5% Max HP, giữ bình 25%, chống bẫy 25%. Phản sát thương chung mỗi lượt ≤50% sát thương cơ bản trung bình của class, chịu DEF/miễn giảm quái; không crit/kích hoạt nội tại. Tiên tri tối đa 2 lựa chọn/event, khóa khi tạo, chỉ báo an toàn/nguy hiểm tức thời, không áp dụng RNGesus. Giải nguyền giữ nội tại; chuyển hóa level cuối làm mất nội tại, phần chỉ số giữ lại không mang nội tại.",
         },
         {
           name: "Cửa hàng & túi Sinh tồn",
@@ -238,7 +266,7 @@ module.exports = function createModule(dependencies) {
         {
           name: "Rút thưởng và mất thưởng",
           value:
-            "- Sau khi vượt ít nhất một tầng, **Rút thưởng** kết thúc run và nhận thưởng theo bảng. Rút trước tầng đầu là bỏ run, mất cược. RNGesus và rương boss chưa xử lý không cho rút.\n- Payout là **tổng thưởng xu**, không phải tiền lãi. Hệ số từ vượt tầng dừng tăng sau 100. Bonus event tính theo cược ban đầu; event cược thưởng theo khoản đã đặt. Phạt event trừ một lần theo payout hiện tại, không giảm hệ số thưởng. Giới hạn 10 triệu xu. Các khoản mua đồ/dịch vụ trong run làm giảm payout theo giá đã xác nhận.\n- Chết, bỏ run hoặc hết hạn: mất cược và toàn bộ xu/kim cương tạm giữ. Trang bị trong run cũng không chuyển vào túi Gacha.\n- Run mới dùng v2.0.1; run cũ tiếp tục theo phiên bản đã lưu.",
+            "- Sau khi vượt ít nhất một tầng, **Rút thưởng** kết thúc run và nhận thưởng theo bảng. Rút trước tầng đầu là bỏ run, mất cược. RNGesus và rương boss chưa xử lý không cho rút.\n- Payout là **tổng thưởng xu**, không phải tiền lãi. Hệ số từ vượt tầng dừng tăng sau 100. Bonus event tính theo cược ban đầu; event cược thưởng theo khoản đã đặt. Phạt event trừ một lần theo payout hiện tại, không giảm hệ số thưởng. Giới hạn 10 triệu xu. Các khoản mua đồ/dịch vụ trong run làm giảm payout theo giá đã xác nhận.\n- Chết, bỏ run hoặc hết hạn: mất cược và toàn bộ xu/kim cương tạm giữ. Trang bị trong run cũng không chuyển vào túi Gacha.\n- Run mới dùng v3.1.0; run cũ tiếp tục theo phiên bản đã lưu.",
         },
         {
           name: "Kim cương theo mốc",
@@ -247,6 +275,23 @@ module.exports = function createModule(dependencies) {
         },
       ],
     };
+    {
+      // New Survival V3 runs always use the reworked equipment rules.
+      fields.loot.unshift({
+        name: "Trang bị V3 · affinity",
+        value:
+          "55% hợp class · 25% Universal · 20% lệch build. Sau 3 nguồn thưởng liên tiếp thiếu món hợp class, nguồn tiếp theo bảo đảm một lựa chọn hợp class. Offer nhiều món chỉ tính một lượt; vé/LR/đồ cố định/snapshot mộ không tính. Mọi trang bị sở hữu đều hoạt động; lệch build vẫn nhận hiệu ứng chung.",
+      });
+      fields.combat.push({
+        name: "Level trang bị V3",
+        value:
+          "Level không giới hạn. Tổng hiệu lực Lv.1–5: 100/160/200/230/250%; các cấp sau tiến dần đến 270%. Nội tại/affinity tính một lần mỗi ID. Buff và nguyền chưa giải dùng cùng đường cong. Run cũ giữ luật đã lưu.",
+      });
+      const forge = fields.rewards.find((f) => f.name.includes("Horadric"));
+      if (forge)
+        forge.value =
+          "Luật trang bị mới: nghiền 1 level, gỡ buff/nguyền tương ứng; hết level thì mất nội tại/affinity. Chọn trực tiếp một boon cố định +1 thuộc tính chính, +1 VIT hoặc +1 chỉ số phụ theo class. Không giữ chỉ số hấp thụ; không tốn xu, không reroll. Run cũ giữ Forge cũ.";
+    }
     return category
       ? fields[category] || fields.combat
       : Object.values(fields).flat();

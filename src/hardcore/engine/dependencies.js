@@ -154,8 +154,18 @@ module.exports = function createModule(dependencies) {
 
   const int = (lo, hi, rng) => lo + Math.floor(rng() * (hi - lo + 1));
 
-  const randomItem = (rarity, rng) =>
-    structuredClone(pick(ITEM_POOLS[rarity], rng));
+  const randomItem = (
+    rarity,
+    rng,
+    state = null,
+    source = "random",
+    options = {},
+  ) =>
+    require("../equipment/rules").enabled(state)
+      ? require("../equipment/loot").single(state, rarity, rng, source, options)
+      : structuredClone(
+          pick(require("../item").LEGACY_ITEM_POOLS[rarity], rng),
+        );
 
   const SHRINE_KINDS = Object.freeze([
     "healing",

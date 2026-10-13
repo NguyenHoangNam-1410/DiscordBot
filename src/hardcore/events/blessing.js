@@ -15,7 +15,8 @@ function restore(state) {
     (sum, n) => sum + Math.max(0, n),
     0,
   );
-  state.modifiers = {};
+  if (require("../rift").enabled(state)) require("../rift").clear(state);
+  else state.modifiers = {};
   stats.recompute(state);
   state.hp = state.maxHp;
   state.mana = state.maxMana;

@@ -18,16 +18,27 @@ module.exports = function createModule(dependencies) {
     );
   }
 
-  function chestOdds(state, treasure = false) {
+  function chestOdds(state, treasure = false, riftEligible = true) {
     const guaranteed = state.pityRare >= 5;
-    const unstable = state.modifiers.unstable_rift || 0;
-    const ancient = guaranteed ? 0 : clamp(0.03 + unstable * 0.01, 0, 0.15);
+    const modernRift = require("../rift").enabled(state);
+    const unstable = modernRift
+      ? riftEligible
+        ? require("../rift").count(state, "unstable_rift")
+        : 0
+      : state.modifiers.unstable_rift || 0;
+    const ancient = guaranteed
+      ? 0
+      : clamp(0.03 + unstable * (modernRift ? 0.005 : 0.01), 0, 0.15);
     const mimic = guaranteed
       ? 0
-      : clamp(0.12 + unstable * 0.03 + state.mimicChance, 0, 0.65);
+      : clamp(
+          0.12 + unstable * (modernRift ? 0.015 : 0.03) + state.mimicChance,
+          0,
+          0.65,
+        );
     let loot;
     if (treasure) {
-      const ssr = Math.min(0.7, 0.35 + unstable * 0.05);
+      const ssr = Math.min(0.7, 0.35 + unstable * (modernRift ? 0.02 : 0.05));
       loot = { legendary: ssr, rare: 1 - ssr };
     } else {
       const ssr = legendaryChance(state);
@@ -60,11 +71,29 @@ module.exports = function createModule(dependencies) {
     };
   }
 
-  function makeChest(state, rng, treasure = false) {
+  function makeChest(
+    state,
+    rng,
+    treasure = false,
+    { deferAffinity = false, riftEligible = true } = {},
+  ) {
     const guaranteed = state.pityRare >= 5;
-    const unstable = state.modifiers.unstable_rift || 0;
-    const ancient = clamp(0.03 + unstable * 0.01, 0, 0.15),
-      mimic = clamp(0.12 + unstable * 0.03 + state.mimicChance, 0, 0.65);
+    const modernRift = require("../rift").enabled(state);
+    const unstable = modernRift
+      ? riftEligible
+        ? require("../rift").count(state, "unstable_rift")
+        : 0
+      : state.modifiers.unstable_rift || 0;
+    const ancient = clamp(
+        0.03 + unstable * (modernRift ? 0.005 : 0.01),
+        0,
+        0.15,
+      ),
+      mimic = clamp(
+        0.12 + unstable * (modernRift ? 0.015 : 0.03) + state.mimicChance,
+        0,
+        0.65,
+      );
     const mimicRoll = rng();
     let kind =
       !guaranteed && mimicRoll < ancient
@@ -76,7 +105,9 @@ module.exports = function createModule(dependencies) {
     const lootRoll = rng();
     if (treasure)
       rarity =
-        lootRoll < Math.min(0.7, 0.35 + unstable * 0.05) ? "legendary" : "rare";
+        lootRoll < Math.min(0.7, 0.35 + unstable * (modernRift ? 0.02 : 0.05))
+          ? "legendary"
+          : "rare";
     else {
       const ssr = legendaryChance(state);
       if (lootRoll < ssr) rarity = "legendary";
@@ -96,8 +127,18 @@ module.exports = function createModule(dependencies) {
       kind,
       rarity,
       guaranteed,
-      odds: chestOdds(state, treasure),
-      item: rarity ? randomItem(rarity, rng) : null,
+      odds: chestOdds(state, treasure, riftEligible),
+      item:
+        rarity &&
+        !deferAffinity &&
+        (kind === "safe" || !require("../equipment/rules").enabled(state))
+          ? randomItem(
+              rarity,
+              rng,
+              state,
+              treasure ? "treasure_chest" : "chest",
+            )
+          : null,
       inspected: false,
       revealed: false,
       detectionChance: Math.min(
@@ -120,6 +161,12 @@ module.exports = function createModule(dependencies) {
       state.pityRare++;
       state.pityLegendary++;
       state.encounter = chest.mimic;
+      if (require("../events/explorationMarks").enabled(state)) {
+        state.encounter.name =
+          chest.kind === "ancient_mimic" ? "Ancient Mimic" : "Mimic";
+        state.encounter.mimicKind = chest.kind;
+      }
+      state.encounter.mechanic = null;
       state.lastLog = `${prefix}${chest.kind === "ancient_mimic" ? "Ancient Mimic" : "Mimic"} xuất hiện!`;
       finishEventResult(state);
       return;

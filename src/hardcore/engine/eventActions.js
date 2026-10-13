@@ -49,6 +49,38 @@ module.exports = function createModule(dependencies) {
     };
     const itemById = (id) =>
       state.items.find((item) => item.definition.id === id);
+    if (k === "horadric" && e.forge) {
+      const f = e.forge;
+      if (f.version !== 1) throw Error("INVALID_FORGE_VERSION");
+      if (action === "forge_grind" && f.stage === "grind") {
+        const target = itemById(f.targetId);
+        if (!target) throw Error("NO_FORGE_ITEM");
+        f.removed = { id: target.definition.id, level: target.level };
+        grind(state, target);
+        f.stage = "boon";
+        state.lastLog = "🔨 Đã nghiền 1 level. Chọn một boon để tiếp tục.";
+        return;
+      }
+      if (
+        /^forge_boon_[0-2]$/.test(action) &&
+        f.stage === "boon" &&
+        !f.claimed
+      ) {
+        const boon = f.boons[Number(action.slice(-1))];
+        f.claimed = true;
+        addSource(state, { [boon.key]: boon.amount }, "forgeBoon");
+        done(
+          "🔨 Forge: +" +
+            boon.amount +
+            " " +
+            boon.key.toUpperCase() +
+            " cho bạn.",
+        );
+        return;
+      }
+      if (f.stage === "boon" || action !== "event_skip")
+        throw Error("STALE_ACTION");
+    }
     if (k === "royal_invitation") {
       if (action === "event_skip") {
         royal.decline(state);
@@ -85,6 +117,9 @@ module.exports = function createModule(dependencies) {
           "** (−" +
           offer.price +
           "; giảm trong suốt run).\n";
+      } else if (require("../events/explorationMarks").freeMerchant(state, k)) {
+        offer.price = 0;
+        paymentLog = "Underworld Lead: mua miễn phí.\n";
       } else if (k === "diamond_shop")
         spendDiamonds(session.guild_id, session.user_id, offer.price, {
           reason: "hardcore:v2:item-shop",
@@ -148,6 +183,7 @@ module.exports = function createModule(dependencies) {
         completeFloor(state, session, rng, 0);
       } else if (e.wins >= 3 || e.round >= 5) {
         if (e.wins >= 3) {
+          e.reward ||= randomItem(e.rewardRarity, rng, state, "duelist");
           receiveItem(state, e.reward);
           state.lastLog += ` Nhận ${e.reward.name}.`;
         } else {
@@ -162,7 +198,48 @@ module.exports = function createModule(dependencies) {
       }
       return;
     }
-    if (k === "healer") {
+    if (k === "healer" && e.healerReturn) {
+      const marks = require("../events/explorationMarks"),
+        m = marks.ensure(state);
+      if (!marks.healerDue(state)) throw Error("INVALID_ACTION");
+      const hpBefore = state.hp,
+        mpBefore = state.mana;
+      delete m.vulnerable;
+      m.vitalBlessing = true;
+      addSource(
+        state,
+        { str: 10, dex: 10, vit: 10, ene: 10, luck: 40 },
+        "vitalBenediction",
+      );
+      state.hp = state.maxHp;
+      state.mana = state.maxMana;
+      markDirect(state, ["hp", "mana"]);
+      done(
+        eventIcon("healer") +
+          " Healer trở lại: " +
+          E.hp +
+          " HP " +
+          hpBefore +
+          " → " +
+          state.hp +
+          "; " +
+          E.mana +
+          " MP " +
+          mpBefore +
+          " → " +
+          state.mana +
+          ". Vulnerable chuyển thành Vital Benediction: LUCK +40; STR/DEX/VIT/ENE +10 đến hết run.",
+      );
+    } else if (k === "healer" && action === "event_healer_blood") {
+      const lost = require("../events/explorationMarks").blood(state);
+      markDirect(state, ["hp"]);
+      done(
+        eventIcon("healer") +
+          " Hiến " +
+          lost +
+          " HP. Nhận Vulnerable: checkpoint không hồi HP trong 10 tầng tiếp theo; xem Tower Remembers trong Rift.",
+      );
+    } else if (k === "healer") {
       const recovery = healEvent(state, Math.max(20, state.maxHp * 0.3), {
         manaRate: 0.3,
       });
@@ -175,7 +252,12 @@ module.exports = function createModule(dependencies) {
       if (e.roll < goblinCatchChance(state)) {
         state.bonus += Math.floor(state.stake * GOBLIN_REWARDS.bonusRate);
         // Saved Goblins keep their catch roll and use the existing independent loot roll.
-        e.goblinItem ||= randomItem(goblinRewardRarity(e.roll2 ?? rng()), rng);
+        e.goblinItem ||= randomItem(
+          goblinRewardRarity(e.roll2 ?? rng()),
+          rng,
+          state,
+          "goblin",
+        );
         receiveItem(state, e.goblinItem);
         done(
           `${eventIcon("goblin")} Bắt được Treasure Goblin: bonus +25% cược và nhận trang bị.`,
@@ -213,6 +295,7 @@ module.exports = function createModule(dependencies) {
         rarity: target.rarity,
         level: target.level,
         curseLevels: Math.max(0, target.level - (target.cleansedLevels || 0)),
+        cleansedLevels: target.cleansedLevels || 0,
         curseEffects: structuredClone(target.definition.curse?.effects || {}),
         defenseLoss:
           target.curseEffects?.defense != null
@@ -272,12 +355,8 @@ module.exports = function createModule(dependencies) {
         const recovery = healEvent(state, state.maxHp);
         done("🩸 Blood Fountain đã hồi phục HP/MP cho bạn.\n" + recovery.log);
       } else if (e.roll < (e.goodThreshold ?? 0.85)) {
-        addSource(state, { maxHp: 15 });
-        const recovery = healEvent(state, 15);
-        done(
-          "🩸 Blood Fountain đã tăng sinh lực và hồi HP/MP cho bạn.\n" +
-            recovery.log,
-        );
+        addSource(state, { vit: 10 });
+        done(`🩸 Blood Fountain: nhận +10 ${E.vit} VIT trong run.`);
       } else combat(e.enemy, "Blood Mimic xuất hiện!");
     } else if (k === "horadric") {
       const target = itemById(e.targetId);
@@ -383,7 +462,10 @@ module.exports = function createModule(dependencies) {
           state.potions = Math.min(state.maxPotions, state.potions + 1);
         }
         if (door === "gold") state.bonus += Math.floor(state.stake * 0.5);
-        if (door === "dark") receiveItem(state, e.item);
+        if (door === "dark") {
+          e.item ||= randomItem("legendary", rng, state, "doors");
+          receiveItem(state, e.item);
+        }
         done(
           `${eventIcon("doors")} Cửa ${{ light: "sáng", gold: "vàng", dark: "tối" }[door]}: ${door === "light" ? `hồi đầy ${E.hp} HP/${E.mana} MP và tiếp tế ${E.potion} bình máu` : door === "gold" ? `bonus +50% cược (${Math.floor(state.stake * 0.5).toLocaleString("vi-VN")} xu)` : "nhận trang bị SSR"}.` +
             (recovery ? "\n" + recovery.log : ""),

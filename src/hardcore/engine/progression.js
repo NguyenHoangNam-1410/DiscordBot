@@ -44,6 +44,22 @@ module.exports = function createModule(dependencies) {
       if (phase === "boss_chest") delete state.pendingBossChest;
       return;
     }
+    if (require("../rift").enabled(state)) {
+      const awarded = require("../rift").claimPending(state);
+      if (awarded)
+        state.lastLog +=
+          "\n" +
+          (RIFT_ICONS[awarded.key] || E.rift) +
+          " " +
+          world.RIFT_MODIFIERS[awarded.key].name +
+          " ×" +
+          awarded.before +
+          "→×" +
+          awarded.after +
+          (awarded.tierChanged
+            ? " · lên Rift " + (awarded.after === 5 ? "II" : "III")
+            : "");
+    }
     if (state.finalBossDefeated && state.cleared === 999) {
       state.phase = "summit";
       state.encounter = { type: "summit" };
@@ -119,7 +135,12 @@ module.exports = function createModule(dependencies) {
         const contract = state.contract;
         const payoutBefore = payoutSnapshot(state);
         state.contract = null;
-        if (contract.kind === "potion") receiveItem(state, contract.item);
+        if (contract.kind === "potion")
+          receiveItem(
+            state,
+            contract.item ||
+              dependencies.randomItem("legendary", rng, state, "contract"),
+          );
         else if (contract.kind === "skill")
           state.bonus += Math.floor(state.stake * 0.5);
         else addSource(state, { [mainStat(state)]: 10 });
@@ -178,7 +199,9 @@ module.exports = function createModule(dependencies) {
       state.pendingMilestones.push("upgrade");
       state.lastLog += `\n${E.checkpoint} Đạt tầng ${floor} · Checkpoint: ${E.hp} **HP:** ${hpBefore} → **${state.hp}**  •  ${E.potion} **Bình máu:** ${potionsBefore} → **${state.potions}** (tối đa ${state.maxPotions}); chọn +5 thuộc tính.`;
     }
-    if (floor % 10 === 0) {
+    if (require("../rift").enabled(state)) {
+      require("../rift").reserve(state, floor, rng);
+    } else if (floor % 10 === 0) {
       const keys = Object.keys(world.RIFT_MODIFIERS),
         missing = keys.filter((key) => !state.modifiers[key]);
       const key = pick(missing.length ? missing : keys, rng);

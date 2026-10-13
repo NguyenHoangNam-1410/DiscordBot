@@ -79,6 +79,9 @@ const E = {
   get magic() {
     return icon("ELE", "🔮");
   },
+  get defres() {
+    return icon("DEFRES", "🛡️");
+  },
   get res() {
     return icon("RES", icon("crystal_ball", "🔮"));
   },
@@ -187,15 +190,15 @@ function effectStatLabel(key) {
 }
 const MONSTER_ICON_NAMES = Object.freeze({
   "Fallen Zealot": "monster_fallen_zealot",
-  "Goatman": "monster_goatman",
+  Goatman: "monster_goatman",
   "Dark Cultist": "monster_dark_cultist",
   "Lost Soul": "monster_lost_soul",
   "Possessed Citizen": "monster_possessed_citizen",
-  "Necromorb": "monster_necromorb",
+  Necromorb: "monster_necromorb",
   "Ashen Marauder": "monster_ashen_marauder",
   "Powder Keg Fanatic": "monster_powder_keg_fanatic",
-  "Necrobot": "monster_necrobot",
-  "Harpylisk": "monster_harpylisk",
+  Necrobot: "monster_necrobot",
+  Harpylisk: "monster_harpylisk",
   "Steel Terror": "monster_steel_terror",
   "Fauztinville Drone": "monster_fauztinville_drone",
   "Teganze Spirit": "monster_teganze_spirit",
@@ -220,24 +223,24 @@ const MONSTER_ICON_NAMES = Object.freeze({
   "Fleshweaver Spawn": "monster_fleshweaver_spawn",
   "The Butcher": "monster_the_butcher",
   "Infernal Machine": "monster_infernal_machine",
-  "Assur": "monster_assur",
+  Assur: "monster_assur",
   "Master Control System": "monster_master_control_system",
   "Necrobot Alpha": "monster_necrobot_alpha",
   "Quov Tsin": "monster_quov_tsin",
-  "Lucion": "monster_lucion",
+  Lucion: "monster_lucion",
   "Bul-Kathos": "monster_bul_kathos",
   "Spirit of Giyua": "monster_spirit_of_giyua",
   "Ascendant Riftwalker": "monster_ascendant_riftwalker",
   "Gharbad the Weak": "monster_gharbad_the_weak",
-  "Phoboss": "monster_phoboss",
+  Phoboss: "monster_phoboss",
   "Kabraxis, Keeper of the Seals": "monster_kabraxis",
   "The Justicar": "monster_the_justicar",
   "Uldyssian the Tainted": "monster_uldyssian_the_tainted",
   "Archbishop Lazarus": "monster_archbishop_lazarus",
-  "Xazax": "monster_xazax",
-  "Samael": "monster_samael",
+  Xazax: "monster_xazax",
+  Samael: "monster_samael",
   "Deimoss the Fleshweaver": "monster_deimoss_the_fleshweaver",
-  "Mimic": "monster_mimic",
+  Mimic: "monster_mimic",
   "Ancient Mimic": "monster_ancient_mimic",
   "Blood Mimic": "monster_blood_mimic",
   "Mirror Clone": "monster_mirror_clone",
@@ -255,7 +258,7 @@ const MONSTER_ICON_NAMES = Object.freeze({
   "Wild Boar": "monster_wild_boar",
   "Steel Drone": "monster_steel_drone",
   "Stone Golem": "monster_stone_golem",
-  "Annihilator": "monster_annihilator",
+  Annihilator: "monster_annihilator",
 });
 const BOSS_ICON_NAMES = Object.freeze({
   butcher: "The Butcher",
@@ -284,10 +287,18 @@ function monsterIcon(enemy) {
   const e = typeof enemy === "string" ? { name: enemy } : enemy || {};
   if (e.name === "RNGesus") return eventIcon("rngesus");
   const name = BOSS_ICON_NAMES[e.boss?.id] || e.name;
-  const emojiName = MONSTER_ICON_NAMES[name] ||
-    (e.memoryFamily === "mirror" ? MONSTER_ICON_NAMES["Mirror Clone"] :
-      e.memoryFamily === "vengeance" || e.echoId ? MONSTER_ICON_NAMES["Restless Spirit"] : null);
-  return emojiName ? icon(emojiName, "👹") : e.memoryFamily ? memoryIcon(e.memoryFamily) : "👹";
+  const emojiName =
+    MONSTER_ICON_NAMES[name] ||
+    (e.memoryFamily === "mirror"
+      ? MONSTER_ICON_NAMES["Mirror Clone"]
+      : e.memoryFamily === "vengeance" || e.echoId
+        ? MONSTER_ICON_NAMES["Restless Spirit"]
+        : null);
+  return emojiName
+    ? icon(emojiName, "👹")
+    : e.memoryFamily
+      ? memoryIcon(e.memoryFamily)
+      : "👹";
 }
 const RELIC_ICON_NAMES = Object.freeze({
   kingslayers_testament: "relic_kingslayers_testament",
@@ -302,11 +313,13 @@ function relicIcon(id) {
 }
 function fragmentIcon(key) {
   return ["mimic", "ancient_mimic", "blood_mimic", "mirror_clone"].includes(key)
-    ? icon("fragment_" + key, "🧩") : "🧩";
+    ? icon("fragment_" + key, "🧩")
+    : "🧩";
 }
 function sealIcon(kind) {
   return ["war", "protection", "arcane"].includes(kind)
-    ? icon("seal_" + kind, "🔺") : "🔺";
+    ? icon("seal_" + kind, "🔺")
+    : "🔺";
 }
 function passiveIcon(kind) {
   return buffIcon(kind);

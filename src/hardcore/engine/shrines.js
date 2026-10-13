@@ -12,12 +12,12 @@ module.exports = function createModule(dependencies) {
     SHRINE_TREASURE_WEIGHTS,
   } = dependencies;
 
-  function shrineTreasureItem(rng) {
+  function shrineTreasureItem(rng, state = null) {
     const roll = rng() * 100;
     let boundary = 0;
     for (const [rarity, weight] of Object.entries(SHRINE_TREASURE_WEIGHTS)) {
       boundary += weight;
-      if (roll < boundary) return randomItem(rarity, rng);
+      if (roll < boundary) return randomItem(rarity, rng, state, "shrine");
     }
     throw new Error("INVALID_SHRINE_ROLL");
   }
@@ -34,7 +34,8 @@ module.exports = function createModule(dependencies) {
       powerStat: mainStat(state),
     };
     if (gilded.ready(state)) shrine.branchCount = 7;
-    if (shrine.kind === "treasure") shrine.item = shrineTreasureItem(rng);
+    if (shrine.kind === "treasure")
+      shrine.item = shrineTreasureItem(rng, state);
     return shrine;
   }
 

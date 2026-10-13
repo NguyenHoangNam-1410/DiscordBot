@@ -77,11 +77,6 @@ const cases = [
     1,
   ],
   [
-    { type: "surprise", name: "Fountain", kind: "fountain", roll: 0.7 },
-    "event_drink",
-    (s) => 15 / s.maxHp,
-  ],
-  [
     {
       type: "surprise",
       name: "Merchant",
@@ -160,6 +155,29 @@ for (const [encounter, action, rate] of cases) {
   const copy = structuredClone(s);
   core.normalize(copy);
   assert.equal(copy.mana, s.mana);
+}
+// The former partial-heal branch now grants permanent run VIT, without healing.
+for (const [roll, healThreshold, goodThreshold] of [
+  [0.6, 0.6, 0.85],
+  [0.849, 0.6, 0.85],
+  [0.55, 0.5, 0.7],
+]) {
+  const s = fresh();
+  const before = { vit: s.vit, hp: s.hp, mana: s.mana };
+  s.encounter = { type: "surprise", name: "Blood Fountain", kind: "fountain", roll, healThreshold, goodThreshold };
+  const details = JSON.stringify(view.privatePayload(s, session.id, null, "details", 0));
+  assert(details.includes("+10"));
+  assert(details.includes("VIT"));
+  assert(!details.includes("+15"));
+  core.act(s, session, "event_drink", rng);
+  assert.equal(s.sources.event.vit, 10);
+  assert.equal(s.vit, before.vit + 10);
+  assert.equal(s.hp, before.hp);
+  assert.equal(s.mana, before.mana);
+  assert(s.lastLog.includes("VIT"));
+  const copy = structuredClone(s);
+  core.normalize(copy);
+  assert.equal(copy.vit, s.vit);
 }
 echoes.owns = originalOwns;
 echoes.release = originalRelease;
@@ -290,6 +308,6 @@ const summary = JSON.stringify(view.embed(result.state, "u").toJSON());
 assert(summary.includes("MP"));
 assert(!summary.includes("undefined"));
 console.log(
-  "Event recovery: ratios/rounding/caps, 11 event branches, divine kill reward, checkpoint exclusions, Tower isolation, resume and stale persistence passed.",
+  "Event recovery: ratios/rounding/caps, 10 healing event branches, Blood Fountain VIT reward, divine kill reward, checkpoint exclusions, Tower isolation, resume and stale persistence passed.",
 );
 db.close();

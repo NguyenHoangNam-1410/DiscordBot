@@ -56,9 +56,9 @@ function buildRatesEmbed(category = null) {
   if (require("../shared/version").useV2()) {
     return new EmbedBuilder()
       .setColor(0xe67e22)
-      .setTitle("🎰 SINH TỒN v2.0.1 · TỶ LỆ VÀ CƠ CHẾ")
+      .setTitle("🎰 SINH TỒN v3.1.0 · TỶ LỆ VÀ CƠ CHẾ")
       .setDescription(
-        "Run mới dùng v2.0.1. Kết quả ẩn được lưu; mở lại UI/restart không roll lại. Run cũ tiếp tục theo luật legacy.",
+        "Run mới dùng v3.1.0. Kết quả ẩn được lưu; mở lại UI/restart không roll lại. Run cũ tiếp tục theo luật legacy.",
       )
       .addFields(splitRuleFields(require("./index").ratesFields(category)));
   }
@@ -87,7 +87,7 @@ function buildRatesEmbed(category = null) {
       {
         name: "15 surprise event",
         value:
-          "Healer · Treasure Goblin · Blacksmith · Purifier · Altar of Sacrifice · Cursed Gambler · Lost Adventurer · Blood Fountain · Horadric Forge · Rift Merchant · Mirror of Fate · Treasure Room · Rift Contract · Class Shrine · Strange Doors. Chọn đều trong pool hợp lệ; có thể bỏ qua.",
+          "Healer · Treasure Goblin · Blacksmith · Purifier · Altar of Sacrifice · Cursed Gambler · Lost Adventurer · Blood Fountain · Horadric Forge · Rift Merchant · Mirror of Fate · Treasure Room · Rift Contract · Class Shrine · Strange Doors. Purifier trọng số 3, Royal Invitation đủ điều kiện trọng số 10; các event khác trọng số 1. Sau khi hạ cả Mimic và Ancient Mimic: Blood Fountain/Mirror trọng số 2. Healer trở lại được ưu tiên khi Vulnerable đến hạn. Có thể bỏ qua event thường.",
       },
       {
         name: "Dịch vụ và Merchant",
@@ -115,7 +115,7 @@ function buildRatesEmbed(category = null) {
       {
         name: "Luck",
         value:
-          "SSR +Luck×0,2%; phát hiện Mimic = min(95%,25%+Luck×3%+item); Goblin = min(90%,min(80%,60%+Luck×1%)+item). Lucky Break = min(30%,Luck×1,5%), chỉ né Tax Collector/Potion Thief. Không tác động Wrong Portal.",
+          "SSR +Luck×0,2%; phát hiện Mimic = min(95%,25%+Luck×3%+item); Goblin = min(90%,min(80%,60%+Luck×1%)+item). Lucky Break = min(50%,Luck×0,25%), đạt trần ở 200 LUCK, chỉ né Tax Collector/The Thief. Không tác động Wrong Portal.",
       },
       {
         name: "Wrong Portal",
@@ -161,7 +161,7 @@ function ratesPages(category = "encounters") {
     RATE_CATEGORIES.find((item) => item.id === category) || RATE_CATEGORIES[0];
   const pages = paginateRuleEmbed(
     buildRatesEmbed(selected.id).setTitle(
-      `🎰 SINH TỒN ${require("../shared/version").useV2() ? "v2.0.1" : "legacy"} · ${selected.name.toUpperCase()}`,
+      `🎰 SINH TỒN ${require("../shared/version").useV2() ? "v3.1.0" : "legacy"} · ${selected.name.toUpperCase()}`,
     ),
   );
   return pages.map((page, index) =>

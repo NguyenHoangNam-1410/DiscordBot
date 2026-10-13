@@ -1,4 +1,6 @@
 "use strict";
+const bosses = require("../bosses/mechanics");
+const statsV3 = require("../shared/statsV3");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -87,11 +89,7 @@ module.exports = function createModule(dependencies) {
       for (const item of state.items.slice(page * 5, page * 5 + 5))
         e.addFields({
           name: `${item.name} Lv.${item.level} [${rarityLabel(item.rarity)}]`,
-          value:
-            `${effectText(item.definition.effects, item.level)}${passiveText(item.definition)}${item.definition.curse ? `\n☣️ ${item.level > (item.cleansedLevels || 0) ? effectText(item.definition.curse.effects, item.level - (item.cleansedLevels || 0), { defenseLoss: item.curseEffects?.defense != null ? -item.curseEffects.defense : null }) : "Đã giải toàn bộ curse"}` : ""}`.slice(
-              0,
-              1024,
-            ),
+          value: dependencies.ownedItemText(state, item).slice(0, 1024),
         });
       if (!state.items.length)
         e.addFields({ name: `${E.backpack} Trang bị`, value: "Chưa có." });
@@ -103,7 +101,8 @@ module.exports = function createModule(dependencies) {
         e.addFields({
           name: `${eventIcon("covenant")} Mảnh Chinh Phạt (${covenant.progress(state).completed ? 4 : covenant.fragmentCount(state)}/4)`,
           value: covenant.progress(state).completed
-            ? relicIcon("conquerors_covenant") + " Đã hợp nhất thành **Conqueror’s Covenant [LR]**."
+            ? relicIcon("conquerors_covenant") +
+              " Đã hợp nhất thành **Conqueror’s Covenant [LR]**."
             : Object.entries(covenant.FRAGMENTS)
                 .map(([key, name]) =>
                   covenant.progress(state).fragments?.[key] != null
@@ -125,15 +124,25 @@ module.exports = function createModule(dependencies) {
               " · Nhận tại tầng " +
               relic.acquiredFloor +
               "\n" +
-              passiveIcon(definition.relicPassive.kind) + " " + formatStatText(definition.text),
+              passiveIcon(definition.relicPassive.kind) +
+              " " +
+              formatStatText(definition.text),
           });
       }
     } else if (tab === "stats") {
+      if (require("../equipment/rules").enabled(state))
+        addTextFields(
+          e,
+          "✨ Affinity trang bị",
+          require("../equipment/affinityEffects").summary(state),
+        );
       const activeRelic = core.RELIC_ITEMS[state.activeRelic];
       if (activeRelic)
         addTextFields(
           e,
-          passiveIcon(activeRelic.relicPassive.kind) + " Nội tại LR · " + activeRelic.name,
+          passiveIcon(activeRelic.relicPassive.kind) +
+            " Nội tại LR · " +
+            activeRelic.name,
           formatStatText(activeRelic.text) +
             gilded.status(state) +
             royal.status(state) +
@@ -153,6 +162,67 @@ module.exports = function createModule(dependencies) {
           effective: true,
         }),
       );
+      if (state.encounter.boss?.version === 2) {
+        const b = state.encounter.boss,
+          m = b.mechanicState;
+        const lines = [
+          "Vật lý ×" +
+            bosses.playerFactor(state, false).toFixed(1) +
+            " · Phép ×" +
+            bosses.playerFactor(state, true).toFixed(1) +
+            " (cơ chế boss, trước giảm trừ).",
+        ];
+        if (bosses.healingLimit(state) < state.maxHp)
+          lines.push(
+            "Hồi HP không vượt " +
+              bosses.healingLimit(state) +
+              "/" +
+              state.maxHp +
+              " trong hiệu ứng hiện tại.",
+          );
+        if (m.curses?.length)
+          lines.push(
+            "Flesh Curse: " +
+              m.curses
+                .map(
+                  (v) =>
+                    ({
+                      damageTaken: "+5% DMG nhận",
+                      skillHpCost: "Skill trả thêm 1% Max HP",
+                      healingReduction: "−15% hồi HP",
+                    })[v.type],
+                )
+                .join(" · "),
+          );
+        addTextFields(e, "⚔️ Ảnh hưởng từ boss lên bạn", lines.join("\n"));
+      }
+      const innateText = require("../innate").description(state);
+      if (innateText) addTextFields(e, "✨ Class Innate · tầng 1", innateText);
+      const awakeningText = require("../awakening").description(state);
+      if (awakeningText) addTextFields(e, "✨ Class Awakening", awakeningText);
+      if (state.gameplayVersion === 3) {
+        addTextFields(e, "✨ Mastery của class", statsV3.description(state, E));
+        const b = state.damageBreakdown;
+        const line = (name, x) =>
+          name +
+          ": class **" +
+          Number(x.base.toFixed(1)).toLocaleString("vi-VN") +
+          "** · điểm phân bổ **" +
+          Number(x.attributes.toFixed(1)).toLocaleString("vi-VN") +
+          "** · item/hấp thụ **" +
+          Number(x.equipment.toFixed(1)).toLocaleString("vi-VN") +
+          "** → **" +
+          x.total +
+          " DMG**.";
+        addTextFields(
+          e,
+          "Nguồn sát thương",
+          line(E.attack + " Vật lý", b.physical) +
+            "\n" +
+            line(E.magic + " Phép", b.spell) +
+            "\nTrước hệ số Skill, nội tại/Rift và giảm trừ của quái. Các hệ số Skill hiện tại giữ nguyên.",
+        );
+      }
       const deductions = coinPayoutDetails(state).trim();
       if (deductions) addTextFields(e, `${E.coin} Thống kê xu`, deductions);
       addTextFields(
@@ -198,7 +268,7 @@ module.exports = function createModule(dependencies) {
         },
         {
           name: `${E.attack} Tấn công`,
-          value: `- ${E.attack} **Vật lý**: 1 đòn, có thể trượt hoặc ${E.crit} **CRIT ×${royal.critMultiplier(state).toLocaleString("vi-VN")}**.\n- ${E.mana} **MP +${core.attackManaGain(state)}**, kể cả trượt (tối đa Max MP).\nQuái còn sống sẽ đánh trả.`,
+          value: `- ${E.attack} **Vật lý**: 1 đòn, có thể trượt hoặc ${E.crit} **CRIT ×${Number(royal.critMultiplier(state).toFixed(1)).toLocaleString("vi-VN")}**.\n- ${E.mana} **MP +${core.attackManaGain(state)}**, kể cả trượt (tối đa Max MP).\nQuái còn sống sẽ đánh trả.`,
         },
         {
           name: `${E.defense} Phòng thủ`,

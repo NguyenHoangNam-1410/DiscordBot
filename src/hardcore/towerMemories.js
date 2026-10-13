@@ -1,6 +1,11 @@
 "use strict";
 const world = require("../services/hardcoreWorld");
-const { E, memoryIcon, eventIcon, sealIcon } = require("../services/hardcoreIcons");
+const {
+  E,
+  memoryIcon,
+  eventIcon,
+  sealIcon,
+} = require("../services/hardcoreIcons");
 
 const { mainStat } = require("./engine/stats");
 
@@ -229,7 +234,9 @@ function fields(state) {
     output.push({
       name: eventIcon("prophecy") + " The Tower Remembers · Threefold Prophecy",
       value:
-        "**Nguồn:** chọn ấn " + sealIcon(kind) + " **" +
+        "**Nguồn:** chọn ấn " +
+        sealIcon(kind) +
+        " **" +
         seal +
         "** tại tầng **333**.\n**Tầng 666:** ấn quyết định cơ chế của Kabraxis; xem **Chi tiết** khi gặp boss.\n" +
         (state.prophecy.awakened
@@ -322,6 +329,7 @@ function fields(state) {
   }
   if (output.length === 1)
     output[0].value += "\nChưa có hậu quả hẹn hoặc bảo hộ đang chờ.";
+  output.push(...require("./events/explorationMarks").fields(state));
   return output;
 }
 

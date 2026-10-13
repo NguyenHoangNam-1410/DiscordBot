@@ -61,6 +61,23 @@ if (backend === "memory") {
     });
   };
 }
+const sourceFiles = [
+  "src/hardcore/bosses/balanceV2.js",
+  "src/hardcore/bosses/catalogV2.js",
+  "src/hardcore/bosses/runtimeV2.js",
+  "src/hardcore/bosses/mechanicsV2.js",
+  "src/hardcore/bosses/decisionsV2.js",
+  "src/hardcore/engine/world.js",
+  "src/hardcore/engine/combat.js",
+  "src/hardcore/engine/actions.js",
+  "src/hardcore/shared/statsV3.js",
+];
+const sourceFingerprint = require("node:crypto").createHash("sha256");
+for (const source of sourceFiles)
+  sourceFingerprint.update(
+    source + fs.readFileSync(source, "utf8").replace(/\r\n/g, "\n"),
+  );
+const codeFingerprint = sourceFingerprint.digest("hex");
 const simulationSeed =
   process.env.HARDCORE_SIM_SEED || "survival-holdout-2026-10-02";
 let seedKey = "setup";
@@ -76,15 +93,51 @@ fairness.createFairness = () => {
   };
 };
 const bossExperiment = process.env.HARDCORE_SIM_BOSS_ROSTER || "current";
-if (!["current", "previous"].includes(bossExperiment))
+if (!["current", "fixed", "previous"].includes(bossExperiment))
   throw Error("INVALID_BOSS_EXPERIMENT");
 if (bossExperiment === "previous")
   require("../src/hardcore/bosses/mechanics").enabled = () => false;
 const checkpointExperiment = require("./hardcore-checkpoint-experiment");
 checkpointExperiment.install();
-const bossPolicy = require("./hardcore-boss-policy");
+process.env.HARDCORE_BOSS_ROSTER_VERSION =
+  bossExperiment === "current" ? "2" : "1";
+const bossPolicy = require("./hardcore-boss-policy-v2");
 const hardcore = require("../src/services/hardcoreService");
 const balance = require("../src/services/hardcoreBalance");
+const resumeValidation =
+  process.env.HARDCORE_SIM_RESUME_VALIDATION || "each_action";
+if (
+  !["each_action", "once_per_run"].includes(resumeValidation) ||
+  (resumeValidation !== "each_action" && backend !== "memory")
+)
+  throw Error("INVALID_RESUME_VALIDATION");
+if (resumeValidation === "once_per_run") {
+  const normalize = hardcore.V2.normalize;
+  const seen = new WeakSet();
+  hardcore.V2.normalize = (s) => {
+    if (!seen.has(s)) {
+      normalize(s);
+      seen.add(s);
+    }
+    return s;
+  };
+}
+// Offline calibration only; runtime class stats/skills are unchanged.
+const bossDamageExperiment = process.env.HARDCORE_SIM_BOSS_DAMAGE
+  ? JSON.parse(process.env.HARDCORE_SIM_BOSS_DAMAGE)
+  : {};
+if (
+  Object.values(bossDamageExperiment).some(
+    (n) => !Number.isFinite(n) || n < 0.2 || n > 5,
+  )
+)
+  throw Error("INVALID_BOSS_DAMAGE_EXPERIMENT");
+if (Object.keys(bossDamageExperiment).length) {
+  const mechanics = require("../src/hardcore/bosses/mechanicsV2");
+  const originalFactor = mechanics.playerFactor;
+  mechanics.playerFactor = (s, magic) =>
+    originalFactor(s, magic) * (bossDamageExperiment[s.classKey] || 1);
+}
 if (process.env.HARDCORE_SIM_POWER) {
   const powers = JSON.parse(process.env.HARDCORE_SIM_POWER);
   const defaults = balance.forClass;
@@ -152,19 +205,20 @@ if (classesToRun.some((classKey) => !Object.hasOwn(hardcore.CLASSES, classKey)))
 
 function actionFor(state, strategy = policy) {
   if (
-    state.gameplayVersion === 2 &&
+    [2, 3].includes(state.gameplayVersion) &&
     strategy === "optimized" &&
     optimalBuilds[state.classKey] === "baseline"
   )
     return actionForV2(state, "balanced");
-  if (state.gameplayVersion === 2 && strategy === "optimized")
+  if ([2, 3].includes(state.gameplayVersion) && strategy === "optimized")
     return require("./hardcore-optimal-policy").choose(
       state,
       optimalBuilds[state.classKey] ||
         process.env.HARDCORE_SIM_BUILD ||
         "balanced",
     );
-  if (state.gameplayVersion === 2) return actionForV2(state, strategy);
+  if ([2, 3].includes(state.gameplayVersion))
+    return actionForV2(state, strategy);
   // Decisions use public stats and revealed encounters, never saved hidden results.
   if (state.phase === "upgrade") {
     const checkpoint = state.cleared / 5;
@@ -488,6 +542,9 @@ for (const classKey of classesToRun) {
   const floors = [];
   const finalStates = [];
   const deathFloors = {};
+  const deathBosses = {};
+  let actualStatProfile = null;
+  let actualBossDamageProfile = null;
   let timeouts = 0;
   for (let i = 0; i < runs; i += 1) {
     if (process.env.HARDCORE_SIM_ISOLATED === "1")
@@ -506,6 +563,17 @@ for (const classKey of classesToRun) {
       classKey,
     });
     let state = started.state;
+    actualBossDamageProfile ||= state.bossDamageProfile
+      ? structuredClone(state.bossDamageProfile)
+      : null;
+    actualStatProfile ||= {
+      balanceVersion: state.balanceVersion,
+      statProfile: state.statProfile,
+    };
+    if (bossExperiment === "fixed") {
+      state.bossRosterVersion = 1;
+      repository.saveState(started.session, state);
+    }
     let captured = false;
     for (
       let turn = 0;
@@ -522,7 +590,7 @@ for (const classKey of classesToRun) {
       }
       const action = actionFor(state, classPolicy);
       if (
-        state.gameplayVersion === 2 &&
+        [2, 3].includes(state.gameplayVersion) &&
         !hardcore.V2.actions(state).some(
           (option) => option.action === action && !option.disabled,
         )
@@ -564,8 +632,13 @@ for (const classKey of classesToRun) {
         ? 999
         : Math.min(998, state.cleared),
     );
-    if (state.hp <= 0)
+    if (state.hp <= 0) {
       deathFloors[state.floor] = (deathFloors[state.floor] || 0) + 1;
+      if (state.encounter?.boss) {
+        const id = state.encounter.boss.id;
+        deathBosses[id] = (deathBosses[id] || 0) + 1;
+      }
+    }
     if (hardcore.getHardcoreByUser("simulation", userId)) {
       if (state.cleared < targetFloor) timeouts += 1;
       hardcore.forceEndHardcoreSession(
@@ -627,13 +700,18 @@ for (const classKey of classesToRun) {
   const sorted = [...floors].sort((a, b) => a - b);
   report[classKey] = {
     runs,
+    codeFingerprint,
     policy: classPolicy,
     build: optimalBuilds[classKey] || process.env.HARDCORE_SIM_BUILD || null,
     externalDiamonds: 0,
-    balanceVersion: balance.VERSION,
+    balanceVersion: actualStatProfile?.balanceVersion || balance.VERSION,
+    actualStatProfile,
+    actualBossDamageProfile,
     balanceProfile: balance.forClass(classKey),
     revealedChestAction,
     backend,
+    resumeValidation,
+    deathBosses,
     gameplayVersion:
       process.env.HARDCORE_GAMEPLAY_VERSION === "legacy"
         ? "legacy-4"
@@ -641,7 +719,12 @@ for (const classKey of classesToRun) {
     simulationSeed,
     checkpointRule: checkpointExperiment.settings,
     bossRoster: bossExperiment,
-    bossPolicy: "public telegraphs v" + bossPolicy.VERSION,
+    bossDamageExperiment,
+    bossPolicy:
+      "public telegraphs v" +
+      (bossExperiment === "fixed"
+        ? require("./hardcore-boss-policy").VERSION
+        : bossPolicy.VERSION),
     stake,
     completedPercent: +(
       (100 * floors.filter((floor) => floor >= 999).length) /
