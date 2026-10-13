@@ -434,7 +434,7 @@ Thuộc tính trong bảng được cộng **mỗi cấp**. Cột đặc biệt 
 
 | Item | Nhóm | Thuộc tính mỗi cấp | Hiệu ứng đặc biệt | Lời nguyền khi chưa giải |
 |---|---|---|---|---|
-| Glass Cannon | weapon | +35 STR, +15 DEX | Không có | Defense = 0 |
+| Glass Cannon | weapon | +35 STR, +15 DEX | Không có | Giảm 50% DEF lúc nhận nguyền; lưu khoản trừ, không cộng dồn theo cấp. Giải hết nguyền hoàn trả khoản đã trừ. |
 | Schrödinger’s Armor | armor | +20 STR, +30 VIT | Không có | nhận thêm 20% damage vật lý (tối đa 100%) |
 | Goblin’s Debt | charm | +20 DEX, +15 VIT | +12 Luck, +20% bắt Goblin | mất 15% payout xu mỗi cấp chưa giải |
 | Crown of Ruin | armor | +20 STR, +15 VIT | +8 Luck | giảm 1 sức chứa bình mỗi cấp chưa giải, còn tối thiểu 1 bình |

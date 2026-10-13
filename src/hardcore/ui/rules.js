@@ -92,6 +92,10 @@ module.exports = function createModule(dependencies) {
           value: `- ${E.ticket} **Vé thoát [UR]** nằm trong pool vật phẩm của run. Nhặt vé vào ô vé, tối đa 1; không tăng level, không có nguyền và không chiếm chỗ trang bị. Vé dư bị bỏ.\n- ${E.reviveTicket} **Vé hồi sinh [LR]**: hiện LR chỉ có loại vật phẩm, chưa có trang bị. Không xuất hiện trong Gacha hay pool rơi đồ ngẫu nhiên; nguồn sự kiện đặc biệt sẽ có spec sau.\n- Cửa hàng Sinh tồn vẫn bán cả ba vé: thoát 100, cầu nguyện 100, hồi sinh 300 kim cương. Vé đã sở hữu vẫn dùng được.`,
         },
         {
+          name: `${E.defense} Glass Cannon [UR] · lời nguyền DEF`,
+          value: `Lần đầu nhận nguyền: trừ **50% DEF sau khi nhận buff của món đồ**, làm tròn khoản trừ xuống và lưu trên món đó. Ví dụ: DEF 41, lưu khoản trừ 20, còn 21.\nKhoản trừ giữ cố định khi cộng điểm, nhận đồ hoặc tăng level; nhiều level chưa giải vẫn chỉ trừ một lần. Gỡ một cấp nhưng còn nguyền thì khoản trừ giữ nguyên. **Gỡ hết nguyền: hoàn trả đúng số DEF đã lưu.** Nếu nhận lại cấp bị nguyền sau đó, tính khoản trừ mới.`,
+        },
+        {
           name: `${E.hp} Lời nguyền rút HP`,
           value:
             "Trang bị có lời nguyền rút HP áp dụng **sau khi vượt tầng**, dựa trên Max HP và số level chưa giải nguyền. Tổng lượng rút luôn chừa ít nhất **1 HP**; đang có 1 HP thì không mất thêm.\nĐiều này chỉ bảo vệ trước hiệu ứng rút HP của trang bị và Shrine Fake. Quái hoặc các event có nhánh tử trận vẫn có thể giết bạn. Giải nguyền hoặc chuyển hóa level bị nguyền có thể gỡ hiệu ứng theo công dụng dịch vụ.",

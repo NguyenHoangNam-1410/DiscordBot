@@ -214,6 +214,10 @@ module.exports = function createModule(dependencies) {
         level: target.level,
         curseLevels: Math.max(0, target.level - (target.cleansedLevels || 0)),
         curseEffects: structuredClone(target.definition.curse?.effects || {}),
+        defenseLoss:
+          target.curseEffects?.defense != null
+            ? -target.curseEffects.defense
+            : null,
         maxPotionsBefore: state.maxPotions,
       };
       cleanse(state, target);
@@ -280,7 +284,15 @@ module.exports = function createModule(dependencies) {
       const previousLevel = target.level;
       const removedCurse =
         target.definition.curse && previousLevel > (target.cleansedLevels || 0);
+      const fixedDefenseLoss = target.curseEffects?.defense;
       grind(state, target);
+      const curseRemoval = !removedCurse
+        ? ""
+        : Number.isFinite(fixedDefenseLoss)
+          ? target.level > (target.cleansedLevels || 0)
+            ? "; gỡ 1 cấp nguyền, khoản DEF đã trừ giữ nguyên vì còn nguyền"
+            : "; gỡ cấp nguyền cuối, hoàn trả khoản DEF đã trừ"
+          : "; gỡ lời nguyền của level đó";
       if (action === "forge_main") addSource(state, { [mainStat(state)]: 6 });
       else if (action === "forge_guard") addSource(state, { [e.forgeStat]: 7 });
       else if (action === "forge_vit") addSource(state, { vit: 4 });
@@ -294,7 +306,7 @@ module.exports = function createModule(dependencies) {
               ? "vit"
               : "ticket";
       done(
-        `${eventIcon("horadric")} Horadric Forge: chuyển hóa ${E.backpack} **${target.name}** ${previousLevel === 1 ? "(đã hết level, rời trang bị)" : `Lv.${previousLevel}→**${target.level}**`}. Giữ hiệu ứng có lợi của level đã dùng trong run${removedCurse ? "; gỡ lời nguyền của level đó" : ""}.\nPhần thưởng đã chọn: ${E[rewardKey]} **${rewardKey === "ticket" ? "Vé thoát" : rewardKey.toUpperCase()}**.`,
+        `${eventIcon("horadric")} Horadric Forge: chuyển hóa ${E.backpack} **${target.name}** ${previousLevel === 1 ? "(đã hết level, rời trang bị)" : `Lv.${previousLevel}→**${target.level}**`}. Giữ hiệu ứng có lợi của level đã dùng trong run${curseRemoval}.\nPhần thưởng đã chọn: ${E[rewardKey]} **${rewardKey === "ticket" ? "Vé thoát" : rewardKey.toUpperCase()}**.`,
       );
     } else if (k === "mirror") {
       if (action === "event_mirror_power") {

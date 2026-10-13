@@ -146,6 +146,7 @@ module.exports = function createModule(dependencies) {
       );
       if (target) {
         markDirect(state, effectStatKeys(target.definition.curse.effects));
+        const fixedDefenseLoss = target.curseEffects?.defense;
         target.cleansedLevels = (target.cleansedLevels || 0) + 1;
         target.rarity = target.definition.rarity;
         recompute(state);
@@ -154,7 +155,12 @@ module.exports = function createModule(dependencies) {
           memoryIcon("divine") +
           " Ân huệ: gỡ 1 level nguyền của " +
           target.name +
-          "; giữ UR, level và nội tại.";
+          "; giữ UR, level và nội tại." +
+          (Number.isFinite(fixedDefenseLoss)
+            ? target.level > target.cleansedLevels
+              ? " Còn cấp nguyền: khoản DEF đã trừ giữ nguyên."
+              : " Đã hết nguyền: hoàn trả khoản DEF đã trừ."
+            : "");
       } else {
         const restored = healEvent(state, state.maxHp * 0.2);
         state.lastLog +=

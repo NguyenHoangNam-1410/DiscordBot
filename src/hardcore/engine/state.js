@@ -30,6 +30,7 @@ module.exports = function createModule(dependencies) {
       potionPower: ["potionRate"],
       heal: ["hp"],
       defenseSet: ["defense"],
+      defenseReduction: ["defense"],
     };
     return [
       ...new Set(

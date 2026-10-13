@@ -118,7 +118,15 @@ function sumEffects(state) {
     add(item.definition.effects, item.level);
     const curses = Math.max(0, item.level - (item.cleansedLevels || 0));
     if (curses) {
-      add(item.definition.curse?.effects, curses);
+      const effects = { ...item.definition.curse?.effects };
+      if (itemCurses.defenseReduction(item)) {
+        delete effects.defenseReduction;
+        delete effects.defenseSet;
+        // This is a saved flat loss for the item, never multiplied by levels.
+        totals.defense =
+          (totals.defense || 0) - (itemCurses.defenseLoss(item) || 0);
+      }
+      add(effects, curses);
       curseFactor *=
         (1 - (item.definition.curse?.effects.bonusPenalty || 0)) ** curses;
     }
@@ -200,6 +208,23 @@ function derive(state) {
   return d;
 }
 function recompute(state) {
+  const pending = [];
+  for (const item of state.items || []) {
+    itemCurses.migrateDefenseCurse(item);
+    if (!itemCurses.defenseReduction(item)) continue;
+    if (item.level <= (item.cleansedLevels || 0)) {
+      delete item.curseEffects;
+    } else if (itemCurses.defenseLoss(item) === null) pending.push(item);
+  }
+  if (pending.length) {
+    // Capture after the item's buffs have been added, but before its own curse.
+    let defense = derive(state).defense;
+    for (const item of pending) {
+      const lost = Math.floor(defense * itemCurses.defenseReduction(item));
+      item.curseEffects = { ...item.curseEffects, defense: -lost };
+      defense -= lost;
+    }
+  }
   Object.assign(state, derive(state));
   if (typeof state.hp === "number") state.hp = clamp(state.hp, 0, state.maxHp);
   if (typeof state.mana === "number")

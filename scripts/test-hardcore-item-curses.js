@@ -53,7 +53,7 @@ try {
   assert.deepEqual(
     core.ITEMS.cursed.map((i) => Object.keys(i.curse.effects)),
     [
-      ["defenseSet"],
+      ["defenseReduction"],
       ["physicalDamageTaken"],
       ["bonusPenalty"],
       ["potionCapacityLoss"],
@@ -373,7 +373,10 @@ try {
   core.receiveItem(migrated, get("glass_cannon"));
   assert.equal(migrated.items[0].rarity, "cursed");
   assert.equal(migrated.items[0].level - migrated.items[0].cleansedLevels, 1);
-  assert.equal(migrated.defense, 0);
+  assert.equal(
+    migrated.defense,
+    Math.ceil(Math.floor(migrated.str * 0.3 + migrated.vit * 0.15) / 2),
+  );
   migrated.encounter = core.makeSurprise(migrated, () => 0.5, "purifier");
   core.act(
     migrated,

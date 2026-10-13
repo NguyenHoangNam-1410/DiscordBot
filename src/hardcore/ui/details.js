@@ -88,7 +88,7 @@ module.exports = function createModule(dependencies) {
         e.addFields({
           name: `${item.name} Lv.${item.level} [${rarityLabel(item.rarity)}]`,
           value:
-            `${effectText(item.definition.effects, item.level)}${passiveText(item.definition)}${item.definition.curse ? `\n☣️ ${item.level > (item.cleansedLevels || 0) ? effectText(item.definition.curse.effects, item.level - (item.cleansedLevels || 0)) : "Đã giải toàn bộ curse"}` : ""}`.slice(
+            `${effectText(item.definition.effects, item.level)}${passiveText(item.definition)}${item.definition.curse ? `\n☣️ ${item.level > (item.cleansedLevels || 0) ? effectText(item.definition.curse.effects, item.level - (item.cleansedLevels || 0), { defenseLoss: item.curseEffects?.defense != null ? -item.curseEffects.defense : null }) : "Đã giải toàn bộ curse"}` : ""}`.slice(
               0,
               1024,
             ),

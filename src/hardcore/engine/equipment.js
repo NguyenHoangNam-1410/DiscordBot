@@ -164,6 +164,7 @@ module.exports = function createModule(dependencies) {
     item.cleansedLevels += Math.min(levels, Math.max(0, cleansedLevels));
     item.rarity = definition.rarity;
     recompute(state);
+    definition = item.definition;
     for (let i = 0; i < levels; i++) {
       const e = definition.effects;
       if (e.heal) heal(state, e.heal);
@@ -185,6 +186,7 @@ module.exports = function createModule(dependencies) {
         levels,
         definition: structuredClone(definition),
         curseLevels: Math.max(0, levels - cleansedLevels),
+        curseEffects: structuredClone(item.curseEffects || {}),
         before,
         after: statSnapshot(state),
         directKeys: effectStatKeys({
@@ -227,6 +229,7 @@ module.exports = function createModule(dependencies) {
       "escapeTokens",
       "bonusPenalty",
       "defenseSet",
+      "defenseReduction",
     ])
       delete effects[key];
     item.level--;

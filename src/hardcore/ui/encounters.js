@@ -1,5 +1,6 @@
 "use strict";
 const bossDisplay = require("../bosses/display");
+const itemCurses = require("../itemCurses");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -157,6 +158,7 @@ module.exports = function createModule(dependencies) {
               "escapeTokens",
               "bonusPenalty",
               "defenseSet",
+              "defenseReduction",
             ].includes(key),
         ),
       );
@@ -164,7 +166,16 @@ module.exports = function createModule(dependencies) {
       const guard = e.forgeStat || "str";
       const hasCurse =
         target.level > (target.cleansedLevels || 0) && target.definition.curse;
-      return `${eventIcon(k)} **HORADRIC FORGE · LÒ CHUYỂN HÓA**\nTiêu hao **1 level trang bị** để giữ hiệu ứng có lợi trong run và chọn thêm một phần thưởng. Không tốn xu.\n\n**${E.backpack} Trang bị dùng để chuyển hóa**\n${E.backpack} **${target.name} [${rarityLabel(target.rarity)}] · Lv.${target.level}**\n- Sau khi dùng: ${target.level === 1 ? "món này biến mất khỏi trang bị" : `level **${target.level}→${target.level - 1}**`}.\n- **Giữ nguyên hiệu ứng của level đã tiêu hao:** ${effectText(retained)}. Đây là hiệu ứng được giữ lại, không cộng thêm lần nữa.\n${hasCurse ? `- **Xóa lời nguyền của 1 level:** ${effectText(target.definition.curse.effects)}.\n` : ""}- Không nhận lại ${E.potion} bình máu, ${E.ticket} Vé thoát hoặc ${E.hp} HP hồi khi nhặt đồ.\n\n**Chọn một phần thưởng thêm**\n- ${E[main]} **${main.toUpperCase()} +6**.\n- ${E[guard]} **${guard.toUpperCase()} +7**.\n- ${E.vit} **VIT +4**.${["legendary", "cursed"].includes(target.rarity) ? `\n- ${E.ticket} **Nhận 1 vé thoát** (giữ tối đa 1).` : ""}\n\n**Bỏ qua:** giữ nguyên trang bị, không nhận phần thưởng.`;
+      const cursedLevels = target.level - (target.cleansedLevels || 0);
+      const lostDefense = itemCurses.defenseLoss(target);
+      const curseRemoval = !hasCurse
+        ? ""
+        : itemCurses.defenseReduction(target)
+          ? cursedLevels > 1
+            ? `- Gỡ **1 cấp nguyền**; còn ${cursedLevels - 1} cấp nguyền nên ${E.defense} **DEF −${lostDefense ?? 0}** vẫn giữ nguyên.\n`
+            : `- Gỡ **cấp nguyền cuối**: hoàn trả ${E.defense} **DEF +${lostDefense ?? 0}** đã trừ.\n`
+          : `- **Xóa lời nguyền của 1 level:** ${effectText(target.definition.curse.effects)}.\n`;
+      return `${eventIcon(k)} **HORADRIC FORGE · LÒ CHUYỂN HÓA**\nTiêu hao **1 level trang bị** để giữ hiệu ứng có lợi trong run và chọn thêm một phần thưởng. Không tốn xu.\n\n**${E.backpack} Trang bị dùng để chuyển hóa**\n${E.backpack} **${target.name} [${rarityLabel(target.rarity)}] · Lv.${target.level}**\n- Sau khi dùng: ${target.level === 1 ? "món này biến mất khỏi trang bị" : `level **${target.level}→${target.level - 1}**`}.\n- **Giữ nguyên hiệu ứng của level đã tiêu hao:** ${effectText(retained)}. Đây là hiệu ứng được giữ lại, không cộng thêm lần nữa.\n${curseRemoval}- Không nhận lại ${E.potion} bình máu, ${E.ticket} Vé thoát hoặc ${E.hp} HP hồi khi nhặt đồ.\n\n**Chọn một phần thưởng thêm**\n- ${E[main]} **${main.toUpperCase()} +6**.\n- ${E[guard]} **${guard.toUpperCase()} +7**.\n- ${E.vit} **VIT +4**.${["legendary", "cursed"].includes(target.rarity) ? `\n- ${E.ticket} **Nhận 1 vé thoát** (giữ tối đa 1).` : ""}\n\n**Bỏ qua:** giữ nguyên trang bị, không nhận phần thưởng.`;
     }
     const descriptions = {
       healer: `**Hồi phục:** hồi ${E.hp} HP bằng 30% Max HP, ít nhất 20; hồi 30% Max ${E.mana} MP (làm tròn lên); +1 ${E.potion} bình máu (theo giới hạn bình của bạn). Miễn phí.`,

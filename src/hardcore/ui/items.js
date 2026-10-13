@@ -17,7 +17,11 @@ module.exports = function createModule(dependencies) {
     STAT_SEPARATOR,
   } = dependencies;
 
-  function effectText(effects, level = 1, { compactCurses = false } = {}) {
+  function effectText(
+    effects,
+    level = 1,
+    { compactCurses = false, defenseLoss = null } = {},
+  ) {
     const percentages = [
       "critChance",
       "potionPower",
@@ -40,7 +44,8 @@ module.exports = function createModule(dependencies) {
             compactCurses,
           );
           if (curseText) return formatPassiveText(curseText);
-          if (key === "defenseSet") return `${E.defense} **DEF** = 0`;
+          if (key === "defenseReduction" || key === "defenseSet")
+            return `${E.defense} **DEF** −${percent(key === "defenseSet" ? 0.5 : value)} lúc nhận nguyền${defenseLoss !== null ? ` (đã trừ **${defenseLoss}**)` : ""}${compactCurses ? "" : "; không cộng dồn theo cấp"}`;
           if (key === "bonusPenalty")
             return `${highlightStat(effectStatLabel(key))} ×${(1 - value).toFixed(2)} mỗi cấp chưa giải`;
           if (key === "potions")
@@ -104,14 +109,17 @@ module.exports = function createModule(dependencies) {
     return `${effectText(item.effects, level)}${passiveText(item)}${item.curse ? `\n☣️ Curse: ${effectText(item.curse.effects, level)}` : ""}`;
   }
 
-  function itemEffectChanges(effects, beforeLevel, afterLevel) {
+  function itemEffectChanges(effects, beforeLevel, afterLevel, options = {}) {
     return Object.entries(effects)
       .map(([key, value]) => {
         const label = highlightStat(effectStatLabel(key));
         const describe = (level) =>
           key === "bonusPenalty"
             ? label + " ×" + Math.pow(1 - value, level).toFixed(3)
-            : effectText({ [key]: value }, level, { compactCurses: true });
+            : effectText({ [key]: value }, level, {
+                ...options,
+                compactCurses: true,
+              });
         const before = describe(beforeLevel);
         if (afterLevel === 0) return "- " + before + " → **Đã gỡ**";
         const after = describe(afterLevel);
@@ -195,17 +203,22 @@ module.exports = function createModule(dependencies) {
       for (const [key, value] of Object.entries(effects || {})) {
         if (["heal", "potions", "escapeTokens", "bonusPenalty"].includes(key))
           continue;
-        if (key === "defenseSet") {
+        if (key === "defenseReduction" || key === "defenseSet") {
           if (levels > 0) totals[key] = value;
         } else totals[key] = (totals[key] || 0) + value * levels;
       }
     };
     for (const item of state.items) {
       add(item.definition.effects, item.level);
-      add(
-        item.definition.curse?.effects,
-        Math.max(0, item.level - (item.cleansedLevels || 0)),
-      );
+      const levels = Math.max(0, item.level - (item.cleansedLevels || 0));
+      const effects = { ...item.definition.curse?.effects };
+      if (levels && itemCurses.defenseReduction(item)) {
+        delete effects.defenseReduction;
+        delete effects.defenseSet;
+        totals.defense =
+          (totals.defense || 0) - (itemCurses.defenseLoss(item) || 0);
+      }
+      add(effects, levels);
     }
     const active = Object.fromEntries(
       Object.entries(totals).filter(

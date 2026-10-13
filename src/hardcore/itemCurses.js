@@ -18,6 +18,24 @@ function derive(totals) {
     ]),
   );
 }
+function defenseReduction(item) {
+  const effects = item.definition?.curse?.effects;
+  // Saved Glass Cannon designs also receive the revised curse rule.
+  if (effects?.defenseSet === 0) return 0.5;
+  return Math.min(1, Math.max(0, effects?.defenseReduction || 0));
+}
+function defenseLoss(item) {
+  const value = item.curseEffects?.defense;
+  return Number.isFinite(value) && value <= 0 ? -value : null;
+}
+function migrateDefenseCurse(item) {
+  if (item.definition?.curse?.effects?.defenseSet !== 0) return;
+  item.definition = structuredClone(item.definition);
+  delete item.definition.curse.effects.defenseSet;
+  item.definition.curse.effects.defenseReduction = 0.5;
+  item.definition.curse.text =
+    "Giảm 50% DEF lúc nhận nguyền; lưu khoản trừ, không cộng dồn theo cấp. Giải hết nguyền hoàn trả khoản đã trừ.";
+}
 function describeEffect(key, value, level = 1, compact = false) {
   const n = Math.min(CAPS[key] ?? Infinity, value * level);
   const pct = (x) => Math.round(x * 100) + "%";
@@ -93,4 +111,11 @@ function describeEffect(key, value, level = 1, compact = false) {
       return null;
   }
 }
-module.exports = { CAPS, derive, describeEffect };
+module.exports = {
+  CAPS,
+  derive,
+  describeEffect,
+  defenseReduction,
+  defenseLoss,
+  migrateDefenseCurse,
+};

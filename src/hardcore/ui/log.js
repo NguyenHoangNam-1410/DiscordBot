@@ -33,7 +33,9 @@ module.exports = function createModule(dependencies) {
           "] · Lv." +
           purified.level +
           "**\n" +
-          itemEffectChanges(purified.curseEffects, purified.curseLevels, 0),
+          itemEffectChanges(purified.curseEffects, purified.curseLevels, 0, {
+            defenseLoss: purified.defenseLoss ?? null,
+          }),
       );
       if (purified.maxPotionsBefore !== purified.maxPotionsAfter)
         details.push(

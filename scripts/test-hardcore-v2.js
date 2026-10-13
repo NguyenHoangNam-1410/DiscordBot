@@ -352,7 +352,10 @@ async function main() {
   const cursed = stats.createState("barbarian", 10);
   cursed.cleared = 10;
   core.receiveItem(cursed, item("glass_cannon"));
-  assert.equal(cursed.defense, 0);
+  assert.equal(
+    cursed.defense,
+    Math.ceil(Math.floor(cursed.str * 0.3 + cursed.vit * 0.15) / 2),
+  );
   core.receiveItem(cursed, item("glass_cannon"));
   const target = cursed.items[0],
     power = cursed.str;
@@ -373,7 +376,10 @@ async function main() {
   assert.equal(target.cleansedLevels, 2);
   assert.equal(cursed.str, power);
   core.receiveItem(cursed, item("glass_cannon"));
-  assert.equal(cursed.defense, 0);
+  assert.equal(
+    cursed.defense,
+    Math.ceil(Math.floor(cursed.str * 0.3 + cursed.vit * 0.15) / 2),
+  );
   assert.equal(target.cleansedLevels, 2);
   const beforeForge = cursed.str;
   core.grind(cursed, target);

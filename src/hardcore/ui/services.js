@@ -76,6 +76,12 @@ module.exports = function createModule(dependencies) {
                 target.definition.curse.effects,
                 curseLevels,
                 curseLevels + 1,
+                {
+                  defenseLoss:
+                    target.curseEffects?.defense != null
+                      ? -target.curseEffects.defense
+                      : null,
+                },
               )
           : "☣️ **Đã giải toàn bộ nguyền:** rèn không thêm lời nguyền.",
       );
@@ -148,7 +154,12 @@ module.exports = function createModule(dependencies) {
       "**Lời nguyền sẽ gỡ · " +
         curseLevels +
         " cấp chưa giải:**\n" +
-        itemEffectChanges(target.definition.curse.effects, curseLevels, 0),
+        itemEffectChanges(target.definition.curse.effects, curseLevels, 0, {
+          defenseLoss:
+            target.curseEffects?.defense != null
+              ? -target.curseEffects.defense
+              : null,
+        }),
     ];
     const statChanges = [changes, capacity]
       .filter(Boolean)

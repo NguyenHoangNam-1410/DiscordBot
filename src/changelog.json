@@ -1,5 +1,16 @@
 [
   {
+    "id": "d3ab00eb-9d62-477b-9260-bec000d23843",
+    "updatedAt": "2026-10-11T13:47:04.142Z",
+    "auditedAt": "2026-10-11T13:47:04.142Z",
+    "title": "Điều chỉnh lời nguyền Glass Cannon",
+    "changes": [
+      "Glass Cannon [UR] giảm 50% DEF lúc nhận nguyền thay cho đưa DEF về 0; khoản trừ làm tròn xuống và lưu trên món đồ.",
+      "Khoản trừ DEF giữ cố định khi cộng chỉ số hoặc tăng level, không cộng dồn theo cấp nguyền. Giải hết nguyền hoàn trả đúng số DEF đã trừ; gỡ một cấp vẫn giữ khoản trừ nếu còn nguyền.",
+      "Túi đồ, rèn, giải nguyền và chuyển hóa hiển thị rõ khoản DEF bị trừ. Glass Cannon trong ván cũ áp dụng luật mới khi mở lại, tính khoản trừ từ DEF ở thời điểm chuyển đổi."
+    ]
+  },
+  {
     "id": "efc85496-a55e-496c-930d-e10ef2cd18c7",
     "updatedAt": "2026-10-09T06:13:02.363Z",
     "auditedAt": "2026-10-09T06:13:02.363Z",

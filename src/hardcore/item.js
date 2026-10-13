@@ -876,9 +876,9 @@ const ITEMS = {
       curse: {
         id: "glass_cannon_curse",
         effects: {
-          defenseSet: 0,
+          defenseReduction: 0.5,
         },
-        text: "Defense = 0",
+        text: "Giảm 50% DEF lúc nhận nguyền; lưu khoản trừ, không cộng dồn theo cấp. Giải hết nguyền hoàn trả khoản đã trừ.",
       },
     },
     {

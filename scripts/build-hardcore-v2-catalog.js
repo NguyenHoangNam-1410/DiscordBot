@@ -33,7 +33,7 @@ function parse(text) {
         Number(m[1]) /
         (["luck", "maxMana", "resistance", "defense"].includes(key) ? 1 : 100);
   }
-  if (/Defense = 0/.test(text)) effects.defenseSet = 0;
+  if (/Giảm 50% DEF|Defense = 0/.test(text)) effects.defenseReduction = 0.5;
   const hpLoss = /mất (\d+)% Max HP/.exec(text);
   if (hpLoss) effects.floorHpLoss = Number(hpLoss[1]) / 100;
   const payout = /mất (\d+)% payout/.exec(text);
