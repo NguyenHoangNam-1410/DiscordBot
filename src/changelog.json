@@ -1,5 +1,16 @@
 [
   {
+    "id": "d0a0116a-60d1-4d9e-865a-d2a66049da59",
+    "updatedAt": "2026-10-13T03:07:29.658Z",
+    "auditedAt": "2026-10-13T03:07:29.658Z",
+    "title": "Tinh gọn Battle UI Sinh tồn V3",
+    "changes": [
+      "Tiêu đề hiển thị tầng và khu vực; class và người chơi cùng một dòng. Thay mô tả skill trên bảng bằng tỷ lệ vật lý đánh trúng quái.",
+      "Bỏ dòng chỉ số gốc của đối thủ và dự báo nhận riêng; Đòn kế tiếp gộp loại sát thương, DMG sau DEF/RES và giảm trừ, tỷ lệ đánh trúng cùng tỷ lệ CRIT. Dải DMG chưa nhân CRIT.",
+      "Vé cầu nguyện chỉ hiển thị trên Battle UI khi đang gặp RNGesus; vẫn xem vé trong túi đồ."
+    ]
+  },
+  {
     "id": "1744a440-779d-4e00-a2d9-30c0c69b6f16",
     "updatedAt": "2026-10-13T02:48:28.168Z",
     "auditedAt": "2026-10-13T02:48:28.168Z",

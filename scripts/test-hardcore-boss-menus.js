@@ -335,6 +335,112 @@ async function main() {
     }
   });
 
+  await test("Compact V3 battle shows final counter damage, hit and Crit without duplicate stats", () => {
+    const stats = require("../src/hardcore/engine/stats");
+    const { E } = require("../src/hardcore/shared/icons");
+    for (const key of Object.keys(stats.CLASSES)) {
+      const s = stats.createState(key, 10000);
+      s.floor = 6;
+      s.cleared = 5;
+      s.encounter = world.makeEnemy(s, "normal", "UI test", () => 0.5);
+      s.encounter.damageMin = 100;
+      s.encounter.damageMax = 120;
+      s.encounter.critChance = 0.25;
+      s.encounter.nextDamageType = "physical";
+      const before = JSON.stringify(s),
+        p = core.incomingPreview(s),
+        embed = view.embed(s, "u").toJSON();
+      assert.equal(embed.title, "SINH TỒN v3.0.0 · TẦNG 6 · Sanctuary");
+      assert(
+        embed.description.startsWith(
+          stats.CLASSES[key].emoji +
+            " **" +
+            stats.CLASSES[key].name +
+            "** · <@u>",
+        ),
+      );
+      assert.equal(
+        (JSON.stringify(embed).match(/Tỷ lệ vật lý đánh trúng quái/g) || [])
+          .length,
+        1,
+      );
+      assert(!embed.description.includes("Phép luôn trúng"));
+      const foe = embed.fields.find((f) => f.name.includes("Đối thủ")).value;
+      assert.doesNotMatch(foe, /Dự báo|DEF|RES|Tỷ lệ vật lý trúng/);
+      assert(foe.includes(p.low + "–" + p.high + " DMG"));
+      assert(foe.includes("25% CRIT"));
+      assert(p.high < 120, "Counter is reduced by the character's defenses");
+      assert.equal(JSON.stringify(s), before);
+      s.encounter.nextDamageType = "magic";
+      require("../src/hardcore/rift").encounter(s).lockedCounterType = "magic";
+      assert.equal(core.incomingPreview(s).critChance, 0);
+      assert(
+        view
+          .embed(s, "u")
+          .toJSON()
+          .fields.find((f) => f.name.includes("Đối thủ"))
+          .value.includes(E.magic + " Phép"),
+      );
+      assert(
+        view
+          .embed(s, "u")
+          .toJSON()
+          .fields.find((f) => f.name.includes("Đối thủ"))
+          .value.includes("0% CRIT"),
+      );
+    }
+    const run = runBoss("bul_kathos"),
+      s = run.state;
+    s.encounter.boss.mechanicState.clashWrong = true;
+    assert.equal(core.incomingPreview(s).critChance, 1);
+    assert(
+      view
+        .embed(s, "u")
+        .toJSON()
+        .fields.find((f) => f.name.includes("Đối thủ"))
+        .value.includes("100% CRIT"),
+    );
+    s.encounter.boss.mechanicState.skipCounter = true;
+    assert(
+      view
+        .embed(s, "u")
+        .toJSON()
+        .fields.find((f) => f.name.includes("Đối thủ"))
+        .value.includes("Không phản công"),
+    );
+    repo.deleteSession(run.session.id);
+    const tickets = stats.createState("necromancer", 10000);
+    tickets.prayerBoost = true;
+    tickets.encounter = { type: "empty" };
+    assert(
+      !JSON.stringify(view.embed(tickets, "u").toJSON()).includes(
+        "Vé cầu nguyện",
+      ),
+    );
+    tickets.encounter = {
+      type: "rngesus",
+      encounterChance: 0.01,
+      fleeChance: 0.9,
+      prayerChance: 0.6,
+    };
+    assert(
+      JSON.stringify(view.embed(tickets, "u").toJSON()).includes(
+        "Vé cầu nguyện",
+      ),
+    );
+    const legacy = stats.createState("necromancer", 10000, {
+      gameplayVersion: 2,
+    });
+    legacy.floor = 6;
+    legacy.encounter = world.makeEnemy(legacy, "normal", null, () => 0.5);
+    assert(
+      view
+        .embed(legacy, "u")
+        .toJSON()
+        .fields.some((f) => f.name.includes("Necromancer")),
+    );
+  });
+
   console.log(
     groups + " deterministic boss menu/display groups passed; no simulations.",
   );

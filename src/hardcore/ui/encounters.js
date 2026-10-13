@@ -222,7 +222,7 @@ module.exports = function createModule(dependencies) {
     return `${eventIcon(e.kind)} **${e.name}**\n${descriptions[k] || "Chọn một hành động."}`;
   }
 
-  function encounterSummary(s) {
+  function encounterSummary(s, compact = false) {
     if (s.phase === "upgrade")
       return `${E.checkpoint} **CHECKPOINT**\nChọn +5 STR, DEX, VIT hoặc ENE. Xem **Chi tiết** để đọc dự báo chỉ số.`;
     if (s.phase === "boss_chest")
@@ -250,6 +250,12 @@ module.exports = function createModule(dependencies) {
           ancient_mimic: "Ancient Mimic",
         }[world.mimicKind(e) ? "elite" : e.rank] || e.rank;
       const preview = core.incomingPreview(s);
+      if (compact) {
+        const next = preview.skip
+          ? "🎯 **Đòn kế tiếp:** Không phản công lượt này."
+          : `🎯 **Đòn kế tiếp:** ${preview.trueDamage ? "DMG chuẩn" : preview.magic ? E.magic + " Phép" : E.attack + " Vật lý"} **${money(preview.low)}–${money(preview.high)} DMG** · ${E.evasion} **${percent(preview.chance)}** trúng bạn · ${E.crit} **${percent(preview.critChance)} CRIT** (×1,75)`;
+        return `${monsterIcon(e)} **${e.name}** · ${e.boss ? "Tầng " + s.floor + (["anomaly", "kabraxis"].includes(e.boss.id) ? " · Phase " + e.boss.phase : "") : rank}\n${(e.boss && bossDisplay.bars(s)) || healthBar(e.hp, e.maxHp)}${e.boss ? "\n" + bossDisplay.status(s) : ""}${require("../rift").battle(s)}${e.mechanic === "riftwalker" && e.combatTurn % 3 === 0 ? "\n🛡️ Quái miễn sát thương lượt này" : ""}\n${next}`;
+      }
       if (e.boss)
         return `${monsterIcon(e)} **${e.name}** · Tầng ${s.floor}${["anomaly", "kabraxis"].includes(e.boss.id) ? " · Phase " + e.boss.phase : ""}
 ${bossDisplay.bars(s) || healthBar(e.hp, e.maxHp)}

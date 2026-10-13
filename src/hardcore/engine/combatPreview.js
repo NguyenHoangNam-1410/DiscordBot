@@ -19,7 +19,8 @@ module.exports = function createModule(dependencies) {
         ? 1 + Math.min(5, e.frenzy + 1) * 0.08
         : 1);
     const plan = rift.counter(state, bosses.counter(state));
-    if (plan.skip) return { low: 0, high: 0, chance: 0 };
+    if (plan.skip)
+      return { low: 0, high: 0, chance: 0, critChance: 0, skip: true };
     const shield = awakening.active(state)
       ? Math.min(
           state.classAwakening.bark || 0,
@@ -41,6 +42,7 @@ module.exports = function createModule(dependencies) {
         ),
         chance: 1,
         trueDamage: true,
+        critChance: 0,
       };
     const low = attackDamage(e, state, state, () => 0, {
       magic: plan.magic,
@@ -63,6 +65,14 @@ module.exports = function createModule(dependencies) {
     return {
       low: afterShield(low),
       high: afterShield(high),
+      magic: Boolean(plan.magic),
+      critChance: plan.magic
+        ? 0
+        : plan.critical == null
+          ? e.critChance || 0
+          : plan.critical
+            ? 1
+            : 0,
       chance: plan.magic
         ? 1
         : rift.hitChance(

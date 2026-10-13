@@ -23,6 +23,14 @@ module.exports = function createModule(dependencies) {
 
   function embed(state, userId, result = null, sessionId = null) {
     const c = stats.CLASSES[state.classKey];
+    const compact =
+      state.gameplayVersion === 3 &&
+      !state.mode?.startsWith("tower") &&
+      !state.towerChallengeId;
+    const character =
+      state.phase === "encounter" && state.encounter.type === "combat"
+        ? battleStats(state, compact)
+        : statLine(state, false, state.phase !== "upgrade");
     const e = new EmbedBuilder()
       .setColor(
         result
@@ -38,20 +46,22 @@ module.exports = function createModule(dependencies) {
                 : 0xe67e22,
       )
       .setTitle(
-        `${c.emoji} SINH TỒN v${state.releaseVersion} · TẦNG ${state.floor}${state.floor > 100 ? " · OVERRUN" : ""}`,
+        compact
+          ? `SINH TỒN v${state.releaseVersion} · TẦNG ${state.floor} · ${world.regionForFloor(state.floor).name}`
+          : `${c.emoji} SINH TỒN v${state.releaseVersion} · TẦNG ${state.floor}${state.floor > 100 ? " · OVERRUN" : ""}`,
       )
       .setDescription(
-        `${icon("bust_in_silhouette", "👤")} <@${userId}> · **${world.regionForFloor(state.floor).name}**`,
-      )
-      .addFields({
+        compact
+          ? `${c.emoji} **${c.name}** · <@${userId}>\n${character}`
+          : `${icon("bust_in_silhouette", "👤")} <@${userId}> · **${world.regionForFloor(state.floor).name}**`,
+      );
+    if (!compact)
+      e.addFields({
         name: `${c.emoji} ${c.name}`,
-        value: (state.phase === "encounter" && state.encounter.type === "combat"
-          ? battleStats(state)
-          : statLine(state, false, state.phase !== "upgrade")
-        ).slice(0, 1024),
+        value: character.slice(0, 1024),
       });
     const protections = [
-      ...(state.prayerBoost
+      ...(state.prayerBoost && state.encounter.type === "rngesus"
         ? [`${E.prayerTicket} **Vé cầu nguyện ×1** · RNGesus **60%**`]
         : []),
       ...(state.reviveTickets
@@ -67,7 +77,7 @@ module.exports = function createModule(dependencies) {
       state.encounter.type === "combat"
         ? `${E.attack} Đối thủ`
         : "⚠️ Tình huống",
-      encounterSummary(state),
+      encounterSummary(state, compact),
     );
     e.addFields({
       name: `${icon("moneybag", "💰")} Rút thưởng`,

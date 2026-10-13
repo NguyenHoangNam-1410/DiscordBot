@@ -89,7 +89,7 @@ module.exports = function createModule(dependencies) {
     return lines.join("\n");
   }
 
-  function battleStats(s) {
+  function battleStats(s, compact = false) {
     const attack = core.attackDamagePreview(s);
     const defense = require("../rift").enabled(s)
       ? counterDefense(
@@ -106,6 +106,15 @@ module.exports = function createModule(dependencies) {
             require("../awakening").incomingDefense(s),
         );
     const skill = core.skillDamagePreview(s);
+    const physicalChance = bosses.vanished(s)
+      ? 0
+      : require("../rift").guaranteedHit(s)
+        ? 1
+        : world.hitChance(
+            s.accuracy + require("../equipment/affinityEffects").accuracy(s),
+            s.encounter.evasion,
+            0.45,
+          );
     const detail = bosses.brainControl(s)
       ? "DMG chuẩn 20% Max HP boss; không Crit, không mất MP."
       : {
@@ -122,7 +131,7 @@ module.exports = function createModule(dependencies) {
             : "Phép luôn trúng, không Crit; chặn phản công.",
           paladin: "Vật lý, có thể trượt/Crit; tự Phòng thủ.",
         }[s.classKey];
-    return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${bosses.effectiveMaxMana(s)}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé thoát** **${s.escapeTokens}**\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${core.effectiveResistance(s, s.resistance, false, !require("../rift").enabled(s) || require("../rift").encounter(s)?.lockedCounterType === "magic")}%**${core.effectiveResistance(s, s.resistance, false, !require("../rift").enabled(s) || require("../rift").encounter(s)?.lockedCounterType === "magic") !== s.resistance ? ` (gốc ${s.resistance}%)` : ""}\n${bosses.brainControl(s) ? "🧠" : SKILL_ICONS[s.classKey]} **${bosses.brainControl(s) ? "Brain Control" : stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""}): ${skill.low}–${skill.high} DMG**\n${detail}\n`;
+    return `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${s.mana}/${bosses.effectiveMaxMana(s)}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé thoát** **${s.escapeTokens}**\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${defense}**${STAT_SEPARATOR}${E.res} **RES** **${core.effectiveResistance(s, s.resistance, false, !require("../rift").enabled(s) || require("../rift").encounter(s)?.lockedCounterType === "magic")}%**${core.effectiveResistance(s, s.resistance, false, !require("../rift").enabled(s) || require("../rift").encounter(s)?.lockedCounterType === "magic") !== s.resistance ? ` (gốc ${s.resistance}%)` : ""}\n${bosses.brainControl(s) ? "🧠" : SKILL_ICONS[s.classKey]} **${bosses.brainControl(s) ? "Brain Control" : stats.CLASSES[s.classKey].skill} (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""}): ${skill.low}–${skill.high} DMG**\n${compact ? `${E.accuracy} Tỷ lệ vật lý đánh trúng quái: **${percent(physicalChance)}**` : detail}\n`;
   }
 
   function checkpointPreview(s, key) {
