@@ -1,5 +1,14 @@
 [
   {
+    "id": "aac86075-0982-43cc-9700-6a3700b9eb30",
+    "updatedAt": "2026-10-13T15:29:17.339Z",
+    "auditedAt": "2026-10-13T15:29:17.339Z",
+    "title": "Khôi phục nút chọn chỉ số tại checkpoint",
+    "changes": [
+      "Checkpoint hiển thị lại 4 nút cộng +5 STR, DEX, VIT hoặc ENE với icon chỉ số, thay cho menu chọn thuộc tính."
+    ]
+  },
+  {
     "id": "e2d6cf82-1b8a-4322-a418-1f87f62c94a8",
     "updatedAt": "2026-10-13T15:25:39.602Z",
     "auditedAt": "2026-10-13T15:25:39.602Z",

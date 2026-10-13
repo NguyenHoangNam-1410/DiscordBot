@@ -516,7 +516,7 @@ async function main() {
     assert.equal(JSON.stringify(s), before);
   });
 
-  await test("Event selectors route Rift, checkpoint, shops and Forge once and publish the new UI", async () => {
+  await test("Event selectors and checkpoint buttons route once and publish the new UI", async () => {
     const gear = Object.values(core.ITEMS)
       .flat()
       .find((i) => i.rarity === "common");
@@ -585,10 +585,17 @@ async function main() {
       const rows = view.rows(run.session.id, s).map((r) => r.toJSON()),
         components = rows.flatMap((r) => r.components),
         menu = components.find((c) => c.custom_id?.endsWith(":event_select"));
-      assert(menu, name);
+      assert(
+        name === "checkpoint"
+          ? components.some(
+              (c) => c.type === 2 && c.custom_id?.endsWith(":upgrade_str"),
+            )
+          : menu,
+        name,
+      );
       assert(rows.length <= 5);
-      assert(menu.options.length <= 25);
-      for (const o of menu.options)
+      assert((menu?.options.length || 0) <= 25);
+      for (const o of menu?.options || [])
         assert(
           !components.some(
             (c) => c.type === 2 && c.custom_id?.endsWith(":" + o.value),
@@ -601,7 +608,12 @@ async function main() {
           : name === "checkpoint"
             ? "upgrade_str"
             : menu.options[0].value;
-      const input = mock(run.session.id, s.turn, "event_select", [value]);
+      const raw = name === "checkpoint" ? value : "event_select";
+      const interactionType =
+        name === "checkpoint"
+          ? { isButton: () => true, isStringSelectMenu: () => false }
+          : {};
+      const input = mock(run.session.id, s.turn, raw, [value], interactionType);
       await route(input);
       assert.equal(input.responses.acks, 1);
       assert.equal(input.responses.updates.length, 1, name);
@@ -610,7 +622,7 @@ async function main() {
       assert.equal(live.turn, s.turn + 1);
       check(live);
       const after = repo.getSession(run.session.id).state_json;
-      await route(mock(run.session.id, s.turn, "event_select", [value]));
+      await route(mock(run.session.id, s.turn, raw, [value], interactionType));
       assert.equal(repo.getSession(run.session.id).state_json, after);
       repo.deleteSession(run.session.id);
     }

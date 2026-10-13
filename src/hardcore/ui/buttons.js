@@ -107,6 +107,7 @@ module.exports = function createModule(dependencies) {
   function eventMenuActions(state, actions = core.actions(state)) {
     if (
       state.gameplayVersion !== 3 ||
+      state.phase === "upgrade" ||
       state.mode?.startsWith("tower") ||
       state.towerChallengeId ||
       ["combat", "rngesus"].includes(state.encounter.type) ||
