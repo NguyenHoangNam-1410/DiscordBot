@@ -13,86 +13,199 @@ const labels = ["◇", "△", "○"],
   };
 const RULES = {
   butcher:
-    "Khoảng cách 0–2; cuối lượt Butcher tiến 1 ô, mỗi chu kỳ Meat Hook kéo về 0 trừ khi đã chặt xích. Ở 0: bạn +15% DMG và boss tăng Bloodlust (có trần). Lùi mất lượt; chặt xích trả 5% HP hiện tại, phải còn 1 HP, chặn đúng lần kéo kế.",
+    "Theo dõi khoảng cách 0–2. Sau mỗi lượt, boss tiến gần bạn một ô; mỗi {CYCLE} lượt sẽ kéo bạn về 0.\nỞ khoảng cách 0, DMG của bạn +15%; mỗi lượt ở đây thêm một điểm Cuồng nộ cho boss (tối đa {CAP}), mỗi điểm tăng {POWER}% DMG boss.\nLùi một ô để giãn khoảng cách. Chặt xích tốn 5% HP hiện tại, ngăn một lần kéo sắp tới; bạn phải còn ít nhất 1 HP.\nLùi và Chặt xích đều tốn 1 lượt, boss vẫn có thể phản công.",
   machine:
-    "Mỗi hit Tấn công/Skill tăng nhiệt. Nhiệt 70–99: boss nhận +30% DMG; đạt 100 cuối lượt: bạn mất một phần Max HP, boss mất 6% Max HP rồi nhiệt/reset Shield về 0. Xả −35 nhiệt tạo 1 Shield cho boss (trần 2, boss nhận ít hơn 15% DMG) và hồi boss 3%; Quá tải +35. Heal boss dùng ngân sách hữu hạn.",
+    "Mỗi hit Tấn công/Skill gây DMG tăng {AMOUNT} nhiệt. Giữ nhiệt 70–99 để DMG của bạn lên boss +30%.\nĐạt 100 nhiệt: cuối lượt bạn nhận DMG chuẩn bằng {HARM}% Max HP, boss mất 6% Max HP; nhiệt và lá chắn boss về 0.\nXả nhiệt giảm 35 nhiệt, nhưng hồi boss tối đa 3% Max HP và thêm một lá chắn (tối đa 2). Khi có lá chắn, boss nhận ít hơn 15% DMG từ bạn.\nQuá tải tăng 35 nhiệt. Cả hai lựa chọn tốn 1 lượt và boss vẫn phản công.",
   assur:
-    "Ba Sigil ứng với ba màu theo thứ tự được công bố. Chạm màu kế trong vòng nhận 1 Purify Charge, tối đa 3; sai mất HP theo Depth và vẫn tiến manh mối, không mất charge. Đủ 3 dùng Purify: tắt rune, không phản công lượt đó, mở cửa sổ DMG rồi rune trở lại. Rune giữ ít nhất 1 HP boss; vật lý/phép đều xử lý được.",
+    "Boss chưa thể bị kết liễu khi ấn bảo hộ còn hoạt động. Chọn Sigil có màu được báo trên bảng để tích điểm thanh tẩy.\nĐúng màu: +1 điểm (tối đa 3). Sai màu: bạn nhận DMG chuẩn bằng {HARM}% Max HP; vẫn chuyển sang màu kế tiếp.\nĐủ 3 điểm, dùng Purify: tiêu thụ cả 3 điểm, boss không phản công lượt đó; ấn tắt trong {AMOUNT} lượt kế tiếp.\nTấn công/Skill trong lúc ấn tắt để kết liễu. Chạm màu và Purify đều tốn 1 lượt.",
   control:
-    "Shield giữ ít nhất 1 HP boss. Mỗi hành động gây hit cho một manh mối loại trừ Alpha/Beta/Gamma (hai manh mối đủ xác định). Nhập đúng làm Shield sập 2 lượt combat, không phản công khi nhập; sai gây minefield DMG chuẩn và thêm manh mối. Tần số mới theo vòng đã khóa; không roll khi mở bảng.",
+    "Lá chắn giữ boss sống với ít nhất 1 HP. Gây DMG bằng Tấn công/Skill để lấy manh mối loại trừ Alpha, Beta hoặc Gamma.\nHai manh mối loại trừ xác định tần số đúng. Chọn tần số còn lại để tắt lá chắn trong 2 lượt kế tiếp; boss không phản công lượt nhập đúng.\nNhập sai: bạn nhận DMG chuẩn bằng {HARM}% Max HP, thêm một manh mối và boss vẫn phản công.\nNhập tần số tốn 1 lượt. Khi lá chắn tắt, dùng Tấn công/Skill để kết liễu.",
   necrobot:
-    "Chọn bộ phận rồi dùng Tấn công/Skill để phá: Plating (Giáp) tăng DEF boss; Barrier (Khiên phép) tăng RES boss; Weapon (Vũ khí) tăng DMG phản công của boss. Phá một bộ phận sẽ làm các bộ phận còn sống mạnh hơn. Phá ít nhất 2/3 bộ phận để mở mục tiêu Boss (Core). Đổi mục tiêu không tốn lượt và không gây sát thương. HP bộ phận đã tính trong tổng HP boss; phá bộ phận không nhận thưởng riêng.",
-  quov: "Chọn một Ward không tốn lượt. Đúng nguyên tố kế tiếp giảm mạnh phản công và ghi Absorb của nguyên tố đó. Đủ ba Absorb khác nhau giảm RES boss đến hết trận. Depth III có đòn hai nguyên tố; Ward khớp một nguyên tố vẫn bảo vệ. Không cần MP để đổi Ward.",
+    "Chọn một bộ phận trong menu rồi dùng Tấn công/Skill để phá. Đổi mục tiêu không tốn lượt, không tự gây DMG.\nPlating (Giáp) tăng DEF boss; Barrier (Khiên phép) tăng RES boss; Weapon (Vũ khí) tăng DMG phản công boss.\nPhá ít nhất 2 trong 3 bộ phận để mở mục tiêu Boss (Core). Sau đó chọn Boss và đánh để kết liễu.\nMỗi bộ phận bị phá làm các bộ phận còn sống mạnh hơn. HP bộ phận nằm trong tổng HP boss; không có thưởng riêng.",
+  quov: "Xem nguyên tố của đòn kế tiếp rồi chọn Ward Lửa, Lạnh hoặc Sét tương ứng. Đổi Ward miễn phí, không tốn lượt hoặc MP.\nWard khớp nguyên tố giảm {POWER}% DMG phản công và ghi nhận nguyên tố đã hấp thụ.\nHấp thụ đủ 3 nguyên tố khác nhau: RES boss giảm {AMOUNT} điểm % đến hết trận.\nỞ tầng 700 trở đi, một số đòn có hai nguyên tố; Ward khớp một nguyên tố vẫn bảo vệ bạn.",
   lucion:
-    "Mệnh lệnh có manh mối ba biểu tượng theo vòng. Chọn đáp án ứng với biểu tượng báo trước: tăng Will; đủ 3 Will phá Scales cho 2 lượt, phản công của lựa chọn đúng bị chặn. Sai gây Flame/HP chuẩn và hồi boss 3%. Ngoài cửa sổ Scales, boss nhận 30% DMG; không khóa cứng build.",
+    "Đọc biểu tượng mệnh lệnh trên bảng: ◇ chọn Chống lệnh, △ chọn Giả vờ, ○ chọn Phản bội.\nChọn đúng: tăng 1 Ý chí và chặn phản công lượt đó. Đủ 3 Ý chí, lớp vảy boss mở trong 2 lượt kế tiếp để bạn gây DMG đầy đủ và kết liễu.\nKhi lớp vảy chưa mở, boss chỉ nhận 30% DMG từ bạn và luôn còn ít nhất 1 HP.\nChọn sai: bạn nhận DMG chuẩn bằng {HARM}% Max HP, boss hồi tối đa 3% Max HP và vẫn phản công. Mỗi đáp án tốn 1 lượt.",
   bul_kathos:
-    "Thế boss được báo theo vòng. Chọn Đỡ cao/Đỡ thấp/Không mắc lừa khớp biểu tượng: stagger 2 lượt và không phản công khi xử lý đúng. Lựa chọn kế trong vòng là hòa: hai phía mất 2% HP boss/bạn; lựa chọn còn lại thua, boss CRIT (Phòng thủ vẫn miễn Crit theo luật chung). Không roll thêm sau khi công bố thế; không phạt lặp Attack/Skill.",
+    "Đọc thế đánh trên bảng rồi chọn đáp án tương ứng: High Cleave → Đỡ cao; Low Sweep → Đỡ thấp; Feint → Không mắc lừa.\nĐáp án đúng làm boss choáng, không phản công lượt chọn và trong 2 lượt kế tiếp.\nMột trong hai đáp án còn lại là hòa: boss mất 2% Max HP; bạn nhận DMG chuẩn bằng {TWO_HARM}% Max HP của bạn. Boss vẫn phản công. Đáp án thua khiến phản công boss chắc chắn CRIT.\nMỗi đáp án tốn 1 lượt. Không có phạt chỉ vì bạn dùng Tấn công/Skill liên tiếp.",
   giyua:
-    "Phá Nest giảm số tổ; phong ấn giảm tổ và chặn sinh tổ trong một chu kỳ; khai thác hồi 4% Max HP +1 MP nhưng nếu lượt kế không gây DMG thì tổ tiến hóa/thêm một. Tổ tăng DMG boss và có trần. Attack/Skill luôn đánh boss, không tự mất lượt vào tổ.",
+    "Mỗi Tổ đang còn tăng {POWER}% DMG boss, tối đa {CAP} Tổ. Boss sinh thêm một Tổ mỗi {CYCLE} lượt nếu không bị phong ấn.\nPhá Nest xóa một Tổ. Phong ấn Nest xóa một Tổ và ngăn sinh Tổ trong {CYCLE} lượt.\nKhai thác Nest hồi tối đa 4% Max HP và +1 MP cho bạn; lượt kế tiếp phải gây DMG bằng Tấn công/Skill, nếu không boss thêm một Tổ.\nXử lý Tổ tốn 1 lượt và boss vẫn phản công. Tấn công/Skill thường luôn đánh boss.",
   riftwalker:
-    "Mỗi hành động combat chung tạo Echo đến sau ba lượt. Attack/Skill: shockwave cả hai, giới hạn theo Max HP bạn; Bình: hồi boss 3%; Phòng thủ: boss được Shield 2 lượt. Bẻ đúng một Echo tốn phần Max HP theo Depth và một lượt; không tua RNG. Timeline khóa trong state.",
+    "Mỗi Tấn công, Skill, Phòng thủ hoặc dùng bình để lại một Dư âm, kích hoạt sau 3 lượt.\nDư âm Tấn công/Skill: boss mất HP bằng 15% DMG của đòn cũ, tối đa {POWER}% Max HP của bạn. Bạn nhận DMG chuẩn bằng {ECHO_RATE}% DMG đòn cũ, tối đa {HARM}% Max HP của bạn. Dư âm bình hồi boss tối đa 3% Max HP; Dư âm Phòng thủ giúp boss nhận ít hơn 20% DMG từ bạn trong 2 lượt.\nBẻ Echo xóa đúng Dư âm đã chọn, tốn {COST}% Max HP và 1 lượt; phải còn ít nhất 1 HP, boss vẫn phản công.\nĐọc loại Dư âm và số lượt còn lại trên bảng trước khi chọn.",
   gharbad:
-    "Quy luật thật–giả được công bố và giữ suốt trận, dấu hiệu đổi theo vòng. Chấp nhận thật hồi 5% HP +1 MP; khám xét thật mở buff; tấn công khi giả mở buff và ngắt phản công. Chọn sai mất HP, chấp nhận sai còn hồi boss. Không roll lại kết quả khi chọn.",
+    "Bảng ghi rõ đầu hàng thật hay giả. Khi thật, chọn Chấp nhận hoặc Khám xét; khi giả, chọn Tấn công lời đầu hàng.\nChấp nhận đúng hồi tối đa 5% Max HP và +1 MP cho bạn. Khám xét đúng chặn phản công. Tấn công lời đầu hàng giả làm boss mất 4% Max HP và chặn phản công.\nChọn sai: bạn nhận DMG chuẩn bằng {HARM}% Max HP và boss vẫn phản công; Chấp nhận sai còn hồi boss tối đa 3% Max HP.\nMỗi lựa chọn tốn 1 lượt. Dấu hiệu đổi sau khi bạn xử lý lời đầu hàng.",
   phoboss:
-    "Dream Depth 0–5 tăng DMG hai phía theo Depth. Thức tỉnh tốn một phần HP hiện tại và một lượt, hạ Dream 2 bậc. Dream ≥4: mỗi lượt lẻ khóa Skill, hiển thị trước. Skill không xóa stack tự động.",
+    "Mỗi điểm Mộng tăng {POWER}% DMG Tấn công/Skill của bạn và DMG boss. Mộng tăng một điểm mỗi {CYCLE} lượt, tối đa 5.\nThức tỉnh giảm 2 điểm Mộng, tốn {COST}% HP hiện tại và 1 lượt; phải còn ít nhất 1 HP, boss vẫn phản công.\nKhi Mộng từ 4 trở lên, Skill bị khóa ở những lượt được cảnh báo trên bảng.\nSkill không tự giảm điểm Mộng.",
   anomaly:
-    "Matter/Energy/Void luân phiên mỗi lượt; ổn định đúng dạng lấy một shard, chọn sai mất HP và boss nhảy dạng. Đủ ba shard mở Overload: DEF/RES boss về 0 trong hai lượt. Shard không drop vật phẩm hoặc tăng payout.",
+    "Boss đổi dạng Matter (Vật chất), Energy (Năng lượng), Void (Hư không) sau mỗi lượt. Chọn Ổn định đúng dạng hiện tại trên bảng.\nĐúng dạng: nhận một mảnh của dạng đó nếu chưa có, chặn phản công lượt chọn. Sai dạng: bạn nhận DMG chuẩn bằng {HARM}% Max HP; boss đổi dạng lệch lịch và vẫn phản công.\nCó đủ 3 mảnh khác nhau, chọn Overload: tiêu thụ mảnh, boss không phản công lượt đó; DEF/RES boss về 0 trong 2 lượt kế tiếp.\nỔn định và Overload đều tốn 1 lượt. Mảnh chỉ dùng trong trận, không phải vật phẩm.",
   zakarum:
-    "Halo Might tăng DMG, Sanctuary hồi boss định kỳ, Haste tăng tốc Shield. Cướp một mảnh mất một lượt, tắt buff đó; hai mảnh còn lại tăng công suất trong hai lượt, bạn nhận mảnh yếu đến hết trận. Menu ghi rõ phần đang còn.",
+    "Boss có 3 Halo: Might tăng DMG boss; Sanctuary hồi boss; Haste tăng DEF boss vào các lượt của nó.\nChọn Cướp Halo để xóa hiệu ứng đó của boss. Những Halo còn lại mạnh hơn trong 2 lượt sau khi cướp.\nMảnh cướp giữ đến hết trận: Might tăng 10% DMG của bạn; Sanctuary tăng 5 điểm % RES của bạn và giảm 10 điểm % RES boss; Haste tăng 3 điểm % CRIT của bạn, chịu trần CRIT.\nMỗi lần cướp tốn 1 lượt và boss vẫn phản công.",
   justicar:
-    "Trước mỗi ba lượt combat chọn phán quyết không tốn lượt: Steel tăng vật lý hai phía, giảm phép; Arcane tăng phép hai phía, giảm vật lý; Silence khóa Skill và giảm DMG boss 35%. Không được dùng hành động thường khi chưa chọn. Ý định ba lượt được báo trước.",
+    "Trước mỗi nhóm 3 lượt chiến đấu, phải chọn Steel, Arcane hoặc Silence trong menu. Chọn không tốn lượt.\nSteel tăng {POWER}% DMG vật lý và giảm 15% DMG phép của cả bạn và boss. Arcane tăng {POWER}% DMG phép và giảm 15% DMG vật lý của cả hai.\nSilence khóa Skill của bạn, đổi lại giảm 35% DMG boss trong 3 lượt.\nĐọc lịch loại đòn boss được báo trên bảng trước khi chọn.",
   uldyssian:
-    "Bốn hành động chung gần nhất tạo Clone theo loại xuất hiện nhiều nhất, hòa ưu tiên lần xuất hiện đầu. Clone Attack tăng DMG; Skill hút MP/đổi phép; Defend giảm DMG nhận; Potion hồi boss. Viết lại một ô thành Trống tốn 1 MP và một lượt; nút boss không tự thêm ô combat.",
+    "Boss nhớ từng nhóm 4 hành động Tấn công, Skill, Phòng thủ hoặc bình của bạn. Loại xuất hiện nhiều nhất quyết định Bản sao; nếu hòa, loại xuất hiện trước được ưu tiên.\nBản sao Tấn công tăng {POWER}% DMG boss; Skill khiến boss đánh phép và hút 1 MP của bạn mỗi lượt; Phòng thủ giảm 20% DMG bạn gây lên boss; bình hồi boss tối đa 2% Max HP mỗi lượt.\nXóa ký ức thay một hành động đã ghi bằng ô trống, tốn 1 MP và 1 lượt; boss vẫn phản công.\nCác lựa chọn riêng của boss không được thêm vào nhóm 4 hành động.",
   lazarus:
-    "Chọn Restoration/Tremor/Drain/Boss không mất lượt. Restoration hồi boss, Tremor DMG chuẩn theo chu kỳ, Drain hút MP. Boss hồi sinh Totem bị phá gần nhất mỗi chu kỳ nếu còn ngân sách hồi hữu hạn; không hồi sinh bằng render/resume. Có thể đánh boss bất cứ lúc nào.",
+    "Chọn Restoration, Tremor, Drain hoặc Boss trong menu rồi dùng Tấn công/Skill. Đổi mục tiêu không tốn lượt.\nRestoration hồi boss tối đa {POWER}% Max HP mỗi lượt. Mỗi {CYCLE} lượt, Tremor gây DMG chuẩn bằng {HARM}% Max HP lên bạn và Drain hút 1 MP của bạn nếu chúng còn sống.\nMỗi {CYCLE} lượt, boss có thể hồi sinh Totem vừa bị phá gần nhất nếu còn lượng hồi phục cho phép.\nBạn được đánh Boss bất cứ lúc nào; phá Totem nguy hiểm trước để giảm áp lực.",
   xazax:
-    "Portal sinh theo chu kỳ và tăng DMG boss, có trần. Đóng xóa an toàn; Chiếm xóa và gây 4% Max HP boss xuyên RES; Bước vào xóa, bỏ phản công lượt đó nhưng RES của bạn −10 trong hai lượt. Mỗi lựa chọn mất một lượt. Skill không tự đóng Portal.",
+    "Boss thêm một Portal mỗi {CYCLE} lượt, tối đa {CAP}. Mỗi Portal tăng {POWER}% DMG boss.\nĐóng Portal xóa một cổng, không có chi phí riêng. Chiếm Portal xóa một cổng và làm boss mất 4% Max HP, bỏ qua RES.\nBước vào Portal xóa một cổng và chặn phản công lượt đó; RES của bạn giảm 10 điểm % trong 2 lượt kế tiếp.\nMỗi lựa chọn tốn 1 lượt; Đóng/Chiếm vẫn có phản công. Skill không tự đóng cổng.",
   samael:
-    "Pentagram có 5 điểm, thêm theo chu kỳ. Dập một điểm tốn 1 MP; cướp điểm mất 5% Max HP để nhận +5% DMG đến hết trận. Đủ 5: phản công mạnh và burst HP chuẩn được cảnh báo, rồi reset. Không yêu cầu Phòng thủ theo chu kỳ cố định.",
+    "Boss thêm một điểm sáng mỗi {CYCLE} lượt, tối đa 5. Đủ 5 điểm: đòn boss mạnh hơn, bạn nhận thêm DMG chuẩn bằng {HARM}% Max HP cuối lượt, rồi điểm sáng về 0.\nDập ấn xóa một điểm, tốn 1 MP. Cướp ấn xóa một điểm nhưng bạn nhận DMG chuẩn bằng {FIVE_HARM}% Max HP.\nMỗi điểm đã cướp tăng 5% DMG của bạn đến hết trận, tối đa 5 điểm.\nDập/Cướp đều tốn 1 lượt và boss vẫn phản công. Xử lý trước khi đủ 5 điểm.",
   death_projector:
-    "Tia bắn mỗi lượt, đổi hướng theo chu kỳ A→B→C (Depth III tiến hai khu). Có thể Attack khi khu an toàn; chuyển vùng tốn lượt, không phản công thường nhưng vẫn chịu tia nếu ở vùng bị quét. UI báo khu và lượt bắn; không cần đoán.",
+    "Xem vùng A/B/C đang bị tia quét. Đứng ở vùng khác để không nhận tia; tại vùng an toàn có thể Tấn công/Skill.\nChọn Sang A/B/C tốn 1 lượt. Không có phản công thường khi di chuyển, nhưng bạn vẫn nhận tia nếu đến vùng đang bị quét.\nVùng bị quét được ghi trên bảng trước khi bạn hành động. Run cũ đổi hướng theo chu kỳ A→B→C; ở độ khó III tiến hai vùng mỗi lần.",
   akarat:
-    "Mercy/Wrath/Faith là ba Apostle có HP riêng trong tổng HP. Mercy hồi boss, Wrath tăng DMG, Faith tạo Shield. Phải hạ cả ba mới chọn boss. Thứ tự chết được lưu; mảnh cuối để lại buff tương ứng. Không có phần thưởng/drop khi giết Apostle.",
+    "Phải hạ cả 3 Apostle mới mở mục tiêu Boss. Chọn mục tiêu trong menu miễn lượt, rồi dùng Tấn công/Skill để đánh.\nMercy hồi boss tối đa 2% Max HP mỗi {CYCLE} lượt; Wrath tăng {POWER}% DMG boss; Faith tăng 10 điểm % RES boss và giảm 10% DMG bạn gây lên boss.\nHiệu ứng của Apostle bị hạ cuối cùng sẽ còn đến hết trận. Chọn thứ tự hạ để quyết định hiệu ứng phải chịu khi đánh Boss.\nHP các Apostle nằm trong tổng HP; hạ từng Apostle không nhận thưởng riêng.",
   buyard:
-    "Nhiệt 0–100: dưới 40 Shield giảm DMG bạn 40%; 40–70 boss nhận thêm 20%; trên 70 cả hai bị thiêu. Thu hẹp tăng nhiệt, mở rộng giảm nhiệt theo lượng Depth, mỗi lựa chọn mất lượt. Boss cũng tăng nhiệt định kỳ; mọi mức nhiệt có trần.",
+    "Giữ nhiệt trong khoảng 40–70: DMG của bạn lên boss +20%. Dưới 40, DMG của bạn giảm 40%.\nTrên 70: cuối mỗi lượt bạn nhận DMG chuẩn bằng {HARM}% Max HP, boss mất 2% Max HP.\nThu hẹp vòng tăng {AMOUNT} nhiệt; Mở rộng vòng giảm {AMOUNT} nhiệt. Mỗi lựa chọn tốn 1 lượt và boss vẫn phản công.\nBoss tự tăng 10 nhiệt mỗi {CYCLE} lượt; nhiệt giới hạn 0–100.",
   bartuc:
-    "Tether chuyển 35% DMG đã gây sang Golem để ghi nợ. Golem mạnh dần có trần. Cắt liên kết tốn HP hiện tại, trả toàn bộ DMG đã chuyển lên boss và mở giáp 2 lượt (+20% DMG nhận). Không cấp drop/payout cho Golem; không thể cắt nếu HP không đủ.",
+    "Khi liên kết còn nối, 35% DMG bạn gây ra được giữ ở Golem thay vì trừ HP boss. Mỗi lượt Golem tăng một mức, tối đa {CAP}; mỗi mức tăng {POWER}% DMG boss.\nCắt liên kết tốn {COST}% HP hiện tại và 1 lượt; bạn phải còn ít nhất 1 HP, boss vẫn phản công.\nKhi cắt, toàn bộ DMG đã giữ được trừ vào HP boss; DMG của bạn lên boss tăng 20% trong 2 lượt kế tiếp.\nGolem không cho vật phẩm hoặc payout riêng.",
   jitan:
-    "Ba cổng ◇/△/○; quy luật và cổng kỳ tới được công bố từ trước. Chọn đúng mở cửa sổ gây DMG; sai sinh Guard Tower tối đa 3 và gây HP chuẩn. Ngoài cửa sổ boss nhận 0 DMG. Vật lý/phép đều mở được bằng nút cổng, không yêu cầu MP.",
+    "Bảng báo Cổng ◇, △ hoặc ○ đang đúng. Chọn cổng tương ứng để mở đường đánh boss trong {AMOUNT} lượt kế tiếp; boss không phản công lượt mở đúng.\nKhi cổng chưa mở, boss nhận 0 DMG từ Tấn công/Skill của bạn.\nChọn sai: thêm một Tháp canh (tối đa 3), bạn nhận DMG chuẩn bằng {HARM}% Max HP và boss vẫn phản công. Mỗi Tháp canh tăng {POWER}% DMG boss.\nChọn cổng tốn 1 lượt, không tốn MP; dấu hiệu đổi mỗi {CYCLE} lượt.",
   greater_riftwalker:
-    "Bão xanh an toàn Gần, bão đỏ an toàn Xa; đổi theo chu kỳ Depth, màu và đợt kế được báo trước. Đổi vị trí tốn lượt, không phản công thường nhưng đứng sai vẫn nhận bão. Không thể tự động tránh chỉ bằng Phòng thủ.",
+    "Bão xanh: Gần an toàn. Bão đỏ: Xa an toàn. Xem màu bão và số lượt còn lại trên bảng.\nChọn Đổi vị trí để chuyển Gần/Xa, tốn 1 lượt; boss không đánh thường khi di chuyển.\nBão đến mỗi {CYCLE} lượt và đổi màu cho đợt sau. Đứng sai vị trí lúc bão đến vẫn nhận sát thương bão, kể cả vừa di chuyển.\nPhòng thủ không thay thế việc đứng đúng vị trí.",
   athulua:
-    "Đánh dấu một vùng Trái/Giữa/Phải, dịch theo mũi tên sau mỗi đòn gây DMG của bạn. Đứng vùng bị khóa tăng DMG Guided Arrow; ở Giữa gần boss nhận thêm 15%. Depth III Sky Siege khóa một vùng 1–2 lượt theo lịch công bố. Di chuyển mất lượt và vẫn xử lý Arrow.",
+    "Xem vùng Trái/Giữa/Phải đang bị ngắm trước khi hành động. Đứng đúng vùng bị ngắm khiến đòn boss mạnh hơn; vùng ngắm dịch sau mỗi đòn bạn gây DMG.\nỞ Giữa, DMG boss lên bạn tăng thêm 15%. Chọn vùng khác để giảm nguy hiểm.\nSang Trái/Giữa/Phải tốn 1 lượt; di chuyển vẫn xử lý đòn mũi tên tại vùng bạn đến.\nTừ tầng 700, Sky Siege khóa một vùng trong 2 lượt theo lịch công bố; không thể chọn vùng đang bị khóa.",
   lilith:
-    "Hiến 5/10/20% Max HP (cần còn 1) mở 1/2/3 lượt tăng DMG theo Depth. Máu đã hiến bị khóa khỏi hồi cho tới khi Bargain hết hiệu lực; bình/skill không vượt mức đó. Không hiến vẫn có thể đánh. Mỗi hiến là một lượt có phản công.",
+    "Hiến 5%, 10% hoặc 20% Max HP để tăng DMG của bạn trong 1, 2 hoặc 3 lượt kế tiếp.\nHP đã hiến không thể hồi lại khi hiệu ứng còn; phải còn ít nhất 1 HP sau chi phí. Hiến máu tốn 1 lượt và boss vẫn phản công.\nCó thể đánh bình thường nếu không muốn hiến.",
   nemesis:
-    "Timeline hai ô. Lặp đúng cùng chuỗi hai hành động: boss sao chép DMG có giới hạn và khóa hành động đầu trong hai lượt. Đổi combo để tránh. UI hiện timeline và khóa còn lại; không thêm nút hay roll sau lựa chọn.",
+    "Tránh lặp cùng một cặp hành động: ví dụ Tấn công → Skill → Tấn công → Skill.\nKhi lặp cặp, phản công boss dùng DMG bạn vừa gây lên boss (có trần theo sức mạnh boss); hành động đầu của cặp bị khóa trong 2 lượt kế tiếp.\nĐổi một hành động trong cặp để tránh bị sao chép. Xem hành động đang khóa và số lượt còn lại trên bảng.",
   azmodan:
-    "Ấn nổ sau 3 lượt: phản ấn tốn 1 MP, khi nổ boss mất 5% Max HP; dập dùng đúng 1 bình, reset ấn an toàn, không hồi HP; bỏ mặc mất HP theo Depth. Cả hai nút là một lượt; ấn không reset do xem bảng.",
+    "Ấn máu nổ sau 3 lượt. Phản ấn tốn 1 MP: lần nổ sắp tới làm boss mất 5% Max HP thay vì gây hại cho bạn.\nDập lửa dùng đúng 1 bình để đặt lại thời gian nổ về 3 lượt, không hồi HP.\nBỏ mặc: bạn nhận DMG chuẩn bằng {HARM}% Max HP khi ấn nổ. Phản ấn và Dập lửa đều tốn 1 lượt, boss vẫn phản công.",
   dark_star_dragon:
-    "Trước Beam xuất hiện ba trụ che, độ bền hữu hạn theo Depth. Nấp mất một lượt; che đúng lúc Beam chặn tia và mất 1 bền. Hết bền không thể chọn trụ. Beam có lịch công khai; các lượt khác phản công thường.",
+    "Xem số lượt còn lại trước tia lớn. Đến lượt bắn, chọn Nấp trụ còn độ bền để chặn tia.\nNấp tốn 1 lượt; trụ chặn tia mất 1 độ bền. Trụ hết độ bền không thể chọn; phải nấp lại ở lần bắn sau.\nTia lớn đến mỗi {CYCLE} lượt. Ngoài lượt bắn tia, boss vẫn phản công thường.",
   juris_khan:
-    "Vị trí 0–3: mỗi bước gần tăng damage hai phía theo Depth. Tiến/lùi mỗi lượt chỉ 1 ô. Đứng yên 3 lượt linh hồn tăng áp lực; UI báo số lượt đứng yên. Build nào cũng dùng nút di chuyển được.",
+    "Vị trí 0–3: càng tiến gần boss, DMG của cả bạn và boss càng tăng. Mỗi mức vị trí tăng {POWER}% DMG của mỗi bên.\nTiến/Lùi thay đổi đúng một mức và tốn 1 lượt; boss vẫn phản công.\nĐứng yên 3 lượt liên tiếp tăng thêm {POWER}% DMG boss. Di chuyển đặt lại số lượt đứng yên.",
   manoruk:
-    "Hai wave Commander/Ritualist/Vanguard; HP cả hai wave nằm trong tổng HP. Commander tăng DMG, Ritualist hồi sinh một lính đã chết trong mỗi wave bằng ngân sách hữu hạn, Vanguard che Core. Chọn mục tiêu miễn lượt; hết một wave tự mở wave sau, không thưởng sớm.",
-  baal: "Defile tăng Corruption/DMG có trần; Inferno đốt MP; Visions luân phiên giảm DEF/RES/CRIT. Purity ban đầu 1, tối đa 3; gây đủ 15% Max HP boss hồi 1. Chọn thanh tẩy đúng một hậu quả mất một lượt và 1 Purity; không được xóa tất cả cùng lúc.",
+    "Chọn Commander, Ritualist hoặc Vanguard trong menu rồi dùng Tấn công/Skill; đổi mục tiêu không tốn lượt.\nCommander tăng DMG boss; Ritualist có thể hồi sinh một lính bị hạ trong mỗi đợt; Vanguard tăng DEF boss.\nPhải hạ hết lính trong cả 2 đợt mới chọn được Boss (Core). Hết đợt đầu, đợt sau tự xuất hiện.\nHP cả hai đợt nằm trong tổng HP boss; hạ lính hoặc qua đợt không nhận thưởng riêng.",
+  baal: "Boss luân phiên Defile, Inferno, Visions mỗi {CYCLE} lượt. Defile thêm điểm Ô nhiễm, mỗi điểm tăng {POWER}% DMG boss, tối đa {CAP} điểm.\nInferno lấy tối đa {DRAIN} MP của bạn. Visions có thể giảm 30% DEF của bạn, giảm 15 điểm % RES, hoặc đưa CRIT của bạn về 0 đồng thời giảm 15% DMG phép của bạn.\nChọn Thanh tẩy đúng hiệu ứng để gỡ nó: tốn 1 điểm Thanh tẩy và 1 lượt; boss vẫn phản công. Thanh tẩy Inferno hoàn phần MP đã bị lấy.\nBắt đầu có 1 điểm Thanh tẩy, tối đa 3. Gây DMG tích lũy bằng 15% Max HP boss để hồi một điểm.",
   belial:
-    "Ba bóng với ba rune; manh mối đúng được khóa và công bố theo round. Chọn đúng lộ boss 2 lượt, không phản công lượt chọn; sai tăng Deception tối đa 5 và nhận HP chuẩn. Ngoài cửa sổ vẫn đánh nhưng không kết liễu được; Skill không xóa clone.",
+    "Xem số và biểu tượng của bóng thật trên bảng: bóng 1 ◇, bóng 2 △, bóng 3 ○. Chọn Đánh bóng tương ứng.\nChọn đúng: boss không phản công lượt đó và lộ diện trong 2 lượt kế tiếp. Dùng Tấn công/Skill khi boss đang lộ để kết liễu.\nChọn sai: bạn nhận DMG chuẩn bằng {HARM}% Max HP, thêm một điểm Lừa dối (tối đa 5); mỗi điểm tăng {POWER}% DMG boss. Boss vẫn phản công.\nMỗi lựa chọn tốn 1 lượt; khi chưa lộ, boss luôn còn ít nhất 1 HP.",
   astrogha:
-    "Venom tăng DMG độc, Web khóa vị trí, Brood hồi boss. Vị trí Giữa: DMG bạn +10%; Trái/Phải: DMG hai phía −10%. Có thể chọn Totem/Boss miễn lượt. Phá Totem chuyển hiệu ứng sang boss đúng hai lượt: Venom tăng DMG, Web tiếp tục khóa vị trí, Brood hút máu; sau đó mất. Không trao drop cho Totem.",
+    "Chọn Totem hoặc Boss trong menu miễn lượt, rồi dùng Tấn công/Skill. Venom tăng DMG boss; Web khóa việc di chuyển; Brood hồi boss.\nPhá Totem không xóa hiệu ứng ngay: hiệu ứng chuyển sang boss trong 2 lượt. Venom vẫn tăng DMG; Web vẫn khóa vị trí; Brood giúp boss hồi 10% DMG thực gây lên bạn.\nỞ Giữa, DMG của bạn +10%. Ở Trái/Phải, DMG của bạn và boss đều giảm 10%.\nHP Totem nằm trong tổng HP boss; không có thưởng riêng khi phá.",
   atanna:
-    "Ba giấc trong queue công khai: Đòn mạnh/Hút MP/Hồi boss. Mỗi chu kỳ chỉ xóa đúng một giấc, tốn một lượt và vẫn xử lý giấc đang đến nếu nó chưa bị xóa; chịu hai giấc còn lại. Queue và cờ xóa lưu qua restart.",
+    "Bảng báo thứ tự 3 giấc: Đòn mạnh, Hút MP hoặc Hồi boss. Mỗi lượt xử lý giấc đang được đánh dấu kế tiếp.\nĐòn mạnh tăng {DOUBLE_POWER}% DMG boss. Hút MP lấy 1 MP của bạn. Hồi boss hồi tối đa 3% Max HP boss, vẫn có phản công thường.\nTrong mỗi nhóm 3 lượt, được Xóa giấc một lần. Xóa tốn 1 lượt; giấc đến trong lượt chọn vẫn xảy ra nếu bạn xóa một giấc khác.\nGiấc đã xóa không có phản công hoặc hiệu ứng ở lượt của nó; chuỗi mới sẽ bổ sung giấc sau 3 lượt.",
   inarius:
-    "Shield chỉ mở khi Inarius và Lilith cùng trong vòng Ritual. Kéo mất một lượt đưa hai đơn vị vào vòng; Che chở hồi Lilith và bảo vệ hai lượt. Ritual di chuyển theo lịch; Lilith có HP riêng, chết thì run thất bại. Cảnh báo HP NPC luôn nằm trên bảng chính.",
+    "Chọn Kéo Inarius vào Ritual để đưa Inarius và Lilith vào vòng và mở lá chắn boss trong 2 lượt kế tiếp. Kéo tốn 1 lượt; boss vẫn phản công.\nChe chở hồi Lilith 15 HP và bảo vệ cô ấy trong lượt chọn cùng 2 lượt kế tiếp; tốn 1 lượt, boss vẫn phản công.\nLilith có thanh HP riêng 0–100; khi không được bảo vệ, mất {POWER} HP mỗi lượt. Lilith về 0 HP khiến bạn thua run dù nhân vật còn sống.\nVòng Ritual và Inarius dịch vị trí mỗi {CYCLE} lượt. Quan sát vị trí và HP Lilith trước khi đánh.",
   sescheron:
-    "Mã gồm ba rune trong state; hit combat lần lượt mở manh mối cho từng ô. Ba nút nhập rune, mỗi lần nhập là một lượt. Đúng đủ ba: Engine quá tải 2 lượt; sai tăng Rage tối đa 5 và mất HP chuẩn. Không phải đoán mò: có thể đọc toàn mã sau 3 hit.",
+    "Mã gồm 3 biểu tượng ◇/△/○. Mỗi hit Tấn công/Skill gây DMG mở thêm một ô manh mối; cần biết đủ 3 ô rồi nhập theo đúng thứ tự.\nMỗi lần nhập một biểu tượng tốn 1 lượt. Đúng đủ 3 ô: boss không phản công lượt hoàn thành, không phản công trong 2 lượt kế tiếp và điểm Cuồng nộ về 0.\nNhập sai bộ 3: bạn nhận DMG chuẩn bằng {HARM}% Max HP, thêm một điểm Cuồng nộ (tối đa 5); mỗi điểm tăng {POWER}% DMG boss.\nSau mỗi bộ 3 đã nhập, mã đổi thứ tự và manh mối được xóa; gây DMG để đọc mã mới.",
   nithogur:
-    "Một Neo và một Tua/trận. Neo lưu HP/MP bạn và HP boss; Tua khôi phục đúng ba giá trị, không hồi RNG, vật phẩm, phần thưởng, số lượt hoặc Enrage. Cả hai là một lượt có phản công. Enrage tăng theo lượt với trần riêng từng Depth.",
+    "Neo thời gian lưu HP/MP hiện tại của bạn và HP hiện tại boss. Tua thời gian khôi phục cả ba giá trị đó, vì vậy boss cũng có thể hồi HP.\nMỗi trận chỉ Neo một lần và Tua một lần. Mỗi lựa chọn tốn 1 lượt và boss vẫn phản công.\nTua không hoàn bình/vật phẩm đã dùng, không lùi số lượt hoặc mức Cuồng nộ.\nMỗi lượt tăng một mức Cuồng nộ, tối đa {CAP}; mỗi mức tăng {POWER}% DMG boss.",
   kabraxis:
-    "Giữ cửa rút tầng 666; bước vào khóa rút. Một HP bar, ba ngưỡng >66%, 33–66%, <33%. Resonance bắt đầu 0 khi vào: War gây DMG +1, Crit thêm +1 (tối đa 2/lượt); Protection sống phản công +1, giảm/chặn ≥40% dự báo thêm +1; Arcane có tiêu/hồi MP +1/lượt. Seal mỗi 3 vòng Phase 1, mỗi 2 vòng Phase 2, tối đa 5; pending không sinh thêm. Thanh tẩy −3 Resonance; phá miễn phí; có thể tiếp tục combat và bỏ qua. Pending sang Phase 3 tính Broken. Phase 3: mỗi Purified +5% DMG bạn, Broken +5% DMG boss và War +3 điểm % Crit/Protection −5 RES/Arcane −1 Max MP hiệu dụng (ít nhất 2). Kết quả khóa, không tạo Seal mới. Phase 2 mỗi hai lượt: War ép CRIT, Protection đánh phép và −10 RES bạn, Arcane hút 1 MP.",
+    "Vào trận tầng 666 sẽ khóa Rút thưởng. Boss có một thanh HP: Phase 1 trên 66,7%; Phase 2 từ 33,3% đến 66,7%; Phase 3 ở 33,3% trở xuống.\nTích Điểm cộng hưởng theo ấn đã chọn ở tầng 333: War gây DMG +1, CRIT thêm +1 (tối đa 2/lượt); Protection sống qua phản công +1, giảm/chặn ít nhất 40% DMG dự báo thêm +1; Arcane có tiêu hoặc hồi MP +1/lượt.\nBoss tạo Ấn nguyền mỗi 3 lượt ở Phase 1 hoặc mỗi 2 lượt ở Phase 2, tối đa 5. Thanh tẩy một Ấn tốn 3 Điểm cộng hưởng; Phá ấn không tốn điểm. Cả hai tốn 1 lượt và chặn phản công lượt đó. Có thể tiếp tục đánh khi có Ấn chờ.\nPhase 3 khóa kết quả: mỗi Ấn đã thanh tẩy tăng 5% DMG của bạn; mỗi Ấn đã phá tăng 5% DMG boss. Ấn chưa xử lý bị tính là đã phá.\nHậu quả Ấn đã phá theo lựa chọn: War thêm 3 điểm % CRIT boss/ấn; Protection giảm 5 điểm % RES của bạn/ấn; Arcane giảm 1 Max MP hiệu dụng của bạn/ấn (ít nhất 2).\nỞ Phase 2, mỗi 2 lượt: War có phản công chắc chắn CRIT; Protection đánh phép và giảm 10 điểm % RES của bạn; Arcane lấy 1 MP của bạn.",
   deimoss:
-    "Ba HP bar 30/30/40%; dư DMG không xuyên Spire/bar, chuyển phase không phản công. P1: Ruin tăng vật lý boss, Silence tăng 1 MP Skill mỗi chu kỳ (không vượt Max MP), Hunger hồi 12% DMG thực nhận; menu chọn Spire miễn lượt. P2: Core ở 75/50/25%, khóa stat +8 và curse trước chọn; thiêu −1 MP, cấy nhận STR/ENE/VIT kèm curse +5% DMG nhận/+1% Max HP chi phí Skill/−15% hồi, bỏ mặc hồi boss 2,5% bar trong hai lượt. Chọn Core không mất lượt. P3: chọn Plane miễn lượt cho 3 combat; Material vật lý hai phía +25%/phép −25%, Arcane ngược lại; Void bạn +15% DMG, DEF ×0,75 và RES −20 hai phía, không hồi HP. Ý định 3 đòn kế công khai. Chỉ P3 chết mới nhận thưởng.",
+    "Boss có 3 thanh HP nối tiếp, tương ứng 30%/30%/40% tổng HP. DMG dư không chuyển sang mục tiêu hoặc thanh kế; đổi phase không có phản công.\nPhase 1: chọn trụ miễn lượt rồi dùng Tấn công/Skill. Ruin tăng 15% DMG vật lý boss; Silence thêm 1 MP vào chi phí Skill của bạn ở lượt tác động (không vượt Max MP); Hunger hồi boss 12% DMG thực gây lên bạn. Phá trụ để gỡ hiệu ứng.\nPhase 2: khi HP boss xuống 75%, 50%, 25%, phải xử lý một Lõi thịt trước khi đánh tiếp. Thiêu tốn 1 MP; Cấy nhận +8 STR/ENE/VIT đã ghi cùng lời nguyền; Bỏ mặc hồi boss tối đa 2,5% Max HP mỗi lượt trong 2 lượt. Chọn xử lý không tốn lượt.\nLời nguyền do Cấy có thể là DMG bạn nhận +5%, Skill của bạn trả thêm 1% Max HP hoặc hồi HP của bạn giảm 15%; từng lõi báo rõ trước khi chọn.\nPhase 3: chọn không gian miễn lượt, giữ 3 lượt chiến đấu. Material: DMG vật lý của cả bạn và boss +25%, phép −25%; Arcane ngược lại.\nVoid: DMG của bạn +15%; DEF của bạn và boss giảm 25%, RES của cả hai giảm 20 điểm %; bạn không được hồi HP. Hạ hết thanh Phase 3 mới nhận thưởng.",
 };
+
+const MECHANIC_TITLES = {
+  butcher: "Khoảng cách và Cuồng nộ",
+  machine: "Nhiệt và lá chắn",
+  assur: "Chọn màu để gỡ ấn bảo hộ",
+  control: "Tần số phá lá chắn",
+  necrobot: "Phá bộ phận để mở lõi",
+  quov: "Chọn khiên đúng nguyên tố",
+  lucion: "Giải mệnh lệnh để phá lớp vảy",
+  bul_kathos: "Đỡ đúng thế đánh",
+  giyua: "Tổ quái tăng sức mạnh boss",
+  riftwalker: "Dư âm hành động",
+  gharbad: "Nhận biết đầu hàng thật",
+  phoboss: "Mộng tăng sát thương",
+  anomaly: "Ổn định ba dạng",
+  zakarum: "Cướp hào quang",
+  justicar: "Chọn phán quyết cho ba lượt",
+  uldyssian: "Bản sao từ hành động của bạn",
+  lazarus: "Phá Totem nguy hiểm",
+  xazax: "Xử lý cổng triệu hồi",
+  samael: "Ngăn tích đủ năm điểm sáng",
+  death_projector: "Tránh vùng tia bắn",
+  akarat: "Hạ ba Apostle để mở boss",
+  buyard: "Giữ nhiệt ở vùng có lợi",
+  bartuc: "Cắt liên kết với Golem",
+  jitan: "Mở cổng để gây sát thương",
+  greater_riftwalker: "Đứng đúng vị trí tránh bão",
+  athulua: "Tránh vùng mũi tên ngắm",
+  lilith: "Hiến máu để tăng sát thương",
+  nemesis: "Tránh lặp cặp hành động",
+  azmodan: "Xử lý ấn máu trước khi nổ",
+  dark_star_dragon: "Nấp trụ để chặn tia lớn",
+  juris_khan: "Di chuyển để điều chỉnh sát thương",
+  manoruk: "Hạ hai đợt lính để mở boss",
+  baal: "Thanh tẩy hiệu ứng đang gây hại",
+  belial: "Chọn bóng thật để kết liễu",
+  astrogha: "Phá Totem và chọn vị trí",
+  atanna: "Chọn một giấc để xóa",
+  inarius: "Giữ Lilith sống và mở lá chắn",
+  sescheron: "Đọc và nhập đúng ba biểu tượng",
+  nithogur: "Neo và tua HP/MP",
+  kabraxis: "Tích điểm và xử lý ấn nguyền",
+  deimoss: "Ba giai đoạn và ba thanh HP",
+};
+const STATUS_WORDS = {
+  Charge: "Điểm thanh tẩy",
+  Sigil: "Sigil (ấn màu)",
+  Will: "Ý chí",
+  Scales: "Lớp vảy",
+  stagger: "choáng",
+  Nest: "Tổ",
+  Echo: "Dư âm",
+  Dream: "Mộng",
+  Shard: "Mảnh ổn định",
+  Overload: "Quá tải",
+  Halo: "Hào quang",
+  Timeline: "Lịch hành động",
+  Clone: "Bản sao",
+  Queue: "Chuỗi giấc",
+  Rage: "Cuồng nộ",
+  Enrage: "Cuồng nộ",
+  Resonance: "Điểm cộng hưởng",
+  Purified: "Ấn đã thanh tẩy",
+  Broken: "Ấn đã phá",
+  "Flesh Core": "Lõi thịt",
+  "Flesh Curse": "Nguyền từ lõi thịt",
+  curse: "nguyền",
+  Plane: "Không gian",
+  Shield: "Lá chắn",
+  Absorb: "Nguyên tố đã hấp thụ",
+  Arrow: "Mũi tên",
+  Beam: "Tia",
+  Core: "Lõi",
+  Spire: "Trụ",
+  Hook: "kéo xích",
+  Tether: "Liên kết",
+  Tower: "Tháp canh",
+};
+function plainStatus(text) {
+  const names = Object.keys(STATUS_WORDS).sort((a, b) => b.length - a.length);
+  return text.replace(
+    new RegExp("\\b(" + names.join("|") + ")\\b", "g"),
+    (word) => STATUS_WORDS[word],
+  );
+}
+function harmRate(x) {
+  return Number(
+    (
+      x.c.power *
+      require("../events/explorationMarks").incoming(x.s, x.e) *
+      100
+    ).toFixed(1),
+  );
+}
+function renderRule(text, x) {
+  const percent = (n) => Number((n * 100).toFixed(1));
+  const incoming = require("../events/explorationMarks").incoming(x.s, x.e);
+  const values = {
+    CYCLE: x.c.cycle,
+    CAP: x.c.cap,
+    POWER: percent(x.c.power),
+    DOUBLE_POWER: percent(x.c.power * 2),
+    AMOUNT: x.c.amount,
+    COST: percent(x.c.amount),
+    HARM: percent(x.c.power * incoming),
+    TWO_HARM: percent(0.02 * incoming),
+    FIVE_HARM: percent(0.05 * incoming),
+    ECHO_RATE: percent(0.15 * incoming),
+    DRAIN: 1 + (x.b.depth % 2),
+  };
+  return text.replace(/\{([A-Z_]+)\}/g, (_, key) => String(values[key]));
+}
+
 function statText(text) {
   const keys = {
     "Max HP": "hp",
@@ -120,9 +233,9 @@ function statText(text) {
     .replaceAll("hai phía", "bạn và boss")
     .replaceAll("Cửa sổ ", "Hiệu ứng kéo dài ");
 }
-function readableRules(text) {
-  return text
-    .split(/\.\s+/)
+function readableRules(text, x) {
+  return renderRule(text, x)
+    .split(/\n+/)
     .filter(Boolean)
     .map((line) => "- " + statText(line))
     .join("\n");
@@ -159,30 +272,37 @@ function status(s) {
         "% Max HP. Giữ 70–99 hoặc Xả.";
       break;
     case "assur":
-      text =
-        "Charge " +
-        m.charges +
-        "/3 · " +
-        (active ? "Rune tắt" : "Rune bất tử") +
-        " · Vòng Sigil " +
-        pattern.map((n) => colors[n]).join(" → ") +
-        "; bước " +
-        ((m.cursor % 3) + 1) +
-        ". Chạm đúng màu tiếp.";
+      text = active
+        ? "Ấn đã tắt: dùng Tấn công/Skill để kết liễu."
+        : "Điểm thanh tẩy " +
+          m.charges +
+          "/3. " +
+          (m.charges >= 3
+            ? "Chọn Purify để gỡ ấn."
+            : "Chọn **Sigil " +
+              (pattern[m.cursor % 3] + 1) +
+              " · " +
+              colors[pattern[m.cursor % 3]] +
+              "** theo màu kế tiếp.") +
+          "\nBoss chưa thể bị kết liễu khi ấn còn bật.";
       break;
     case "control":
-      text =
-        "Shield " +
-        (active ? "tắt" : "bật") +
-        " · Manh mối: " +
-        (m.hints
-          ? pattern
-              .filter((n) => n !== pattern[m.cursor % 3])
-              .slice(0, m.hints)
-              .map((n) => names[n])
-              .join(", ") + " bị loại"
-          : "đánh trúng để lấy manh mối") +
-        ". Nhập tần số còn lại.";
+      text = active
+        ? "Lá chắn đã tắt: dùng Tấn công/Skill để kết liễu."
+        : m.hints >= 2
+          ? "Tần số đúng: **" +
+            names[pattern[m.cursor % 3]] +
+            "**. Chọn tần số này để tắt lá chắn."
+          : "Lá chắn còn bật: boss luôn còn ít nhất 1 HP.\n" +
+            (m.hints
+              ? "Đã loại **" +
+                pattern
+                  .filter((n) => n !== pattern[m.cursor % 3])
+                  .slice(0, m.hints)
+                  .map((n) => names[n])
+                  .join(", ") +
+                "**; gây DMG để lấy manh mối còn lại."
+              : "Gây DMG bằng Tấn công/Skill để lấy manh mối loại trừ tần số.");
       break;
     case "necrobot":
       text =
@@ -208,7 +328,7 @@ function status(s) {
       break;
     case "lazarus":
       text =
-        "Restoration hồi boss · Tremor gây DMG chuẩn · Drain hút MP. Totem vừa phá hồi sinh sau " +
+        "Restoration hồi boss · Tremor gây DMG chuẩn · Drain hút MP. Totem vừa phá có thể hồi sinh sau " +
         (c.cycle - (b.round % c.cycle)) +
         " lượt; chọn Totem nguy hiểm.";
       break;
@@ -233,31 +353,31 @@ function status(s) {
           .join(" + ") +
         " · Ward " +
         (m.ward == null ? "chưa chọn" : colors[m.ward]) +
-        " · Absorb " +
+        " · Đã hấp thụ " +
         m.absorbs.length +
         "/3. Đổi Ward trước đánh.";
       break;
     case "lucion":
-      text =
-        "Will " +
-        m.will +
-        "/3 · Lệnh " +
-        labels[pattern[b.round % 3]] +
-        "; " +
-        labels
-          .map((l, i) => l + "=" + ["Chống", "Giả vờ", "Phản bội"][i])
-          .join(", ") +
-        ". " +
-        (active ? "Scales đã vỡ." : "Chọn đáp án ứng với rune.");
+      text = active
+        ? "Lớp vảy đã mở: Tấn công/Skill gây DMG đầy đủ và có thể kết liễu."
+        : "Ý chí " +
+          m.will +
+          "/3. Biểu tượng **" +
+          labels[pattern[b.round % 3]] +
+          "** → chọn **" +
+          ["Chống lệnh", "Giả vờ", "Phản bội"][pattern[b.round % 3]] +
+          "**.\nChọn đúng chặn phản công; đủ 3 Ý chí mở lớp vảy.";
       break;
     case "bul_kathos":
       text =
-        "Thế " +
-        ["High Cleave", "Low Sweep", "Feint"][pattern[b.round % 3]] +
-        " → " +
+        "Thế đánh: **" +
+        ["Chém cao", "Quét thấp", "Đòn nhử"][pattern[b.round % 3]] +
+        "** → chọn **" +
         ["Đỡ cao", "Đỡ thấp", "Không mắc lừa"][pattern[b.round % 3]] +
-        ". " +
-        (m.staggerUntil > b.round ? "Boss stagger." : "⚠ Sai Clash: CRIT.");
+        "**.\n" +
+        (m.staggerUntil > b.round
+          ? "Boss đang choáng, không phản công."
+          : "Chọn đúng làm boss choáng 2 lượt; đáp án thua khiến boss CRIT.");
       break;
     case "giyua":
       text =
@@ -281,7 +401,7 @@ function status(s) {
               " lượt",
           )
           .join(" · ") || "trống") +
-        ". Bẻ Echo nguy hiểm.";
+        ". Bẻ Echo để xóa hiệu ứng sắp đến (tốn HP và 1 lượt).";
       break;
     case "gharbad": {
       const signs = ["🔷 Hình thoi (◇)", "🔺 Tam giác (△)", "⚪ Hình tròn (○)"];
@@ -311,15 +431,18 @@ function status(s) {
         ". Thức tỉnh giảm 2.";
       break;
     case "anomaly":
-      text =
-        "Dạng " +
-        ["Matter", "Energy", "Void"][b.phase - 1] +
-        " · Shard " +
-        m.shards.map((n) => labels[n]).join(" ") +
-        " (" +
-        m.shards.length +
-        "/3). " +
-        (active ? "Overload: DEF/RES 0." : "Ổn định đúng dạng.");
+      text = active
+        ? "Boss đang Quá tải: DEF/RES về 0. Dùng Tấn công/Skill."
+        : "Dạng hiện tại: **" +
+          ["Matter", "Energy", "Void"][b.phase - 1] +
+          "** → chọn **Ổn định " +
+          ["Matter", "Energy", "Void"][b.phase - 1] +
+          "**.\nMảnh đã có: " +
+          m.shards.length +
+          "/3" +
+          (m.shards.length === 3
+            ? " · Chọn Overload để đưa DEF/RES boss về 0 trong 2 lượt."
+            : " · Thu đủ cả ba dạng để mở Overload.");
       break;
     case "zakarum":
       text =
@@ -327,7 +450,7 @@ function status(s) {
         m.halos.join(", ") +
         " · đã cướp " +
         (m.stolenHalos.join(", ") || "chưa có") +
-        ". Cướp mảnh hợp build; hai mảnh còn lại mạnh trong 2 lượt.";
+        ". Cướp một Halo để gỡ buff đó; Halo còn lại mạnh hơn 2 lượt.";
       break;
     case "justicar":
       text =
@@ -398,7 +521,7 @@ function status(s) {
             : "⚠ Thiêu cả hai") +
         "; tăng/giảm " +
         c.amount +
-        ". Giữ 40–70.";
+        ". Giữ 40–70 để DMG của bạn +20%.";
       break;
     case "bartuc":
       text =
@@ -408,21 +531,18 @@ function status(s) {
         m.golem +
         "/" +
         c.cap +
-        " · DMG giữ " +
+        " · DMG sẽ trừ vào boss khi cắt: " +
         m.golemDamage +
         ". Cắt khi đủ HP.";
       break;
     case "jitan":
-      text =
-        "Chuỗi cổng " +
-        pattern.map((n) => labels[n]).join(" → ") +
-        " · cổng kỳ này " +
-        labels[pattern[Math.floor(b.round / c.cycle) % 3]] +
-        "; kỳ tới " +
-        labels[pattern[(Math.floor(b.round / c.cycle) + 1) % 3]] +
-        " · Tower " +
-        m.towers +
-        "/3. Chọn cổng yếu.";
+      text = active
+        ? "Cổng đang mở: dùng Tấn công/Skill để gây DMG lên boss."
+        : "Cổng đúng: **" +
+          labels[pattern[Math.floor(b.round / c.cycle) % 3]] +
+          "** → chọn cổng này để mở đường đánh.\nChưa mở cổng: boss nhận 0 DMG. Tháp canh " +
+          m.towers +
+          "/3 tăng DMG boss.";
       break;
     case "greater_riftwalker":
       text =
@@ -500,11 +620,15 @@ function status(s) {
           : "Chưa xử lý: ấn gây " +
             E.attack +
             " **" +
-            Math.floor(s.maxHp * c.power) +
+            Math.floor(
+              s.maxHp *
+                c.power *
+                require("../events/explorationMarks").incoming(s, e),
+            ) +
             " DMG chuẩn** cho bạn (" +
             E.hp +
             " **" +
-            Math.round(c.power * 100) +
+            harmRate(x) +
             "% Max HP**).\n" +
             "Chọn **Phản ấn** (" +
             E.mana +
@@ -582,25 +706,34 @@ function status(s) {
       break;
     case "inarius":
       text =
-        "Inarius " +
-        m.inarius +
-        " · Lilith " +
-        m.lilith +
-        " · Ritual " +
-        m.ritual +
-        " · ⚠ HP Lilith " +
-        Math.round(m.lilithHp) +
-        "/100. Kéo vào vòng; che chở trước Lilith tử trận.";
+        "Vị trí Inarius: vùng " +
+        (m.inarius + 1) +
+        " · Lilith: vùng " +
+        (m.lilith + 1) +
+        " · Vòng Ritual: vùng " +
+        (m.ritual + 1) +
+        ".\n⚠ HP Lilith **" +
+        Number(m.lilithHp.toFixed(1)) +
+        "/100**. " +
+        (m.lilithHp <= c.power * 100
+          ? "Che chở ngay để tránh Lilith tử trận."
+          : "Kéo để mở lá chắn; Che chở để hồi HP/bảo vệ Lilith.");
       break;
     case "sescheron":
       text =
-        "Mã " +
+        "Mã đã biết: **" +
         m.code.map((n, i) => (i < m.hints ? labels[n] : "?")).join(" ") +
-        " · đã nhập " +
-        m.input.map((n) => labels[n]).join(" ") +
-        " · Rage " +
+        "**.\nĐã nhập: " +
+        (m.input.map((n) => labels[n]).join(" ") || "chưa có") +
+        " · cần nhập ô " +
+        (m.input.length + 1) +
+        ". " +
+        (m.input.length < m.hints
+          ? "Chọn **" + labels[m.code[m.input.length]] + "**."
+          : "Gây DMG để biết biểu tượng của ô này.") +
+        "\nCuồng nộ " +
         m.rage +
-        "/5. Đánh trúng để đọc mã.";
+        "/5 tăng DMG boss.";
       break;
     case "nithogur":
       text =
@@ -612,7 +745,7 @@ function status(s) {
         (m.anchorUsed ? "Neo đã lưu" : "còn 1 Neo") +
         " · " +
         (m.rewound ? "đã Tua" : "còn 1 Tua") +
-        ". Tua cả hai HP, không lùi lượt/Enrage.";
+        ". Tua hồi lại HP/MP đã lưu của bạn và HP boss, không lùi lượt.";
       break;
     case "kabraxis":
       text =
@@ -626,7 +759,7 @@ function status(s) {
         (m.pending
           ? "Seal chờ: thanh tẩy −3 hoặc phá."
           : "Seal tạo " + m.generated + "/5.") +
-        " Phase 3 khóa kết quả." +
+        " Sang Phase 3: ấn chờ tự tính là đã phá." +
         (b.phase === 2
           ? " · " +
             {
@@ -691,12 +824,12 @@ function status(s) {
             })[v.type],
         )
         .join(" · ");
-  if (active) text += " · Cửa sổ " + (m.openUntil - b.round) + " lượt.";
+  if (active) text += " · Hiệu ứng còn " + (m.openUntil - b.round) + " lượt.";
   return (
-    CATALOG[b.id].mechanic +
-    (b.depth ? " · Depth " + ["", "I", "II", "III"][b.depth] : "") +
+    (MECHANIC_TITLES[b.id] || CATALOG[b.id].mechanic) +
+    (b.depth ? " · Độ khó " + ["", "I", "II", "III"][b.depth] : "") +
     "\n" +
-    (["lilith", "azmodan"].includes(b.id) ? text : statText(text))
+    (["lilith", "azmodan"].includes(b.id) ? text : statText(plainStatus(text)))
   );
 }
 function details(s) {
@@ -708,7 +841,7 @@ function details(s) {
       " lượt.\n- Chọn đúng: tốn 1 lượt, boss không phản công lượt đó và lộ diện trong 2 lượt kế tiếp. Dùng Tấn công/Skill khi boss đang lộ để kết liễu.\n- Chọn sai: tốn 1 lượt, bạn nhận " +
       E.attack +
       " DMG chuẩn bằng " +
-      Math.round(x.c.power * 100) +
+      harmRate(x) +
       "% " +
       E.hp +
       " Max HP và boss vẫn phản công. Mỗi lần sai tăng 1 Lừa dối (tối đa 5), mỗi điểm tăng " +
@@ -728,7 +861,7 @@ function details(s) {
       "- Bỏ mặc: bạn nhận " +
       E.attack +
       " **DMG chuẩn bằng " +
-      Math.round(x.c.power * 100) +
+      harmRate(x) +
       "%** " +
       E.hp +
       " **Max HP của bạn**.\n" +
@@ -788,8 +921,8 @@ function details(s) {
   }
   return (
     (x.b.id === "death_projector" && mech.randomBeam(x)
-      ? "Tia bắn mỗi lượt, giữ một vùng trong 2 lượt rồi chọn ngẫu nhiên một trong hai vùng còn lại. UI báo chính xác vùng đang bị bắn và số lượt còn lại; hướng đã chọn được lưu khi mở lại. Attack ở vùng an toàn; chuyển vùng tốn lượt và vẫn chịu tia nếu đến vùng đang bị quét."
-      : readableRules(RULES[x.b.id])) +
+      ? "Tia bắn mỗi lượt vào vùng A/B/C đang báo trên bảng. Tia giữ một vùng trong 2 lượt rồi chuyển ngẫu nhiên sang một trong hai vùng khác. Ở vùng an toàn có thể Tấn công/Skill; chọn Sang A/B/C tốn 1 lượt và vẫn nhận tia nếu đến vùng đang bị bắn."
+      : readableRules(RULES[x.b.id], x)) +
     "\n\n" +
     status(s) +
     "\n\n" +
@@ -799,4 +932,14 @@ function details(s) {
     "**."
   );
 }
-module.exports = { RULES, status, details };
+function explainedDetails(s) {
+  const text = details(s);
+  return text.includes("DMG chuẩn")
+    ? text +
+        "\n\n" +
+        statText(
+          "DMG chuẩn: không thể né; DEF/RES của bạn không giảm được sát thương này.",
+        )
+    : text;
+}
+module.exports = { RULES, status, details: explainedDetails };

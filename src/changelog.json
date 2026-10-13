@@ -1,5 +1,16 @@
 [
   {
+    "id": "3dda3484-4d39-4eb8-898a-baaa09a432f4",
+    "updatedAt": "2026-10-13T04:45:07.437Z",
+    "auditedAt": "2026-10-13T04:45:07.437Z",
+    "title": "Làm rõ mô tả toàn bộ boss V3",
+    "changes": [
+      "Rà lại 39 boss trong pool cùng Kabraxis và Deimoss: Chi tiết nói rõ thao tác, chi phí, thời hạn, điều kiện kết liễu và chỉ số ảnh hưởng đến bạn hay boss; thay thuật ngữ khó hiểu bằng lời giải thích.",
+      "Bảng chiến đấu chỉ dẫn rõ các bước giải đố của Assur, Master Control, Lucion, Bul-Kathos, Anomaly, Jitan và Sescheron; tên cơ chế và trạng thái được diễn giải bằng tiếng Việt.",
+      "Sửa diễn giải Assur theo số lượt mở ấn thực tế ở từng độ khó; bỏ mô tả buff không có của Gharbad; làm rõ Deimoss, các chi phí và DMG chuẩn. Giữ nguyên cơ chế và cân bằng chiến đấu."
+    ]
+  },
+  {
     "id": "f2908063-56b5-4116-a334-5839bb584d87",
     "updatedAt": "2026-10-13T04:12:08.059Z",
     "auditedAt": "2026-10-13T04:12:08.059Z",

@@ -651,6 +651,84 @@ async function main() {
     repo.deleteSession(run.session.id);
   });
 
+  await test("All 41 boss explanations resolve current difficulty values and fit Discord without changing combat", () => {
+    const stats = require("../src/hardcore/engine/stats");
+    assert.deepEqual(
+      Object.keys(display.RULES).sort(),
+      Object.keys(catalog.CATALOG).sort(),
+    );
+    let checks = 0;
+    for (const [id, definition] of Object.entries(catalog.CATALOG)) {
+      for (const tierFloor of [150, 500, 850]) {
+        const s = stats.createState("sorceress", 10000);
+        s.bossRosterVersion = 2;
+        s.floor = id === "kabraxis" ? 666 : id === "deimoss" ? 999 : tierFloor;
+        s.cleared = s.floor - 1;
+        s.encounter = world.makeEnemy(
+          s,
+          id === "deimoss" ? "final_boss" : "boss",
+          null,
+          () => 0.5,
+          definition,
+        );
+        core.prepareItemCombat(s, () => 0.5);
+        const snapshot = JSON.stringify(s),
+          detail = display.details(s),
+          status = display.status(s);
+        assert.doesNotMatch(
+          detail,
+          /\{[A-Z_]+\}|undefined|HP chuẩn|theo Depth|khóa cứng build|ngân sách hữu hạn/,
+        );
+        assert.doesNotMatch(
+          status,
+          /\bDepth\b|\bTimeline\b|\bQueue\b|\bScales\b/,
+        );
+        for (const embed of view
+          .privatePayload(s, "id", "public", "encounter")
+          .embeds.map((e) => e.toJSON())) {
+          assert((embed.description || "").length <= 4096, id + " description");
+          assert(
+            (embed.fields || []).every((f) => f.value.length <= 1024),
+            id + " field",
+          );
+          assert(
+            (embed.title || "").length +
+              (embed.description || "").length +
+              (embed.footer?.text || "").length +
+              (embed.fields || []).reduce(
+                (n, f) => n + f.name.length + f.value.length,
+                0,
+              ) <=
+              6000,
+            id + " total",
+          );
+        }
+        if (id === "assur") {
+          const c = catalog.config(id, s.floor);
+          assert(detail.includes(c.amount + " lượt kế tiếp"));
+          assert(status.includes("Sigil"));
+        }
+        if (id === "lucion")
+          assert(
+            status.includes(
+              ["Chống lệnh", "Giả vờ", "Phản bội"][
+                s.encounter.boss.mechanicState.pattern[0]
+              ],
+            ),
+          );
+        if (id === "control") {
+          s.encounter.boss.mechanicState.hints = 2;
+          assert(display.status(s).includes("Tần số đúng"));
+          s.encounter.boss.mechanicState.hints = 0;
+        }
+        if (id === "gharbad") assert(!detail.includes("mở buff"));
+        assert.equal(JSON.stringify(s), snapshot, id + " read-only");
+        checks++;
+      }
+    }
+    assert.equal(checks, 123);
+  });
+
   console.log(
     groups + " deterministic boss menu/display groups passed; no simulations.",
   );
