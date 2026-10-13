@@ -306,7 +306,7 @@ async function main() {
         /Chu kỳ \d; trần|Đổi mục tiêu\/Ward\/Plane|undefined/,
       );
       if (id === "azmodan") {
-        assert.match(text, /Ấn máu: tự nổ sau 3 lượt/);
+        assert.match(text, /Ấn máu.*tự nổ sau.*3 lượt/);
         assert.match(display.status(s), /DMG chuẩn.*cho bạn/);
         s.encounter.boss.mechanicState.reflected = true;
         assert.match(display.status(s), /boss mất.*5% Max HP/);

@@ -1,5 +1,15 @@
 [
   {
+    "id": "b07b887f-dd95-433f-9672-582c01142e0f",
+    "updatedAt": "2026-10-13T08:36:25.871Z",
+    "auditedAt": "2026-10-13T08:36:25.871Z",
+    "title": "Boss: diễn giải theo hướng dẫn",
+    "changes": [
+      "Viết lại mô tả 41 boss theo tài liệu hướng dẫn: cơ chế chính, lựa chọn, cách xử lý và điều cần nhớ; vẫn hiển thị thông tin hiện tại của trận.",
+      "Các câu trong tài liệu khác cơ chế đang chạy được diễn giải đúng gameplay; giữ Lilith 50/50 HP và các thông số theo độ khó."
+    ]
+  },
+  {
     "id": "b04e2ec3-a5e6-4688-94dc-f93e837ccb79",
     "updatedAt": "2026-10-13T08:31:52.288Z",
     "auditedAt": "2026-10-13T08:31:52.288Z",
