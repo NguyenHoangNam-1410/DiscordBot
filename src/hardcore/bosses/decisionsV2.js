@@ -628,7 +628,7 @@ function act(s, action, ops) {
         u.open(x, 2);
       } else {
         m.protectUntil = b.round + 3;
-        m.lilithHp = Math.min(100, m.lilithHp + 15);
+        m.lilithHp = Math.min(u.LILITH_MAX_HP, m.lilithHp + 15);
       }
       break;
     case "sescheron":

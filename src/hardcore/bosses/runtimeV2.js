@@ -1,5 +1,6 @@
 "use strict";
 const { CATALOG, config, depth } = require("./catalogV2");
+const LILITH_MAX_HP = 50;
 const on = (e) => e?.boss?.version === 2;
 const bstate = (s) => (on(s.encounter) ? s.encounter.boss : null);
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
@@ -265,7 +266,7 @@ function seed(s, e, d, rng) {
       m.inarius = 0;
       m.lilith = 2;
       m.ritual = 1;
-      m.lilithHp = 100;
+      m.lilithHp = LILITH_MAX_HP;
       m.protectUntil = 0;
       break;
     case "sescheron":
@@ -428,8 +429,15 @@ function validate(s, e = s.encounter) {
     m.pattern.some((n) => ![0, 1, 2].includes(n))
   )
     throw Error("INVALID_BOSS_STATE");
+  // Old saves keep their remaining HP, capped to the current Lilith limit.
+  if (b.id === "inarius") {
+    if (!Number.isFinite(m.lilithHp) || m.lilithHp < 0 || m.lilithHp > 100)
+      throw Error("INVALID_BOSS_STATE");
+    m.lilithHp = Math.min(LILITH_MAX_HP, m.lilithHp);
+  }
 }
 module.exports = {
+  LILITH_MAX_HP,
   on,
   bstate,
   current,

@@ -1,5 +1,15 @@
 [
   {
+    "id": "b04e2ec3-a5e6-4688-94dc-f93e837ccb79",
+    "updatedAt": "2026-10-13T08:31:52.288Z",
+    "auditedAt": "2026-10-13T08:31:52.288Z",
+    "title": "Inarius: Lilith còn 50 HP",
+    "changes": [
+      "Lilith trong trận Inarius bắt đầu với 50/50 HP; Che chở vẫn hồi 15 HP nhưng tối đa 50. Run đang lưu có HP Lilith vượt 50 được giới hạn về 50, không hồi thêm HP.",
+      "Cập nhật mô tả và trạng thái Lilith theo giới hạn mới; giữ nguyên chu kỳ Ritual, lượng HP mất mỗi lượt và cơ chế kết giới."
+    ]
+  },
+  {
     "id": "99f69b35-d81e-4bcc-ac7a-9e285921fdb5",
     "updatedAt": "2026-10-13T08:26:20.815Z",
     "auditedAt": "2026-10-13T08:26:20.815Z",

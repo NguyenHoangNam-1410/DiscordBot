@@ -1,5 +1,6 @@
 "use strict";
 const { E } = require("../shared/icons");
+const { LILITH_MAX_HP } = require("./runtimeV2");
 const mech = require("./mechanicsV2"),
   { CATALOG, config } = require("./catalogV2");
 const labels = ["◇", "△", "○"],
@@ -83,7 +84,7 @@ const RULES = {
   atanna:
     "Bảng báo thứ tự 3 giấc: Đòn mạnh, Hút MP hoặc Hồi boss. Mỗi lượt xử lý giấc đang được đánh dấu kế tiếp.\nĐòn mạnh tăng {DOUBLE_POWER}% DMG boss. Hút MP lấy 1 MP của bạn. Hồi boss hồi tối đa 3% Max HP boss, vẫn có phản công thường.\nTrong mỗi nhóm 3 lượt, được Xóa giấc một lần. Xóa tốn 1 lượt; giấc đến trong lượt chọn vẫn xảy ra nếu bạn xóa một giấc khác.\nGiấc đã xóa không có phản công hoặc hiệu ứng ở lượt của nó; chuỗi mới sẽ bổ sung giấc sau 3 lượt.",
   inarius:
-    "Chọn Kéo Inarius vào Ritual để đưa Inarius và Lilith vào vòng và mở lá chắn boss trong 2 lượt kế tiếp. Kéo tốn 1 lượt; boss vẫn phản công.\nChe chở hồi Lilith 15 HP và bảo vệ cô ấy trong lượt chọn cùng 2 lượt kế tiếp; tốn 1 lượt, boss vẫn phản công.\nLilith có thanh HP riêng 0–100; khi không được bảo vệ, mất {POWER} HP mỗi lượt. Lilith về 0 HP khiến bạn thua run dù nhân vật còn sống.\nVòng Ritual và Inarius dịch vị trí mỗi {CYCLE} lượt. Quan sát vị trí và HP Lilith trước khi đánh.",
+    "Chọn Kéo Inarius vào Ritual để đưa Inarius và Lilith vào vòng và mở lá chắn boss trong 2 lượt kế tiếp. Kéo tốn 1 lượt; boss vẫn phản công.\nChe chở hồi Lilith 15 HP và bảo vệ cô ấy trong lượt chọn cùng 2 lượt kế tiếp; tốn 1 lượt, boss vẫn phản công.\nLilith có thanh HP riêng 0–50; khi không được bảo vệ, mất {POWER} HP mỗi lượt. Lilith về 0 HP khiến bạn thua run dù nhân vật còn sống.\nVòng Ritual và Inarius dịch vị trí mỗi {CYCLE} lượt. Quan sát vị trí và HP Lilith trước khi đánh.",
   sescheron:
     "Mã gồm 3 biểu tượng ◇/△/○. Mỗi hit Tấn công/Skill gây DMG mở thêm một ô manh mối; cần biết đủ 3 ô rồi nhập theo đúng thứ tự.\nMỗi lần nhập một biểu tượng tốn 1 lượt. Đúng đủ 3 ô: boss không phản công lượt hoàn thành, không phản công trong 2 lượt kế tiếp và điểm Cuồng nộ về 0.\nNhập sai bộ 3: bạn nhận DMG chuẩn bằng {HARM}% Max HP, thêm một điểm Cuồng nộ (tối đa 5); mỗi điểm tăng {POWER}% DMG boss.\nSau mỗi bộ 3 đã nhập, mã đổi thứ tự và manh mối được xóa; gây DMG để đọc mã mới.",
   nithogur:
@@ -975,7 +976,7 @@ function status(s) {
     case "inarius":
       text = [
         `Vị trí: Inarius **ô ${m.inarius + 1}** · Lilith **ô ${m.lilith + 1}** · Ritual **ô ${m.ritual + 1}**`,
-        `${E.hp} Lilith: **${Number(m.lilithHp.toFixed(1))}/100 HP**${m.protectUntil > b.round ? ` · Được che chở **${m.protectUntil - b.round} lượt**` : ` · Mất **${Number((c.power * 100).toFixed(1))} HP/lượt** nếu không che chở`}`,
+        `${E.hp} Lilith: **${Number(m.lilithHp.toFixed(1))}/${LILITH_MAX_HP} HP**${m.protectUntil > b.round ? ` · Được che chở **${m.protectUntil - b.round} lượt**` : ` · Mất **${Number((c.power * 100).toFixed(1))} HP/lượt** nếu không che chở`}`,
         `${E.defense} Kết giới Inarius: ${active ? `**Đang tắt** · còn **${m.openUntil - b.round} lượt** để kết liễu.` : "**Đang bật** · vẫn nhận sát thương nhưng không thể bị kết liễu; chọn Kéo Inarius vào Ritual."}`,
       ].join("\n");
       break;
@@ -1098,7 +1099,7 @@ function details(s) {
     return [
       "- **Kết giới:** bạn vẫn gây sát thương, nhưng Inarius luôn còn ít nhất 1 HP khi chưa mở thời gian kết liễu.",
       "- **Kéo Inarius vào Ritual:** tốn **1 lượt**, đưa Inarius và Lilith vào vị trí vòng Ritual; cho phép kết liễu boss trong **2 lượt kế tiếp**, kể cả khi vòng đổi vị trí. Boss vẫn phản công.",
-      `- **Che chở Lilith:** tốn **1 lượt**, hồi ${E.hp} **15 HP** cho Lilith (tối đa 100); ngăn cô ấy mất HP trong lượt chọn và **2 lượt kế tiếp**. Boss vẫn phản công người chơi.`,
+      `- **Che chở Lilith:** tốn **1 lượt**, hồi ${E.hp} **15 HP** cho Lilith (tối đa ${LILITH_MAX_HP}); ngăn cô ấy mất HP trong lượt chọn và **2 lượt kế tiếp**. Boss vẫn phản công người chơi.`,
       `- **Không được che chở:** Lilith mất ${E.hp} **${Number((x.c.power * 100).toFixed(1))} HP mỗi lượt**.`,
       `- **Di chuyển:** cứ mỗi **${x.c.cycle} lượt**, vòng Ritual và Inarius sang ô kế tiếp trong vòng 1 → 2 → 3 → 1. Lilith không tự di chuyển.`,
       `- **Thất bại:** Lilith về ${E.hp} **0 HP** khiến bạn thất bại ngay, dù nhân vật còn HP.`,

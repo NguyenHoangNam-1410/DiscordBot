@@ -651,6 +651,27 @@ async function main() {
     repo.deleteSession(run.session.id);
   });
 
+  await test("Inarius Lilith starts at 50 HP, protection caps at 50 and saved runs never gain HP", () => {
+    const run = runBoss("inarius"), s = run.state,
+      m = s.encounter.boss.mechanicState;
+    assert.equal(m.lilithHp, 50);
+    assert(display.status(s).includes("50/50 HP"));
+    assert(display.details(s).includes("tối đa 50"));
+    m.lilithHp = 45;
+    core.act(s, run.session, "boss_inarius__protect", () => 0.5);
+    assert.equal(m.lilithHp, 50);
+    assert(display.status(s).includes("Được che chở"));
+    m.lilithHp = 80;
+    core.normalize(s);
+    assert.equal(m.lilithHp, 50);
+    m.lilithHp = 20;
+    core.normalize(s);
+    assert.equal(m.lilithHp, 20);
+    const copy = structuredClone(s);
+    core.normalize(copy);
+    assert.equal(copy.encounter.boss.mechanicState.lilithHp, 20);
+    repo.deleteSession(run.session.id);
+  });
   await test("All 41 boss explanations resolve current difficulty values and fit Discord without changing combat", () => {
     const stats = require("../src/hardcore/engine/stats");
     assert.deepEqual(
