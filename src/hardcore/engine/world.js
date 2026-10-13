@@ -207,7 +207,15 @@ function makeEnemy(
   const enemy = normalizeMimicEnemy({
     type: "combat",
     rank,
-    name: name || boss?.name || names[Math.floor(rng() * names.length)],
+    name:
+      name ||
+      boss?.name ||
+      (require("../events/explorationMarks").enabled(state) && rank === "mimic"
+        ? "Mimic"
+        : require("../events/explorationMarks").enabled(state) &&
+            rank === "ancient_mimic"
+          ? "Ancient Mimic"
+          : names[Math.floor(rng() * names.length)]),
     mechanic: boss?.mechanic || null,
     hp,
     maxHp: hp,

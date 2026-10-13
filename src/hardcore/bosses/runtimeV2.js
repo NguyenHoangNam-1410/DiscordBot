@@ -13,7 +13,15 @@ const isOpen = (x) => (x.m.openUntil || 0) > x.b.round;
 function lose(x, amount, ops, nonlethal = false) {
   const damage = Math.min(
     x.s.hp - (nonlethal ? 1 : 0),
-    Math.max(0, Math.floor(amount)),
+    Math.max(
+      0,
+      Math.floor(
+        amount *
+          (nonlethal
+            ? 1
+            : require("../events/explorationMarks").incoming(x.s, x.e)),
+      ),
+    ),
   );
   if (damage <= 0) return 0;
   if (ops?.hurt) ops.hurt(x.s, damage, !nonlethal);

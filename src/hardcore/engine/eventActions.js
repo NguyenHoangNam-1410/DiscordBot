@@ -117,6 +117,9 @@ module.exports = function createModule(dependencies) {
           "** (−" +
           offer.price +
           "; giảm trong suốt run).\n";
+      } else if (require("../events/explorationMarks").freeMerchant(state, k)) {
+        offer.price = 0;
+        paymentLog = "Underworld Lead: mua miễn phí.\n";
       } else if (k === "diamond_shop")
         spendDiamonds(session.guild_id, session.user_id, offer.price, {
           reason: "hardcore:v2:item-shop",
@@ -195,7 +198,48 @@ module.exports = function createModule(dependencies) {
       }
       return;
     }
-    if (k === "healer") {
+    if (k === "healer" && e.healerReturn) {
+      const marks = require("../events/explorationMarks"),
+        m = marks.ensure(state);
+      if (!marks.healerDue(state)) throw Error("INVALID_ACTION");
+      const hpBefore = state.hp,
+        mpBefore = state.mana;
+      delete m.vulnerable;
+      m.vitalBlessing = true;
+      addSource(
+        state,
+        { str: 10, dex: 10, vit: 10, ene: 10, luck: 40 },
+        "vitalBenediction",
+      );
+      state.hp = state.maxHp;
+      state.mana = state.maxMana;
+      markDirect(state, ["hp", "mana"]);
+      done(
+        eventIcon("healer") +
+          " Healer trở lại: " +
+          E.hp +
+          " HP " +
+          hpBefore +
+          " → " +
+          state.hp +
+          "; " +
+          E.mana +
+          " MP " +
+          mpBefore +
+          " → " +
+          state.mana +
+          ". Vulnerable chuyển thành Vital Benediction: LUCK +40; STR/DEX/VIT/ENE +10 đến hết run.",
+      );
+    } else if (k === "healer" && action === "event_healer_blood") {
+      const lost = require("../events/explorationMarks").blood(state);
+      markDirect(state, ["hp"]);
+      done(
+        eventIcon("healer") +
+          " Hiến " +
+          lost +
+          " HP. Nhận Vulnerable: checkpoint không hồi HP trong 10 tầng tiếp theo; xem Tower Remembers trong Rift.",
+      );
+    } else if (k === "healer") {
       const recovery = healEvent(state, Math.max(20, state.maxHp * 0.3), {
         manaRate: 0.3,
       });

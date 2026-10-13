@@ -62,7 +62,32 @@ module.exports = function createModule(dependencies) {
     }
     return (
       {
-        healer: [{ action: "event_heal", label: "Hồi HP/MP +1 bình" }],
+        healer: state.encounter.healerReturn
+          ? [{ action: "event_healer_return", label: "Nhận phúc lành" }]
+          : [
+              {
+                action: "event_heal",
+                label: require("../events/explorationMarks").enabled(state)
+                  ? "Trị liệu"
+                  : "Hồi HP/MP +1 bình",
+              },
+              ...(require("../events/explorationMarks").enabled(state)
+                ? [
+                    {
+                      action: "event_healer_blood",
+                      label: "Hiến 70% HP hiện tại",
+                      disabled:
+                        state.hp <= 1 ||
+                        Boolean(
+                          require("../events/explorationMarks").data(state)
+                            .vulnerable ||
+                          require("../events/explorationMarks").data(state)
+                            .vitalBlessing,
+                        ),
+                    },
+                  ]
+                : []),
+            ],
         goblin: [
           {
             action: "event_catch",
@@ -266,6 +291,7 @@ module.exports = function createModule(dependencies) {
         ...surpriseActions(state),
         ...(e.forge?.stage === "boon" ||
         e.kind === "treasure_room" ||
+        (e.kind === "healer" && e.healerReturn) ||
         (e.kind === "duelist" && e.mode)
           ? []
           : [{ action: "event_skip", label: "Bỏ qua" }]),
@@ -277,6 +303,18 @@ module.exports = function createModule(dependencies) {
         ...(covenant.canEnter(state)
           ? [{ action: "covenant_basement", label: "Xuống tầng hầm · 4 mảnh" }]
           : []),
+      ];
+    if (
+      e.type === "trap" &&
+      ["tax", "potion_thief"].includes(e.kind) &&
+      require("../events/explorationMarks").enabled(state)
+    )
+      return [
+        { action: "next", label: e.kind === "tax" ? "Nộp thuế" : "Chấp nhận" },
+        {
+          action: e.kind === "tax" ? "tax_resist" : "thief_fight",
+          label: e.kind === "tax" ? "Chống trả" : "Đánh đuổi",
+        },
       ];
     if (e.type === "chest")
       return [

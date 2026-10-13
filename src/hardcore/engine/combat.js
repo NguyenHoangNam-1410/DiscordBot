@@ -130,7 +130,8 @@ module.exports = function createModule(dependencies) {
         : 1);
     damage *= player
       ? affinity.outgoing(state, magic, crit)
-      : affinity.incoming(state);
+      : affinity.incoming(state) *
+        require("../events/explorationMarks").incoming(state, attacker);
     if (player && defender.rank === "normal")
       damage *= 1 - (state.normalDamagePenalty || 0);
     if (player)
@@ -298,7 +299,14 @@ module.exports = function createModule(dependencies) {
         ? 1 + Math.min(5, enemy.frenzy + 1) * 0.08
         : 1;
     const hit = plan.trueDamage
-      ? { damage: plan.raw, hit: true, crit: false }
+      ? {
+          damage: Math.floor(
+            plan.raw *
+              require("../events/explorationMarks").incoming(state, enemy),
+          ),
+          hit: true,
+          crit: false,
+        }
       : attackDamage(enemy, state, state, rng, {
           magic: plan.magic,
           multiplier:

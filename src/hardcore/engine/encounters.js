@@ -67,6 +67,7 @@ module.exports = function createModule(dependencies) {
     delete encounter.passivePriceVersion;
     itemPassives.discountOffers(state, encounter);
     encounter.coinPayoutPriceVersion = 1;
+    require("../events/explorationMarks").freeOffers(state, encounter);
   }
 
   function makeSurprise(state, rng, kind = null) {
@@ -103,7 +104,10 @@ module.exports = function createModule(dependencies) {
           ? royal.WEIGHT
           : key === "purifier"
             ? PURIFIER_EVENT_WEIGHT
-            : 1,
+            : require("../events/explorationMarks").boosted(state) &&
+                ["fountain", "mirror"].includes(key)
+              ? 2
+              : 1,
       ).fill(key),
     );
     kind = kind || pick(eventPool, rng);
@@ -172,6 +176,9 @@ module.exports = function createModule(dependencies) {
     }
     if (kind === "fountain") {
       e.goodThreshold = itemPassives.goodChance(state, 0.85);
+      const originalGood = e.goodThreshold;
+      if (require("../events/explorationMarks").boosted(state))
+        e.goodThreshold = Math.max(0, 1 - 2 * (1 - originalGood));
       e.healThreshold = (0.6 * e.goodThreshold) / 0.85;
       e.enemy = world.makeEnemy(state, "mimic", "Blood Mimic", rng);
     }
@@ -326,6 +333,7 @@ module.exports = function createModule(dependencies) {
     if (["merchant", "payout_shop"].includes(kind))
       e.coinPayoutPriceVersion = 1;
     itemPassives.discountOffers(state, e);
+    require("../events/explorationMarks").freeOffers(state, e);
     return itemPassives.prepareForecast(state, e, rng);
   }
 
@@ -457,6 +465,13 @@ module.exports = function createModule(dependencies) {
         };
       }
     }
+    if (require("../events/explorationMarks").healerDue(state))
+      return {
+        type: "surprise",
+        kind: "healer",
+        name: "Wandering Healer · Trở lại",
+        healerReturn: true,
+      };
     const extra = require("../rift").enabled(state)
         ? require("../rift").unstable(state).encounter
         : Math.min(0.16, (state.modifiers.unstable_rift || 0) * 0.02),
@@ -469,8 +484,24 @@ module.exports = function createModule(dependencies) {
     if (roll < 0.94) {
       const kind = pick(
         state.floor === 1
-          ? ["potion_thief", "portal"]
-          : ["tax", "potion_thief", "portal"],
+          ? ["potion_thief", "portal"].filter(
+              (k) =>
+                !(
+                  k === "potion_thief" &&
+                  require("../events/explorationMarks").data(state).underworld
+                ),
+            )
+          : ["tax", "potion_thief", "portal"].filter(
+              (k) =>
+                !(
+                  k === "tax" &&
+                  require("../events/explorationMarks").data(state).outlaw
+                ) &&
+                !(
+                  k === "potion_thief" &&
+                  require("../events/explorationMarks").data(state).underworld
+                ),
+            ),
         rng,
       );
       return {
@@ -480,7 +511,9 @@ module.exports = function createModule(dependencies) {
             ? "Wrong Portal"
             : kind === "tax"
               ? "Tax Collector"
-              : "Potion Thief",
+              : require("../events/explorationMarks").enabled(state)
+                ? "The Thief"
+                : "Potion Thief",
         kind,
         lucky: rng() < Math.min(0.3, state.luck * 0.015),
         good:

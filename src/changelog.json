@@ -1,5 +1,18 @@
 [
   {
+    "id": "1744a440-779d-4e00-a2d9-30c0c69b6f16",
+    "updatedAt": "2026-10-13T02:48:28.168Z",
+    "auditedAt": "2026-10-13T02:48:28.168Z",
+    "title": "Lựa chọn mới cho Tax Collector, Healer và The Thief",
+    "changes": [
+      "Tax Collector: thêm Chống trả để nhận Royal Outlaw, không gặp lại người thu thuế nhưng Boss gây thêm 20% sát thương đến hết run; Nộp thuế và Lucky Break giữ nguyên.",
+      "Healer: thêm Hiến 70% HP hiện tại, khóa hồi HP tại checkpoint trong 10 tầng tiếp theo; Healer trở lại hồi đầy HP/MP và trao phúc ấn LUCK +40, STR/DEX/VIT/ENE mỗi chỉ số +10.",
+      "The Thief: Chấp nhận có Lucky Break, nếu thất bại chia đều mất 10% payout hiện tại hoặc nửa bình; Đánh đuổi Elite nhận thưởng 20% cược và Underworld Lead, miễn phí Diamond/Rift Merchant theo giới hạn cũ, không gặp lại Thief nhưng Elite gây thêm 30% sát thương.",
+      "Mimic mở rương xuất hiện đúng tên và icon tại cùng phòng. Hạ cả Mimic và Ancient Mimic tăng gấp đôi trọng số Blood Fountain/Mirror of Fate và tỷ lệ Blood Mimic trong Blood Fountain; giữ các phần thưởng cũ.",
+      "Các ấn mới lưu theo run và hiển thị tại Tower Remembers trong Rift; Chi tiết và trang tỷ lệ giải thích các lựa chọn mới. Chỉ áp dụng Sinh tồn V3."
+    ]
+  },
+  {
     "id": "63bb5c72-5c6b-4bf9-9963-3a548119b86d",
     "updatedAt": "2026-10-12T11:46:40.873Z",
     "auditedAt": "2026-10-12T11:46:40.873Z",
@@ -849,9 +862,7 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "d5758e9b34d159db664e3015833351fe47278586",
     "title": "Sinh tồn: phân loại Mimic",
-    "changes": [
-      "Ancient Mimic và Blood Mimic được phân loại là quái tinh anh."
-    ]
+    "changes": ["Ancient Mimic và Blood Mimic được phân loại là quái tinh anh."]
   },
   {
     "id": "d95d1c0",
@@ -982,9 +993,7 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "a168a3c2f345cdb5328d125f8666d333aa73110b",
     "title": "Sinh tồn V2: khôi phục cách hiển thị cũ",
-    "changes": [
-      "Khôi phục nút chiến đấu gọn và nhãn MP trong Sinh tồn V2."
-    ]
+    "changes": ["Khôi phục nút chiến đấu gọn và nhãn MP trong Sinh tồn V2."]
   },
   {
     "id": "c305df0",
@@ -992,9 +1001,7 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "c305df09cdc528e07a1cab6394419721960005d7",
     "title": "Tháp Định Mệnh: bỏ chỉ số bị lặp",
-    "changes": [
-      "DEF và RES trên bảng nhân vật không còn hiển thị hai lần."
-    ]
+    "changes": ["DEF và RES trên bảng nhân vật không còn hiển thị hai lần."]
   },
   {
     "id": "579168c",
@@ -1022,9 +1029,7 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "1df259eed83b7de93d44a8569f068a83f88f6b5f",
     "title": "Hồ sơ: nền tối",
-    "changes": [
-      "Đổi các mảng màu pastel sáng trên hồ sơ sang bảng màu tối."
-    ]
+    "changes": ["Đổi các mảng màu pastel sáng trên hồ sơ sang bảng màu tối."]
   },
   {
     "id": "e80316e",
@@ -1032,9 +1037,7 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "e80316ef864635027053c5ed3a66c08cd60ac477",
     "title": "Poker: giao diện kết thúc ván",
-    "changes": [
-      "Ẩn mục Bài của bot sau khi ván poker đã kết thúc."
-    ]
+    "changes": ["Ẩn mục Bài của bot sau khi ván poker đã kết thúc."]
   },
   {
     "id": "8f329df",
@@ -1076,9 +1079,7 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "62aca60056d54fb12c86f316f9a0ba582a413a5e",
     "title": "Sinh tồn: đồ nhận gần nhất ở đầu túi",
-    "changes": [
-      "Các món vừa nhận được đẩy lên đầu danh sách túi đồ."
-    ]
+    "changes": ["Các món vừa nhận được đẩy lên đầu danh sách túi đồ."]
   },
   {
     "id": "db27a0a",
@@ -1086,9 +1087,7 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "db27a0abbe2c5e41f47581a0b5478d8d94e95a35",
     "title": "Cò quay Nga: bỏ mục Lượt của bạn",
-    "changes": [
-      "Bỏ nhãn lượt dư thừa khỏi giao diện Cò quay Nga."
-    ]
+    "changes": ["Bỏ nhãn lượt dư thừa khỏi giao diện Cò quay Nga."]
   },
   {
     "id": "25a3b31",

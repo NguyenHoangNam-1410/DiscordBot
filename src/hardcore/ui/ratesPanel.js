@@ -87,7 +87,7 @@ function buildRatesEmbed(category = null) {
       {
         name: "15 surprise event",
         value:
-          "Healer · Treasure Goblin · Blacksmith · Purifier · Altar of Sacrifice · Cursed Gambler · Lost Adventurer · Blood Fountain · Horadric Forge · Rift Merchant · Mirror of Fate · Treasure Room · Rift Contract · Class Shrine · Strange Doors. Chọn đều trong pool hợp lệ; có thể bỏ qua.",
+          "Healer · Treasure Goblin · Blacksmith · Purifier · Altar of Sacrifice · Cursed Gambler · Lost Adventurer · Blood Fountain · Horadric Forge · Rift Merchant · Mirror of Fate · Treasure Room · Rift Contract · Class Shrine · Strange Doors. Purifier trọng số 3, Royal Invitation đủ điều kiện trọng số 10; các event khác trọng số 1. Sau khi hạ cả Mimic và Ancient Mimic: Blood Fountain/Mirror trọng số 2. Healer trở lại được ưu tiên khi Vulnerable đến hạn. Có thể bỏ qua event thường.",
       },
       {
         name: "Dịch vụ và Merchant",
@@ -115,7 +115,7 @@ function buildRatesEmbed(category = null) {
       {
         name: "Luck",
         value:
-          "SSR +Luck×0,2%; phát hiện Mimic = min(95%,25%+Luck×3%+item); Goblin = min(90%,min(80%,60%+Luck×1%)+item). Lucky Break = min(30%,Luck×1,5%), chỉ né Tax Collector/Potion Thief. Không tác động Wrong Portal.",
+          "SSR +Luck×0,2%; phát hiện Mimic = min(95%,25%+Luck×3%+item); Goblin = min(90%,min(80%,60%+Luck×1%)+item). Lucky Break = min(30%,Luck×1,5%), chỉ né Tax Collector/The Thief. Không tác động Wrong Portal.",
       },
       {
         name: "Wrong Portal",

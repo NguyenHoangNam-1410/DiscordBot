@@ -3,6 +3,7 @@ const purifier = require("../events/purifier");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
+    world,
     covenant,
     bosses,
     gilded,
@@ -392,6 +393,19 @@ module.exports = function createModule(dependencies) {
           state.lastLog =
             "Bỏ qua Wrong Portal: không nhận thưởng hoặc chịu hiệu ứng của portal.";
           completeFloor(state, session, rng, 0);
+        } else if (e.kind === "tax" && action === "tax_resist") {
+          require("../events/explorationMarks").ensure(state).outlaw = true;
+          state.lastLog =
+            eventIcon("tax") +
+            " Chống trả Tax Collector: nhận Royal Outlaw đến hết run. Không còn gặp Tax Collector; Boss gây thêm 20% DMG. Xem Rift.";
+          completeFloor(state, session, rng, 0);
+        } else if (e.kind === "potion_thief" && action === "thief_fight") {
+          state.encounter = world.makeEnemy(state, "elite", "The Thief", rng);
+          state.encounter.thiefTrial = true;
+          state.lastLog =
+            "The Thief · Tinh anh: hạ để nhận bonus 20% cược và Underworld Lead. Bạn hành động trước.";
+          finishEventResult(state);
+          prepareItemCombat(state, rng);
         } else if (e.kind !== "portal") {
           if (e.lucky) state.lastLog = `${E.luck} Lucky Break: tránh bẫy.`;
           else if (e.kind === "tax") {
@@ -401,6 +415,19 @@ module.exports = function createModule(dependencies) {
             state.lastLog = cost
               ? `${eventIcon("tax")} Tax Collector: đã thu một lần 15% payout hiện tại.`
               : `${eventIcon("tax")} Tax Collector: không có payout để thu thuế.`;
+          } else if (require("../events/explorationMarks").enabled(state)) {
+            if (e.good) {
+              penalty(state, 0.1);
+              state.lastLog = "The Thief: mất 10% payout hiện tại.";
+            } else {
+              const stolen = Math.ceil(state.potions / 2);
+              state.potions -= stolen;
+              state.lastLog =
+                "The Thief: mất " +
+                stolen +
+                " bình máu" +
+                (stolen ? " (một nửa, làm tròn lên)." : ": túi đã hết bình.");
+            }
           } else {
             const stolen = Math.min(1, state.potions);
             state.potions -= stolen;

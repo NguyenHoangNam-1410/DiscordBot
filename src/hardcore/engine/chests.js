@@ -161,6 +161,12 @@ module.exports = function createModule(dependencies) {
       state.pityRare++;
       state.pityLegendary++;
       state.encounter = chest.mimic;
+      if (require("../events/explorationMarks").enabled(state)) {
+        state.encounter.name =
+          chest.kind === "ancient_mimic" ? "Ancient Mimic" : "Mimic";
+        state.encounter.mimicKind = chest.kind;
+      }
+      state.encounter.mechanic = null;
       state.lastLog = `${prefix}${chest.kind === "ancient_mimic" ? "Ancient Mimic" : "Mimic"} xuất hiện!`;
       finishEventResult(state);
       return;

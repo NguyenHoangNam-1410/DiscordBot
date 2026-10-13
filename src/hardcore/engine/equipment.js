@@ -28,6 +28,8 @@ module.exports = function createModule(dependencies) {
   }
 
   function heal(state, amount, { checkpoint = false } = {}) {
+    if (checkpoint && require("../events/explorationMarks").vulnerable(state))
+      return 0;
     if (!checkpoint) markDirect(state, ["hp"]);
     const actual = Math.max(
       0,

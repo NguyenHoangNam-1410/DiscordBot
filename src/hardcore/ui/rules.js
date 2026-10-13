@@ -146,17 +146,32 @@ module.exports = function createModule(dependencies) {
           value: `${E.dex} **DEX:** Amazon, Assassin.\n${E.ene} **ENE:** Sorceress, Necromancer.\n${E.str} **STR:** Barbarian, Druid, Paladin.\nCorrupted tăng +12 thuộc tính phù hợp class và giảm 8 ${E.vit} VIT.`,
         },
         {
-          name: `${E.luck} Bẫy và Lucky Break`,
-          value: `- **Thu thuế:** trừ một lần 15% số xu có thể rút tại lúc xử lý event (làm tròn lên 1 xu); không đổi hệ số payout và không đánh thuế phần thưởng tăng thêm sau đó. **Trộm bình:** lấy 1 ${E.potion} bình nếu còn. Lucky Break có thể tránh hai hậu quả này: mỗi Luck cho 1,5 điểm %, tối đa 30%.\n- **Wrong Portal:** cơ bản 50% tốt / 50% xấu; LUCK không tác động, nội tại may mắn sự kiện có thể tăng nhánh tốt. Chọn **Vào portal** để nhận kết quả; nhánh xấu gọi Elite đánh phủ đầu, phải hạ Elite mới vượt tầng. **Bỏ qua** để vượt tầng mà không nhận thưởng, chịu hiệu ứng portal hoặc gặp Elite. Tiên tri (nếu có) đánh dấu nút vào portal.\n- Phòng trống cho phép đi tiếp hoặc rút thưởng.`,
+          name: `${eventIcon("tax")} Tax Collector · V3`,
+          value:
+            "Nộp thuế: trừ 15% payout hiện tại, làm tròn lên; không đổi hệ số payout. Lucky Break = min(30%, LUCK ×1,5%) giúp tránh thuế. Chống trả: không nộp thuế; Royal Outlaw đến hết run loại Tax Collector khỏi roster, Boss/Final Boss gây thêm 20% DMG lên bạn. Không cộng dồn; xem Rift.",
+        },
+        {
+          name: `${eventIcon("potion_thief")} The Thief · V3`,
+          value:
+            "Chấp nhận: Lucky Break = min(30%, LUCK ×1,5%) tránh mất mát; nếu thất bại, 50% mất 10% payout hiện tại / 50% mất nửa bình hiện có, làm tròn lên (0 bình không mất). Đánh đuổi: đánh The Thief (Elite) tại tầng này, bạn đi trước. Hạ nhận +20% cược và Underworld Lead: miễn phí Diamond Merchant/Rift Merchant, giữ một món/lần gặp và Diamond Merchant hai lần/run. Không gặp lại The Thief; Elite gây thêm 30% DMG lên bạn đến hết run. Không cộng dồn; xem Rift.",
+        },
+        {
+          name: `${E.luck} Wrong Portal`,
+          value:
+            "Cơ bản 50% tốt / 50% xấu; LUCK không tác động, nội tại may mắn event có thể tăng nhánh tốt. Vào portal nhận kết quả; nhánh xấu gọi Elite đánh phủ đầu, hạ Elite mới vượt tầng. Bỏ qua để vượt tầng không nhận thưởng, chịu hiệu ứng portal hoặc gặp Elite. Tiên tri đánh dấu nút vào portal. Phòng trống cho phép đi tiếp hoặc rút thưởng.",
         },
         {
           name: `${eventIcon("goblin")} Treasure Goblin`,
           value: `Tỷ lệ bắt = **60% + LUCK ×1 điểm % + buff bắt Goblin**, tối đa **90%**.\n- **Bắt được:** bonus bằng **25% tiền cược** và **1 ${E.backpack} vật phẩm**. Độ hiếm khi bắt thành công: **60% SR / 35% SSR / 5% UR** (trang bị có nguyền hoặc Vé thoát). Buff bắt chỉ tăng cơ hội bắt; tỷ lệ độ hiếm giữ nguyên, không dùng pity của hòm. Đồ trùng tăng 1 level.\n- **Goblin thoát:** trừ một lần **5% payout hiển thị hiện tại**, làm tròn lên 1 xu. Khoản này không giảm hệ số payout hoặc thưởng tăng thêm về sau.\n- Phần thưởng được khóa khi event xuất hiện; mở lại bảng không roll lại. Item và thay đổi chỉ số hiển thị ở **Lượt vừa rồi**.`,
         },
         {
+          name: `${eventIcon("healer")} Healer · Hiến máu (V3)`,
+          value: `**Trị liệu:** hồi 30% Max ${E.hp} HP (ít nhất 20), 30% Max ${E.mana} MP làm tròn lên, +1 ${E.potion} bình. **Hiến máu:** mất 70% HP hiện tại làm tròn lên, còn ít nhất 1; không trị liệu/tiếp tế. Nhận Vulnerable: checkpoint không hồi HP đến hết 10 tầng kế tiếp; bình và chọn thuộc tính giữ nguyên. Sau đó Healer trở lại ở tình huống hợp lệ kế tiếp (sau ưu tiên boss/RNGesus/ký ức/mộ), hồi đầy HP/MP và chuyển thành Vital Benediction: ${E.luck} LUCK +40, ${E.str} STR/${E.dex} DEX/${E.vit} VIT/${E.ene} ENE mỗi chỉ số +10 đến hết run. Hiến máu một lần/run. Xem các ấn trong Rift.`,
+        },
+        {
           name: "Các sự kiện đặc biệt",
           value:
-            "Healer · Treasure Goblin · Blacksmith · Purifier · Sacrificial Altar · Cursed Gambler · Lost Adventurer · Fountain · Horadric Forge · Rift Merchant · Mirror · Treasure Room · Contract · Class Shrine · Strange Doors · Duelist · Payout Shop · Blood Shop · Diamond Shop.\n\nChỉ những event đủ điều kiện mới được chọn. Các lựa chọn có thể đổi HP/MP, thuộc tính, trang bị, payout hoặc tạo hiệu ứng tạm thời. Event hồi HP cũng hồi MP theo cùng tỷ lệ Max MP, làm tròn lên, không vượt Max MP; HP đã đầy vẫn hồi MP. Checkpoint chỉ hồi HP. Lời nguyền giảm hồi HP không giảm MP hồi. Không phải event nào cũng miễn phí hoặc an toàn; đọc giá, tỷ lệ và điều kiện trên bảng trước khi xác nhận.",
+            "Healer · Treasure Goblin · Blacksmith · Purifier · Sacrificial Altar · Cursed Gambler · Lost Adventurer · Fountain · Horadric Forge · Rift Merchant · Mirror · Treasure Room · Contract · Class Shrine · Strange Doors · Duelist · Payout Shop · Blood Shop · Diamond Shop.\n\nPurifier trọng số 3, Royal Invitation đủ điều kiện trọng số 10, các event khác 1. Hạ cả Mimic và Ancient Mimic trong cùng run: Blood Fountain/Mirror trọng số 2 và nhánh Blood Mimic ×2 (tối đa 100%). Chỉ những event đủ điều kiện mới được chọn. Các lựa chọn có thể đổi HP/MP, thuộc tính, trang bị, payout hoặc tạo hiệu ứng tạm thời. Event hồi HP cũng hồi MP theo cùng tỷ lệ Max MP, làm tròn lên, không vượt Max MP; HP đã đầy vẫn hồi MP. Checkpoint chỉ hồi HP. Lời nguyền giảm hồi HP không giảm MP hồi. Không phải event nào cũng miễn phí hoặc an toàn; đọc giá, tỷ lệ và điều kiện trên bảng trước khi xác nhận.",
         },
         {
           name: `${eventIcon("treasure_room")} Treasure Room`,

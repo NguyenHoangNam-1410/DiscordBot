@@ -68,6 +68,17 @@ module.exports = function createModule(dependencies) {
       echoes.consume(session, e.echoId);
     }
     state.lastLog += `\n${monsterIcon(e)} Hạ **${e.name}**.`;
+    if (require("../events/explorationMarks").enabled(state)) {
+      const m = require("../events/explorationMarks").ensure(state);
+      if (e.mimicKind === "mimic" || e.name === "Mimic") m.mimic = true;
+      if (world.mimicKind(e) === "ancient_mimic") m.ancientMimic = true;
+      if (e.thiefTrial && !m.underworld) {
+        m.underworld = true;
+        state.bonus += Math.floor(state.stake * 0.2);
+        state.lastLog +=
+          "\nThe Thief: bonus +20% cược. Nhận Underworld Lead đến hết run; xem Rift.";
+      }
+    }
     covenant.recordKill(state, e);
     royal.recordBoss(state, e);
     if (paradox.is(state, "hunger"))

@@ -97,6 +97,7 @@ module.exports = function createModule(dependencies) {
   }
 
   function normalize(state) {
+    require("../events/explorationMarks").normalize(state);
     const rules = require("../equipment/rules");
     const ITEMS = rules.enabled(state)
       ? require("../item").ITEMS_V3

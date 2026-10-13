@@ -209,7 +209,12 @@ module.exports = function createModule(dependencies) {
       return `${eventIcon(k)} **HORADRIC FORGE · LÒ CHUYỂN HÓA**\nTiêu hao **1 level trang bị** để giữ hiệu ứng có lợi trong run và chọn thêm một phần thưởng. Không tốn xu.\n\n**${E.backpack} Trang bị dùng để chuyển hóa**\n${E.backpack} **${target.name} [${rarityLabel(target.rarity)}] · Lv.${target.level}**\n- Sau khi dùng: ${target.level === 1 ? "món này biến mất khỏi trang bị" : `level **${target.level}→${target.level - 1}**`}.\n- **Giữ nguyên hiệu ứng của level đã tiêu hao:** ${effectText(retained)}. Đây là hiệu ứng được giữ lại, không cộng thêm lần nữa.\n${hasCurse ? `- **Xóa lời nguyền của 1 level:** ${effectText(target.definition.curse.effects)}.\n` : ""}- Không nhận lại ${E.potion} bình máu, ${E.ticket} Vé thoát hoặc ${E.hp} HP hồi khi nhặt đồ.\n\n**Chọn một phần thưởng thêm**\n- ${E[main]} **${main.toUpperCase()} +6**.\n- ${E[guard]} **${guard.toUpperCase()} +7**.\n- ${E.vit} **VIT +4**.${["legendary", "cursed"].includes(target.rarity) ? `\n- ${E.ticket} **Nhận 1 vé thoát** (giữ tối đa 1).` : ""}\n\n**Bỏ qua:** giữ nguyên trang bị, không nhận phần thưởng.`;
     }
     const descriptions = {
-      healer: `**Hồi phục:** hồi ${E.hp} HP bằng 30% Max HP, ít nhất 20; hồi 30% Max ${E.mana} MP (làm tròn lên); +1 ${E.potion} bình máu (theo giới hạn bình của bạn). Miễn phí.`,
+      healer: e.healerReturn
+        ? `**Healer trở lại:** hồi đầy ${E.hp} HP/${E.mana} MP; Vulnerable chuyển thành Vital Benediction: ${E.luck} LUCK +40, ${E.str} STR/${E.dex} DEX/${E.vit} VIT/${E.ene} ENE mỗi chỉ số +10 đến hết run. Chỉ một lần/run.`
+        : (require("../events/explorationMarks").enabled(s)
+            ? `**Hiến máu:** giao 70% ${E.hp} HP hiện tại (làm tròn lên, giữ ≥1), không nhận trị liệu/bình. Nhận Vulnerable: checkpoint không hồi HP cho đến hết 10 tầng kế tiếp; vẫn nhận bình và chọn thuộc tính. Sau đó Healer trở lại ở tình huống hợp lệ kế tiếp, hồi đầy HP/MP và trao ${E.luck} LUCK +40, ${E.str} STR/${E.dex} DEX/${E.vit} VIT/${E.ene} ENE mỗi chỉ số +10 đến hết run. Xem Tower Remembers trong Rift.\n`
+            : "") +
+          `**Trị liệu:** hồi ${E.hp} HP bằng 30% Max HP, ít nhất 20; hồi 30% Max ${E.mana} MP (làm tròn lên); +1 ${E.potion} bình máu (theo giới hạn bình của bạn). Miễn phí.`,
       sacrifice: `**Hiến HP:** mất tối đa 20% Max ${E.hp} HP (giữ ≥1) → +6 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\n**Hiến payout:** trả 10% payout hiện tại → +6 ${E.vit} VIT. Hiến HP không cộng bonus Blood Paradox.`,
       contract: `Trong 3 tầng, chọn một điều kiện:\n- **Không dùng ${E.potion} bình:** nhận đồ [SSR].\n- **Không dùng skill:** bonus +50% cược.\n- **Không phòng thủ:** +10 ${E[stats.mainStat(s)]} ${stats.mainStat(s).toUpperCase()}.\nVi phạm chỉ hủy thưởng.`,
       class_shrine: `Hiệu lực ba tầng tiếp theo: ${SHRINES[s.classKey]}`,
@@ -284,9 +289,15 @@ ${bossDisplay.status(s)}${require("../rift").battle(s)}
             ? covenant.canEnter(s)
               ? "Đủ bốn mảnh: cửa tầng hầm đã mở. Chọn vào portal, bỏ qua hoặc thử thách tầng hầm."
               : "Chọn vào portal hoặc bỏ qua để vượt tầng."
-            : "Đi tiếp để xử lý tình huống.",
+            : require("../events/explorationMarks").enabled(s)
+              ? e.kind === "tax"
+                ? "Chọn nộp thuế hoặc chống trả."
+                : "Chọn chấp nhận hoặc đánh đuổi."
+              : "Đi tiếp để xử lý tình huống.",
         echo: "Chọn cách tương tác với mộ.",
-        surprise: "Chọn một hành động bằng nút bên dưới.",
+        surprise: e.healerReturn
+          ? "Healer đã trở lại. Nhận hồi phục và phúc ấn."
+          : "Chọn một hành động bằng nút bên dưới.",
       };
       const target = s.items.find((item) => item.definition.id === e.targetId);
       const context =

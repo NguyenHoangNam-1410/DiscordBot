@@ -29,8 +29,16 @@ module.exports = function createModule(dependencies) {
     const afterShield = (n) => Math.max(0, n - shield);
     if (plan.trueDamage)
       return {
-        low: afterShield(plan.raw),
-        high: afterShield(plan.raw),
+        low: afterShield(
+          Math.floor(
+            plan.raw * require("../events/explorationMarks").incoming(state, e),
+          ),
+        ),
+        high: afterShield(
+          Math.floor(
+            plan.raw * require("../events/explorationMarks").incoming(state, e),
+          ),
+        ),
         chance: 1,
         trueDamage: true,
       };
