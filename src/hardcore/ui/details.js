@@ -1,4 +1,5 @@
 "use strict";
+const { itemIcon } = require("../shared/icons");
 const bosses = require("../bosses/mechanics");
 const statsV3 = require("../shared/statsV3");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
@@ -88,7 +89,7 @@ module.exports = function createModule(dependencies) {
     if (tab === "items") {
       for (const item of state.items.slice(page * 5, page * 5 + 5))
         e.addFields({
-          name: `${item.name} Lv.${item.level} [${rarityLabel(item.rarity)}]`,
+          name: `${itemIcon(item)} ${item.name} Lv.${item.level} [${rarityLabel(item.rarity)}]`,
           value: dependencies.ownedItemText(state, item).slice(0, 1024),
         });
       if (!state.items.length)

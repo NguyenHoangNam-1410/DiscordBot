@@ -189,6 +189,26 @@ function effectStatLabel(key) {
   return `${E[symbol]} ${label}`;
 }
 const MONSTER_ICON_NAMES = Object.freeze({
+  "Death Projector": "monster_death_projector",
+  "Akarat, the False Prophet": "monster_akarat",
+  "Buyard Cholik": "monster_buyard",
+  "Bartuc, Warlord of Blood": "monster_bartuc",
+  "Lord Aldric Jitan": "monster_jitan",
+  "Greater Riftwalker": "monster_greater_riftwalker",
+  Athulua: "monster_athulua",
+  Lilith: "monster_lilith",
+  Nemesis: "monster_nemesis",
+  Azmodan: "monster_azmodan",
+  "Dark Star Dragon": "monster_dark_star_dragon",
+  "Juris Khan": "monster_juris_khan",
+  Manoruk: "monster_manoruk",
+  "Baal, Lord of Destruction": "monster_baal",
+  "Belial, Lord of Lies": "monster_belial",
+  Astrogha: "monster_astrogha",
+  "Atanna Khan": "monster_atanna",
+  Inarius: "monster_inarius",
+  "Sescheron's Destroyer": "monster_sescheron",
+  Nithogur: "monster_nithogur",
   "Fallen Zealot": "monster_fallen_zealot",
   Goatman: "monster_goatman",
   "Dark Cultist": "monster_dark_cultist",
@@ -261,6 +281,26 @@ const MONSTER_ICON_NAMES = Object.freeze({
   Annihilator: "monster_annihilator",
 });
 const BOSS_ICON_NAMES = Object.freeze({
+  death_projector: "Death Projector",
+  akarat: "Akarat, the False Prophet",
+  buyard: "Buyard Cholik",
+  bartuc: "Bartuc, Warlord of Blood",
+  jitan: "Lord Aldric Jitan",
+  greater_riftwalker: "Greater Riftwalker",
+  athulua: "Athulua",
+  lilith: "Lilith",
+  nemesis: "Nemesis",
+  azmodan: "Azmodan",
+  dark_star_dragon: "Dark Star Dragon",
+  juris_khan: "Juris Khan",
+  manoruk: "Manoruk",
+  baal: "Baal, Lord of Destruction",
+  belial: "Belial, Lord of Lies",
+  astrogha: "Astrogha",
+  atanna: "Atanna Khan",
+  inarius: "Inarius",
+  sescheron: "Sescheron's Destroyer",
+  nithogur: "Nithogur",
   butcher: "The Butcher",
   machine: "Infernal Machine",
   assur: "Assur",
@@ -310,6 +350,14 @@ const RELIC_ICON_NAMES = Object.freeze({
 });
 function relicIcon(id) {
   return RELIC_ICON_NAMES[id] ? icon(RELIC_ICON_NAMES[id], "💠") : "💠";
+}
+function itemIcon(item) {
+  const definition = item?.definition || item;
+  const id = typeof definition === "string" ? definition : definition?.id;
+  if (!id) return E.backpack;
+  if (TICKET_TYPES[id]) return ticketIcon(id);
+  if (RELIC_ICON_NAMES[id]) return relicIcon(id);
+  return icon("item_" + id, E.backpack);
 }
 function fragmentIcon(key) {
   return ["mimic", "ancient_mimic", "blood_mimic", "mirror_clone"].includes(key)
@@ -421,6 +469,7 @@ module.exports = {
   RELIC_ICON_NAMES,
   monsterIcon,
   relicIcon,
+  itemIcon,
   fragmentIcon,
   sealIcon,
 };

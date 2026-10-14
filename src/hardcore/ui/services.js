@@ -1,4 +1,5 @@
 "use strict";
+const { itemIcon } = require("../shared/icons");
 const purifier = require("../events/purifier");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
@@ -52,7 +53,7 @@ module.exports = function createModule(dependencies) {
     const lines = [
       eventIcon("blacksmith") +
         " **Blacksmith** · Rèn thêm **1 cấp** cho trang bị.",
-      E.backpack +
+      itemIcon(target) +
         " **" +
         target.name +
         " [" +
@@ -154,7 +155,7 @@ module.exports = function createModule(dependencies) {
     const lines = [
       eventIcon("purifier") +
         " **Purifier** · Giải nguyền **1 món mỗi lần gặp**.",
-      E.backpack +
+      itemIcon(target) +
         " **" +
         target.name +
         " [" +
@@ -227,10 +228,10 @@ module.exports = function createModule(dependencies) {
   function merchantOffer(offer) {
     if (offer.item)
       return {
-        name: `${E.backpack} ${offer.item.name} [${rarityLabel(offer.item.rarity)}]`,
+        name: `${itemIcon(offer.item)} ${offer.item.name} [${rarityLabel(offer.item.rarity)}]`,
         detail: itemText(offer.item),
         button: offer.item.name,
-        icon: E.backpack,
+        icon: itemIcon(offer.item),
       };
     return (
       {

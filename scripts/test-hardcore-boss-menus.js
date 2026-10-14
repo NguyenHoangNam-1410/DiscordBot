@@ -516,6 +516,100 @@ async function main() {
     assert.equal(JSON.stringify(s), before);
   });
 
+  await test("Custom icons resolve dynamically for every boss/item and stay consistent across inventory, shop, receipts and controls", () => {
+    const icons = require("../src/hardcore/shared/icons"),
+      app = require("../src/utils/appEmoji");
+    app.setApplicationEmojisForTest([]);
+    const items = Object.values(core.ITEMS).flat();
+    assert.equal(icons.itemIcon("rusted_edge"), icons.E.backpack);
+    const names = [
+      ...new Set([
+        ...Object.values(icons.MONSTER_ICON_NAMES),
+        ...items.map(
+          (i) =>
+            icons.TICKET_TYPES[i.id]?.emojiName ||
+            icons.RELIC_ICON_NAMES[i.id] ||
+            "item_" + i.id,
+        ),
+      ]),
+    ];
+    const entries = names.map((n, i) => [
+      n,
+      String(1558000000000000000n + BigInt(i)),
+    ]);
+    try {
+      app.setApplicationEmojisForTest(entries);
+      for (const boss of Object.values(catalog.CATALOG)) {
+        const expected = icons.MONSTER_ICON_NAMES[boss.name];
+        assert(expected, boss.name);
+        assert(
+          icons
+            .monsterIcon({ name: boss.name, boss: { id: boss.id } })
+            .startsWith("<:" + expected + ":"),
+        );
+      }
+      for (const item of items) {
+        const expected =
+          icons.TICKET_TYPES[item.id]?.emojiName ||
+          icons.RELIC_ICON_NAMES[item.id] ||
+          "item_" + item.id;
+        assert(icons.itemIcon(item).startsWith("<:" + expected + ":"), item.id);
+        assert.equal(
+          icons.itemIcon({ definition: item }),
+          icons.itemIcon(item),
+        );
+      }
+      const run = runBoss("belial"),
+        s = run.state;
+      const item = items.find((i) => i.id === "rusted_edge");
+      s.lastReceivedItems = [];
+      core.receiveItem(s, item);
+      const before = JSON.stringify(s);
+      const inventory = view.privatePayload(
+        s,
+        run.session.id,
+        "public",
+        "items",
+      );
+      assert(JSON.stringify(inventory).includes(icons.itemIcon(item)));
+      const battle = view.embed(s, "u").toJSON();
+      assert(JSON.stringify(battle).includes("monster_belial"));
+      assert(JSON.stringify(battle).includes("item_rusted_edge"));
+      assert.equal(JSON.stringify(s), before);
+      s.phase = "boss_chest";
+      s.encounter = {
+        type: "boss_chest",
+        bossFloor: 150,
+        offers: [item, item, item],
+      };
+      let components = view
+        .rows(run.session.id, s)
+        .flatMap((r) => r.toJSON().components);
+      const take = components.find((c) =>
+        c.custom_id?.endsWith(":boss_pick_0"),
+      );
+      assert.equal(take.emoji.name, "item_rusted_edge");
+      assert(take.label.includes(item.name));
+      assert(
+        JSON.stringify(
+          view.privatePayload(s, run.session.id, "public", "encounter"),
+        ).includes("item_rusted_edge"),
+      );
+      s.phase = "encounter";
+      s.encounter = core.makeSurprise(s, () => 0.5, "payout_shop");
+      components = view
+        .rows(run.session.id, s)
+        .flatMap((r) => r.toJSON().components);
+      for (let i = 0; i < s.encounter.offers.length; i++) {
+        const buy = components.find((c) => c.custom_id?.endsWith(":buy_" + i));
+        if (buy)
+          assert.equal(buy.emoji.name, "item_" + s.encounter.offers[i].item.id);
+      }
+      repo.deleteSession(run.session.id);
+    } finally {
+      app.setApplicationEmojisForTest([]);
+    }
+  });
   await test("At most four event actions use buttons, five use selector; retreat and tabs do not count", () => {
     const run = runBoss("lilith"),
       s = run.state;

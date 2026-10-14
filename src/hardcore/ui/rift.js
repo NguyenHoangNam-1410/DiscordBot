@@ -1,4 +1,5 @@
 "use strict";
+const { itemIcon } = require("../shared/icons");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -56,7 +57,7 @@ module.exports = function createModule(dependencies) {
     const main = stats.mainStat(state);
     const reward =
       c.kind === "potion"
-        ? `1 trang bị SSR${c.item?.name ? " · " + c.item.name : ""}`
+        ? `1 trang bị SSR${c.item?.name ? " · " + itemIcon(c.item) + " " + c.item.name : ""}`
         : c.kind === "skill"
           ? `bonus bằng 50% cược (${money(Math.floor(state.stake * 0.5))} ${E.coin})`
           : `+10 ${E[main]} ${main.toUpperCase()} cho bạn`;

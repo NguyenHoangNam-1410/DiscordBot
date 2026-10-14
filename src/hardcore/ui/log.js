@@ -1,4 +1,5 @@
 "use strict";
+const { itemIcon } = require("../shared/icons");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -25,7 +26,9 @@ module.exports = function createModule(dependencies) {
       details.push(
         eventIcon("purifier") +
           " **Đã giải nguyền:** " +
-          E.backpack +
+          itemIcon(
+            state.items.find((i) => i.name === purified.name) || purified,
+          ) +
           " **" +
           purified.name +
           " [" +
@@ -57,7 +60,7 @@ module.exports = function createModule(dependencies) {
     const received = state.lastReceivedItems || [];
     const receivedTitles = received.map(
       (item) =>
-        `${item.upgradedFromLevel != null ? eventIcon("blacksmith") + " **Rèn:** " : ""}${item.consumable ? ticketIcon(item.definition.id) : E.backpack} **${item.name} [${rarityLabel(item.rarity)}]**${item.consumable ? " · Vật phẩm" : ` · ${item.upgradedFromLevel != null ? `Lv.${item.upgradedFromLevel} → **Lv.${item.level}**` : `**Lv.${item.level}**`}`}`,
+        `${item.upgradedFromLevel != null ? eventIcon("blacksmith") + " **Rèn:** " : ""}${itemIcon(item)} **${item.name} [${rarityLabel(item.rarity)}]**${item.consumable ? " · Vật phẩm" : ` · ${item.upgradedFromLevel != null ? `Lv.${item.upgradedFromLevel} → **Lv.${item.level}**` : `**Lv.${item.level}**`}`}`,
     );
     if (state.lastUpgrade)
       details.push(

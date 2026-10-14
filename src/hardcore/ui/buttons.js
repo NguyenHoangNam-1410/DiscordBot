@@ -1,4 +1,5 @@
 "use strict";
+const { itemIcon } = require("../shared/icons");
 const purifier = require("../events/purifier");
 const { StringSelectMenuBuilder } = require("discord.js");
 const bosses = require("../bosses/mechanics");
@@ -145,6 +146,13 @@ module.exports = function createModule(dependencies) {
       : { name: value };
   }
 
+  function actionItem(state, action) {
+    if (state.phase === "boss_chest" && /^boss_pick_\d+$/.test(action))
+      return state.encounter.offers?.[Number(action.slice(10))];
+    if (/^buy_\d+$/.test(action))
+      return state.encounter.offers?.[Number(action.slice(4))]?.item;
+    return null;
+  }
   function rows(sessionId, state, disabled = false) {
     if (disabled)
       return chunkRows([
@@ -197,43 +205,45 @@ module.exports = function createModule(dependencies) {
               ? ButtonStyle.Success
               : ButtonStyle.Secondary,
         a.disabled,
-        state.phase === "severance" && a.action !== "sever_none"
-          ? RIFT_ICONS[a.action.slice(6)] || E.rift
-          : state.encounter.type === "memory"
-            ? memoryIcon(memories.family(state.encounter.debt))
-            : a.action.startsWith("paradox_") && state.encounter.version === 2
-              ? paradoxIcon(a.action.slice(8))
-              : a.action.startsWith("chest_") &&
-                  state.encounter.kind === "treasure_room"
-                ? treasureChestIcon(a.action.slice(6))
-                : a.action.startsWith("boss_")
-                  ? eventIcon("boss_chest")
-                  : a.action === "skill"
-                    ? bosses.brainControl(state)
-                      ? "🧠"
-                      : SKILL_ICONS[state.classKey]
-                    : a.action.startsWith("forge_")
-                      ? E[
-                          a.action === "forge_main"
-                            ? stats.mainStat(state)
-                            : a.action === "forge_guard"
-                              ? state.encounter.forgeStat || "str"
-                              : a.action === "forge_vit"
-                                ? "vit"
-                                : "ticket"
-                        ]
-                      : state.encounter.kind === "merchant" &&
-                          a.action.startsWith("buy_")
-                        ? merchantOffer(
-                            state.encounter.offers[Number(a.action.slice(4))],
-                          ).icon
-                        : /^(event_|buy_|forge_|contract_|door_|duel_|hand_)/.test(
-                              a.action,
-                            )
-                          ? eventIcon(
-                              state.encounter.kind || state.encounter.type,
-                            )
-                          : null,
+        actionItem(state, a.action)
+          ? itemIcon(actionItem(state, a.action))
+          : state.phase === "severance" && a.action !== "sever_none"
+            ? RIFT_ICONS[a.action.slice(6)] || E.rift
+            : state.encounter.type === "memory"
+              ? memoryIcon(memories.family(state.encounter.debt))
+              : a.action.startsWith("paradox_") && state.encounter.version === 2
+                ? paradoxIcon(a.action.slice(8))
+                : a.action.startsWith("chest_") &&
+                    state.encounter.kind === "treasure_room"
+                  ? treasureChestIcon(a.action.slice(6))
+                  : a.action.startsWith("boss_")
+                    ? eventIcon("boss_chest")
+                    : a.action === "skill"
+                      ? bosses.brainControl(state)
+                        ? "🧠"
+                        : SKILL_ICONS[state.classKey]
+                      : a.action.startsWith("forge_")
+                        ? E[
+                            a.action === "forge_main"
+                              ? stats.mainStat(state)
+                              : a.action === "forge_guard"
+                                ? state.encounter.forgeStat || "str"
+                                : a.action === "forge_vit"
+                                  ? "vit"
+                                  : "ticket"
+                          ]
+                        : state.encounter.kind === "merchant" &&
+                            a.action.startsWith("buy_")
+                          ? merchantOffer(
+                              state.encounter.offers[Number(a.action.slice(4))],
+                            ).icon
+                          : /^(event_|buy_|forge_|contract_|door_|duel_|hand_)/.test(
+                                a.action,
+                              )
+                            ? eventIcon(
+                                state.encounter.kind || state.encounter.type,
+                              )
+                            : null,
       ),
     );
     if (
@@ -289,30 +299,32 @@ module.exports = function createModule(dependencies) {
                 ).slice(0, 100),
                 value: a.action,
                 emoji: menuEmoji(
-                  state.phase === "severance"
-                    ? RIFT_ICONS[a.action.slice(6)] || E.rift
-                    : a.action.startsWith("upgrade_")
-                      ? E[a.action.slice(8)]
-                      : a.action.startsWith("forge_boon_")
-                        ? E[
-                            {
-                              accuracy: "accuracy",
-                              resistance: "res",
-                              defense: "defense",
-                            }[
-                              state.encounter.forge.boons[
-                                Number(a.action.slice(-1))
-                              ].key
-                            ] ||
-                              state.encounter.forge.boons[
-                                Number(a.action.slice(-1))
-                              ].key
-                          ] || E.shrine
-                        : a.action.startsWith("buy_")
-                          ? icon("shopping_cart", "🛒")
-                          : eventIcon(
-                              state.encounter.kind || state.encounter.type,
-                            ),
+                  actionItem(state, a.action)
+                    ? itemIcon(actionItem(state, a.action))
+                    : state.phase === "severance"
+                      ? RIFT_ICONS[a.action.slice(6)] || E.rift
+                      : a.action.startsWith("upgrade_")
+                        ? E[a.action.slice(8)]
+                        : a.action.startsWith("forge_boon_")
+                          ? E[
+                              {
+                                accuracy: "accuracy",
+                                resistance: "res",
+                                defense: "defense",
+                              }[
+                                state.encounter.forge.boons[
+                                  Number(a.action.slice(-1))
+                                ].key
+                              ] ||
+                                state.encounter.forge.boons[
+                                  Number(a.action.slice(-1))
+                                ].key
+                            ] || E.shrine
+                          : a.action.startsWith("buy_")
+                            ? icon("shopping_cart", "🛒")
+                            : eventIcon(
+                                state.encounter.kind || state.encounter.type,
+                              ),
                 ),
               })),
             ),
@@ -371,6 +383,7 @@ module.exports = function createModule(dependencies) {
               (item.level - (item.cleansedLevels || 0)) +
               " cấp nguyền",
             default: item.definition.id === state.encounter.targetId,
+            emoji: menuEmoji(itemIcon(item)),
           })),
         );
       result.unshift(new ActionRowBuilder().addComponents(menu));

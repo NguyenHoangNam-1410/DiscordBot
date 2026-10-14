@@ -1,5 +1,16 @@
 [
   {
+    "id": "24b16356-306a-47b6-bd95-03d7a9065bc4",
+    "updatedAt": "2026-10-14T02:51:03.677Z",
+    "auditedAt": "2026-10-14T02:51:03.677Z",
+    "title": "Sinh tồn: chuẩn hóa icon quái và vật phẩm",
+    "changes": [
+      "Nối icon riêng cho 20 boss còn thiếu theo đúng tên monster_* trong bộ icon mới.",
+      "Dùng icon riêng của 100 item và giữ naming vé/di vật; thống nhất tại Túi, shop, rương boss, rèn, giải nguyền, tiến độ set, nút/menu chọn món và Lượt vừa rồi.",
+      "Icon được tra theo tên lúc hiển thị; nếu emoji chưa có trên bot thì dùng icon dự phòng, giữ nguyên cơ chế và chỉ số."
+    ]
+  },
+  {
     "id": "c6a7b2af-0f1e-414c-a2c9-9f28cb416fc4",
     "updatedAt": "2026-10-14T01:20:23.873Z",
     "auditedAt": "2026-10-14T01:20:23.873Z",

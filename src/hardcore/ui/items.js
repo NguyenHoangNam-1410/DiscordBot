@@ -1,4 +1,5 @@
 "use strict";
+const { itemIcon } = require("../shared/icons");
 const rules = require("../equipment/rules");
 const affinity = require("../equipment/affinityEffects");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
@@ -227,6 +228,8 @@ module.exports = function createModule(dependencies) {
                 key;
               return (
                 (item ? "✅ " : "▫️ ") +
+                itemIcon(key) +
+                " " +
                 name +
                 (item?.definition.curse &&
                 item.level > (item.cleansedLevels || 0)

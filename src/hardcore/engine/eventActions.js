@@ -1,4 +1,5 @@
 "use strict";
+const { itemIcon } = require("../shared/icons");
 const purifier = require("../events/purifier");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
@@ -139,7 +140,7 @@ module.exports = function createModule(dependencies) {
       if (offer.item) {
         const item = receiveItem(state, offer.item);
         done(
-          `${paymentLog}${E.backpack} Nhận ${item.name}${item.consumable ? "" : ` Lv.${item.level}`}.`,
+          `${paymentLog}${itemIcon(item)} Nhận ${item.name}${item.consumable ? "" : ` Lv.${item.level}`}.`,
         );
       } else {
         if (offer.key === "potion")
@@ -385,7 +386,7 @@ module.exports = function createModule(dependencies) {
               ? "vit"
               : "ticket";
       done(
-        `${eventIcon("horadric")} Horadric Forge: chuyển hóa ${E.backpack} **${target.name}** ${previousLevel === 1 ? "(đã hết level, rời trang bị)" : `Lv.${previousLevel}→**${target.level}**`}. Giữ hiệu ứng có lợi của level đã dùng trong run${curseRemoval}.\nPhần thưởng đã chọn: ${E[rewardKey]} **${rewardKey === "ticket" ? "Vé thoát" : rewardKey.toUpperCase()}**.`,
+        `${eventIcon("horadric")} Horadric Forge: chuyển hóa ${itemIcon(target)} **${target.name}** ${previousLevel === 1 ? "(đã hết level, rời trang bị)" : `Lv.${previousLevel}→**${target.level}**`}. Giữ hiệu ứng có lợi của level đã dùng trong run${curseRemoval}.\nPhần thưởng đã chọn: ${E[rewardKey]} **${rewardKey === "ticket" ? "Vé thoát" : rewardKey.toUpperCase()}**.`,
       );
     } else if (k === "mirror") {
       if (action === "event_mirror_power") {
