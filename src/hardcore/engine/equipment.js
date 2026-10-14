@@ -92,7 +92,13 @@ module.exports = function createModule(dependencies) {
     };
   }
 
-  function hurt(state, amount, hostile = true, nonlethal = false, shields = true) {
+  function hurt(
+    state,
+    amount,
+    hostile = true,
+    nonlethal = false,
+    shields = true,
+  ) {
     markDirect(state, ["hp"]);
     const awakening = require("../awakening");
     const before = state.hp;
@@ -238,15 +244,16 @@ module.exports = function createModule(dependencies) {
         level: item.level,
         levels,
         effectScale: equipmentRules.enabled(state)
-          ? equipmentRules.scale(item.level) -
-            equipmentRules.scale(previousLevel)
+          ? equipmentRules.scale(item.level, state) -
+            equipmentRules.scale(previousLevel, state)
           : levels,
         curseScale: equipmentRules.enabled(state)
           ? equipmentRules.curseScale(state, item) -
-            (equipmentRules.scale(previousLevel) -
+            (equipmentRules.scale(previousLevel, state) -
               equipmentRules.scale(
                 (item.cleansedLevels || 0) -
                   Math.min(levels, Math.max(0, cleansedLevels)),
+                state,
               ))
           : Math.max(0, levels - cleansedLevels),
         definition: structuredClone(definition),

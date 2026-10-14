@@ -348,15 +348,21 @@ module.exports = function createModule(dependencies) {
       counterDamage = awakening.absorb(state, counterDamage);
       // Ambushes can counter before the first player action locks Paradox cost.
       if (
+        !innate.rebalanced(state) &&
         state.classKey === "sorceress" &&
         innate.combat(state)?.counterSkillCost == null
       )
         prepareParadoxCombat(state, rng);
       const reserve =
-        state.classKey === "sorceress"
+        !innate.rebalanced(state) && state.classKey === "sorceress"
           ? (innate.combat(state)?.counterSkillCost ?? skillManaCost(state))
           : 0;
-      const shield = innate.absorb(state, counterDamage, reserve);
+      const shield = innate.absorb(
+        state,
+        counterDamage,
+        reserve,
+        defend || (innate.rebalanced(state) && plan.raw != null),
+      );
       counterDamage = shield.remaining;
       manaShieldLog = shield.log;
     }
@@ -444,6 +450,39 @@ module.exports = function createModule(dependencies) {
     );
   }
 
+  function holyDamage(s, target, beforeCrit, action = null) {
+    if (innate.rebalanced(s)) {
+      const boss =
+        bosses.on(target) || ["boss", "final_boss"].includes(target.rank);
+      const bonus = boss
+        ? s.bossDamage
+        : target.rank === "elite"
+          ? s.eliteDamage
+          : 0;
+      return (
+        (s.defense * 0.2 + s.resistance) *
+        rift.outgoing(s) *
+        innate.multiplier(s, action) *
+        bosses.playerFactor(s, false) *
+        (1 + (bonus || 0)) *
+        (boss
+          ? 1 -
+            world.defenseReduction(
+              rift.enemyDefense(s, target.defense),
+              s.floor,
+            )
+          : 1)
+      );
+    }
+    return (
+      Math.max(
+        s.defense * 0.25 * rift.outgoing(s) * innate.multiplier(s, action),
+        beforeCrit * 0.15,
+      ) *
+      (1 -
+        world.defenseReduction(rift.enemyDefense(s, target.defense), s.floor))
+    );
+  }
   function playerAttack(state, action, rng) {
     prepareItemCombat(state, rng);
     const e = state.encounter;
@@ -647,11 +686,19 @@ module.exports = function createModule(dependencies) {
           const hpBefore = state.hp;
           const healPotential = dependencies.healingAmount(
             state,
-            state.maxHp * 0.12 * affinity.healing(state),
+            state.maxHp *
+              (awakening.active(state)
+                ? awakening.tuning(state).healRate || 0.12
+                : 0.12) *
+              affinity.healing(state),
           );
           const gained = heal(
             state,
-            state.maxHp * 0.12 * affinity.healing(state),
+            state.maxHp *
+              (awakening.active(state)
+                ? awakening.tuning(state).healRate || 0.12
+                : 0.12) *
+              affinity.healing(state),
           );
           if (awakening.active(state)) {
             const a = state.classAwakening;
@@ -730,19 +777,7 @@ module.exports = function createModule(dependencies) {
           for (const h of hits.filter((h) => h.hit && h.damage > 0)) {
             const beforeCrit =
               h.preCritDamage * (paradox.active(state) ? 1 : 1 + bonus);
-            const holy =
-              Math.max(
-                state.defense *
-                  0.25 *
-                  rift.outgoing(state) *
-                  innate.multiplier(state),
-                beforeCrit * 0.15,
-              ) *
-              (1 -
-                world.defenseReduction(
-                  rift.enemyDefense(state, e.defense),
-                  state.floor,
-                ));
+            const holy = holyDamage(state, e, beforeCrit);
             extraHit("Consecration", holy);
           }
           c.ground--;
@@ -774,6 +809,15 @@ module.exports = function createModule(dependencies) {
             (innate.enabled(state) ? mainStrength : mainDealt) *
               awakening.tuning(state).echo,
           );
+          if (
+            innate.rebalanced(state) &&
+            e.hp > 0 &&
+            rng() < awakening.tuning(state).echoExtra
+          )
+            extraHit(
+              "Arcane Echo bổ sung",
+              mainStrength * awakening.tuning(state).echo,
+            );
           c.barrier += Math.floor(
             state.maxHp * awakening.tuning(state).echoShield,
           );
@@ -854,6 +898,7 @@ module.exports = function createModule(dependencies) {
     physicalRange,
     effectiveResistance,
     attackDamage,
+    holyDamage,
     enemyTurn,
     playerAttack,
   };

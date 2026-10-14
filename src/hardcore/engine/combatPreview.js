@@ -30,9 +30,17 @@ module.exports = function createModule(dependencies) {
       : 0;
     const afterShield = (n) => {
       const remaining = Math.max(0, n - shield);
-      return remaining - innate.manaShieldAmount(state, remaining, skillManaCost(state));
+      return (
+        remaining -
+        innate.manaShieldAmount(
+          state,
+          remaining,
+          innate.rebalanced(state) ? 0 : skillManaCost(state),
+          innate.rebalanced(state) && plan.raw != null,
+        )
+      );
     };
-    const trueAmount = (n) => innate.enabled(state) ? n : afterShield(n);
+    const trueAmount = (n) => (innate.enabled(state) ? n : afterShield(n));
     if (plan.trueDamage)
       return {
         low: trueAmount(
@@ -71,23 +79,26 @@ module.exports = function createModule(dependencies) {
       low: afterShield(low),
       high: afterShield(high),
       magic: Boolean(plan.magic),
-      critChance: plan.magic || innate.combat(state)?.titan
-        ? 0
-        : plan.critical == null
-          ? e.critChance || 0
-          : plan.critical
-            ? 1
-            : 0,
-      chance: (plan.magic
-        ? 1
-        : rift.hitChance(
-            state,
-            world.hitChance(
-              e.accuracy,
-              state.evasion,
-              state.evasionCap ?? 0.45,
-            ),
-          )) * (1 - innate.avoidChance(state)),
+      critChance:
+        plan.magic || innate.combat(state)?.titan
+          ? 0
+          : plan.critical == null
+            ? e.critChance || 0
+            : plan.critical
+              ? 1
+              : 0,
+      chance:
+        (plan.magic
+          ? 1
+          : rift.hitChance(
+              state,
+              world.hitChance(
+                e.accuracy,
+                state.evasion,
+                state.evasionCap ?? 0.45,
+              ),
+            )) *
+        (1 - innate.avoidChance(state)),
     };
   }
 
@@ -153,7 +164,7 @@ module.exports = function createModule(dependencies) {
         : 0;
 
     if (rift.enabled(state)) {
-      const forecast = (raw) => {
+      const forecast = (raw, echoExtra = false) => {
         const copy = structuredClone(state),
           target = copy.encounter;
         bosses.beginAction(copy, action);
@@ -211,8 +222,16 @@ module.exports = function createModule(dependencies) {
             }
           };
           if (skill && copy.classKey === "sorceress" && a.echo)
-            extra(main * awakening.tuning(copy).echo);
-          if (skill && copy.classKey === "necromancer" && a.totems === awakening.tuning(copy).totems - 1)
+            extra(
+              main *
+                awakening.tuning(copy).echo *
+                (echoExtra && innate.rebalanced(copy) ? 2 : 1),
+            );
+          if (
+            skill &&
+            copy.classKey === "necromancer" &&
+            a.totems === awakening.tuning(copy).totems - 1
+          )
             extra(main * awakening.tuning(copy).nova);
           if (
             copy.classKey === "paladin" &&
@@ -220,16 +239,12 @@ module.exports = function createModule(dependencies) {
             main > 0
           ) {
             for (const h of hits.filter((h) => h.hit && h.damage > 0)) {
-              const holy =
-                Math.max(
-                  copy.defense * 0.25 * rift.outgoing(copy) * innate.multiplier(state, action),
-                  h.preCritDamage * factor * 0.15,
-                ) *
-                (1 -
-                  world.defenseReduction(
-                    rift.enemyDefense(copy, target.defense),
-                    copy.floor,
-                  ));
+              const holy = dependencies.holyDamage(
+                copy,
+                target,
+                h.preCritDamage * factor,
+                action,
+              );
               extra(holy);
             }
           }
@@ -238,14 +253,14 @@ module.exports = function createModule(dependencies) {
       };
       return {
         low: forecast(range[0]),
-        high: forecast(range[1]),
+        high: forecast(range[1], true),
         magic,
         shots,
         extraShot:
           skill && state.classKey === "amazon" && Boolean(shrineActive(state)),
       };
     }
-    const extraDamage = (copy, hit, total, raw) => {
+    const extraDamage = (copy, hit, total, raw, echoExtra = false) => {
       if (!awakening.active(copy) || !hit.hit || total <= 0) return total;
       const a = copy.classAwakening;
       if (skill && copy.classKey === "amazon" && a.focus === 2) {
@@ -268,20 +283,27 @@ module.exports = function createModule(dependencies) {
           total = Math.max(1, Math.floor(total * 0.75));
       }
       if (skill && copy.classKey === "sorceress" && a.echo)
-        total += Math.floor(total * awakening.tuning(copy).echo);
-      if (skill && copy.classKey === "necromancer" && a.totems === awakening.tuning(copy).totems - 1)
+        total +=
+          Math.floor(total * awakening.tuning(copy).echo) *
+          (echoExtra && innate.rebalanced(copy) ? 2 : 1);
+      if (
+        skill &&
+        copy.classKey === "necromancer" &&
+        a.totems === awakening.tuning(copy).totems - 1
+      )
         total += Math.floor(total * awakening.tuning(copy).nova);
       if (copy.classKey === "paladin" && awakening.ground(copy))
         total += Math.floor(
-          Math.max(
-            copy.defense * 0.25,
-            hit.preCritDamage * (paradox.active(copy) ? 1 : 1 + bonus) * 0.15,
-          ) *
-            (1 - world.defenseReduction(e.defense, copy.floor)),
+          dependencies.holyDamage(
+            copy,
+            e,
+            hit.preCritDamage * (paradox.active(copy) ? 1 : 1 + bonus),
+            action,
+          ),
         );
       return total;
     };
-    const damage = (raw) => {
+    const damage = (raw, echoExtra = false) => {
       if (bosses.on(e)) {
         const copy = {
           ...state,
@@ -313,6 +335,7 @@ module.exports = function createModule(dependencies) {
             lastHit,
             Math.floor(total * (paradox.active(copy) ? 1 : 1 + bonus)),
             raw,
+            echoExtra,
           ),
         );
       }
@@ -334,11 +357,11 @@ module.exports = function createModule(dependencies) {
       if (e.mechanic === "riftwalker" && e.combatTurn % 3 === 0) n = 0;
       if (!paradox.active(state) && e.mechanic === "deimoss" && n > 0)
         n = Math.max(1, Math.floor(n * 0.75));
-      return n > 0 ? extraDamage(previewState, hit, n, raw) : n;
+      return n > 0 ? extraDamage(previewState, hit, n, raw, echoExtra) : n;
     };
     return {
       low: damage(range[0]),
-      high: damage(range[1]),
+      high: damage(range[1], true),
       magic,
       shots,
       extraShot:

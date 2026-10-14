@@ -1,5 +1,19 @@
 [
   {
+    "id": "23927362-b96f-4700-b60b-64482d5797e1",
+    "updatedAt": "2026-10-14T08:27:26.549Z",
+    "auditedAt": "2026-10-14T08:27:26.549Z",
+    "title": "Sinh tồn v3.1: cân bằng class và loot",
+    "changes": [
+      "Run mới dùng luật mới; run đang chơi giữ snapshot cũ. Mục tiêu thắng tầng 999: 8–12%.",
+      "Druid: Mark +20%; thức tỉnh hồi 10% HP, Bark 4%, trần 18%. Assassin: Crit hồi 2% HP. Barbarian: Barrier 5% HP/Fury.",
+      "Necromancer: 3 Ward tạo Anchor; đánh thường dùng Anchor +15% DMG. Paladin: Vindicate +15%, hạ quái hồi 20% HP; Holy = 20% DEF + RES, chỉ boss giảm bằng DEF.",
+      "Sorceress: Mana Shield không tiêu MP, 2 lần/combat và mỗi phase, không dùng khi Phòng thủ. Echo 80%, 20% thêm Echo; Barrier 15% HP.",
+      "Item Lv.1–3 giữ đủ hiệu lực; Lv.4–8 = 3,7/4,2/4,5/4,6/4,7 lần, sau đó +0,1/cấp. Giảm trọng số đồ đã có theo level, tránh roll ID liên tiếp nếu còn lựa chọn.",
+      "Hệ số DMG đánh boss: Amazon 2,1; Barbarian 0,504; Assassin 0,36; Druid 0,3; Necromancer 0,135; Paladin 0,5; Sorceress 1,6."
+    ]
+  },
+  {
     "id": "fcb25434-2a5c-438d-94b1-872dbed710f0",
     "updatedAt": "2026-10-14T05:56:22.239Z",
     "auditedAt": "2026-10-14T05:56:22.239Z",

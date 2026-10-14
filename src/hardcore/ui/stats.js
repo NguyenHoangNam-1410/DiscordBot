@@ -134,7 +134,10 @@ module.exports = function createModule(dependencies) {
     const awakening = require("../awakening");
     const barrier = awakening.combat(s)
       ? s.classKey === "druid"
-        ? Math.min(s.classAwakening.bark || 0, Math.floor(s.maxHp * awakening.tuning(s).barkCap))
+        ? Math.min(
+            s.classAwakening.bark || 0,
+            Math.floor(s.maxHp * awakening.tuning(s).barkCap),
+          )
         : awakening.combat(s).barrier || 0
       : 0;
     const detail = bosses.brainControl(s)
@@ -144,7 +147,7 @@ module.exports = function createModule(dependencies) {
           barbarian: "Vật lý, có thể trượt/Crit.",
           assassin: "Vật lý, có thể trượt/Crit; né phản công.",
           sorceress: "Phép luôn trúng, không Crit.",
-          druid: `Vật lý, có thể trượt/Crit; hồi tối đa ${E.hp} **${money(core.healingAmount(s, s.maxHp * 0.12))} HP** cho bạn (**12% Max HP**${s.healingReduction ? " trước giảm hồi phục" : ""}).`,
+          druid: `Vật lý, có thể trượt/Crit; hồi tối đa ${E.hp} **${money(core.healingAmount(s, s.maxHp * (require("../awakening").active(s) ? require("../awakening").tuning(s).healRate || 0.12 : 0.12)))} HP** cho bạn (**${require("../awakening").active(s) && require("../awakening").tuning(s).healRate ? 10 : 12}% Max HP**${s.healingReduction ? " trước giảm hồi phục" : ""}).`,
           necromancer: royal.freeMagic(s)
             ? "Phép luôn trúng, không Crit; " +
               (s.encounter?.astralGuardLastAction

@@ -1,0 +1,166 @@
+{
+  "druid": {
+    "runs": 10,
+    "startRunOffset": 50,
+    "deathFloors": {
+      "100": 2,
+      "750": 1,
+      "800": 1,
+      "850": 2,
+      "950": 2
+    },
+    "classInnateRevision": 2,
+    "itemLevelCurveVersion": 2,
+    "lootRulesVersion": 2,
+    "codeFingerprint": "a39a7ae15df3edfefc82052ce8aaa47672d6abae3f3989ae592f79df639328a0",
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "3.1.0",
+    "actualStatProfile": {
+      "balanceVersion": "3.1.0",
+      "statProfile": {
+        "version": 3,
+        "masteryVersion": 1,
+        "classKey": "druid",
+        "core": {
+          "str": 20,
+          "dex": 16,
+          "vit": 20,
+          "ene": 24,
+          "baseHp": 42,
+          "baseMana": 2,
+          "baseRes": 6,
+          "baseCrit": 0.05,
+          "strWeight": 0.8
+        },
+        "initialVitHp": 3,
+        "mastery": {
+          "name": "Wild Growth",
+          "accuracy": 1.2,
+          "evasion": 0.25,
+          "crit": 0.0004,
+          "critCap": 0.4,
+          "evasionCap": 0.35,
+          "hp": 4,
+          "strDefense": 0.2,
+          "vitDefense": 0.2,
+          "res": 0.16,
+          "mana": 0.045454545454545456,
+          "physicalPower": 1,
+          "spellPower": 1,
+          "vitPhysical": 0.12,
+          "enePhysical": 0.1,
+          "vitSpell": 0
+        },
+        "powers": {
+          "basePower": 1.12,
+          "attributePower": 1,
+          "equipmentPower": 1,
+          "skillPower": 1
+        }
+      }
+    },
+    "actualBossDamageProfile": {
+      "version": 1,
+      "classKey": "druid",
+      "playerDamage": 0.3
+    },
+    "balanceProfile": {
+      "power": 1.12
+    },
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "resumeValidation": "once_per_run",
+    "deathBosses": {
+      "assur": 3,
+      "butcher": 1,
+      "samael": 2,
+      "jitan": 1,
+      "inarius": 1
+    },
+    "gameplayVersion": "3.1.0",
+    "simulationSeed": "survival-current-holdout-2026-10-13",
+    "checkpointRule": {
+      "variant": "baseline",
+      "fromClearedFloor": null,
+      "intervalBefore": 5,
+      "pointsBefore": 5,
+      "intervalAfter": 5,
+      "pointsAfter": 5,
+      "healAtCheckpoint": "Full HP and +2 potions, respecting the existing cap"
+    },
+    "bossRoster": "current",
+    "bossDamageExperiment": {},
+    "bossPolicy": "public telegraphs v2",
+    "stake": 100000,
+    "completedPercent": 20,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 100,
+        "count": 2
+      },
+      {
+        "floor": 850,
+        "count": 2
+      },
+      {
+        "floor": 950,
+        "count": 2
+      },
+      {
+        "floor": 750,
+        "count": 1
+      },
+      {
+        "floor": 800,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": null,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 10,
+    "passedFloor50": 10,
+    "passedFloor100": 8,
+    "passedFloor699": 8,
+    "passedFloor700": 8,
+    "passedFloor800": 6,
+    "passedFloor900": 4,
+    "reachedFinalBoss": 2,
+    "completed999": 2,
+    "runFloors": [
+      99,
+      749,
+      849,
+      949,
+      99,
+      999,
+      949,
+      849,
+      999,
+      799
+    ],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": {
+      "maxHp": 5037,
+      "damageMax": 644,
+      "defense": 492,
+      "potions": 10,
+      "resistance": 70
+    },
+    "finalBossMeans": {
+      "maxHp": 11268,
+      "damageMax": 1539,
+      "defense": 654
+    },
+    "estimatedCompletionPercent": null,
+    "maxFloor": 999,
+    "medianFloor": 849,
+    "meanFloor": 734
+  }
+}

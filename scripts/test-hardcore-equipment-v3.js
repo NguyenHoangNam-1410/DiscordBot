@@ -29,6 +29,10 @@ function test(name, fn) {
 }
 function state(k = "assassin") {
   const s = stats.createState(k, 10000);
+  // Preserve saved original equipment curve and loot contracts.
+  s.itemLevelCurveVersion = 1;
+  delete s.lootRulesVersion;
+  s.classInnateRevision = 1;
   s.encounter = { type: "empty", name: "Empty" };
   return s;
 }

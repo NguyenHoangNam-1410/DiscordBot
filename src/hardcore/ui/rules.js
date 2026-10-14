@@ -285,7 +285,7 @@ module.exports = function createModule(dependencies) {
       fields.combat.push({
         name: "Level trang bị V3",
         value:
-          "Level không giới hạn. Tổng hiệu lực Lv.1–5: 100/160/200/230/250%; các cấp sau tiến dần đến 270%. Nội tại/affinity tính một lần mỗi ID. Buff và nguyền chưa giải dùng cùng đường cong. Run cũ giữ luật đã lưu.",
+          "Level không giới hạn. Luật mới giữ đủ hiệu lực 3 cấp đầu: Lv.1–8 = 100/200/300/370/420/450/460/470%; mỗi cấp sau thêm 10%. Giảm trọng số món đang sở hữu: Lv.1–2 còn 80%, Lv.3–4 còn 50%, Lv.5 còn 25%, Lv.6+ còn 10%; tránh roll liên tiếp cùng ID nếu nhóm đủ điều kiện còn lựa chọn khác. Nội tại/affinity tính một lần mỗi ID. Buff và nguyền chưa giải dùng cùng đường cong. Run cũ giữ luật đã lưu.",
       });
       const forge = fields.rewards.find((f) => f.name.includes("Horadric"));
       if (forge)

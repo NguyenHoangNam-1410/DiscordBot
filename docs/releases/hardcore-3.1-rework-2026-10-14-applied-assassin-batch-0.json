@@ -1,0 +1,185 @@
+{
+  "assassin": {
+    "runs": 25,
+    "startRunOffset": 0,
+    "deathFloors": {
+      "50": 16,
+      "100": 4,
+      "150": 1,
+      "200": 2
+    },
+    "classInnateRevision": 2,
+    "itemLevelCurveVersion": 2,
+    "lootRulesVersion": 2,
+    "codeFingerprint": "a39a7ae15df3edfefc82052ce8aaa47672d6abae3f3989ae592f79df639328a0",
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "3.1.0",
+    "actualStatProfile": {
+      "balanceVersion": "3.1.0",
+      "statProfile": {
+        "version": 3,
+        "masteryVersion": 1,
+        "classKey": "assassin",
+        "core": {
+          "str": 18,
+          "dex": 30,
+          "vit": 18,
+          "ene": 14,
+          "baseHp": 46,
+          "baseMana": 2,
+          "baseRes": 3,
+          "baseCrit": 0.08,
+          "strWeight": 0.3
+        },
+        "initialVitHp": 4,
+        "mastery": {
+          "name": "Shadow Mastery",
+          "accuracy": 1.2,
+          "evasion": 0.9,
+          "crit": 0.0018,
+          "critCap": 0.65,
+          "evasionCap": 0.55,
+          "hp": 4,
+          "strDefense": 0.15,
+          "vitDefense": 0.1,
+          "res": 0.1,
+          "mana": 0.04,
+          "physicalPower": 1.1,
+          "spellPower": 1,
+          "vitPhysical": 0,
+          "enePhysical": 0,
+          "vitSpell": 0
+        },
+        "powers": {
+          "basePower": 1,
+          "attributePower": 1,
+          "equipmentPower": 1,
+          "skillPower": 1
+        }
+      }
+    },
+    "actualBossDamageProfile": {
+      "version": 1,
+      "classKey": "assassin",
+      "playerDamage": 0.36
+    },
+    "balanceProfile": {
+      "power": 1
+    },
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "resumeValidation": "once_per_run",
+    "deathBosses": {
+      "giyua": 2,
+      "azmodan": 1,
+      "lazarus": 3,
+      "atanna": 2,
+      "phoboss": 1,
+      "juris_khan": 3,
+      "dark_star_dragon": 1,
+      "manoruk": 1,
+      "control": 2,
+      "zakarum": 1,
+      "astrogha": 2,
+      "assur": 2,
+      "inarius": 1,
+      "akarat": 1
+    },
+    "gameplayVersion": "3.1.0",
+    "simulationSeed": "survival-current-holdout-2026-10-13",
+    "checkpointRule": {
+      "variant": "baseline",
+      "fromClearedFloor": null,
+      "intervalBefore": 5,
+      "pointsBefore": 5,
+      "intervalAfter": 5,
+      "pointsAfter": 5,
+      "healAtCheckpoint": "Full HP and +2 potions, respecting the existing cap"
+    },
+    "bossRoster": "current",
+    "bossDamageExperiment": {},
+    "bossPolicy": "public telegraphs v2",
+    "stake": 100000,
+    "completedPercent": 8,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 50,
+        "count": 16
+      },
+      {
+        "floor": 100,
+        "count": 4
+      },
+      {
+        "floor": 200,
+        "count": 2
+      },
+      {
+        "floor": 150,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": null,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 25,
+    "passedFloor50": 9,
+    "passedFloor100": 5,
+    "passedFloor699": 2,
+    "passedFloor700": 2,
+    "passedFloor800": 2,
+    "passedFloor900": 2,
+    "reachedFinalBoss": 2,
+    "completed999": 2,
+    "runFloors": [
+      49,
+      199,
+      49,
+      99,
+      49,
+      149,
+      49,
+      49,
+      49,
+      49,
+      49,
+      49,
+      49,
+      99,
+      99,
+      199,
+      49,
+      49,
+      49,
+      49,
+      49,
+      49,
+      99,
+      999,
+      999
+    ],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": {
+      "maxHp": 2499,
+      "damageMax": 615,
+      "defense": 146,
+      "potions": 10,
+      "resistance": 58
+    },
+    "finalBossMeans": {
+      "maxHp": 11268,
+      "damageMax": 1539,
+      "defense": 654
+    },
+    "estimatedCompletionPercent": null,
+    "maxFloor": 999,
+    "medianFloor": 49,
+    "meanFloor": 149
+  }
+}

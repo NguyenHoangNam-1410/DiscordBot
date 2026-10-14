@@ -1,0 +1,198 @@
+{
+  "barbarian": {
+    "runs": 25,
+    "startRunOffset": 0,
+    "deathFloors": {
+      "50": 7,
+      "100": 1,
+      "150": 3,
+      "350": 1,
+      "556": 1,
+      "600": 1,
+      "666": 1,
+      "697": 1,
+      "700": 2,
+      "750": 1,
+      "800": 1,
+      "850": 1,
+      "900": 1
+    },
+    "classInnateRevision": 2,
+    "itemLevelCurveVersion": 2,
+    "lootRulesVersion": 2,
+    "codeFingerprint": "a39a7ae15df3edfefc82052ce8aaa47672d6abae3f3989ae592f79df639328a0",
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "3.1.0",
+    "actualStatProfile": {
+      "balanceVersion": "3.1.0",
+      "statProfile": {
+        "version": 3,
+        "masteryVersion": 1,
+        "classKey": "barbarian",
+        "core": {
+          "str": 30,
+          "dex": 14,
+          "vit": 28,
+          "ene": 8,
+          "baseHp": 46,
+          "baseMana": 2,
+          "baseRes": 2,
+          "baseCrit": 0.05,
+          "strWeight": 1
+        },
+        "initialVitHp": 3,
+        "mastery": {
+          "name": "Might",
+          "accuracy": 1.2,
+          "evasion": 0.15,
+          "crit": 0.0003,
+          "critCap": 0.4,
+          "evasionCap": 0.3,
+          "hp": 4,
+          "strDefense": 0.4,
+          "vitDefense": 0.2,
+          "res": 0.1,
+          "mana": 0.04,
+          "physicalPower": 1.2,
+          "spellPower": 1,
+          "vitPhysical": 0,
+          "enePhysical": 0,
+          "vitSpell": 0
+        },
+        "powers": {
+          "basePower": 1.64,
+          "attributePower": 1,
+          "equipmentPower": 1,
+          "skillPower": 1
+        }
+      }
+    },
+    "actualBossDamageProfile": {
+      "version": 1,
+      "classKey": "barbarian",
+      "playerDamage": 0.504
+    },
+    "balanceProfile": {
+      "power": 1.64
+    },
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "resumeValidation": "once_per_run",
+    "deathBosses": {
+      "manoruk": 2,
+      "bul_kathos": 1,
+      "kabraxis": 1,
+      "giyua": 2,
+      "inarius": 2,
+      "nithogur": 3,
+      "astrogha": 1,
+      "azmodan": 1,
+      "atanna": 1,
+      "lazarus": 1,
+      "xazax": 2,
+      "lucion": 1,
+      "control": 1,
+      "phoboss": 1
+    },
+    "gameplayVersion": "3.1.0",
+    "simulationSeed": "survival-current-holdout-2026-10-13",
+    "checkpointRule": {
+      "variant": "baseline",
+      "fromClearedFloor": null,
+      "intervalBefore": 5,
+      "pointsBefore": 5,
+      "intervalAfter": 5,
+      "pointsAfter": 5,
+      "healAtCheckpoint": "Full HP and +2 potions, respecting the existing cap"
+    },
+    "bossRoster": "current",
+    "bossDamageExperiment": {},
+    "bossPolicy": "public telegraphs v2",
+    "stake": 100000,
+    "completedPercent": 12,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 50,
+        "count": 7
+      },
+      {
+        "floor": 150,
+        "count": 3
+      },
+      {
+        "floor": 700,
+        "count": 2
+      },
+      {
+        "floor": 100,
+        "count": 1
+      },
+      {
+        "floor": 350,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": null,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 25,
+    "passedFloor50": 18,
+    "passedFloor100": 17,
+    "passedFloor699": 9,
+    "passedFloor700": 7,
+    "passedFloor800": 5,
+    "passedFloor900": 3,
+    "reachedFinalBoss": 3,
+    "completed999": 3,
+    "runFloors": [
+      49,
+      49,
+      665,
+      49,
+      49,
+      699,
+      49,
+      999,
+      349,
+      999,
+      149,
+      149,
+      999,
+      599,
+      849,
+      899,
+      49,
+      749,
+      49,
+      696,
+      99,
+      699,
+      149,
+      799,
+      555
+    ],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": {
+      "maxHp": 4089,
+      "damageMax": 821,
+      "defense": 565,
+      "potions": 10,
+      "resistance": 70
+    },
+    "finalBossMeans": {
+      "maxHp": 11268,
+      "damageMax": 1539,
+      "defense": 654
+    },
+    "estimatedCompletionPercent": null,
+    "maxFloor": 999,
+    "medianFloor": 555,
+    "meanFloor": 457.76
+  }
+}

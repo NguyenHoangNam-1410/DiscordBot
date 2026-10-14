@@ -274,7 +274,11 @@ module.exports = function createModule(dependencies) {
         require("../rift").thresholds(state, beforeEnemyHp, e.hp);
         require("../rift").endAction(state, acted.dealt || 0);
         const innateFrame = require("../innate").combat(state);
-        if (innateFrame && state.classKey === "sorceress")
+        if (
+          innateFrame &&
+          !require("../innate").rebalanced(state) &&
+          state.classKey === "sorceress"
+        )
           innateFrame.counterSkillCost = dependencies.skillManaCost(state);
         if (action !== "ritual_claim") paradox.afterAction(state, action);
         state.lastLog += acted.log;

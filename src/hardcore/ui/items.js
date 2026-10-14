@@ -109,7 +109,7 @@ module.exports = function createModule(dependencies) {
   function itemText(item, level = 1, state = null) {
     if (item.category === "consumable")
       return ticketIcon(item.id) + " **Vật phẩm:** " + item.text;
-    const scale = item.catalogVersion === 3 ? rules.scale(level) : level;
+    const scale = item.catalogVersion === 3 ? rules.scale(level, state) : level;
     return (
       effectText(item.effects, scale) +
       passiveText(item) +
@@ -156,11 +156,12 @@ module.exports = function createModule(dependencies) {
   ) {
     const removed = afterLevel === 0;
     if (rules.enabled(state)) {
-      beforeLevel = rules.scale(beforeLevel) - rules.scale(cleansedLevels);
+      beforeLevel =
+        rules.scale(beforeLevel, state) - rules.scale(cleansedLevels, state);
       afterLevel =
         afterLevel === 0
           ? 0
-          : rules.scale(afterLevel) - rules.scale(cleansedLevels);
+          : rules.scale(afterLevel, state) - rules.scale(cleansedLevels, state);
     }
     return Object.entries(effects)
       .map(([key, value]) => {
@@ -234,8 +235,7 @@ module.exports = function createModule(dependencies) {
                   : "")
               );
             })
-            .join(STAT_SEPARATOR) +
-          (status ? "\n" + status : ""),
+            .join(STAT_SEPARATOR) + (status ? "\n" + status : ""),
       };
     });
   }

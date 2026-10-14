@@ -27,6 +27,10 @@ function test(n, f) {
 }
 function state(mods = {}, k = "amazon") {
   const s = stats.createState(k, 10000);
+  // Saved original V3.1 combat fixture; rework contracts have a separate suite.
+  s.classInnateRevision = 1;
+  s.itemLevelCurveVersion = 1;
+  delete s.lootRulesVersion;
   Object.assign(s.rift.stacks, mods);
   s.floor = 101;
   s.encounter = {

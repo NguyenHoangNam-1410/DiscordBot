@@ -331,6 +331,7 @@ function createState(
     require("../rift").activate(state);
     state.classAwakeningVersion = 1;
     state.classInnateVersion = 1;
+    state.classInnateRevision = 2;
     state.statSystemVersion = statsV3.VERSION;
     state.classMasteryVersion = statsV3.MASTERY_VERSION;
     state.statProfile = statsV3.snapshot(

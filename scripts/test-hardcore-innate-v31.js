@@ -45,6 +45,10 @@ function enemy() {
 }
 function fresh(k, awakened = false) {
   const s = stats.createState(k, 10000);
+  // Saved original V3.1 fixture: new rework is tested separately.
+  s.classInnateRevision = 1;
+  s.itemLevelCurveVersion = 1;
+  delete s.lootRulesVersion;
   Object.assign(s, {
     floor: 6,
     cleared: 5,
@@ -107,12 +111,12 @@ try {
     assert.equal(
       require("../src/hardcore/bosses/balanceV2").snapshot("assassin")
         .playerDamage,
-      0.94,
+      0.36,
     );
     assert.equal(
       require("../src/hardcore/bosses/balanceV2").snapshot("druid")
         .playerDamage,
-      0.55,
+      0.3,
     );
     for (const k of Object.keys(stats.CLASSES)) {
       const s = fresh(k);
@@ -489,15 +493,16 @@ try {
       const c = awake.combat(s);
       if (k === "druid") s.classAwakening.bark = s.maxHp;
       else c.barrier = 67;
-      const amount = k === "druid" ? Math.floor(s.maxHp * awake.tuning(s).barkCap) : 67;
+      const amount =
+        k === "druid" ? Math.floor(s.maxHp * awake.tuning(s).barkCap) : 67;
       const before = JSON.stringify(s);
       const text = view.embed(s, "u").toJSON().description;
-      const line = text.split("\n").find(x => x.includes("ACC:"));
+      const line = text.split("\n").find((x) => x.includes("ACC:"));
       assert(line.includes("Barrier: **" + amount + "**"), k);
       assert.equal(JSON.stringify(s), before);
       if (k === "druid") s.classAwakening.bark = 0;
       else c.barrier = 0;
-      assert(!view.embed(s,"u").toJSON().description.includes("Barrier:"));
+      assert(!view.embed(s, "u").toJSON().description.includes("Barrier:"));
     }
   });
   test("Mana Shield uses locked Paradox cost through counters and handles portal ambush", () => {
