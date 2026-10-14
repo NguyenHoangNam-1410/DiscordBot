@@ -202,7 +202,7 @@ module.exports = function createModule(dependencies) {
       if (require("../events/explorationMarks").enabled(s))
         return show(
           e.name,
-          `${E.luck} LUCK: Lucky Break ${percent(lucky)} (LUCK ×0,25%, tối đa 50% ở 200 LUCK).`,
+          `${E.luck} Lucky Break ${percent(lucky)}.`,
           e.kind === "tax"
             ? [
                 option("Nộp thuế", [
