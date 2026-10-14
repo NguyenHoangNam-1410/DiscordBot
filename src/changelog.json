@@ -1,5 +1,14 @@
 [
   {
+    "id": "fcb25434-2a5c-438d-94b1-872dbed710f0",
+    "updatedAt": "2026-10-14T05:56:22.239Z",
+    "auditedAt": "2026-10-14T05:56:22.239Z",
+    "title": "Sinh tồn: tinh gọn tiến độ set",
+    "changes": [
+      "Bỏ dòng tên di vật LR dưới Set Diệt Vương và Set Tinh Tú trong Túi; giữ tiến độ, danh sách item và trạng thái set."
+    ]
+  },
+  {
     "id": "27599a65-5085-4769-869e-dfff7261ee89",
     "updatedAt": "2026-10-14T03:04:14.770Z",
     "auditedAt": "2026-10-14T03:04:14.770Z",

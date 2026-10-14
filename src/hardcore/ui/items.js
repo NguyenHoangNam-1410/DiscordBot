@@ -216,9 +216,6 @@ module.exports = function createModule(dependencies) {
       return {
         name: relicIcon(id) + " Set " + set.name + " (" + count + "/5)",
         value:
-          "→ **" +
-          core.RELIC_ITEMS[id].name +
-          " [LR]**\n" +
           set.ids
             .map((key, n) => {
               const item = members[n];
