@@ -1,5 +1,15 @@
 [
   {
+    "id": "c6a7b2af-0f1e-414c-a2c9-9f28cb416fc4",
+    "updatedAt": "2026-10-14T01:20:23.873Z",
+    "auditedAt": "2026-10-14T01:20:23.873Z",
+    "title": "Sinh tồn: nút bấm cho tình huống ít lựa chọn",
+    "changes": [
+      "UI có tối đa 4 action dùng nút bấm; trên 4 action tiếp tục dùng selector. Không tính Rút thưởng và các nút Chỉ số, Túi, Rift, Chi tiết vào ngưỡng này.",
+      "Các lựa chọn bị khóa vẫn tính vào số action để giao diện không đổi theo MP, bình hoặc xu; menu chọn món giải nguyền vẫn giữ."
+    ]
+  },
+  {
     "id": "aac86075-0982-43cc-9700-6a3700b9eb30",
     "updatedAt": "2026-10-13T15:29:17.339Z",
     "auditedAt": "2026-10-13T15:29:17.339Z",

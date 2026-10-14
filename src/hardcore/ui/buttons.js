@@ -106,6 +106,9 @@ module.exports = function createModule(dependencies) {
 
   function eventMenuActions(state, actions = core.actions(state)) {
     if (
+      actions.filter(
+        (a) => a.action !== "retreat" && !a.action.startsWith("view_"),
+      ).length <= 4 ||
       state.gameplayVersion !== 3 ||
       state.phase === "upgrade" ||
       state.mode?.startsWith("tower") ||

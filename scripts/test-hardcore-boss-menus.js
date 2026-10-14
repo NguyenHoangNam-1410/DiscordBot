@@ -516,6 +516,56 @@ async function main() {
     assert.equal(JSON.stringify(s), before);
   });
 
+  await test("At most four event actions use buttons, five use selector; retreat and tabs do not count", () => {
+    const run = runBoss("lilith"),
+      s = run.state;
+    s.phase = "severance";
+    s.encounter = { type: "severance" };
+    s.modifiers = Object.fromEntries(
+      Object.keys(s.modifiers).map((k) => [k, 0]),
+    );
+    for (const key of [
+      "stone_skin",
+      "bloodlust",
+      "fortified",
+      "elemental_dominion",
+    ])
+      s.modifiers[key] = 1;
+    assert.equal(core.actions(s).length, 4);
+    const snapshot = JSON.stringify(s);
+    let components = view
+      .rows(run.session.id, s)
+      .flatMap((r) => r.toJSON().components);
+    assert.equal(view.eventMenuActions(s).length, 0);
+    for (const a of core.actions(s))
+      assert(
+        components.some(
+          (c) => c.type === 2 && c.custom_id.endsWith(":" + a.action),
+        ),
+      );
+    assert(components.some((c) => c.custom_id.endsWith(":retreat")));
+    assert(
+      components.filter((c) => c.custom_id.includes(":view_")).length >= 3,
+    );
+    assert.equal(JSON.stringify(s), snapshot);
+    s.modifiers.swift_horror = 1;
+    assert.equal(core.actions(s).length, 5);
+    components = view
+      .rows(run.session.id, s)
+      .flatMap((r) => r.toJSON().components);
+    assert(
+      components.some(
+        (c) => c.type === 3 && c.custom_id.endsWith(":event_select"),
+      ),
+    );
+    assert(
+      components.some((c) => c.type === 2 && c.custom_id.endsWith(":retreat")),
+    );
+    const actions = core.actions(s).map((a) => ({ ...a, disabled: true }));
+    assert(view.eventMenuActions(s, actions).length > 0);
+    assert.equal(view.eventMenuActions(s, actions.slice(0, 4)).length, 0);
+    repo.deleteSession(run.session.id);
+  });
   await test("Event selectors and checkpoint buttons route once and publish the new UI", async () => {
     const gear = Object.values(core.ITEMS)
       .flat()
@@ -586,9 +636,12 @@ async function main() {
         components = rows.flatMap((r) => r.components),
         menu = components.find((c) => c.custom_id?.endsWith(":event_select"));
       assert(
-        name === "checkpoint"
+        !menu
           ? components.some(
-              (c) => c.type === 2 && c.custom_id?.endsWith(":upgrade_str"),
+              (c) =>
+                c.type === 2 &&
+                !c.custom_id?.includes(":view_") &&
+                !c.custom_id?.endsWith(":retreat"),
             )
           : menu,
         name,
@@ -607,12 +660,13 @@ async function main() {
           ? "sever_stone_skin"
           : name === "checkpoint"
             ? "upgrade_str"
-            : menu.options[0].value;
-      const raw = name === "checkpoint" ? value : "event_select";
-      const interactionType =
-        name === "checkpoint"
-          ? { isButton: () => true, isStringSelectMenu: () => false }
-          : {};
+            : menu
+              ? menu.options[0].value
+              : core.actions(s).find((a) => !a.disabled).action;
+      const raw = menu ? "event_select" : value;
+      const interactionType = !menu
+        ? { isButton: () => true, isStringSelectMenu: () => false }
+        : {};
       const input = mock(run.session.id, s.turn, raw, [value], interactionType);
       await route(input);
       assert.equal(input.responses.acks, 1);
@@ -640,7 +694,14 @@ async function main() {
       .rows(run.session.id, s)
       .flatMap((r) => r.toJSON().components)
       .find((c) => c.custom_id?.endsWith(":event_select"));
-    assert(menu.disabled);
+    if (menu) assert(menu.disabled);
+    else {
+      const buys = view
+        .rows(run.session.id, s)
+        .flatMap((r) => r.toJSON().components)
+        .filter((c) => c.custom_id?.includes(":buy_"));
+      assert(buys.length > 0 && buys.every((c) => c.type === 2 && c.disabled));
+    }
     const before = repo.getSession(run.session.id).state_json;
     for (const values of [[], ["attack"], ["buy_0"], ["buy_0", "buy_1"]]) {
       const input = mock(run.session.id, s.turn, "event_select", values);
@@ -664,7 +725,8 @@ async function main() {
   });
 
   await test("Inarius Lilith starts at 50 HP, protection caps at 50 and saved runs never gain HP", () => {
-    const run = runBoss("inarius"), s = run.state,
+    const run = runBoss("inarius"),
+      s = run.state,
       m = s.encounter.boss.mechanicState;
     assert.equal(m.lilithHp, 50);
     assert(display.status(s).includes("50/50 HP"));
@@ -714,9 +776,17 @@ async function main() {
         if (id === "inarius") {
           const c = catalog.config(id, s.floor);
           assert(detail.includes(`**${c.cycle} lượt**`));
-          assert(detail.includes(`**${Number((c.power * 100).toFixed(1))} HP mỗi lượt**`));
+          assert(
+            detail.includes(
+              `**${Number((c.power * 100).toFixed(1))} HP mỗi lượt**`,
+            ),
+          );
           assert(detail.includes("vẫn gây sát thương"));
-          assert(status.includes("ô 1") && status.includes("ô 3") && status.includes("ô 2"));
+          assert(
+            status.includes("ô 1") &&
+              status.includes("ô 3") &&
+              status.includes("ô 2"),
+          );
           assert(status.includes("Đang bật"));
           s.encounter.boss.mechanicState.openUntil = s.encounter.boss.round + 2;
           assert(display.status(s).includes("Đang tắt"));
