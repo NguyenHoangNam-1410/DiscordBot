@@ -1,5 +1,24 @@
 [
   {
+    "id": "27599a65-5085-4769-869e-dfff7261ee89",
+    "updatedAt": "2026-10-14T03:04:14.770Z",
+    "auditedAt": "2026-10-14T03:04:14.770Z",
+    "title": "Sinh tồn: hiển thị Barrier cạnh ACC",
+    "changes": [
+      "Battle UI hiển thị lượng Barrier còn lại cạnh ACC khi có Fury Barrier, Echo Shield hoặc Bark; hết Barrier thì tự ẩn."
+    ]
+  },
+  {
+    "id": "c531f201-5d1b-4523-8679-c4fa833274ea",
+    "updatedAt": "2026-10-14T03:01:18.137Z",
+    "auditedAt": "2026-10-14T03:01:18.137Z",
+    "title": "Sinh tồn: sửa icon Soul Drain",
+    "changes": [
+      "Soul Drain trong Lượt vừa rồi dùng đúng icon rift_soul_drain khi hút MP và khi phòng thủ chặn hút MP.",
+      "Các icon Rift được tra khi hiển thị để cập nhật đúng emoji ứng dụng sau khi bot tải danh sách icon."
+    ]
+  },
+  {
     "id": "24b16356-306a-47b6-bd95-03d7a9065bc4",
     "updatedAt": "2026-10-14T02:51:03.677Z",
     "auditedAt": "2026-10-14T02:51:03.677Z",

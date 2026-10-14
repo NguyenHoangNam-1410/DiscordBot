@@ -243,6 +243,49 @@ try {
     assert(!blocked.encounter.rift.swiftExposed);
     assert.equal(rift.hitChance(blocked, 0.95), 1);
   });
+  test("Soul Drain logs and Rift UI use application icon loaded after module startup", () => {
+    const app = require("../src/utils/appEmoji"),
+      icons = require("../src/hardcore/shared/icons");
+    app.setApplicationEmojisForTest([]);
+    assert.equal(typeof icons.RIFT_ICONS.soul_drain, "string");
+    try {
+      app.setApplicationEmojisForTest([
+        ["rift_soul_drain", "1558000000000000001"],
+      ]);
+      const icon = "<:rift_soul_drain:1558000000000000001>";
+      assert.equal(icons.RIFT_ICONS.soul_drain, icon);
+      const s = state({ soul_drain: 8 });
+      s.mana = 2;
+      const drained = rift.finishCounter(s, {
+        hit: true,
+        physical: true,
+        defend: false,
+      });
+      assert(drained.includes(icon));
+      assert(!drained.includes("👻"));
+      assert.equal(s.mana, 1);
+      const defended = rift.finishCounter(s, {
+        hit: true,
+        physical: true,
+        defend: true,
+      });
+      assert(defended.includes(icon));
+      assert.equal(s.mana, 1);
+      s.lastLog = drained;
+      assert(JSON.stringify(view.embed(s, "u").toJSON()).includes(icon));
+      assert(
+        JSON.stringify(
+          view.privatePayload(s, "id", "public", "effects"),
+        ).includes(icon),
+      );
+      app.setApplicationEmojisForTest([
+        ["rift_soul_drain", "1558000000000000002"],
+      ]);
+      assert(icons.RIFT_ICONS.soul_drain.endsWith("000000002>"));
+    } finally {
+      app.setApplicationEmojisForTest([]);
+    }
+  });
   test("Soul Drain zero-MP/defend/block; fracture bonus once, effective cap", () => {
     const s = state({ soul_drain: 8 });
     s.mana = 0;

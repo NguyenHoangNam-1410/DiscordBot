@@ -383,17 +383,26 @@ const SKILL_ICONS = Object.fromEntries(
     paladin: "skill_devineshield",
   }).map(([key, name]) => [key, icon(name, "✨")]),
 );
-const RIFT_ICONS = Object.fromEntries(
-  [
-    "stone_skin",
-    "elemental_dominion",
-    "bloodlust",
-    "unstable_rift",
-    "fortified",
-    "swift_horror",
-    "soul_drain",
-    "cursed_ground",
-  ].map((key) => [key, icon(`rift_${key}`, "🌀")]),
+// Resolve Rift emojis after startup loads the application registry.
+const RIFT_ICONS = Object.freeze(
+  Object.defineProperties(
+    {},
+    Object.fromEntries(
+      [
+        "stone_skin",
+        "elemental_dominion",
+        "bloodlust",
+        "unstable_rift",
+        "fortified",
+        "swift_horror",
+        "soul_drain",
+        "cursed_ground",
+      ].map((key) => [
+        key,
+        { enumerable: true, get: () => icon(`rift_${key}`, "🌀") },
+      ]),
+    ),
+  ),
 );
 function eventIcon(key) {
   const aliases = {

@@ -483,6 +483,23 @@ try {
     assert.equal(awake.combat(s).barrier, 400);
     assert(!innate.combat(s).manaShieldUsed);
   });
+  test("Battle shows remaining Fury/Echo/Bark Barrier beside ACC, hides zero and never changes state", () => {
+    for (const k of ["barbarian", "sorceress", "druid"]) {
+      const s = fresh(k, true);
+      const c = awake.combat(s);
+      if (k === "druid") s.classAwakening.bark = s.maxHp;
+      else c.barrier = 67;
+      const amount = k === "druid" ? Math.floor(s.maxHp * awake.tuning(s).barkCap) : 67;
+      const before = JSON.stringify(s);
+      const text = view.embed(s, "u").toJSON().description;
+      const line = text.split("\n").find(x => x.includes("ACC:"));
+      assert(line.includes("Barrier: **" + amount + "**"), k);
+      assert.equal(JSON.stringify(s), before);
+      if (k === "druid") s.classAwakening.bark = 0;
+      else c.barrier = 0;
+      assert(!view.embed(s,"u").toJSON().description.includes("Barrier:"));
+    }
+  });
   test("Mana Shield uses locked Paradox cost through counters and handles portal ambush", () => {
     const make = () => {
       const s = fresh("sorceress");

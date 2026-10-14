@@ -1,5 +1,5 @@
 "use strict";
-const { E } = require("./shared/icons");
+const { E, RIFT_ICONS } = require("./shared/icons");
 // Rules version 2 is snapshotted only for new Survival V3 runs.
 const KEYS = [
   "stone_skin",
@@ -266,13 +266,13 @@ function finishCounter(s, { hit, physical, defend, blocked = false }) {
   if (!hit || r.soulDrainCharges <= 0 || bossOwnDrain(s)) return "";
   if (defend) {
     r.soulDrainCharges--;
-    return "\n👻 Soul Drain: Phòng thủ tiêu 1 lần hút, giữ MP.";
+    return `\n${RIFT_ICONS.soul_drain} Soul Drain: Phòng thủ tiêu 1 lần hút, giữ MP.`;
   }
   if (s.mana <= 0) return "";
   s.mana--;
   r.soulDrainCharges--;
   r.manaFracture = true;
-  return "\n👻 Soul Drain: −1 MP; đánh thường kế tiếp hồi thêm 1 MP.";
+  return `\n${RIFT_ICONS.soul_drain} Soul Drain: −1 MP; đánh thường kế tiếp hồi thêm 1 MP.`;
 }
 function nextCounter(s, rng, plan) {
   const r = encounter(s);
@@ -505,7 +505,7 @@ function battle(s) {
   if (!r) return "";
   const lines = [];
   if (bossOwnDrain(s) && r.stacks.soul_drain > 0)
-    lines.push("👻 Hút MP riêng của boss thay thế Soul Drain.");
+    lines.push(`${RIFT_ICONS.soul_drain} Hút MP riêng của boss thay thế Soul Drain.`);
   if (r.stoneArmorMax > 0) lines.push(stoneStatus(s));
   if (r.bloodlustReady)
     lines.push(

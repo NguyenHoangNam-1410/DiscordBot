@@ -131,6 +131,12 @@ module.exports = function createModule(dependencies) {
             s.encounter.evasion,
             0.45,
           );
+    const awakening = require("../awakening");
+    const barrier = awakening.combat(s)
+      ? s.classKey === "druid"
+        ? Math.min(s.classAwakening.bark || 0, Math.floor(s.maxHp * awakening.tuning(s).barkCap))
+        : awakening.combat(s).barrier || 0
+      : 0;
     const detail = bosses.brainControl(s)
       ? "DMG chuẩn 20% Max HP boss; không Crit, không mất MP."
       : {
@@ -150,7 +156,7 @@ module.exports = function createModule(dependencies) {
     const resources = compact
       ? battleResources(s)
       : `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${statNumber(s.mana)}/${bosses.effectiveMaxMana(s)}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé thoát** **${s.escapeTokens}**`;
-    return `${resources}\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${statNumber(defense)}**${STAT_SEPARATOR}${E.res} **RES** **${statNumber(core.effectiveResistance(s, s.resistance, false, !require("../rift").enabled(s) || require("../rift").encounter(s)?.lockedCounterType === "magic"))}%**${core.effectiveResistance(s, s.resistance, false, !require("../rift").enabled(s) || require("../rift").encounter(s)?.lockedCounterType === "magic") !== s.resistance ? ` (gốc ${statNumber(s.resistance)}%)` : ""}\n${bosses.brainControl(s) ? "🧠" : SKILL_ICONS[s.classKey]} **${bosses.brainControl(s) ? "Brain Control" : stats.CLASSES[s.classKey].skill}${compact ? "" : ` (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""})`}: ${skill.low}–${skill.high} DMG**\n${compact ? `${E.accuracy} ACC: **${percent(physicalChance)}**` : detail}\n`;
+    return `${resources}\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${statNumber(defense)}**${STAT_SEPARATOR}${E.res} **RES** **${statNumber(core.effectiveResistance(s, s.resistance, false, !require("../rift").enabled(s) || require("../rift").encounter(s)?.lockedCounterType === "magic"))}%**${core.effectiveResistance(s, s.resistance, false, !require("../rift").enabled(s) || require("../rift").encounter(s)?.lockedCounterType === "magic") !== s.resistance ? ` (gốc ${statNumber(s.resistance)}%)` : ""}\n${bosses.brainControl(s) ? "🧠" : SKILL_ICONS[s.classKey]} **${bosses.brainControl(s) ? "Brain Control" : stats.CLASSES[s.classKey].skill}${compact ? "" : ` (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""})`}: ${skill.low}–${skill.high} DMG**\n${compact ? `${E.accuracy} ACC: **${percent(physicalChance)}**${barrier > 0 ? `${STAT_SEPARATOR}${E.defense} Barrier: **${statNumber(barrier)}**` : ""}` : detail}\n`;
   }
 
   function checkpointPreview(s, key) {
