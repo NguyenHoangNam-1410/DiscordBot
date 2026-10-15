@@ -425,16 +425,16 @@ ${bossDisplay.status(s)}${require("../rift").battle(s)}
     if (info.regionChest)
       return `${E.backpack} **Rơi trang bị:** không roll thêm đồ; hạ boss cuối khu vực nhận rương boss.`;
     const pool = info.rarities
-      .map((rarity, i) => `**${rarityLabel(rarity)} ${i === 0 ? 60 : 40}%**`)
+      .map((rarity, i) => `**[${rarityLabel(rarity)}] ${i === 0 ? 60 : 40}%**`)
       .join(" · ");
     const mimic = world.mimicKind(state.encounter);
     const reward =
       mimic === "ancient_mimic"
-        ? "SR 50% · SSR 30% · UR 20%"
+        ? "**[SR] 50% · [SSR] 30% · [UR] 20%**"
         : mimic === "blood_mimic"
-          ? "SR 60% · SSR 40%"
+          ? "**[SR] 60% · [SSR] 40%**"
           : "";
-    return `${E.backpack} **Rơi trang bị khi hạ quái:** **${percent(info.chance)}** · ${E.luck} **LUCK ${info.luck}** (chốt khi vào combat).\n**Khi có drop:** ${pool}. Tự nhặt 1 món vào run; trang bị trùng tăng 1 level, Vé thoát UR giữ tối đa 1 vé.\nTỷ lệ = 1% + LUCK × 0,5 điểm %, tối đa **20%**. Không chịu pity hòm hay hiệu ứng tìm SSR.${reward ? `\n**Thưởng riêng chắc chắn:** 1 món (${reward}), cộng thêm roll drop ở trên.` : ""}`;
+    return `${E.backpack} **Tỷ lệ rơi đồ:** **${percent(info.chance)}** · ${E.luck} **LUCK ${info.luck}**.\n**Khi có drop:** ${pool}.${reward ? `\n**Thưởng riêng chắc chắn:** 1 món (${reward}), cộng thêm roll drop ở trên.` : ""}`;
   }
 
   function rawEncounterDetails(s) {
@@ -455,8 +455,7 @@ ${bossDisplay.status(s)}${require("../rift").battle(s)}
           butcher: `Frenzy: mỗi lần phản công tăng 8% sát thương, tối đa 5 stack. Hiện **${e.frenzy}/5**; phản công kế dùng **${Math.min(5, e.frenzy + 1)}/5** stack.`,
           riftwalker: `Miễn sát thương ở nhịp đầu mỗi chu kỳ 3 lần bạn tấn công/dùng skill. Nhịp kế **${(e.combatTurn % 3) + 1}/3**: **${e.combatTurn % 3 === 0 ? "miễn sát thương" : "có thể gây sát thương"}**. Phòng thủ/uống bình không đẩy nhịp này.`,
           assur: `${E.evasion} EVA **${e.evasion}**, ${E.crit} CRIT **${percent(e.critChance)}**. Phòng thủ miễn Crit của lần phản công đó.`,
-          lucion:
-            "Hồi HP bằng **35% sát thương thực tế gây lên bạn** sau mỗi phản công, tối đa Max HP. Né/chặn phản công ngăn hồi HP.",
+          lucion: `Hồi ${E.health} bằng **35% sát thương thực tế gây lên bạn** sau mỗi phản công, tối đa Max HP. Né/chặn phản công ngăn hồi **${E.health}**.`,
           deimoss:
             "Abyssal Spires giảm **25% sát thương bạn gây ra**, áp dụng mọi đòn. Dự báo skill trên bảng chính đã tính giảm trừ này.",
         }[e.mechanic] || "Quái này không có chu kỳ kích hoạt riêng.";
