@@ -561,14 +561,16 @@ function cardText(cards) {
 function largeCards(cards) {
   return cardsText(cards);
 }
-function handText(hand, index, active, result = null) {
-  const marker = active === index && !result ? "👉 " : "";
+function handText(hand, index, active, result = null, single = false) {
+  // Chỉ một tay (chưa tách): không cần nhãn "Tay 1" hay mũi tên chỉ tay đang chơi.
+  const marker = !single && active === index && !result ? "👉 " : "";
+  const label = single ? "" : `**Tay ${index + 1}:** `;
   const outcome = result
     ? ` • **${result.label}**`
     : hand.status === "bust"
       ? " • **BUST**"
       : "";
-  return `${marker}**Tay ${index + 1}:** ${cardText(hand.cards)} — **${handValueText(hand.cards)}** • Cược ${formatCoins(hand.bet)} :coin:${outcome}`;
+  return `${marker}${label}${cardText(hand.cards)} — **${handValueText(hand.cards)}** • Cược ${formatCoins(hand.bet)} :coin:${outcome}`;
 }
 
 function blackjackEmbed(state, userId, result = null, sessionId = null) {
@@ -578,7 +580,13 @@ function blackjackEmbed(state, userId, result = null, sessionId = null) {
   const dealerScore = result ? ` · **${handValueText(state.dealer)}**` : "";
   const hands = state.hands
     .map((hand, index) =>
-      handText(hand, index, state.active, result?.results?.[index]),
+      handText(
+        hand,
+        index,
+        state.active,
+        result?.results?.[index],
+        state.hands.length === 1,
+      ),
     )
     .join("\n");
   const embed = new EmbedBuilder()
@@ -655,12 +663,15 @@ function actionRows(sessionId, state, disabled = false) {
         .setEmoji("✋")
         .setStyle(ButtonStyle.Success)
         .setDisabled(disabled || !mayStand),
-      new ButtonBuilder()
-        .setCustomId(`blackjack:${sessionId}:split`)
-        .setLabel("Tách bài")
-        .setEmoji("✂️")
-        .setStyle(ButtonStyle.Secondary)
-        .setDisabled(!canSplit),
+      ...(canSplit
+        ? [
+            new ButtonBuilder()
+              .setCustomId(`blackjack:${sessionId}:split`)
+              .setLabel("Tách bài")
+              .setEmoji("✂️")
+              .setStyle(ButtonStyle.Secondary),
+          ]
+        : []),
       new ButtonBuilder()
         .setCustomId(`blackjack:${sessionId}:forfeit`)
         .setLabel("Bỏ ván")
