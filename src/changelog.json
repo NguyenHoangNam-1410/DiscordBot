@@ -1,5 +1,14 @@
 [
   {
+    "id": "21cb4786-b7bb-44c6-b409-9b00b76de7d3",
+    "updatedAt": "2026-10-15T11:39:30.493Z",
+    "auditedAt": "2026-10-15T11:39:30.493Z",
+    "title": "Chatbot Gemini cập nhật model",
+    "changes": [
+      "Chatbot Gemini chuyển sang model mới gemini-3.8-flash vì model cũ đã ngừng cấp cho tài khoản mới."
+    ]
+  },
+  {
     "id": "df469ae2-b890-42bb-9121-a1e63ef4fe0f",
     "updatedAt": "2026-10-15T11:37:49.778Z",
     "auditedAt": "2026-10-15T11:37:49.778Z",
