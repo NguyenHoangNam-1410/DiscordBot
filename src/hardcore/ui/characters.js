@@ -69,11 +69,7 @@ function payload(
       "Lọc class",
       ["all", ...Object.keys(characters.CLASSES)].map((value) => ({
         label:
-          value === "all"
-            ? "Tất cả class"
-            : characters.CLASSES[value].name +
-              " · " +
-              characters.CLASSES[value].build,
+          value === "all" ? "Tất cả class" : characters.CLASSES[value].name,
         value,
         default: value === classKey,
       })),
@@ -250,9 +246,9 @@ function payload(
       })),
     );
     fields.push({
-      name: "Tinh hồn · bản thiết kế",
+      name: "Tinh hồn · cơ chế chiến đấu",
       value:
-        "S1–S6 chưa mở nâng cấp. Mục tiêu S6: **30–35%** hoàn thành tầng 999 cho từng nhân vật; chưa kiểm chứng bằng simulate. Sức mạnh mỗi bậc có thể thay đổi khi cân bằng.",
+        "S1–S6 đã có hiệu ứng chiến đấu; tài khoản hiện khởi đầu S0.",
     });
     embed.addFields(splitRuleFields(fields));
     components.push(
