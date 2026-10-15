@@ -1,5 +1,14 @@
 [
   {
+    "id": "69c418fc-c2cf-436a-8fe3-f3d36a467327",
+    "updatedAt": "2026-10-15T11:47:34.664Z",
+    "auditedAt": "2026-10-15T11:47:34.664Z",
+    "title": "Chatbot bớt bị giới hạn",
+    "changes": [
+      "Chatbot tự chuyển sang model dự phòng và thử lại khi nhà cung cấp tạm giới hạn lượt gọi."
+    ]
+  },
+  {
     "id": "281fced8-1fd3-4c41-8b33-83cfc6c6fd70",
     "updatedAt": "2026-10-15T11:42:27.524Z",
     "auditedAt": "2026-10-15T11:42:27.524Z",

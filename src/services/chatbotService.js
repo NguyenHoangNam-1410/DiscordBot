@@ -32,7 +32,13 @@ const PROVIDERS = Object.freeze({
 });
 const provider = () => PROVIDERS[String(process.env.CHATBOT_PROVIDER || "openai").toLowerCase()] || PROVIDERS.openai;
 const baseUrl = () => String(process.env.OPENAI_BASE_URL || provider().baseUrl).replace(/\/+$/, "");
-const model = () => process.env.OPENAI_MODEL || provider().model;
+// OPENAI_MODEL có thể là danh sách phân tách bằng dấu phẩy: model đầu là chính, các model sau là dự phòng khi bị giới hạn/lỗi.
+const models = () =>
+  String(process.env.OPENAI_MODEL || provider().model)
+    .split(",")
+    .map((name) => name.trim())
+    .filter(Boolean);
+const model = () => models()[0] || "";
 const useModeration = () => provider().moderation && !process.env.OPENAI_BASE_URL;
 const isConfigured = () => Boolean(process.env.OPENAI_API_KEY) && Boolean(model());
 
@@ -138,6 +144,35 @@ function clipReply(text) {
   return clean.length > DISCORD_LIMIT - 60 ? `${clean.slice(0, DISCORD_LIMIT - 61)}…` : clean;
 }
 
+const RETRYABLE = (error) => error.status === 429 || error.status >= 500;
+const RETRY_DELAY_MS = () => Number(process.env.CHATBOT_RETRY_DELAY_MS ?? 2000);
+const sleep = (ms, signal) =>
+  new Promise((resolve, reject) => {
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener("abort", () => {
+      clearTimeout(timer);
+      reject(new Error("aborted"));
+    });
+  });
+
+// Thử lần lượt từng model; bị giới hạn (429) hoặc lỗi máy chủ thì chuyển model dự phòng, hết danh sách thì thử lại model đầu một lần sau vài giây.
+async function completeWithFallback(messages, signal) {
+  const list = models();
+  let lastError;
+  for (let round = 0; round < 2; round += 1) {
+    for (const name of list) {
+      try {
+        return await openai("chat/completions", { model: name, max_tokens: MAX_OUTPUT_TOKENS, messages }, signal);
+      } catch (error) {
+        if (signal?.aborted || !RETRYABLE(error)) throw error;
+        lastError = error;
+      }
+    }
+    if (round === 0) await sleep(RETRY_DELAY_MS(), signal);
+  }
+  throw lastError;
+}
+
 // Trả về { ok, text } hoặc { error } với: DISABLED | TOO_LONG | LIMIT | FLAGGED | API
 async function ask({ guildId, userId, channelId, text, now = Date.now(), signal = null }) {
   if (!isConfigured()) return { error: "DISABLED" };
@@ -152,15 +187,8 @@ async function ask({ guildId, userId, channelId, text, now = Date.now(), signal 
       refundTurn(guildId, userId, now);
       return { error: "FLAGGED" };
     }
-    const data = await openai(
-      "chat/completions",
-      {
-        model: model(),
-        max_tokens: MAX_OUTPUT_TOKENS,
-        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...getHistory(key, now), { role: "user", content: input }],
-      },
-      signal,
-    );
+    const messages = [{ role: "system", content: SYSTEM_PROMPT }, ...getHistory(key, now), { role: "user", content: input }];
+    const data = await completeWithFallback(messages, signal);
     const reply = clipReply(data.choices?.[0]?.message?.content);
     if (!reply) throw new Error("EMPTY_REPLY");
     remember(key, input, reply, now);
@@ -175,6 +203,7 @@ async function ask({ guildId, userId, channelId, text, now = Date.now(), signal 
 module.exports = {
   DEFAULT_MODEL,
   model,
+  models,
   baseUrl,
   MAX_INPUT_CHARS,
   setChannel,
