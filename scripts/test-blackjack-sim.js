@@ -153,7 +153,22 @@ void sawBust;
     ...pairState,
     hands: [{ cards: ["8♠", "9♥"], bet: 100, status: "playing" }],
   }).find((button) => button.custom_id.endsWith(":split"));
-  assert(noPair.disabled, "không cặp thì khóa Tách bài");
+  assert(!noPair, "không thể tách thì ẩn hẳn nút Tách bài");
+  const overLimit = buttons({ ...pairState, maxBet: 150 }).find((button) =>
+    button.custom_id.endsWith(":split"),
+  );
+  assert(!overLimit, "vượt hạn mức cược thì ẩn nút Tách bài");
+  const single = blackjack.blackjackEmbed(pairState, "u").data.description || "";
+  const embedText = JSON.stringify(blackjack.blackjackEmbed(pairState, "u").toJSON());
+  assert(!/Tay 1/.test(embedText), "một tay thì không hiện nhãn Tay 1");
+  assert(!/👉/.test(embedText), "một tay thì không hiện mũi tên");
+  void single;
+  const afterSplit = JSON.stringify(
+    blackjack
+      .blackjackEmbed({ ...pairState, split: true, hands: [pairState.hands[0], { ...pairState.hands[0] }] }, "u")
+      .toJSON(),
+  );
+  assert(/Tay 1/.test(afterSplit) && /Tay 2/.test(afterSplit), "sau khi tách vẫn có Tay 1/Tay 2");
   const started = blackjack.startBlackjack({
     guildId,
     channelId: "c",
