@@ -427,60 +427,14 @@ function description(k, n, s) {
     t = tier(n),
     fmt = (x) => Number(x.toFixed(1)).toLocaleString("vi-VN");
   const lines = {
-    stone_skin:
-      "Quái nhận lá chắn đá bằng " +
-      fmt(n * 1.5) +
-      "% " +
-      E.hp +
-      " Max HP khi xuất hiện. Lá chắn hấp thụ DMG vật lý/phép; sát thương dư trừ HP quái. Vỡ lá chắn: " +
-      E.defres +
-      " DEF/RES quái giảm " +
-      [0, 8, 12, 16][t] +
-      "% đến hết combat. Không hồi giáp khi boss hồi HP/chuyển phase.",
-    elemental_dominion:
-      "Quái hỗn hợp: +" +
-      fmt(n * 2) +
-      " điểm % tỷ lệ phép. Phản công phép: +" +
-      fmt(n * 1.25) +
-      "% DMG. Không tăng vật lý, true damage hoặc damage cố định.",
-    bloodlust:
-      "Lần đầu quái xuống dưới 50% HP: phản công kế +" +
-      fmt(12 + 2 * n) +
-      "% DMG; Phòng thủ chỉ nhận +" +
-      fmt((12 + 2 * n) / 2) +
-      "%. Một lần/thanh HP boss 999; né/chặn vẫn kết thúc lượt cuồng nộ.",
-    unstable_rift:
-      "Hòm/kho báu +" +
-      fmt(n * 0.75) +
-      " điểm % (lấy từ quái thường); SSR kho báu an toàn +" +
-      fmt(n * 2) +
-      " điểm %; Mimic +" +
-      fmt(n * 1.5) +
-      " điểm %, Ancient Mimic +" +
-      fmt(n * 0.5) +
-      " điểm %. Giữ pity và kết quả khóa; không xóa bằng Severance.",
-    fortified:
-      "Quái +" +
-      fmt(n * 3) +
-      "% Max HP khi xuất hiện. Lần đầu xuống dưới 50%: action gây DMG kế của bạn +" +
-      [0, 10, 15, 20][t] +
-      "% DMG, toàn bộ hit. Một lần/thanh HP.",
-    swift_horror:
-      "Phản công vật lý quái +" +
-      n +
-      " điểm % trúng. Né tự nhiên: action gây DMG kế của bạn +" +
-      [0, 8, 12, 16][t] +
-      "% DMG và vật lý chắc chắn trúng. Né bảo đảm không kích hoạt; không tăng EVA quái.",
-    soul_drain:
-      "Tối đa " +
-      Math.ceil(n / 4) +
-      " lần/combat. Phản công trúng hút 1 MP; 0 MP giữ charge, Phòng thủ tiêu charge không mất MP, chặn/né giữ charge. Sau khi bị hút: đánh thường kế hồi thêm 1 MP.",
-    cursed_ground:
-      "Khi nhận vật lý: DEF gốc −" +
-      fmt(n * 2) +
-      "%. Khi nhận phép: RES gốc −" +
-      fmt(n * 1.5) +
-      " điểm %. Áp dụng trước Consecration/Class Shrine/Phòng thủ; không đổi chỉ số gốc hoặc lá chắn.",
+    stone_skin: `Quái nhận lá chắn đá bằng ${fmt(n * 1.5)}% Max ${E.hp} khi xuất hiện. Lá chắn hấp thụ DMG vật lý/phép; sát thương dư trừ HP quái. Vỡ lá chắn: ${E.defres} DEF/RES quái giảm ${[0, 8, 12, 16][t]}% đến hết combat. Không hồi giáp khi boss hồi HP/chuyển phase.`,
+    elemental_dominion: `Quái hỗn hợp: +${fmt(n * 2)} điểm % tỷ lệ phép. Phản công phép: +${fmt(n * 1.25)}% DMG. Không tăng vật lý, true damage hoặc damage cố định.`,
+    bloodlust: `Lần đầu quái xuống dưới 50% Max ${E.hp}: phản công kế +${fmt(12 + 2 * n)}% DMG; Phòng thủ chỉ nhận +${fmt((12 + 2 * n) / 2)}%. Né/chặn vẫn kết thúc lượt cuồng nộ.`,
+    unstable_rift: `Hòm/kho báu +${fmt(n * 0.75)} điểm % (lấy từ quái thường); SSR kho báu an toàn +${fmt(n * 2)} điểm %; Mimic +${fmt(n * 1.5)} điểm %, Ancient Mimic +${fmt(n * 0.5)} điểm %. Giữ pity và kết quả khóa; không xóa bằng Severance.`,
+    fortified: `Quái +${fmt(n * 3)}% Max ${E.hp} khi xuất hiện. Lần đầu xuống dưới 50%: action gây DMG kế của bạn +${[0, 10, 15, 20][t]}% DMG, toàn bộ hit.`,
+    swift_horror: `Phản công vật lý quái +${n} điểm % trúng. Né tự nhiên: action gây DMG kế của bạn +${[0, 8, 12, 16][t]}% DMG và vật lý chắc chắn trúng. Né bảo đảm không kích hoạt; không tăng ${E.evasion} quái.`,
+    soul_drain: `Tối đa ${Math.ceil(n / 4)} lần/combat. Phản công trúng hút 1 ${E.mana}; 0 ${E.mana} giữ charge, Phòng thủ tiêu charge không mất ${E.mana}, chặn/né giữ charge. Sau khi bị hút: đánh thường kế hồi thêm 1 ${E.mana}.`,
+    cursed_ground: `Khi nhận vật lý: DEF gốc −${fmt(n * 2)}%. Khi nhận phép: RES gốc −${fmt(n * 1.5)} điểm %. Áp dụng trước Consecration/Class Shrine/Phòng thủ; không đổi chỉ số gốc hoặc lá chắn.`,
   };
   let text =
     "**Rift " + ["", "I", "II", "III"][t] + " · ×" + n + "**\n" + lines[k];
@@ -489,7 +443,7 @@ function description(k, n, s) {
     text +=
       "\nTrận này: " +
       (bossOwnDrain(s)
-        ? "cơ chế hút MP boss thay thế Soul Drain; giữ charge"
+        ? "cơ chế hút ${E.mana} boss thay thế Soul Drain, giữ charge"
         : r.soulDrainCharges + " lần hút còn lại") +
       (r.manaFracture ? " · Mana Fracture sẵn sàng" : "");
   if (s.encounter?.boss && k === "stone_skin")
@@ -506,24 +460,23 @@ function battle(s) {
   const lines = [];
   if (bossOwnDrain(s) && r.stacks.soul_drain > 0)
     lines.push(
-      `${RIFT_ICONS.soul_drain} Hút MP riêng của boss thay thế Soul Drain.`,
+      `${RIFT_ICONS.soul_drain} Hút ${E.mana} riêng của boss thay thế Soul Drain.`,
     );
   if (r.stoneArmorMax > 0) lines.push(stoneStatus(s));
   if (r.bloodlustReady)
     lines.push(
       "🩸 Bloodlust +" +
         (12 + 2 * r.stacks.bloodlust) +
-        "% DMG · Phòng thủ: +" +
+        "% DMG · ${E.defense}: +" +
         (6 + r.stacks.bloodlust) +
         "%",
     );
   if (r.fortifiedExposed || r.swiftExposed)
     lines.push(
-      "🎯 Exposed: action gây DMG kế +" +
-        ((r.fortifiedExposed ? [0, 10, 15, 20][tier(r.stacks.fortified)] : 0) +
-          (r.swiftExposed ? [0, 8, 12, 16][tier(r.stacks.swift_horror)] : 0)) +
-        "%" +
-        (r.swiftExposed ? " · vật lý chắc chắn trúng" : ""),
+      `🎯 Exposed: action gây DMG kế ${
+        (r.fortifiedExposed ? [0, 10, 15, 20][tier(r.stacks.fortified)] : 0) +
+        (r.swiftExposed ? [0, 8, 12, 16][tier(r.stacks.swift_horror)] : 0)
+      }%` + (r.swiftExposed ? " · vật lý chắc chắn trúng" : ""),
     );
   return lines.length ? "\n" + lines.join("\n") : "";
 }
