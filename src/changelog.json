@@ -1,5 +1,15 @@
 [
   {
+    "id": "ab73b412-8997-41ff-95ef-e91380be4dba",
+    "updatedAt": "2026-10-15T04:19:40.138Z",
+    "auditedAt": "2026-10-15T04:19:40.138Z",
+    "title": "Phân nhân vật thành 4 class",
+    "changes": [
+      "Chiến binh ưu tiên STR: Barbarian, Druid; Thủ vệ ưu tiên VIT/DEF: Paladin; Sát thủ ưu tiên DEX: Amazon, Assassin; Pháp sư ưu tiên ENE: Sorceress, Necromancer.",
+      "Bộ lọc nhân vật dùng 4 class; chi tiết và hướng dẫn chọn nhân vật hiển thị hướng build tương ứng. Giữ nguyên chỉ số, kỹ năng và công thức riêng của từng nhân vật."
+    ]
+  },
+  {
     "id": "97109fe6-8af0-4d00-b55d-3f8733daec3c",
     "updatedAt": "2026-10-15T04:14:41.146Z",
     "auditedAt": "2026-10-15T04:14:41.146Z",

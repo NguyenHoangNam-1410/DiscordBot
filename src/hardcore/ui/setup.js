@@ -18,7 +18,12 @@ module.exports = function createModule(dependencies) {
   function setupPreview(classKey) {
     const state = stats.createState(classKey, 10);
     const c = stats.CLASSES[classKey];
-    const main = stats.mainStat(state).toUpperCase();
+    const characters = require("../characters");
+    const character = characters.catalog.characters.find(
+      (c) => c.starter && c.profileKey === classKey,
+    );
+    const group = character && characters.CLASSES[character.classKey];
+    const main = (group?.primaryStat || stats.mainStat(state)).toUpperCase();
     const builds = {
       amazon:
         "Ưu tiên DEX cho sát thương, trúng/né và Crit; thêm VIT khi thiếu HP. Trang bị vật lý, ACC và Crit hợp với hai phát Barrage.",
@@ -33,13 +38,13 @@ module.exports = function createModule(dependencies) {
       necromancer:
         "Ưu tiên ENE cho skill phép, RES và Max MP; thêm VIT cho HP. Đánh thường hồi MP, dùng Totem Ward để vừa gây phép vừa chặn phản công.",
       paladin:
-        "Ưu tiên STR cho sát thương và DEF; thêm VIT cho HP. VIT/ENE cũng góp sát thương nhờ Divine Guard. Chọn trang bị vật lý/chống chịu, dùng Divine Shield để gây sát thương rồi thủ.",
+        "Ưu tiên VIT để tăng HP và DEF; DEF tăng Holy DMG sau thức tỉnh. STR bổ sung sát thương vật lý và DEF. Dùng Divine Shield để chuẩn bị phản công và vùng thánh.",
     };
     const manaGain = core.attackManaGain(state);
     return {
       name: `${c.emoji} ${c.name}`,
       skillIcon: SKILL_ICONS[classKey],
-      role: `Build ${main}${STAT_SEPARATOR}${{ amazon: "Hai phát vật lý", barbarian: "Vật lý và chống chịu", assassin: "Crit và né phản công", sorceress: "Skill phép mạnh", druid: "Vật lý và hồi phục", necromancer: "Phép và chặn phản công", paladin: "Vật lý và phòng thủ" }[classKey]}`,
+      role: `${group ? group.name + STAT_SEPARATOR : ""}Build ${main}${STAT_SEPARATOR}${{ amazon: "Hai phát vật lý", barbarian: "Vật lý và chống chịu", assassin: "Crit và né phản công", sorceress: "Skill phép mạnh", druid: "Vật lý và hồi phục", necromancer: "Phép và chặn phản công", paladin: "Vật lý và phòng thủ" }[classKey]}`,
       attributes: `${E.str} **STR** **${state.str}**${STAT_SEPARATOR}${E.dex} **DEX** **${state.dex}**${STAT_SEPARATOR}${E.vit} **VIT** **${state.vit}**${STAT_SEPARATOR}${E.ene} **ENE** **${state.ene}**`,
       stats: `${E.str} **STR** **${state.str}**${STAT_SEPARATOR}${E.dex} **DEX** **${state.dex}**${STAT_SEPARATOR}${E.vit} **VIT** **${state.vit}**${STAT_SEPARATOR}${E.ene} **ENE** **${state.ene}**\n${E.hp} **HP** **${state.hp}**${STAT_SEPARATOR}${E.mana} **MP** **${state.mana}**${STAT_SEPARATOR}${E.defense} **DEF** **${state.defense}**${STAT_SEPARATOR}${E.potion} **Bình** **${state.potions}**\n${E.attack} **Vật lý** **${state.damageMin}–${state.damageMax}**${STAT_SEPARATOR}${E.magic} **Phép** **${state.spellMin}–${state.spellMax}**${STAT_SEPARATOR}${E.res} **RES** **${state.resistance}%**${STAT_SEPARATOR}${E.crit} **CRIT** **${percent(state.critChance)}**`,
       build: builds[classKey],

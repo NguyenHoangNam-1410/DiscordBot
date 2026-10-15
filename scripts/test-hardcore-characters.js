@@ -77,6 +77,48 @@ async function click(p, kind, values, userId = owner, customId) {
 }
 async function main() {
   assert(characters.validate());
+  assert.deepEqual(Object.keys(characters.CLASSES), [
+    "warrior",
+    "guardian",
+    "assassin",
+    "mage",
+  ]);
+  const expectedGroups = {
+    warrior: ["barbarian", "druid"],
+    guardian: ["paladin"],
+    assassin: ["amazon", "assassin"],
+    mage: ["sorceress", "necromancer"],
+  };
+  const expectedStats = {
+    warrior: "str",
+    guardian: "vit",
+    assassin: "dex",
+    mage: "ene",
+  };
+  for (const [key, ids] of Object.entries(expectedGroups)) {
+    assert.deepEqual(
+      characters
+        .list({ classKey: key })
+        .map((c) => c.id)
+        .sort(),
+      ids.sort(),
+    );
+    assert.equal(characters.CLASSES[key].primaryStat, expectedStats[key]);
+    for (const id of ids) {
+      const preview = require("../src/hardcore/ui").setupPreview(
+        characters.get(id).profileKey,
+      );
+      assert(preview.role.includes(characters.CLASSES[key].name));
+      assert(
+        preview.role.includes("Build " + expectedStats[key].toUpperCase()),
+      );
+    }
+  }
+  assert(
+    require("../src/hardcore/ui")
+      .setupPreview("paladin")
+      .build.includes("Ưu tiên VIT"),
+  );
   assert.equal(characters.catalog.characters.length, 7);
   assert.equal(
     characters.catalog.characters.flatMap((c) => c.souls).length,
@@ -111,11 +153,12 @@ async function main() {
   ]);
   const overview = ui.payload(owner);
   limits(overview);
+  assert.equal(component(overview, "class").options.length, 5);
   assert(stringify(overview).includes("class_amazon"));
   const frozen = JSON.stringify(characters.catalog);
   for (const c of characters.catalog.characters) {
     const current = characters.preview(c.id);
-    const actual = stats.createState(c.classKey, 0, { gameplayVersion: 3 });
+    const actual = stats.createState(c.profileKey, 0, { gameplayVersion: 3 });
     for (const k of [
       "str",
       "dex",
@@ -148,8 +191,8 @@ async function main() {
   assert(stringify(result.payload).includes("Chưa có nhân vật"));
   assert(component(result.payload, "character").disabled);
   assert((await click(result.payload, "character", ["amazon"])).error);
-  result = await click(overview, "class", ["druid"]);
-  assert.equal(component(result.payload, "character").options.length, 1);
+  result = await click(overview, "class", ["warrior"]);
+  assert.equal(component(result.payload, "character").options.length, 2);
   const filtered = result.payload;
   assert((await click(filtered, "character", ["sorceress"])).error);
   result = await click(filtered, "character", ["druid"]);
@@ -192,11 +235,11 @@ async function main() {
       });
     assert(characters.validate());
     assert(!characters.ownedCharacters().future_0);
-    const more = ui.payload(owner, { classKey: "amazon" });
+    const more = ui.payload(owner, { classKey: "assassin" });
     limits(more);
     const next = await click(more, "next");
     limits(next.payload);
-    assert.equal(component(next.payload, "character").options.length, 7);
+    assert.equal(component(next.payload, "character").options.length, 8);
     assert((await click(next.payload, "character", ["future_17"])).payload);
     assert((await click(more, "character", ["future_17"])).error);
   } finally {

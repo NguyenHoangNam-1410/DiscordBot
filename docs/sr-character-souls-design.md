@@ -4,9 +4,20 @@ Ngày thiết kế: 14/10/2026. Cập nhật: 15/10/2026. Trạng thái: **đã 
 
 Thiết kế kinh tế: [Spark, thẻ và nhân vật](spark-tinh-hon-design.md).
 
+## Phân loại class
+
+| Class | Ưu tiên build | Nhân vật khởi đầu |
+|---|---|---|
+| Chiến binh | STR | Barbarian, Druid |
+| Thủ vệ | VIT / DEF | Paladin |
+| Sát thủ | DEX | Amazon, Assassin |
+| Pháp sư | ENE | Sorceress, Necromancer |
+
+Class là nhóm định hướng build; nhân vật vẫn giữ kỹ năng, nội tại, Mastery và công thức riêng. Hướng VIT/DEF của Thủ vệ tận dụng chống chịu và Holy DMG của Paladin; việc đổi nhóm không tự thay chỉ số, hệ số sát thương hay dữ liệu run đang chơi. profileKey trong catalog trỏ tới bộ công thức cũ, classKey dùng cho 4 nhóm mới.
+
 ## Nguyên tắc chung
 
-Dùng Amazon, Barbarian, Assassin, Sorceress, Druid, Necromancer và Paladin làm tên nhân vật SR ban đầu. Tên riêng, chân dung và cốt truyện có thể khai báo sau; chưa tạo thêm class hoặc đổi tên class trong code.
+Dùng Amazon, Barbarian, Assassin, Sorceress, Druid, Necromancer và Paladin làm tên nhân vật SR ban đầu. Tên riêng, chân dung và cốt truyện có thể khai báo sau; nhân vật được phân vào 4 class ở danh mục, giữ công thức riêng qua profile nhân vật.
 
 **Mục tiêu mới đã chốt:** mỗi nhân vật ở S6 có tỷ lệ kỳ vọng hoàn thành tầng 999 **30–35%**. Mốc khoảng 11% S0 là tham chiếu simulate cũ, không phải tỷ lệ cố định của mọi nhân vật. Chưa có simulate xác minh S6.
 
@@ -25,7 +36,7 @@ S0 bám phiên bản V3.1 mới nhất, với classInnateRevision = 2. Không l�
 - Hồi HP chịu giảm hồi và HP bị khóa; hồi MP không vượt Max MP. Hiệu ứng hoàn MP không được tính là MP đã trả để tạo Echo.
 - Lá chắn chỉ hấp thụ những loại sát thương được cơ chế lá chắn hiện hành cho phép; không biến thành miễn nhiễm DMG chuẩn, phản phệ hoặc HP cost.
 
-## 1. Amazon — Du kích SR
+## 1. Amazon — Sát thủ SR
 
 **Bản sắc:** đánh thường để chuẩn bị Barrage, duy trì nhịp bắn chính xác.
 
@@ -59,7 +70,7 @@ S0 bám phiên bản V3.1 mới nhất, với classInnateRevision = 2. Không l�
 
 **Giới hạn:** không thêm Fury mới, không đặt lại ngưỡng đã dùng. S2 không kích hoạt lại ở phase mới và không giảm HP cost. Barrier giữ luật hết khi combat kết thúc. S6 mạnh ở thời điểm hiếm, không phải buff mọi lượt.
 
-## 3. Assassin — Du kích SR
+## 3. Assassin — Sát thủ SR
 
 **Bản sắc:** tận dụng né tự nhiên và Crit để tạo một Shadow Step quyết định.
 
@@ -93,7 +104,7 @@ S0 bám phiên bản V3.1 mới nhất, với classInnateRevision = 2. Không l�
 
 **Giới hạn:** không tích Echo khi đang giữ Echo; Skill miễn phí/MP được hoàn không tạo tiến trình Echo. Mana Shield không áp cho Phòng thủ, cơ chế boss, phản phệ, bẫy và HP cost. S2 không biến số lần nạp shield theo phase thành nguồn MP vô hạn.
 
-## 5. Druid — Thiên nhiên SR
+## 5. Druid — Chiến binh SR
 
 **Bản sắc:** luân phiên hồi phục và đánh thường, dùng hồi dư chuyển thành Bark.
 
@@ -127,7 +138,7 @@ S0 bám phiên bản V3.1 mới nhất, với classInnateRevision = 2. Không l�
 
 **Giới hạn:** không giảm 3 Ward thành 2 cho mọi Anchor, không giảm 2 Totem thành 1. Khi đang giữ Anchor, tiến trình vẫn xử lý theo giới hạn S0; S2 không tạo thêm Anchor tồn kho. Grave Nova không Crit/hút MP/tạo Totem; S6 không đệ quy với S5.
 
-## 7. Paladin — Chiến binh SR
+## 7. Paladin — Thủ vệ SR
 
 **Bản sắc:** dùng Divine Shield trước đợt đánh, tận dụng DEF để gây Holy DMG.
 

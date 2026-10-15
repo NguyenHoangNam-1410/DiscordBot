@@ -14,7 +14,7 @@ const { appEmoji } = require("../../utils/appEmoji");
 const { splitRuleFields } = require("./rulePages");
 const PAGE_SIZE = 12;
 const TABS = ["stats", "skills", "souls"];
-const icon = (c) => appEmoji("class_" + c.classKey, "👤");
+const icon = (c) => appEmoji("class_" + c.profileKey, "👤");
 const number = (n) => Number(Number(n).toFixed(1)).toLocaleString("vi-VN");
 const pct = (n) => number(n * 100) + "%";
 const row = (component) => new ActionRowBuilder().addComponents(component);
@@ -30,7 +30,7 @@ function payload(
 ) {
   if (
     !(rarity === "all" || characters.RARITIES.includes(rarity)) ||
-    !(classKey === "all" || Object.hasOwn(stats.CLASSES, classKey)) ||
+    !(classKey === "all" || Object.hasOwn(characters.CLASSES, classKey)) ||
     !TABS.includes(tab)
   )
     throw Error("INVALID_CHARACTER_FILTER");
@@ -67,8 +67,13 @@ function payload(
     menu(
       "class",
       "Lọc class",
-      ["all", ...Object.keys(stats.CLASSES)].map((value) => ({
-        label: value === "all" ? "Tất cả class" : stats.CLASSES[value].name,
+      ["all", ...Object.keys(characters.CLASSES)].map((value) => ({
+        label:
+          value === "all"
+            ? "Tất cả class"
+            : characters.CLASSES[value].name +
+              " · " +
+              characters.CLASSES[value].build,
         value,
         default: value === classKey,
       })),
@@ -83,7 +88,7 @@ function payload(
             description:
               c.rarity +
               " · " +
-              stats.CLASSES[c.classKey].name +
+              characters.CLASSES[c.classKey].name +
               " · " +
               (owned[c.id]
                 ? "Đã sở hữu · S" + owned[c.id].soulLevel
@@ -113,7 +118,7 @@ function payload(
         visible.map((c) => ({
           name: icon(c) + " " + c.name + " [" + c.rarity + "]",
           value:
-            stats.CLASSES[c.classKey].name +
+            characters.CLASSES[c.classKey].name +
             " · " +
             (owned[c.id]
               ? "S" + owned[c.id].soulLevel + " · Đã sở hữu"
@@ -130,12 +135,15 @@ function payload(
       )
       .setDescription(
         "Class **" +
-          stats.CLASSES[selected.classKey].name +
+          characters.CLASSES[selected.classKey].name +
           "** · " +
           (owned[id]
             ? "Đã sở hữu · **S" + owned[id].soulLevel + "**"
             : "Chưa sở hữu") +
           "\n" +
+          "Ưu tiên **" +
+          characters.CLASSES[selected.classKey].build +
+          "** · " +
           selected.role,
       );
     const fields = [];
@@ -209,12 +217,12 @@ function payload(
         value: require("../shared/statsV3").description(state, E),
       });
     } else if (tab === "skills") {
-      const preview = require("./index").setupPreview(selected.classKey);
+      const preview = require("./index").setupPreview(selected.profileKey);
       fields.push({
         name:
-          SKILL_ICONS[selected.classKey] +
+          SKILL_ICONS[selected.profileKey] +
           " " +
-          stats.CLASSES[selected.classKey].skill,
+          stats.CLASSES[selected.profileKey].skill,
         value: preview.skill,
       });
       fields.push({
@@ -303,7 +311,7 @@ async function handle(interaction) {
     parts[0] !== "hardcore-char" ||
     parts.length !== 8 ||
     !(rarity === "all" || characters.RARITIES.includes(rarity)) ||
-    !(classKey === "all" || Object.hasOwn(stats.CLASSES, classKey)) ||
+    !(classKey === "all" || Object.hasOwn(characters.CLASSES, classKey)) ||
     !/^\d+$/.test(rawPage) ||
     !Number.isSafeInteger(page) ||
     !TABS.includes(tab)
@@ -327,7 +335,7 @@ async function handle(interaction) {
       Object.assign(state, { rarity: value, page: 0, id: "all" });
     else if (
       kind === "class" &&
-      (value === "all" || Object.hasOwn(stats.CLASSES, value))
+      (value === "all" || Object.hasOwn(characters.CLASSES, value))
     )
       Object.assign(state, { classKey: value, page: 0, id: "all" });
     else if (

@@ -1,5 +1,23 @@
 "use strict";
 const catalog = require("./catalog.json");
+const CLASSES = Object.freeze({
+  warrior: Object.freeze({
+    name: "Chiến binh",
+    primaryStat: "str",
+    build: "STR",
+  }),
+  guardian: Object.freeze({
+    name: "Thủ vệ",
+    primaryStat: "vit",
+    build: "VIT / DEF",
+  }),
+  assassin: Object.freeze({
+    name: "Sát thủ",
+    primaryStat: "dex",
+    build: "DEX",
+  }),
+  mage: Object.freeze({ name: "Pháp sư", primaryStat: "ene", build: "ENE" }),
+});
 const RARITIES = Object.freeze(["SR", "SSR", "SSR+", "UR", "UR+", "LR"]);
 function validate(entries = catalog.characters) {
   const ids = new Set();
@@ -16,7 +34,8 @@ function validate(entries = catalog.characters) {
       c.role.length > 500 ||
       typeof c.starter !== "boolean" ||
       !RARITIES.includes(c.rarity) ||
-      !require("../engine/stats").CLASSES[c.classKey]
+      !Object.hasOwn(CLASSES, c.classKey) ||
+      !Object.hasOwn(require("../engine/stats").CLASSES, c.profileKey)
     )
       throw Error("INVALID_CHARACTER_CATALOG");
     if (
@@ -48,12 +67,13 @@ function ownedCharacters() {
 function preview(id) {
   const c = get(id);
   if (!c) throw Error("INVALID_CHARACTER");
-  return require("../engine/stats").createState(c.classKey, 0, {
+  return require("../engine/stats").createState(c.profileKey, 0, {
     gameplayVersion: 3,
   });
 }
 module.exports = {
   catalog,
+  CLASSES,
   RARITIES,
   get,
   list,

@@ -48,18 +48,20 @@ Ví dụ: đã quay 199 lượt, quay thêm một lượt nhận R vẫn đủ 2
 
 Một tinh hồn là **một bậc nâng cho nhân vật được chọn**, không phải mở bậc đó cho mọi nhân vật cùng hệ. Phải nâng tuần tự S0 → S1 → … → S6; trừ thẻ đúng hệ/độ hiếm. SSR không dùng thẻ SR thay thế.
 
-### Phân hệ thẻ đề xuất
+### Bốn class và hệ thẻ
+
+Class và hướng build đã chốt theo cập nhật 15/10/2026; thẻ đề xuất dùng cùng nhóm class.
 
 | Hệ thẻ | SR hiện tại | Định hướng |
 |---|---|---|
-| Chiến binh | Barbarian, Paladin | Chống chịu, cận chiến |
-| Du kích | Amazon, Assassin | Đòn vật lý, chuỗi đánh, Crit/né |
-| Pháp sư | Sorceress, Necromancer | Phép, tài nguyên MP, triệu hồi |
-| Thiên nhiên | Druid | Hồi phục, Bark, cân bằng tấn công/phòng thủ |
+| Chiến binh | Barbarian, Druid | Ưu tiên STR |
+| Sát thủ | Amazon, Assassin | Ưu tiên DEX |
+| Pháp sư | Sorceress, Necromancer | Ưu tiên ENE |
+| Thủ vệ | Paladin | Ưu tiên VIT / DEF |
 
-Thẻ có khóa **hệ + độ hiếm**, không dùng chung SR/SSR. Hệ gắn cố định với nhân vật, không đổi bằng lựa chọn build. Druid đang đứng riêng nên nguồn thẻ ít hơn các hệ hai nhân vật nếu chia đều xác suất theo nhân vật; cần bù bằng tỷ lệ hoặc sự kiện thẻ khi chốt pool. Không tự cho Druid giá tinh hồn thấp hơn trong bản này.
+Thẻ có khóa **hệ + độ hiếm**, không dùng chung SR/SSR. Hệ gắn cố định với nhân vật, không đổi bằng lựa chọn build. Paladin đang đứng riêng nên nguồn thẻ ít hơn các hệ hai nhân vật nếu chia đều xác suất theo nhân vật; cần bù bằng tỷ lệ hoặc sự kiện thẻ khi chốt pool. Không tự cho Paladin giá tinh hồn thấp hơn trong bản này.
 
-Ví dụ: nhận trùng Amazon cho 5 thẻ Du kích SR. Tích đủ 20 có thể nâng Amazon hoặc Assassin một bậc nếu đã sở hữu. Nhận trùng một SSR Pháp sư cho 50 thẻ Pháp sư SSR, dùng nâng một SSR Pháp sư đã sở hữu.
+Ví dụ: nhận trùng Amazon cho 5 thẻ Sát thủ SR. Tích đủ 20 có thể nâng Amazon hoặc Assassin một bậc nếu đã sở hữu. Nhận trùng một SSR Pháp sư cho 50 thẻ Pháp sư SSR, dùng nâng một SSR Pháp sư đã sở hữu.
 
 ## 4. Chi phí và các con số cần hiểu đúng
 

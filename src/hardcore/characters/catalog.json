@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "soulDesign": {
     "status": "draft",
     "completionTarget": {
@@ -12,7 +12,7 @@
   "characters": [
     {
       "id": "amazon",
-      "classKey": "amazon",
+      "classKey": "assassin",
       "name": "Amazon",
       "rarity": "SR",
       "starter": true,
@@ -48,11 +48,12 @@
           "name": "Loạt tên quyết định",
           "description": "Sau thức tỉnh: Barrage tiêu đủ 2 Focus tăng thêm 10% DMG các phát chính của chính action đó. Phát Focus dùng hệ số S3, không nhận thêm hệ số S6 lần thứ hai."
         }
-      ]
+      ],
+      "profileKey": "amazon"
     },
     {
       "id": "barbarian",
-      "classKey": "barbarian",
+      "classKey": "warrior",
       "name": "Barbarian",
       "rarity": "SR",
       "starter": true,
@@ -88,7 +89,8 @@
           "name": "Cơn thịnh nộ cuối",
           "description": "Sau thức tỉnh: Iron Will tiêu đúng 3 Fury tăng thêm 10% DMG của action đó, nhân một lần sau bonus Fury."
         }
-      ]
+      ],
+      "profileKey": "barbarian"
     },
     {
       "id": "assassin",
@@ -128,11 +130,12 @@
           "name": "Kết liễu trong bóng",
           "description": "Sau thức tỉnh: bonus hệ số Crit của Shadow Step dùng 2 Shadow tăng từ +0,25 lên +0,35; nếu không Crit thì không có bonus này."
         }
-      ]
+      ],
+      "profileKey": "assassin"
     },
     {
       "id": "sorceress",
-      "classKey": "sorceress",
+      "classKey": "mage",
       "name": "Sorceress",
       "rarity": "SR",
       "starter": true,
@@ -168,11 +171,12 @@
           "name": "Bùng nổ khai màn",
           "description": "Sau thức tỉnh: Arcane Burst đầu tiên tiêu Echo trong mỗi combat tăng 10% DMG hit chính. Echo tính từ hit chính đã tăng; không nhân thêm 10% trên hit Echo lần thứ hai."
         }
-      ]
+      ],
+      "profileKey": "sorceress"
     },
     {
       "id": "druid",
-      "classKey": "druid",
+      "classKey": "warrior",
       "name": "Druid",
       "rarity": "SR",
       "starter": true,
@@ -208,11 +212,12 @@
           "name": "Rễ bám sinh tồn",
           "description": "Sau thức tỉnh: lần đầu Bark đang có HP bị một phản công thường phá hết trong combat, hồi 5% Max HP nếu Druid còn sống sau toàn bộ đòn đó. Một lần/combat; không tạo thêm Bark từ phần hồi này."
         }
-      ]
+      ],
+      "profileKey": "druid"
     },
     {
       "id": "necromancer",
-      "classKey": "necromancer",
+      "classKey": "mage",
       "name": "Necromancer",
       "rarity": "SR",
       "starter": true,
@@ -248,11 +253,12 @@
           "name": "Nghi lễ hoàn chỉnh",
           "description": "Sau thức tỉnh: Grave Nova thứ hai gây DMG thực sự trong mỗi combat tăng thêm 15% DMG của riêng hit Nova đó. Một lần/combat; không tăng hit chính, không tạo Nova mới."
         }
-      ]
+      ],
+      "profileKey": "necromancer"
     },
     {
       "id": "paladin",
-      "classKey": "paladin",
+      "classKey": "guardian",
       "name": "Paladin",
       "rarity": "SR",
       "starter": true,
@@ -288,7 +294,8 @@
           "name": "Phán quyết thánh",
           "description": "Sau thức tỉnh: action gây DMG đầu tiên tiêu Vindicate trong mỗi combat tăng 20% phần Holy của action đó. Không tăng lần nữa theo số hit hoặc sát thương chính."
         }
-      ]
+      ],
+      "profileKey": "paladin"
     }
   ]
 }
