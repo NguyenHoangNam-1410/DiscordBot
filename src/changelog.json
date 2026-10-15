@@ -1,5 +1,14 @@
 [
   {
+    "id": "b9183241-2414-4461-99fe-1cc774066fa9",
+    "updatedAt": "2026-10-15T11:32:38.369Z",
+    "auditedAt": "2026-10-15T11:32:38.369Z",
+    "title": "Chatbot dùng Gemini",
+    "changes": [
+      "Chatbot hỗ trợ chạy bằng Google Gemini ngoài OpenAI."
+    ]
+  },
+  {
     "id": "1c176501-295f-4da4-8f8b-3e107e4d2c72",
     "updatedAt": "2026-10-15T11:27:07.632Z",
     "auditedAt": "2026-10-15T11:27:07.632Z",
