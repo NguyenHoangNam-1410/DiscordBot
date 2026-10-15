@@ -88,7 +88,7 @@ module.exports = function createModule(dependencies) {
 
   const SKILLS = {
     venance:
-      "Không gây DMG. Cường hóa đánh thường thành phép trong 3 hành động tiếp theo; không hồi MP khi đánh cường hóa. Dùng lại làm mới thời gian và xóa chuỗi/ấn cũ. Boss vẫn phản công.",
+      "Không gây DMG. Cường hóa đánh thường thành phép trong 3 hành động chiến đấu tiếp theo, giữ qua phòng; không hồi MP khi đánh cường hóa. Dùng lại làm mới thời gian và xóa chuỗi/ấn cũ. Boss vẫn phản công.",
     amazon: "Hai phát vật lý ×0,85, tính trúng/Crit riêng.",
     barbarian: "Vật lý ×1,65.",
     assassin: "Vật lý ×1,30, né phản công.",

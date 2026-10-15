@@ -361,7 +361,10 @@ async function main() {
     Math.ceil(
       stats.derive({
         ...cursed,
-        items: cursed.items.map((item) => ({ ...item, cleansedLevels: item.level })),
+        items: cursed.items.map((item) => ({
+          ...item,
+          cleansedLevels: item.level,
+        })),
       }).defense / 2,
     ),
   );
@@ -390,7 +393,10 @@ async function main() {
     Math.ceil(
       stats.derive({
         ...cursed,
-        items: cursed.items.map((item) => ({ ...item, cleansedLevels: item.level })),
+        items: cursed.items.map((item) => ({
+          ...item,
+          cleansedLevels: item.level,
+        })),
       }).defense / 2,
     ),
   );

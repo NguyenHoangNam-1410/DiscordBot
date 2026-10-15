@@ -147,7 +147,8 @@ function draw(state) {
 
 function playerResult(player) {
   const score = handScore(player.cards).total;
-  if (isXiBang(player.cards)) return { value: 23, score, label: "Xì bàng (2 A)" };
+  if (isXiBang(player.cards))
+    return { value: 23, score, label: "Xì bàng (2 A)" };
   if (score > 21) return { value: -1, score, label: "Quắc" };
   if (isBlackjack(player.cards)) return { value: 22, score, label: "Xì dách" };
   return { value: score, score, label: `${score} điểm` };
@@ -311,7 +312,10 @@ const playTx = db.transaction((id, actorId, action, now) => {
     const score = handScore(player.cards).total;
     if (score >= 21) player.status = score > 21 ? "bust" : "stand";
   } else if (action === "stand") {
-    if (!isXiBang(player.cards) && handScore(player.cards).total < PLAYER_MIN_STAND)
+    if (
+      !isXiBang(player.cards) &&
+      handScore(player.cards).total < PLAYER_MIN_STAND
+    )
       throw new Error("MUST_HIT");
     player.status = "stand";
   } else throw new Error("INVALID_ACTION");

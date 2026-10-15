@@ -17,15 +17,15 @@ Ngày chạy: 2026-10-03. Engine và luật 2.0.0 không thay đổi trong lần
 
 Tầng trong bảng là tầng **đã vượt**, không phải tầng chết hoặc tầng vừa bước vào.
 
-| Class | Chiến thuật | Tầng trung bình | Trung vị | Cao nhất | Vượt 100 | Đến boss 999 | Vượt 999 |
-| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Amazon | baseline | 63,82 | 49 | 199 | 1/100 | 0/100 | 0/100 |
-| Barbarian | baseline | 72,34 | 49 | 199 | 4/100 | 0/100 | 0/100 |
-| Assassin | baseline | 134,10 | 83 | 999 | 12/100 | 3/100 | 1/100 |
-| Sorceress | mana | 269,11 | 109 | 949 | 50/100 | 0/100 | 0/100 |
-| Druid | baseline | 103,26 | 49 | 998 | 10/100 | 1/100 | 0/100 |
-| Necromancer | baseline | 761,82 | 998 | 999 | 78/100 | 62/100 | 26/100 |
-| Paladin | power | 55,56 | 48 | 699 | 3/100 | 0/100 | 0/100 |
+| Class       | Chiến thuật | Tầng trung bình | Trung vị | Cao nhất | Vượt 100 | Đến boss 999 | Vượt 999 |
+| ----------- | ----------- | --------------: | -------: | -------: | -------: | -----------: | -------: |
+| Amazon      | baseline    |           63,82 |       49 |      199 |    1/100 |        0/100 |    0/100 |
+| Barbarian   | baseline    |           72,34 |       49 |      199 |    4/100 |        0/100 |    0/100 |
+| Assassin    | baseline    |          134,10 |       83 |      999 |   12/100 |        3/100 |    1/100 |
+| Sorceress   | mana        |          269,11 |      109 |      949 |   50/100 |        0/100 |    0/100 |
+| Druid       | baseline    |          103,26 |       49 |      998 |   10/100 |        1/100 |    0/100 |
+| Necromancer | baseline    |          761,82 |      998 |      999 |   78/100 |       62/100 |   26/100 |
+| Paladin     | power       |           55,56 |       48 |      699 |    3/100 |        0/100 |    0/100 |
 
 Không có run nào hết giới hạn action trong mẫu 700 run. Run thắng được thực hiện action chốt Summit và settlement, không chỉ kiểm tra cờ thắng rồi ép forfeit. Mô phỏng này không kiểm tra tương tác nút trực tiếp trên Discord.
 

@@ -808,7 +808,8 @@ function endAction(s, rng, ops) {
   if (controlWasOpen && !u.isOpen(x)) {
     m.hints = 0;
     m.openUntil = 0;
-    s.lastLog += "\n🛡️ Master Control System: Plasma Shield đã trở lại; tấn công để thu thập manh mối tần số mới.";
+    s.lastLog +=
+      "\n🛡️ Master Control System: Plasma Shield đã trở lại; tấn công để thu thập manh mối tần số mới.";
   }
   e.combatTurn = b.round;
   b.inAction = false;

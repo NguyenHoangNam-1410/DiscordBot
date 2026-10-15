@@ -9,7 +9,16 @@ function standardRank(score, variant) {
 }
 
 // Số liệu riêng của Poker cho thành tựu; chỉ ghi khi người chơi thắng thật (nhận nhiều hơn số đã bỏ ra).
-function recordPokerRun({ guildId, userId, outcome, reason, score = null, variant = null, allIn = false, pvp = false }) {
+function recordPokerRun({
+  guildId,
+  userId,
+  outcome,
+  reason,
+  score = null,
+  variant = null,
+  allIn = false,
+  pvp = false,
+}) {
   if (outcome !== "win") return;
   const showdown = reason === "showdown";
   const foldWin = reason === "everyone-folded";

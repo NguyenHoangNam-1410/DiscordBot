@@ -294,22 +294,26 @@ module.exports = function createModule(dependencies) {
           "Xem **Rift** để đọc Ân nghĩa và Truy nã.",
         ]);
       case "fountain":
-        return show(e.name, "Uống để hồi phục, tăng VIT hoặc gặp Blood Mimic.", [
-          option("Uống", [
-            [
-              percent(e.healThreshold ?? 0.6),
-              `Hồi đầy ${E.hp} HP/${E.mana} MP.`,
-            ],
-            [
-              percent((e.goodThreshold ?? 0.85) - (e.healThreshold ?? 0.6)),
-              `+10 ${E.vit} VIT trong run.`,
-            ],
-            [
-              percent(1 - (e.goodThreshold ?? 0.85)),
-              "Chiến đấu Blood Mimic (Tinh anh).",
-            ],
-          ]),
-        ]);
+        return show(
+          e.name,
+          "Uống để hồi phục, tăng VIT hoặc gặp Blood Mimic.",
+          [
+            option("Uống", [
+              [
+                percent(e.healThreshold ?? 0.6),
+                `Hồi đầy ${E.hp} HP/${E.mana} MP.`,
+              ],
+              [
+                percent((e.goodThreshold ?? 0.85) - (e.healThreshold ?? 0.6)),
+                `+10 ${E.vit} VIT trong run.`,
+              ],
+              [
+                percent(1 - (e.goodThreshold ?? 0.85)),
+                "Chiến đấu Blood Mimic (Tinh anh).",
+              ],
+            ]),
+          ],
+        );
       case "mirror":
         return show(e.name, "Nhận sức mạnh hoặc phá gương để thử vận may.", [
           `**Sức mạnh:** ${attr(main, 10)}.`,

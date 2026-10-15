@@ -18,7 +18,10 @@ const { createFairness, fairInt } = require("./fairnessService");
 const { consumeInventory, getInventoryQuantity } = require("./shopService");
 const engine = require("./coquayEngine");
 const { resultBlock, coins } = require("../utils/rewardText");
-const { getWinMultiplier, formatMultiplier } = require("./winMultiplierService");
+const {
+  getWinMultiplier,
+  formatMultiplier,
+} = require("./winMultiplierService");
 
 const MIN_BET = 10;
 const MAX_BET = 100_000;

@@ -22,18 +22,18 @@ Ví dụ: nhận trùng Barbarian cho 5 thẻ Chiến binh SR; có thể tích �
 
 ## Class, thẻ và nâng tinh hồn
 
-| Class | Nhân vật khởi đầu | Định hướng |
-|---|---|---|
-| Chiến binh | Barbarian, Druid | STR |
-| Thủ vệ | Paladin | VIT / DEF |
-| Sát thủ | Amazon, Assassin | DEX |
-| Pháp sư | Sorceress, Necromancer | ENE |
+| Class      | Nhân vật khởi đầu      | Định hướng |
+| ---------- | ---------------------- | ---------- |
+| Chiến binh | Barbarian, Druid       | STR        |
+| Thủ vệ     | Paladin                | VIT / DEF  |
+| Sát thủ    | Amazon, Assassin       | DEX        |
+| Pháp sư    | Sorceress, Necromancer | ENE        |
 
-| Nội dung | SR | SSR khi được phát hành |
-|---|---:|---:|
-| Nhận trùng một bản | 5 thẻ | 50 thẻ |
-| Một bậc tinh hồn | 20 thẻ | 50 thẻ |
-| S0 → S6 | 120 thẻ | 300 thẻ |
+| Nội dung           |      SR | SSR khi được phát hành |
+| ------------------ | ------: | ---------------------: |
+| Nhận trùng một bản |   5 thẻ |                 50 thẻ |
+| Một bậc tinh hồn   |  20 thẻ |                 50 thẻ |
+| S0 → S6            | 120 thẻ |                300 thẻ |
 
 Thẻ có khóa **class + độ hiếm gốc**. Thẻ SR và SSR tách biệt; không đổi class theo build. Nâng từng nhân vật theo thứ tự S0 → S1 → … → S6, không nâng toàn bộ class cùng lúc. Bản đầu tiên của nhân vật chưa sở hữu mở S0, không đồng thời cho thẻ; bản tiếp theo cho thẻ.
 
@@ -59,12 +59,12 @@ LR nhân vật là tiến trình tài khoản, khác di vật LR trong run. Nân
 
 Giữ các mốc đã chốt cho giai đoạn phát hành SSR:
 
-| Nội dung | Quy tắc |
-|---|---|
-| Một lượt | 300 gem |
-| Mười lượt | 3.000 gem; không giảm giá |
-| Spark | Mỗi lượt hợp lệ của banner có Spark nhận 1 Spark |
-| Đổi SSR | 200 Spark chọn một SSR đã phát hành trong cửa hàng tương ứng |
+| Nội dung  | Quy tắc                                                      |
+| --------- | ------------------------------------------------------------ |
+| Một lượt  | 300 gem                                                      |
+| Mười lượt | 3.000 gem; không giảm giá                                    |
+| Spark     | Mỗi lượt hợp lệ của banner có Spark nhận 1 Spark             |
+| Đổi SSR   | 200 Spark chọn một SSR đã phát hành trong cửa hàng tương ứng |
 
 Spark là tiền quy đổi, không phải pity tự ra SSR ở lượt 200. Nhận SSR ngẫu nhiên không xóa Spark. Không bán Spark riêng. Phạm vi Spark, pool và xác suất phải công khai trước khi mở từng banner; cấu hình có mã ví Spark riêng để không gộp nhầm giữa các loại banner.
 
@@ -78,22 +78,21 @@ Mỗi banner có ID ổn định, version, tên, trạng thái, loại thanh to�
 
 Đổi nội dung pool/tỷ lệ/giá cần tăng version. UI giữ banner/version và revision tài khoản, chặn nút cũ khi số dư hoặc cấu hình đã đổi. Bổ sung banner độc lập qua registry, không dùng chung vé tân thủ cho loại banner mới nếu chưa được khai báo.
 
-| Thành phần | Nguồn |
-|---|---|
-| Danh mục/4 class/độ hiếm | src/hardcore/characters/index.js và catalog.json |
-| Tài khoản, thẻ, nâng tinh hồn | src/hardcore/characters/progression.js |
-| Schema SQLite | src/hardcore/characters/schema.js, migration 44 |
-| Khai báo banner và xác suất | src/hardcore/gacha/banners.json |
-| Kiểm tra pool và lấy mẫu | src/hardcore/gacha/banners.js |
-| Cấp vé, quay, lịch sử | src/hardcore/gacha/service.js |
-| UI banner | src/hardcore/gacha/ui.js |
-| UI nhân vật | src/hardcore/ui/characters.js |
-| Kiểm thử | scripts/test-hardcore-gacha.js |
+| Thành phần                    | Nguồn                                            |
+| ----------------------------- | ------------------------------------------------ |
+| Danh mục/4 class/độ hiếm      | src/hardcore/characters/index.js và catalog.json |
+| Tài khoản, thẻ, nâng tinh hồn | src/hardcore/characters/progression.js           |
+| Schema SQLite                 | src/hardcore/characters/schema.js, migration 44  |
+| Khai báo banner và xác suất   | src/hardcore/gacha/banners.json                  |
+| Kiểm tra pool và lấy mẫu      | src/hardcore/gacha/banners.js                    |
+| Cấp vé, quay, lịch sử         | src/hardcore/gacha/service.js                    |
+| UI banner                     | src/hardcore/gacha/ui.js                         |
+| UI nhân vật                   | src/hardcore/ui/characters.js                    |
+| Kiểm thử                      | scripts/test-hardcore-gacha.js                   |
 
 Toàn bộ cấp vé, trừ tiền/vé, trao item/thẻ, Spark, kết quả và lịch sử đều nằm trong transaction SQLite. Mỗi interaction có operation ID; retry phát lại đúng kết quả đã lưu, không roll lại. Revision chặn hai lượt khác nhau đồng thời sử dụng một màn hình cũ.
 
 Lịch sử lưu banner/version, snapshot toàn pool và xác suất, chi phí, từng kết quả, quy đổi thẻ và operation ID. Các bảng nằm trong cùng database đang backup của bot; không dùng bộ nhớ tiến trình để giữ số dư lâu dài.
-
 
 ## Xác minh triển khai
 

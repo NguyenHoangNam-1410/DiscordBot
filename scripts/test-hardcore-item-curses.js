@@ -378,7 +378,10 @@ try {
     Math.ceil(
       stats.derive({
         ...migrated,
-        items: migrated.items.map((item) => ({ ...item, cleansedLevels: item.level })),
+        items: migrated.items.map((item) => ({
+          ...item,
+          cleansedLevels: item.level,
+        })),
       }).defense / 2,
     ),
   );

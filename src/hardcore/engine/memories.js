@@ -55,7 +55,13 @@ module.exports = function createModule(dependencies) {
     if (e.hp > 0 || state.hp <= 0 || e.defeatSettled) return;
     if (bosses.advancePhase(state, e)) return;
     e.defeatSettled = true;
-    state.lastLog += require("../innate").finish(state, e, heal, bosses.effectiveMaxMana(state));
+    require("../characters/venance").finish(state);
+    state.lastLog += require("../innate").finish(
+      state,
+      e,
+      heal,
+      bosses.effectiveMaxMana(state),
+    );
     delete e.awakeningCombat;
     delete e.awakeningGroundThisAction;
     require("../awakening").grant(state, e);
@@ -71,13 +77,16 @@ module.exports = function createModule(dependencies) {
     state.lastLog += `\n${monsterIcon(e)} Hạ **${e.name}**.`;
     if (require("../events/explorationMarks").enabled(state)) {
       const m = require("../events/explorationMarks").ensure(state);
-      const hadMimicBoost = require("../events/explorationMarks").boosted(state);
+      const hadMimicBoost = require("../events/explorationMarks").boosted(
+        state,
+      );
       if (!hadMimicBoost) m.mimicBoost = false;
       if (e.mimicKind === "mimic" || e.name === "Mimic") m.mimic = true;
       if (world.mimicKind(e) === "ancient_mimic") m.ancientMimic = true;
       if (!hadMimicBoost && m.mimic && m.ancientMimic) {
         m.mimicBoost = require("../towerMemories").canQueue(state);
-        if (!m.mimicBoost) state.lastLog += "\nĐầy 8 ký ức: chưa nhận được Dấu vết Mimic.";
+        if (!m.mimicBoost)
+          state.lastLog += "\nĐầy 8 ký ức: chưa nhận được Dấu vết Mimic.";
       }
       if (e.thiefTrial && !m.underworld) {
         m.underworld = true;

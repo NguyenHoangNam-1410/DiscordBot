@@ -27,15 +27,15 @@ Chu kỳ: **mỗi thứ Hai**, timezone `Asia/Bangkok`
 
 Vòng đầu bắt đầu từ ISO week 41 năm 2026:
 
-| ISO week | Thời gian | Class | Hướng puzzle chính |
-|---|---|---|---|
-| 2026-W41 | 05/10–12/10 | Sorceress | Mana, spell order, Arcane Reflection |
-| 2026-W42 | 12/10–19/10 | Druid | Heal timing, HP threshold, regeneration |
-| 2026-W43 | 19/10–26/10 | Necromancer | Ward timing, block charge, spell control |
-| 2026-W44 | 26/10–02/11 | Paladin | Defend chain, physical/magic intent |
-| 2026-W45 | 02/11–09/11 | Amazon | Barrage hit order, multi-target shields |
-| 2026-W46 | 09/11–16/11 | Barbarian | Physical damage, low Mana, rage threshold |
-| 2026-W47 | 16/11–23/11 | Assassin | Dodge timing, counterattack, fragile HP |
+| ISO week | Thời gian   | Class       | Hướng puzzle chính                        |
+| -------- | ----------- | ----------- | ----------------------------------------- |
+| 2026-W41 | 05/10–12/10 | Sorceress   | Mana, spell order, Arcane Reflection      |
+| 2026-W42 | 12/10–19/10 | Druid       | Heal timing, HP threshold, regeneration   |
+| 2026-W43 | 19/10–26/10 | Necromancer | Ward timing, block charge, spell control  |
+| 2026-W44 | 26/10–02/11 | Paladin     | Defend chain, physical/magic intent       |
+| 2026-W45 | 02/11–09/11 | Amazon      | Barrage hit order, multi-target shields   |
+| 2026-W46 | 09/11–16/11 | Barbarian   | Physical damage, low Mana, rage threshold |
+| 2026-W47 | 16/11–23/11 | Assassin    | Dodge timing, counterattack, fragile HP   |
 
 Tuần 48 quay lại Sorceress nhưng dùng seed và kịch bản khác hoàn toàn.
 
@@ -43,13 +43,13 @@ Không dùng trực tiếp `isoWeek % 7` vì thêm season đặc biệt có th�
 
 ```js
 const CLASS_ROTATION = [
-  'sorceress',
-  'druid',
-  'necromancer',
-  'paladin',
-  'amazon',
-  'barbarian',
-  'assassin',
+  "sorceress",
+  "druid",
+  "necromancer",
+  "paladin",
+  "amazon",
+  "barbarian",
+  "assassin",
 ];
 ```
 
@@ -312,9 +312,7 @@ Production code không chứa mảng canonical viết tay. Generator trả:
 
 ```js
 {
-  payload,
-  canonicalSolution,
-  audit
+  (payload, canonicalSolution, audit);
 }
 ```
 
@@ -354,12 +352,12 @@ Một challenge bị reject nếu chỉ gồm các clue trực tiếp Attack/Ski
 
 Tỷ lệ mục tiêu:
 
-| Loại bước | Tỷ lệ |
-|---|---:|
-| Clue trực tiếp | tối đa 40% |
-| Quản lý HP/Mana | tối thiểu 20% |
-| Delayed consequence | tối thiểu 15% |
-| Memory/echo | tối thiểu 10% |
+| Loại bước              |         Tỷ lệ |
+| ---------------------- | ------------: |
+| Clue trực tiếp         |    tối đa 40% |
+| Quản lý HP/Mana        | tối thiểu 20% |
+| Delayed consequence    | tối thiểu 15% |
+| Memory/echo            | tối thiểu 10% |
 | Paradox/class mechanic | tối thiểu 15% |
 
 Yêu cầu thêm:
@@ -386,24 +384,24 @@ wrongActionPolicy: immediate_reset
 
 Phân bổ số bước:
 
-| Tầng | Số bước | Loại chính |
-|---:|---:|---|
-| 1 | 4 | Học ba luật và một bước giả |
-| 2 | 4 | Mana order |
-| 3 | 5 | Physical/Arcane alternation |
-| 4 | 5 | Event HP fork |
-| 5 | 4 | Paradox choice và kiểm tra tức thì |
-| 6 | 5 | Mana Fracture chain |
-| 7 | 5 | Double Verdict |
-| 8 | 5 | Mana event và combat nối tiếp |
-| 9 | 6 | Delayed reflection |
-| 10 | 5 | Purification fork |
-| 11 | 6 | Debt Collector |
-| 12 | 6 | Reverse memory tầng 1 |
-| 13 | 6 | Class seal và resource lock |
-| 14 | 7 | Final Auditor |
-| 15 | 8 | The Unbroken Point |
-| **Tổng** | **81** | — |
+|     Tầng | Số bước | Loại chính                         |
+| -------: | ------: | ---------------------------------- |
+|        1 |       4 | Học ba luật và một bước giả        |
+|        2 |       4 | Mana order                         |
+|        3 |       5 | Physical/Arcane alternation        |
+|        4 |       5 | Event HP fork                      |
+|        5 |       4 | Paradox choice và kiểm tra tức thì |
+|        6 |       5 | Mana Fracture chain                |
+|        7 |       5 | Double Verdict                     |
+|        8 |       5 | Mana event và combat nối tiếp      |
+|        9 |       6 | Delayed reflection                 |
+|       10 |       5 | Purification fork                  |
+|       11 |       6 | Debt Collector                     |
+|       12 |       6 | Reverse memory tầng 1              |
+|       13 |       6 | Class seal và resource lock        |
+|       14 |       7 | Final Auditor                      |
+|       15 |       8 | The Unbroken Point                 |
+| **Tổng** |  **81** | —                                  |
 
 Generator tuần đầu bắt buộc tạo:
 

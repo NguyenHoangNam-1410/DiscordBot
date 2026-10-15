@@ -2,12 +2,7 @@
   "version": "2.0.0",
   "pilotSeed": "survival-v2-tuning-2026-10-03",
   "runsPerClassPerPolicy": 20,
-  "policies": [
-    "baseline",
-    "power",
-    "guard",
-    "mana"
-  ],
+  "policies": ["baseline", "power", "guard", "mana"],
   "pilotRuns": 560,
   "objective": "Maximize completed999, tie-break by mean cleared floor",
   "selected": {

@@ -1,7 +1,14 @@
 const { db } = require("../db");
 
 // Số liệu riêng của Đua ngựa cho thành tựu. Hòa không phá chuỗi thắng; thua về 0.
-function recordHorseRun({ guildId, userId, outcome, winnerMultiplier = 0, winnerSpecial = false, distinctHorses = 1 }) {
+function recordHorseRun({
+  guildId,
+  userId,
+  outcome,
+  winnerMultiplier = 0,
+  winnerSpecial = false,
+  distinctHorses = 1,
+}) {
   const win = outcome === "win";
   db.prepare(
     `INSERT INTO horse_records(guild_id,user_id,best_win_multiplier,special_wins,spread_wins,current_streak,best_streak,updated_at)

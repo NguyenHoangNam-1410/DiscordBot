@@ -25,7 +25,14 @@ function lose(x, amount, ops, nonlethal = false) {
     ),
   );
   if (damage <= 0) return 0;
-  if (ops?.hurt) ops.hurt(x.s, damage, !nonlethal, false, !require("../innate").enabled(x.s));
+  if (ops?.hurt)
+    ops.hurt(
+      x.s,
+      damage,
+      !nonlethal,
+      false,
+      !require("../innate").enabled(x.s),
+    );
   else x.s.hp -= damage;
   if (x.s.hp <= 0)
     x.s.lastDeathCause = x.e.name + " · cơ chế gây " + damage + " DMG chuẩn.";

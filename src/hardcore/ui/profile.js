@@ -285,11 +285,17 @@ function tabEmbed(guildId, user, tab, page, overview) {
   if (tab === "fights") {
     const killers =
       s.killers
-        .map((k, i) => `${i + 1}. ${monsterIcon(k.name)} ${k.name} — ${k.count} lần`)
+        .map(
+          (k, i) =>
+            `${i + 1}. ${monsterIcon(k.name)} ${k.name} — ${k.count} lần`,
+        )
         .join("\n") || "Chưa tử trận ván nào.";
     const bosses =
       s.bosses
-        .map((b, i) => `${i + 1}. ${monsterIcon(b.name)} ${b.name} — ${b.count} lần`)
+        .map(
+          (b, i) =>
+            `${i + 1}. ${monsterIcon(b.name)} ${b.name} — ${b.count} lần`,
+        )
         .join("\n") || "Chưa hạ boss nào.";
     const floors =
       s.deathFloors.map((f) => `Tầng ${f.floor}: ${f.count} lần`).join(" · ") ||

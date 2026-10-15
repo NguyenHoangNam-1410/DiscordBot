@@ -1298,43 +1298,189 @@ const HARDCORE_CLASSES = Object.freeze({
 });
 const CLASS_FLOOR_TIERS = Object.freeze([
   { floor: 50, tag: "50", title: "Tân binh", reward: 20_000, diamonds: 60 },
-  { floor: 150, tag: "150", title: "Chiến binh", reward: 80_000, diamonds: 200 },
-  { floor: 300, tag: "300", title: "Huyền thoại", reward: 200_000, diamonds: 500 },
+  {
+    floor: 150,
+    tag: "150",
+    title: "Chiến binh",
+    reward: 80_000,
+    diamonds: 200,
+  },
+  {
+    floor: 300,
+    tag: "300",
+    title: "Huyền thoại",
+    reward: 200_000,
+    diamonds: 500,
+  },
   { floor: 500, tag: "500", title: "Bất tử", reward: 500_000, diamonds: 1000 },
 ]);
-const classFloorAchievements = Object.entries(HARDCORE_CLASSES).flatMap(([key, name]) =>
-  CLASS_FLOOR_TIERS.map((tier) => ({
-    id: `hc_class_${key}_${tier.tag}`,
-    name: `${name} ${tier.title}`,
-    description: `Đạt tầng ${tier.floor} Sinh tồn bằng ${name}`,
-    target: tier.floor,
-    reward: tier.reward,
-    diamonds: tier.diamonds,
-    cosmetic: ringForAchievement("hc_class_" + key + "_" + tier.tag)?.id || null,
-    metric: `hcClass_${key}`,
-  })),
+const classFloorAchievements = Object.entries(HARDCORE_CLASSES).flatMap(
+  ([key, name]) =>
+    CLASS_FLOOR_TIERS.map((tier) => ({
+      id: `hc_class_${key}_${tier.tag}`,
+      name: `${name} ${tier.title}`,
+      description: `Đạt tầng ${tier.floor} Sinh tồn bằng ${name}`,
+      target: tier.floor,
+      reward: tier.reward,
+      diamonds: tier.diamonds,
+      cosmetic:
+        ringForAchievement("hc_class_" + key + "_" + tier.tag)?.id || null,
+      metric: `hcClass_${key}`,
+    })),
 );
 const eventAchievements = [
-  ["hc_event_5", "Người ưa bất ngờ", "Gặp 5 sự kiện đặc biệt trong Sinh tồn", 5, 10_000, 30, "hardcoreEvents"],
-  ["hc_event_25", "Kẻ săn sự kiện", "Gặp 25 sự kiện đặc biệt trong Sinh tồn", 25, 40_000, 120, "hardcoreEvents"],
-  ["hc_event_100", "Con cưng của vận may", "Gặp 100 sự kiện đặc biệt trong Sinh tồn", 100, 150_000, 400, "hardcoreEvents"],
-  ["hc_chain_3", "Phản ứng dây chuyền", "Kích hoạt 3 chuỗi sự kiện (sự kiện dẫn tới trận chiến)", 3, 15_000, 40, "hardcoreChains"],
-  ["hc_chain_15", "Domino chết chóc", "Kích hoạt 15 chuỗi sự kiện", 15, 60_000, 150, "hardcoreChains"],
-  ["hc_chain_50", "Bậc thầy chuỗi", "Kích hoạt 50 chuỗi sự kiện", 50, 200_000, 500, "hardcoreChains"],
-  ["hc_kinds_5", "Nhà thám hiểm", "Gặp 5 loại sự kiện đặc biệt khác nhau", 5, 15_000, 40, "hardcoreEventKinds"],
-  ["hc_kinds_10", "Nhà sưu tầm biến cố", "Gặp 10 loại sự kiện đặc biệt khác nhau", 10, 60_000, 150, "hardcoreEventKinds"],
-  ["hc_kinds_20", "Đã thấy tất cả", "Gặp đủ 20 loại sự kiện đặc biệt", 20, 250_000, 600, "hardcoreEventKinds"],
-  ["hc_kills_50", "Thợ săn quái", "Hạ 50 quái trong Sinh tồn", 50, 10_000, 30, "hardcoreKills"],
-  ["hc_kills_500", "Đồ tể hầm ngục", "Hạ 500 quái trong Sinh tồn", 500, 60_000, 150, "hardcoreKills"],
-  ["hc_kills_2500", "Lưỡi hái vực sâu", "Hạ 2.500 quái trong Sinh tồn", 2500, 250_000, 600, "hardcoreKills"],
-  ["hc_boss_1", "Kẻ diệt trùm", "Hạ 1 boss trong Sinh tồn", 1, 10_000, 30, "hardcoreBossKills"],
-  ["hc_boss_10", "Thợ săn trùm", "Hạ 10 boss trong Sinh tồn", 10, 60_000, 150, "hardcoreBossKills"],
-  ["hc_boss_50", "Bóng đen của trùm", "Hạ 50 boss trong Sinh tồn", 50, 250_000, 600, "hardcoreBossKills"],
-].map(([id, name, description, target, reward, diamonds, metric]) => ({ id, name, description, target, reward, diamonds, metric }));
+  [
+    "hc_event_5",
+    "Người ưa bất ngờ",
+    "Gặp 5 sự kiện đặc biệt trong Sinh tồn",
+    5,
+    10_000,
+    30,
+    "hardcoreEvents",
+  ],
+  [
+    "hc_event_25",
+    "Kẻ săn sự kiện",
+    "Gặp 25 sự kiện đặc biệt trong Sinh tồn",
+    25,
+    40_000,
+    120,
+    "hardcoreEvents",
+  ],
+  [
+    "hc_event_100",
+    "Con cưng của vận may",
+    "Gặp 100 sự kiện đặc biệt trong Sinh tồn",
+    100,
+    150_000,
+    400,
+    "hardcoreEvents",
+  ],
+  [
+    "hc_chain_3",
+    "Phản ứng dây chuyền",
+    "Kích hoạt 3 chuỗi sự kiện (sự kiện dẫn tới trận chiến)",
+    3,
+    15_000,
+    40,
+    "hardcoreChains",
+  ],
+  [
+    "hc_chain_15",
+    "Domino chết chóc",
+    "Kích hoạt 15 chuỗi sự kiện",
+    15,
+    60_000,
+    150,
+    "hardcoreChains",
+  ],
+  [
+    "hc_chain_50",
+    "Bậc thầy chuỗi",
+    "Kích hoạt 50 chuỗi sự kiện",
+    50,
+    200_000,
+    500,
+    "hardcoreChains",
+  ],
+  [
+    "hc_kinds_5",
+    "Nhà thám hiểm",
+    "Gặp 5 loại sự kiện đặc biệt khác nhau",
+    5,
+    15_000,
+    40,
+    "hardcoreEventKinds",
+  ],
+  [
+    "hc_kinds_10",
+    "Nhà sưu tầm biến cố",
+    "Gặp 10 loại sự kiện đặc biệt khác nhau",
+    10,
+    60_000,
+    150,
+    "hardcoreEventKinds",
+  ],
+  [
+    "hc_kinds_20",
+    "Đã thấy tất cả",
+    "Gặp đủ 20 loại sự kiện đặc biệt",
+    20,
+    250_000,
+    600,
+    "hardcoreEventKinds",
+  ],
+  [
+    "hc_kills_50",
+    "Thợ săn quái",
+    "Hạ 50 quái trong Sinh tồn",
+    50,
+    10_000,
+    30,
+    "hardcoreKills",
+  ],
+  [
+    "hc_kills_500",
+    "Đồ tể hầm ngục",
+    "Hạ 500 quái trong Sinh tồn",
+    500,
+    60_000,
+    150,
+    "hardcoreKills",
+  ],
+  [
+    "hc_kills_2500",
+    "Lưỡi hái vực sâu",
+    "Hạ 2.500 quái trong Sinh tồn",
+    2500,
+    250_000,
+    600,
+    "hardcoreKills",
+  ],
+  [
+    "hc_boss_1",
+    "Kẻ diệt trùm",
+    "Hạ 1 boss trong Sinh tồn",
+    1,
+    10_000,
+    30,
+    "hardcoreBossKills",
+  ],
+  [
+    "hc_boss_10",
+    "Thợ săn trùm",
+    "Hạ 10 boss trong Sinh tồn",
+    10,
+    60_000,
+    150,
+    "hardcoreBossKills",
+  ],
+  [
+    "hc_boss_50",
+    "Bóng đen của trùm",
+    "Hạ 50 boss trong Sinh tồn",
+    50,
+    250_000,
+    600,
+    "hardcoreBossKills",
+  ],
+].map(([id, name, description, target, reward, diamonds, metric]) => ({
+  id,
+  name,
+  description,
+  target,
+  reward,
+  diamonds,
+  metric,
+}));
 const godAchievement = {
-  id: "hc_god_rngesus_1", name: "Được Thần Vận Mệnh Chọn",
+  id: "hc_god_rngesus_1",
+  name: "Được Thần Vận Mệnh Chọn",
   description: "Gặp God of RNGesus và nhận phước lành trong Sinh tồn",
-  target: 1, reward: 0, diamonds: 0, metric: "hardcoreGodBlessings",
+  target: 1,
+  reward: 0,
+  diamonds: 0,
+  metric: "hardcoreGodBlessings",
 };
 const relicAchievements = [
   {
@@ -1435,9 +1581,20 @@ const CATEGORY_GROUPS = Object.freeze({
   pokerHandRank: "pokerHands",
 });
 const achievementCategory = (item) =>
-  item.metric.startsWith("hcClass_") ? "hardcoreClass" : CATEGORY_GROUPS[item.metric] || item.metric;
+  item.metric.startsWith("hcClass_")
+    ? "hardcoreClass"
+    : CATEGORY_GROUPS[item.metric] || item.metric;
 
-const BETTING_GAMES = Object.freeze(["baucua","taixiu","chinchiro","blackjack","poker","duangua","mines","coquay"]);
+const BETTING_GAMES = Object.freeze([
+  "baucua",
+  "taixiu",
+  "chinchiro",
+  "blackjack",
+  "poker",
+  "duangua",
+  "mines",
+  "coquay",
+]);
 const BETTING_SQL = BETTING_GAMES.map((game) => `'${game}'`).join(",");
 
 function metrics(guildId, userId) {
@@ -1471,7 +1628,9 @@ function metrics(guildId, userId) {
     classFloors[`hcClass_${row.class_key}`] = row.best || 0;
   const eventRow =
     db
-      .prepare("SELECT events, chains, kills, boss_kills, kinds_json FROM hardcore_event_stats WHERE guild_id=? AND user_id=?")
+      .prepare(
+        "SELECT events, chains, kills, boss_kills, kinds_json FROM hardcore_event_stats WHERE guild_id=? AND user_id=?",
+      )
       .get(guild, user) || {};
   const betting = db
     .prepare(
@@ -1617,16 +1776,29 @@ function metrics(guildId, userId) {
     gameTypes,
     hardcoreFloor,
     ...classFloors,
-    hardcoreConquerorRelics: Math.max(relicCounts.conquerors_covenant, eventRow.kinds_json && JSON.parse(eventRow.kinds_json).includes("conquerors_covenant") ? 1 : 0),
+    hardcoreConquerorRelics: Math.max(
+      relicCounts.conquerors_covenant,
+      eventRow.kinds_json &&
+        JSON.parse(eventRow.kinds_json).includes("conquerors_covenant")
+        ? 1
+        : 0,
+    ),
     hardcoreGildedRelics: relicCounts.gilded_soul,
     hardcoreKingslayerRelics: relicCounts.kingslayers_testament,
     hardcoreAstralRelics: relicCounts.astral_singularity,
-    hardcoreGodBlessings: db.prepare("SELECT blessings FROM hardcore_rngesus_favor WHERE guild_id=? AND user_id=?").get(guild, user)?.blessings || 0,
+    hardcoreGodBlessings:
+      db
+        .prepare(
+          "SELECT blessings FROM hardcore_rngesus_favor WHERE guild_id=? AND user_id=?",
+        )
+        .get(guild, user)?.blessings || 0,
     hardcoreEvents: eventRow.events || 0,
     hardcoreChains: eventRow.chains || 0,
     hardcoreKills: eventRow.kills || 0,
     hardcoreBossKills: eventRow.boss_kills || 0,
-    hardcoreEventKinds: eventRow.kinds_json ? JSON.parse(eventRow.kinds_json).length : 0,
+    hardcoreEventKinds: eventRow.kinds_json
+      ? JSON.parse(eventRow.kinds_json).length
+      : 0,
   };
 }
 
@@ -1657,13 +1829,14 @@ function claimAchievements(guildId, userId, now = Date.now()) {
       db.prepare(
         "INSERT INTO achievement_claims(guild_id,user_id,achievement_id,claimed_at) VALUES(?,?,?,?)",
       ).run(String(guildId), String(userId), item.id, now);
-      if (item.reward > 0) creditCoins({
-        guildId,
-        userId,
-        amount: item.reward,
-        reason: `achievement:${item.id}`,
-        operationId: `achievement:${guildId}:${userId}:${item.id}`,
-      });
+      if (item.reward > 0)
+        creditCoins({
+          guildId,
+          userId,
+          amount: item.reward,
+          reason: `achievement:${item.id}`,
+          operationId: `achievement:${guildId}:${userId}:${item.id}`,
+        });
       if (item.diamonds)
         addDiamonds(guildId, userId, item.diamonds, {
           reason: `achievement:${item.id}`,

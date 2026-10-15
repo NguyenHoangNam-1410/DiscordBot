@@ -1526,21 +1526,21 @@ function bet(guildId, roundId, userId, choice, amount) {
   const makeDuel = (table, status, updatedAt) => {
     const id = crypto.randomBytes(4).toString("hex");
     db.prepare(
-        "INSERT INTO blackjack_duels(id,guild_id,channel_id,message_id,challenger_id,opponent_id,stake,state_json,status,expires_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-      ).run(
-        id,
-        recordGuild,
-        "c",
-        null,
-        "a",
-        "b",
-        100,
-        "{}",
-        status,
-        updatedAt,
-        updatedAt,
-        updatedAt,
-      );
+      "INSERT INTO blackjack_duels(id,guild_id,channel_id,message_id,challenger_id,opponent_id,stake,state_json,status,expires_at,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+    ).run(
+      id,
+      recordGuild,
+      "c",
+      null,
+      "a",
+      "b",
+      100,
+      "{}",
+      status,
+      updatedAt,
+      updatedAt,
+      updatedAt,
+    );
     return id;
   };
   const makeTable = (status, updatedAt) => {

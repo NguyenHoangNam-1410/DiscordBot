@@ -575,9 +575,7 @@ function blackjackEmbed(state, userId, result = null, sessionId = null) {
   const dealerCards = result
     ? largeCards(state.dealer)
     : `${largeCards([state.dealer[0]])}　${hiddenCards(state, 1, sessionId)}`;
-  const dealerScore = result
-    ? ` · **${handValueText(state.dealer)}**`
-    : "";
+  const dealerScore = result ? ` · **${handValueText(state.dealer)}**` : "";
   const hands = state.hands
     .map((hand, index) =>
       handText(hand, index, state.active, result?.results?.[index]),
@@ -803,7 +801,8 @@ function tableStatusResult(player, dealer, dealerNatural) {
   const dealerType = handType(dealer);
   let outcome = "loss";
   const dealerScore = handScore(dealer).total;
-  if (playerType === "xibang") outcome = dealerType === "xibang" ? "draw" : "win";
+  if (playerType === "xibang")
+    outcome = dealerType === "xibang" ? "draw" : "win";
   else if (dealerType === "xibang") outcome = "loss";
   else if (playerType === "bust") outcome = dealerScore > 21 ? "draw" : "loss";
   else if (playerType === "ngulinh" && dealerType !== "ngulinh")

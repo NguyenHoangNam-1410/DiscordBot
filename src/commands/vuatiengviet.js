@@ -51,7 +51,11 @@ function countdownBand(question, now = Date.now()) {
   if (remaining >= 10) return "yellow";
   return "red";
 }
-const OUTCOME_BANDS = Object.freeze({ correct: "blue", skipped: "gray", expired: "gray" });
+const OUTCOME_BANDS = Object.freeze({
+  correct: "blue",
+  skipped: "gray",
+  expired: "gray",
+});
 function questionColor(question, outcome = null, now = Date.now()) {
   return COLORS[OUTCOME_BANDS[outcome] || countdownBand(question, now)];
 }
@@ -223,7 +227,11 @@ async function postNextQuestionMessage(guildId, channel, outcome = "correct") {
       await previousMessage
         .edit({
           embeds: old
-            ? [EmbedBuilder.from(old).setColor(COLORS[OUTCOME_BANDS[outcome] || "blue"])]
+            ? [
+                EmbedBuilder.from(old).setColor(
+                  COLORS[OUTCOME_BANDS[outcome] || "blue"],
+                ),
+              ]
             : previousMessage.embeds,
           components: [],
         })
@@ -439,7 +447,11 @@ const command = {
           allowedMentions: { parse: [] },
         })
         .catch(() => null);
-    await postNextQuestionMessage(interaction.guildId, interaction.channel, "skipped");
+    await postNextQuestionMessage(
+      interaction.guildId,
+      interaction.channel,
+      "skipped",
+    );
     return interaction.followUp({
       content: skipStatusText(result),
       flags: MessageFlags.Ephemeral,
@@ -543,7 +555,11 @@ const playerCommand = {
           allowedMentions: { parse: [] },
         })
         .catch(() => null);
-    await postNextQuestionMessage(interaction.guildId, interaction.channel, "skipped");
+    await postNextQuestionMessage(
+      interaction.guildId,
+      interaction.channel,
+      "skipped",
+    );
     return interaction.reply({
       content: skipStatusText(result),
       flags: MessageFlags.Ephemeral,

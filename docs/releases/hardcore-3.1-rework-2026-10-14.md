@@ -6,15 +6,15 @@
 
 Mỗi class 100 run; tổng 700 run trong vòng đối chiếu cuối, không dùng hệ số thử nghiệm bên ngoài.
 
-| Class | Theo số ban đầu trong tài liệu | Sau hiệu chỉnh, bản áp dụng | Thắng/run | Hệ số DMG nhân vật đánh boss | Tới boss cuối | Tầng trung bình |
-|---|---:|---:|---:|---:|---:|---:|
-| Druid | 46% | 11% | 11/100 | 0,3 | 11 | 531,1 |
-| Amazon | 17% | 11% | 11/100 | 2,1 | 12 | 633,8 |
-| Barbarian | 24% | 9% | 9/100 | 0,504 | 10 | 478,2 |
-| Assassin | 50% | 9% | 9/100 | 0,36 | 9 | 238 |
-| Sorceress | 9% | 9% | 9/100 | 1,6 | 14 | 877,5 |
-| Necromancer | 29% | 9% | 9/100 | 0,135 | 10 | 540 |
-| Paladin | 29% | 8% | 8/100 | 0,5 | 14 | 494 |
+| Class       | Theo số ban đầu trong tài liệu | Sau hiệu chỉnh, bản áp dụng | Thắng/run | Hệ số DMG nhân vật đánh boss | Tới boss cuối | Tầng trung bình |
+| ----------- | -----------------------------: | --------------------------: | --------: | ---------------------------: | ------------: | --------------: |
+| Druid       |                            46% |                         11% |    11/100 |                          0,3 |            11 |           531,1 |
+| Amazon      |                            17% |                         11% |    11/100 |                          2,1 |            12 |           633,8 |
+| Barbarian   |                            24% |                          9% |     9/100 |                        0,504 |            10 |           478,2 |
+| Assassin    |                            50% |                          9% |     9/100 |                         0,36 |             9 |             238 |
+| Sorceress   |                             9% |                          9% |     9/100 |                          1,6 |            14 |           877,5 |
+| Necromancer |                            29% |                          9% |     9/100 |                        0,135 |            10 |             540 |
+| Paladin     |                            29% |                          8% |     8/100 |                          0,5 |            14 |             494 |
 
 ## Các thay đổi đã áp dụng
 
@@ -33,15 +33,15 @@ Mỗi class 100 run; tổng 700 run trong vòng đối chiếu cuối, không d�
 
 Chỉ thay hệ số DMG của nhân vật khi đánh boss giữa các vòng; giữ nguyên cơ chế và chiến thuật. Mỗi cấu hình trong bảng được đo đủ 100 run riêng.
 
-| Class | Hệ số hiệu dụng → tỷ lệ thắng |
-|---|---|
-| Druid | 0,6 → 46% · 0,3 → 11% |
-| Amazon | 3,5 → 17% · 2,1 → 11% · 2,275 → 13% · 2,975 → 18% |
-| Barbarian | 0,7 → 24% · 0,455 → 5% · 0,504 → 9% |
-| Assassin | 0,8 → 50% · 0,3 → 1% · 0,35 → 5% · 0,36 → 9% · 0,365 → 17% · 0,375 → 16% · 0,4 → 19% |
-| Sorceress | 1,6 → 9% |
-| Necromancer | 0,45 → 29% · 0,135 → 9% · 0,2925 → 29% |
-| Paladin | 0,7 → 29% · 0,42 → 6% · 0,455 → 5% · 0,5 → 8% |
+| Class       | Hệ số hiệu dụng → tỷ lệ thắng                                                        |
+| ----------- | ------------------------------------------------------------------------------------ |
+| Druid       | 0,6 → 46% · 0,3 → 11%                                                                |
+| Amazon      | 3,5 → 17% · 2,1 → 11% · 2,275 → 13% · 2,975 → 18%                                    |
+| Barbarian   | 0,7 → 24% · 0,455 → 5% · 0,504 → 9%                                                  |
+| Assassin    | 0,8 → 50% · 0,3 → 1% · 0,35 → 5% · 0,36 → 9% · 0,365 → 17% · 0,375 → 16% · 0,4 → 19% |
+| Sorceress   | 1,6 → 9%                                                                             |
+| Necromancer | 0,45 → 29% · 0,135 → 9% · 0,2925 → 29%                                               |
+| Paladin     | 0,7 → 29% · 0,42 → 6% · 0,455 → 5% · 0,5 → 8%                                        |
 
 Tổng lượt chạy hiệu chỉnh: 2400. Vòng đối chiếu cuối: 700 run. Không cộng các cấu hình lặp lại thành một mẫu thắng chung.
 
@@ -58,14 +58,14 @@ Tổng lượt chạy hiệu chỉnh: 2400. Vòng đối chiếu cuối: 700 run
 
 ## Điểm nghẽn ở bản áp dụng
 
-| Class | Tầng tử trận thường gặp | Boss gây nhiều lần tử trận nhất |
-|---|---|---|
-| Druid | 50 (30) · 950 (15) · 100 (9) | Assur (13) · The Butcher (10) · Samael (8) |
-| Amazon | 700 (10) · 550 (6) · 650 (6) | Inarius (12) · Spirit of Giyua (8) · Manoruk (6) |
-| Barbarian | 50 (22) · 100 (14) · 700 (7) | Inarius (8) · Spirit of Giyua (6) · Manoruk (5) |
-| Assassin | 50 (54) · 100 (17) · 150 (5) | Assur (8) · Spirit of Giyua (7) · Phoboss (7) |
-| Sorceress | 900 (25) · 950 (20) · 850 (10) | Gharbad the Weak (8) · The Butcher (7) · Athulua (7) |
-| Necromancer | 50 (28) · 800 (9) · 750 (8) | Sescheron's Destroyer (14) · Inarius (13) · Assur (9) |
-| Paladin | 50 (33) · 100 (13) · 950 (10) | Samael (11) · Deimoss the Fleshweaver (6) · Assur (5) |
+| Class       | Tầng tử trận thường gặp        | Boss gây nhiều lần tử trận nhất                       |
+| ----------- | ------------------------------ | ----------------------------------------------------- |
+| Druid       | 50 (30) · 950 (15) · 100 (9)   | Assur (13) · The Butcher (10) · Samael (8)            |
+| Amazon      | 700 (10) · 550 (6) · 650 (6)   | Inarius (12) · Spirit of Giyua (8) · Manoruk (6)      |
+| Barbarian   | 50 (22) · 100 (14) · 700 (7)   | Inarius (8) · Spirit of Giyua (6) · Manoruk (5)       |
+| Assassin    | 50 (54) · 100 (17) · 150 (5)   | Assur (8) · Spirit of Giyua (7) · Phoboss (7)         |
+| Sorceress   | 900 (25) · 950 (20) · 850 (10) | Gharbad the Weak (8) · The Butcher (7) · Athulua (7)  |
+| Necromancer | 50 (28) · 800 (9) · 750 (8)    | Sescheron's Destroyer (14) · Inarius (13) · Assur (9) |
+| Paladin     | 50 (33) · 100 (13) · 950 (10)  | Samael (11) · Deimoss the Fleshweaver (6) · Assur (5) |
 
 Thời điểm tổng hợp: 2026-10-14T08:30:09.772Z.

@@ -2,15 +2,15 @@
 
 7.000 run đánh giá, 1.000/class. Thắng = hạ Deimoss, sống qua tầng 999 và chốt Summit. Chạy trên engine hiện tại tại commit nền 3cb961a, với simulator đã sửa theo hành động công khai hiện hành; không chỉnh sức mạnh class.
 
-| Class | Thắng | Tỷ lệ | Khoảng tin cậy 95% | Tầng trung bình | Trung vị | Đến Deimoss |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| Amazon | 92/1000 | 9.2% | 7.481–11.164% | 459.37 | 456 | 108 |
-| Barbarian | 50/1000 | 5% | 3.734–6.539% | 385.93 | 326 | 57 |
-| Assassin | 43/1000 | 4.3% | 3.129–5.749% | 275.89 | 99 | 47 |
-| Sorceress | 108/1000 | 10.8% | 8.944–12.89% | 582.84 | 574 | 133 |
-| Druid | 45/1000 | 4.5% | 3.301–5.975% | 258.87 | 49 | 47 |
-| Necromancer | 69/1000 | 6.9% | 5.408–8.652% | 404.18 | 394 | 83 |
-| Paladin | 55/1000 | 5.5% | 4.17–7.099% | 392.42 | 371 | 62 |
+| Class       |    Thắng | Tỷ lệ | Khoảng tin cậy 95% | Tầng trung bình | Trung vị | Đến Deimoss |
+| ----------- | -------: | ----: | -----------------: | --------------: | -------: | ----------: |
+| Amazon      |  92/1000 |  9.2% |      7.481–11.164% |          459.37 |      456 |         108 |
+| Barbarian   |  50/1000 |    5% |       3.734–6.539% |          385.93 |      326 |          57 |
+| Assassin    |  43/1000 |  4.3% |       3.129–5.749% |          275.89 |       99 |          47 |
+| Sorceress   | 108/1000 | 10.8% |       8.944–12.89% |          582.84 |      574 |         133 |
+| Druid       |  45/1000 |  4.5% |       3.301–5.975% |          258.87 |       49 |          47 |
+| Necromancer |  69/1000 |  6.9% |       5.408–8.652% |          404.18 |      394 |          83 |
+| Paladin     |  55/1000 |  5.5% |        4.17–7.099% |          392.42 |      371 |          62 |
 
 Khoảng tin cậy Clopper–Pearson hai phía. Tỷ lệ mẫu mô tả chiến thuật và điều kiện dưới đây, không phải tỷ lệ cố định của mọi người chơi.
 

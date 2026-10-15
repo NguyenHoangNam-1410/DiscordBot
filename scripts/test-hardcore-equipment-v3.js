@@ -224,7 +224,10 @@ try {
       Math.ceil(
         stats.derive({
           ...s,
-          items: s.items.map((item) => ({ ...item, cleansedLevels: item.level })),
+          items: s.items.map((item) => ({
+            ...item,
+            cleansedLevels: item.level,
+          })),
         }).defense / 2,
       ),
     );

@@ -29,12 +29,16 @@ module.exports = function createModule(dependencies) {
       state.gameplayVersion === 3 &&
       !state.mode?.startsWith("tower") &&
       !state.towerChallengeId;
-    const character =
+    let character =
       state.phase === "encounter" && state.encounter.type === "combat"
         ? battleStats(state, compact)
         : statLine(state, false, state.phase !== "upgrade", {
             battleResources: compact,
           });
+    if (state.phase !== "encounter" || state.encounter.type !== "combat") {
+      const status = require("../characters/venance").status(state);
+      if (status) character += "\n" + status;
+    }
     const e = new EmbedBuilder()
       .setColor(
         result

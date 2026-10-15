@@ -585,14 +585,25 @@ assert.equal(
 );
 for (const floor of [50, 400, 750]) {
   const control = hold("control", floor);
-  const frequency = () => cmd(control, "frequency" + u.current(control).m.pattern[u.current(control).m.cursor % 3]);
+  const frequency = () =>
+    cmd(
+      control,
+      "frequency" +
+        u.current(control).m.pattern[u.current(control).m.cursor % 3],
+    );
   core.act(control, session, "skill", () => 0.5);
   core.act(control, session, "skill", () => 0.5);
   assert.equal(u.current(control).m.hints, 2);
   core.act(control, session, frequency(), () => 0.5);
-  assert.equal(u.current(control).m.openUntil - control.encounter.boss.round, 2);
-  assert(!core.actions(control).some(a => a.action.includes("frequency")));
-  assert.throws(() => core.act(control, session, frequency(), rng), /INVALID_ACTION/);
+  assert.equal(
+    u.current(control).m.openUntil - control.encounter.boss.round,
+    2,
+  );
+  assert(!core.actions(control).some((a) => a.action.includes("frequency")));
+  assert.throws(
+    () => core.act(control, session, frequency(), rng),
+    /INVALID_ACTION/,
+  );
   const resumed = structuredClone(control);
   core.normalize(resumed);
   assert(u.isOpen(u.current(resumed)), "resume retains disabled window");
@@ -602,19 +613,36 @@ for (const floor of [50, 400, 750]) {
     control.mana = control.maxMana;
     core.act(control, session, "skill", () => 0.5);
     assert.equal(control.hp, hp, "disabled boss must not counter");
-    assert.equal(u.current(control).m.hints, 0, "no clues collected without shield");
+    assert.equal(
+      u.current(control).m.hints,
+      0,
+      "no clues collected without shield",
+    );
   }
-  assert(!u.isOpen(u.current(control)), "shield returns after exactly two turns");
+  assert(
+    !u.isOpen(u.current(control)),
+    "shield returns after exactly two turns",
+  );
   assert(!boss.counter(control).skip);
   assert(control.lastLog.includes("Plasma Shield đã trở lại"));
-  assert(core.actions(control).some(a => a.action.includes("frequency")));
+  assert(core.actions(control).some((a) => a.action.includes("frequency")));
   control.mana = control.maxMana;
   core.act(control, session, "skill", () => 0.5);
-  assert.equal(u.current(control).m.hints, 1, "attacks reveal clues for the next frequency");
+  assert.equal(
+    u.current(control).m.hints,
+    1,
+    "attacks reveal clues for the next frequency",
+  );
   core.act(control, session, frequency(), () => 0.5);
-  assert.equal(u.current(control).m.openUntil - control.encounter.boss.round, 2, "next shield break starts a fresh two-turn window");
+  assert.equal(
+    u.current(control).m.openUntil - control.encounter.boss.round,
+    2,
+    "next shield break starts a fresh two-turn window",
+  );
 }
-groups.push("Master Control: two disabled turns, shield returns, new clues, no frequency refresh exploit and resume across three Depths");
+groups.push(
+  "Master Control: two disabled turns, shield returns, new clues, no frequency refresh exploit and resume across three Depths",
+);
 s = hold("giyua");
 core.act(s, session, cmd(s, "nest_harvest"), rng);
 core.act(s, session, "defend", rng);

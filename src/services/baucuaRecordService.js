@@ -3,7 +3,8 @@ const { db } = require("../db");
 // Số liệu riêng của Bầu cua cho thành tựu. Hòa không phá chuỗi thắng; thua về 0.
 // `bets`: các cược của người chơi trong ván [{ choice, amount, payout }]; `symbols`: ba biểu tượng ra.
 function recordBauCuaRun({ guildId, userId, outcome, bets, symbols }) {
-  const matchesOf = (choice) => symbols.filter((symbol) => symbol === choice).length;
+  const matchesOf = (choice) =>
+    symbols.filter((symbol) => symbol === choice).length;
   const paying = bets.filter((bet) => bet.payout > 0);
   const triple = paying.filter((bet) => matchesOf(bet.choice) === 3).length;
   const double = paying.filter((bet) => matchesOf(bet.choice) === 2).length;

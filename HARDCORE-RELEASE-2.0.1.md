@@ -8,15 +8,15 @@ Mục tiêu hiệu chỉnh: khoảng **1% hoàn thành tầng 999**, theo Assass
 
 Mỗi class có hệ số sức mạnh, áp dụng vào sức mạnh vật lý/phép sau khi cộng thuộc tính và trang bị, trước khi tạo dải sát thương `power−2 … power+3`. Assassin ×1 giữ đúng công thức cũ. Các hệ số này đã được hiệu chỉnh bằng mô phỏng, không phải chỉ tăng chỉ số khởi đầu.
 
-| Class | Hệ số sức mạnh |
-| --- | ---: |
-| Amazon | 2,09 |
-| Barbarian | 1,64 |
-| Assassin | 1,00 |
-| Sorceress | 1,57 |
-| Druid | 1,12 |
-| Necromancer | 0,54 |
-| Paladin | 1,67 |
+| Class       | Hệ số sức mạnh |
+| ----------- | -------------: |
+| Amazon      |           2,09 |
+| Barbarian   |           1,64 |
+| Assassin    |           1,00 |
+| Sorceress   |           1,57 |
+| Druid       |           1,12 |
+| Necromancer |           0,54 |
+| Paladin     |           1,67 |
 
 Kỹ năng giữ cơ chế riêng: Assassin né phản công, Necromancer chặn phản công và đánh phép, Druid hồi máu, Paladin thủ trước phản công, Amazon nhiều phát. HP, DEF, RES, crit, Mana, các mức thưởng, boss và catalog không bị thay đổi bởi hệ số sức mạnh này. Paradox Inverse vẫn sử dụng DEF làm sát thương vật lý theo luật riêng.
 

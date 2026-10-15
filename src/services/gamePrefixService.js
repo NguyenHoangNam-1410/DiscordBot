@@ -1,5 +1,8 @@
 const { normalizeSearch } = require("../utils/text");
-const { handleSlashPrefix, messageInteraction } = require("./slashPrefixService");
+const {
+  handleSlashPrefix,
+  messageInteraction,
+} = require("./slashPrefixService");
 const baucua = require("../commands/baucua");
 const taixiu = require("../commands/taixiu");
 const chinchiro = require("../commands/chinchiro");

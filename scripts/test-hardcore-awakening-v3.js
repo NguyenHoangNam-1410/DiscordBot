@@ -46,8 +46,12 @@ function state(k, awakened = true) {
   s.releaseVersion = s.balanceVersion = "3.0.0";
   delete s.classInnateVersion;
   delete s.statProfile.initialVitHp;
-  if (k === "amazon") Object.assign(s.statProfile.mastery, { hp: 3, evasion: 0.3 });
-  if (k === "assassin") { s.statProfile.mastery.hp = 3; s.statProfile.core.baseHp = 38; }
+  if (k === "amazon")
+    Object.assign(s.statProfile.mastery, { hp: 3, evasion: 0.3 });
+  if (k === "assassin") {
+    s.statProfile.mastery.hp = 3;
+    s.statProfile.core.baseHp = 38;
+  }
   stats.recompute(s);
   s.hp = s.maxHp;
   s.floor = 100;

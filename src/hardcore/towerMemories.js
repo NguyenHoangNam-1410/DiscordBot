@@ -92,19 +92,34 @@ function title(debt) {
 }
 function usedSlots(state) {
   const m = require("./events/explorationMarks").data(state);
-  const current = state.encounter?.type === "memory" ? state.encounter.debt : state.encounter?.memoryDebt;
-  return (state.debts || []).length +
+  const current =
+    state.encounter?.type === "memory"
+      ? state.encounter.debt
+      : state.encounter?.memoryDebt;
+  return (
+    (state.debts || []).length +
     Number(Boolean(current && !(state.debts || []).includes(current))) +
-    Number(Boolean(state.adventurerRescue)) + Number(Boolean(state.prophecy)) +
+    Number(Boolean(state.adventurerRescue)) +
+    Number(Boolean(state.prophecy)) +
     Number(Boolean(state.grudge && state.grudge.stage !== "completed")) +
-    Number(Boolean(m.outlaw)) + Number(Boolean(m.underworld || state.encounter?.thiefTrial)) +
-    Number(Boolean(m.vulnerable || m.vitalBlessing)) + Number(require("./events/explorationMarks").boosted(state));
+    Number(Boolean(m.outlaw)) +
+    Number(Boolean(m.underworld || state.encounter?.thiefTrial)) +
+    Number(Boolean(m.vulnerable || m.vitalBlessing)) +
+    Number(require("./events/explorationMarks").boosted(state))
+  );
 }
 function canQueue(state, slots = 1) {
   return usedSlots(state) + slots <= LIMIT;
 }
 function robberySlots(state) {
-  return 1 + Number(require("./events/gildedSoul").enabled(state) && !state.grudge && !require("./events/gildedSoul").owns(state));
+  return (
+    1 +
+    Number(
+      require("./events/gildedSoul").enabled(state) &&
+        !state.grudge &&
+        !require("./events/gildedSoul").owns(state),
+    )
+  );
 }
 function queue(state, action, rng, data = {}) {
   const key = ACTIONS[action];
@@ -214,10 +229,23 @@ function actions(state, payout) {
 }
 
 function fields(state) {
-  const output = [{
-    name: eventIcon("memory") + " The Tower Remembers (" + usedSlots(state) + "/" + LIMIT + ")",
-    value: usedSlots(state) >= LIMIT ? "Đã đầy · không thể nhận thêm ký ức." : usedSlots(state) ? "Ấn vĩnh viễn giữ chỗ đến hết run." : "Chưa có ký ức.",
-  }];
+  const output = [
+    {
+      name:
+        eventIcon("memory") +
+        " The Tower Remembers (" +
+        usedSlots(state) +
+        "/" +
+        LIMIT +
+        ")",
+      value:
+        usedSlots(state) >= LIMIT
+          ? "Đã đầy · không thể nhận thêm ký ức."
+          : usedSlots(state)
+            ? "Ấn vĩnh viễn giữ chỗ đến hết run."
+            : "Chưa có ký ức.",
+    },
+  ];
   if (
     state.prophecy &&
     !state.mode?.startsWith("tower") &&
@@ -264,9 +292,11 @@ function fields(state) {
   for (const debt of debts) {
     const key = family(debt);
     let detail = CATALOG[key].detail;
-    if (key === "bounty") detail = debt.kind === "tax"
-      ? "Trừ một lần 10% payout hiện tại."
-      : "Gặp Bounty Hunter tinh anh; đánh hoặc trả 20% payout để tránh.";
+    if (key === "bounty")
+      detail =
+        debt.kind === "tax"
+          ? "Trừ một lần 10% payout hiện tại."
+          : "Gặp Bounty Hunter tinh anh; đánh hoặc trả 20% payout để tránh.";
     if (key === "wealth")
       detail +=
         "\nBonus nếu thắng: **" +

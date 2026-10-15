@@ -537,6 +537,155 @@ try {
     assert.equal(JSON.stringify(f), before);
     assert.equal(s.hp, Math.ceil(s.maxHp / 2));
   });
+
+  function nextRoom(s) {
+    s.phase = "encounter";
+    s.encounter = require("../src/hardcore/engine/world").makeEnemy(
+      s,
+      "normal",
+      null,
+      rng,
+    );
+    Object.assign(s.encounter, {
+      hp: 100000,
+      maxHp: 100000,
+      defense: 0,
+      resistance: 0,
+      evasion: 0,
+      damageMin: 1,
+      damageMax: 1,
+    });
+    core.prepareItemCombat(s, rng);
+    return s.encounter;
+  }
+  test("Killing a room keeps the cast through events/checkpoints; third hit continues in the next combat", () => {
+    const s = fresh(0, true);
+    act(s, "skill");
+    s.encounter.hp = 1;
+    act(s, "attack");
+    assert.equal(kit.frame(s).remaining, 2);
+    assert.equal(kit.frame(s).hits, 1);
+    assert(kit.empowered(s));
+    const saved = JSON.parse(JSON.stringify(s));
+    core.normalize(saved);
+    assert.equal(kit.frame(saved).remaining, 2);
+    s.phase = "encounter";
+    s.encounter = { type: "empty", name: "Fixture" };
+    const f = JSON.stringify(kit.frame(s));
+    act(s, "next");
+    assert.equal(JSON.stringify(kit.frame(s)), f);
+    s.floor = 10;
+    s.cleared = 9;
+    s.phase = "encounter";
+    s.encounter = { type: "empty", name: "Checkpoint approach" };
+    act(s, "next");
+    assert.equal(s.phase, "upgrade");
+    assert.equal(kit.frame(s).remaining, 2);
+    act(s, "upgrade_ene");
+    assert.equal(kit.frame(s).remaining, 2);
+    const e = nextRoom(s);
+    let hp = e.hp;
+    act(s, "attack");
+    assert.equal(hp - e.hp, 220);
+    assert.equal(kit.frame(s).hits, 2);
+    assert.equal(kit.frame(s).remaining, 1);
+    const before = JSON.stringify(s);
+    assert.equal(core.attackDamagePreview(s).low, 297);
+    assert.equal(JSON.stringify(s), before);
+    hp = e.hp;
+    act(s, "attack");
+    assert.equal(hp - e.hp, 297);
+    assert.equal(kit.frame(s).remaining, 0);
+    assert.equal(kit.frame(s).hits, 3);
+  });
+  test("Ready sigil carries to another room; Barrier resets and S2 reloads only for the new combat", () => {
+    const s = fresh(4, true);
+    act(s, "skill");
+    assert(kit.frame(s).firstBarrierUsed);
+    s.encounter.hp = 1;
+    act(s, "attack");
+    assert(kit.frame(s).ready);
+    assert.equal(kit.frame(s).barrier, 0);
+    assert.equal(kit.frame(s).remaining, 2);
+    nextRoom(s);
+    assert(kit.frame(s).ready);
+    assert.equal(kit.frame(s).barrier, 0);
+    assert(!kit.frame(s).firstBarrierUsed);
+    s.hp = 50;
+    act(s, "defend");
+    assert(!kit.frame(s).ready);
+    assert(kit.frame(s).sigilUsed);
+    assert.equal(kit.frame(s).remaining, 1);
+    assert(s.lastLog.includes("Hồi lưu"));
+    act(s, "skill");
+    assert.equal(kit.frame(s).remaining, 3);
+    assert.equal(kit.frame(s).hits, 0);
+    assert(!kit.frame(s).sigilUsed);
+    assert(kit.frame(s).firstBarrierUsed);
+    assert(kit.frame(s).barrier > 0);
+  });
+  test("Old saved encounter frames migrate without reloading buff, sigil or S2; invalid run frames fail", () => {
+    const s = fresh(6, true);
+    act(s, "skill");
+    act(s, "attack");
+    const expected = structuredClone(kit.frame(s));
+    s.encounter.venanceCombat = structuredClone(s.venanceState);
+    delete s.venanceState;
+    core.normalize(s);
+    assert.deepEqual(s.venanceState, expected);
+    assert.deepEqual(s.encounter.venanceCombat, { version: 2 });
+    core.prepareItemCombat(s, rng);
+    assert.deepEqual(kit.frame(s), expected);
+    const bad = structuredClone(s);
+    bad.venanceState.remaining = 4;
+    assert.throws(() => core.normalize(bad), /INVALID_VENANCE_COMBAT/);
+  });
+  test("Real beta transaction persists remaining empowerment after a kill and a server-style resume", () => {
+    const service = require("../src/hardcore"),
+      repo = require("../src/hardcore/storage/sessions");
+    const enemy = structuredClone(fresh().encounter);
+    delete enemy.venanceCombat;
+    enemy.hp = enemy.maxHp = 1;
+    const run = service.startHardcore({
+      guildId: "g",
+      userId: "cross-room",
+      channelId: "c",
+      beta: true,
+      forcedEncounter: enemy,
+    });
+    const cast = service.playHardcore({
+      sessionId: run.session.id,
+      userId: "cross-room",
+      expectedTurn: 0,
+      action: "skill",
+    });
+    assert.equal(kit.frame(cast.state).remaining, 3);
+    const killed = service.playHardcore({
+      sessionId: run.session.id,
+      userId: "cross-room",
+      expectedTurn: cast.state.turn,
+      action: "attack",
+    });
+    assert(!killed.settled);
+    assert.equal(kit.frame(killed.state).remaining, 2);
+    assert.equal(kit.frame(killed.state).hits, 1);
+    const saved = JSON.parse(repo.getSession(run.session.id).state_json);
+    core.normalize(saved);
+    assert.equal(kit.frame(saved).remaining, 2);
+    assert.equal(kit.frame(saved).hits, 1);
+    saved.encounter = { type: "empty", name: "Between rooms" };
+    assert(
+      require("../src/hardcore/ui")
+        .embed(saved, "cross-room")
+        .data.description.includes("Giữ qua phòng"),
+    );
+    service.playHardcore({
+      sessionId: run.session.id,
+      userId: "cross-room",
+      expectedTurn: killed.state.turn,
+      action: "beta_end",
+    });
+  });
   console.log(count + " Venance groups passed (no simulation).");
 } finally {
   db.close();

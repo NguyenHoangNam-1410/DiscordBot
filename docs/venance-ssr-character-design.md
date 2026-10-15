@@ -29,7 +29,7 @@ Mốc LR được hiểu là **LR đã có S6**, vì lộ trình nâng độ hi�
 
 Khi dùng Skill:
 
-- Nhận **Cường hóa trong 3 hành động tiếp theo**. Hành động vừa niệm Skill không trừ ngay một hành động của buff mới.
+- Nhận **Cường hóa trong 3 hành động chiến đấu tiếp theo, giữ xuyên phòng**. Hành động vừa niệm Skill không trừ ngay một hành động của buff mới.
 - Đánh thường trong thời gian này chuyển thành **một đòn phép**, dùng khoảng Phép hiện tại × **2,2** ở S0. Không cộng thêm sát thương vật lý lên trên.
 - Đòn phép luôn trúng theo luật phép hiện hành, không Crit, chịu RES, lá chắn và điều kiện gây sát thương của boss. Không xuyên cơ chế miễn sát thương.
 - Đòn cường hóa **không hồi MP**. Chặn hồi MP mặc định, hút MP và các nguồn hoàn MP phát sinh từ chính action đánh này; không biến hit phụ S6 thành cách hoàn MP.
@@ -63,7 +63,7 @@ Có từ tầng 1:
 3. Phòng thủ khi có ấn: tiêu ấn, **hồi 5% Max HP trước phản công**. Chịu giảm hồi, giới hạn HP bị khóa và không tạo hồi dư thành lá chắn.
 4. Mỗi lần cường hóa chỉ tạo một ấn; tối đa giữ một. Đã dùng rồi không tạo lại trong cùng chuỗi.
 
-Ấn đã tạo vẫn dùng được sau khi buff hết thời gian, nhưng mất khi dùng Skill mới hoặc kết thúc combat. Phòng thủ không có ấn vẫn hồi 2 MP, không hồi HP.
+Ấn đã tạo vẫn dùng được sau khi buff hết thời gian, giữ qua phòng và chỉ mất khi dùng Skill mới hoặc đã tiêu ấn. Phòng thủ không có ấn vẫn hồi 2 MP, không hồi HP.
 
 Đòn hợp lệ là hit chính cường hóa thực sự gây sát thương lên HP, lá chắn hoặc mục tiêu phụ được chọn hợp lệ. Đánh vào miễn sát thương không tạo tiến trình; phản đòn, phản phệ, hit phụ và Skill chuẩn bị không tính. Chuyển phase không nạp lại ấn hoặc hạn mức dùng.
 
@@ -202,7 +202,7 @@ Tên/ID đề xuất: characterId và profileKey riêng **venance**, classKey **
 - Hiện có các nhánh hardcode phép là Skill của Sorceress/Necromancer, như metadata gửi vào Affinity và tính MP đánh thường. Cần chuyển sang đọc loại hit/cơ chế nhân vật phù hợp; không gắn Venance vào profile Sorceress để mượn nội tại.
 - Vẫn kiểm tra chi phí MP/HP và điều kiện được phép dùng Skill; Skill không damage không được bỏ qua giá hoặc giới hạn boss. Phòng thủ +2 vẫn chịu giảm/chặn hồi MP, Max MP hiệu lực và luật phản công hiện hành.
 - Skill miễn MP từ Astral Singularity vẫn tốn action và chỉ làm mới ba hành động; không gây damage, không nạp lại lá chắn S2 hoặc phát sinh tiến trình MP đã trả. Venance không tự có Arcane Echo của Sorceress.
-- Giữ timer/tiến trình qua phase, giảm đúng một lần cho mỗi action hợp lệ; không giảm thêm vì counter/hit phụ/chuyển phase không tốn lượt. Xóa buff và lá chắn khi combat kết thúc, không mang sẵn sang quái khác.
+- Giữ timer/tiến trình qua phase, giảm đúng một lần cho mỗi action hợp lệ; không giảm thêm vì counter/hit phụ/chuyển phase không tốn lượt. Cường hóa còn lại, tiến trình đòn hợp lệ và Ấn Hồi lưu giữ xuyên phòng; đi phòng/sự kiện/checkpoint không tự trừ hành động cường hóa. Barrier hết khi combat kết thúc, hạn mức S2 nạp lại ở combat mới.
 - Chết và hồi sinh trong cùng combat không tự nạp timer, lá chắn S2, ấn đã tiêu hoặc đòn thứ ba. Phải lưu tiến trình trong snapshot, không dựng lại từ HP/tầng.
 - Snapshot cấp S, độ hiếm và thông số lúc bắt đầu run. Nâng tài khoản giữa run không cập nhật sức mạnh run cũ. Không thay cơ chế Tower hoặc 7 SR.
 - Không tự cho Venance vào banner tân thủ. Banner SSR, xác suất và cửa hàng 200 Spark phát hành riêng sau khi nhân vật được triển khai và kiểm chứng.
@@ -220,7 +220,6 @@ Tên/ID đề xuất: characterId và profileKey riêng **venance**, classKey **
 
 Tỷ lệ chiến thắng không thể xác nhận chỉ từ bảng chỉ số hoặc tổng hệ số damage. Bản này chưa công bố Venance đã đạt bất kỳ mốc thắng nào.
 
-
 ## 11. Ghi chú triển khai · 15/10/2026
 
 - Bộ kỹ năng và trạng thái combat riêng: `src/hardcore/characters/venance.js`. Snapshot tham số/cấp tinh hồn/độ hiếm lúc tạo run; không cập nhật theo tài khoản giữa run.
@@ -232,3 +231,7 @@ Tỷ lệ chiến thắng không thể xác nhận chỉ từ bảng chỉ số 
 - Banner tân thủ không có Venance. Không tự cấp SSR cho tài khoản và chưa mở banner SSR/Spark shop.
 - Kiểm thử xác định: `npm run test:hardcore-venance`; gồm timer, MP, S1–S6, mục tiêu phụ, selector, chuyển phase, hồi sinh, stale click, rollback, UI và quyền sở hữu. Không dùng kết quả test cơ chế để khẳng định win rate.
 - Policy simulate riêng cho Venance và các lô đo mục tiêu ở mục 10 còn thực hiện khi có yêu cầu simulate; chưa dùng policy Sorceress để đánh giá nhân vật này.
+
+### Cập nhật 15/10/2026 · Cường hóa xuyên phòng
+
+Astral Armament nay lưu ở `state.venanceState`: giữ số hành động còn lại, số đòn hợp lệ, Ấn Hồi lưu và trạng thái đã dùng ấn qua các phòng. Chỉ hành động chiến đấu tốn lượt mới giảm thời gian; sự kiện, checkpoint và thao tác xem/đổi mục tiêu không trừ. Không nạp lại thời lượng khi đổi phòng. Barrier/S2 vẫn theo combat. Run đang lưu dùng frame cũ được chuyển sang trạng thái mới khi khôi phục; không tự cấp lại cường hóa đã mất từ trước cập nhật.

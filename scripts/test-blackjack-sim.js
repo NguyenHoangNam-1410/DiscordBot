@@ -137,17 +137,44 @@ void sawBust;
     split: false,
     maxBet: 100_000,
   };
-  const buttons = (state) => blackjack.actionRows("s", state).flatMap((row) => row.toJSON().components);
+  const buttons = (state) =>
+    blackjack.actionRows("s", state).flatMap((row) => row.toJSON().components);
   const ids = buttons(pairState).map((button) => button.custom_id);
   assert(!ids.some((id) => id.endsWith(":double")), "không còn nút Gấp đôi");
-  assert(!buttons(pairState).some((button) => /Gấp đôi/.test(button.label || "")), "không còn nhãn Gấp đôi");
-  const split = buttons(pairState).find((button) => button.custom_id.endsWith(":split"));
+  assert(
+    !buttons(pairState).some((button) => /Gấp đôi/.test(button.label || "")),
+    "không còn nhãn Gấp đôi",
+  );
+  const split = buttons(pairState).find((button) =>
+    button.custom_id.endsWith(":split"),
+  );
   assert(split && !split.disabled, "cặp cùng hạng vẫn được tách bài");
-  const noPair = buttons({ ...pairState, hands: [{ cards: ["8♠", "9♥"], bet: 100, status: "playing" }] }).find((button) => button.custom_id.endsWith(":split"));
+  const noPair = buttons({
+    ...pairState,
+    hands: [{ cards: ["8♠", "9♥"], bet: 100, status: "playing" }],
+  }).find((button) => button.custom_id.endsWith(":split"));
   assert(noPair.disabled, "không cặp thì khóa Tách bài");
-  const started = blackjack.startBlackjack({ guildId, channelId: "c", userId, stake: STAKE, forcedDeck: ["9♣", "7♦", "5♠", "6♥", "3♣", "2♦", "4♦", "5♦", "8♣", "4♣"] });
-  assert(!started.immediate, "ván thử phải đang chơi (không phải Xì dách tự nhiên)");
-  assert.throws(() => blackjack.playAction({ sessionId: started.session.id, userId, action: "double" }), /INVALID_ACTION/, "thao tác double cũ (nút trên tin nhắn cũ) bị từ chối");
+  const started = blackjack.startBlackjack({
+    guildId,
+    channelId: "c",
+    userId,
+    stake: STAKE,
+    forcedDeck: ["9♣", "7♦", "5♠", "6♥", "3♣", "2♦", "4♦", "5♦", "8♣", "4♣"],
+  });
+  assert(
+    !started.immediate,
+    "ván thử phải đang chơi (không phải Xì dách tự nhiên)",
+  );
+  assert.throws(
+    () =>
+      blackjack.playAction({
+        sessionId: started.session.id,
+        userId,
+        action: "double",
+      }),
+    /INVALID_ACTION/,
+    "thao tác double cũ (nút trên tin nhắn cũ) bị từ chối",
+  );
 }
 
 const { simulate } = require("../src/services/blackjackSim");

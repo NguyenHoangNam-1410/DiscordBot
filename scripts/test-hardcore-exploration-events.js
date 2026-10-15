@@ -73,7 +73,15 @@ function detail(s) {
   );
 }
 test("Lucky Break: linear scaling to 50% at 200 LUCK, with legacy isolation", () => {
-  for (const [luck, chance] of [[-1, 0], [0, 0], [20, 0.05], [100, 0.25], [199, 0.4975], [200, 0.5], [400, 0.5]]) {
+  for (const [luck, chance] of [
+    [-1, 0],
+    [0, 0],
+    [20, 0.05],
+    [100, 0.25],
+    [199, 0.4975],
+    [200, 0.5],
+    [400, 0.5],
+  ]) {
     const s = fresh(2);
     s.luck = luck;
     assert.equal(stats.luckyBreakChance(s), chance);
@@ -82,7 +90,10 @@ test("Lucky Break: linear scaling to 50% at 200 LUCK, with legacy isolation", ()
       assert(detail(s).includes("200 LUCK"));
       assert(detail(s).includes("50%"));
     }
-    for (const [roll, expected] of [[chance, false], [Math.max(0, chance - 0.00001), chance > 0]]) {
+    for (const [roll, expected] of [
+      [chance, false],
+      [Math.max(0, chance - 0.00001), chance > 0],
+    ]) {
       s.encounter = { type: "empty" };
       const calls = [0.9, 0, roll, 0.5, 0.5];
       const e = core.generateEncounter(s, session, () => calls.shift() ?? 0.5);

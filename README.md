@@ -155,12 +155,12 @@ Số xu là **thay đổi ròng** (tiền nhận về − tiền cược): thắ
 
 `/quantri hesothang` mở bảng (menu + modal) để admin chỉnh **hệ số thắng** của các game đấu 1-1 với nhà cái. Hệ số là tổng tiền nhận về / tiền cược khi thắng (x2 = ăn 1 đền 1), cho phép từ **x1,1 đến x3**:
 
-| Game | Mặc định | Phạm vi áp dụng |
-|---|---|---|
-| Xì dách (với bot) | x2 | Thắng thường và Ngũ linh; Xì dách/Xì bàng tự nhiên = hệ số + 0,5 |
-| Chinchiro | x1,8 | Thắng bằng điểm cao hơn nhà cái; Shigoro, Bão, Pin-Zoro giữ nguyên |
-| Cò quay Nga | x2 | Hạ Bot về 0 máu |
-| Tài xỉu | x2 | Cửa Tài/Xỉu/Chẵn/Lẻ (ra bộ ba vẫn thua); Bộ ba và Tổng cụ thể giữ nguyên |
+| Game              | Mặc định | Phạm vi áp dụng                                                          |
+| ----------------- | -------- | ------------------------------------------------------------------------ |
+| Xì dách (với bot) | x2       | Thắng thường và Ngũ linh; Xì dách/Xì bàng tự nhiên = hệ số + 0,5         |
+| Chinchiro         | x1,8     | Thắng bằng điểm cao hơn nhà cái; Shigoro, Bão, Pin-Zoro giữ nguyên       |
+| Cò quay Nga       | x2       | Hạ Bot về 0 máu                                                          |
+| Tài xỉu           | x2       | Cửa Tài/Xỉu/Chẵn/Lẻ (ra bộ ba vẫn thua); Bộ ba và Tổng cụ thể giữ nguyên |
 
 Hệ số được khóa vào ván lúc bắt đầu (Tài xỉu: lúc mở ván), nên ván đang chơi không bị đổi giữa chừng. Bảng hiển thị RTP ước tính khi chơi tối ưu và không dùng vật phẩm, kèm cảnh báo ⚠️ nếu trên 100% (người chơi có lợi). Giá trị được lưu theo từng server và có nút **Khôi phục mặc định**. Chênh lệch nhỏ vì làm tròn xu xuống số nguyên.
 
@@ -173,7 +173,6 @@ Paradox mới xuất hiện sau checkpoint/nâng thuộc tính tại mốc 25–
 Migration 35 tạo `hardcore_tower_sessions` và `hardcore_tower_results`, tự chạy khi bot khởi động. Sau pull bản mới: chạy `npm run register` trên server có env Discord rồi restart bot. Không cần upload asset/emoji mới.
 
 Chạy `npm run test:hardcore:paradox`, `npm run test:hardcore:tower`, `npm run solve:hardcore:tower`. Solver duyệt toàn bộ hành động hợp lệ và chỉ đăng ký challenge khi có đúng một lời giải, khớp chuỗi chuẩn và final state. Kịch bản nằm trong `src/hardcore/tower/`, catalog trong `src/hardcore/towerChallenges.js`; các tuần sau thêm dữ liệu mới, phiên bản/ID riêng và mốc `startsAt`/`endsAt` rõ timezone. `endsAt` hỗ trợ season hai tuần. Hiện chỉ đăng ký tuần 41; không tự tạo kịch bản khi sang tuần chưa có nội dung. History lưu fingerprint SHA-256 từng hành động; session không lưu chuỗi lời giải dạng plaintext.
-
 
 ## Chẩn đoán phản hồi chậm của Sinh tồn
 
@@ -192,7 +191,6 @@ Bot ghi `slow hardcore interaction` khi một tương tác mất từ 1 giây, �
 Log `discord REST rate limited` xác nhận thư viện đang chờ giới hạn API; có thời gian phải đợi, không ghi URL webhook/token. `discordMs` cao nhưng không có log rate limit có thể do mạng, Discord hoặc retry. `gameMs` cao cần kiểm tra CPU/SQLite/ổ đĩa trên server. Đây là các số đo để chẩn đoán, không phải cam kết về thời gian phản hồi.
 
 Chạy `npm run test:hardcore:latency` để kiểm tra Discord chậm, bấm trùng, thứ tự cập nhật, phục hồi lỗi và xác nhận rút thưởng. Script cũng báo thời gian xử lý lượt đơn giản/dựng battle trên SQLite trong RAM; số này không đo mạng hoặc ổ đĩa server.
-
 
 ### Backup và phục hồi khi server lỗi
 
@@ -222,7 +220,6 @@ Phục hồi backup sẽ mất những thay đổi sau thời điểm snapshot. 
 Chạy `npm run test:db:recovery`: kiểm tra kill tiến trình giữa transaction, phục hồi xu/lượt chơi, bản backup độc lập, retention, lỗi backup, shutdown khi Discord chưa ready và chờ thao tác đang chạy. Kiểm tra SIGKILL không mô phỏng được mất điện thật hoặc lỗi phần cứng.
 
 Tham khảo: [SQLite WAL](https://www.sqlite.org/wal.html), [SQLite synchronous](https://www.sqlite.org/pragma.html#pragma_synchronous), [SQLite Backup API](https://www.sqlite.org/backup.html), [PM2 graceful shutdown](https://pm2.keymetrics.io/docs/usage/signals-clean-restart/).
-
 
 ### Nhận backup qua DM Discord
 

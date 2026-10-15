@@ -298,7 +298,8 @@ function settle(session, state, reason) {
     countGame: reason !== "forfeit",
   });
   db.prepare("DELETE FROM mines_sessions WHERE id = ?").run(session.id);
-  if (reason !== "forfeit") recordMinesRun(session, state, reason, outcome, payout);
+  if (reason !== "forfeit")
+    recordMinesRun(session, state, reason, outcome, payout);
   state.status = reason;
   return {
     reason,

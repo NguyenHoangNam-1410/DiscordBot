@@ -12,14 +12,8 @@
     "maxTurns": 40000,
     "measurement": "confirmed progress checkpoints; stopped early at user request",
     "includedRunIndexRanges": [
-      [
-        0,
-        399
-      ],
-      [
-        500,
-        899
-      ]
+      [0, 399],
+      [500, 899]
     ],
     "shards": [
       {

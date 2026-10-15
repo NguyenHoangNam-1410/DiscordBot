@@ -8,7 +8,9 @@ function isAdminInteraction(interaction) {
     .filter(Boolean);
   return (
     ids.includes(interaction.user.id) ||
-    Boolean(interaction.memberPermissions?.has(PermissionFlagsBits.Administrator))
+    Boolean(
+      interaction.memberPermissions?.has(PermissionFlagsBits.Administrator),
+    )
   );
 }
 

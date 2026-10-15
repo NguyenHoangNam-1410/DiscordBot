@@ -2,15 +2,15 @@
 
 Mục tiêu khoảng 1% hoàn thành tầng 999 theo Assassin (8/800 ở dữ liệu hiệu chỉnh). Hệ số và chiến thuật được khóa trước lượt đánh giá của từng class. Tổng 7.000 run đánh giá cuối, 1.000/class.
 
-| Class | Sức mạnh | Hoàn thành 999 | Tỷ lệ mẫu | Khoảng tin cậy 95% | Tầng trung bình | Trung vị | Đến boss 999 |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Amazon | 2.09 | 14/1000 | 1.4% | 0.767–2.338% | 314.73 | 99 | 35 |
-| Barbarian | 1.64 | 6/1000 | 0.6% | 0.22–1.301% | 192.28 | 99 | 11 |
-| Assassin | 1 | 8/1000 | 0.8% | 0.346–1.57% | 144.7 | 94 | 23 |
-| Sorceress | 1.57 | 11/1000 | 1.1% | 0.55–1.96% | 672.5 | 799 | 57 |
-| Druid | 1.12 | 13/1000 | 1.3% | 0.694–2.213% | 159.34 | 49 | 29 |
-| Necromancer | 0.54 | 15/1000 | 1.5% | 0.842–2.462% | 341.02 | 49 | 57 |
-| Paladin | 1.67 | 15/1000 | 1.5% | 0.842–2.462% | 219.81 | 99 | 23 |
+| Class       | Sức mạnh | Hoàn thành 999 | Tỷ lệ mẫu | Khoảng tin cậy 95% | Tầng trung bình | Trung vị | Đến boss 999 |
+| ----------- | -------: | -------------: | --------: | -----------------: | --------------: | -------: | -----------: |
+| Amazon      |     2.09 |        14/1000 |      1.4% |       0.767–2.338% |          314.73 |       99 |           35 |
+| Barbarian   |     1.64 |         6/1000 |      0.6% |        0.22–1.301% |          192.28 |       99 |           11 |
+| Assassin    |        1 |         8/1000 |      0.8% |        0.346–1.57% |           144.7 |       94 |           23 |
+| Sorceress   |     1.57 |        11/1000 |      1.1% |         0.55–1.96% |           672.5 |      799 |           57 |
+| Druid       |     1.12 |        13/1000 |      1.3% |       0.694–2.213% |          159.34 |       49 |           29 |
+| Necromancer |     0.54 |        15/1000 |      1.5% |       0.842–2.462% |          341.02 |       49 |           57 |
+| Paladin     |     1.67 |        15/1000 |      1.5% |       0.842–2.462% |          219.81 |       99 |           23 |
 
 Khoảng tin cậy Clopper–Pearson hai phía. Tất cả khoảng tin cậy đều bao phủ mục tiêu 1%; việc này không chứng minh các kỳ vọng bằng nhau hoặc thỏa một biên tương đương cụ thể. Tỷ lệ mẫu nằm trong 0,6–1,5%, Assassin 0,8%.
 

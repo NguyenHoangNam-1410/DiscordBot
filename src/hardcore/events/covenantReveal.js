@@ -10,8 +10,10 @@ function frame(state, userId, stage = 0) {
   )
     return null;
   const texts = [
-    eventIcon("covenant") + " Bốn mảnh bắt đầu cộng hưởng.\nNanh giả, cổ ấn, huyết tâm và ảnh gương cùng tan vào một luồng sáng…",
-    relicIcon("conquerors_covenant") + " Tầng hầm rung chuyển.\nMột khế ước cổ xưa công nhận người đã chinh phục cả bốn thử thách…",
+    eventIcon("covenant") +
+      " Bốn mảnh bắt đầu cộng hưởng.\nNanh giả, cổ ấn, huyết tâm và ảnh gương cùng tan vào một luồng sáng…",
+    relicIcon("conquerors_covenant") +
+      " Tầng hầm rung chuyển.\nMột khế ước cổ xưa công nhận người đã chinh phục cả bốn thử thách…",
   ];
   return {
     content: "",

@@ -22,7 +22,10 @@ const {
   bonusLine,
   coins,
 } = require("../utils/rewardText");
-const { getWinMultiplier, formatMultiplier } = require("./winMultiplierService");
+const {
+  getWinMultiplier,
+  formatMultiplier,
+} = require("./winMultiplierService");
 
 const ROUND_MS = 30_000;
 const MIN_BET = 10;
@@ -110,7 +113,10 @@ function roundStats(roundId) {
 
 function roundEvenMultiplier(round) {
   try {
-    return JSON.parse(round.result_json || "{}").evenMultiplier || getWinMultiplier(round.guild_id, "taixiu");
+    return (
+      JSON.parse(round.result_json || "{}").evenMultiplier ||
+      getWinMultiplier(round.guild_id, "taixiu")
+    );
   } catch {
     return 2;
   }
@@ -254,10 +260,8 @@ function calculatePayout(game, choice, amount, result, evenMultiplier = 2) {
     return matches ? amount * (matches + 1) : 0;
   }
   const { dice, total, triple } = result;
-  if (choice === "tai")
-    return !triple && total >= 11 && total <= 17 ? even : 0;
-  if (choice === "xiu")
-    return !triple && total >= 4 && total <= 10 ? even : 0;
+  if (choice === "tai") return !triple && total >= 11 && total <= 17 ? even : 0;
+  if (choice === "xiu") return !triple && total >= 4 && total <= 10 ? even : 0;
   if (choice === "chan") return !triple && total % 2 === 0 ? even : 0;
   if (choice === "le") return !triple && total % 2 === 1 ? even : 0;
   if (choice === "bo_ba") return triple ? amount * 35 : 0;
@@ -534,7 +538,9 @@ async function createRound(interaction, game, logger = console) {
     closes_at: now + ROUND_MS,
     result_json: JSON.stringify({
       fair,
-      ...(game === "taixiu" ? { evenMultiplier: getWinMultiplier(interaction.guildId, "taixiu") } : {}),
+      ...(game === "taixiu"
+        ? { evenMultiplier: getWinMultiplier(interaction.guildId, "taixiu") }
+        : {}),
     }),
     created_at: now,
   };

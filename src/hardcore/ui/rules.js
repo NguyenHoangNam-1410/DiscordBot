@@ -73,7 +73,7 @@ module.exports = function createModule(dependencies) {
         {
           name: `${SKILL_ICONS.venance} Venance · Skill chuẩn bị`,
           value:
-            "Astral Armament tốn 2 MP, không gây DMG; cường hóa đánh thường thành phép trong 3 hành động tiếp theo. Bình, Phòng thủ và thao tác boss tốn lượt đều trừ thời gian. Đòn cường hóa luôn trúng, không Crit, không hồi MP; Phòng thủ hồi tổng 2 MP. Xem Nhân vật để đọc Hồi lưu và Tam trọng.",
+            "Astral Armament tốn 2 MP, không gây DMG; cường hóa đánh thường thành phép trong 3 hành động chiến đấu tiếp theo, giữ qua phòng. Bình, Phòng thủ và thao tác boss tốn lượt đều trừ thời gian. Đòn cường hóa luôn trúng, không Crit, không hồi MP; Phòng thủ hồi tổng 2 MP. Xem Nhân vật để đọc Hồi lưu và Tam trọng.",
         },
         {
           name: `${eventIcon("boss")} Cơ chế boss`,

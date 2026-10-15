@@ -7,29 +7,29 @@ Tài liệu nguồn: 2026-10-08-hardcore-boss-roster-design.md. Mốc code trư�
 
 Chỉ áp dụng Sinh tồn 999 tầng. Tower giữ generator, dữ liệu công bố và luật riêng. Bộ boss mới thay vòng 5 boss; trạng thái, phase, lượt, stack, kết quả đầu hàng và phần thưởng được lưu trong session. Boss bắt buộc ưu tiên trước God/RNGesus, Grave Echo, Tower Remembers và event thường.
 
-| Tầng | Boss | Damage chính |
-| ---: | --- | --- |
-| 50 | The Butcher | Vật lý |
-| 100 | Infernal Machine | Phép |
-| 150 | Assur | Phép |
-| 200 | Master Control System | Phép |
-| 250 | Necrobot Alpha | Hỗn hợp |
-| 300 | Quov Tsin | Phép |
-| 350 | Lucion | Phép |
-| 400 | Bul-Kathos | Vật lý |
-| 450 | Spirit of Giyua | Phép |
-| 500 | Ascendant Riftwalker | Hỗn hợp |
-| 550 | Gharbad the Weak | Vật lý |
-| 600 | Phoboss | Phép |
-| 650 | Unstable Anomaly | Hỗn hợp |
-| 666 | Kabraxis, Keeper of the Seals | Hỗn hợp |
-| 700 | Zakarum Avatar | Phép |
-| 750 | The Justicar | Hỗn hợp |
-| 800 | Uldyssian the Tainted | Hỗn hợp |
-| 850 | Archbishop Lazarus | Phép |
-| 900 | Xazax | Phép |
-| 950 | Samael | Hỗn hợp |
-| 999 | Deimoss the Fleshweaver | Hỗn hợp |
+| Tầng | Boss                          | Damage chính |
+| ---: | ----------------------------- | ------------ |
+|   50 | The Butcher                   | Vật lý       |
+|  100 | Infernal Machine              | Phép         |
+|  150 | Assur                         | Phép         |
+|  200 | Master Control System         | Phép         |
+|  250 | Necrobot Alpha                | Hỗn hợp      |
+|  300 | Quov Tsin                     | Phép         |
+|  350 | Lucion                        | Phép         |
+|  400 | Bul-Kathos                    | Vật lý       |
+|  450 | Spirit of Giyua               | Phép         |
+|  500 | Ascendant Riftwalker          | Hỗn hợp      |
+|  550 | Gharbad the Weak              | Vật lý       |
+|  600 | Phoboss                       | Phép         |
+|  650 | Unstable Anomaly              | Hỗn hợp      |
+|  666 | Kabraxis, Keeper of the Seals | Hỗn hợp      |
+|  700 | Zakarum Avatar                | Phép         |
+|  750 | The Justicar                  | Hỗn hợp      |
+|  800 | Uldyssian the Tainted         | Hỗn hợp      |
+|  850 | Archbishop Lazarus            | Phép         |
+|  900 | Xazax                         | Phép         |
+|  950 | Samael                        | Hỗn hợp      |
+|  999 | Deimoss the Fleshweaver       | Hỗn hợp      |
 
 - Tầng 333 bắt buộc chọn một ấn. War: +12 stat chính và +8% DMG boss; Protection: +12 VIT, +5 RES; Arcane: +10 ENE, +1 Max MP. Lưu một lần, không chọn lại khi tiếp tục. Thông tin ghi ở Rift.
 - Tầng 666 có cửa rút thưởng trước trận. Vào trận khóa rút thưởng cả ở engine lẫn confirmation cũ. Không bỏ qua; vé hồi sinh và Lost Adventurer vẫn cứu theo luật hiện hành.
@@ -42,16 +42,16 @@ Chỉ áp dụng Sinh tồn 999 tầng. Tower giữ generator, dữ liệu công
 
 Hệ số HP/DMG theo đúng bảng tài liệu, bao gồm HP Infernal Machine tăng thêm 100%. Những hằng số tài liệu chưa ghi số dùng các giá trị sau; đây là lựa chọn triển khai, không phải con số đã được chứng minh cân bằng:
 
-| Cơ chế | Giá trị bổ sung |
-| --- | --- |
-| Infernal Machine | Tia Overcharge vật lý ×2,5. Tài liệu vừa ghi vật lý trong cơ chế vừa ghi phép ở yêu cầu UI; chọn vật lý và UI khớp với đòn thực tế. |
-| Necrobot Alpha | Plating DEF ×1,4 / RES −15; Barrier DEF ×0,7 / RES +20, cap 75%. Damage khắc chế ×0,7 theo tài liệu. |
-| Unstable Anomaly | Matter DEF ×1,4; Energy RES +20, cap 75%; Void DEF ×0,7, RES −20, nhận DMG ×1,5. Void phản công phép. |
-| Gharbad | 25% False Surrender mỗi lượt; khóa trước khi hiển thị, mở UI không roll lại. |
-| Uldyssian | Lặp Attack: EVA +30; lặp Skill: RES +20 và mất tối đa 1 MP sau chi phí Skill. |
+| Cơ chế                  | Giá trị bổ sung                                                                                                                                                                                            |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Infernal Machine        | Tia Overcharge vật lý ×2,5. Tài liệu vừa ghi vật lý trong cơ chế vừa ghi phép ở yêu cầu UI; chọn vật lý và UI khớp với đòn thực tế.                                                                        |
+| Necrobot Alpha          | Plating DEF ×1,4 / RES −15; Barrier DEF ×0,7 / RES +20, cap 75%. Damage khắc chế ×0,7 theo tài liệu.                                                                                                       |
+| Unstable Anomaly        | Matter DEF ×1,4; Energy RES +20, cap 75%; Void DEF ×0,7, RES −20, nhận DMG ×1,5. Void phản công phép.                                                                                                      |
+| Gharbad                 | 25% False Surrender mỗi lượt; khóa trước khi hiển thị, mở UI không roll lại.                                                                                                                               |
+| Uldyssian               | Lặp Attack: EVA +30; lặp Skill: RES +20 và mất tối đa 1 MP sau chi phí Skill.                                                                                                                              |
 | Kabraxis Corrupted Seal | Phase 2 mỗi 3 vòng +1, cap 3; War thêm 10 điểm % phản công phụ mỗi Seal; Protection giảm RES 5 + Seal; Arcane hút 1 + Seal MP. Ở lượt Seal: DMG thêm 5% mỗi Seal đang có. Các hiệu ứng ghi trong Chi tiết. |
-| Samael | Pentagram vật lý ×3; Phòng thủ còn ×0,3, tiếp tục áp dụng giảm trừ Phòng thủ thông thường. Dread không làm tăng Max MP vốn thấp hơn 2. |
-| Deimoss Flesh | Mỗi Flesh +10% DMG, tối đa 3; chỉ Phase 2. |
+| Samael                  | Pentagram vật lý ×3; Phòng thủ còn ×0,3, tiếp tục áp dụng giảm trừ Phòng thủ thông thường. Dread không làm tăng Max MP vốn thấp hơn 2.                                                                     |
+| Deimoss Flesh           | Mỗi Flesh +10% DMG, tối đa 3; chỉ Phase 2.                                                                                                                                                                 |
 
 Đòn phản lại từ nội tại vẫn chịu phòng thủ/miễn sát thương của boss và cap chung; không hưởng buff dành riêng cho Attack/Skill hoặc tạo Overheat. Time Debt dùng lại kế hoạch phản công đã cảnh báo trong cùng hành động.
 
@@ -67,15 +67,15 @@ Service lưu trạng thái trong SQLite và kiểm tra phiên bản lượt. JSO
 
 Bộ cũ được tạo bằng tắt roster mới trong simulator; không thay cờ production. Policy balanced giữ luật cũ cho boss cũ, dùng cảnh báo công khai để xử lý boss mới (public telegraphs v2). Đây là so sánh hai chiến lược có hiểu cơ chế tương ứng, không phải người chơi tối ưu mọi build.
 
-| Class | Thắng roster cũ | Thắng roster mới | Run mới thắng | Tầng qua trung bình mới |
-| --- | ---: | ---: | ---: | ---: |
-| amazon | 41.5% | 13% | 26/200 | 365.49 |
-| barbarian | 27% | 1% | 2/200 | 212.58 |
-| assassin | 17% | 0% | 0/200 | 118.75 |
-| sorceress | 56.5% | 23% | 46/200 | 581.58 |
-| druid | 15% | 0.5% | 1/200 | 106.64 |
-| necromancer | 33.5% | 0% | 0/200 | 201.15 |
-| paladin | 27.5% | 2% | 4/200 | 188.64 |
+| Class       | Thắng roster cũ | Thắng roster mới | Run mới thắng | Tầng qua trung bình mới |
+| ----------- | --------------: | ---------------: | ------------: | ----------------------: |
+| amazon      |           41.5% |              13% |        26/200 |                  365.49 |
+| barbarian   |             27% |               1% |         2/200 |                  212.58 |
+| assassin    |             17% |               0% |         0/200 |                  118.75 |
+| sorceress   |           56.5% |              23% |        46/200 |                  581.58 |
+| druid       |             15% |             0.5% |         1/200 |                  106.64 |
+| necromancer |           33.5% |               0% |         0/200 |                  201.15 |
+| paladin     |           27.5% |               2% |         4/200 |                  188.64 |
 
 Bộ mới khó hơn rõ rệt. Assassin và Necromancer có 0/200 thắng, Druid có 1/200; 0 trong mẫu không chứng minh class không thể thắng (cận trên một phía 95% khoảng 1,49% với 200 thử). Cần thêm vòng cân bằng nếu mục tiêu là giữ tỷ lệ thắng gần bản cũ. Không khẳng định các hệ số đề xuất đã cân bằng.
 

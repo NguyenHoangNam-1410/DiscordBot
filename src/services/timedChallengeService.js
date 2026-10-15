@@ -54,7 +54,11 @@ async function processExpiredChallenges(
 
 // Đổi màu viền câu khó khi sang mốc thời gian mới (xanh lá → vàng → đỏ); chỉ sửa tin nhắn khi đổi mốc.
 const renderedBands = new Map();
-async function refreshChallengeColors(client, logger = console, now = Date.now()) {
+async function refreshChallengeColors(
+  client,
+  logger = console,
+  now = Date.now(),
+) {
   const { getVuaSession } = require("./funGameService");
   const vua = require("../commands/vuatiengviet");
   const rows = db
@@ -83,7 +87,10 @@ async function refreshChallengeColors(client, logger = console, now = Date.now()
       });
       edited += 1;
     } catch (error) {
-      logger.warn?.({ err: error, guildId: row.guild_id }, "failed to refresh challenge color");
+      logger.warn?.(
+        { err: error, guildId: row.guild_id },
+        "failed to refresh challenge color",
+      );
     }
   }
   return edited;

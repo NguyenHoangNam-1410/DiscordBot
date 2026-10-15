@@ -21,7 +21,8 @@ function frame(state, userId, stage = 0) {
             e.sourceFloor +
             "\n\n" +
             (stage
-              ? relicIcon(e.relicId) + " Năm bảo vật tan vào một luồng sáng.\n**" +
+              ? relicIcon(e.relicId) +
+                " Năm bảo vật tan vào một luồng sáng.\n**" +
                 name +
                 "** được trao cho người nhận lời…"
               : eventIcon("royal_invitation") +

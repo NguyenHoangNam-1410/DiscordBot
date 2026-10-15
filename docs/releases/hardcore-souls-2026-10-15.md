@@ -8,15 +8,15 @@ Cập nhật: lúc 12:13:55 GMT+7 Thứ Năm, 15 tháng 10, 2026.
 
 Thắng nghĩa là hạ boss cuối tầng 999 và còn sống. Bảng này dùng đúng 100 run có chỉ số 0–99 cho mỗi cấu hình được chọn, tổng 700 run. Không cộng các lần hiệu chỉnh vào mẫu cuối.
 
-| Nhân vật | Hoàn thành | Tỷ lệ mẫu | Wilson 95% | Tầng trung bình | Gặp boss cuối | Timeout |
-|---|---:|---:|---:|---:|---:|---:|
-| Amazon | 30/100 | 30% | 21.9–39.6% | 836.21 | 32 | 0 |
-| Barbarian | 30/100 | 30% | 21.9–39.6% | 690.69 | 35 | 0 |
-| Assassin | 33/100 | 33% | 24.6–42.7% | 558.17 | 33 | 0 |
-| Sorceress | 32/100 | 32% | 23.7–41.7% | 921.05 | 36 | 0 |
-| Druid | 30/100 | 30% | 21.9–39.6% | 737.73 | 37 | 0 |
-| Necromancer | 30/100 | 30% | 21.9–39.6% | 788.21 | 33 | 0 |
-| Paladin | 34/100 | 34% | 25.5–43.7% | 725.16 | 35 | 0 |
+| Nhân vật    | Hoàn thành | Tỷ lệ mẫu | Wilson 95% | Tầng trung bình | Gặp boss cuối | Timeout |
+| ----------- | ---------: | --------: | ---------: | --------------: | ------------: | ------: |
+| Amazon      |     30/100 |       30% | 21.9–39.6% |          836.21 |            32 |       0 |
+| Barbarian   |     30/100 |       30% | 21.9–39.6% |          690.69 |            35 |       0 |
+| Assassin    |     33/100 |       33% | 24.6–42.7% |          558.17 |            33 |       0 |
+| Sorceress   |     32/100 |       32% | 23.7–41.7% |          921.05 |            36 |       0 |
+| Druid       |     30/100 |       30% | 21.9–39.6% |          737.73 |            37 |       0 |
+| Necromancer |     30/100 |       30% | 21.9–39.6% |          788.21 |            33 |       0 |
+| Paladin     |     34/100 |       34% | 25.5–43.7% |          725.16 |            35 |       0 |
 
 Đây là **tập hiệu chỉnh**, chưa phải kiểm chứng độc lập. Seed được dùng lại giữa các hệ số, mặc dù tên seed có chữ holdout. Khoảng Wilson chỉ mô tả độ bất định của mẫu; chưa tính thiên lệch do chọn hệ số. 100 run/nhân vật chưa đủ để khẳng định tỷ lệ thực tế luôn nằm trong 30–35%.
 
@@ -24,15 +24,15 @@ Thắng nghĩa là hạ boss cuối tầng 999 và còn sống. Bảng này dùn
 
 42 cơ chế riêng theo [bản thiết kế tinh hồn](../sr-character-souls-design.md) đã chạy trong combat. Các cơ chế đó một mình chưa đạt mục tiêu, nên S6 có thêm hệ số DMG Attack/Skill lên boss theo nhân vật. Hệ số này áp dụng từ tầng 1, gồm hit phụ nội tại; sát thương cố định của cơ chế boss không được nhân. Điều kiện shield/module, miễn sát thương và thất bại boss vẫn giữ.
 
-| Nhân vật | Bonus boss riêng S6 | Hệ số boss nền giữ nguyên | S6 trước hiệu chỉnh | S6 cuối |
-|---|---:|---:|---:|---:|
-| Amazon | ×3.4 (+240%) | ×2.1 | 9% | 30% |
-| Barbarian | ×1.55 (+55%) | ×0.504 | 14% | 30% |
-| Assassin | ×1.62 (+62%) | ×0.36 | 10% | 33% |
-| Sorceress | ×1.4 (+40%) | ×1.6 | 21% | 32% |
-| Druid | ×1.5 (+50%) | ×0.3 | 15% | 30% |
-| Necromancer | ×2.6 (+160%) | ×0.135 | 6% | 30% |
-| Paladin | ×1.4 (+40%) | ×0.5 | 21% | 34% |
+| Nhân vật    | Bonus boss riêng S6 | Hệ số boss nền giữ nguyên | S6 trước hiệu chỉnh | S6 cuối |
+| ----------- | ------------------: | ------------------------: | ------------------: | ------: |
+| Amazon      |        ×3.4 (+240%) |                      ×2.1 |                  9% |     30% |
+| Barbarian   |        ×1.55 (+55%) |                    ×0.504 |                 14% |     30% |
+| Assassin    |        ×1.62 (+62%) |                     ×0.36 |                 10% |     33% |
+| Sorceress   |         ×1.4 (+40%) |                      ×1.6 |                 21% |     32% |
+| Druid       |         ×1.5 (+50%) |                      ×0.3 |                 15% |     30% |
+| Necromancer |        ×2.6 (+160%) |                    ×0.135 |                  6% |     30% |
+| Paladin     |         ×1.4 (+40%) |                      ×0.5 |                 21% |     34% |
 
 Các con số “trước hiệu chỉnh” cũng là S6, **không phải S0**. S0–S5 không nhận hệ số boss riêng S6. Mẫu S0 khoảng 11% là tham chiếu lịch sử, chưa chạy lại trong đợt này. UI nhân vật công khai bonus boss S6; cấp và thông số được snapshot khi bắt đầu run.
 
@@ -65,39 +65,39 @@ Druid được chạy thêm 5 shard ×20 để tăng tốc. Đã kiểm tra chú
 
 Mỗi hàng dưới là một cấu hình đủ 100 run riêng. Không gộp tỷ lệ giữa các hàng; việc đổi hệ số có thể đổi cả đường đi và các lượt RNG về sau nên kết quả cùng seed không nhất thiết tăng đơn điệu.
 
-| Lần thử | Nhân vật | Hệ số boss S6 | Hoàn thành |
-|---|---|---:|---:|
-| initial | Amazon | ×1 | 9/100 |
-| initial | Barbarian | ×1 | 14/100 |
-| initial | Assassin | ×1 | 10/100 |
-| initial | Sorceress | ×1 | 21/100 |
-| initial | Druid | ×1 | 15/100 |
-| initial | Necromancer | ×1 | 6/100 |
-| initial | Paladin | ×1 | 21/100 |
-| trial1 | Amazon | ×2 | 15/100 |
-| trial1 | Barbarian | ×1.5 | 29/100 |
-| trial1 | Assassin | ×1.25 | 19/100 |
-| trial1 | Sorceress | ×1.5 | 36/100 |
-| trial1 | Druid | ×1.5 | 30/100 |
-| trial1 | Necromancer | ×2 | 26/100 |
-| trial1 | Paladin | ×1.2 | 23/100 |
-| trial2 | Amazon | ×3.5 | 36/100 |
-| trial2 | Barbarian | ×1.55 | 30/100 |
-| trial2 | Assassin | ×1.6 | 27/100 |
-| trial2 | Sorceress | ×1.45 | 36/100 |
-| trial2 | Necromancer | ×2.7 | 37/100 |
-| trial2 | Paladin | ×1.7 | 45/100 |
-| trial3 | Amazon | ×3.3 | 27/100 |
-| trial3 | Assassin | ×1.75 | 38/100 |
-| trial3 | Necromancer | ×2.4 | 19/100 |
-| trial3 | Paladin | ×1.4 | 34/100 |
-| trial4 | Amazon | ×3.4 | 30/100 |
-| trial4 | Assassin | ×1.68 | 38/100 |
-| trial4 | Sorceress | ×1.4 | 32/100 |
-| trial4 | Necromancer | ×2.6 | 30/100 |
-| trial5 | Assassin | ×1.65 | 40/100 |
-| trial6 | Assassin | ×1.61 | 31/100 |
-| trial7 | Assassin | ×1.62 | 33/100 |
+| Lần thử | Nhân vật    | Hệ số boss S6 | Hoàn thành |
+| ------- | ----------- | ------------: | ---------: |
+| initial | Amazon      |            ×1 |      9/100 |
+| initial | Barbarian   |            ×1 |     14/100 |
+| initial | Assassin    |            ×1 |     10/100 |
+| initial | Sorceress   |            ×1 |     21/100 |
+| initial | Druid       |            ×1 |     15/100 |
+| initial | Necromancer |            ×1 |      6/100 |
+| initial | Paladin     |            ×1 |     21/100 |
+| trial1  | Amazon      |            ×2 |     15/100 |
+| trial1  | Barbarian   |          ×1.5 |     29/100 |
+| trial1  | Assassin    |         ×1.25 |     19/100 |
+| trial1  | Sorceress   |          ×1.5 |     36/100 |
+| trial1  | Druid       |          ×1.5 |     30/100 |
+| trial1  | Necromancer |            ×2 |     26/100 |
+| trial1  | Paladin     |          ×1.2 |     23/100 |
+| trial2  | Amazon      |          ×3.5 |     36/100 |
+| trial2  | Barbarian   |         ×1.55 |     30/100 |
+| trial2  | Assassin    |          ×1.6 |     27/100 |
+| trial2  | Sorceress   |         ×1.45 |     36/100 |
+| trial2  | Necromancer |          ×2.7 |     37/100 |
+| trial2  | Paladin     |          ×1.7 |     45/100 |
+| trial3  | Amazon      |          ×3.3 |     27/100 |
+| trial3  | Assassin    |         ×1.75 |     38/100 |
+| trial3  | Necromancer |          ×2.4 |     19/100 |
+| trial3  | Paladin     |          ×1.4 |     34/100 |
+| trial4  | Amazon      |          ×3.4 |     30/100 |
+| trial4  | Assassin    |         ×1.68 |     38/100 |
+| trial4  | Sorceress   |          ×1.4 |     32/100 |
+| trial4  | Necromancer |          ×2.6 |     30/100 |
+| trial5  | Assassin    |         ×1.65 |     40/100 |
+| trial6  | Assassin    |         ×1.61 |     31/100 |
+| trial7  | Assassin    |         ×1.62 |     33/100 |
 
 ## Kiểm thử
 

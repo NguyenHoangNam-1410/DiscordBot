@@ -37,7 +37,11 @@ function normalize(s) {
   )
     throw Error("INVALID_EXPLORATION_MARK");
 }
-const boosted = (s) => Boolean(data(s).mimicBoost || (data(s).mimic && data(s).ancientMimic && data(s).mimicBoost !== false));
+const boosted = (s) =>
+  Boolean(
+    data(s).mimicBoost ||
+    (data(s).mimic && data(s).ancientMimic && data(s).mimicBoost !== false),
+  );
 const incoming = (s, e = s.encounter) =>
   e?.rank === "elite" && data(s).underworld
     ? 1.3
@@ -60,7 +64,12 @@ const healerDue = (s) =>
   Boolean(data(s).vulnerable && s.cleared >= data(s).vulnerable.due);
 function blood(s) {
   const m = ensure(s);
-  if (!require("../towerMemories").canQueue(s) || m.vulnerable || m.vitalBlessing || s.hp <= 1)
+  if (
+    !require("../towerMemories").canQueue(s) ||
+    m.vulnerable ||
+    m.vitalBlessing ||
+    s.hp <= 1
+  )
     throw Error("INVALID_ACTION");
   const before = s.hp;
   s.hp = Math.max(1, s.hp - Math.ceil(s.hp * 0.7));
@@ -86,13 +95,14 @@ function fields(s) {
     r.push({
       name: eventIcon("healer") + " Vulnerable",
       value:
-        "Checkpoint không hồi HP đến hết tầng " + m.vulnerable.due + "; sau đó Healer trở lại hồi đầy HP/MP và đổi thành Vital Benediction.",
+        "Checkpoint không hồi HP đến hết tầng " +
+        m.vulnerable.due +
+        "; sau đó Healer trở lại hồi đầy HP/MP và đổi thành Vital Benediction.",
     });
   if (m.vitalBlessing)
     r.push({
       name: eventIcon("healer") + " Vital Benediction",
-      value:
-        "Đến hết run: LUCK +40; STR/DEX/VIT/ENE +10 (đã tính vào chỉ số).",
+      value: "Đến hết run: LUCK +40; STR/DEX/VIT/ENE +10 (đã tính vào chỉ số).",
     });
   if (boosted(s))
     r.push({

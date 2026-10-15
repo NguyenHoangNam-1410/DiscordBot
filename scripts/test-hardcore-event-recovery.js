@@ -157,14 +157,26 @@ for (const [encounter, action, rate] of cases) {
   assert.equal(copy.mana, s.mana);
 }
 // Recovery log and event receipt must not repeat the same HP/MP transition.
-for (const [missingHp, missingMp] of [[true, true], [true, false], [false, true]]) {
+for (const [missingHp, missingMp] of [
+  [true, true],
+  [true, false],
+  [false, true],
+]) {
   const s = fresh();
   if (!missingHp) s.hp = s.maxHp;
   if (!missingMp) s.mana = s.maxMana;
-  s.encounter = {type: "surprise", name: "Blood Fountain", kind: "fountain", roll: 0.1};
+  s.encounter = {
+    type: "surprise",
+    name: "Blood Fountain",
+    kind: "fountain",
+    roll: 0.1,
+  };
   core.act(s, session, "event_drink", rng);
   const rawLog = s.lastLog;
-  const rendered = view.embed(s, "u").toJSON().fields.find(f => f.name.includes("Lượt vừa rồi")).value;
+  const rendered = view
+    .embed(s, "u")
+    .toJSON()
+    .fields.find((f) => f.name.includes("Lượt vừa rồi")).value;
   assert.equal((rendered.match(/Blood Fountain/g) || []).length, 1, rendered);
   assert(!rendered.includes(" HP:"), rendered);
   assert(!rendered.includes(" MP:"), rendered);
@@ -178,8 +190,17 @@ for (const [roll, healThreshold, goodThreshold] of [
 ]) {
   const s = fresh();
   const before = { vit: s.vit, hp: s.hp, mana: s.mana };
-  s.encounter = { type: "surprise", name: "Blood Fountain", kind: "fountain", roll, healThreshold, goodThreshold };
-  const details = JSON.stringify(view.privatePayload(s, session.id, null, "details", 0));
+  s.encounter = {
+    type: "surprise",
+    name: "Blood Fountain",
+    kind: "fountain",
+    roll,
+    healThreshold,
+    goodThreshold,
+  };
+  const details = JSON.stringify(
+    view.privatePayload(s, session.id, null, "details", 0),
+  );
   assert(details.includes("+10"));
   assert(details.includes("VIT"));
   assert(!details.includes("+15"));

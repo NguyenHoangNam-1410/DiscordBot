@@ -12,32 +12,32 @@
 
 ## Tìm theo công việc
 
-| Công việc                                         | Module nên đọc                                                                          |
-| ------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Khởi tạo, khôi phục và xác thực phiên             | `runtime/start.js`, `runtime/state.js`, `storage/sessions.js`                           |
-| Chọn class, cược, vé, loadout                     | `runtime/setup.js`, `runtime/setupFlow.js`, `inventory/service.js`, `inventory/view.js` |
-| Nhận button, ACK, hàng đợi, kiểm tra chủ run      | `runtime/interactions.js`                                                               |
-| Transaction hành động, chống click cũ             | `runtime/actions.js`                                                                    |
-| Kết thúc, hoàn tiền, thưởng, timeout              | `runtime/settlement.js`, `runtime/records.js`                                           |
-| Chuyển tầng, checkpoint, milestone                | `engine/progression.js`                                                                 |
-| Sinh quái và event, giá dịch vụ                   | `engine/encounters.js`                                                                  |
-| Menu lựa chọn, xử lý lựa chọn event               | `engine/choices.js`, `engine/eventActions.js`, `engine/actions.js`                      |
-| Đánh, phản công, preview sát thương               | `engine/combat.js`, `engine/combatPassives.js`, `engine/combatPreview.js`               |
-| Chỉ số class, giới hạn, scale thế giới            | `engine/stats.js`, `engine/world.js`, `shared/balance.js`                               |
-| Payout, thưởng/phạt, ghi biến động xu             | `engine/payout.js`, `shared/rewards.js`                                                 |
-| Nhận, giải nguyền, nghiền item, hồi máu           | `engine/equipment.js`, `engine/state.js`                                                |
-| Rương và Shrine                                   | `engine/chests.js`, `engine/shrines.js`                                                 |
-| RNGesus, God và animation                         | `events/rngesus.js`, `events/godRngesus.js`, `events/godReveal.js`                      |
-| Paradox, Contract, Tower Remembers trong Sinh tồn | `events/paradox.js`, `engine/memories.js`, `towerMemories.js`                           |
-| Catalog item / passive / curse / LR / drop        | `item.js`, `itemPassives.js`, `itemCurses.js`, `itemRelics.js`, `monsterLoot.js`        |
-| Battle embed và button                            | `ui/battle.js`, `ui/buttons.js`, `runtime/render.js`                                    |
-| Nội dung event, preview dịch vụ, log lượt         | `ui/events.js`, `ui/services.js`, `ui/encounters.js`, `ui/log.js`                       |
-| Túi / Rift / chỉ số / Chi tiết                    | `ui/details.js`, `ui/items.js`, `ui/rift.js`, `ui/stats.js`                             |
-| Danh mục nhân vật / tinh hồn / quyền S0             | `characters/catalog.json`, `characters/index.js`, `characters/souls.js`, `characters/soulTuning.json`, `ui/characters.js`                   |
-| Luật chơi / hồ sơ / bảng thành tích               | `ui/rules.js`, `ui/ratesPanel.js`, `ui/rulePages.js`, `ui/profile.js`                   |
-| Emoji, định dạng chỉ số và trang bị               | `shared/icons.js`, `shared/ui.js`, `shared/equipment.js`                                |
-| Lịch sử run, Echo và Nemesis                      | `storage/echoes.js`                                                                     |
-| Run cũ và công thức/UI cũ                         | `legacy/`                                                                               |
+| Công việc                                         | Module nên đọc                                                                                                            |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| Khởi tạo, khôi phục và xác thực phiên             | `runtime/start.js`, `runtime/state.js`, `storage/sessions.js`                                                             |
+| Chọn class, cược, vé, loadout                     | `runtime/setup.js`, `runtime/setupFlow.js`, `inventory/service.js`, `inventory/view.js`                                   |
+| Nhận button, ACK, hàng đợi, kiểm tra chủ run      | `runtime/interactions.js`                                                                                                 |
+| Transaction hành động, chống click cũ             | `runtime/actions.js`                                                                                                      |
+| Kết thúc, hoàn tiền, thưởng, timeout              | `runtime/settlement.js`, `runtime/records.js`                                                                             |
+| Chuyển tầng, checkpoint, milestone                | `engine/progression.js`                                                                                                   |
+| Sinh quái và event, giá dịch vụ                   | `engine/encounters.js`                                                                                                    |
+| Menu lựa chọn, xử lý lựa chọn event               | `engine/choices.js`, `engine/eventActions.js`, `engine/actions.js`                                                        |
+| Đánh, phản công, preview sát thương               | `engine/combat.js`, `engine/combatPassives.js`, `engine/combatPreview.js`                                                 |
+| Chỉ số class, giới hạn, scale thế giới            | `engine/stats.js`, `engine/world.js`, `shared/balance.js`                                                                 |
+| Payout, thưởng/phạt, ghi biến động xu             | `engine/payout.js`, `shared/rewards.js`                                                                                   |
+| Nhận, giải nguyền, nghiền item, hồi máu           | `engine/equipment.js`, `engine/state.js`                                                                                  |
+| Rương và Shrine                                   | `engine/chests.js`, `engine/shrines.js`                                                                                   |
+| RNGesus, God và animation                         | `events/rngesus.js`, `events/godRngesus.js`, `events/godReveal.js`                                                        |
+| Paradox, Contract, Tower Remembers trong Sinh tồn | `events/paradox.js`, `engine/memories.js`, `towerMemories.js`                                                             |
+| Catalog item / passive / curse / LR / drop        | `item.js`, `itemPassives.js`, `itemCurses.js`, `itemRelics.js`, `monsterLoot.js`                                          |
+| Battle embed và button                            | `ui/battle.js`, `ui/buttons.js`, `runtime/render.js`                                                                      |
+| Nội dung event, preview dịch vụ, log lượt         | `ui/events.js`, `ui/services.js`, `ui/encounters.js`, `ui/log.js`                                                         |
+| Túi / Rift / chỉ số / Chi tiết                    | `ui/details.js`, `ui/items.js`, `ui/rift.js`, `ui/stats.js`                                                               |
+| Danh mục nhân vật / tinh hồn / quyền S0           | `characters/catalog.json`, `characters/index.js`, `characters/souls.js`, `characters/soulTuning.json`, `ui/characters.js` |
+| Luật chơi / hồ sơ / bảng thành tích               | `ui/rules.js`, `ui/ratesPanel.js`, `ui/rulePages.js`, `ui/profile.js`                                                     |
+| Emoji, định dạng chỉ số và trang bị               | `shared/icons.js`, `shared/ui.js`, `shared/equipment.js`                                                                  |
+| Lịch sử run, Echo và Nemesis                      | `storage/echoes.js`                                                                                                       |
+| Run cũ và công thức/UI cũ                         | `legacy/`                                                                                                                 |
 
 ## Boss roster trên V3
 
@@ -98,3 +98,5 @@ Gacha nhân vật: `gacha/banners.json` khai báo từng banner; `gacha/banners.
 Venance SSR: `characters/venance.js` giữ snapshot, buff 3 hành động, Hồi lưu, Barrier và Tam trọng/S6. Tham khảo `docs/venance-ssr-character-design.md`; chạy `npm run test:hardcore-venance`. Catalog hiển thị nhân vật, còn setup chỉ cho chọn nhân vật đã sở hữu. Icon tạm dùng tên `class_venance`, `skill_venance_astral_armament`, `soul_venance_1`–`soul_venance_6`. Chưa mở banner SSR hoặc chạy simulate Venance.
 
 Beta Venance: `/sinhton beta` mở/tiếp tục run SSR S0, cược giả lập 100.000 xu, dùng Battle UI hiện tại. `beta.js` giữ trạng thái hồi sinh/gem giả lập; `runtime/beta.js` xuất bảng. Chỉ lưu phiên thử, không quyết toán kinh tế, thành tích, di vật tài khoản, mộ chung, khung hoặc thành tựu. Một slot Sinh tồn/người/server; không thay thế run thật đang chơi. Kiểm thử: `npm run test:hardcore-beta`.
+
+Cường hóa Venance giữ xuyên phòng trong `state.venanceState`; `encounter.venanceCombat` chỉ đánh dấu combat để nạp lại S2 và xóa Barrier đúng lúc. Mở phòng/event/checkpoint không trừ thời lượng; vẫn chỉ có 3 hành động chiến đấu cho mỗi lần dùng Skill.

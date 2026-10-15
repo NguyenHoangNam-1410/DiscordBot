@@ -57,7 +57,7 @@ module.exports = function createModule(dependencies) {
       defend: `Không gây sát thương; hồi **${classKey === "venance" ? 2 : 1} MP**. Trong lần phản công này: **DEF ×2** khi nhận vật lý, **+15 RES** khi nhận phép, giảm thêm **15% sát thương** và miễn Crit. Không duy trì sang lượt sau.${classKey === "venance" ? " Có Ấn Hồi lưu: tiêu ấn để hồi HP trước phản công." : ""}`,
       skill:
         classKey === "venance"
-          ? "Tốn **2 MP**, **không gây DMG**. Cường hóa đánh thường thành phép trong **3 hành động tiếp theo**, gồm cả Phòng thủ/bình/hành động boss tốn lượt. Boss vẫn phản công. Dùng lại đặt về 3 hành động và xóa chuỗi/ấn cũ."
+          ? "Tốn **2 MP**, **không gây DMG**. Cường hóa đánh thường thành phép trong **3 hành động chiến đấu tiếp theo**, giữ qua phòng. Phòng thủ/bình/hành động boss tốn lượt đều trừ thời gian. Boss vẫn phản công. Dùng lại đặt về 3 hành động và xóa chuỗi/ấn cũ."
           : `${SKILLS[classKey]} Tốn **2 MP**, không hồi MP như đánh thường. ${["sorceress", "necromancer"].includes(classKey) ? "Sát thương phép chịu RES của quái, không Crit." : "Mỗi đòn vật lý có thể trượt/Crit, chịu DEF của quái."} ${["assassin", "necromancer"].includes(classKey) ? "Chặn phản công của lượt này kể cả skill không gây sát thương." : classKey === "paladin" ? "Nếu quái sống, nhận phản công với hiệu quả DEF; skill không cộng 1 MP." : "Nếu quái sống, nhận phản công bình thường."}`,
       passive:
         classKey === "venance"

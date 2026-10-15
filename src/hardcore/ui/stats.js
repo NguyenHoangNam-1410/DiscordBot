@@ -156,7 +156,7 @@ module.exports = function createModule(dependencies) {
       ? "DMG chuẩn 20% Max HP boss; không Crit, không mất MP."
       : {
           venance:
-            "Skill không gây sát thương; cường hóa đánh thường thành phép trong 3 hành động tiếp theo.",
+            "Skill không gây sát thương; cường hóa đánh thường thành phép trong 3 hành động chiến đấu tiếp theo, giữ qua phòng.",
           amazon: `Hai phát vật lý, trúng/Crit riêng.${skill.extraShot ? " 20% thêm phát thứ ba." : ""}`,
           barbarian: "Vật lý, có thể trượt/Crit.",
           assassin: "Vật lý, có thể trượt/Crit; né phản công.",

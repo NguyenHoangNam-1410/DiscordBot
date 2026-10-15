@@ -36,18 +36,44 @@ function attach(s, rarity = "SSR") {
   require("../engine/stats").recompute(s);
   s.hp = s.maxHp;
 }
-const frame = (s) => (enabled(s) ? s.encounter?.venanceCombat || null : null);
+// Run state owns the cast; encounter markers reset only combat-scoped resources.
+const frame = (s) =>
+  enabled(s)
+    ? s.venanceState ||
+      (s.encounter?.venanceCombat?.version === 1
+        ? s.encounter.venanceCombat
+        : null)
+    : null;
 function prepare(s) {
   if (!enabled(s) || s.encounter?.type !== "combat") return null;
-  return (s.encounter.venanceCombat ||= {
-    version: 1,
-    remaining: 0,
-    hits: 0,
-    ready: false,
-    sigilUsed: false,
-    firstBarrierUsed: false,
-    barrier: 0,
-  });
+  const e = s.encounter,
+    legacy = e.venanceCombat?.version === 1;
+  s.venanceState ||= legacy
+    ? { ...e.venanceCombat }
+    : {
+        version: 1,
+        remaining: 0,
+        hits: 0,
+        ready: false,
+        sigilUsed: false,
+        firstBarrierUsed: false,
+        barrier: 0,
+      };
+  if (e.venanceCombat?.version !== 2) {
+    if (!legacy) {
+      s.venanceState.firstBarrierUsed = false;
+      s.venanceState.barrier = 0;
+    }
+    e.venanceCombat = { version: 2 };
+  }
+  return s.venanceState;
+}
+function finish(s) {
+  const f = frame(s);
+  if (f) {
+    f.barrier = 0;
+    f.firstBarrierUsed = false;
+  }
 }
 const empowered = (s) => Boolean(frame(s)?.remaining > 0);
 const blockedMana = (s) => Boolean(frame(s)?.empoweredAction);
@@ -62,7 +88,7 @@ function begin(s, action) {
   if (f) f.empoweredAction = action === "attack" && f.remaining > 0;
 }
 function end(s, action, e = s.encounter) {
-  const f = e?.venanceCombat;
+  const f = e?.venanceCombat ? frame(s) : null;
   if (!enabled(s) || !f) return;
   if (action !== "skill" && f.remaining > 0) f.remaining--;
   delete f.empoweredAction;
@@ -78,7 +104,7 @@ function cast(s) {
   });
   let log =
     SKILL_ICONS.venance +
-    " Astral Armament: cường hóa 3 hành động tiếp theo; đánh thường thành phép ×" +
+    " Astral Armament: cường hóa 3 hành động chiến đấu tiếp theo, giữ qua phòng; đánh thường thành phép ×" +
     c.coefficient +
     ", không hồi " +
     E.mana +
@@ -178,7 +204,7 @@ function status(s) {
   return f
     ? "Cường hóa: **" +
         f.remaining +
-        "/3 hành động** · Đòn hợp lệ: **" +
+        "/3 hành động** · Giữ qua phòng · Đòn hợp lệ: **" +
         f.hits +
         "/3**" +
         (f.ready ? " · ✨ Hồi lưu sẵn sàng" : "")
@@ -218,7 +244,7 @@ function awakeningText(s) {
 }
 function validate(s) {
   if (!enabled(s)) {
-    if (s.venanceProfile || s.encounter?.venanceCombat)
+    if (s.venanceProfile || s.venanceState || s.encounter?.venanceCombat)
       throw Error("INVALID_VENANCE_PROFILE");
     return;
   }
@@ -230,6 +256,14 @@ function validate(s) {
     Object.keys(expected).some((k) => p[k] !== expected[k])
   )
     throw Error("INVALID_VENANCE_PROFILE");
+  const marker = s.encounter?.venanceCombat;
+  if (
+    marker &&
+    (![1, 2].includes(marker.version) ||
+      (marker.version === 2 &&
+        (!s.venanceState || Object.keys(marker).join() !== "version")))
+  )
+    throw Error("INVALID_VENANCE_COMBAT");
   const f = frame(s);
   if (!f) return;
   if (
@@ -248,6 +282,11 @@ function validate(s) {
     f.empoweredAction != null
   )
     throw Error("INVALID_VENANCE_COMBAT");
+  // Preserve the active cast from saves made before cross-room empowerment.
+  if (marker?.version === 1) {
+    s.venanceState = { ...f };
+    s.encounter.venanceCombat = { version: 2 };
+  }
 }
 module.exports = {
   enabled,
@@ -256,6 +295,7 @@ module.exports = {
   attach,
   frame,
   prepare,
+  finish,
   empowered,
   blockedMana,
   third,

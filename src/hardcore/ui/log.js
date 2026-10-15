@@ -167,12 +167,37 @@ module.exports = function createModule(dependencies) {
     const lines = (state.lastLog || "Run bắt đầu.")
       .split("\n")
       .filter((line) => {
-        if (eventDirect && receipt && directKeys.includes("hp") && directKeys.includes("mana")) {
-          const before = receipt.before, after = receipt.after;
-          const recoveryLine = E.hp + " HP: " + before.hp + " → **" + after.hp + "** (+" + (after.hp - before.hp) + ") · " +
-            E.mana + " MP: " + before.mana + " → **" + after.mana + "** (+" + (after.mana - before.mana) + ").";
+        if (
+          eventDirect &&
+          receipt &&
+          directKeys.includes("hp") &&
+          directKeys.includes("mana")
+        ) {
+          const before = receipt.before,
+            after = receipt.after;
+          const recoveryLine =
+            E.hp +
+            " HP: " +
+            before.hp +
+            " → **" +
+            after.hp +
+            "** (+" +
+            (after.hp - before.hp) +
+            ") · " +
+            E.mana +
+            " MP: " +
+            before.mana +
+            " → **" +
+            after.mana +
+            "** (+" +
+            (after.mana - before.mana) +
+            ").";
           if (line === recoveryLine) return false;
-          if (receipt.kind === "fountain" && /^🩸 Blood Fountain đã hồi phục [^\n]*$/.test(line)) return false;
+          if (
+            receipt.kind === "fountain" &&
+            /^🩸 Blood Fountain đã hồi phục [^\n]*$/.test(line)
+          )
+            return false;
         }
         if (
           purified &&

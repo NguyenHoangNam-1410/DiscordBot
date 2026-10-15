@@ -65,12 +65,12 @@ Quy tắc thời hạn:
 
 Khi encounter Paradox được tạo, bot chọn một trong bốn cặp dưới đây bằng RNG công bằng. Cặp đã chọn phải được lưu ngay trong state; mở lại panel không được roll lại.
 
-| Cặp | Lựa chọn A | Lựa chọn B |
-|---|---|---|
-| 1 | Huyết Ước | Mana Vỡ Vụn |
-| 2 | Giáp Nghịch Đảo | Ma Pháp Nghịch Đảo |
-| 3 | Cơn Đói | Nợ Thời Gian |
-| 4 | Gương Máu | Linh Hồn Bất Ổn |
+| Cặp | Lựa chọn A      | Lựa chọn B         |
+| --- | --------------- | ------------------ |
+| 1   | Huyết Ước       | Mana Vỡ Vụn        |
+| 2   | Giáp Nghịch Đảo | Ma Pháp Nghịch Đảo |
+| 3   | Cơn Đói         | Nợ Thời Gian       |
+| 4   | Gương Máu       | Linh Hồn Bất Ổn    |
 
 Không ghép tùy ý giữa tám Paradox. Các cặp cố định giúp tránh trường hợp một lựa chọn vượt trội hoàn toàn lựa chọn còn lại.
 
@@ -403,20 +403,20 @@ State tối thiểu:
 Class cố định: **Sorceress**\
 Tên challenge: **Sổ Nợ Arcane**
 
-| Chỉ số | Giá trị |
-|---|---:|
-| STR | 10 |
-| DEX | 16 |
-| VIT | 22 |
-| ENE | 75 |
-| HP | 100/100 |
-| Mana | 0/5 |
-| DEF | 6 |
-| ACC | 79 |
-| EVA | 8 |
-| Crit | 5,6% nhưng bị tắt trong mode này |
-| RES | 23% |
-| Bình máu | 0 |
+| Chỉ số   |                          Giá trị |
+| -------- | -------------------------------: |
+| STR      |                               10 |
+| DEX      |                               16 |
+| VIT      |                               22 |
+| ENE      |                               75 |
+| HP       |                          100/100 |
+| Mana     |                              0/5 |
+| DEF      |                                6 |
+| ACC      |                               79 |
+| EVA      |                                8 |
+| Crit     | 5,6% nhưng bị tắt trong mode này |
+| RES      |                              23% |
+| Bình máu |                                0 |
 
 Challenge dùng damage override cố định, không dùng range từ mode 999:
 
@@ -684,7 +684,31 @@ Kết quả chuẩn: `HP 14 · Mana 0 · hoàn thành 15/15`.
 Chuỗi action chuẩn dùng cho solver:
 
 ```json
-["attack","skill","attack","skill","skill","attack","touch","attack","skill","defend","skill","mana_fracture","skill","skill","attack","absorb_mana","skill","skill","attack","defend","skill","skill","skill"]
+[
+  "attack",
+  "skill",
+  "attack",
+  "skill",
+  "skill",
+  "attack",
+  "touch",
+  "attack",
+  "skill",
+  "defend",
+  "skill",
+  "mana_fracture",
+  "skill",
+  "skill",
+  "attack",
+  "absorb_mana",
+  "skill",
+  "skill",
+  "attack",
+  "defend",
+  "skill",
+  "skill",
+  "skill"
+]
 ```
 
 `solutionHash` phải được tính từ `challengeId + contentVersion + canonical action list`. Không lưu lời giải dạng plain text trong SQLite session.
