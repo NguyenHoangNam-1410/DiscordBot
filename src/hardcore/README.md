@@ -33,6 +33,7 @@
 | Battle embed và button                            | `ui/battle.js`, `ui/buttons.js`, `runtime/render.js`                                    |
 | Nội dung event, preview dịch vụ, log lượt         | `ui/events.js`, `ui/services.js`, `ui/encounters.js`, `ui/log.js`                       |
 | Túi / Rift / chỉ số / Chi tiết                    | `ui/details.js`, `ui/items.js`, `ui/rift.js`, `ui/stats.js`                             |
+| Danh mục nhân vật / tinh hồn / quyền S0             | `characters/catalog.json`, `characters/index.js`, `ui/characters.js`                   |
 | Luật chơi / hồ sơ / bảng thành tích               | `ui/rules.js`, `ui/ratesPanel.js`, `ui/rulePages.js`, `ui/profile.js`                   |
 | Emoji, định dạng chỉ số và trang bị               | `shared/icons.js`, `shared/ui.js`, `shared/equipment.js`                                |
 | Lịch sử run, Echo và Nemesis                      | `storage/echoes.js`                                                                     |

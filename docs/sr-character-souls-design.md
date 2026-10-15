@@ -1,12 +1,16 @@
 # Đề xuất tinh hồn cho 7 nhân vật SR khởi đầu
 
-Ngày thiết kế: 14/10/2026. Trạng thái: **đề xuất S1–S6, chưa thay đổi gameplay**.
+Ngày thiết kế: 14/10/2026. Cập nhật: 15/10/2026. Trạng thái: **đã có danh mục /sinhton nhanvat; S1–S6 là bản thiết kế, chưa áp dụng vào combat**.
 
 Thiết kế kinh tế: [Spark, thẻ và nhân vật](spark-tinh-hon-design.md).
 
 ## Nguyên tắc chung
 
 Dùng Amazon, Barbarian, Assassin, Sorceress, Druid, Necromancer và Paladin làm tên nhân vật SR ban đầu. Tên riêng, chân dung và cốt truyện có thể khai báo sau; chưa tạo thêm class hoặc đổi tên class trong code.
+
+**Mục tiêu mới đã chốt:** mỗi nhân vật ở S6 có tỷ lệ kỳ vọng hoàn thành tầng 999 **30–35%**. Mốc khoảng 11% S0 là tham chiếu simulate cũ, không phải tỷ lệ cố định của mọi nhân vật. Chưa có simulate xác minh S6.
+
+Mỗi bậc được phép thay đổi cơ chế, kỹ năng, hiệu ứng, chỉ số hoặc hệ số; mức tăng không bắt buộc bằng nhau. Các hệ số trong 42 bậc dưới đây vẫn là bản nháp, cần hiệu chỉnh để đạt mục tiêu S6 thay vì coi là số đã cân bằng.
 
 S0 bám phiên bản V3.1 mới nhất, với classInnateRevision = 2. Không lấy số của run cũ làm nền. Sáu bậc bên dưới **cộng dồn**; giá mỗi bậc là 20 thẻ SR đúng hệ, tổng 120 thẻ để đạt S6. Các số là điểm khởi đầu để thử nghiệm, chưa được simulate.
 
@@ -163,4 +167,6 @@ S6 không có cùng phần trăm tăng sức mạnh ở tất cả class vì ph�
 5. Kiểm tra vài build item mạnh và LR như Astral Singularity: Skill miễn phí không tạo Echo, không làm các hiệu ứng hoàn MP nhân đôi; tinh hồn không đổi luật di vật.
 6. Ưu tiên kiểm tra vòng hồi/MP/Bark của Druid; kế tiếp Necromancer và AVOID của Assassin. Nếu vượt mục tiêu, giảm hệ số trước khi thay bản sắc class.
 
-**Hiện tại chỉ lập tài liệu. Chưa chạy simulate, chưa thêm gacha hoặc áp dụng 42 hiệu ứng vào code.**
+**Đã triển khai danh mục xem nhân vật:** lọc độ hiếm/class, chọn nhân vật và xem ba tab Chỉ số, Kỹ năng, Tinh hồn. Mỗi người có quyền sở hữu mặc định cả 7 nhân vật khởi đầu ở S0. Nhân vật có ID riêng và class riêng để bổ sung nhiều nhân vật cùng class sau này. Chưa mở nâng tinh hồn hoặc gacha; chưa áp dụng 42 hiệu ứng vào combat và chưa chạy simulate S6.
+
+Nguồn bản thiết kế hiển thị: src/hardcore/characters/catalog.json. Chỉ số S0 được dựng từ luật game hiện hành, không sao chép thủ công từ tài liệu. S1–S6 chỉ hiển thị mô tả, không tính ra chỉ số giả cho những cấp chưa được triển khai.

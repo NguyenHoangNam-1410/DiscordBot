@@ -101,7 +101,7 @@ LR nhân vật là tiến trình tài khoản, **khác với di vật LR trong r
 - Không áp dụng mặc định cho Tower mode hoặc các game khác.
 - Không dùng level item nhân sức mạnh tinh hồn.
 
-Mục tiêu cân bằng gần nhất 8–12% hoàn thành của roster V3.1 là mốc tham chiếu của S0, không tự áp cho S6. Cần đo riêng S0/S3/S6 khi triển khai, cùng chính sách chơi và seed; tài liệu này không chạy simulate hay khẳng định kết quả chiến thắng mới.
+Mục tiêu cân bằng gần nhất 8–12% hoàn thành của roster V3.1 là mốc tham chiếu của S0. Cập nhật 15/10/2026: mục tiêu S6 là 30–35% hoàn thành tầng 999 cho từng nhân vật. Các bậc có thể tăng khác nhau và thay đổi cơ chế/kỹ năng/chỉ số/hệ số. Cần đo riêng S0/S3/S6, dùng cùng policy và bộ seed đối chiếu rồi xác minh bằng seed độc lập; chưa xác nhận các số tinh hồn hiện tại đạt mục tiêu.
 
 ## 7. UI Discord đề xuất
 
@@ -122,4 +122,4 @@ Battle UI chỉ cần tên nhân vật kèm bậc S khi hệ thống được tr
 
 ## 9. Phạm vi tài liệu này
 
-Đã ghi giá gem, đổi SSR bằng Spark, quy tắc thẻ đã thảo luận và 42 bậc tinh hồn SR đề xuất. Chưa thêm lệnh gacha, kho thẻ, thay đổi chỉ số nhân vật hoặc thay roster game hiện tại. Các đề xuất có thể được chốt riêng trước khi viết code.
+Đã ghi giá gem, đổi SSR bằng Spark, quy tắc thẻ đã thảo luận và 42 bậc tinh hồn SR đề xuất. Đã bổ sung /sinhton nhanvat để xem danh mục và bản thiết kế tinh hồn; mọi người sở hữu 7 nhân vật SR ở S0. Chưa thêm lệnh gacha, kho thẻ, nâng tinh hồn hoặc thay đổi chỉ số combat. Các đề xuất có thể được chốt riêng trước khi viết code.

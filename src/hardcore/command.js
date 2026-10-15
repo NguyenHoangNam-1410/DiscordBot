@@ -79,6 +79,9 @@ module.exports = {
         .setDescription("Mua vé và 5 trang bị đổi mỗi ngày lúc 00:00 Việt Nam"),
     )
     .addSubcommand((command) =>
+      command.setName("nhanvat").setDescription("Xem nhân vật, chỉ số, kỹ năng và tinh hồn"),
+    )
+    .addSubcommand((command) =>
       command
         .setName("tuido")
         .setDescription("Xem túi Sinh tồn và lọc theo độ hiếm hoặc vé"),
@@ -112,6 +115,7 @@ module.exports = {
   handleTopPage: (interaction) => profileView.handleTopPage(interaction),
   handleRatesSelect,
   handleRatesPage,
+  handleCharacterInteraction: interaction => require("./ui/characters").handle(interaction),
   async execute(interaction) {
     if (!interaction.guildId)
       return interaction.reply({
@@ -119,6 +123,8 @@ module.exports = {
         flags: MessageFlags.Ephemeral,
       });
     const subcommand = interaction.options.getSubcommand();
+    if (subcommand === "nhanvat")
+      return interaction.reply({...require("./ui/characters").payload(interaction.user.id), flags: MessageFlags.Ephemeral});
     if (subcommand === "thap")
       return require("../services/hardcoreTowerService").openTower(interaction);
     if (["cuahang", "tuido"].includes(subcommand)) {

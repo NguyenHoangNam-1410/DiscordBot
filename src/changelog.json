@@ -1,5 +1,16 @@
 [
   {
+    "id": "b5a86e2e-2efa-49a1-ad5a-a63d90784914",
+    "updatedAt": "2026-10-15T03:58:47.652Z",
+    "auditedAt": "2026-10-15T03:58:47.652Z",
+    "title": "Danh mục nhân vật và tinh hồn Sinh tồn",
+    "changes": [
+      "Thêm /sinhton nhanvat: tổng quan có lọc độ hiếm/class, chọn nhân vật và xem Chỉ số, Kỹ năng hoặc Tinh hồn; hỗ trợ phân trang khi danh mục mở rộng.",
+      "Mỗi người có sẵn 7 nhân vật SR khởi đầu ở S0. Chỉ số và kỹ năng S0 lấy từ luật game hiện hành; danh mục tách ID nhân vật khỏi class.",
+      "Hiển thị bản thiết kế 42 bậc S1–S6. Mục tiêu S6 là 30–35% hoàn thành tầng 999 cho từng nhân vật; chưa mở nâng tinh hồn, chưa áp hiệu ứng vào combat và chưa xác minh bằng simulate."
+    ]
+  },
+  {
     "id": "78e8dec3-80be-4e73-91c8-1f389d6918d3",
     "updatedAt": "2026-10-15T03:45:17.847Z",
     "auditedAt": "2026-10-15T03:45:17.847Z",

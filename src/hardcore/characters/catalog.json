@@ -1,0 +1,294 @@
+{
+  "version": 1,
+  "soulDesign": {
+    "status": "draft",
+    "completionTarget": {
+      "floor": 999,
+      "min": 0.3,
+      "max": 0.35
+    },
+    "validated": false
+  },
+  "characters": [
+    {
+      "id": "amazon",
+      "classKey": "amazon",
+      "name": "Amazon",
+      "rarity": "SR",
+      "starter": true,
+      "role": "đánh thường để chuẩn bị Barrage, duy trì nhịp bắn chính xác.",
+      "souls": [
+        {
+          "level": 1,
+          "name": "Nhịp săn",
+          "description": "Bloodlust tăng từ 15% lên 18% DMG."
+        },
+        {
+          "level": 2,
+          "name": "Mũi tên mở màn",
+          "description": "Đánh thường đầu tiên trong mỗi combat nhận +5 điểm % ACC. Trượt vẫn dùng lượt ưu đãi này."
+        },
+        {
+          "level": 3,
+          "name": "Mũi tên truy kích",
+          "description": "Sau thức tỉnh: phát phụ do 2 Focus tăng từ 70% lên 80% sức sát thương cơ sở của phát Barrage tương ứng, giữ cùng công thức giảm trừ hiện tại."
+        },
+        {
+          "level": 4,
+          "name": "Chuẩn bị săn đuổi",
+          "description": "Sau thức tỉnh: bắt đầu mỗi combat với 1 Focus, vẫn tối đa 2; không cộng lại khi chuyển phase."
+        },
+        {
+          "level": 5,
+          "name": "Tiếp tế",
+          "description": "Đánh thường đầu tiên trúng trong mỗi combat hồi thêm 1 MP. Chỉ một lần; không áp cho các phát Barrage."
+        },
+        {
+          "level": 6,
+          "name": "Loạt tên quyết định",
+          "description": "Sau thức tỉnh: Barrage tiêu đủ 2 Focus tăng thêm 10% DMG các phát chính của chính action đó. Phát Focus dùng hệ số S3, không nhận thêm hệ số S6 lần thứ hai."
+        }
+      ]
+    },
+    {
+      "id": "barbarian",
+      "classKey": "barbarian",
+      "name": "Barbarian",
+      "rarity": "SR",
+      "starter": true,
+      "role": "sống sót ở ngưỡng HP nguy hiểm rồi chuyển Fury thành sức mạnh.",
+      "souls": [
+        {
+          "level": 1,
+          "name": "Xương thép",
+          "description": "DEF hiệu lực từ Iron Will tăng từ +25% lên +35% cho phản công ngay sau Skill."
+        },
+        {
+          "level": 2,
+          "name": "Giữ thế",
+          "description": "Khi dùng Phòng thủ ở HP ≤50%, nhận Barrier 3% Max HP trước phản công; một lần/combat. Không dùng cho hành động boss riêng."
+        },
+        {
+          "level": 3,
+          "name": "Cuồng nộ tôi luyện",
+          "description": "Sau thức tỉnh: bonus DMG Iron Will từ mỗi Fury tăng từ 15% lên 18%."
+        },
+        {
+          "level": 4,
+          "name": "Lá chắn cuồng nộ",
+          "description": "Sau thức tỉnh: Barrier Iron Will từ mỗi Fury tăng từ 5% lên 6% Max HP. Giữ tối đa 3 Fury."
+        },
+        {
+          "level": 5,
+          "name": "Hơi thở chiến binh",
+          "description": "Sau thức tỉnh: Iron Will tiêu từ 2 Fury trở lên hồi 1 MP sau khi xử lý Skill; một lần/combat."
+        },
+        {
+          "level": 6,
+          "name": "Cơn thịnh nộ cuối",
+          "description": "Sau thức tỉnh: Iron Will tiêu đúng 3 Fury tăng thêm 10% DMG của action đó, nhân một lần sau bonus Fury."
+        }
+      ]
+    },
+    {
+      "id": "assassin",
+      "classKey": "assassin",
+      "name": "Assassin",
+      "rarity": "SR",
+      "starter": true,
+      "role": "tận dụng né tự nhiên và Crit để tạo một Shadow Step quyết định.",
+      "souls": [
+        {
+          "level": 1,
+          "name": "Phản xạ bóng tối",
+          "description": "AVOID cơ bản tăng từ 5% lên 7%; giữ hệ số DEX và trần 55%."
+        },
+        {
+          "level": 2,
+          "name": "Vết cắt sinh lực",
+          "description": "Hồi HP khi Crit tăng từ 2% lên 2,5% Max HP; vẫn một lần/action."
+        },
+        {
+          "level": 3,
+          "name": "Sát ý chuẩn xác",
+          "description": "Sau thức tỉnh: bonus Crit của Shadow Step dùng 2 Shadow tăng từ +20 lên +25 điểm %. Giữ trần Crit hiện hành."
+        },
+        {
+          "level": 4,
+          "name": "Ẩn mình",
+          "description": "Sau thức tỉnh: bắt đầu mỗi combat với 1 Shadow. Không nhận lại khi chuyển phase."
+        },
+        {
+          "level": 5,
+          "name": "Thu hồi nhịp thở",
+          "description": "Crit đầu tiên gây DMG thực sự trong mỗi combat hồi 1 MP; hit phụ không tính, một lần/combat."
+        },
+        {
+          "level": 6,
+          "name": "Kết liễu trong bóng",
+          "description": "Sau thức tỉnh: bonus hệ số Crit của Shadow Step dùng 2 Shadow tăng từ +0,25 lên +0,35; nếu không Crit thì không có bonus này."
+        }
+      ]
+    },
+    {
+      "id": "sorceress",
+      "classKey": "sorceress",
+      "name": "Sorceress",
+      "rarity": "SR",
+      "starter": true,
+      "role": "quản lý MP và tận dụng Echo cho một đợt phép lớn.",
+      "souls": [
+        {
+          "level": 1,
+          "name": "Khiên mana bền vững",
+          "description": "Giới hạn hấp thụ mỗi lần Mana Shield tăng từ 20% lên 22% Max HP. Không tăng số lần kích hoạt."
+        },
+        {
+          "level": 2,
+          "name": "Tái lưu chuyển",
+          "description": "Lần Mana Shield đầu tiên thực sự hấp thụ DMG ở mỗi combat hồi 1 MP. Không nạp lại phần hoàn MP khi chuyển phase."
+        },
+        {
+          "level": 3,
+          "name": "Dư âm mạnh mẽ",
+          "description": "Sau thức tỉnh: hệ số mỗi hit Echo tăng từ 80% lên 90% DMG hit chính sau giảm trừ theo công thức Echo hiện tại."
+        },
+        {
+          "level": 4,
+          "name": "Màn chắn cộng hưởng",
+          "description": "Sau thức tỉnh: Barrier từ action dùng Echo tăng từ 15% lên 18% Max HP."
+        },
+        {
+          "level": 5,
+          "name": "Dư âm nối tiếp",
+          "description": "Sau thức tỉnh: xác suất có Echo phụ thứ hai tăng từ 20% lên 25%; tối đa hai hit Echo/action."
+        },
+        {
+          "level": 6,
+          "name": "Bùng nổ khai màn",
+          "description": "Sau thức tỉnh: Arcane Burst đầu tiên tiêu Echo trong mỗi combat tăng 10% DMG hit chính. Echo tính từ hit chính đã tăng; không nhân thêm 10% trên hit Echo lần thứ hai."
+        }
+      ]
+    },
+    {
+      "id": "druid",
+      "classKey": "druid",
+      "name": "Druid",
+      "rarity": "SR",
+      "starter": true,
+      "role": "luân phiên hồi phục và đánh thường, dùng hồi dư chuyển thành Bark.",
+      "souls": [
+        {
+          "level": 1,
+          "name": "Dấu ấn hoang dã",
+          "description": "Bonus DMG của Mark tăng từ 20% lên 25%."
+        },
+        {
+          "level": 2,
+          "name": "Nhịp rừng đầu tiên",
+          "description": "Đánh thường có Mark đầu tiên trúng trong mỗi combat hồi thêm 1 MP ngoài phần hồi S0 nếu phần hồi S0 đủ điều kiện. Giữ cooldown 2 action; nếu MP đã đầy vẫn dùng lượt S2, không để dành."
+        },
+        {
+          "level": 3,
+          "name": "Vỏ cây cổ thụ",
+          "description": "Sau thức tỉnh: phần Bark cơ bản tăng từ 4% lên 5% Max HP sau giảm hồi; phần chuyển hồi dư vẫn 50%."
+        },
+        {
+          "level": 4,
+          "name": "Tán rừng vững chắc",
+          "description": "Sau thức tỉnh: trần Bark tăng từ 18% lên 22% Max HP. Không vượt trần bằng hồi dư."
+        },
+        {
+          "level": 5,
+          "name": "Mạch sống",
+          "description": "Sau thức tỉnh: Wild Regeneration hồi 11% thay vì 10% Max HP. Trước thức tỉnh vẫn 12%, không cộng thành 13%."
+        },
+        {
+          "level": 6,
+          "name": "Rễ bám sinh tồn",
+          "description": "Sau thức tỉnh: lần đầu Bark đang có HP bị một phản công thường phá hết trong combat, hồi 5% Max HP nếu Druid còn sống sau toàn bộ đòn đó. Một lần/combat; không tạo thêm Bark từ phần hồi này."
+        }
+      ]
+    },
+    {
+      "id": "necromancer",
+      "classKey": "necromancer",
+      "name": "Necromancer",
+      "rarity": "SR",
+      "starter": true,
+      "role": "dựng Totem, kiểm soát nhịp phản công, xen đánh thường để dùng Anchor.",
+      "souls": [
+        {
+          "level": 1,
+          "name": "Neo bóng tối",
+          "description": "Bonus DMG của đánh thường tiêu Anchor tăng từ 15% lên 20%."
+        },
+        {
+          "level": 2,
+          "name": "Nghi thức chuẩn bị",
+          "description": "Bắt đầu mỗi combat với 1 tiến trình Anchor, chưa có Anchor. Không tạo Bone Totem từ tiến trình ban đầu này."
+        },
+        {
+          "level": 3,
+          "name": "Chấn động mộ phần",
+          "description": "Sau thức tỉnh: Grave Nova tăng từ 65% lên 75% DMG hit Skill chính sau giảm trừ, giữ công thức hiện hành."
+        },
+        {
+          "level": 4,
+          "name": "Neo không hụt",
+          "description": "Đánh thường dùng Anchor nhưng trượt vẫn hồi thêm 1 MP. Trúng vẫn chỉ nhận phần thêm 1 MP như S0, không thành 2 MP."
+        },
+        {
+          "level": 5,
+          "name": "Sinh lực từ mộ",
+          "description": "Sau thức tỉnh: Grave Nova đầu tiên gây DMG thực sự trong mỗi combat hồi 3% Max HP; không tính khi toàn bộ sát thương bị ngăn."
+        },
+        {
+          "level": 6,
+          "name": "Nghi lễ hoàn chỉnh",
+          "description": "Sau thức tỉnh: Grave Nova thứ hai gây DMG thực sự trong mỗi combat tăng thêm 15% DMG của riêng hit Nova đó. Một lần/combat; không tăng hit chính, không tạo Nova mới."
+        }
+      ]
+    },
+    {
+      "id": "paladin",
+      "classKey": "paladin",
+      "name": "Paladin",
+      "rarity": "SR",
+      "starter": true,
+      "role": "dùng Divine Shield trước đợt đánh, tận dụng DEF để gây Holy DMG.",
+      "souls": [
+        {
+          "level": 1,
+          "name": "Lời thề chiến đấu",
+          "description": "Bonus DMG của Vindicate tăng từ 15% lên 18%."
+        },
+        {
+          "level": 2,
+          "name": "Ánh sáng hồi phục",
+          "description": "Divine Shield hồi 4% thay vì 3% Max HP. Giữ giảm hồi và HP bị khóa."
+        },
+        {
+          "level": 3,
+          "name": "Thánh lực tôi luyện",
+          "description": "Sau thức tỉnh: Holy dùng 23% DEF thay vì 20%; phần giá trị RES giữ nguyên."
+        },
+        {
+          "level": 4,
+          "name": "Kết giới vững vàng",
+          "description": "Sau thức tỉnh: bonus DEF của Consecration tăng từ 20% lên 25%; bonus RES giữ +10 điểm %."
+        },
+        {
+          "level": 5,
+          "name": "Phần thưởng giữ lời",
+          "description": "Thưởng hồi HP khi action Vindicate kết thúc combat hợp lệ tăng từ 20% lên 25% Max HP; MP vẫn +1."
+        },
+        {
+          "level": 6,
+          "name": "Phán quyết thánh",
+          "description": "Sau thức tỉnh: action gây DMG đầu tiên tiêu Vindicate trong mỗi combat tăng 20% phần Holy của action đó. Không tăng lần nữa theo số hit hoặc sát thương chính."
+        }
+      ]
+    }
+  ]
+}
