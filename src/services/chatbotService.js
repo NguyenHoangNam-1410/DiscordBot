@@ -24,7 +24,7 @@ const PROVIDERS = Object.freeze({
   openai: { baseUrl: "https://api.openai.com/v1", model: DEFAULT_MODEL, moderation: true },
   gemini: {
     baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
-    model: "gemini-2.5-flash",
+    model: "gemini-3.8-flash",
     moderation: false,
   },
 });
