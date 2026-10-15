@@ -3,11 +3,11 @@ const { E, eventIcon, paradoxIcon } = require("../shared/icons");
 const CATALOG = Object.freeze({
   blood_pact: {
     name: "Huyết Ước",
-    text: `**Bạn** gây ${E.attack} **DMG** **×1,30**. Mỗi Skill trừ ${E.hp} **HP** của **bạn** bằng **5%** ${E.hp} **Max HP**, làm tròn xuống và tối thiểu **1 HP**; cần còn ít nhất **1 HP** sau chi phí.`,
+    text: `**Bạn** gây ${E.attack} **DMG** **×1,30**. Mỗi Skill trừ ${E.hp} của **bạn** bằng **5% Max ${E.hp}**, làm tròn xuống và tối thiểu **1 ${E.hp}**; cần còn ít nhất **1 ${E.hp}** sau chi phí.`,
   },
   mana_fracture: {
     name: "Mana Vỡ Vụn",
-    text: `- **Skill của bạn:** tốn ${E.mana} **1 MP/lần**, thay vì **2 MP**. Lượt được Class Shrine miễn phí vẫn tốn **0 MP**.\n- ${E.attack} **Tấn công thường:** không hồi MP cho bạn.\n- ${E.defense} **Phòng thủ:** hồi ${E.mana} **1 MP** cho bạn, tối đa Max MP.`,
+    text: `- **Skill của bạn:** tốn **1 ${E.mana}** mỗi lần, thay vì **2 ${E.mana}**. Lượt được Class Shrine miễn phí vẫn tốn **0 ${E.mana}**.\n- ${E.attack} **Tấn công thường:** không hồi ${E.mana}.\n- ${E.defense} **Phòng thủ:** hồi **1 ${E.mana}**.`,
   },
   inverted_armor: {
     name: "Giáp Nghịch Đảo",
@@ -19,19 +19,19 @@ const CATALOG = Object.freeze({
   },
   hunger: {
     name: "Cơn Đói",
-    text: `Khi hạ quái, **bạn** hồi ${E.hp} **HP** bằng **12%** ${E.hp} **Max HP**, làm tròn xuống và tối thiểu **1 HP**. Hiệu lực ${E.potion} **bình của bạn** giảm còn **×0,50**; tỷ lệ hồi cuối cùng giới hạn **10%–75%** ${E.hp} **Max HP**.`,
+    text: `Khi hạ quái, hồi **12% Max ${E.hp}**, làm tròn xuống và tối thiểu **1 ${E.hp}**. Hiệu lực ${E.potion} giảm còn **×0,50**; tỷ lệ hồi cuối cùng giới hạn **10%–75% Max ${E.hp}**.`,
   },
   time_debt: {
     name: "Nợ Thời Gian",
-    text: `Hai lần Tấn công/Skill đầu mỗi trận của **bạn** gây ${E.attack} **DMG** **×1,25**. Đúng hành động thứ **3** của bạn, tính cả Phòng thủ/Bình: **quái** còn sống sẽ phản công **2 lần**.`,
+    text: `Hai lần Tấn công/Skill đầu mỗi trận gây **DMG ×1,25**. Đúng hành động thứ **3** của bạn, tính cả Phòng thủ/Bình: **quái** còn sống sẽ phản công **2 lần**.`,
   },
   blood_mirror: {
     name: "Gương Máu",
-    text: `Khi **bạn** còn ${E.hp} **HP** **≤40%** ${E.hp} **Max HP**: ${E.attack} **DMG** của bạn **×1,40** và được dùng bình. Khi HP của **bạn** **>40%** ${E.hp} **Max HP**: không dùng được ${E.potion} **bình**.`,
+    text: `Khi **bạn** còn **HP ≤40% Max ${E.hp}**: gây **DMG ×1,40** và được dùng ${E.potion}. Ngược lại, không dùng được ${E.potion}.`,
   },
   unstable_soul: {
     name: "Linh Hồn Bất Ổn",
-    text: `Mỗi lượt, Skill của **bạn** có **25%** cơ hội tốn ${E.mana} **MP** **0**; **15%** tốn thêm **1 MP**; **60%** dùng chi phí bình thường. Class Shrine miễn phí vẫn tốn ${E.mana} **MP** **0**. Chi phí được chốt cho lượt hiện tại; mở lại UI không đổi kết quả.`,
+    text: `Mỗi lượt, Skill có **25%** cơ hội tốn 0 ${E.mana} ; **15%** tốn thêm 1 ${E.mana} ; **60%** tốn chi phí bình thường. Class Shrine miễn phí vẫn tốn 0 ${E.mana}.`,
   },
 });
 const PAIRS = Object.freeze({
@@ -177,10 +177,10 @@ function describe(s) {
         CATALOG[p.id].text +
         (p.id === "unstable_soul" && p.lockedSkillCost !== null
           ? "\nSkill của bạn lượt này: " +
-            E.mana +
-            " **MP** **" +
             p.lockedSkillCost +
-            "**."
+            " " +
+            E.mana +
+            "."
           : "")
     : "";
 }

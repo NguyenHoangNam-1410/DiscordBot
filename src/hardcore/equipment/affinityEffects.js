@@ -117,7 +117,7 @@ function afterAttack(
     c.spells++;
     if (c.spells % 3 === 0 && s.mana < maxMana) {
       s.mana++;
-      return "\n" + E.mana + " Affinity: hồi 1 MP cho bạn.";
+      return "\n" + E.mana + " Affinity: hồi 1 " + E.mana + ".";
     }
   }
   return "";

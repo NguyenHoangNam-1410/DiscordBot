@@ -17,7 +17,8 @@ module.exports = function createModule(dependencies) {
 
   function riftModifierText(key, count, state) {
     if (require("../rift").enabled(state))
-      return require("../rift").description(key, count, state);
+      return require("../rift").description(key, count, state)
+        .replace(/^\*\*Rift (?:I|II|III) · ×\d+\*\*\r?\n/, "");
     const bonus = riftStatBonus(key, count);
     const icons = {
       "Max HP": E.hp,

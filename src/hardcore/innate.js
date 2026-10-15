@@ -173,13 +173,13 @@ function afterPlayer(
     s.mana = Math.min(maxMana, s.mana + 1);
     if (s.mana > before) {
       if (s.encounter.boss) s.encounter.boss.mpChanged = true;
-      log += `\n${E.mana} ${name}: hồi 1 MP cho bạn.`;
+      log += `\n${E.mana} ${name}: hồi 1 ${E.mana}.`;
     }
     return s.mana > before;
   };
   const healing = (name, rate) => {
     const gained = heal(s, s.maxHp * rate);
-    if (gained) log += `\n${E.hp} ${name}: hồi ${gained} HP cho bạn.`;
+    if (gained) log += `\n${E.hp} ${name}: hồi ${gained} ${E.hp}.`;
   };
   if (s.classKey === "amazon" && action === "attack" && landed)
     c.bloodlust = true;

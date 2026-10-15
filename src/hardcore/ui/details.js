@@ -281,7 +281,7 @@ module.exports = function createModule(dependencies) {
         ([, n]) => n > 0,
       ))
         e.addFields({
-          name: `${RIFT_ICONS[key] || E.rift} ${world.RIFT_MODIFIERS[key].name} ×${n}`,
+          name: `${RIFT_ICONS[key] || E.rift} ${world.RIFT_MODIFIERS[key].name} ×${n}${require("../rift").enabled(state) ? " · Bậc " + ["", "I", "II", "III"][require("../rift").tier(n)] : ""}`,
           value: riftModifierText(key, n, state),
         });
       if (!Object.values(state.modifiers).some((count) => count > 0))

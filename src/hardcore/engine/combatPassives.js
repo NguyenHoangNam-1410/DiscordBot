@@ -28,7 +28,7 @@ module.exports = function createModule(dependencies) {
       state.mana = Math.max(0, state.mana - state.combatManaLoss);
       state.lastLog =
         (state.lastLog || "") +
-        `\n${E.mana} Soul Leash: ${before} → ${state.mana} MP cho bạn.`;
+        `\n${E.mana} Soul Leash: ${before} → ${state.mana} ${E.mana}.`;
     }
     const p = itemPassives.aggregate(state);
     if (
@@ -47,7 +47,7 @@ module.exports = function createModule(dependencies) {
         before +
         " → " +
         state.mana +
-        " MP cho bạn.";
+        ` ${E.mana}.`;
     }
   }
 

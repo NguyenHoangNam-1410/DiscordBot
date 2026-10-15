@@ -339,7 +339,11 @@ module.exports = function createModule(dependencies) {
     } else if (k === "adventurer") {
       if (action === "event_rescue") {
         if (state.potions < 1) throw new Error("NO_RESCUE_POTIONS");
-        if (!state.adventurerRescue && !require("../towerMemories").canQueue(state)) throw new Error("INVALID_ACTION");
+        if (
+          !state.adventurerRescue &&
+          !require("../towerMemories").canQueue(state)
+        )
+          throw new Error("INVALID_ACTION");
         state.potions--;
         receiveItem(state, e.rescueItem);
         const region = world.regionForFloor(state.floor);
@@ -347,7 +351,8 @@ module.exports = function createModule(dependencies) {
         state.lastLog = `${memoryIcon("rescue")} Cứu người: nhận ${e.rescueItem.name}.\nÂn nghĩa đã ghi nhận. Xem bảo hộ trong Rift.`;
       } else {
         const memories = require("../towerMemories");
-        if (!memories.canQueue(state, memories.robberySlots(state))) throw new Error("INVALID_ACTION");
+        if (!memories.canQueue(state, memories.robberySlots(state)))
+          throw new Error("INVALID_ACTION");
         receiveItem(state, e.robItem);
         state.lastLog = `🗡️ Cướp: nhận ${e.robItem.name}.`;
         remember(state, action, rng);
@@ -357,7 +362,9 @@ module.exports = function createModule(dependencies) {
     } else if (k === "fountain") {
       if (e.roll < (e.healThreshold ?? 0.6)) {
         const recovery = healEvent(state, state.maxHp);
-        done("🩸 Blood Fountain đã hồi phục HP/MP cho bạn.\n" + recovery.log);
+        done(
+          `🩸 Blood Fountain đã hồi phục ${E.hp}/${E.mana}.\n` + recovery.log,
+        );
       } else if (e.roll < (e.goodThreshold ?? 0.85)) {
         addSource(state, { vit: 10 });
         done(`🩸 Blood Fountain: nhận +10 ${E.vit} VIT trong run.`);
