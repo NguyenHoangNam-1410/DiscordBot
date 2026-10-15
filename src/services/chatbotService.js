@@ -101,23 +101,32 @@ function remember(key, user, assistant, now = Date.now()) {
   histories.set(key, { at: now, turns });
 }
 
-async function openai(path, body) {
+async function openai(path, body, signal = null) {
+  const timeout = AbortSignal.timeout(30_000);
   const response = await fetch(`${baseUrl()}/${path}`, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
     body: JSON.stringify(body),
-    signal: AbortSignal.timeout(30_000),
+    signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
   });
-  if (!response.ok) throw new Error(`OPENAI_${response.status}`);
+  if (!response.ok) {
+    // Giữ lại thông điệp lỗi của nhà cung cấp (không chứa khóa) để ghi log chẩn đoán.
+    const text = await response.text?.().catch(() => "");
+    const error = new Error(`API_${response.status}`);
+    error.status = response.status;
+    error.body = String(text || "").slice(0, 500);
+    throw error;
+  }
   return response.json();
 }
 
-async function flagged(text) {
+async function flagged(text, signal) {
   if (!useModeration()) return false;
   try {
-    const result = await openai("moderations", { model: "omni-moderation-latest", input: text });
+    const result = await openai("moderations", { model: "omni-moderation-latest", input: text }, signal);
     return Boolean(result.results?.[0]?.flagged);
-  } catch {
+  } catch (error) {
+    if (signal?.aborted) throw error;
     return false; // kiểm duyệt lỗi thì vẫn trả lời; mô hình đã được dặn từ chối nội dung xấu
   }
 }
@@ -128,30 +137,36 @@ function clipReply(text) {
 }
 
 // Trả về { ok, text } hoặc { error } với: DISABLED | TOO_LONG | LIMIT | FLAGGED | API
-async function ask({ guildId, userId, channelId, text, now = Date.now() }) {
+async function ask({ guildId, userId, channelId, text, now = Date.now(), signal = null }) {
   if (!isConfigured()) return { error: "DISABLED" };
   const input = String(text || "").trim();
   if (!input) return { error: "EMPTY" };
   if (input.length > MAX_INPUT_CHARS) return { error: "TOO_LONG", max: MAX_INPUT_CHARS };
+  if (signal?.aborted) return { error: "CANCELLED" };
   if (!consumeTurn(guildId, userId, now)) return { error: "LIMIT", ...usage(guildId, userId, now) };
   const key = `${guildId}:${channelId}:${userId}`;
   try {
-    if (await flagged(input)) {
+    if (await flagged(input, signal)) {
       refundTurn(guildId, userId, now);
       return { error: "FLAGGED" };
     }
-    const data = await openai("chat/completions", {
-      model: model(),
-      max_tokens: MAX_OUTPUT_TOKENS,
-      messages: [{ role: "system", content: SYSTEM_PROMPT }, ...getHistory(key, now), { role: "user", content: input }],
-    });
+    const data = await openai(
+      "chat/completions",
+      {
+        model: model(),
+        max_tokens: MAX_OUTPUT_TOKENS,
+        messages: [{ role: "system", content: SYSTEM_PROMPT }, ...getHistory(key, now), { role: "user", content: input }],
+      },
+      signal,
+    );
     const reply = clipReply(data.choices?.[0]?.message?.content);
     if (!reply) throw new Error("EMPTY_REPLY");
     remember(key, input, reply, now);
     return { ok: true, text: reply, ...usage(guildId, userId, now) };
   } catch (error) {
     refundTurn(guildId, userId, now);
-    return { error: "API", detail: error.message };
+    if (signal?.aborted) return { error: "CANCELLED" };
+    return { error: "API", detail: error.message, status: error.status, body: error.body };
   }
 }
 
