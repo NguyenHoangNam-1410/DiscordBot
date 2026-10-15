@@ -8,7 +8,7 @@ delete process.env.OPENAI_API_KEY;
 delete process.env.CHATBOT_DAILY_LIMIT;
 
 const chatbot = require("../src/services/chatbotService");
-const { handleChatbotMessage } = require("../src/services/chatbotMessageService");
+const { handleChatbotMessage, cancelForDeletedMessage } = require("../src/services/chatbotMessageService");
 const command = require("../src/commands/chatbot");
 
 const calls = [];
@@ -101,7 +101,67 @@ global.fetch = async (url, init) => {
   assert.equal(chatbot.getChannelId(G), "newch");
   await command.execute(interaction("tat"));
   assert.equal(chatbot.getChannelId(G), null);
+  // lỗi nhà cung cấp: ghi log chẩn đoán (status + nội dung), người dùng thấy lỗi chung, lượt không mất
+  failChat = true;
+  const logs = [];
+  const failBefore = chatbot.usage(G, "diag").used;
+  global.fetch = async (url) => ({
+    ok: false,
+    status: 403,
+    text: async () => "API key not valid",
+    json: async () => ({}),
+  });
+  const sent2 = [];
+  const mk = (over = {}) => ({
+    id: "mm1", guildId: G, channelId: C, content: "chào", author: { id: "diag", bot: false },
+    channel: { sendTyping: async () => {} }, reply: async (p) => sent2.push(p), ...over,
+  });
+  chatbot.setChannel(G, C, "admin");
+  await handleChatbotMessage(mk(), { warn: (...a) => logs.push(a) });
+  assert.equal(logs[0][0].status, 403);
+  assert.match(logs[0][0].body, /API key not valid/);
+  assert.match(sent2[0].content, /Lượt của bạn chưa bị trừ/);
+  assert.equal(sent2[0].failIfNotExists, false, "tin gốc bị xóa không làm hỏng việc trả lời");
+  assert.equal(chatbot.usage(G, "diag").used, failBefore);
+  // reply lỗi (tin gốc đã bị xóa) không ném lỗi ra ngoài
+  await handleChatbotMessage(
+    mk({ id: "mm2", reply: async () => { throw new Error("Unknown message"); } }),
+    { warn: () => {} },
+  );
+
+  // xóa tin nhắn khi đang xử lý: hủy ngay, không trả lời, hoàn lượt
+  let abortedFetch = false;
+  global.fetch = (url, init) =>
+    new Promise((resolve, reject) => {
+      init.signal.addEventListener("abort", () => {
+        abortedFetch = true;
+        reject(new Error("aborted"));
+      });
+    });
+  const sent3 = [];
+  const pending = handleChatbotMessage(
+    mk({ id: "del1", author: { id: "deleter", bot: false }, reply: async (p) => sent3.push(p) }),
+    { warn: () => {} },
+  );
+  await new Promise((r) => setTimeout(r, 20));
+  assert.equal(chatbot.usage(G, "deleter").used, 1, "đang xử lý thì đã trừ lượt tạm");
+  assert.equal(cancelForDeletedMessage("del1"), true);
+  await pending;
+  assert(abortedFetch, "yêu cầu tới nhà cung cấp phải bị hủy");
+  assert.equal(sent3.length, 0, "tin gốc đã xóa thì không trả lời");
+  assert.equal(chatbot.usage(G, "deleter").used, 0, "hoàn lượt khi bị hủy");
+  assert.equal(cancelForDeletedMessage("del1"), false);
+  // người dùng có thể chat lại ngay sau khi hủy
+  global.fetch = async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: "ok" } }] }) });
+  assert.equal(await handleChatbotMessage(mk({ id: "again", author: { id: "deleter", bot: false }, reply: async (p) => sent3.push(p) })), true);
+  assert.equal(sent3.length, 1);
+  failChat = false;
+
   // Gemini: endpoint và model riêng, bỏ qua bước kiểm duyệt của OpenAI
+  global.fetch = async (url, init) => {
+    calls.push({ url, body: JSON.parse(init.body), auth: init.headers.authorization });
+    return { ok: true, json: async () => ({ choices: [{ message: { content: "Xin chào!" } }] }) };
+  };
   process.env.CHATBOT_PROVIDER = "gemini";
   calls.length = 0;
   assert((await chatbot.ask({ guildId: G, userId: "gem", channelId: C, text: "chào" })).ok);

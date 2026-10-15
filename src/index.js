@@ -17,7 +17,10 @@ const monitoring = require("./services/monitoringService");
 const { startEconomyMaintenance } = require("./services/economyService");
 const { handlePrefixMessage } = require("./services/prefixCommandService");
 const { handleGameMessage } = require("./services/gameMessageService");
-const { handleChatbotMessage } = require("./services/chatbotMessageService");
+const {
+  handleChatbotMessage,
+  cancelForDeletedMessage,
+} = require("./services/chatbotMessageService");
 const { handleGamePrefix } = require("./services/gamePrefixService");
 const { resumeOpenRounds } = require("./services/multiplayerGameService");
 const {
@@ -187,6 +190,8 @@ client.once(Events.ClientReady, async () => {
   );
 });
 if (messageCommandsEnabled)
+  client.on(Events.MessageDelete, (message) => cancelForDeletedMessage(message.id));
+if (messageCommandsEnabled)
   client.on(Events.MessageCreate, (message) => {
     if (shuttingDown) return;
     const rate = rateLimiter.consume(
@@ -198,7 +203,7 @@ if (messageCommandsEnabled)
     const task = (async () => {
       if (await handlePrefixMessage(message, logger)) return;
       if (await handleGamePrefix(message)) return;
-      if (await handleChatbotMessage(message)) return;
+      if (await handleChatbotMessage(message, logger)) return;
       await handleGameMessage(message);
     })().catch((error) => {
       logger.error({ err: error }, "message command failed");

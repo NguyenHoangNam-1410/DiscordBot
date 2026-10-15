@@ -1,5 +1,15 @@
 [
   {
+    "id": "df469ae2-b890-42bb-9121-a1e63ef4fe0f",
+    "updatedAt": "2026-10-15T11:37:49.778Z",
+    "auditedAt": "2026-10-15T11:37:49.778Z",
+    "title": "Chatbot ổn định hơn",
+    "changes": [
+      "Xóa tin nhắn khi chatbot đang trả lời sẽ hủy ngay yêu cầu và hoàn lượt, không tốn thêm token.",
+      "Chatbot không còn lỗi khi tin nhắn gốc bị xóa lúc bot đang trả lời."
+    ]
+  },
+  {
     "id": "b9183241-2414-4461-99fe-1cc774066fa9",
     "updatedAt": "2026-10-15T11:32:38.369Z",
     "auditedAt": "2026-10-15T11:32:38.369Z",
