@@ -13,7 +13,9 @@ const SYSTEM_PROMPT =
   "Luôn trả lời bằng tiếng Việt, ngắn gọn (tối đa vài câu) trừ khi được yêu cầu chi tiết. " +
   "Từ chối nhẹ nhàng nội dung nguy hiểm, bạo lực cực đoan, người lớn hoặc xâm phạm đời tư. " +
   "Bạn không biết và không được hỏi về dữ liệu tài khoản hay số xu của người chơi. " +
-  "Không đề cập tới việc bạn là mô hình của hãng nào trừ khi được hỏi trực tiếp.";
+  "Không đề cập tới việc bạn là mô hình của hãng nào trừ khi được hỏi trực tiếp. " +
+  "Người dùng có thể nhắc tới người khác bằng dạng <@số>; nếu hợp ngữ cảnh, hãy gọi lại đúng người đó bằng nguyên văn <@số> như trong câu hỏi. " +
+  "Không tự bịa dạng <@số> nào khác và không bao giờ nhắc tới vai trò, @everyone hay @here.";
 
 const MIN_LIMIT = 1;
 const MAX_LIMIT = 500;
@@ -156,7 +158,32 @@ async function flagged(text, signal) {
 
 function clipReply(text) {
   const clean = String(text || "").trim();
-  return clean.length > DISCORD_LIMIT - 60 ? `${clean.slice(0, DISCORD_LIMIT - 61)}…` : clean;
+  return clean.length > DISCORD_LIMIT - 160 ? `${clean.slice(0, DISCORD_LIMIT - 161)}…` : clean;
+}
+
+const MAX_PINGED = 3;
+// Câu hỏi: lấy tối đa 3 người được ping (không tính người hỏi và bot), bỏ mọi ping vai trò/@everyone/@here trước khi gửi cho AI.
+function prepareQuestion(text, { askerId = null, botId = null } = {}) {
+  const raw = String(text || "");
+  const pinged = [];
+  for (const match of raw.matchAll(/<@!?(\d{5,25})>/g)) {
+    const id = match[1];
+    if (id !== String(askerId) && id !== String(botId) && !pinged.includes(id) && pinged.length < MAX_PINGED) pinged.push(id);
+  }
+  const clean = raw
+    .replace(/<@&\d+>/g, "[vai trò]")
+    .replace(/@(everyone|here)/gi, "$1")
+    .replace(/<@!(\d+)>/g, "<@$1>");
+  return { text: clean, pinged };
+}
+
+// Trả lời: chỉ giữ ping những người được phép; vai trò, @everyone, @here và ID lạ bị vô hiệu hóa.
+function sanitizeReply(text, allowedIds = []) {
+  const allowed = new Set(allowedIds.map(String));
+  return String(text || "")
+    .replace(/<@&\d+>/g, "[vai trò]")
+    .replace(/@(everyone|here)/gi, "$1")
+    .replace(/<@!?(\d+)>/g, (m, id) => (allowed.has(id) ? `<@${id}>` : "[người dùng]"));
 }
 
 const RETRYABLE = (error) => error.status === 429 || error.status >= 500;
@@ -233,5 +260,8 @@ module.exports = {
   refundTurn,
   isConfigured,
   ask,
+  prepareQuestion,
+  sanitizeReply,
+  MAX_PINGED,
   dayKey,
 };

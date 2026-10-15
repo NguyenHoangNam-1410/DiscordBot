@@ -1,5 +1,16 @@
 [
   {
+    "id": "ef44435c-3806-4575-91ab-3c74f99268fb",
+    "updatedAt": "2026-10-15T12:00:40.307Z",
+    "auditedAt": "2026-10-15T12:00:40.307Z",
+    "title": "Chatbot tương tác hơn",
+    "changes": [
+      "Chatbot mention người hỏi khi trả lời; nếu câu hỏi ping ai đó, bot gọi lại đúng người đó (tối đa 3 người).",
+      "Bot không bao giờ ping vai trò, @everyone hay @here.",
+      "Khi hỏi bằng !hoi, bot thả emoji lên tin nhắn của bạn: 🤔 đang nghĩ, ✅ xong, ❌ lỗi, ⛔ hết lượt."
+    ]
+  },
+  {
     "id": "7fbbb7de-4594-4062-9b27-f18231df5d91",
     "updatedAt": "2026-10-15T11:58:11.518Z",
     "auditedAt": "2026-10-15T11:58:11.518Z",

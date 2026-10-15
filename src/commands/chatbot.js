@@ -15,30 +15,57 @@ function errorText(result) {
   return "Chatbot đang bận, thử lại sau nhé. Lượt của bạn chưa bị trừ.";
 }
 
+// Phản ứng (emoji mặc định) lên tin nhắn của người hỏi khi dùng !hoi; lệnh slash không có tin nhắn để react.
+async function react(interaction, ...emojis) {
+  const message = interaction.sourceMessage;
+  if (!message?.react) return;
+  for (const emoji of emojis) await message.react(emoji).catch(() => null);
+}
+async function unreact(interaction, emoji) {
+  const message = interaction.sourceMessage;
+  const mine = message?.client?.user?.id;
+  if (!mine) return;
+  await message.reactions?.cache?.get(emoji)?.users?.remove(mine).catch(() => null);
+}
+
 async function ask(interaction) {
   const channelId = chatbot.getChannelId(interaction.guildId);
   const ephemeral = (content) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
   if (!channelId) return ephemeral("Server chưa mở kênh chatbot. Hãy nhờ admin dùng `/chatbot kenh`.");
   if (interaction.channelId !== channelId) return ephemeral(`Hãy dùng \`/chatbot hoi\` trong kênh <#${channelId}>.`);
   const u = chatbot.usage(interaction.guildId, interaction.user.id);
-  if (u.remaining <= 0) return ephemeral(errorText({ error: "LIMIT", limit: u.limit }));
+  if (u.remaining <= 0) {
+    await react(interaction, "⛔");
+    return ephemeral(errorText({ error: "LIMIT", limit: u.limit }));
+  }
   const key = `${interaction.guildId}:${interaction.user.id}`;
   if (busy.has(key)) return ephemeral("Bạn đang có một câu hỏi chưa trả lời xong, đợi chút nhé.");
   busy.add(key);
   try {
     await interaction.deferReply();
+    await react(interaction, "🤔");
+    const question = chatbot.prepareQuestion(interaction.options.getString("noidung"), {
+      askerId: interaction.user.id,
+      botId: interaction.client?.user?.id,
+    });
     const result = await chatbot.ask({
       guildId: interaction.guildId,
       userId: interaction.user.id,
       channelId: interaction.channelId,
-      text: interaction.options.getString("noidung"),
+      text: question.text,
     });
     if (result.error === "API")
       console.warn(
         JSON.stringify({ level: 40, msg: "chatbot provider request failed", status: result.status, detail: result.detail, body: result.body }),
       );
-    const content = result.ok ? `${result.text}\n-# Còn ${result.remaining}/${result.limit} lượt hôm nay` : errorText(result);
-    await interaction.editReply({ content, allowedMentions: { parse: [] } });
+    // Chỉ ping người hỏi và những người họ nhắc tới; tuyệt đối không ping vai trò, @everyone, @here.
+    const allowed = [interaction.user.id, ...question.pinged];
+    const content = result.ok
+      ? `<@${interaction.user.id}> ${chatbot.sanitizeReply(result.text, allowed)}\n-# Còn ${result.remaining}/${result.limit} lượt hôm nay`
+      : errorText(result);
+    await interaction.editReply({ content, allowedMentions: { parse: [], users: allowed, roles: [] } });
+    await unreact(interaction, "🤔");
+    await react(interaction, result.ok ? "✅" : result.error === "LIMIT" ? "⛔" : "❌");
   } finally {
     busy.delete(key);
   }
