@@ -13,6 +13,7 @@ const { db } = require("../db");
 const { recordBauCuaRun } = require("./baucuaRecordService");
 const { spendCoins, settleReservedGame } = require("./economyService");
 const { formatCoins } = require("../utils/economy");
+const { appEmoji } = require("../utils/appEmoji");
 const { getGameBetLimit } = require("./gameBetLimitService");
 const { createFairness, fairInt } = require("./fairnessService");
 const {
@@ -68,7 +69,7 @@ const TOTAL_RATIOS = {
   16: 34,
   17: 69,
 };
-const DICE = ["⚀", "⚁", "⚂", "⚃", "⚄", "⚅"];
+const DICE = [":one:", ":two:", ":three:", ":four:", ":five:", ":six:"];
 
 function gameLabel(game) {
   return game === "baucua" ? "BẦU CUA" : "TÀI XỈU · SIC BO";
@@ -387,7 +388,7 @@ function resultEmbed(settled) {
   const resultText =
     round.game === "baucua"
       ? result.symbols.map((symbol) => BAUCUA[symbol][0]).join("  ")
-      : `${result.dice.map((value) => DICE[value - 1]).join(" ")}\n**${result.total} điểm · ${result.triple ? "BỘ BA" : result.total >= 11 ? "TÀI" : "XỈU"} · ${result.total % 2 ? "LẺ" : "CHẴN"}**`;
+      : `${result.dice.map((value) => appEmoji(`dieWhite${value}`, DICE[value - 1])).join(" ")}\n**${result.total} điểm · ${result.triple ? "BỘ BA" : result.total >= 11 ? "TÀI" : "XỈU"} · ${result.total % 2 ? "LẺ" : "CHẴN"}**`;
   const betLines = [];
   for (const item of settlements) {
     if (item.bets?.length > 1) {
