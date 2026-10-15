@@ -17,6 +17,8 @@ const ALIASES = {
   coquaynga: "coquay",
   cqn: "coquay",
 };
+// Bí danh rút gọn cả lệnh con: "!hoi <câu>" = "!chatbot hoi <câu>".
+const EXPANSIONS = { hoi: "chatbot hoi" };
 const SUB_ALIASES = {
   sinhton: { start: "batdau", profile: "hoso", top: "xephang", rates: "tyle" },
   vtv: { start: "batdau", skip: "boqua", end: "ketthuc" },
@@ -372,7 +374,9 @@ async function handleSlashPrefix(message) {
   const prefix = process.env.COMMAND_PREFIX || "!";
   const content = String(message.content || "").trim();
   if (!content.startsWith(prefix)) return false;
-  const body = content.slice(prefix.length).trim();
+  let body = content.slice(prefix.length).trim();
+  const head = normalize(body.match(/^\S+/)?.[0] || "");
+  if (EXPANSIONS[head]) body = `${EXPANSIONS[head]}${body.slice(body.match(/^\S+/)[0].length)}`;
   const first = body.match(/^\S+/)?.[0] || "";
   const name = ALIASES[normalize(first)] || normalize(first);
   const command = commandMap(message).get(name);

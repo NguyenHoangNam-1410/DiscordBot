@@ -199,5 +199,27 @@ global.fetch = async (url, init) => {
   assert.equal(calls[0].body.model, "some/model:free");
   delete process.env.OPENAI_MODEL;
   delete process.env.CHATBOT_PROVIDER;
+  // tiền tố: !chatbot hoi ... và bí danh !hoi ...
+  chatbot.setChannel(G, C, "admin");
+  global.fetch = async (url, init) => ({
+    ok: true,
+    json: async () => ({ choices: [{ message: { content: `echo:${JSON.parse(init.body).messages.at(-1).content}` } }] }),
+  });
+  const { handleSlashPrefix } = require("../src/services/slashPrefixService");
+  const out = [];
+  const pmsg = (content) => ({
+    id: "p1", guildId: G, channelId: C, content, author: { id: "pfx", bot: false },
+    member: { permissions: { has: () => false } }, guild: {}, client: {}, channel: { sendTyping: async () => {} },
+    reply: async (p) => { out.push(p.content); return { edit: async (q) => out.push(q.content) }; },
+  });
+  assert.equal(await handleSlashPrefix(pmsg("!chatbot hoi Lorem ipsum dolor")), true);
+  assert.match(out.at(-1), /^echo:Lorem ipsum dolor/);
+  assert.equal(await handleSlashPrefix(pmsg("!hoi Xin chào bạn")), true);
+  assert.match(out.at(-1), /^echo:Xin chào bạn/);
+  assert.equal(await handleSlashPrefix(pmsg("!HOI abc")), true);
+  assert.match(out.at(-1), /^echo:abc/);
+  const count = out.length;
+  assert.equal(await handleSlashPrefix(pmsg("!hoivui")), false, "không bắt nhầm lệnh khác bắt đầu bằng hoi");
+  assert.equal(out.length, count);
   console.log("chatbot ok");
 })();
