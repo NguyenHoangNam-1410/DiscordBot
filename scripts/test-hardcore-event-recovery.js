@@ -156,6 +156,20 @@ for (const [encounter, action, rate] of cases) {
   core.normalize(copy);
   assert.equal(copy.mana, s.mana);
 }
+// Recovery log and event receipt must not repeat the same HP/MP transition.
+for (const [missingHp, missingMp] of [[true, true], [true, false], [false, true]]) {
+  const s = fresh();
+  if (!missingHp) s.hp = s.maxHp;
+  if (!missingMp) s.mana = s.maxMana;
+  s.encounter = {type: "surprise", name: "Blood Fountain", kind: "fountain", roll: 0.1};
+  core.act(s, session, "event_drink", rng);
+  const rawLog = s.lastLog;
+  const rendered = view.embed(s, "u").toJSON().fields.find(f => f.name.includes("Lượt vừa rồi")).value;
+  assert.equal((rendered.match(/Blood Fountain/g) || []).length, 1, rendered);
+  assert(!rendered.includes(" HP:"), rendered);
+  assert(!rendered.includes(" MP:"), rendered);
+  assert.equal(s.lastLog, rawLog, "rendering does not rewrite saved logs");
+}
 // The former partial-heal branch now grants permanent run VIT, without healing.
 for (const [roll, healThreshold, goodThreshold] of [
   [0.6, 0.6, 0.85],
