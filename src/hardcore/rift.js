@@ -323,17 +323,9 @@ function stoneStatus(s) {
   if (!r) return "";
   return (
     E.defense +
-    " Lá chắn đá **" +
-    r.stoneArmorMax +
-    " HP** · còn **" +
-    r.stoneArmor +
-    " HP**" +
+    ` Lá chắn đá **${r.stoneArmor} / ${r.stoneArmorMax} HP**` +
     (r.brokenArmor
-      ? " · đã vỡ: " +
-        E.defres +
-        " DEF/RES giảm " +
-        [0, 8, 12, 16][tier(r.stacks.stone_skin)] +
-        "%"
+      ? ` · đã vỡ: ${E.defres} **DEF/RES giảm ${[0, 8, 12, 16][tier(r.stacks.stone_skin)]}%**`
       : "")
   );
 }
