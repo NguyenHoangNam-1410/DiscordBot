@@ -131,7 +131,7 @@ async function main() {
     for (const tab of ["stats", "skills", "souls"]) {
       const p = ui.payload(owner, { id: c.id, tab });
       limits(p);
-      if (tab === "souls") {
+      {
         assert.equal(
           p.embeds[0].data.fields.filter((f) => /^🔒 S[1-6]/.test(f.name))
             .length,
@@ -153,6 +153,13 @@ async function main() {
   const filtered = result.payload;
   assert((await click(filtered, "character", ["sorceress"])).error);
   result = await click(filtered, "character", ["druid"]);
+  assert.equal(
+    result.payload.embeds[0].data.fields.filter((f) =>
+      /^🔒 S[1-6]/.test(f.name),
+    ).length,
+    6,
+    "all soul levels appear immediately when selecting a character",
+  );
   assert(stringify(result.payload).includes("Wild Growth"));
   result = await click(result.payload, "tab_skills");
   assert(stringify(result.payload).includes("Wild Regeneration"));

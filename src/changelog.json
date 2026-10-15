@@ -1,5 +1,14 @@
 [
   {
+    "id": "97109fe6-8af0-4d00-b55d-3f8733daec3c",
+    "updatedAt": "2026-10-15T04:14:41.146Z",
+    "auditedAt": "2026-10-15T04:14:41.146Z",
+    "title": "Hiển thị đầy đủ tinh hồn trong chi tiết nhân vật",
+    "changes": [
+      "Khi chọn nhân vật, màn hình chi tiết hiển thị ngay toàn bộ S1–S6 với tên và hiệu ứng từng cấp, kể cả ở tab Chỉ số và Kỹ năng; không cần chuyển riêng sang tab Tinh hồn."
+    ]
+  },
+  {
     "id": "b5a86e2e-2efa-49a1-ad5a-a63d90784914",
     "updatedAt": "2026-10-15T03:58:47.652Z",
     "auditedAt": "2026-10-15T03:58:47.652Z",

@@ -234,18 +234,18 @@ function payload(
         value:
           "Bộ kỹ năng hiện tại. Các bậc cộng dồn, nâng theo thứ tự S1 → S6.",
       });
-      fields.push(
-        ...selected.souls.map((s) => ({
-          name: "🔒 S" + s.level + " · " + s.name,
-          value: s.description,
-        })),
-      );
-      fields.push({
-        name: "Tinh hồn · bản thiết kế",
-        value:
-          "S1–S6 chưa mở nâng cấp. Mục tiêu S6: **30–35%** hoàn thành tầng 999 cho từng nhân vật; chưa kiểm chứng bằng simulate. Sức mạnh mỗi bậc có thể thay đổi khi cân bằng.",
-      });
     }
+    fields.push(
+      ...selected.souls.map((s) => ({
+        name: "🔒 S" + s.level + " · " + s.name,
+        value: s.description,
+      })),
+    );
+    fields.push({
+      name: "Tinh hồn · bản thiết kế",
+      value:
+        "S1–S6 chưa mở nâng cấp. Mục tiêu S6: **30–35%** hoàn thành tầng 999 cho từng nhân vật; chưa kiểm chứng bằng simulate. Sức mạnh mỗi bậc có thể thay đổi khi cân bằng.",
+    });
     embed.addFields(splitRuleFields(fields));
     components.push(
       new ActionRowBuilder().addComponents(
