@@ -1,6 +1,7 @@
 "use strict";
 const awakening = require("../awakening");
 const rift = require("../rift");
+const souls = require("../characters/souls");
 const innate = require("../innate");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
@@ -29,7 +30,10 @@ module.exports = function createModule(dependencies) {
         ) + (awakening.combat(state)?.barrier || 0)
       : 0;
     const afterShield = (n) => {
-      const remaining = Math.max(0, n - shield);
+      const remaining = Math.max(
+        0,
+        n - shield - (souls.frame(state)?.guardBarrier || 0),
+      );
       return (
         remaining -
         innate.manaShieldAmount(
@@ -134,6 +138,16 @@ module.exports = function createModule(dependencies) {
   }
 
   function outgoingDamagePreview(state, action) {
+    const originalInnate = innate.multiplier(state, action);
+    if (souls.has(state, 1)) {
+      state = structuredClone(state);
+      awakening.prepare(state);
+      innate.prepare(state);
+      souls.prepare(state);
+      innate.begin(state, action);
+      souls.begin(state, action);
+      souls.frame(state).previewAction = true;
+    }
     const e = state.encounter;
     const skill = action === "skill";
     const magic =
@@ -151,8 +165,13 @@ module.exports = function createModule(dependencies) {
           }[state.classKey]
         : 1) *
       (skill && state.classKey === "barbarian"
-        ? 1 + 0.15 * awakening.fury(state)
-        : 1);
+        ? (1 + souls.furyRate(state) * awakening.fury(state)) *
+          souls.furyFinisher(state, awakening.fury(state))
+        : 1) *
+      (skill && state.classKey === "amazon"
+        ? souls.focusMain(state, state.classAwakening?.focus === 2)
+        : 1) *
+      (skill && state.classKey === "sorceress" ? souls.echoMain(state) : 1);
     const shots = skill && state.classKey === "amazon" ? 2 : 1;
     const range = magic
       ? [state.spellMin, state.spellMax]
@@ -186,7 +205,7 @@ module.exports = function createModule(dependencies) {
           copy.classKey === "amazon" &&
           copy.classAwakening?.focus === 2
         )
-          rolls.push(0.7);
+          rolls.push(souls.focusRate(state));
         let dealt = 0,
           strength = 0;
         const hits = [];
@@ -196,7 +215,7 @@ module.exports = function createModule(dependencies) {
             magic,
             raw,
             multiplier: m,
-            innateMultiplier: innate.multiplier(state, action),
+            innateMultiplier: originalInnate,
             critical: false,
           });
           let n = Math.floor(h.damage * factor);
@@ -221,18 +240,17 @@ module.exports = function createModule(dependencies) {
               dealt += bosses.applyDamage(copy, Math.floor(amount));
             }
           };
-          if (skill && copy.classKey === "sorceress" && a.echo)
-            extra(
-              main *
-                awakening.tuning(copy).echo *
-                (echoExtra && innate.rebalanced(copy) ? 2 : 1),
-            );
+          if (skill && copy.classKey === "sorceress" && a.echo) {
+            const echo = Math.floor(main * awakening.tuning(copy).echo);
+            extra(echo);
+            if (echoExtra && innate.rebalanced(copy)) extra(echo);
+          }
           if (
             skill &&
             copy.classKey === "necromancer" &&
             a.totems === awakening.tuning(copy).totems - 1
           )
-            extra(main * awakening.tuning(copy).nova);
+            extra(main * awakening.tuning(copy).nova * souls.novaFactor(copy));
           if (
             copy.classKey === "paladin" &&
             awakening.ground(copy) &&
@@ -267,8 +285,8 @@ module.exports = function createModule(dependencies) {
         const focus = attackDamage(copy, copy.encounter, copy, () => 0, {
           player: true,
           raw,
-          multiplier: 0.7,
-          innateMultiplier: innate.multiplier(state, action),
+          multiplier: souls.focusRate(state),
+          innateMultiplier: originalInnate,
           critical: false,
         });
         total = Math.floor(
@@ -291,7 +309,9 @@ module.exports = function createModule(dependencies) {
         copy.classKey === "necromancer" &&
         a.totems === awakening.tuning(copy).totems - 1
       )
-        total += Math.floor(total * awakening.tuning(copy).nova);
+        total += Math.floor(
+          total * awakening.tuning(copy).nova * souls.novaFactor(copy),
+        );
       if (copy.classKey === "paladin" && awakening.ground(copy))
         total += Math.floor(
           dependencies.holyDamage(
@@ -322,7 +342,7 @@ module.exports = function createModule(dependencies) {
             magic,
             raw,
             multiplier,
-            innateMultiplier: innate.multiplier(state, action),
+            innateMultiplier: originalInnate,
             critical: false,
           });
           total += h.damage;
@@ -348,7 +368,7 @@ module.exports = function createModule(dependencies) {
         magic,
         raw,
         multiplier,
-        innateMultiplier: innate.multiplier(state, action),
+        innateMultiplier: originalInnate,
         critical: false,
       });
       let n = Math.floor(

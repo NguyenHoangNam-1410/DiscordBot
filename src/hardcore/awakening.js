@@ -1,4 +1,5 @@
 "use strict";
+const souls = require("./characters/souls");
 const innate = require("./innate");
 const OLD_TUNING = Object.freeze({
   furyBarrier: 0.05,
@@ -30,11 +31,14 @@ const REWORK_TUNING = Object.freeze({
   nova: 0.65,
 });
 const tuning = (s) =>
-  innate.rebalanced(s)
-    ? REWORK_TUNING
-    : innate.enabled(s)
-      ? NEW_TUNING
-      : OLD_TUNING;
+  souls.awakeningTuning(
+    s,
+    innate.rebalanced(s)
+      ? REWORK_TUNING
+      : innate.enabled(s)
+        ? NEW_TUNING
+        : OLD_TUNING,
+  );
 const LEGACY_TEXT = {
   barbarian:
     "Mỗi combat: lần đầu vượt xuống 75/50/25% HP tạo Fury. Bắt đầu ở ≤50% HP nhận 1 Fury. Iron Will tiêu Fury: mỗi điểm +15% DMG Skill và lá chắn 5% Max HP.",
@@ -175,7 +179,7 @@ function ground(s) {
   );
 }
 function incomingDefense(s) {
-  return ground(s) ? 1.2 : 1;
+  return ground(s) ? (souls.has(s, 4) ? 1.25 : 1.2) : 1;
 }
 function incomingRes(s) {
   return ground(s) ? 10 : 0;
@@ -222,6 +226,53 @@ function description(s) {
   const a = s.classAwakening,
     c = combat(s),
     d = ARTIFACTS[s.classKey];
+  const cfg = tuning(s);
+  const soulRules = souls.has(s, 1)
+    ? {
+        amazon:
+          "Đánh thường trúng +1 Focus (trần 2); Barrage tiêu 2 để thêm phát vật lý " +
+          souls.focusRate(s) * 100 +
+          "%.",
+        barbarian:
+          "Vượt ngưỡng HP mới tạo Fury; mỗi Fury tăng " +
+          souls.furyRate(s) * 100 +
+          "% DMG Iron Will và Barrier " +
+          cfg.furyBarrier * 100 +
+          "% Max HP.",
+        assassin:
+          "Crit/né tự nhiên: tối đa 1 Shadow/action (trần 2). Shadow Step tiêu 2: giá 1 MP, +" +
+          (souls.has(s, 3) ? 25 : 20) +
+          " điểm % CRIT, +" +
+          (souls.has(s, 6) ? 0.35 : 0.25) +
+          " hệ số CRIT.",
+        sorceress:
+          "Đủ 3 MP chủ động cho Skill tạo Echo. Burst kế tiêu Echo: hit " +
+          cfg.echo * 100 +
+          "%, " +
+          cfg.echoExtra * 100 +
+          "% thêm hit Echo; Barrier " +
+          cfg.echoShield * 100 +
+          "% Max HP. Không tích khi đang giữ Echo hoặc Skill miễn phí.",
+        druid:
+          "Skill hồi " +
+          cfg.healRate * 100 +
+          "% Max HP; Bark = " +
+          cfg.barkBase * 100 +
+          "% Max HP sau giảm hồi +50% hồi dư, trần " +
+          cfg.barkCap * 100 +
+          "% Max HP; hết khi combat kết thúc.",
+        necromancer:
+          "Đủ 2 Bone Totem tạo Nova " +
+          cfg.nova * 100 +
+          "% DMG Skill sau giảm trừ và hồi 1 MP; không Crit/hút MP/tạo Totem.",
+        paladin:
+          "Divine Shield tạo vùng thánh 2 action gây DMG: +" +
+          (souls.has(s, 4) ? 25 : 20) +
+          "% DEF/+10 điểm % RES. Holy mỗi hit vật lý trúng = " +
+          (souls.has(s, 3) ? 23 : 20) +
+          "% DEF + giá trị RES; boss vẫn giảm qua DEF.",
+      }
+    : null;
   const resource = {
     amazon: "Focus " + a.focus + "/2",
     assassin: "Shadow " + a.shadow + "/2",
@@ -242,11 +293,13 @@ function description(s) {
     "** · **" +
     d[1] +
     "**\n" +
-    (innate.rebalanced(s)
-      ? REWORK_TEXT[s.classKey] || d[2]
-      : innate.enabled(s)
-        ? d[2]
-        : LEGACY_TEXT[s.classKey] || d[2]) +
+    (soulRules
+      ? soulRules[s.classKey]
+      : innate.rebalanced(s)
+        ? REWORK_TEXT[s.classKey] || d[2]
+        : innate.enabled(s)
+          ? d[2]
+          : LEGACY_TEXT[s.classKey] || d[2]) +
     "\n**" +
     resource +
     "**\nClass Artifact riêng của run; không có level, không rèn/nghiền/giải nguyền và không mất bởi event."

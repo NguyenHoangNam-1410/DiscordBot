@@ -98,6 +98,7 @@ module.exports = function createModule(dependencies) {
   }
 
   function normalize(state) {
+    require("../characters/souls").validate(state);
     require("../events/explorationMarks").normalize(state);
     const rules = require("../equipment/rules");
     const ITEMS = rules.enabled(state)
@@ -124,7 +125,10 @@ module.exports = function createModule(dependencies) {
         )
           throw Error("INVALID_ITEM_LEVEL");
     }
-    if ((state.gameplayVersion === 3) !== (["3.0.0", "3.1.0"].includes(state.releaseVersion)))
+    if (
+      (state.gameplayVersion === 3) !==
+      ["3.0.0", "3.1.0"].includes(state.releaseVersion)
+    )
       throw new Error("UNSUPPORTED_HARDCORE_VERSION");
     if (!["2.0.0", "2.0.1", "3.0.0", "3.1.0"].includes(state.releaseVersion))
       throw new Error("UNSUPPORTED_HARDCORE_VERSION");
@@ -154,7 +158,10 @@ module.exports = function createModule(dependencies) {
       ])
         if (!Number.isSafeInteger(a[k]) || a[k] < 0 || a[k] > max)
           throw Error("INVALID_AWAKENING_RESOURCE");
-      a.bark = Math.min(a.bark, Math.floor(state.maxHp * awakening.tuning(state).barkCap));
+      a.bark = Math.min(
+        a.bark,
+        Math.floor(state.maxHp * awakening.tuning(state).barkCap),
+      );
       const c = state.encounter?.awakeningCombat;
       if (
         c &&

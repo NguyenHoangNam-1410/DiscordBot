@@ -1,0 +1,182 @@
+{
+  "druid": {
+    "runs": 20,
+    "codeFingerprint": "38f1577ef7298057567d41730b8d587f58a5338563fd5bd2415b3ebd2ceb8ab2",
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "3.1.0",
+    "actualStatProfile": {
+      "balanceVersion": "3.1.0",
+      "statProfile": {
+        "version": 3,
+        "masteryVersion": 1,
+        "classKey": "druid",
+        "core": {
+          "str": 20,
+          "dex": 16,
+          "vit": 20,
+          "ene": 24,
+          "baseHp": 42,
+          "baseMana": 2,
+          "baseRes": 6,
+          "baseCrit": 0.05,
+          "strWeight": 0.8
+        },
+        "initialVitHp": 3,
+        "mastery": {
+          "name": "Wild Growth",
+          "accuracy": 1.2,
+          "evasion": 0.25,
+          "crit": 0.0004,
+          "critCap": 0.4,
+          "evasionCap": 0.35,
+          "hp": 4,
+          "strDefense": 0.2,
+          "vitDefense": 0.2,
+          "res": 0.16,
+          "mana": 0.045454545454545456,
+          "physicalPower": 1,
+          "spellPower": 1,
+          "vitPhysical": 0.12,
+          "enePhysical": 0.1,
+          "vitSpell": 0
+        },
+        "powers": {
+          "basePower": 1.12,
+          "attributePower": 1,
+          "equipmentPower": 1,
+          "skillPower": 1
+        }
+      }
+    },
+    "actualBossDamageProfile": {
+      "version": 1,
+      "classKey": "druid",
+      "playerDamage": 0.3
+    },
+    "runOffset": 0,
+    "soulLevel": 6,
+    "soulTuning": {
+      "version": 1,
+      "bossMultipliers": {
+        "amazon": 3.5,
+        "barbarian": 1.5,
+        "assassin": 1.6,
+        "sorceress": 1.5,
+        "druid": 1.5,
+        "necromancer": 2.7,
+        "paladin": 1.7
+      }
+    },
+    "balanceProfile": {
+      "power": 1.12
+    },
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "resumeValidation": "once_per_run",
+    "deathBosses": {
+      "butcher": 1,
+      "sescheron": 1,
+      "akarat": 1,
+      "inarius": 2,
+      "bul_kathos": 2,
+      "deimoss": 3,
+      "athulua": 1,
+      "samael": 2
+    },
+    "gameplayVersion": "3.1.0",
+    "simulationSeed": "survival-current-holdout-2026-10-13",
+    "checkpointRule": {
+      "variant": "baseline",
+      "fromClearedFloor": null,
+      "intervalBefore": 5,
+      "pointsBefore": 5,
+      "intervalAfter": 5,
+      "pointsAfter": 5,
+      "healAtCheckpoint": "Full HP and +2 potions, respecting the existing cap"
+    },
+    "bossRoster": "current",
+    "bossDamageExperiment": {},
+    "bossPolicy": "public telegraphs v2",
+    "stake": 100000,
+    "completedPercent": 30,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 900,
+        "count": 3
+      },
+      {
+        "floor": 999,
+        "count": 3
+      },
+      {
+        "floor": 50,
+        "count": 2
+      },
+      {
+        "floor": 950,
+        "count": 2
+      },
+      {
+        "floor": 661,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": null,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 20,
+    "passedFloor50": 18,
+    "passedFloor100": 18,
+    "passedFloor699": 17,
+    "passedFloor700": 16,
+    "passedFloor800": 15,
+    "passedFloor900": 11,
+    "reachedFinalBoss": 9,
+    "completed999": 6,
+    "runFloors": [
+      660,
+      949,
+      849,
+      49,
+      949,
+      999,
+      999,
+      999,
+      49,
+      998,
+      749,
+      899,
+      998,
+      899,
+      998,
+      999,
+      999,
+      899,
+      699,
+      999
+    ],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": {
+      "maxHp": 4071,
+      "damageMax": 630,
+      "defense": 477,
+      "potions": 10,
+      "resistance": 70
+    },
+    "finalBossMeans": {
+      "maxHp": 11268,
+      "damageMax": 1539,
+      "defense": 654
+    },
+    "estimatedCompletionPercent": null,
+    "maxFloor": 999,
+    "medianFloor": 949,
+    "meanFloor": 831.9
+  }
+}

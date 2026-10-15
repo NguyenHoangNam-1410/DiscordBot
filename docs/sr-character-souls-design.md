@@ -1,6 +1,6 @@
 # Đề xuất tinh hồn cho 7 nhân vật SR khởi đầu
 
-Ngày thiết kế: 14/10/2026. Cập nhật: 15/10/2026. Trạng thái: **đã có danh mục /sinhton nhanvat; S1–S6 là bản thiết kế, chưa áp dụng vào combat**.
+Ngày thiết kế: 14/10/2026. Cập nhật: 15/10/2026. Trạng thái: **đã triển khai S1–S6 vào combat và danh mục /sinhton nhanvat; tài khoản khởi đầu S0**.
 
 Thiết kế kinh tế: [Spark, thẻ và nhân vật](spark-tinh-hon-design.md).
 
@@ -19,11 +19,11 @@ Class là nhóm định hướng build; nhân vật vẫn giữ kỹ năng, nộ
 
 Dùng Amazon, Barbarian, Assassin, Sorceress, Druid, Necromancer và Paladin làm tên nhân vật SR ban đầu. Tên riêng, chân dung và cốt truyện có thể khai báo sau; nhân vật được phân vào 4 class ở danh mục, giữ công thức riêng qua profile nhân vật.
 
-**Mục tiêu mới đã chốt:** mỗi nhân vật ở S6 có tỷ lệ kỳ vọng hoàn thành tầng 999 **30–35%**. Mốc khoảng 11% S0 là tham chiếu simulate cũ, không phải tỷ lệ cố định của mọi nhân vật. Chưa có simulate xác minh S6.
+**Mục tiêu mới đã chốt:** mỗi nhân vật ở S6 có tỷ lệ kỳ vọng hoàn thành tầng 999 **30–35%**. Mốc khoảng 11% S0 là tham chiếu simulate cũ, không phải tỷ lệ cố định của mọi nhân vật. Đã mô phỏng 100 run S6/nhân vật để hiệu chỉnh; [báo cáo và giới hạn phép đo](releases/hardcore-souls-2026-10-15.md).
 
-Mỗi bậc được phép thay đổi cơ chế, kỹ năng, hiệu ứng, chỉ số hoặc hệ số; mức tăng không bắt buộc bằng nhau. Các hệ số trong 42 bậc dưới đây vẫn là bản nháp, cần hiệu chỉnh để đạt mục tiêu S6 thay vì coi là số đã cân bằng.
+Mỗi bậc được phép thay đổi cơ chế, kỹ năng, hiệu ứng, chỉ số hoặc hệ số; mức tăng không bắt buộc bằng nhau. 42 hiệu ứng dưới đây đã có xử lý chiến đấu. S6 có thêm bonus DMG đánh boss riêng cho từng nhân vật để hiệu chỉnh mục tiêu; thông số và kết quả đo được ghi riêng trong báo cáo simulate. Chưa coi một lô 100 run là bằng chứng bảo đảm tỷ lệ thực tế.
 
-S0 bám phiên bản V3.1 mới nhất, với classInnateRevision = 2. Không lấy số của run cũ làm nền. Sáu bậc bên dưới **cộng dồn**; giá mỗi bậc là 20 thẻ SR đúng hệ, tổng 120 thẻ để đạt S6. Các số là điểm khởi đầu để thử nghiệm, chưa được simulate.
+S0 bám phiên bản V3.1 mới nhất, với classInnateRevision = 2. Không lấy số của run cũ làm nền. Sáu bậc bên dưới **cộng dồn**; giá đề xuất mỗi bậc là 20 thẻ SR đúng hệ (chưa triển khai nâng cấp/thẻ), tổng 120 thẻ để đạt S6. Các cơ chế đã qua kiểm thử xác định và mô phỏng S6; S1–S5 chưa có lô simulate thống kê riêng.
 
 - S1: cải thiện nội tại đang có. S2: hỗ trợ nhịp chơi từ đầu run.
 - S3: nâng cơ chế thức tỉnh. S4–S5: ổn định tài nguyên/phòng thủ.
@@ -36,13 +36,17 @@ S0 bám phiên bản V3.1 mới nhất, với classInnateRevision = 2. Không l�
 - Hồi HP chịu giảm hồi và HP bị khóa; hồi MP không vượt Max MP. Hiệu ứng hoàn MP không được tính là MP đã trả để tạo Echo.
 - Lá chắn chỉ hấp thụ những loại sát thương được cơ chế lá chắn hiện hành cho phép; không biến thành miễn nhiễm DMG chuẩn, phản phệ hoặc HP cost.
 
+### Bonus boss chung ở S6
+
+Ngoài cơ chế riêng ở từng bảng dưới đây, S6 nhận hệ số DMG Attack/Skill lên boss theo nhân vật. Hệ số áp dụng từ tầng 1, gồm các hit phụ nội tại; không tăng sát thương cố định từ cơ chế boss và không bỏ qua điều kiện gây sát thương. S0–S5 không có bonus này. Giá trị cuối cùng và kết quả 100 run nằm trong [báo cáo simulate](releases/hardcore-souls-2026-10-15.md).
+
 ## 1. Amazon — Sát thủ SR
 
 **Bản sắc:** đánh thường để chuẩn bị Barrage, duy trì nhịp bắn chính xác.
 
 **S0:** đánh thường trúng tạo Bloodlust +15% DMG cho action Attack/Skill kế; không cộng dồn. Sau thức tỉnh, đánh thường trúng tích Focus tối đa 2; Barrage tiêu 2 để thêm một phát vật lý 70%, kiểm tra trúng/Crit riêng.
 
-| Bậc | Tên đề xuất | Hiệu ứng |
+| Bậc | Tên tinh hồn | Hiệu ứng |
 |---|---|---|
 | S1 | Nhịp săn | Bloodlust tăng từ 15% lên 18% DMG. |
 | S2 | Mũi tên mở màn | Đánh thường đầu tiên trong mỗi combat nhận +5 điểm % ACC. Trượt vẫn dùng lượt ưu đãi này. |
@@ -59,7 +63,7 @@ S0 bám phiên bản V3.1 mới nhất, với classInnateRevision = 2. Không l�
 
 **S0:** Iron Will tăng 25% DEF hiệu lực và miễn Crit cho phản công ngay sau đó. Sau thức tỉnh, vượt các ngưỡng HP 75/50/25% lần đầu tạo Fury, tối đa 3; mỗi điểm tăng 15% DMG Iron Will và Barrier 5% Max HP. Không farm Fury bằng hồi rồi tụt lại cùng ngưỡng.
 
-| Bậc | Tên đề xuất | Hiệu ứng |
+| Bậc | Tên tinh hồn | Hiệu ứng |
 |---|---|---|
 | S1 | Xương thép | DEF hiệu lực từ Iron Will tăng từ +25% lên +35% cho phản công ngay sau Skill. |
 | S2 | Giữ thế | Khi dùng Phòng thủ ở HP ≤50%, nhận Barrier 3% Max HP trước phản công; một lần/combat. Không dùng cho hành động boss riêng. |
@@ -68,7 +72,7 @@ S0 bám phiên bản V3.1 mới nhất, với classInnateRevision = 2. Không l�
 | S5 | Hơi thở chiến binh | Sau thức tỉnh: Iron Will tiêu từ 2 Fury trở lên hồi 1 MP sau khi xử lý Skill; một lần/combat. |
 | S6 | Cơn thịnh nộ cuối | Sau thức tỉnh: Iron Will tiêu đúng 3 Fury tăng thêm 10% DMG của action đó, nhân một lần sau bonus Fury. |
 
-**Giới hạn:** không thêm Fury mới, không đặt lại ngưỡng đã dùng. S2 không kích hoạt lại ở phase mới và không giảm HP cost. Barrier giữ luật hết khi combat kết thúc. S6 mạnh ở thời điểm hiếm, không phải buff mọi lượt.
+**Giới hạn:** không thêm Fury mới, không đặt lại ngưỡng đã dùng. S2 không kích hoạt lại ở phase mới và không giảm HP cost. Barrier giữ luật hết khi combat kết thúc. Hiệu ứng tiêu đủ 3 Fury chỉ mạnh ở thời điểm hiếm; bonus DMG boss riêng của S6 vẫn áp dụng cho các Attack/Skill lên boss khác.
 
 ## 3. Assassin — Sát thủ SR
 
@@ -76,7 +80,7 @@ S0 bám phiên bản V3.1 mới nhất, với classInnateRevision = 2. Không l�
 
 **S0:** AVOID = 5% + DEX ×0,05 điểm %, trần 55%. Crit hồi 2% Max HP một lần/action. Sau thức tỉnh, Crit/né tự nhiên tạo tối đa 1 Shadow mỗi action, giữ tối đa 2; Shadow Step tiêu 2 có giá 1 MP, +20 điểm % Crit và +0,25 hệ số Crit.
 
-| Bậc | Tên đề xuất | Hiệu ứng |
+| Bậc | Tên tinh hồn | Hiệu ứng |
 |---|---|---|
 | S1 | Phản xạ bóng tối | AVOID cơ bản tăng từ 5% lên 7%; giữ hệ số DEX và trần 55%. |
 | S2 | Vết cắt sinh lực | Hồi HP khi Crit tăng từ 2% lên 2,5% Max HP; vẫn một lần/action. |
@@ -93,7 +97,7 @@ S0 bám phiên bản V3.1 mới nhất, với classInnateRevision = 2. Không l�
 
 **S0:** Mana Shield hấp thụ tối đa 20% Max HP ở phản công thường đủ điều kiện; 2 lần/combat, nạp đủ 2 ở mỗi phase boss. Sau thức tỉnh, trả đủ 3 MP chủ động cho Skill tạo Echo; Arcane Burst kế dùng Echo gây hit phụ 80% hit chính, 20% thêm một hit Echo 80%, đồng thời tạo Barrier 15% Max HP.
 
-| Bậc | Tên đề xuất | Hiệu ứng |
+| Bậc | Tên tinh hồn | Hiệu ứng |
 |---|---|---|
 | S1 | Khiên mana bền vững | Giới hạn hấp thụ mỗi lần Mana Shield tăng từ 20% lên 22% Max HP. Không tăng số lần kích hoạt. |
 | S2 | Tái lưu chuyển | Lần Mana Shield đầu tiên thực sự hấp thụ DMG ở mỗi combat hồi 1 MP. Không nạp lại phần hoàn MP khi chuyển phase. |
@@ -110,7 +114,7 @@ S0 bám phiên bản V3.1 mới nhất, với classInnateRevision = 2. Không l�
 
 **S0:** Wild Regeneration tạo Mark +20% DMG cho action Attack/Skill kế. Đánh thường trúng có Mark hồi thêm 1 MP, cooldown 2 combat action; không cộng dồn Mark. Skill hồi 12% Max HP trước thức tỉnh; sau thức tỉnh hồi 10%, tạo Bark = 4% Max HP sau giảm hồi +50% HP hồi dư, trần 18% Max HP, hết khi combat kết thúc.
 
-| Bậc | Tên đề xuất | Hiệu ứng |
+| Bậc | Tên tinh hồn | Hiệu ứng |
 |---|---|---|
 | S1 | Dấu ấn hoang dã | Bonus DMG của Mark tăng từ 20% lên 25%. |
 | S2 | Nhịp rừng đầu tiên | Đánh thường có Mark đầu tiên trúng trong mỗi combat hồi thêm 1 MP ngoài phần hồi S0 nếu phần hồi S0 đủ điều kiện. Giữ cooldown 2 action; nếu MP đã đầy vẫn dùng lượt S2, không để dành. |
@@ -127,7 +131,7 @@ S0 bám phiên bản V3.1 mới nhất, với classInnateRevision = 2. Không l�
 
 **S0:** mỗi Totem Ward +1 tiến trình Anchor; đủ 3 tạo tối đa một Anchor. Đánh thường tiêu Anchor tăng 15% DMG và né phản công; trúng hồi thêm 1 MP, trượt vẫn tiêu Anchor. Sau thức tỉnh, 2 Bone Totem tạo Grave Nova 65% hit Skill chính và hồi 1 MP.
 
-| Bậc | Tên đề xuất | Hiệu ứng |
+| Bậc | Tên tinh hồn | Hiệu ứng |
 |---|---|---|
 | S1 | Neo bóng tối | Bonus DMG của đánh thường tiêu Anchor tăng từ 15% lên 20%. |
 | S2 | Nghi thức chuẩn bị | Bắt đầu mỗi combat với 1 tiến trình Anchor, chưa có Anchor. Không tạo Bone Totem từ tiến trình ban đầu này. |
@@ -144,7 +148,7 @@ S0 bám phiên bản V3.1 mới nhất, với classInnateRevision = 2. Không l�
 
 **S0:** Divine Shield hồi 3% Max HP, tạo Vindicate +15% DMG action kế. Action được cường hóa hạ mục tiêu chính và kết thúc combat cho 20% Max HP +1 MP. Sau thức tỉnh, Consecration có hiệu lực trong 2 action gây DMG kế, tăng 20% DEF và 10 điểm % RES khi phản công; Holy mỗi hit vật lý trúng = 20% DEF + giá trị RES. Holy bỏ DEF quái thường/tinh anh, boss vẫn giảm qua DEF và hệ số class.
 
-| Bậc | Tên đề xuất | Hiệu ứng |
+| Bậc | Tên tinh hồn | Hiệu ứng |
 |---|---|---|
 | S1 | Lời thề chiến đấu | Bonus DMG của Vindicate tăng từ 15% lên 18%. |
 | S2 | Ánh sáng hồi phục | Divine Shield hồi 4% thay vì 3% Max HP. Giữ giảm hồi và HP bị khóa. |
@@ -169,15 +173,15 @@ S0 bám phiên bản V3.1 mới nhất, với classInnateRevision = 2. Không l�
 
 S6 không có cùng phần trăm tăng sức mạnh ở tất cả class vì phòng thủ, né, hồi phục và sát thương có giá trị khác nhau. Không dùng cộng tổng các tỷ lệ để kết luận cân bằng.
 
-## Kế hoạch xác minh trước khi đưa vào game
+## Phạm vi kiểm chứng và công việc tiếp theo
 
-1. Chốt bảng tinh hồn và phân hệ thẻ với người dùng. Giữ riêng các thông số có thể cân bằng sau này.
-2. Kiểm tra S0 không đổi, nâng tuần tự, snapshot run và run cũ không tự nhận tinh hồn mới.
+1. Đã triển khai 42 hiệu ứng S1–S6. Phân hệ thẻ và thao tác nâng cấp vẫn để giai đoạn gacha. Bonus DMG boss S6 nằm trong soulTuning.json, được công khai ở trang nhân vật và snapshot riêng theo run.
+2. Đã kiểm thử S0 với run không có snapshot: cùng hành động và RNG cho kết quả chiến đấu giống nhau ở cả 7 nhân vật. Đã kiểm thử lưu/đọc SQLite và chống lặp lượt. Run cũ không tự nhận tinh hồn mới.
 3. Kiểm tra từng bậc trong tình huống trượt, Crit, nhiều hit, HP/MP đầy, HP khóa, giảm hồi, nhiều phase, mục tiêu phụ, boss miễn sát thương và DMG chuẩn.
-4. Đo S0/S3/S6 của từng class với cùng policy/seed và một bộ seed xác minh độc lập. Tách báo cáo tầng <100 và sau thức tỉnh, boss thường/cuối khu vực, thời lượng run và tỷ lệ chết theo nguyên nhân.
+4. Đã đo S6 100 run/nhân vật trong từng cấu hình hiệu chỉnh. Các lần thử dùng cùng seed và không phải tập xác minh độc lập. Chưa chạy lại S0, chưa đo S3, thời lượng hoặc từng build tối ưu; cần một seed mới để xác minh mục tiêu dài hạn. Báo cáo lưu tầng kết thúc và phân bố boss gây tử trận.
 5. Kiểm tra vài build item mạnh và LR như Astral Singularity: Skill miễn phí không tạo Echo, không làm các hiệu ứng hoàn MP nhân đôi; tinh hồn không đổi luật di vật.
 6. Ưu tiên kiểm tra vòng hồi/MP/Bark của Druid; kế tiếp Necromancer và AVOID của Assassin. Nếu vượt mục tiêu, giảm hệ số trước khi thay bản sắc class.
 
-**Đã triển khai danh mục xem nhân vật:** lọc độ hiếm/class, chọn nhân vật và xem ba tab Chỉ số, Kỹ năng, Tinh hồn. Mỗi người có quyền sở hữu mặc định cả 7 nhân vật khởi đầu ở S0. Nhân vật có ID riêng và class riêng để bổ sung nhiều nhân vật cùng class sau này. Chưa mở nâng tinh hồn hoặc gacha; chưa áp dụng 42 hiệu ứng vào combat và chưa chạy simulate S6.
+**Đã triển khai danh mục và cơ chế tinh hồn:** lọc độ hiếm/class, chọn nhân vật và xem ba tab Chỉ số, Kỹ năng, Tinh hồn. Mỗi người có quyền sở hữu mặc định cả 7 nhân vật khởi đầu ở S0. Nhân vật có ID riêng và class riêng để bổ sung nhiều nhân vật cùng class sau này. Chưa mở nâng tinh hồn hoặc gacha. Cơ chế S1–S6 đã chạy theo snapshot trong combat, mỗi run giữ riêng cấp và thông số; run thiếu snapshot dùng S0. Tower không áp dụng tinh hồn.
 
-Nguồn bản thiết kế hiển thị: src/hardcore/characters/catalog.json. Chỉ số S0 được dựng từ luật game hiện hành, không sao chép thủ công từ tài liệu. S1–S6 chỉ hiển thị mô tả, không tính ra chỉ số giả cho những cấp chưa được triển khai.
+Nguồn bản thiết kế hiển thị: src/hardcore/characters/catalog.json. Chỉ số S0 được dựng từ luật game hiện hành, không sao chép thủ công từ tài liệu. Tab nhân vật hiển thị toàn bộ S1–S6 và bonus boss S6 hiện hành. Chỉ số công khai mặc định S0 vì mọi tài khoản đang khởi đầu S0. Run simulate S6 gắn snapshot hợp lệ trước hành động đầu, không nâng tài khoản người chơi.

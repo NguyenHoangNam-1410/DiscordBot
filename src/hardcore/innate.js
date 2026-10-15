@@ -1,4 +1,5 @@
 "use strict";
+const souls = require("./characters/souls");
 const { E } = require("./shared/icons");
 const NAMES = {
   amazon: "Bloodlust",
@@ -58,23 +59,23 @@ function begin(s, action) {
   c.titan = s.classKey === "barbarian" && action === "skill";
   if (!["attack", "skill"].includes(action)) return;
   if (s.classKey === "amazon" && c.bloodlust) {
-    c.actionBuff = 1.15;
+    c.actionBuff = souls.bloodlust(s);
     c.bloodlust = false;
   }
   if (s.classKey === "druid" && c.wild) {
-    c.actionBuff = rebalanced(s) ? 1.2 : 1.15;
+    c.actionBuff = rebalanced(s) ? souls.wild(s) : 1.15;
     c.wildAction = true;
     c.wild = false;
   }
   if (s.classKey === "paladin" && c.vindicate) {
-    c.actionBuff = rebalanced(s) ? 1.15 : 1.1;
+    c.actionBuff = rebalanced(s) ? souls.vindicate(s) : 1.1;
     c.vindicateAction = true;
     c.vindicate = false;
   }
   if (s.classKey === "necromancer" && action === "attack" && c.anchor) {
     c.anchor = false;
     c.anchorDodge = true;
-    if (rebalanced(s)) c.actionBuff = 1.15;
+    if (rebalanced(s)) c.actionBuff = souls.anchor(s);
   }
 }
 function multiplier(s, action) {
@@ -82,28 +83,29 @@ function multiplier(s, action) {
   if (!c) return 1;
   if (action != null) {
     if (!["attack", "skill"].includes(action)) return 1;
-    if (s.classKey === "amazon" && c.bloodlust) return 1.15;
-    if (s.classKey === "druid" && c.wild) return rebalanced(s) ? 1.2 : 1.15;
+    if (s.classKey === "amazon" && c.bloodlust) return souls.bloodlust(s);
+    if (s.classKey === "druid" && c.wild)
+      return rebalanced(s) ? souls.wild(s) : 1.15;
     if (s.classKey === "paladin" && c.vindicate)
-      return rebalanced(s) ? 1.15 : 1.1;
+      return rebalanced(s) ? souls.vindicate(s) : 1.1;
     if (
       rebalanced(s) &&
       s.classKey === "necromancer" &&
       action === "attack" &&
       c.anchor
     )
-      return 1.15;
+      return souls.anchor(s);
     return 1;
   }
   return c.actionBuff || 1;
 }
 function avoidChance(s) {
   return enabled(s) && s.classKey === "assassin"
-    ? Math.min(0.55, Math.max(0, 0.05 + 0.0005 * s.dex))
+    ? Math.min(0.55, Math.max(0, souls.value(s, "avoidBase") + 0.0005 * s.dex))
     : 0;
 }
 function defenseFactor(s) {
-  return combat(s)?.titan ? 1.25 : 1;
+  return combat(s)?.titan ? souls.value(s, "titanDefense") : 1;
 }
 function counterEnd(s) {
   const c = combat(s);
@@ -119,7 +121,7 @@ function manaShieldAmount(s, amount, skillCost, defend = false) {
         ? 2
         : c.manaShieldCharges) > 0 &&
       amount > 0
-      ? Math.floor(Math.min(amount, s.maxHp * 0.2))
+      ? Math.floor(Math.min(amount, s.maxHp * souls.value(s, "shieldRate")))
       : 0;
   return c &&
     s.classKey === "sorceress" &&
@@ -140,6 +142,12 @@ function absorb(s, amount, skillCost, defend = false) {
       c.manaShieldCharges = 2;
     }
     c.manaShieldCharges--;
+    let refund = "";
+    const sf = souls.frame(s);
+    if (souls.has(s, 2) && sf && !sf.shieldMana) {
+      sf.shieldMana = true;
+      refund = "\n" + E.mana + " Tái lưu chuyển: hồi " + souls.mana(s) + " MP.";
+    }
     return {
       remaining: amount - used,
       log:
@@ -149,7 +157,8 @@ function absorb(s, amount, skillCost, defend = false) {
         used +
         " DMG; còn " +
         c.manaShieldCharges +
-        "/2 lần.",
+        "/2 lần." +
+        refund,
     };
   }
   s.mana--;
@@ -181,10 +190,26 @@ function afterPlayer(
     const gained = heal(s, s.maxHp * rate);
     if (gained) log += `\n${E.hp} ${name}: hồi ${gained} ${E.hp}.`;
   };
-  if (s.classKey === "amazon" && action === "attack" && landed)
+  const sf = souls.frame(s);
+  if (s.classKey === "amazon" && action === "attack" && landed) {
     c.bloodlust = true;
+    if (souls.has(s, 5) && !sf.basicMana) {
+      sf.basicMana = true;
+      mana("Tiếp tế");
+    }
+  }
   if (s.classKey === "assassin" && critical && landed > 0)
-    healing("AVOID", rebalanced(s) ? 0.02 : 0.03);
+    healing("AVOID", rebalanced(s) ? souls.value(s, "critHeal") : 0.03);
+  if (
+    s.classKey === "assassin" &&
+    souls.has(s, 5) &&
+    critical &&
+    mainDealt > 0 &&
+    !sf.critMana
+  ) {
+    sf.critMana = true;
+    mana("Thu hồi nhịp thở");
+  }
   if (s.classKey === "druid") {
     if (
       action === "attack" &&
@@ -192,12 +217,17 @@ function afterPlayer(
       c.wildAction &&
       c.actions >= c.wildMpReady
     ) {
-      if (mana("Mark of the Wild")) c.wildMpReady = c.actions + 2;
+      const gained = mana("Mark of the Wild");
+      if (souls.has(s, 2) && !sf.wildMana) {
+        sf.wildMana = true;
+        mana("Nhịp rừng đầu tiên");
+      }
+      if (gained) c.wildMpReady = c.actions + 2;
     }
     if (action === "skill") c.wild = true;
   }
   if (s.classKey === "necromancer") {
-    if (action === "attack" && landed && c.anchorDodge)
+    if (action === "attack" && (landed || souls.has(s, 4)) && c.anchorDodge)
       mana("Bend the Shadows");
     if (rebalanced(s) && action === "skill") {
       c.anchorProgress++;
@@ -213,7 +243,7 @@ function afterPlayer(
   if (s.classKey === "paladin") {
     c.killEligible = c.vindicateAction && mainDealt > 0 && s.encounter.hp <= 0;
     if (action === "skill") {
-      healing("Divine Shield", 0.03);
+      healing("Divine Shield", souls.value(s, "paladinHeal"));
       c.vindicate = true;
     }
   }
@@ -229,7 +259,10 @@ function finish(s, e, heal, maxMana) {
     e.defeatSettled &&
     s.hp > 0
   ) {
-    const gained = heal(s, s.maxHp * (rebalanced(s) ? 0.2 : 0.15)),
+    const gained = heal(
+        s,
+        s.maxHp * (rebalanced(s) ? souls.value(s, "killHeal") : 0.15),
+      ),
       before = s.mana;
     s.mana = Math.min(maxMana, s.mana + 1);
     log = `\n${E.hp} Vindicate: hồi ${gained} HP và ${s.mana - before} ${E.mana} MP khi kết thúc combat.`;
@@ -277,7 +310,7 @@ function validate(s) {
     throw Error("INVALID_CLASS_INNATE");
   if (
     c.version !== (rebalanced(s) ? 2 : 1) ||
-    ![1, 1.1, 1.15, 1.2].includes(c.actionBuff)
+    ![1, 1.1, 1.15, 1.18, 1.2, 1.25].includes(c.actionBuff)
   )
     throw Error("INVALID_CLASS_INNATE");
   for (const k of ["actions", "wildMpReady", "anchorReady"])
@@ -302,14 +335,14 @@ function description(s) {
   const c = combat(s);
   const revised = rebalanced(s);
   const text = {
-    amazon: `${E.attack} Tấn công thường trúng tạo Bloodlust: action Tấn công/Skill kế +15% toàn bộ DMG. Một lần, không cộng dồn; đánh thường có thể dùng rồi tạo lại.`,
-    assassin: `${E.evasion} AVOID: ${(Math.round(avoidChance(s) * 1000) / 10).toLocaleString("vi-VN")}% = 5% + tổng DEX ×0,05 điểm %, trần 55%. Vật lý kiểm tra EVA trước, rồi AVOID; phép kiểm tra AVOID. ${E.crit} Crit hồi ${revised ? 2 : 3}% Max HP. Né tự nhiên tạo Shadow/Shadow Mark; Shadow Step không tạo từ lần né chắc chắn.`,
-    barbarian: `${E.defense} Iron Will tăng 25% DEF hiệu lực và miễn Crit cho phản công ngay sau đó. Không giảm DMG chuẩn, không giữ sang lượt sau.`,
-    druid: `${E.attack} Sau Wild Regeneration, action Tấn công/Skill kế +${revised ? 20 : 15}% toàn bộ DMG. Nếu là đánh thường trúng, hồi thêm 1 ${E.mana} MP, cooldown 2 combat action. Skill làm mới dấu, không cộng dồn.`,
-    necromancer: `${E.mana} ${revised ? "Mỗi Totem Ward tích 1 tiến trình; đủ 3 tạo Shadow Anchor. Đánh thường dùng Anchor tăng 15% DMG." : "Totem Ward tạo Shadow Anchor tối đa một lần mỗi 3 combat action."} Đánh thường kế tiêu Anchor và né phản công; trúng hồi thêm 1 MP. Trượt vẫn tiêu Anchor và né, nhưng không hồi thêm MP.`,
-    paladin: `${E.attack} Divine Shield hồi 3% Max HP và đặt Vindicate: action gây DMG kế +${revised ? 15 : 10}% toàn bộ DMG. Nếu action được cường hóa hạ mục tiêu chính, kết thúc combat: hồi ${revised ? 20 : 15}% Max HP và 1 ${E.mana} MP. Hạ mục tiêu phụ/chuyển phase không nhận thưởng này.`,
+    amazon: `${E.attack} Tấn công thường trúng tạo Bloodlust: action Tấn công/Skill kế +${souls.has(s, 1) ? 18 : 15}% toàn bộ DMG. Một lần, không cộng dồn; đánh thường có thể dùng rồi tạo lại.`,
+    assassin: `${E.evasion} AVOID: ${(Math.round(avoidChance(s) * 1000) / 10).toLocaleString("vi-VN")}% = ${souls.has(s, 1) ? 7 : 5}% + tổng DEX ×0,05 điểm %, trần 55%. Vật lý kiểm tra EVA trước, rồi AVOID; phép kiểm tra AVOID. ${E.crit} Crit hồi ${revised ? (souls.has(s, 2) ? 2.5 : 2) : 3}% Max HP. Né tự nhiên tạo Shadow/Shadow Mark; Shadow Step không tạo từ lần né chắc chắn.`,
+    barbarian: `${E.defense} Iron Will tăng ${souls.has(s, 1) ? 35 : 25}% DEF hiệu lực và miễn Crit cho phản công ngay sau đó. Không giảm DMG chuẩn, không giữ sang lượt sau.`,
+    druid: `${E.attack} Sau Wild Regeneration, action Tấn công/Skill kế +${revised ? (souls.has(s, 1) ? 25 : 20) : 15}% toàn bộ DMG. Nếu là đánh thường trúng, hồi thêm 1 ${E.mana} MP, cooldown 2 combat action. Skill làm mới dấu, không cộng dồn.`,
+    necromancer: `${E.mana} ${revised ? `Mỗi Totem Ward tích 1 tiến trình; đủ 3 tạo Shadow Anchor. Đánh thường dùng Anchor tăng ${souls.has(s, 1) ? 20 : 15}% DMG.` : "Totem Ward tạo Shadow Anchor tối đa một lần mỗi 3 combat action."} Đánh thường kế tiêu Anchor và né phản công; trúng hồi thêm 1 MP. ${souls.has(s, 4) ? "Trượt vẫn tiêu Anchor, né và hồi thêm 1 MP." : "Trượt vẫn tiêu Anchor và né, nhưng không hồi thêm MP."}`,
+    paladin: `${E.attack} Divine Shield hồi ${souls.has(s, 2) ? 4 : 3}% Max HP và đặt Vindicate: action gây DMG kế +${revised ? (souls.has(s, 1) ? 18 : 15) : 10}% toàn bộ DMG. Nếu action được cường hóa hạ mục tiêu chính, kết thúc combat: hồi ${revised ? (souls.has(s, 5) ? 25 : 20) : 15}% Max HP và 1 ${E.mana} MP. Hạ mục tiêu phụ/chuyển phase không nhận thưởng này.`,
     sorceress: revised
-      ? `${E.defense} Mana Shield: tối đa 2 lần/combat, nạp lại đủ 2 lần mỗi phase boss. Phản công thường trúng còn DMG sau Barrier: hấp thụ tối đa 20% Max HP, không tiêu MP. Không dùng khi Phòng thủ hoặc cho cơ chế boss. Hiện còn ${c && c.manaShieldPhase === (s.encounter.boss?.phase || 1) ? c.manaShieldCharges : 2}/2 lần.`
+      ? `${E.defense} Mana Shield: tối đa 2 lần/combat, nạp lại đủ 2 lần mỗi phase boss. Phản công thường trúng còn DMG sau Barrier: hấp thụ tối đa ${souls.has(s, 1) ? 22 : 20}% Max HP, không tiêu MP. Không dùng khi Phòng thủ hoặc cho cơ chế boss. Hiện còn ${c && c.manaShieldPhase === (s.encounter.boss?.phase || 1) ? c.manaShieldCharges : 2}/2 lần.`
       : `${E.mana} Mana Shield: một lần/combat, khi phản công trúng còn DMG sau Barrier và MP dư hơn chi phí Skill, tiêu 1 MP để hấp thụ min(25% DMG còn lại, 6% Max HP). Luôn giữ đủ MP cho một Skill.`,
   }[s.classKey];
   const ready =

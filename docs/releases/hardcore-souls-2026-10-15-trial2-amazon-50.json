@@ -1,0 +1,215 @@
+{
+  "amazon": {
+    "runs": 50,
+    "codeFingerprint": "38f1577ef7298057567d41730b8d587f58a5338563fd5bd2415b3ebd2ceb8ab2",
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "3.1.0",
+    "actualStatProfile": {
+      "balanceVersion": "3.1.0",
+      "statProfile": {
+        "version": 3,
+        "masteryVersion": 1,
+        "classKey": "amazon",
+        "core": {
+          "str": 18,
+          "dex": 28,
+          "vit": 20,
+          "ene": 14,
+          "baseHp": 40,
+          "baseMana": 2,
+          "baseRes": 3,
+          "baseCrit": 0.06,
+          "strWeight": 0.25
+        },
+        "initialVitHp": 3.5,
+        "mastery": {
+          "name": "Marksmanship",
+          "accuracy": 1.35,
+          "evasion": 0.45,
+          "crit": 0.0006,
+          "critCap": 0.5,
+          "evasionCap": 0.4,
+          "hp": 3.5,
+          "strDefense": 0.2,
+          "vitDefense": 0.15,
+          "res": 0.1,
+          "mana": 0.04,
+          "physicalPower": 1,
+          "spellPower": 1,
+          "vitPhysical": 0,
+          "enePhysical": 0,
+          "vitSpell": 0
+        },
+        "powers": {
+          "basePower": 2.09,
+          "attributePower": 1,
+          "equipmentPower": 1,
+          "skillPower": 1
+        }
+      }
+    },
+    "actualBossDamageProfile": {
+      "version": 1,
+      "classKey": "amazon",
+      "playerDamage": 2.1
+    },
+    "runOffset": 50,
+    "soulLevel": 6,
+    "soulTuning": {
+      "version": 1,
+      "bossMultipliers": {
+        "amazon": 3.5,
+        "barbarian": 1.5,
+        "assassin": 1.6,
+        "sorceress": 1.5,
+        "druid": 1.5,
+        "necromancer": 2.7,
+        "paladin": 1.7
+      }
+    },
+    "balanceProfile": {
+      "power": 2.09
+    },
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "resumeValidation": "once_per_run",
+    "deathBosses": {
+      "assur": 2,
+      "xazax": 2,
+      "inarius": 4,
+      "control": 2,
+      "manoruk": 4,
+      "azmodan": 1,
+      "nithogur": 1,
+      "lazarus": 1,
+      "zakarum": 1,
+      "astrogha": 1,
+      "giyua": 3
+    },
+    "gameplayVersion": "3.1.0",
+    "simulationSeed": "survival-current-holdout-2026-10-13",
+    "checkpointRule": {
+      "variant": "baseline",
+      "fromClearedFloor": null,
+      "intervalBefore": 5,
+      "pointsBefore": 5,
+      "intervalAfter": 5,
+      "pointsAfter": 5,
+      "healAtCheckpoint": "Full HP and +2 potions, respecting the existing cap"
+    },
+    "bossRoster": "current",
+    "bossDamageExperiment": {},
+    "bossPolicy": "public telegraphs v2",
+    "stake": 100000,
+    "completedPercent": 32,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 750,
+        "count": 4
+      },
+      {
+        "floor": 700,
+        "count": 3
+      },
+      {
+        "floor": 900,
+        "count": 3
+      },
+      {
+        "floor": 550,
+        "count": 2
+      },
+      {
+        "floor": 600,
+        "count": 2
+      }
+    ],
+    "zeroWinsUpper95Percent": null,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 50,
+    "passedFloor50": 50,
+    "passedFloor100": 50,
+    "passedFloor699": 42,
+    "passedFloor700": 39,
+    "passedFloor800": 30,
+    "passedFloor900": 23,
+    "reachedFinalBoss": 16,
+    "completed999": 16,
+    "runFloors": [
+      699,
+      799,
+      999,
+      706,
+      799,
+      999,
+      649,
+      749,
+      849,
+      769,
+      813,
+      899,
+      904,
+      999,
+      967,
+      499,
+      699,
+      999,
+      667,
+      929,
+      914,
+      999,
+      999,
+      999,
+      999,
+      749,
+      549,
+      699,
+      834,
+      899,
+      599,
+      999,
+      999,
+      899,
+      399,
+      949,
+      999,
+      999,
+      999,
+      908,
+      549,
+      999,
+      599,
+      999,
+      725,
+      933,
+      999,
+      849,
+      749,
+      749
+    ],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": {
+      "maxHp": 2696,
+      "damageMax": 684,
+      "defense": 223,
+      "potions": 6,
+      "resistance": 66
+    },
+    "finalBossMeans": {
+      "maxHp": 11268,
+      "damageMax": 1539,
+      "defense": 654
+    },
+    "estimatedCompletionPercent": null,
+    "maxFloor": 999,
+    "medianFloor": 899,
+    "meanFloor": 838.62
+  }
+}

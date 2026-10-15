@@ -197,6 +197,8 @@ module.exports = function createModule(dependencies) {
           );
         addTextFields(e, "⚔️ Ảnh hưởng từ boss lên bạn", lines.join("\n"));
       }
+      const soulText = require("../characters/souls").summary(state);
+      if (soulText) addTextFields(e, "✨ Tinh hồn nhân vật", soulText);
       const innateText = require("../innate").description(state);
       if (innateText) addTextFields(e, "✨ Class Innate · tầng 1", innateText);
       const awakeningText = require("../awakening").description(state);
@@ -289,8 +291,12 @@ module.exports = function createModule(dependencies) {
           name: `${E.rift} Rift modifier`,
           value: "Chưa có Rift modifier.",
         });
-      const specialEffects = [paradoxEffectText(state), contractEffectText(state)].filter(Boolean);
-      if (specialEffects.length) addTextFields(e, "Hiệu ứng Rift", specialEffects.join("\n"));
+      const specialEffects = [
+        paradoxEffectText(state),
+        contractEffectText(state),
+      ].filter(Boolean);
+      if (specialEffects.length)
+        addTextFields(e, "Hiệu ứng Rift", specialEffects.join("\n"));
       for (const field of [...memories.fields(state), ...gilded.fields(state)])
         addTextFields(e, field.name, field.value);
     } else {

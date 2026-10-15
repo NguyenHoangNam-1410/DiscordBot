@@ -584,10 +584,7 @@ try {
       }).damage;
       assert.equal(after, Math.round(100 * (1 - (50 * (1 - rate)) / 100)));
       assert.equal(s.encounter.resistance, 50);
-      assert.match(
-        rift.battle(s),
-        /Lá chắn đá \*\*2 HP\*\* · còn \*\*0 HP\*\*/,
-      );
+      assert.match(rift.battle(s), /Lá chắn đá \*\*0 \/ 2 HP\*\*/);
       assert.match(rift.description("stone_skin", stack, s), /RES/);
     }
   });

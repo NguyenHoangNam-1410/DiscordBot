@@ -1,5 +1,26 @@
 [
   {
+    "id": "49299036-1ba3-4ff2-a9a6-836b8d1efa15",
+    "updatedAt": "2026-10-15T05:14:56.448Z",
+    "auditedAt": "2026-10-15T05:14:56.448Z",
+    "title": "Sinh tồn: hiệu chỉnh tinh hồn S6",
+    "changes": [
+      "Bonus DMG Tấn công/Skill lên boss ở S6: Amazon +240%, Barbarian +55%, Assassin +62%, Sorceress +40%, Druid +50%, Necromancer +160%, Paladin +40%. Gồm hit phụ nội tại, không tăng sát thương cố định của cơ chế boss.",
+      "Mẫu hiệu chỉnh 100 run S6 mỗi nhân vật ghi nhận 30–34% hoàn thành tầng 999. Đây chưa phải tỷ lệ đã được xác minh trên mẫu độc lập; S0–S5 giữ nguyên hệ số boss nền."
+    ]
+  },
+  {
+    "id": "c2f7a597-152c-494a-b826-68e4f6b6f452",
+    "updatedAt": "2026-10-15T05:02:17.661Z",
+    "auditedAt": "2026-10-15T05:02:17.661Z",
+    "title": "Sinh tồn: tinh hồn chiến đấu S1–S6",
+    "changes": [
+      "Bổ sung 42 hiệu ứng tinh hồn cho 7 nhân vật SR: nâng nội tại, kỹ năng thức tỉnh, hồi phục và quản lý MP; các bậc cộng dồn.",
+      "Cấp tinh hồn và thông số được lưu cố định theo run. Tài khoản vẫn khởi đầu S0, run cũ không tự nâng cấp; chưa mở gacha hoặc nâng tinh hồn.",
+      "Hiển thị cấp tinh hồn đang dùng trong chiến đấu và hiệu ứng trong Chỉ số; công khai bonus DMG boss S6 ở trang nhân vật. Tower giữ nguyên cơ chế."
+    ]
+  },
+  {
     "id": "ab73b412-8997-41ff-95ef-e91380be4dba",
     "updatedAt": "2026-10-15T04:19:40.138Z",
     "auditedAt": "2026-10-15T04:19:40.138Z",

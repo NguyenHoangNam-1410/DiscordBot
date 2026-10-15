@@ -62,6 +62,11 @@ if (backend === "memory") {
   };
 }
 const sourceFiles = [
+  "src/hardcore/characters/souls.js",
+  "src/hardcore/characters/soulTuning.json",
+  "src/hardcore/innate.js",
+  "src/hardcore/awakening.js",
+  "src/hardcore/engine/combatPreview.js",
   "src/hardcore/bosses/balanceV2.js",
   "src/hardcore/bosses/catalogV2.js",
   "src/hardcore/bosses/runtimeV2.js",
@@ -546,7 +551,10 @@ for (const classKey of classesToRun) {
   let actualStatProfile = null;
   let actualBossDamageProfile = null;
   let timeouts = 0;
-  for (let i = 0; i < runs; i += 1) {
+  const runOffset = Number(process.env.HARDCORE_SIM_RUN_OFFSET || 0);
+  if (!Number.isSafeInteger(runOffset) || runOffset < 0)
+    throw Error("INVALID_RUN_OFFSET");
+  for (let i = runOffset; i < runOffset + runs; i += 1) {
     if (process.env.HARDCORE_SIM_ISOLATED === "1")
       db.prepare("DELETE FROM hardcore_echoes").run();
     const userId = `${classKey}-${i}`;
@@ -563,6 +571,15 @@ for (const classKey of classesToRun) {
       classKey,
     });
     let state = started.state;
+    const soulLevel = Number(process.env.HARDCORE_SIM_SOUL_LEVEL || 0);
+    if (soulLevel) {
+      require("../src/hardcore/characters/souls").attach(
+        state,
+        classKey,
+        soulLevel,
+      );
+      repository.saveState(started.session, state);
+    }
     actualBossDamageProfile ||= state.bossDamageProfile
       ? structuredClone(state.bossDamageProfile)
       : null;
@@ -648,9 +665,9 @@ for (const classKey of classesToRun) {
         { forfeit: true },
       );
     }
-    if ((i + 1) % 100 === 0)
+    if ((i - runOffset + 1) % 10 === 0)
       console.error(
-        `${classPolicy}/${classKey}: ${i + 1}/${runs} runs, ${floors.filter((floor) => floor >= 999).length} wins`,
+        `${classPolicy}/${classKey}: ${i - runOffset + 1}/${runs} runs, ${floors.filter((floor) => floor >= 999).length} wins`,
       );
   }
   let finalAttempts = 0;
@@ -707,6 +724,9 @@ for (const classKey of classesToRun) {
     balanceVersion: actualStatProfile?.balanceVersion || balance.VERSION,
     actualStatProfile,
     actualBossDamageProfile,
+    runOffset,
+    soulLevel: Number(process.env.HARDCORE_SIM_SOUL_LEVEL || 0),
+    soulTuning: require("../src/hardcore/characters/soulTuning.json"),
     balanceProfile: balance.forClass(classKey),
     revealedChestAction,
     backend,

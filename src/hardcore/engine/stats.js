@@ -270,7 +270,8 @@ function addSource(state, effects, source = "event") {
 }
 function luckyBreakChance(state) {
   const luck = Math.max(0, Number(state.luck) || 0);
-  const modern = state.gameplayVersion === 3 && !state.mode?.startsWith("tower");
+  const modern =
+    state.gameplayVersion === 3 && !state.mode?.startsWith("tower");
   return modern ? Math.min(0.5, luck * 0.0025) : Math.min(0.3, luck * 0.015);
 }
 function mainStat(state) {
@@ -347,6 +348,8 @@ function createState(
   recompute(state);
   state.hp = state.maxHp;
   state.mana = state.maxMana;
+  if (gameplayVersion === 3)
+    state.characterSoul = require("../characters/souls").snapshot(classKey, 0);
   return state;
 }
 function preview(state, key) {

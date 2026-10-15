@@ -126,20 +126,31 @@ module.exports = function createModule(dependencies) {
       ? 0
       : require("../rift").guaranteedHit(s)
         ? 1
-        : world.hitChance(
-            s.accuracy + require("../equipment/affinityEffects").accuracy(s),
-            s.encounter.evasion,
-            0.45,
+        : Math.min(
+            0.95,
+            (s.classKey === "amazon" &&
+            require("../characters/souls").has(s, 2) &&
+            !require("../characters/souls").frame(s)?.basicAttempt
+              ? 0.05
+              : 0) +
+              world.hitChance(
+                s.accuracy +
+                  require("../equipment/affinityEffects").accuracy(s),
+                s.encounter.evasion,
+                0.45,
+              ),
           );
     const awakening = require("../awakening");
-    const barrier = awakening.combat(s)
-      ? s.classKey === "druid"
-        ? Math.min(
-            s.classAwakening.bark || 0,
-            Math.floor(s.maxHp * awakening.tuning(s).barkCap),
-          )
-        : awakening.combat(s).barrier || 0
-      : 0;
+    const barrier =
+      (require("../characters/souls").frame(s)?.guardBarrier || 0) +
+      (awakening.combat(s)
+        ? s.classKey === "druid"
+          ? Math.min(
+              s.classAwakening.bark || 0,
+              Math.floor(s.maxHp * awakening.tuning(s).barkCap),
+            )
+          : awakening.combat(s).barrier || 0
+        : 0);
     const detail = bosses.brainControl(s)
       ? "DMG chuẩn 20% Max HP boss; không Crit, không mất MP."
       : {

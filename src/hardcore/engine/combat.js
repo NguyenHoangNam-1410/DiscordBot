@@ -2,6 +2,7 @@
 const affinity = require("../equipment/affinityEffects");
 const awakening = require("../awakening");
 const rift = require("../rift");
+const souls = require("../characters/souls");
 const innate = require("../innate");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
@@ -88,10 +89,14 @@ module.exports = function createModule(dependencies) {
       (player && rift.guaranteedHit(state)) ||
       rng() <
         (player
-          ? world.hitChance(
-              attacker.accuracy + (player ? affinity.accuracy(state) : 0),
-              defender.evasion,
-              player ? 0.45 : (state.evasionCap ?? 0.45),
+          ? Math.min(
+              0.95,
+              (souls.frame(state)?.basicAccuracy ? 0.05 : 0) +
+                world.hitChance(
+                  attacker.accuracy + (player ? affinity.accuracy(state) : 0),
+                  defender.evasion,
+                  player ? 0.45 : (state.evasionCap ?? 0.45),
+                ),
             )
           : rift.hitChance(
               state,
@@ -151,7 +156,9 @@ module.exports = function createModule(dependencies) {
         itemPassives.aggregate(state).berserk * (1 - state.hp / state.maxHp);
     if (player)
       damage *=
-        (1 + gilded.damageBonus(state)) * bosses.playerFactor(state, magic);
+        (1 + gilded.damageBonus(state)) *
+        bosses.playerFactor(state, magic) *
+        souls.bossFactor(state);
     if (player && paradox.active(state)) {
       const bonus = ["boss", "final_boss"].includes(defender.rank)
         ? state.bossDamage
@@ -345,7 +352,17 @@ module.exports = function createModule(dependencies) {
     let counterDamage = hit.damage;
     let manaShieldLog = "";
     if (innate.enabled(state) && !plan.trueDamage) {
+      counterDamage = souls.absorb(state, counterDamage);
+      const barkBefore = state.classAwakening?.bark || 0;
       counterDamage = awakening.absorb(state, counterDamage);
+      if (
+        state.classKey === "druid" &&
+        souls.has(state, 6) &&
+        plan.raw == null &&
+        barkBefore > 0 &&
+        state.classAwakening.bark === 0
+      )
+        souls.frame(state).barkBroken = true;
       // Ambushes can counter before the first player action locks Paradox cost.
       if (
         !innate.rebalanced(state) &&
@@ -393,6 +410,7 @@ module.exports = function createModule(dependencies) {
       hit.hit && actual > 0,
       defend,
     );
+    const soulRecoveryLog = souls.afterCounter(state, heal);
     if (!bosses.on(enemy) && enemy.mechanic === "butcher")
       enemy.frenzy = Math.min(5, enemy.frenzy + 1);
     if (!bosses.on(enemy) && enemy.mechanic === "lucion" && actual)
@@ -422,6 +440,7 @@ module.exports = function createModule(dependencies) {
         ? "\n🛡️ Nội tại: lá chắn hấp thụ " + shieldUsed + " DMG."
         : "") +
       manaShieldLog +
+      soulRecoveryLog +
       reflected +
       soulLog +
       (bossLog ? "\n" + bossLog : "")
@@ -456,9 +475,11 @@ module.exports = function createModule(dependencies) {
           ? s.eliteDamage
           : 0;
       return (
-        (s.defense * 0.2 + s.resistance) *
+        (s.defense * souls.value(s, "holyScale") + s.resistance) *
+        souls.holyFactor(s, action != null) *
+        souls.bossFactor(s) *
         rift.outgoing(s) *
-        innate.multiplier(s, action) *
+        innate.multiplier(s, souls.frame(s)?.previewAction ? null : action) *
         bosses.playerFactor(s, false) *
         (1 + (bonus || 0)) *
         (boss
@@ -483,6 +504,7 @@ module.exports = function createModule(dependencies) {
     prepareItemCombat(state, rng);
     const e = state.encounter;
     innate.begin(state, action);
+    souls.begin(state, action);
     if (awakening.combat(state)) state.encounter.awakeningShadowGranted = false;
     const awakeningAtStart = awakening.active(state)
       ? { fury: awakening.fury(state), shadowStep: awakening.empowered(state) }
@@ -541,7 +563,8 @@ module.exports = function createModule(dependencies) {
       const acted = {
         defend: true,
         dodge: false,
-        log: `${E.defense} Phòng thủ và hồi 1 ${E.mana} MP.`,
+        log:
+          `${E.defense} Phòng thủ và hồi 1 ${E.mana} MP.` + souls.defend(state),
       };
       if (affinityHeal)
         acted.log +=
@@ -636,7 +659,10 @@ module.exports = function createModule(dependencies) {
             player: true,
             magic: true,
             raw: int(state.spellMin, state.spellMax, rng),
-            multiplier: state.classKey === "sorceress" ? 2.1 : 1.55,
+            multiplier:
+              state.classKey === "sorceress"
+                ? 2.1 * souls.echoMain(state)
+                : 1.55,
           }),
         ];
         dodge = state.classKey === "necromancer";
@@ -648,14 +674,14 @@ module.exports = function createModule(dependencies) {
         hits = Array.from({ length: shots }, () =>
           rollPlayerHit({
             player: true,
-            multiplier: 0.85,
+            multiplier: 0.85 * souls.focusMain(state, focusShot),
           }),
         );
         if (focusShot)
           hits.push(
             rollPlayerHit({
               player: true,
-              multiplier: 0.7,
+              multiplier: souls.focusRate(state),
             }),
           );
       } else {
@@ -670,10 +696,15 @@ module.exports = function createModule(dependencies) {
                 paladin: 1.4,
               }[state.classKey] *
               (state.classKey === "barbarian"
-                ? 1 + 0.15 * (e.awakeningFurySpent || 0)
+                ? (1 + souls.furyRate(state) * (e.awakeningFurySpent || 0)) *
+                  souls.furyFinisher(state, e.awakeningFurySpent)
                 : 1),
-            critBonus: e.awakeningShadowStep ? 0.2 : 0,
-            critMultiplierBonus: e.awakeningShadowStep ? 0.25 : 0,
+            critBonus: e.awakeningShadowStep
+              ? souls.value(state, "shadowCrit")
+              : 0,
+            critMultiplierBonus: e.awakeningShadowStep
+              ? souls.value(state, "shadowMultiplier")
+              : 0,
           }),
         ];
         dodge = state.classKey === "assassin";
@@ -761,12 +792,13 @@ module.exports = function createModule(dependencies) {
       const a = state.classAwakening,
         c = awakening.combat(state);
       const extraHit = (label, amount) => {
-        if (immune || amount <= 0 || e.hp <= 0) return;
+        if (immune || amount <= 0 || e.hp <= 0) return 0;
         const strength = bosses.damageStrength(state, Math.floor(amount));
         const extra = bosses.applyDamage(state, Math.floor(amount));
         reportedDamage += strength;
         dealt += extra;
         healingLog += "\n✨ " + label + ": +" + strength + " DMG.";
+        return extra;
       };
       if (state.classKey === "paladin") {
         if (c.ground > 0 && mainDealt > 0) {
@@ -830,11 +862,21 @@ module.exports = function createModule(dependencies) {
         a.totems++;
         if (a.totems === awakening.tuning(state).totems) {
           a.totems = 0;
-          extraHit(
+          const nova = extraHit(
             "Grave Nova",
             (innate.enabled(state) ? mainStrength : mainDealt) *
-              awakening.tuning(state).nova,
+              awakening.tuning(state).nova *
+              souls.novaFactor(state),
           );
+          if (nova > 0 && souls.frame(state)) {
+            const f = souls.frame(state);
+            f.novaHits++;
+            if (souls.has(state, 5) && f.novaHits === 1)
+              healingLog +=
+                "\n❤️ Sinh lực từ mộ: hồi " +
+                heal(state, state.maxHp * 0.03) +
+                " HP.";
+          }
           const beforeMana = state.mana;
           state.mana = Math.min(bosses.effectiveMaxMana(state), state.mana + 1);
           healingLog +=
@@ -844,6 +886,16 @@ module.exports = function createModule(dependencies) {
             (state.mana - beforeMana) +
             " MP.";
         }
+      }
+      if (
+        state.classKey === "barbarian" &&
+        souls.has(state, 5) &&
+        e.awakeningFurySpent >= 2 &&
+        !souls.frame(state).furyMana
+      ) {
+        souls.frame(state).furyMana = true;
+        healingLog +=
+          "\n💧 Hơi thở chiến binh: hồi " + souls.mana(state) + " MP.";
       }
       delete e.awakeningFurySpent;
       delete e.awakeningShadowStep;

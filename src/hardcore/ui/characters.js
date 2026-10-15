@@ -1,4 +1,5 @@
 "use strict";
+const soulTuning = require("../characters/soulTuning.json");
 const {
   EmbedBuilder,
   ActionRowBuilder,
@@ -242,13 +243,23 @@ function payload(
     fields.push(
       ...selected.souls.map((s) => ({
         name: "🔒 S" + s.level + " · " + s.name,
-        value: s.description,
+        value:
+          s.description +
+          (s.level === 6 &&
+          soulTuning.bossMultipliers[selected.profileKey] !== 1
+            ? "\n" +
+              E.attack +
+              " DMG Tấn công/Skill lên boss +" +
+              number(
+                (soulTuning.bossMultipliers[selected.profileKey] - 1) * 100,
+              ) +
+              "% (gồm hit phụ; không tăng sát thương cố định từ cơ chế boss)."
+            : ""),
       })),
     );
     fields.push({
       name: "Tinh hồn · cơ chế chiến đấu",
-      value:
-        "S1–S6 đã có hiệu ứng chiến đấu; tài khoản hiện khởi đầu S0.",
+      value: "S1–S6 đã có hiệu ứng chiến đấu; tài khoản hiện khởi đầu S0.",
     });
     embed.addFields(splitRuleFields(fields));
     components.push(

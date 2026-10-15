@@ -180,8 +180,8 @@ async function main() {
             .length,
           6,
         );
-        assert(stringify(p).includes("30–35%"));
-        assert(stringify(p).includes("chưa kiểm chứng"));
+        assert(stringify(p).includes("hiệu ứng chiến đấu"));
+        assert(stringify(p).includes("khởi đầu S0"));
       }
     }
   }
@@ -279,7 +279,7 @@ async function main() {
   ui.payload(owner, { id: "druid", tab: "souls" });
   assert.equal(JSON.stringify(state), snapshot);
   console.log(
-    "PASS: seven S0 entitlements, 42 draft souls, live S0 stats, all tabs/filters, empty pool, future same-class characters, pagination, ownership/forged guards, command/routes and Discord limits; no simulations.",
+    "PASS: seven S0 entitlements, 42 combat souls, live S0 stats, all tabs/filters, empty pool, future same-class characters, pagination, ownership/forged guards, command/routes and Discord limits; no simulations.",
   );
 }
 main()

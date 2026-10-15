@@ -124,4 +124,4 @@ Battle UI chỉ cần tên nhân vật kèm bậc S khi hệ thống được tr
 
 ## 9. Phạm vi tài liệu này
 
-Đã ghi giá gem, đổi SSR bằng Spark, quy tắc thẻ đã thảo luận và 42 bậc tinh hồn SR đề xuất. Đã bổ sung /sinhton nhanvat để xem danh mục và bản thiết kế tinh hồn; mọi người sở hữu 7 nhân vật SR ở S0. Chưa thêm lệnh gacha, kho thẻ, nâng tinh hồn hoặc thay đổi chỉ số combat. Các đề xuất có thể được chốt riêng trước khi viết code.
+Đã ghi giá gem, đổi SSR bằng Spark, quy tắc thẻ đã thảo luận và 42 bậc tinh hồn SR đề xuất. Đã bổ sung /sinhton nhanvat để xem danh mục và bản thiết kế tinh hồn; mọi người sở hữu 7 nhân vật SR ở S0. Cơ chế tinh hồn S1–S6 đã có trong chiến đấu theo snapshot run. Tài khoản vẫn khởi đầu S0; chưa thêm gacha, kho thẻ hoặc giao dịch nâng tinh hồn. Các đề xuất có thể được chốt riêng trước khi viết code.
