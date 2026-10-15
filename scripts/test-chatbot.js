@@ -171,6 +171,17 @@ global.fetch = async (url, init) => {
   process.env.OPENAI_MODEL = "gemini-custom";
   assert.equal(chatbot.model(), "gemini-custom");
   delete process.env.OPENAI_MODEL;
+  // OpenRouter: cần chọn model; đúng endpoint, không kiểm duyệt OpenAI
+  process.env.CHATBOT_PROVIDER = "openrouter";
+  assert.equal(chatbot.isConfigured(), false, "OpenRouter chưa đặt OPENAI_MODEL thì chưa sẵn sàng");
+  process.env.OPENAI_MODEL = "some/model:free";
+  assert.equal(chatbot.isConfigured(), true);
+  calls.length = 0;
+  assert((await chatbot.ask({ guildId: G, userId: "orr", channelId: C, text: "chào" })).ok);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0].url, "https://openrouter.ai/api/v1/chat/completions");
+  assert.equal(calls[0].body.model, "some/model:free");
+  delete process.env.OPENAI_MODEL;
   delete process.env.CHATBOT_PROVIDER;
   console.log("chatbot ok");
 })();
