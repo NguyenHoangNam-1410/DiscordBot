@@ -27,12 +27,14 @@ const PROVIDERS = Object.freeze({
     model: "gemini-3.8-flash",
     moderation: false,
   },
+  // OpenRouter: chọn model có hậu tố ":free" ở openrouter.ai/models rồi đặt OPENAI_MODEL (tên model free thay đổi thường xuyên).
+  openrouter: { baseUrl: "https://openrouter.ai/api/v1", model: "", moderation: false },
 });
 const provider = () => PROVIDERS[String(process.env.CHATBOT_PROVIDER || "openai").toLowerCase()] || PROVIDERS.openai;
 const baseUrl = () => String(process.env.OPENAI_BASE_URL || provider().baseUrl).replace(/\/+$/, "");
 const model = () => process.env.OPENAI_MODEL || provider().model;
 const useModeration = () => provider().moderation && !process.env.OPENAI_BASE_URL;
-const isConfigured = () => Boolean(process.env.OPENAI_API_KEY);
+const isConfigured = () => Boolean(process.env.OPENAI_API_KEY) && Boolean(model());
 
 function dayKey(now = Date.now()) {
   return new Intl.DateTimeFormat("en-CA", {
