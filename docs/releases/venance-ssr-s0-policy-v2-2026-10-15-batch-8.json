@@ -1,0 +1,2459 @@
+{
+  "venance": {
+    "runs": 10,
+    "codeFingerprint": "ed2223646726865317663e5dad0a385fed2489e9e1cda0c42ef6aad4a648a196",
+    "policy": "balanced",
+    "build": null,
+    "externalDiamonds": 0,
+    "balanceVersion": "3.1.0",
+    "actualStatProfile": {
+      "balanceVersion": "3.1.0",
+      "statProfile": {
+        "version": 3,
+        "masteryVersion": 1,
+        "classKey": "venance",
+        "core": {
+          "str": 10,
+          "dex": 14,
+          "vit": 24,
+          "ene": 40,
+          "baseHp": 40,
+          "baseMana": 3,
+          "baseRes": 10,
+          "baseCrit": 0.04,
+          "strWeight": 0.7
+        },
+        "initialVitHp": 3,
+        "mastery": {
+          "name": "Astral Conduction",
+          "accuracy": 1.2,
+          "evasion": 0.2,
+          "crit": 0.0003,
+          "critCap": 0.35,
+          "evasionCap": 0.3,
+          "hp": 3.3,
+          "strDefense": 0.15,
+          "vitDefense": 0.18,
+          "res": 0.25,
+          "mana": 0.05,
+          "physicalPower": 1,
+          "spellPower": 1.4,
+          "vitPhysical": 0,
+          "enePhysical": 0,
+          "vitSpell": 0
+        },
+        "powers": {
+          "basePower": 1.8,
+          "attributePower": 1,
+          "equipmentPower": 1,
+          "skillPower": 1
+        }
+      }
+    },
+    "actualBossDamageProfile": {
+      "version": 1,
+      "classKey": "venance",
+      "playerDamage": 2
+    },
+    "actualVenanceProfile": {
+      "version": 1,
+      "rarity": "SSR",
+      "duration": 3,
+      "coefficient": 2.2,
+      "sigilHits": 2,
+      "sigilHeal": 0.05,
+      "firstBarrier": 0,
+      "thirdMultiplier": 1.35,
+      "thirdBarrier": 0.1,
+      "pulse": 0,
+      "hpMultiplier": 1,
+      "damageMultiplier": 1
+    },
+    "venancePolicyVersion": 2,
+    "actionCounts": {
+      "skill": 3285,
+      "attack": 10409,
+      "defend": 2450,
+      "upgrade_ene": 860,
+      "skip": 653,
+      "next": 667,
+      "upgrade_vit": 850,
+      "potion": 619,
+      "paradox_unstable_soul": 71,
+      "inspect": 1551,
+      "open": 1183,
+      "paradox_inverted_armor": 88,
+      "flee": 50,
+      "paradox_hunger": 100,
+      "leave": 368,
+      "buy_0": 46,
+      "duel_stat": 14,
+      "hand_0": 14,
+      "boss_akarat__target_Wrath": 6,
+      "boss_pick_0": 63,
+      "paradox_blood_pact": 75,
+      "event_sacrifice_payout": 13,
+      "contract_defend": 16,
+      "sever_soul_drain": 34,
+      "boss_athulua__zone2": 6,
+      "event_heal": 18,
+      "event_skip": 85,
+      "prophecy_arcane": 10,
+      "purifier_select_hollow_crown": 4,
+      "event_cleanse": 25,
+      "bribe": 112,
+      "boss_control__frequency1": 3,
+      "boss_necrobot__target_Weapon": 3,
+      "boss_necrobot__target_Barrier": 3,
+      "boss_necrobot__target_boss": 3,
+      "event_catch": 15,
+      "boss_athulua__zone0": 7,
+      "purifier_select_goblins_debt": 2,
+      "boss_azmodan__reflect": 1,
+      "boss_justicar__verdict1": 3,
+      "event_mirror_guard": 12,
+      "enter_kabraxis": 9,
+      "boss_kabraxis__purify_seal": 2,
+      "door_light": 14,
+      "boss_manoruk__target_Ritualist": 12,
+      "boss_astrogha__target_Brood": 4,
+      "boss_buyard__shrink": 6,
+      "boss_buyard__expand": 2,
+      "boss_sescheron__rune1": 3,
+      "boss_sescheron__rune2": 3,
+      "boss_sescheron__rune0": 4,
+      "boss_jitan__gate1": 9,
+      "boss_jitan__gate0": 11,
+      "event_rescue": 10,
+      "boss_belial__lie0": 2,
+      "boss_quov__ward1": 8,
+      "boss_quov__ward0": 5,
+      "event_class": 11,
+      "boss_lucion__command1": 4,
+      "boss_lucion__command0": 5,
+      "chest_red": 12,
+      "boss_control__frequency0": 1,
+      "boss_dark_star_dragon__cover0": 6,
+      "boss_dark_star_dragon__cover1": 3,
+      "boss_belial__lie1": 4,
+      "boss_anomaly__stabilize0": 11,
+      "boss_anomaly__stabilize1": 11,
+      "boss_anomaly__stabilize2": 11,
+      "boss_anomaly__overload": 11,
+      "boss_assur__sigil0": 1,
+      "boss_assur__sigil1": 1,
+      "boss_assur__sigil2": 1,
+      "boss_assur__purify": 1,
+      "boss_inarius__pull": 7,
+      "purifier_select_soul_leash": 4,
+      "boss_atanna__erase2": 5,
+      "boss_baal__purify1": 1,
+      "boss_baal__purify2": 1,
+      "boss_baal__purify0": 1,
+      "boss_quov__ward2": 5,
+      "purifier_select_void_heart": 1,
+      "boss_zakarum__halo_Might": 4,
+      "purifier_select_bleeding_star": 1,
+      "boss_bartuc__cut": 4,
+      "boss_lazarus__target_Drain": 8,
+      "boss_lazarus__target_Tremor": 8,
+      "boss_lucion__command2": 3,
+      "boss_bul_kathos__clash1": 3,
+      "boss_jitan__gate2": 7,
+      "boss_athulua__zone1": 6,
+      "purifier_select_black_sun": 2,
+      "purifier_select_null_idol": 4,
+      "boss_samael__seal_douse": 11,
+      "boss_xazax__portal_take": 16,
+      "boss_deimoss__target_Hunger": 1,
+      "boss_deimoss__target_Silence": 1,
+      "boss_deimoss__core_burn": 2,
+      "boss_deimoss__plane1": 1,
+      "purifier_select_blood_pact": 2,
+      "purifier_select_glass_cannon": 1,
+      "boss_inarius__protect": 6,
+      "boss_belial__lie2": 1,
+      "boss_giyua__nest_seal": 2,
+      "boss_control__frequency2": 1,
+      "purifier_select_ashen_wings": 1,
+      "boss_xazax__portal_enter": 2,
+      "boss_death_projector__zone1": 4,
+      "boss_death_projector__zone2": 2,
+      "boss_death_projector__zone0": 1,
+      "boss_lazarus__target_Restoration": 1,
+      "boss_greater_riftwalker__position": 5,
+      "purifier_select_mimics_promise": 1,
+      "purifier_select_schrodingers_armor": 2,
+      "boss_atanna__erase1": 1
+    },
+    "interruptedThirdHits": 13,
+    "elapsedSeconds": 285.267,
+    "runOffset": 80,
+    "soulLevel": 0,
+    "soulTuning": {
+      "version": 1,
+      "bossMultipliers": {
+        "amazon": 3.4,
+        "barbarian": 1.55,
+        "assassin": 1.62,
+        "sorceress": 1.4,
+        "druid": 1.5,
+        "necromancer": 2.6,
+        "paladin": 1.4,
+        "venance": 1
+      }
+    },
+    "balanceProfile": {
+      "power": 1.8
+    },
+    "revealedChestAction": "sell",
+    "backend": "memory",
+    "resumeValidation": "once_per_run",
+    "deathBosses": {
+      "sescheron": 2,
+      "astrogha": 1,
+      "butcher": 1,
+      "deimoss": 1,
+      "atanna": 1,
+      "athulua": 1,
+      "xazax": 1,
+      "manoruk": 1,
+      "inarius": 1
+    },
+    "deathFloors": {
+      "650": 1,
+      "750": 2,
+      "850": 2,
+      "900": 1,
+      "950": 3,
+      "999": 1
+    },
+    "runOutcomes": [
+      {
+        "run": 80,
+        "floor": 950,
+        "cleared": 949,
+        "status": "died",
+        "cause": "Sescheron's Destroyer gây 703 DMG vật lý, khiến HP về 0.",
+        "hp": 0,
+        "maxHp": 3099,
+        "mana": 2,
+        "potions": 0,
+        "boss": "sescheron",
+        "encounter": "combat",
+        "recentActions": [
+          {
+            "action": "attack",
+            "floor": 950,
+            "hp": 2217,
+            "maxHp": 3099,
+            "mana": 0,
+            "potions": 1,
+            "enemyHp": 19268,
+            "incoming": {
+              "low": 596,
+              "high": 1073,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.9451914444151043
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 2,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "sescheron",
+              "phase": 1,
+              "round": 18,
+              "bloodlust": 0
+            },
+            "afterHp": 1224,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 7553 DMG.\nBạn nhận 993 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 82 lên Sescheron's Destroyer."
+          },
+          {
+            "action": "potion",
+            "floor": 950,
+            "hp": 1224,
+            "maxHp": 3099,
+            "mana": 0,
+            "potions": 1,
+            "enemyHp": 11633,
+            "incoming": {
+              "low": 596,
+              "high": 1073,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.9451914444151043
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 1,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "sescheron",
+              "phase": 1,
+              "round": 19,
+              "bloodlust": 0
+            },
+            "afterHp": 1916,
+            "log": "<:potion:1555983060548194344> Hồi 1549 <:HP:1555983046262394890> HP · ⏳ **Tiết kiệm bình:** giữ lại bình; quái còn sống phản công.\nBạn nhận 857 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 82 lên Sescheron's Destroyer."
+          },
+          {
+            "action": "potion",
+            "floor": 950,
+            "hp": 1916,
+            "maxHp": 3099,
+            "mana": 0,
+            "potions": 1,
+            "enemyHp": 11551,
+            "incoming": {
+              "low": 596,
+              "high": 1073,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.9451914444151043
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "sescheron",
+              "phase": 1,
+              "round": 20,
+              "bloodlust": 0
+            },
+            "afterHp": 2473,
+            "log": "<:potion:1555983060548194344> Hồi 1183 <:HP:1555983046262394890> HP; quái còn sống phản công.\nBạn nhận 626 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 82 lên Sescheron's Destroyer."
+          },
+          {
+            "action": "attack",
+            "floor": 950,
+            "hp": 2473,
+            "maxHp": 3099,
+            "mana": 0,
+            "potions": 0,
+            "enemyHp": 11469,
+            "incoming": {
+              "low": 596,
+              "high": 1073,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.9451914444151043
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "sescheron",
+              "phase": 1,
+              "round": 21,
+              "bloodlust": 0
+            },
+            "afterHp": 1614,
+            "log": "<:PHYS:1555983056488108153> Tấn công: 933 DMG · 💥 Critical.\n🦇 Hút MP: 1 → 2 <:MANA:1555983051811594240> \nBạn nhận 859 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 82 lên Sescheron's Destroyer."
+          },
+          {
+            "action": "boss_sescheron__rune2",
+            "floor": 950,
+            "hp": 1614,
+            "maxHp": 3099,
+            "mana": 2,
+            "potions": 0,
+            "enemyHp": 10454,
+            "incoming": {
+              "low": 596,
+              "high": 1073,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.9451914444151043
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "sescheron",
+              "phase": 1,
+              "round": 22,
+              "bloodlust": 0
+            },
+            "afterHp": 703,
+            "log": "Nhập ○ · 1 lượt\nBạn nhận 911 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 82 lên Sescheron's Destroyer."
+          },
+          {
+            "action": "boss_sescheron__rune0",
+            "floor": 950,
+            "hp": 703,
+            "maxHp": 3099,
+            "mana": 2,
+            "potions": 0,
+            "enemyHp": 10372,
+            "incoming": {
+              "low": 596,
+              "high": 1073,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.9451914444151043
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "sescheron",
+              "phase": 1,
+              "round": 23,
+              "bloodlust": 0
+            },
+            "afterHp": 0,
+            "log": "Nhập ◇ · 1 lượt\nBạn nhận 703 DMG.\n☠️ Tử trận: Sescheron's Destroyer gây 703 DMG vật lý, khiến HP về 0."
+          }
+        ]
+      },
+      {
+        "run": 81,
+        "floor": 850,
+        "cleared": 849,
+        "status": "died",
+        "cause": "Astrogha gây 418 DMG phép, khiến HP về 0.",
+        "hp": 0,
+        "maxHp": 2414,
+        "mana": 1,
+        "potions": 0,
+        "boss": "astrogha",
+        "encounter": "combat",
+        "recentActions": [
+          {
+            "action": "potion",
+            "floor": 850,
+            "hp": 1261,
+            "maxHp": 2414,
+            "mana": 1,
+            "potions": 1,
+            "enemyHp": 18354,
+            "incoming": {
+              "low": 345,
+              "high": 623,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 3,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "astrogha",
+              "phase": 1,
+              "round": 7,
+              "bloodlust": 0
+            },
+            "afterHp": 1979,
+            "log": "<:potion:1555983060548194344> Hồi 1153 <:HP:1555983046262394890> HP; quái còn sống phản công.\nBạn nhận 435 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 80 lên Astrogha."
+          },
+          {
+            "action": "attack",
+            "floor": 850,
+            "hp": 1979,
+            "maxHp": 2414,
+            "mana": 1,
+            "potions": 0,
+            "enemyHp": 18274,
+            "incoming": {
+              "low": 345,
+              "high": 623,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 2,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "astrogha",
+              "phase": 1,
+              "round": 8,
+              "bloodlust": 0
+            },
+            "afterHp": 1481,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 5402 DMG.\nBạn nhận 498 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 80 lên Astrogha."
+          },
+          {
+            "action": "attack",
+            "floor": 850,
+            "hp": 1481,
+            "maxHp": 2414,
+            "mana": 1,
+            "potions": 0,
+            "enemyHp": 16898,
+            "incoming": {
+              "low": 345,
+              "high": 623,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 1,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "astrogha",
+              "phase": 1,
+              "round": 9,
+              "bloodlust": 0
+            },
+            "afterHp": 1004,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 5794 DMG.\n✨ Ấn Hồi lưu sẵn sàng: Phòng thủ để hồi 5% <:HP:1555983046262394890>.\nBạn nhận 477 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 80 lên Astrogha."
+          },
+          {
+            "action": "defend",
+            "floor": 850,
+            "hp": 1004,
+            "maxHp": 2414,
+            "mana": 1,
+            "potions": 0,
+            "enemyHp": 15282,
+            "incoming": {
+              "low": 345,
+              "high": 623,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 2,
+              "ready": true,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "astrogha",
+              "phase": 1,
+              "round": 10,
+              "bloodlust": 0
+            },
+            "afterHp": 867,
+            "log": "<:DEF:1555983042093260891> Phòng thủ và hồi 2 <:MANA:1555983051811594240> MP.\n✨ Hồi lưu: <:HP:1555983046262394890> hồi 120 HP.\nBạn nhận 257 DMG (đã phòng thủ).\n🌵 **Gai** + ↩️ **Phản đòn**: phản <:PHYS:1555983056488108153> **DMG vật lý** 80 lên Astrogha."
+          },
+          {
+            "action": "skill",
+            "floor": 850,
+            "hp": 867,
+            "maxHp": 2414,
+            "mana": 3,
+            "potions": 0,
+            "enemyHp": 15202,
+            "incoming": {
+              "low": 320,
+              "high": 577,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 2,
+              "ready": false,
+              "sigilUsed": true,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "astrogha",
+              "phase": 1,
+              "round": 11,
+              "bloodlust": 0
+            },
+            "afterHp": 418,
+            "log": "🔮 Astral Armament: cường hóa 3 hành động chiến đấu tiếp theo, giữ qua phòng; đánh thường thành phép ×2.2, không hồi <:MANA:1555983051811594240>.\n<:HP:1555983046262394890> Chi phí Skill: 867 → 795 HP cho bạn (−72).\nBạn nhận 377 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 80 lên Astrogha."
+          },
+          {
+            "action": "attack",
+            "floor": 850,
+            "hp": 418,
+            "maxHp": 2414,
+            "mana": 1,
+            "potions": 0,
+            "enemyHp": 15122,
+            "incoming": {
+              "low": 320,
+              "high": 577,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 3,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "astrogha",
+              "phase": 1,
+              "round": 12,
+              "bloodlust": 0
+            },
+            "afterHp": 0,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 6705 DMG.\nBạn nhận 418 DMG.\n☠️ Tử trận: Astrogha gây 418 DMG phép, khiến HP về 0."
+          }
+        ]
+      },
+      {
+        "run": 82,
+        "floor": 750,
+        "cleared": 749,
+        "status": "died",
+        "cause": "The Butcher gây 1509 DMG vật lý, khiến HP về 0.",
+        "hp": 0,
+        "maxHp": 1853,
+        "mana": 2.799999999999999,
+        "potions": 9,
+        "boss": "butcher",
+        "encounter": "combat",
+        "recentActions": [
+          {
+            "action": "defend",
+            "floor": 750,
+            "hp": 1081,
+            "maxHp": 1853,
+            "mana": 2.7999999999999985,
+            "potions": 10,
+            "enemyHp": 16734,
+            "incoming": {
+              "low": 348,
+              "high": 627,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.8604725565013208
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 3,
+              "ready": true,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "butcher",
+              "phase": 1,
+              "round": 0,
+              "distance": 2,
+              "bloodlust": 0
+            },
+            "afterHp": 747,
+            "log": "<:DEF:1555983042093260891> Phòng thủ và hồi 2 <:MANA:1555983051811594240> MP.\n✨ Hồi lưu: <:HP:1555983046262394890> hồi 63 HP.\nBạn nhận 397 DMG (đã phòng thủ).\n🌵 **Gai** + ↩️ **Phản đòn**: phản <:PHYS:1555983056488108153> **DMG vật lý** 104 lên The Butcher."
+          },
+          {
+            "action": "potion",
+            "floor": 750,
+            "hp": 747,
+            "maxHp": 1853,
+            "mana": 4.799999999999999,
+            "potions": 10,
+            "enemyHp": 16734,
+            "incoming": {
+              "low": 348,
+              "high": 627,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.8604725565013208
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 3,
+              "ready": false,
+              "sigilUsed": true,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "butcher",
+              "phase": 1,
+              "round": 1,
+              "distance": 1,
+              "bloodlust": 0
+            },
+            "afterHp": 1629,
+            "log": "<:potion:1555983060548194344> Hồi 882 <:HP:1555983046262394890> HP · ⏳ **Tiết kiệm bình:** giữ lại bình; quái còn sống phản công.\n💨 Quái đánh trượt."
+          },
+          {
+            "action": "skill",
+            "floor": 750,
+            "hp": 1629,
+            "maxHp": 1853,
+            "mana": 4.799999999999999,
+            "potions": 10,
+            "enemyHp": 16734,
+            "incoming": {
+              "low": 400,
+              "high": 721,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.8604725565013208
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 3,
+              "ready": false,
+              "sigilUsed": true,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "butcher",
+              "phase": 1,
+              "round": 2,
+              "distance": 0,
+              "bloodlust": 0
+            },
+            "afterHp": 1180,
+            "log": "🔮 Astral Armament: cường hóa 3 hành động chiến đấu tiếp theo, giữ qua phòng; đánh thường thành phép ×2.2, không hồi <:MANA:1555983051811594240>.\nBạn nhận 449 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 85 lên The Butcher."
+          },
+          {
+            "action": "attack",
+            "floor": 750,
+            "hp": 1180,
+            "maxHp": 1853,
+            "mana": 2.799999999999999,
+            "potions": 10,
+            "enemyHp": 16734,
+            "incoming": {
+              "low": 442,
+              "high": 796,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.8604725565013208
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 3,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "butcher",
+              "phase": 1,
+              "round": 3,
+              "distance": 0,
+              "bloodlust": 1
+            },
+            "afterHp": 627,
+            "log": "\n<:DEF:1555983042093260891> Lá chắn đá đã vỡ: 🛡️ **DEF/RES quái giảm 16%.**\n<:ELE:1555983043997597816> Tấn công cường hóa: 7908 DMG.\nBạn nhận 553 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 104 lên The Butcher."
+          },
+          {
+            "action": "potion",
+            "floor": 750,
+            "hp": 627,
+            "maxHp": 1853,
+            "mana": 2.799999999999999,
+            "potions": 10,
+            "enemyHp": 10792,
+            "incoming": {
+              "low": 483,
+              "high": 871,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.8604725565013208
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 2,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "butcher",
+              "phase": 1,
+              "round": 4,
+              "distance": 0,
+              "bloodlust": 2
+            },
+            "afterHp": 1509,
+            "log": "<:potion:1555983060548194344> Hồi 882 <:HP:1555983046262394890> HP; quái còn sống phản công.\n💨 Quái đánh trượt."
+          },
+          {
+            "action": "attack",
+            "floor": 750,
+            "hp": 1509,
+            "maxHp": 1853,
+            "mana": 2.799999999999999,
+            "potions": 9,
+            "enemyHp": 10792,
+            "incoming": {
+              "low": 525,
+              "high": 947,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.8604725565013208
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 1,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "butcher",
+              "phase": 1,
+              "round": 5,
+              "distance": 0,
+              "bloodlust": 3
+            },
+            "afterHp": 0,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 8352 DMG.\n✨ Ấn Hồi lưu sẵn sàng: Phòng thủ để hồi 5% <:HP:1555983046262394890>.\n💥 Critical! Bạn nhận 1509 DMG.\n☠️ Tử trận: The Butcher gây 1509 DMG vật lý, khiến HP về 0."
+          }
+        ]
+      },
+      {
+        "run": 83,
+        "floor": 999,
+        "cleared": 998,
+        "status": "died",
+        "cause": "Deimoss the Fleshweaver gây 321 DMG vật lý, khiến HP về 0.",
+        "hp": 0,
+        "maxHp": 3358,
+        "mana": 1,
+        "potions": 0,
+        "boss": "deimoss",
+        "encounter": "combat",
+        "recentActions": [
+          {
+            "action": "boss_deimoss__core_burn",
+            "floor": 999,
+            "hp": 1325,
+            "maxHp": 3358,
+            "mana": 2,
+            "potions": 0,
+            "enemyHp": 3291,
+            "incoming": {
+              "low": 471,
+              "high": 849,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 1,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "deimoss",
+              "phase": 2,
+              "round": 5,
+              "bloodlust": 0
+            },
+            "afterHp": 1325,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 7472 DMG.\nBạn nhận 1424 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 101 lên Deimoss the Fleshweaver.\nThiêu hủy Core −1 MP · không tốn lượt · Core đã xử lý\nThiêu hủy Core −1 MP · không tốn lượt · Core đã xử lý"
+          },
+          {
+            "action": "attack",
+            "floor": 999,
+            "hp": 1325,
+            "maxHp": 3358,
+            "mana": 1,
+            "potions": 0,
+            "enemyHp": 3291,
+            "incoming": {
+              "low": 471,
+              "high": 849,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 1,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "deimoss",
+              "phase": 2,
+              "round": 5,
+              "bloodlust": 0
+            },
+            "afterHp": 1325,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 10377 DMG.\n✨ Ấn Hồi lưu sẵn sàng: Phòng thủ để hồi 5% <:HP:1555983046262394890>.\n🌀 Deimoss · Phase 3/3. Không phản công khi chuyển phase."
+          },
+          {
+            "action": "boss_deimoss__plane1",
+            "floor": 999,
+            "hp": 1325,
+            "maxHp": 3358,
+            "mana": 1,
+            "potions": 0,
+            "enemyHp": 15026,
+            "incoming": {
+              "low": 606,
+              "high": 1092,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.9443431907602488
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 2,
+              "ready": true,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "deimoss",
+              "phase": 3,
+              "round": 0,
+              "bloodlust": 0
+            },
+            "afterHp": 1325,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 10377 DMG.\n✨ Ấn Hồi lưu sẵn sàng: Phòng thủ để hồi 5% <:HP:1555983046262394890>.\n🌀 Deimoss · Phase 3/3. Không phản công khi chuyển phase."
+          },
+          {
+            "action": "defend",
+            "floor": 999,
+            "hp": 1325,
+            "maxHp": 3358,
+            "mana": 1,
+            "potions": 0,
+            "enemyHp": 15026,
+            "incoming": {
+              "low": 455,
+              "high": 819,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.9443431907602488
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 2,
+              "ready": true,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "deimoss",
+              "phase": 3,
+              "round": 0,
+              "bloodlust": 0
+            },
+            "afterHp": 1169,
+            "log": "<:DEF:1555983042093260891> Phòng thủ và hồi 2 <:MANA:1555983051811594240> MP.\n✨ Hồi lưu: <:HP:1555983046262394890> hồi 167 HP.\nBạn nhận 323 DMG (đã phòng thủ).\n🌵 **Gai** + ↩️ **Phản đòn**: phản <:PHYS:1555983056488108153> **DMG vật lý** 101 lên Deimoss the Fleshweaver."
+          },
+          {
+            "action": "skill",
+            "floor": 999,
+            "hp": 1169,
+            "maxHp": 3358,
+            "mana": 3,
+            "potions": 0,
+            "enemyHp": 14925,
+            "incoming": {
+              "low": 589,
+              "high": 1061,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 2,
+              "ready": false,
+              "sigilUsed": true,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "deimoss",
+              "phase": 3,
+              "round": 1,
+              "bloodlust": 0
+            },
+            "afterHp": 321,
+            "log": "🔮 Astral Armament: cường hóa 3 hành động chiến đấu tiếp theo, giữ qua phòng; đánh thường thành phép ×2.2, không hồi <:MANA:1555983051811594240>.\nBạn nhận 848 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 101 lên Deimoss the Fleshweaver."
+          },
+          {
+            "action": "attack",
+            "floor": 999,
+            "hp": 321,
+            "maxHp": 3358,
+            "mana": 1,
+            "potions": 0,
+            "enemyHp": 14824,
+            "incoming": {
+              "low": 455,
+              "high": 819,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.9443431907602488
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 3,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "deimoss",
+              "phase": 3,
+              "round": 2,
+              "bloodlust": 0
+            },
+            "afterHp": 0,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 11871 DMG.\nBạn nhận 321 DMG.\n☠️ Tử trận: Deimoss the Fleshweaver gây 321 DMG vật lý, khiến HP về 0."
+          }
+        ]
+      },
+      {
+        "run": 84,
+        "floor": 950,
+        "cleared": 949,
+        "status": "died",
+        "cause": "Atanna Khan gây 1135 DMG vật lý, khiến HP về 0.",
+        "hp": 0,
+        "maxHp": 3297,
+        "mana": 0,
+        "potions": 0,
+        "boss": "atanna",
+        "encounter": "combat",
+        "recentActions": [
+          {
+            "action": "attack",
+            "floor": 950,
+            "hp": 2126,
+            "maxHp": 3297,
+            "mana": 0,
+            "potions": 1,
+            "enemyHp": 30194,
+            "incoming": {
+              "low": 562,
+              "high": 1013,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 2,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "atanna",
+              "phase": 1,
+              "round": 5,
+              "bloodlust": 0
+            },
+            "afterHp": 1299,
+            "log": "\n<:DEF:1555983042093260891> Lá chắn đá đã vỡ: 🛡️ **DEF/RES quái giảm 16%.**\n<:ELE:1555983043997597816> Tấn công cường hóa: 5399 DMG.\nBạn nhận 827 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 91 lên Atanna Khan."
+          },
+          {
+            "action": "potion",
+            "floor": 950,
+            "hp": 1299,
+            "maxHp": 3297,
+            "mana": 0,
+            "potions": 1,
+            "enemyHp": 29775,
+            "incoming": {
+              "low": 668,
+              "high": 1203,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.964138303619665
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 1,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "atanna",
+              "phase": 1,
+              "round": 6,
+              "bloodlust": 0
+            },
+            "afterHp": 3297,
+            "log": "<:potion:1555983060548194344> Hồi 1998 <:HP:1555983046262394890> HP; quái còn sống phản công.\n💨 Quái đánh trượt."
+          },
+          {
+            "action": "defend",
+            "floor": 950,
+            "hp": 3297,
+            "maxHp": 3297,
+            "mana": 0,
+            "potions": 0,
+            "enemyHp": 29775,
+            "incoming": {
+              "low": 562,
+              "high": 1013,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "atanna",
+              "phase": 1,
+              "round": 7,
+              "bloodlust": 0
+            },
+            "afterHp": 2841,
+            "log": "<:DEF:1555983042093260891> Phòng thủ và hồi 2 <:MANA:1555983051811594240> MP.\nBạn nhận 456 DMG (đã phòng thủ).\n🌵 **Gai** + ↩️ **Phản đòn**: phản <:PHYS:1555983056488108153> **DMG vật lý** 91 lên Atanna Khan."
+          },
+          {
+            "action": "skill",
+            "floor": 950,
+            "hp": 2841,
+            "maxHp": 3297,
+            "mana": 2,
+            "potions": 0,
+            "enemyHp": 29684,
+            "incoming": {
+              "low": 668,
+              "high": 1203,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.964138303619665
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "atanna",
+              "phase": 1,
+              "round": 8,
+              "bloodlust": 0
+            },
+            "afterHp": 1925,
+            "log": "🔮 Astral Armament: cường hóa 3 hành động chiến đấu tiếp theo, giữ qua phòng; đánh thường thành phép ×2.2, không hồi <:MANA:1555983051811594240>.\nBạn nhận 916 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 91 lên Atanna Khan."
+          },
+          {
+            "action": "attack",
+            "floor": 950,
+            "hp": 1925,
+            "maxHp": 3297,
+            "mana": 0,
+            "potions": 0,
+            "enemyHp": 29593,
+            "incoming": {
+              "low": 562,
+              "high": 1013,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 3,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "atanna",
+              "phase": 1,
+              "round": 9,
+              "bloodlust": 0
+            },
+            "afterHp": 1135,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 7777 DMG.\nBạn nhận 790 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 91 lên Atanna Khan."
+          },
+          {
+            "action": "attack",
+            "floor": 950,
+            "hp": 1135,
+            "maxHp": 3297,
+            "mana": 0,
+            "potions": 0,
+            "enemyHp": 21725,
+            "incoming": {
+              "low": 668,
+              "high": 1203,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.964138303619665
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 2,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "atanna",
+              "phase": 1,
+              "round": 10,
+              "bloodlust": 0
+            },
+            "afterHp": 0,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 7241 DMG.\n✨ Ấn Hồi lưu sẵn sàng: Phòng thủ để hồi 5% <:HP:1555983046262394890>.\nBạn nhận 1135 DMG.\n☠️ Tử trận: Atanna Khan gây 1135 DMG vật lý, khiến HP về 0."
+          }
+        ]
+      },
+      {
+        "run": 85,
+        "floor": 650,
+        "cleared": 649,
+        "status": "died",
+        "cause": "Sescheron's Destroyer gây 336 DMG vật lý, khiến HP về 0.",
+        "hp": 0,
+        "maxHp": 2047,
+        "mana": 5,
+        "potions": 9,
+        "boss": "sescheron",
+        "encounter": "combat",
+        "recentActions": [
+          {
+            "action": "attack",
+            "floor": 650,
+            "hp": 1430,
+            "maxHp": 2047,
+            "mana": 3,
+            "potions": 10,
+            "enemyHp": 7815,
+            "incoming": {
+              "low": 257,
+              "high": 463,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.8729883138564273
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 3,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "sescheron",
+              "phase": 1,
+              "round": 3,
+              "bloodlust": 0
+            },
+            "afterHp": 1075,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 3302 DMG.\nBạn nhận 355 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 51 lên Sescheron's Destroyer."
+          },
+          {
+            "action": "potion",
+            "floor": 650,
+            "hp": 1075,
+            "maxHp": 2047,
+            "mana": 3,
+            "potions": 10,
+            "enemyHp": 4462,
+            "incoming": {
+              "low": 257,
+              "high": 463,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.8729883138564273
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 2,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "sescheron",
+              "phase": 1,
+              "round": 4,
+              "bloodlust": 0
+            },
+            "afterHp": 1620,
+            "log": "<:potion:1555983060548194344> Hồi 972 <:HP:1555983046262394890> HP; quái còn sống phản công.\nBạn nhận 427 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 51 lên Sescheron's Destroyer."
+          },
+          {
+            "action": "attack",
+            "floor": 650,
+            "hp": 1620,
+            "maxHp": 2047,
+            "mana": 3,
+            "potions": 9,
+            "enemyHp": 4411,
+            "incoming": {
+              "low": 257,
+              "high": 463,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.8729883138564273
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 1,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "sescheron",
+              "phase": 1,
+              "round": 5,
+              "bloodlust": 0
+            },
+            "afterHp": 850,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 3268 DMG.\n✨ Ấn Hồi lưu sẵn sàng: Phòng thủ để hồi 5% <:HP:1555983046262394890>.\n💥 Critical! Bạn nhận 770 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 51 lên Sescheron's Destroyer."
+          },
+          {
+            "action": "defend",
+            "floor": 650,
+            "hp": 850,
+            "maxHp": 2047,
+            "mana": 3,
+            "potions": 9,
+            "enemyHp": 1092,
+            "incoming": {
+              "low": 257,
+              "high": 463,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.8729883138564273
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 2,
+              "ready": true,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "sescheron",
+              "phase": 1,
+              "round": 6,
+              "bloodlust": 0
+            },
+            "afterHp": 682,
+            "log": "<:DEF:1555983042093260891> Phòng thủ và hồi 2 <:MANA:1555983051811594240> MP.\n✨ Hồi lưu: <:HP:1555983046262394890> hồi 102 HP.\nBạn nhận 270 DMG (đã phòng thủ).\n🌵 **Gai** + ↩️ **Phản đòn**: phản <:PHYS:1555983056488108153> **DMG vật lý** 51 lên Sescheron's Destroyer."
+          },
+          {
+            "action": "boss_sescheron__rune1",
+            "floor": 650,
+            "hp": 682,
+            "maxHp": 2047,
+            "mana": 5,
+            "potions": 9,
+            "enemyHp": 1041,
+            "incoming": {
+              "low": 257,
+              "high": 463,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.8729883138564273
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 2,
+              "ready": false,
+              "sigilUsed": true,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "sescheron",
+              "phase": 1,
+              "round": 7,
+              "bloodlust": 0
+            },
+            "afterHp": 336,
+            "log": "Nhập △ · 1 lượt\nBạn nhận 346 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 51 lên Sescheron's Destroyer."
+          },
+          {
+            "action": "boss_sescheron__rune0",
+            "floor": 650,
+            "hp": 336,
+            "maxHp": 2047,
+            "mana": 5,
+            "potions": 9,
+            "enemyHp": 990,
+            "incoming": {
+              "low": 257,
+              "high": 463,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.8729883138564273
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 2,
+              "ready": false,
+              "sigilUsed": true,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "sescheron",
+              "phase": 1,
+              "round": 8,
+              "bloodlust": 0
+            },
+            "afterHp": 0,
+            "log": "Nhập ◇ · 1 lượt\nBạn nhận 336 DMG.\n☠️ Tử trận: Sescheron's Destroyer gây 336 DMG vật lý, khiến HP về 0."
+          }
+        ]
+      },
+      {
+        "run": 86,
+        "floor": 950,
+        "cleared": 949,
+        "status": "died",
+        "cause": "Athulua gây 173 DMG vật lý, khiến HP về 0.",
+        "hp": 0,
+        "maxHp": 2981,
+        "mana": 0,
+        "potions": 0,
+        "boss": "athulua",
+        "encounter": "combat",
+        "recentActions": [
+          {
+            "action": "attack",
+            "floor": 950,
+            "hp": 1949,
+            "maxHp": 2981,
+            "mana": 0,
+            "potions": 1,
+            "enemyHp": 23440,
+            "incoming": {
+              "low": 603,
+              "high": 1086,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.9820689655172413
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 2,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "athulua",
+              "phase": 1,
+              "round": 15,
+              "bloodlust": 0
+            },
+            "afterHp": 1029,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 6387 DMG.\nBạn nhận 920 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 79 lên Athulua."
+          },
+          {
+            "action": "potion",
+            "floor": 950,
+            "hp": 1029,
+            "maxHp": 2981,
+            "mana": 0,
+            "potions": 1,
+            "enemyHp": 16974,
+            "incoming": {
+              "low": 603,
+              "high": 1086,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.9820689655172413
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 1,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "athulua",
+              "phase": 1,
+              "round": 16,
+              "bloodlust": 0
+            },
+            "afterHp": 1895,
+            "log": "<:potion:1555983060548194344> Hồi 1952 <:HP:1555983046262394890> HP; quái còn sống phản công.\nBạn nhận 1086 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 79 lên Athulua."
+          },
+          {
+            "action": "defend",
+            "floor": 950,
+            "hp": 1895,
+            "maxHp": 2981,
+            "mana": 0,
+            "potions": 0,
+            "enemyHp": 16895,
+            "incoming": {
+              "low": 603,
+              "high": 1086,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.9820689655172413
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "athulua",
+              "phase": 1,
+              "round": 17,
+              "bloodlust": 0
+            },
+            "afterHp": 1324,
+            "log": "<:DEF:1555983042093260891> Phòng thủ và hồi 2 <:MANA:1555983051811594240> MP.\nBạn nhận 571 DMG (đã phòng thủ).\n🌵 **Gai** + ↩️ **Phản đòn**: phản <:PHYS:1555983056488108153> **DMG vật lý** 79 lên Athulua."
+          },
+          {
+            "action": "boss_athulua__zone1",
+            "floor": 950,
+            "hp": 1324,
+            "maxHp": 2981,
+            "mana": 2,
+            "potions": 0,
+            "enemyHp": 16816,
+            "incoming": {
+              "low": 603,
+              "high": 1086,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.9820689655172413
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "athulua",
+              "phase": 1,
+              "round": 18,
+              "bloodlust": 0
+            },
+            "afterHp": 1324,
+            "log": "Sang Giữa · 1 lượt\n✨ Cơ chế đã được xử lý: boss không phản công."
+          },
+          {
+            "action": "skill",
+            "floor": 950,
+            "hp": 1324,
+            "maxHp": 2981,
+            "mana": 2,
+            "potions": 0,
+            "enemyHp": 16816,
+            "incoming": {
+              "low": 694,
+              "high": 1249,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.9820689655172413
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "athulua",
+              "phase": 1,
+              "round": 19,
+              "bloodlust": 0
+            },
+            "afterHp": 173,
+            "log": "🔮 Astral Armament: cường hóa 3 hành động chiến đấu tiếp theo, giữ qua phòng; đánh thường thành phép ×2.2, không hồi <:MANA:1555983051811594240>.\nBạn nhận 1151 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 79 lên Athulua."
+          },
+          {
+            "action": "attack",
+            "floor": 950,
+            "hp": 173,
+            "maxHp": 2981,
+            "mana": 0,
+            "potions": 0,
+            "enemyHp": 16737,
+            "incoming": {
+              "low": 694,
+              "high": 1249,
+              "magic": false,
+              "critChance": 0.06,
+              "chance": 0.9820689655172413
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 3,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "athulua",
+              "phase": 1,
+              "round": 20,
+              "bloodlust": 0
+            },
+            "afterHp": 0,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 7703 DMG.\nBạn nhận 173 DMG.\n☠️ Tử trận: Athulua gây 173 DMG vật lý, khiến HP về 0."
+          }
+        ]
+      },
+      {
+        "run": 87,
+        "floor": 750,
+        "cleared": 749,
+        "status": "died",
+        "cause": "Xazax gây 326 DMG phép, khiến HP về 0.",
+        "hp": 0,
+        "maxHp": 2395,
+        "mana": 0.40000000000000435,
+        "potions": 0,
+        "boss": "xazax",
+        "encounter": "combat",
+        "recentActions": [
+          {
+            "action": "boss_xazax__portal_take",
+            "floor": 750,
+            "hp": 1456,
+            "maxHp": 2395,
+            "mana": 2.0000000000000044,
+            "potions": 0,
+            "enemyHp": 10471,
+            "incoming": {
+              "low": 299,
+              "high": 540,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "xazax",
+              "phase": 1,
+              "round": 30,
+              "bloodlust": 0
+            },
+            "afterHp": 1064,
+            "log": "Chiếm Portal · 1 lượt · 653 DMG xuyên RES\nBạn nhận 392 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 76 lên Xazax."
+          },
+          {
+            "action": "defend",
+            "floor": 750,
+            "hp": 1064,
+            "maxHp": 2395,
+            "mana": 2.0000000000000044,
+            "potions": 0,
+            "enemyHp": 9818,
+            "incoming": {
+              "low": 270,
+              "high": 487,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "xazax",
+              "phase": 1,
+              "round": 31,
+              "bloodlust": 0
+            },
+            "afterHp": 875,
+            "log": "<:DEF:1555983042093260891> Phòng thủ và hồi 2 <:MANA:1555983051811594240> MP.\nBạn nhận 189 DMG (đã phòng thủ).\n🌵 **Gai** + ↩️ **Phản đòn**: phản <:PHYS:1555983056488108153> **DMG vật lý** 87 lên Xazax."
+          },
+          {
+            "action": "boss_xazax__portal_enter",
+            "floor": 750,
+            "hp": 875,
+            "maxHp": 2395,
+            "mana": 4.000000000000004,
+            "potions": 0,
+            "enemyHp": 9802,
+            "incoming": {
+              "low": 270,
+              "high": 487,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "xazax",
+              "phase": 1,
+              "round": 32,
+              "bloodlust": 0
+            },
+            "afterHp": 875,
+            "log": "Bước vào Portal · 1 lượt\n✨ Cơ chế đã được xử lý: boss không phản công."
+          },
+          {
+            "action": "boss_xazax__portal_enter",
+            "floor": 750,
+            "hp": 875,
+            "maxHp": 2395,
+            "mana": 4.000000000000004,
+            "potions": 0,
+            "enemyHp": 9802,
+            "incoming": {
+              "low": 333,
+              "high": 599,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "xazax",
+              "phase": 1,
+              "round": 33,
+              "bloodlust": 0
+            },
+            "afterHp": 875,
+            "log": "Bước vào Portal · 1 lượt\n✨ Cơ chế đã được xử lý: boss không phản công."
+          },
+          {
+            "action": "skill",
+            "floor": 750,
+            "hp": 875,
+            "maxHp": 2395,
+            "mana": 4.000000000000004,
+            "potions": 0,
+            "enemyHp": 9802,
+            "incoming": {
+              "low": 297,
+              "high": 535,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "xazax",
+              "phase": 1,
+              "round": 34,
+              "bloodlust": 0
+            },
+            "afterHp": 326,
+            "log": "🔮 Astral Armament: cường hóa 3 hành động chiến đấu tiếp theo, giữ qua phòng; đánh thường thành phép ×2.2, không hồi <:MANA:1555983051811594240>.\n<:HP:1555983046262394890> Chi phí Skill: 875 → 761 HP cho bạn (−114).\nBạn nhận 435 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 87 lên Xazax."
+          },
+          {
+            "action": "attack",
+            "floor": 750,
+            "hp": 326,
+            "maxHp": 2395,
+            "mana": 0.40000000000000435,
+            "potions": 0,
+            "enemyHp": 9715,
+            "incoming": {
+              "low": 297,
+              "high": 535,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 3,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "xazax",
+              "phase": 1,
+              "round": 35,
+              "bloodlust": 0
+            },
+            "afterHp": 0,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 9071 DMG.\nBạn nhận 326 DMG.\n☠️ Tử trận: Xazax gây 326 DMG phép, khiến HP về 0."
+          }
+        ]
+      },
+      {
+        "run": 88,
+        "floor": 900,
+        "cleared": 899,
+        "status": "died",
+        "cause": "Manoruk gây 321 DMG phép, khiến HP về 0.",
+        "hp": 0,
+        "maxHp": 2958,
+        "mana": 0,
+        "potions": 0,
+        "boss": "manoruk",
+        "encounter": "combat",
+        "recentActions": [
+          {
+            "action": "potion",
+            "floor": 900,
+            "hp": 1071,
+            "maxHp": 2958,
+            "mana": 0,
+            "potions": 1,
+            "enemyHp": 15024,
+            "incoming": {
+              "low": 380,
+              "high": 685,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 2,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "manoruk",
+              "phase": 1,
+              "round": 16,
+              "bloodlust": 0
+            },
+            "afterHp": 2371,
+            "log": "<:potion:1555983060548194344> Hồi 1887 <:HP:1555983046262394890> HP; quái còn sống phản công.\nBạn nhận 587 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 81 lên Manoruk."
+          },
+          {
+            "action": "attack",
+            "floor": 900,
+            "hp": 2371,
+            "maxHp": 2958,
+            "mana": 0,
+            "potions": 0,
+            "enemyHp": 14943,
+            "incoming": {
+              "low": 380,
+              "high": 685,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 1,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "manoruk",
+              "phase": 1,
+              "round": 17,
+              "bloodlust": 0
+            },
+            "afterHp": 1929,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 4310 DMG.\n✨ Ấn Hồi lưu sẵn sàng: Phòng thủ để hồi 5% <:HP:1555983046262394890>.\nBạn nhận 442 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 81 lên Manoruk."
+          },
+          {
+            "action": "defend",
+            "floor": 900,
+            "hp": 1929,
+            "maxHp": 2958,
+            "mana": 0,
+            "potions": 0,
+            "enemyHp": 13009,
+            "incoming": {
+              "low": 380,
+              "high": 685,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 2,
+              "ready": true,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "manoruk",
+              "phase": 1,
+              "round": 18,
+              "bloodlust": 0
+            },
+            "afterHp": 1701,
+            "log": "<:DEF:1555983042093260891> Phòng thủ và hồi 2 <:MANA:1555983051811594240> MP.\n✨ Hồi lưu: <:HP:1555983046262394890> hồi 147 HP.\nBạn nhận 375 DMG (đã phòng thủ).\n🌵 **Gai** + ↩️ **Phản đòn**: phản <:PHYS:1555983056488108153> **DMG vật lý** 81 lên Manoruk."
+          },
+          {
+            "action": "skill",
+            "floor": 900,
+            "hp": 1701,
+            "maxHp": 2958,
+            "mana": 2,
+            "potions": 0,
+            "enemyHp": 12928,
+            "incoming": {
+              "low": 380,
+              "high": 685,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 2,
+              "ready": false,
+              "sigilUsed": true,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "manoruk",
+              "phase": 1,
+              "round": 19,
+              "bloodlust": 0
+            },
+            "afterHp": 1124,
+            "log": "🔮 Astral Armament: cường hóa 3 hành động chiến đấu tiếp theo, giữ qua phòng; đánh thường thành phép ×2.2, không hồi <:MANA:1555983051811594240>.\n<:HP:1555983046262394890> Chi phí Skill: 1701 → 1613 HP cho bạn (−88).\nBạn nhận 489 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 81 lên Manoruk."
+          },
+          {
+            "action": "attack",
+            "floor": 900,
+            "hp": 1124,
+            "maxHp": 2958,
+            "mana": 0,
+            "potions": 0,
+            "enemyHp": 12847,
+            "incoming": {
+              "low": 380,
+              "high": 685,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 3,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "manoruk",
+              "phase": 1,
+              "round": 20,
+              "bloodlust": 0
+            },
+            "afterHp": 321,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 4984 DMG.\nBạn nhận 803 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 81 lên Manoruk."
+          },
+          {
+            "action": "attack",
+            "floor": 900,
+            "hp": 321,
+            "maxHp": 2958,
+            "mana": 0,
+            "potions": 0,
+            "enemyHp": 7782,
+            "incoming": {
+              "low": 380,
+              "high": 685,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 2,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "manoruk",
+              "phase": 1,
+              "round": 21,
+              "bloodlust": 0
+            },
+            "afterHp": 0,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 6508 DMG.\n✨ Ấn Hồi lưu sẵn sàng: Phòng thủ để hồi 5% <:HP:1555983046262394890>.\nBạn nhận 321 DMG.\n☠️ Tử trận: Manoruk gây 321 DMG phép, khiến HP về 0."
+          }
+        ]
+      },
+      {
+        "run": 89,
+        "floor": 850,
+        "cleared": 849,
+        "status": "died",
+        "cause": "Inarius gây 92 DMG phép, khiến HP về 0.",
+        "hp": 0,
+        "maxHp": 2626,
+        "mana": 4.800000000000001,
+        "potions": 0,
+        "boss": "inarius",
+        "encounter": "combat",
+        "recentActions": [
+          {
+            "action": "boss_inarius__protect",
+            "floor": 850,
+            "hp": 810,
+            "maxHp": 2626,
+            "mana": 0.8000000000000003,
+            "potions": 1,
+            "enemyHp": 10740,
+            "incoming": {
+              "low": 286,
+              "high": 515,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 3,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "inarius",
+              "phase": 1,
+              "round": 16,
+              "bloodlust": 0,
+              "lilithHp": 20
+            },
+            "afterHp": 505,
+            "log": "Che chở Lilith · 1 lượt\nBạn nhận 305 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 54 lên Inarius."
+          },
+          {
+            "action": "potion",
+            "floor": 850,
+            "hp": 505,
+            "maxHp": 2626,
+            "mana": 0.8000000000000003,
+            "potions": 1,
+            "enemyHp": 10686,
+            "incoming": {
+              "low": 286,
+              "high": 515,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 2,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "inarius",
+              "phase": 1,
+              "round": 17,
+              "bloodlust": 0,
+              "lilithHp": 35
+            },
+            "afterHp": 1268,
+            "log": "<:potion:1555983060548194344> Hồi 1181 <:HP:1555983046262394890> HP; quái còn sống phản công.\nBạn nhận 418 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 74 lên Inarius."
+          },
+          {
+            "action": "attack",
+            "floor": 850,
+            "hp": 1268,
+            "maxHp": 2626,
+            "mana": 0.8000000000000003,
+            "potions": 0,
+            "enemyHp": 10612,
+            "incoming": {
+              "low": 286,
+              "high": 515,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 1,
+              "hits": 0,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "inarius",
+              "phase": 1,
+              "round": 18,
+              "bloodlust": 0,
+              "lilithHp": 35
+            },
+            "afterHp": 832,
+            "log": "<:ELE:1555983043997597816> Tấn công cường hóa: 8826 DMG.\nBạn nhận 436 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 78 lên Inarius."
+          },
+          {
+            "action": "attack",
+            "floor": 850,
+            "hp": 832,
+            "maxHp": 2626,
+            "mana": 0.8000000000000003,
+            "potions": 0,
+            "enemyHp": 1708,
+            "incoming": {
+              "low": 286,
+              "high": 515,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "inarius",
+              "phase": 1,
+              "round": 19,
+              "bloodlust": 0,
+              "lilithHp": 35
+            },
+            "afterHp": 433,
+            "log": "<:PHYS:1555983056488108153> Tấn công: 1365 DMG · 💥 Critical.\n🦇 Hút MP: 1.8000000000000003 → 2.8000000000000003 <:MANA:1555983051811594240> \nBạn nhận 399 DMG.\n🌵 **Gai**: phản <:PHYS:1555983056488108153> **DMG vật lý** 70 lên Inarius."
+          },
+          {
+            "action": "attack",
+            "floor": 850,
+            "hp": 433,
+            "maxHp": 2626,
+            "mana": 2.8000000000000003,
+            "potions": 0,
+            "enemyHp": 273,
+            "incoming": {
+              "low": 286,
+              "high": 515,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "inarius",
+              "phase": 1,
+              "round": 20,
+              "bloodlust": 0,
+              "lilithHp": 29
+            },
+            "afterHp": 92,
+            "log": "<:PHYS:1555983056488108153> Tấn công: 1176 DMG · 💥 Critical.\n🦇 Hút MP: 3.8000000000000003 → 4.800000000000001 <:MANA:1555983051811594240> \nBạn nhận 341 DMG."
+          },
+          {
+            "action": "boss_inarius__protect",
+            "floor": 850,
+            "hp": 92,
+            "maxHp": 2626,
+            "mana": 4.800000000000001,
+            "potions": 0,
+            "enemyHp": 1,
+            "incoming": {
+              "low": 286,
+              "high": 515,
+              "magic": true,
+              "critChance": 0,
+              "chance": 1
+            },
+            "cast": {
+              "version": 1,
+              "remaining": 0,
+              "hits": 1,
+              "ready": false,
+              "sigilUsed": false,
+              "firstBarrierUsed": false,
+              "barrier": 0
+            },
+            "boss": {
+              "id": "inarius",
+              "phase": 1,
+              "round": 21,
+              "bloodlust": 0,
+              "lilithHp": 23
+            },
+            "afterHp": 0,
+            "log": "Che chở Lilith · 1 lượt\nBạn nhận 92 DMG.\n☠️ Tử trận: Inarius gây 92 DMG phép, khiến HP về 0."
+          }
+        ]
+      }
+    ],
+    "gameplayVersion": "3.1.0",
+    "simulationSeed": "venance-s0-diagnostic-2026-10-15",
+    "checkpointRule": {
+      "variant": "baseline",
+      "fromClearedFloor": null,
+      "intervalBefore": 5,
+      "pointsBefore": 5,
+      "intervalAfter": 5,
+      "pointsAfter": 5,
+      "healAtCheckpoint": "Full HP and +2 potions, respecting the existing cap"
+    },
+    "bossRoster": "current",
+    "bossDamageExperiment": {},
+    "bossPolicy": "public telegraphs v2",
+    "stake": 100000,
+    "completedPercent": 0,
+    "mostFrequentDeathFloors": [
+      {
+        "floor": 950,
+        "count": 3
+      },
+      {
+        "floor": 750,
+        "count": 2
+      },
+      {
+        "floor": 850,
+        "count": 2
+      },
+      {
+        "floor": 650,
+        "count": 1
+      },
+      {
+        "floor": 900,
+        "count": 1
+      }
+    ],
+    "zeroWinsUpper95Percent": 25.8866,
+    "targetFloor": 999,
+    "maxTurns": 40000,
+    "timeouts": 0,
+    "equipmentSource": "src/hardcore/item.js",
+    "passedFloor10": 10,
+    "passedFloor50": 10,
+    "passedFloor100": 10,
+    "passedFloor699": 9,
+    "passedFloor700": 9,
+    "passedFloor800": 7,
+    "passedFloor900": 4,
+    "reachedFinalBoss": 1,
+    "completed999": 0,
+    "runFloors": [
+      949,
+      849,
+      749,
+      998,
+      949,
+      649,
+      949,
+      749,
+      899,
+      849
+    ],
+    "echoEnvironment": "Isolated runs; no previous graves",
+    "finalAttempts": 0,
+    "finalWins": 0,
+    "finalStateMeans": {
+      "maxHp": 3358,
+      "damageMax": 206,
+      "defense": 323,
+      "potions": 5,
+      "resistance": 70
+    },
+    "finalBossMeans": {
+      "maxHp": 11268,
+      "damageMax": 1539,
+      "defense": 654
+    },
+    "estimatedCompletionPercent": null,
+    "maxFloor": 998,
+    "medianFloor": 899,
+    "meanFloor": 858.9
+  }
+}

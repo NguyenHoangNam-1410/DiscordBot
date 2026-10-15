@@ -63,7 +63,15 @@ function choose(s) {
     cmd = "position";
   if (b.id === "dark_star_dragon" && u.dec.beamDue(u.current(s)))
     cmd = "cover" + m.pillars.findIndex((v) => v > 0);
-  if (b.id === "inarius" && m.lilithHp <= 35) cmd = "protect";
+  if (
+    s.classKey === "venance" &&
+    b.id === "inarius" &&
+    m.lilithHp <= 25 &&
+    m.protectUntil <= b.round + 1
+  )
+    return go("protect");
+  if (s.classKey !== "venance" && b.id === "inarius" && m.lilithHp <= 35)
+    cmd = "protect";
   if (
     b.id === "inarius" &&
     !u.isOpen(u.current(s)) &&
@@ -84,11 +92,16 @@ function choose(s) {
           n !== (u.arrowZone(u.current(s)) + 1) % 3 &&
           n !== u.dec.blockedZone(u.current(s)),
       );
-  if (cmd && go(cmd)) return go(cmd);
+  if (cmd && go(cmd)) {
+    if (s.classKey === "venance" && cmd === "pull")
+      return require("./hardcore-venance-policy").chooseBoss(s, go(cmd));
+    return go(cmd);
+  }
   const p = core.incomingPreview(s),
-    skill = core.skillDamagePreview(s),
-    attack = core.attackDamagePreview(s);
+    skill = s.classKey === "venance" ? null : core.skillDamagePreview(s),
+    attack = s.classKey === "venance" ? null : core.attackDamagePreview(s);
   if (
+    s.classKey !== "venance" &&
     has("potion") &&
     s.hp < Math.max(p.high * 2, s.maxHp * 0.4) &&
     s.maxHp - s.hp >= s.maxHp * 0.25
@@ -100,7 +113,7 @@ function choose(s) {
     cmd = "frequency" + m.pattern[m.cursor % 3];
   if (b.id === "lucion" && !u.isOpen(u.current(s)))
     cmd = "command" + m.pattern[b.round % 3];
-  if (b.id === "bul_kathos" && m.staggerUntil <= b.round)
+  if (b.id === "bul_kathos" && (m.staggerUntil || 0) <= b.round)
     cmd = "clash" + m.pattern[b.round % 3];
   if (b.id === "giyua" && m.nests > 1) cmd = "nest_seal";
   if (b.id === "gharbad" && !u.isOpen(u.current(s)))
@@ -142,9 +155,9 @@ function choose(s) {
   if (b.id === "sescheron" && !u.isOpen(u.current(s)) && m.hints >= 3)
     cmd = "rune" + m.code[m.input.length];
   if (b.id === "kabraxis" && m.pending && m.resonance >= 3) cmd = "purify_seal";
-  if (cmd && go(cmd)) return go(cmd);
   if (s.classKey === "venance")
-    return require("./hardcore-venance-policy").choose(s);
+    return require("./hardcore-venance-policy").chooseBoss(s, cmd && go(cmd));
+  if (cmd && go(cmd)) return go(cmd);
   if (
     has("skill") &&
     ["assassin", "necromancer", "paladin", "druid"].includes(s.classKey)

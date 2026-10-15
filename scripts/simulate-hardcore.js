@@ -562,6 +562,7 @@ for (const classKey of classesToRun) {
   const finalStates = [];
   const deathFloors = {};
   const deathBosses = {};
+  const runOutcomes = [];
   let actualStatProfile = null;
   let actualBossDamageProfile = null;
   let timeouts = 0;
@@ -620,6 +621,7 @@ for (const classKey of classesToRun) {
       repository.saveState(started.session, state);
     }
     let captured = false;
+    const recentActions = [];
     for (
       let turn = 0;
       turn < maxTurns && state.cleared < targetFloor;
@@ -669,6 +671,33 @@ for (const classKey of classesToRun) {
         classKey === "venance" &&
         require("../src/hardcore/characters/venance").frame(state);
       const pendingThird = cast?.remaining > 0 && cast.hits === 2;
+      const beforeAction =
+        process.env.HARDCORE_SIM_DIAGNOSTICS === "1"
+          ? {
+              action,
+              floor: state.floor,
+              hp: state.hp,
+              maxHp: state.maxHp,
+              mana: state.mana,
+              potions: state.potions,
+              enemyHp: state.encounter.hp,
+              incoming:
+                state.encounter.type === "combat"
+                  ? hardcore.V2.incomingPreview(state)
+                  : null,
+              cast: cast ? structuredClone(cast) : null,
+              boss: state.encounter.boss
+                ? {
+                    id: state.encounter.boss.id,
+                    phase: state.encounter.boss.phase,
+                    round: state.encounter.boss.round,
+                    distance: state.encounter.boss.mechanicState?.distance,
+                    bloodlust: state.encounter.boss.mechanicState?.stack,
+                    lilithHp: state.encounter.boss.mechanicState?.lilithHp,
+                  }
+                : null,
+            }
+          : null;
       const played = hardcore.playHardcore({
         sessionId: started.session.id,
         userId,
@@ -676,6 +705,14 @@ for (const classKey of classesToRun) {
         action,
       });
       state = played.state;
+      if (beforeAction) {
+        recentActions.push({
+          ...beforeAction,
+          afterHp: state.hp,
+          log: state.lastLog?.slice(-2500),
+        });
+        if (recentActions.length > 6) recentActions.shift();
+      }
       if (
         pendingThird &&
         action !== "attack" &&
@@ -695,6 +732,26 @@ for (const classKey of classesToRun) {
         action: "retreat",
       }).state;
     }
+    if (process.env.HARDCORE_SIM_DIAGNOSTICS === "1")
+      runOutcomes.push({
+        run: i,
+        floor: state.floor,
+        cleared: state.cleared,
+        status:
+          state.finalBossDefeated && state.hp > 0
+            ? "won"
+            : state.hp <= 0
+              ? "died"
+              : "unfinished",
+        cause: state.hp <= 0 ? state.lastDeathCause || null : null,
+        hp: state.hp,
+        maxHp: state.maxHp,
+        mana: state.mana,
+        potions: state.potions,
+        boss: state.encounter.boss?.id || null,
+        encounter: state.encounter.kind || state.encounter.type,
+        recentActions,
+      });
     floors.push(
       state.finalBossDefeated && state.hp > 0
         ? 999
@@ -794,6 +851,8 @@ for (const classKey of classesToRun) {
     backend,
     resumeValidation,
     deathBosses,
+    deathFloors,
+    runOutcomes,
     gameplayVersion:
       process.env.HARDCORE_GAMEPLAY_VERSION === "legacy"
         ? "legacy-4"
