@@ -19,7 +19,19 @@ const dailyLimit = () => {
   const n = Number(process.env.CHATBOT_DAILY_LIMIT);
   return Number.isInteger(n) && n > 0 ? n : DEFAULT_DAILY_LIMIT;
 };
-const model = () => process.env.OPENAI_MODEL || DEFAULT_MODEL;
+// Nhà cung cấp: mặc định OpenAI; CHATBOT_PROVIDER=gemini dùng endpoint tương thích OpenAI của Google (khóa vẫn đặt ở OPENAI_API_KEY).
+const PROVIDERS = Object.freeze({
+  openai: { baseUrl: "https://api.openai.com/v1", model: DEFAULT_MODEL, moderation: true },
+  gemini: {
+    baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai",
+    model: "gemini-2.5-flash",
+    moderation: false,
+  },
+});
+const provider = () => PROVIDERS[String(process.env.CHATBOT_PROVIDER || "openai").toLowerCase()] || PROVIDERS.openai;
+const baseUrl = () => String(process.env.OPENAI_BASE_URL || provider().baseUrl).replace(/\/+$/, "");
+const model = () => process.env.OPENAI_MODEL || provider().model;
+const useModeration = () => provider().moderation && !process.env.OPENAI_BASE_URL;
 const isConfigured = () => Boolean(process.env.OPENAI_API_KEY);
 
 function dayKey(now = Date.now()) {
@@ -90,7 +102,7 @@ function remember(key, user, assistant, now = Date.now()) {
 }
 
 async function openai(path, body) {
-  const response = await fetch(`https://api.openai.com/v1/${path}`, {
+  const response = await fetch(`${baseUrl()}/${path}`, {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
     body: JSON.stringify(body),
@@ -101,6 +113,7 @@ async function openai(path, body) {
 }
 
 async function flagged(text) {
+  if (!useModeration()) return false;
   try {
     const result = await openai("moderations", { model: "omni-moderation-latest", input: text });
     return Boolean(result.results?.[0]?.flagged);
@@ -144,6 +157,8 @@ async function ask({ guildId, userId, channelId, text, now = Date.now() }) {
 
 module.exports = {
   DEFAULT_MODEL,
+  model,
+  baseUrl,
   MAX_INPUT_CHARS,
   setChannel,
   clearChannel,

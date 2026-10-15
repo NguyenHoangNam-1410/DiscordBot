@@ -101,5 +101,16 @@ global.fetch = async (url, init) => {
   assert.equal(chatbot.getChannelId(G), "newch");
   await command.execute(interaction("tat"));
   assert.equal(chatbot.getChannelId(G), null);
+  // Gemini: endpoint và model riêng, bỏ qua bước kiểm duyệt của OpenAI
+  process.env.CHATBOT_PROVIDER = "gemini";
+  calls.length = 0;
+  assert((await chatbot.ask({ guildId: G, userId: "gem", channelId: C, text: "chào" })).ok);
+  assert.equal(calls.length, 1, "Gemini không gọi moderations");
+  assert.match(calls[0].url, /^https:\/\/generativelanguage\.googleapis\.com\/v1beta\/openai\/chat\/completions$/);
+  assert.match(calls[0].body.model, /^gemini/);
+  process.env.OPENAI_MODEL = "gemini-custom";
+  assert.equal(chatbot.model(), "gemini-custom");
+  delete process.env.OPENAI_MODEL;
+  delete process.env.CHATBOT_PROVIDER;
   console.log("chatbot ok");
 })();
