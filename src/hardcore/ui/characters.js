@@ -44,7 +44,7 @@ function payload(
   const visible = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const selected = filtered.find((c) => c.id === id);
   id = selected?.id || "all";
-  const owned = characters.ownedCharacters();
+  const owned = characters.ownedCharacters(owner);
   const custom = (kind) =>
     ["hardcore-char", owner, rarity, classKey, page, id, tab, kind].join(":");
   const menu = (kind, placeholder, options, disabled = false) =>
@@ -125,7 +125,7 @@ function payload(
         })),
       );
   } else {
-    const state = characters.preview(id);
+    const state = characters.preview(id, owned[id]?.soulLevel || 0);
     embed
       .setTitle(
         icon(selected) + " " + selected.name + " [" + selected.rarity + "]",
@@ -146,7 +146,7 @@ function payload(
     const fields = [];
     if (tab === "stats") {
       fields.push({
-        name: "Chỉ số khởi đầu · S0",
+        name: "Chỉ số khởi đầu · S" + (owned[id]?.soulLevel || 0),
         value:
           E.hp +
           " **" +
@@ -235,14 +235,21 @@ function payload(
       });
     } else {
       fields.push({
-        name: owned[id] ? "S0 · Đang sở hữu" : "S0 · Bộ kỹ năng cơ bản",
+        name: owned[id]
+          ? "S" + owned[id].soulLevel + " · Đang sở hữu"
+          : "S0 · Bộ kỹ năng cơ bản",
         value:
           "Bộ kỹ năng hiện tại. Các bậc cộng dồn, nâng theo thứ tự S1 → S6.",
       });
     }
     fields.push(
       ...selected.souls.map((s) => ({
-        name: "🔒 S" + s.level + " · " + s.name,
+        name:
+          ((owned[id]?.soulLevel || 0) >= s.level ? "✅" : "🔒") +
+          " S" +
+          s.level +
+          " · " +
+          s.name,
         value:
           s.description +
           (s.level === 6 &&
@@ -259,7 +266,30 @@ function payload(
     );
     fields.push({
       name: "Tinh hồn · cơ chế chiến đấu",
-      value: "S1–S6 đã có hiệu ứng chiến đấu; tài khoản hiện khởi đầu S0.",
+      value:
+        "S1–S6 đã có hiệu ứng chiến đấu; tài khoản khởi đầu S0. Nâng cấp chỉ áp dụng cho run mới." +
+        (owned[id]
+          ? "\nThẻ " +
+            characters.CLASSES[selected.classKey].name +
+            " " +
+            selected.rarity +
+            ": **" +
+            require("../characters/progression").cards(
+              owner,
+              selected.classKey,
+              selected.rarity,
+            ) +
+            "** · " +
+            (owned[id].soulLevel >= 6
+              ? "Đã đạt S6; giữ thẻ cho nhân vật khác cùng class."
+              : "Cần **" +
+                require("../characters/progression").SOUL_COST[
+                  selected.rarity
+                ] +
+                " thẻ** để lên S" +
+                (owned[id].soulLevel + 1) +
+                ".")
+          : ""),
     });
     embed.addFields(splitRuleFields(fields));
     components.push(
@@ -294,6 +324,33 @@ function payload(
         .setDisabled(page >= pages - 1),
     ),
   );
+  if (selected && owned[id]) {
+    const p = require("../characters/progression"),
+      n = owned[id].soulLevel,
+      cost = p.SOUL_COST[selected.rarity];
+    components.at(-1).addComponents(
+      new ButtonBuilder()
+        .setCustomId(custom("upgrade_" + n))
+        .setLabel(
+          n >= 6 ? "Đã đạt S6" : "Nâng S" + (n + 1) + " · " + cost + " thẻ",
+        )
+        .setStyle(ButtonStyle.Success)
+        .setDisabled(
+          n >= 6 ||
+            !cost ||
+            p.cards(owner, selected.classKey, selected.rarity) < cost,
+        ),
+    );
+  }
+  if (require("../characters/progression").account(owner))
+    components
+      .at(-1)
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId(custom("gacha"))
+          .setLabel("Banner gacha")
+          .setStyle(ButtonStyle.Secondary),
+      );
   embed.setFooter({
     text:
       "Trang " +
@@ -330,6 +387,49 @@ async function handle(interaction) {
     (id !== "all" && !filtered.some((c) => c.id === id))
   )
     return reject("Danh sách đã thay đổi. Mở lại /sinhton nhanvat.");
+  if (
+    kind === "gacha" &&
+    interaction.guildId &&
+    require("../characters/progression").account(owner)
+  )
+    return interaction.update(
+      require("../gacha/ui").payload(owner, { guildId: interaction.guildId }),
+    );
+  if (/^upgrade_[0-5]$/.test(kind) && id !== "all") {
+    await interaction.deferUpdate();
+    let notice = "";
+    try {
+      const r = require("../characters/progression").upgrade({
+        userId: owner,
+        characterId: id,
+        expectedLevel: Number(kind.slice(8)),
+        operationId: interaction.id,
+      });
+      notice =
+        "Đã nâng **" +
+        characters.get(id).name +
+        " lên S" +
+        r.soulLevel +
+        "**. Hiệu lực từ run mới.";
+    } catch (error) {
+      if (
+        ![
+          "STALE_CHARACTER_SOUL",
+          "INSUFFICIENT_CHARACTER_CARDS",
+          "CHARACTER_NOT_OWNED",
+        ].includes(error.message)
+      )
+        throw error;
+      notice =
+        error.message === "INSUFFICIENT_CHARACTER_CARDS"
+          ? "Chưa đủ thẻ cùng class và độ hiếm."
+          : "Tiến trình đã thay đổi. Đã làm mới bảng nhân vật.";
+    }
+    return interaction.editReply({
+      ...payload(owner, { rarity, classKey, page, id, tab }),
+      content: notice,
+    });
+  }
   const state = { rarity, classKey, page, id, tab };
   if (["rarity", "class", "character"].includes(kind)) {
     if (interaction.values?.length !== 1)

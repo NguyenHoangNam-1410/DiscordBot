@@ -18,7 +18,7 @@ const CLASSES = Object.freeze({
   }),
   mage: Object.freeze({ name: "Pháp sư", primaryStat: "ene", build: "ENE" }),
 });
-const RARITIES = Object.freeze(["SR", "SSR", "SSR+", "UR", "UR+", "LR"]);
+const RARITIES = Object.freeze(["SR", "SSR", "UR", "LR"]);
 function validate(entries = catalog.characters) {
   const ids = new Set();
   for (const c of entries) {
@@ -57,19 +57,22 @@ function list({ rarity = "all", classKey = "all" } = {}) {
 }
 // Starter ownership is an account entitlement, not a run reward. Future recruits
 // must come from an explicit ownership store; absence never unlocks a nonstarter.
-function ownedCharacters() {
+function ownedCharacters(userId = null) {
+  if (userId != null) return require("./progression").getOwned(String(userId));
   return Object.fromEntries(
     catalog.characters
       .filter((c) => c.starter)
       .map((c) => [c.id, { characterId: c.id, soulLevel: 0 }]),
   );
 }
-function preview(id) {
+function preview(id, soulLevel = 0) {
   const c = get(id);
   if (!c) throw Error("INVALID_CHARACTER");
-  return require("../engine/stats").createState(c.profileKey, 0, {
+  const state = require("../engine/stats").createState(c.profileKey, 0, {
     gameplayVersion: 3,
   });
+  if (soulLevel) require("./souls").attach(state, id, soulLevel);
+  return state;
 }
 module.exports = {
   catalog,

@@ -23,7 +23,7 @@ Dùng Amazon, Barbarian, Assassin, Sorceress, Druid, Necromancer và Paladin là
 
 Mỗi bậc được phép thay đổi cơ chế, kỹ năng, hiệu ứng, chỉ số hoặc hệ số; mức tăng không bắt buộc bằng nhau. 42 hiệu ứng dưới đây đã có xử lý chiến đấu. S6 có thêm bonus DMG đánh boss riêng cho từng nhân vật để hiệu chỉnh mục tiêu; thông số và kết quả đo được ghi riêng trong báo cáo simulate. Chưa coi một lô 100 run là bằng chứng bảo đảm tỷ lệ thực tế.
 
-S0 bám phiên bản V3.1 mới nhất, với classInnateRevision = 2. Không lấy số của run cũ làm nền. Sáu bậc bên dưới **cộng dồn**; giá đề xuất mỗi bậc là 20 thẻ SR đúng hệ (chưa triển khai nâng cấp/thẻ), tổng 120 thẻ để đạt S6. Các cơ chế đã qua kiểm thử xác định và mô phỏng S6; S1–S5 chưa có lô simulate thống kê riêng.
+S0 bám phiên bản V3.1 mới nhất, với classInnateRevision = 2. Không lấy số của run cũ làm nền. Sáu bậc bên dưới **cộng dồn**; giá đề xuất mỗi bậc là 20 thẻ SR đúng hệ (đã triển khai thẻ và nút nâng SR), tổng 120 thẻ để đạt S6. Các cơ chế đã qua kiểm thử xác định và mô phỏng S6; S1–S5 chưa có lô simulate thống kê riêng.
 
 - S1: cải thiện nội tại đang có. S2: hỗ trợ nhịp chơi từ đầu run.
 - S3: nâng cơ chế thức tỉnh. S4–S5: ổn định tài nguyên/phòng thủ.
@@ -175,13 +175,13 @@ S6 không có cùng phần trăm tăng sức mạnh ở tất cả class vì ph�
 
 ## Phạm vi kiểm chứng và công việc tiếp theo
 
-1. Đã triển khai 42 hiệu ứng S1–S6. Phân hệ thẻ và thao tác nâng cấp vẫn để giai đoạn gacha. Bonus DMG boss S6 nằm trong soulTuning.json, được công khai ở trang nhân vật và snapshot riêng theo run.
+1. Đã triển khai 42 hiệu ứng S1–S6. Đã mở thẻ SR cùng class và nút nâng tinh hồn qua banner tân thủ. Bonus DMG boss S6 nằm trong soulTuning.json, được công khai ở trang nhân vật và snapshot riêng theo run.
 2. Đã kiểm thử S0 với run không có snapshot: cùng hành động và RNG cho kết quả chiến đấu giống nhau ở cả 7 nhân vật. Đã kiểm thử lưu/đọc SQLite và chống lặp lượt. Run cũ không tự nhận tinh hồn mới.
 3. Kiểm tra từng bậc trong tình huống trượt, Crit, nhiều hit, HP/MP đầy, HP khóa, giảm hồi, nhiều phase, mục tiêu phụ, boss miễn sát thương và DMG chuẩn.
 4. Đã đo S6 100 run/nhân vật trong từng cấu hình hiệu chỉnh. Các lần thử dùng cùng seed và không phải tập xác minh độc lập. Chưa chạy lại S0, chưa đo S3, thời lượng hoặc từng build tối ưu; cần một seed mới để xác minh mục tiêu dài hạn. Báo cáo lưu tầng kết thúc và phân bố boss gây tử trận.
 5. Kiểm tra vài build item mạnh và LR như Astral Singularity: Skill miễn phí không tạo Echo, không làm các hiệu ứng hoàn MP nhân đôi; tinh hồn không đổi luật di vật.
 6. Ưu tiên kiểm tra vòng hồi/MP/Bark của Druid; kế tiếp Necromancer và AVOID của Assassin. Nếu vượt mục tiêu, giảm hệ số trước khi thay bản sắc class.
 
-**Đã triển khai danh mục và cơ chế tinh hồn:** lọc độ hiếm/class, chọn nhân vật và xem ba tab Chỉ số, Kỹ năng, Tinh hồn. Mỗi người có quyền sở hữu mặc định cả 7 nhân vật khởi đầu ở S0. Nhân vật có ID riêng và class riêng để bổ sung nhiều nhân vật cùng class sau này. Chưa mở nâng tinh hồn hoặc gacha. Cơ chế S1–S6 đã chạy theo snapshot trong combat, mỗi run giữ riêng cấp và thông số; run thiếu snapshot dùng S0. Tower không áp dụng tinh hồn.
+**Đã triển khai danh mục và cơ chế tinh hồn:** lọc độ hiếm/class, chọn nhân vật và xem ba tab Chỉ số, Kỹ năng, Tinh hồn. Mỗi người có quyền sở hữu mặc định cả 7 nhân vật khởi đầu ở S0. Nhân vật có ID riêng và class riêng để bổ sung nhiều nhân vật cùng class sau này. Đã mở /sinhton gacha với 30 vé tân thủ, thẻ SR cùng class và nút nâng S trong bảng nhân vật. Cơ chế S1–S6 đã chạy theo snapshot trong combat, mỗi run giữ riêng cấp và thông số; run thiếu snapshot dùng S0. Tower không áp dụng tinh hồn.
 
-Nguồn bản thiết kế hiển thị: src/hardcore/characters/catalog.json. Chỉ số S0 được dựng từ luật game hiện hành, không sao chép thủ công từ tài liệu. Tab nhân vật hiển thị toàn bộ S1–S6 và bonus boss S6 hiện hành. Chỉ số công khai mặc định S0 vì mọi tài khoản đang khởi đầu S0. Run simulate S6 gắn snapshot hợp lệ trước hành động đầu, không nâng tài khoản người chơi.
+Nguồn bản thiết kế hiển thị: src/hardcore/characters/catalog.json. Chỉ số S0 được dựng từ luật game hiện hành, không sao chép thủ công từ tài liệu. Tab nhân vật hiển thị toàn bộ S1–S6 và bonus boss S6 hiện hành. Màn hình nhân vật dùng cấp tinh hồn đã mở của tài khoản; tài khoản mới khởi đầu S0. Run simulate S6 gắn snapshot hợp lệ trước hành động đầu, không nâng tài khoản người chơi.

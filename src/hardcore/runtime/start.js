@@ -33,6 +33,7 @@ module.exports = function createModule(dependencies) {
       forcedEncounter = null,
       loadout = {},
       playerName = String(userId),
+      characterId = classKey,
     }) => {
       const template = CLASSES[classKey];
       if (!template) throw new Error("INVALID_CLASS");
@@ -104,6 +105,15 @@ module.exports = function createModule(dependencies) {
       if (useV2()) {
         const fair = state.fair;
         state = hardcoreStats.createState(classKey, stake);
+        const souls = require("../characters/souls");
+        if (souls.enabled(state)) {
+          const characters = require("../characters");
+          const character = characters.get(characterId);
+          const owned = characters.ownedCharacters(String(userId))[characterId];
+          if (!owned || character?.profileKey !== classKey)
+            throw Error("CHARACTER_NOT_OWNED");
+          souls.attach(state, characterId, owned.soulLevel);
+        }
         state.bossRosterVersion =
           process.env.HARDCORE_BOSS_ROSTER_VERSION === "1"
             ? 1

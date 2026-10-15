@@ -303,11 +303,19 @@ function applyLoadout(state, loadout) {
   delete state.discardedTicketsThisTurn;
   return state;
 }
-function preview(classKey, stake, loadout) {
-  return applyLoadout(
-    require("../engine/stats").createState(classKey, stake),
-    loadout,
-  );
+function preview(classKey, stake, loadout, userId = null) {
+  const state = require("../engine/stats").createState(classKey, stake);
+  if (userId != null && require("../characters/souls").enabled(state)) {
+    const owned = require("../characters").ownedCharacters(String(userId))[
+      classKey
+    ];
+    require("../characters/souls").attach(
+      state,
+      classKey,
+      owned?.soulLevel || 0,
+    );
+  }
+  return applyLoadout(state, loadout);
 }
 module.exports = {
   PRICES,

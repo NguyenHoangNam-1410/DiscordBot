@@ -1412,4 +1412,6 @@ runMigration(43, "allow manual tower rotations inside a weekly window", () => {
  `);
 });
 
+require("./hardcore/characters/schema")(db, runMigration);
+
 module.exports = { db, dbPath, runMigration };

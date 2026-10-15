@@ -1,5 +1,16 @@
 [
   {
+    "id": "1ca24d3e-a932-40b2-8216-83c1a9bd262f",
+    "updatedAt": "2026-10-15T05:46:55.684Z",
+    "auditedAt": "2026-10-15T05:46:55.684Z",
+    "title": "Sinh tồn: banner nhân vật tân thủ",
+    "changes": [
+      "Thêm /sinhton gacha với banner Khởi Hành: mỗi tài khoản Discord nhận 30 vé tân thủ một lần; R 80% / SR 20%, có quay x1/x10 và lịch sử. Item R vào Túi Sinh tồn của server đang quay.",
+      "SR trùng đổi 5 thẻ cùng class. Dùng 20 thẻ để nâng một nhân vật SR thêm một tinh hồn trong bảng Nhân vật, tối đa S6; cấp mới chỉ áp dụng khi bắt đầu run mới.",
+      "Giữ 7 SR khởi đầu; lộ trình nhân vật SSR sau này còn SSR → UR → LR, bỏ các bậc cộng và nâng vô hạn. Banner tân thủ không tiêu gem hoặc cộng Spark; banner gem và SSR chưa mở."
+    ]
+  },
+  {
     "id": "49299036-1ba3-4ff2-a9a6-836b8d1efa15",
     "updatedAt": "2026-10-15T05:14:56.448Z",
     "auditedAt": "2026-10-15T05:14:56.448Z",

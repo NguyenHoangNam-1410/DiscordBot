@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "banners": [
+    {
+      "id": "novice",
+      "version": 1,
+      "name": "Khởi Hành",
+      "description": "Banner tân thủ · 30 vé miễn phí cho mỗi tài khoản Discord.",
+      "enabled": true,
+      "payment": {
+        "kind": "ticket",
+        "currencyId": "novice_ticket",
+        "unitCost": 1
+      },
+      "spark": null,
+      "pool": [
+        {
+          "kind": "item",
+          "rarity": "R",
+          "weight": 80,
+          "source": "survival_r"
+        },
+        {
+          "kind": "character",
+          "rarity": "SR",
+          "weight": 20,
+          "characterIds": [
+            "amazon",
+            "barbarian",
+            "assassin",
+            "sorceress",
+            "druid",
+            "necromancer",
+            "paladin"
+          ]
+        }
+      ]
+    }
+  ]
+}

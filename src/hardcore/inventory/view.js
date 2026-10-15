@@ -296,7 +296,12 @@ function setupPayload(draft, context) {
     });
   }
   if (draft.stage === "review") {
-    const preview = bag.preview(draft.classKey, draft.stake, loadout);
+    const preview = bag.preview(
+      draft.classKey,
+      draft.stake,
+      loadout,
+      draft.userId,
+    );
     embed.addFields({
       name: `${preview.className} · Chỉ số ban đầu sau trang bị`,
       value: v2View.statLine(preview),

@@ -79,7 +79,14 @@ module.exports = {
         .setDescription("Mua vé và 5 trang bị đổi mỗi ngày lúc 00:00 Việt Nam"),
     )
     .addSubcommand((command) =>
-      command.setName("nhanvat").setDescription("Xem nhân vật, chỉ số, kỹ năng và tinh hồn"),
+      command
+        .setName("gacha")
+        .setDescription("Mở banner nhân vật và nhận 30 vé tân thủ lần đầu"),
+    )
+    .addSubcommand((command) =>
+      command
+        .setName("nhanvat")
+        .setDescription("Xem nhân vật, chỉ số, kỹ năng và tinh hồn"),
     )
     .addSubcommand((command) =>
       command
@@ -115,7 +122,8 @@ module.exports = {
   handleTopPage: (interaction) => profileView.handleTopPage(interaction),
   handleRatesSelect,
   handleRatesPage,
-  handleCharacterInteraction: interaction => require("./ui/characters").handle(interaction),
+  handleCharacterInteraction: (interaction) =>
+    require("./ui/characters").handle(interaction),
   async execute(interaction) {
     if (!interaction.guildId)
       return interaction.reply({
@@ -123,8 +131,12 @@ module.exports = {
         flags: MessageFlags.Ephemeral,
       });
     const subcommand = interaction.options.getSubcommand();
+    if (subcommand === "gacha") return require("./gacha/ui").open(interaction);
     if (subcommand === "nhanvat")
-      return interaction.reply({...require("./ui/characters").payload(interaction.user.id), flags: MessageFlags.Ephemeral});
+      return interaction.reply({
+        ...require("./ui/characters").payload(interaction.user.id),
+        flags: MessageFlags.Ephemeral,
+      });
     if (subcommand === "thap")
       return require("../services/hardcoreTowerService").openTower(interaction);
     if (["cuahang", "tuido"].includes(subcommand)) {

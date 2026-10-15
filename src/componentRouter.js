@@ -50,10 +50,16 @@ const checklistCommand = require("./commands/kiemtra");
 
 const { handleStore, handleBag } = require("./services/hardcoreInventoryView");
 const ROUTES = Object.freeze([
+  ...["button", "select"].map((kind) => ({
+    kind,
+    prefix: "hardcore-cg:",
+    handle: (i, logger) => require("./hardcore/gacha/ui").handle(i, logger),
+  })),
   {
     kind: "button",
     prefix: "changelog:",
-    handle: (interaction) => require("./commands/changelog").handleButton(interaction),
+    handle: (interaction) =>
+      require("./commands/changelog").handleButton(interaction),
   },
   {
     kind: "button",
@@ -89,12 +95,36 @@ const ROUTES = Object.freeze([
     prefix: "hoso:",
     handle: (interaction) => profileCommand.handleSelect(interaction),
   },
-  { kind: "select", prefix: "hardcore-char:", handle: i => hardcoreCommand.handleCharacterInteraction(i) },
-  { kind: "button", prefix: "hardcore-char:", handle: i => hardcoreCommand.handleCharacterInteraction(i) },
-  { kind: "select", prefix: "hardcore-hoso:", handle: (i) => hardcoreCommand.handleProfileSelect(i) },
-  { kind: "button", prefix: "hardcore-hosopg:", handle: (i) => hardcoreCommand.handleProfilePage(i) },
-  { kind: "select", prefix: "hardcore-top:", handle: (i) => hardcoreCommand.handleTopSelect(i) },
-  { kind: "button", prefix: "hardcore-toppg:", handle: (i) => hardcoreCommand.handleTopPage(i) },
+  {
+    kind: "select",
+    prefix: "hardcore-char:",
+    handle: (i) => hardcoreCommand.handleCharacterInteraction(i),
+  },
+  {
+    kind: "button",
+    prefix: "hardcore-char:",
+    handle: (i) => hardcoreCommand.handleCharacterInteraction(i),
+  },
+  {
+    kind: "select",
+    prefix: "hardcore-hoso:",
+    handle: (i) => hardcoreCommand.handleProfileSelect(i),
+  },
+  {
+    kind: "button",
+    prefix: "hardcore-hosopg:",
+    handle: (i) => hardcoreCommand.handleProfilePage(i),
+  },
+  {
+    kind: "select",
+    prefix: "hardcore-top:",
+    handle: (i) => hardcoreCommand.handleTopSelect(i),
+  },
+  {
+    kind: "button",
+    prefix: "hardcore-toppg:",
+    handle: (i) => hardcoreCommand.handleTopPage(i),
+  },
   {
     kind: "select",
     prefix: "hardcore-rates:",

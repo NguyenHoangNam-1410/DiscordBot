@@ -92,3 +92,5 @@ Giữ public exports tương thích khi tách thêm module. Không tạo thêm b
 - Các suite payout, healing, passives, curses, loot, blood, memories, rngesus, tickets và paradox theo phần sửa.
 - `npm run test:hardcore:tower`: kiểm tra phần dùng chung không ảnh hưởng Tower.
 - `npm run test:changelog`.
+
+Gacha nhân vật: `gacha/banners.json` khai báo từng banner; `gacha/banners.js` kiểm tra và dựng pool; `gacha/service.js` xử lý giao dịch; `gacha/ui.js` hiển thị banner. Tiến trình toàn tài khoản nằm ở `characters/progression.js`, schema riêng trong `characters/schema.js`. Run mới snapshot cấp từ tài khoản; Tower độc lập.
