@@ -157,6 +157,35 @@ global.fetch = async (url, init) => {
   assert.equal(sent3.length, 1);
   failChat = false;
 
+  // 429: chuyển model dự phòng; hết danh sách thì thử lại một lần; lỗi khác (403) không thử lại
+  process.env.CHATBOT_RETRY_DELAY_MS = "5";
+  process.env.OPENAI_MODEL = "a:free, b:free";
+  const tried = [];
+  let limitedUntil = 0;
+  global.fetch = async (url, init) => {
+    const body = JSON.parse(init.body);
+    if (url.endsWith("/moderations")) return { ok: true, json: async () => ({ results: [{ flagged: false }] }) };
+    tried.push(body.model);
+    if (tried.length <= limitedUntil) return { ok: false, status: 429, text: async () => "rate limited", json: async () => ({}) };
+    return { ok: true, json: async () => ({ choices: [{ message: { content: `ok ${body.model}` } }] }) };
+  };
+  limitedUntil = 1; // model đầu bị giới hạn -> dùng dự phòng
+  const fb = await chatbot.ask({ guildId: G, userId: "fb1", channelId: C, text: "chào" });
+  assert(fb.ok && /ok b:free/.test(fb.text), "dùng model dự phòng khi model chính bị 429");
+  tried.length = 0;
+  limitedUntil = 2; // cả hai bị giới hạn -> thử lại vòng hai thành công
+  const retry = await chatbot.ask({ guildId: G, userId: "fb2", channelId: C, text: "chào" });
+  assert(retry.ok);
+  assert.deepEqual(tried.slice(-3), ["a:free", "b:free", "a:free"]);
+  tried.length = 0;
+  limitedUntil = 99; // luôn bị giới hạn -> lỗi, hoàn lượt
+  const hard = await chatbot.ask({ guildId: G, userId: "fb3", channelId: C, text: "chào" });
+  assert.equal(hard.error, "API");
+  assert.equal(hard.status, 429);
+  assert.equal(chatbot.usage(G, "fb3").used, 0);
+  delete process.env.OPENAI_MODEL;
+  delete process.env.CHATBOT_RETRY_DELAY_MS;
+
   // Gemini: endpoint và model riêng, bỏ qua bước kiểm duyệt của OpenAI
   global.fetch = async (url, init) => {
     calls.push({ url, body: JSON.parse(init.body), auth: init.headers.authorization });
