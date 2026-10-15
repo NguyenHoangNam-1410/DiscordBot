@@ -15,10 +15,25 @@ const SYSTEM_PROMPT =
   "Bạn không biết và không được hỏi về dữ liệu tài khoản hay số xu của người chơi. " +
   "Không đề cập tới việc bạn là mô hình của hãng nào trừ khi được hỏi trực tiếp.";
 
-const dailyLimit = () => {
+const MIN_LIMIT = 1;
+const MAX_LIMIT = 500;
+// Giới hạn lượt/ngày: admin chỉnh theo server (/chatbot gioihan); chưa chỉnh thì lấy CHATBOT_DAILY_LIMIT hoặc 20.
+const defaultLimit = () => {
   const n = Number(process.env.CHATBOT_DAILY_LIMIT);
   return Number.isInteger(n) && n > 0 ? n : DEFAULT_DAILY_LIMIT;
 };
+const dailyLimit = (guildId) =>
+  db.prepare("SELECT daily_limit FROM chatbot_settings WHERE guild_id=?").get(String(guildId))?.daily_limit ||
+  defaultLimit();
+function setDailyLimit(guildId, limit, adminId, now = Date.now()) {
+  const n = Math.floor(Number(limit));
+  if (!Number.isFinite(n) || n < MIN_LIMIT || n > MAX_LIMIT) throw new Error("INVALID_LIMIT");
+  db.prepare(
+    `INSERT INTO chatbot_settings(guild_id,daily_limit,updated_by,updated_at) VALUES(?,?,?,?)
+    ON CONFLICT(guild_id) DO UPDATE SET daily_limit=excluded.daily_limit,updated_by=excluded.updated_by,updated_at=excluded.updated_at`,
+  ).run(String(guildId), n, String(adminId), now);
+  return n;
+}
 // Nhà cung cấp: mặc định OpenAI; CHATBOT_PROVIDER=gemini dùng endpoint tương thích OpenAI của Google (khóa vẫn đặt ở OPENAI_API_KEY).
 const PROVIDERS = Object.freeze({
   openai: { baseUrl: "https://api.openai.com/v1", model: DEFAULT_MODEL, moderation: true },
@@ -71,7 +86,7 @@ function usage(guildId, userId, now = Date.now()) {
     db
       .prepare("SELECT used FROM chatbot_usage WHERE guild_id=? AND user_id=? AND day_key=?")
       .get(String(guildId), String(userId), dayKey(now))?.used || 0;
-  const limit = dailyLimit();
+  const limit = dailyLimit(guildId);
   return { used, limit, remaining: Math.max(0, limit - used) };
 }
 
@@ -85,7 +100,7 @@ const consumeTurn = db.transaction((guildId, userId, now = Date.now()) => {
   );
   const changed = db
     .prepare("UPDATE chatbot_usage SET used=used+1 WHERE guild_id=? AND user_id=? AND day_key=? AND used<?")
-    .run(String(guildId), String(userId), key, dailyLimit()).changes;
+    .run(String(guildId), String(userId), key, dailyLimit(guildId)).changes;
   return changed > 0;
 });
 function refundTurn(guildId, userId, now = Date.now()) {
@@ -207,6 +222,10 @@ module.exports = {
   baseUrl,
   MAX_INPUT_CHARS,
   setChannel,
+  setDailyLimit,
+  dailyLimit,
+  MIN_LIMIT,
+  MAX_LIMIT,
   clearChannel,
   getChannelId,
   usage,

@@ -8,7 +8,7 @@ delete process.env.OPENAI_API_KEY;
 delete process.env.CHATBOT_DAILY_LIMIT;
 
 const chatbot = require("../src/services/chatbotService");
-const { handleChatbotMessage, cancelForDeletedMessage } = require("../src/services/chatbotMessageService");
+
 const command = require("../src/commands/chatbot");
 
 const calls = [];
@@ -69,93 +69,80 @@ global.fetch = async (url, init) => {
   assert((await chatbot.ask({ guildId: G, userId: "other", channelId: C, text: "hi" })).ok);
   assert((await chatbot.ask({ guildId: G, userId: U, channelId: C, text: "hi", now: Date.now() + 24 * 3600_000 })).ok);
 
-  // handler tin nhắn
-  const sent = [];
-  const msg = (over = {}) => ({
-    guildId: G, channelId: C, content: "chào", author: { id: "m1", bot: false },
-    channel: { sendTyping: async () => {} }, reply: async (p) => sent.push(p), ...over,
-  });
-  assert.equal(await handleChatbotMessage(msg()), false, "kênh chưa đăng ký: bỏ qua");
-  chatbot.setChannel(G, C, "admin");
-  assert.equal(await handleChatbotMessage(msg({ channelId: "other" })), false);
-  assert.equal(await handleChatbotMessage(msg({ author: { id: "b", bot: true } })), false);
-  assert.equal(await handleChatbotMessage(msg({ content: "/xu" })), false);
-  assert.equal(await handleChatbotMessage(msg()), true);
-  assert.match(sent[0].content, /Xin chào!/);
-  assert.match(sent[0].content, /Còn 19\/20 lượt/);
-  assert.deepEqual(sent[0].allowedMentions.parse, [], "không ping ai");
-  assert(sent[0].content.length <= 2000);
-
   // lệnh /chatbot
-  const reply = [];
-  const interaction = (sub, extra = {}) => ({
-    guildId: G, user: { id: "admin" }, memberPermissions: { has: () => true },
-    options: { getSubcommand: () => sub, getChannel: () => ({ id: "newch" }) },
-    reply: async (p) => reply.push(p.content), ...extra,
-  });
-  await command.execute(interaction("luot"));
-  assert.match(reply.at(-1), /lượt/);
-  await command.execute(interaction("kenh", { user: { id: "plain" }, memberPermissions: { has: () => false } }));
-  assert.match(reply.at(-1), /Chỉ admin/);
-  await command.execute(interaction("kenh"));
-  assert.equal(chatbot.getChannelId(G), "newch");
-  await command.execute(interaction("tat"));
-  assert.equal(chatbot.getChannelId(G), null);
-  // lỗi nhà cung cấp: ghi log chẩn đoán (status + nội dung), người dùng thấy lỗi chung, lượt không mất
-  failChat = true;
-  const logs = [];
-  const failBefore = chatbot.usage(G, "diag").used;
-  global.fetch = async (url) => ({
-    ok: false,
-    status: 403,
-    text: async () => "API key not valid",
-    json: async () => ({}),
-  });
-  const sent2 = [];
-  const mk = (over = {}) => ({
-    id: "mm1", guildId: G, channelId: C, content: "chào", author: { id: "diag", bot: false },
-    channel: { sendTyping: async () => {} }, reply: async (p) => sent2.push(p), ...over,
-  });
   chatbot.setChannel(G, C, "admin");
-  await handleChatbotMessage(mk(), { warn: (...a) => logs.push(a) });
-  assert.equal(logs[0][0].status, 403);
-  assert.match(logs[0][0].body, /API key not valid/);
-  assert.match(sent2[0].content, /Lượt của bạn chưa bị trừ/);
-  assert.equal(sent2[0].failIfNotExists, false, "tin gốc bị xóa không làm hỏng việc trả lời");
-  assert.equal(chatbot.usage(G, "diag").used, failBefore);
-  // reply lỗi (tin gốc đã bị xóa) không ném lỗi ra ngoài
-  await handleChatbotMessage(
-    mk({ id: "mm2", reply: async () => { throw new Error("Unknown message"); } }),
-    { warn: () => {} },
-  );
-
-  // xóa tin nhắn khi đang xử lý: hủy ngay, không trả lời, hoàn lượt
-  let abortedFetch = false;
-  global.fetch = (url, init) =>
-    new Promise((resolve, reject) => {
-      init.signal.addEventListener("abort", () => {
-        abortedFetch = true;
-        reject(new Error("aborted"));
-      });
-    });
-  const sent3 = [];
-  const pending = handleChatbotMessage(
-    mk({ id: "del1", author: { id: "deleter", bot: false }, reply: async (p) => sent3.push(p) }),
-    { warn: () => {} },
-  );
-  await new Promise((r) => setTimeout(r, 20));
-  assert.equal(chatbot.usage(G, "deleter").used, 1, "đang xử lý thì đã trừ lượt tạm");
-  assert.equal(cancelForDeletedMessage("del1"), true);
-  await pending;
-  assert(abortedFetch, "yêu cầu tới nhà cung cấp phải bị hủy");
-  assert.equal(sent3.length, 0, "tin gốc đã xóa thì không trả lời");
-  assert.equal(chatbot.usage(G, "deleter").used, 0, "hoàn lượt khi bị hủy");
-  assert.equal(cancelForDeletedMessage("del1"), false);
-  // người dùng có thể chat lại ngay sau khi hủy
+  const replies = [], edits = [];
+  const slash = (sub, opts = {}, over = {}) => ({
+    guildId: G, channelId: C, user: { id: opts.user || "slash" }, memberPermissions: { has: () => opts.admin !== false },
+    options: {
+      getSubcommand: () => sub,
+      getString: () => opts.text ?? "chào",
+      getInteger: () => opts.n,
+      getChannel: () => ({ id: opts.channel || "newch" }),
+    },
+    reply: async (p) => replies.push(p.content),
+    deferReply: async () => { replies.push("<defer>"); },
+    editReply: async (p) => edits.push(p),
+    ...over,
+  });
+  const cmd = command;
+  // hỏi: sai kênh / chưa mở kênh
+  await cmd.execute(slash("hoi", {}, { channelId: "other" }));
+  assert.match(replies.at(-1), /trong kênh <#c>/);
+  // hỏi đúng kênh
+  await cmd.execute(slash("hoi"));
+  assert.equal(replies.at(-1), "<defer>");
+  assert.match(edits[0].content, /Xin chào!/);
+  assert.match(edits[0].content, /Còn 19\/20 lượt/);
+  assert.deepEqual(edits[0].allowedMentions.parse, [], "không ping ai");
+  assert(edits[0].content.length <= 2000);
+  // lỗi nhà cung cấp: log chẩn đoán, báo lỗi chung, không mất lượt
+  const warn = console.warn;
+  const logs = [];
+  console.warn = (line) => logs.push(JSON.parse(line));
+  global.fetch = async () => ({ ok: false, status: 403, text: async () => "API key not valid", json: async () => ({}) });
+  const diagBefore = chatbot.usage(G, "diag").used;
+  await cmd.execute(slash("hoi", { user: "diag" }));
+  console.warn = warn;
+  assert.equal(logs[0].status, 403);
+  assert.match(logs[0].body, /API key not valid/);
+  assert.match(edits.at(-1).content, /Lượt của bạn chưa bị trừ/);
+  assert.equal(chatbot.usage(G, "diag").used, diagBefore);
   global.fetch = async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: "ok" } }] }) });
-  assert.equal(await handleChatbotMessage(mk({ id: "again", author: { id: "deleter", bot: false }, reply: async (p) => sent3.push(p) })), true);
-  assert.equal(sent3.length, 1);
-  failChat = false;
+  // xem lượt
+  await cmd.execute(slash("luot"));
+  assert.match(replies.at(-1), /lượt/);
+
+  // giới hạn tùy chỉnh theo server
+  await cmd.execute(slash("gioihan", { n: 3, admin: false }));
+  assert.match(replies.at(-1), /Chỉ admin/);
+  assert.equal(chatbot.dailyLimit(G), 20);
+  await cmd.execute(slash("gioihan", { n: 3 }));
+  assert.match(replies.at(-1), /3 lượt/);
+  assert.equal(chatbot.dailyLimit(G), 3);
+  assert.equal(chatbot.dailyLimit("otherguild"), 20, "giới hạn theo từng server");
+  for (let i = 0; i < 3; i += 1) await cmd.execute(slash("hoi", { user: "lim" }));
+  assert.match(edits.at(-1).content, /Còn 0\/3/);
+  await cmd.execute(slash("hoi", { user: "lim" }));
+  assert.match(replies.at(-1), /hết \*\*3 lượt\*\*/, "hết lượt: báo riêng tư, không gọi API");
+  assert.throws(() => chatbot.setDailyLimit(G, 0, "a"), /INVALID_LIMIT/);
+  assert.throws(() => chatbot.setDailyLimit(G, 501, "a"), /INVALID_LIMIT/);
+  await cmd.execute(slash("gioihan", { n: 5 }));
+  await cmd.execute(slash("hoi", { user: "lim" }));
+  assert.match(edits.at(-1).content, /Còn 1\/5/, "nâng giới hạn có hiệu lực ngay");
+  chatbot.setDailyLimit(G, 20, "admin");
+
+  // kênh / tắt
+  await cmd.execute(slash("kenh", { admin: false }));
+  assert.match(replies.at(-1), /Chỉ admin/);
+  await cmd.execute(slash("kenh"));
+  assert.equal(chatbot.getChannelId(G), "newch");
+  await cmd.execute(slash("hoi"));
+  assert.match(replies.at(-1), /trong kênh <#newch>/);
+  await cmd.execute(slash("tat"));
+  assert.equal(chatbot.getChannelId(G), null);
+  await cmd.execute(slash("hoi"));
+  assert.match(replies.at(-1), /chưa mở kênh chatbot/);
 
   // 429: chuyển model dự phòng; hết danh sách thì thử lại một lần; lỗi khác (403) không thử lại
   process.env.CHATBOT_RETRY_DELAY_MS = "5";

@@ -70,7 +70,7 @@ const PAGES = Object.freeze({
       ],
       [
         "🤖 Chatbot AI",
-        "Chat trong kênh chatbot do admin chọn (`/chatbot kenh`); mỗi người 20 lượt/ngày, xem `/chatbot luot`.",
+        "Hỏi bằng `/chatbot hoi` trong kênh admin đã chọn (`/chatbot kenh`); xem số lượt còn lại bằng `/chatbot luot`.",
       ],
       [
         "📋 Cập nhật",
