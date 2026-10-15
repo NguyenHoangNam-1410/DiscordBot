@@ -1,4 +1,5 @@
 "use strict";
+const { E } = require("./shared/icons");
 // One passive per distinct equipped item. Levels and absorbed stats never multiply it.
 const CAPS = Object.freeze({
   berserk: 0.4,
@@ -186,65 +187,35 @@ function describe(p) {
   return (
     {
       berserk: () =>
-        "Cuồng chiến: sát thương Tấn công/Skill của bạn tăng theo HP đã mất, tối đa " +
-        n +
-        " khi gần cạn HP.",
+        `Cuồng chiến: sát thương Tấn công/Skill của bạn tăng theo ${E.hp} đã mất, tối đa ${n} khi gần cạn ${E.hp}.`,
       mpLeech: () =>
-        "Hút MP: " +
-        n +
-        " cơ hội hồi 1 MP cho bạn khi Tấn công/Skill gây sát thương, tối đa 1 lần/lượt.",
+        `Hút MP: ${n} cơ hội hồi 1 ${E.mana} cho bạn khi Tấn công/Skill gây sát thương, tối đa 1 lần/lượt.`,
       guardReflect: () =>
-        "Phản đòn: khi bấm Phòng thủ và sống sót, phản " +
-        n +
-        " HP thực mất thành sát thương vật lý lên quái.",
+        `Phản đòn: khi bấm Phòng thủ và sống sót, phản ${n} ${E.hp} thực mất thành sát thương vật lý lên quái.`,
       thorns: () =>
-        "Gai: khi sống sót sau đòn quái, phản " +
-        n +
-        " HP thực mất thành sát thương vật lý lên quái.",
+        `Gai: khi sống sót sau đòn quái, phản ${n} ${E.hp} thực mất thành sát thương vật lý lên quái.`,
       shopDiscount: () =>
-        "Thương lượng: giảm " +
-        n +
-        " giá xu tại Rift Merchant/Payout Item Shop; không giảm HP, kim cương hay cửa hàng ngoài run.",
+        `Thương lượng: giảm ${n} giá xu tại Rift Merchant/Payout Item Shop; không giảm ${E.hp}, kim cương hay cửa hàng ngoài run.`,
       eventLuck: () =>
-        "May mắn sự kiện: tăng " +
-        +(p.amount * 100).toFixed(3) +
-        " điểm % tỷ lệ nhánh tốt ở Blood Fountain, Three Doors và Wrong Portal.",
+        `May mắn sự kiện: tăng ${pct(p.amount)} tỷ lệ nhánh tốt ở ${names.fountain}, ${names.doors} và ${names.portal}.`,
       potionCapacity: () =>
-        "Túi bình: tăng giới hạn của bạn thêm " +
-        p.amount +
-        " bình máu; không tặng bình.",
+        `Túi bình: tăng ${E.potionCapacity} thêm ${p.amount}.`,
       critCap: () =>
-        "Trần chí mạng: tăng " +
-        +(p.amount * 100).toFixed(3) +
-        " điểm % giới hạn CRIT của bạn; không cộng tỷ lệ CRIT hiện tại.",
+        `Trần chí mạng: tăng ${pct(p.amount)} giới hạn ${E.crit} của bạn; không cộng tỷ lệ ${E.crit} hiện tại.`,
       evasionCap: () =>
-        "Trần né: tăng " +
-        +(p.amount * 100).toFixed(3) +
-        " điểm % giới hạn né đòn vật lý của bạn; không cộng EVA, không né phép.",
+        `Trần né: tăng ${pct(p.amount)} giới hạn né đòn vật lý của bạn; không cộng ${E.evasion}, không né phép.`,
       dodgeCounter: () =>
-        "Né phản kích: né tự nhiên đòn vật lý có " +
-        n +
-        " cơ hội phản sát thương vật lý lên quái; không tính né/chặn từ Skill.",
+        `Né phản kích: né tự nhiên đòn vật lý có ${n} cơ hội phản sát thương vật lý lên quái; không tính né/chặn từ Skill.`,
       startMana: () =>
-        "Khởi động MP: " +
-        n +
-        " cơ hội hồi 1 MP cho bạn một lần khi vào mỗi combat.",
+        `Khởi động MP: ${n} cơ hội hồi 1 ${E.mana} cho bạn một lần khi vào mỗi combat.`,
       campHeal: () =>
-        "Nghỉ chân: hồi " +
-        n +
-        " Max HP cho bạn khi qua tầng không có combat, tối đa một lần/tầng.",
+        `Nghỉ chân: hồi ${n} ${E.hp} cho bạn khi qua tầng không có combat, tối đa một lần/tầng.`,
       potionSave: () =>
-        "Tiết kiệm bình: " +
-        n +
-        " cơ hội dùng bình mà không tiêu hao; cần có bình, quái vẫn phản công.",
+        `Tiết kiệm bình: ${n} cơ hội dùng bình mà không tiêu hao; cần có bình, quái vẫn phản công.`,
       trapResistance: () =>
-        "Chống bẫy: giảm " +
-        n +
-        " HP mất do Fake Shrine/bẫy máu Wrong Portal; không giảm chi phí HP hay nguyền.",
+        `Chống bẫy: giảm ${n} ${E.hp} mất do Fake Shrine/bẫy máu Wrong Portal; không giảm chi phí HP hay nguyền.`,
       foresight: () =>
-        "Tiên tri: biết trước an toàn/nguy hiểm của 1 lựa chọn mỗi event thuộc " +
-        p.scopes.map((s) => names[s]).join(", ") +
-        "; không biết trước RNGesus.",
+        `Tiên tri: biết trước an toàn/nguy hiểm của 1 lựa chọn mỗi event thuộc ${p.scopes.map((s) => names[s]).join(", ")}; không biết trước RNGesus.`,
     }[p.kind]?.() || ""
   );
 }
@@ -252,63 +223,33 @@ function summary(state) {
   const a = aggregate(state),
     texts = {
       berserk: () =>
-        "Cuồng chiến · DMG Tấn công/Skill của bạn tăng 0–" +
-        pct(a.berserk) +
-        " theo tỷ lệ HP đã mất.",
+        `Cuồng chiến · DMG Tấn công/Skill của bạn tăng 0–${pct(a.berserk)} theo tỷ lệ ${E.hp} đã mất.`,
       mpLeech: () =>
-        "Hút MP · Tấn công/Skill gây DMG: " +
-        pct(a.mpLeech) +
-        " hồi 1 MP cho bạn, một lần/hành động.",
+        `Hút MP · Tấn công/Skill gây DMG: ${pct(a.mpLeech)} hồi 1 ${E.mana} cho bạn, một lần/hành động.`,
       guardReflect: () =>
-        "Phản thủ · bấm Phòng thủ và sống sót: phản " +
-        pct(a.guardReflect) +
-        " HP thực mất lên quái.",
+        `Phản thủ · bấm ${E.guard} và sống sót: phản ${pct(a.guardReflect)} ${E.hp} thực mất lên quái.`,
       thorns: () =>
-        "Gai · sống sót sau đòn quái: phản " +
-        pct(a.thorns) +
-        " HP thực mất lên quái.",
+        `Gai · sống sót sau đòn quái: phản ${pct(a.thorns)} ${E.hp} thực mất lên quái.`,
       shopDiscount: () =>
-        "Thương lượng · giá xu trong Rift Merchant/Payout Item Shop −" +
-        pct(a.shopDiscount) +
-        ".",
+        `Thương lượng · giá xu trong Rift Merchant/Payout Item Shop −${pct(a.shopDiscount)}.`,
       eventLuck: () =>
-        "May mắn event · nhánh tốt Fountain/Doors/Wrong Portal +" +
-        +(a.eventLuck * 100).toFixed(3) +
-        " điểm % (≤95%).",
+        `May mắn event · nhánh tốt Fountain/Doors/Wrong Portal +${(a.eventLuck * 100).toFixed(3)} điểm % (≤95%).`,
       potionCapacity: () =>
-        "Túi bình · bạn giữ thêm " +
-        a.potionCapacity +
-        " bình (tổng " +
-        (5 + a.potionCapacity) +
-        "); không tặng bình.",
+        `Túi bình · bạn giữ thêm ${a.potionCapacity} bình (tổng ${5 + a.potionCapacity}); không tặng bình.`,
       critCap: () =>
-        "Trần CRIT của bạn: " +
-        pct(0.6 + a.critCap) +
-        "; không cộng tỷ lệ CRIT hiện tại.",
+        `Trần CRIT của bạn: ${pct(0.6 + a.critCap)}; không cộng tỷ lệ CRIT hiện tại.`,
       evasionCap: () =>
-        "Trần né vật lý của bạn: " +
-        pct(0.45 + a.evasionCap) +
-        "; không cộng EVA, không né phép.",
+        `Trần né vật lý của bạn: ${pct(0.45 + a.evasionCap)}; không cộng ${E.evasion}, không né phép.`,
       dodgeCounter: () =>
-        "Né phản kích · né tự nhiên đòn vật lý: " +
-        pct(a.dodgeCounter) +
-        " phản DMG lên quái.",
+        `Né phản kích · né tự nhiên đòn vật lý: ${pct(a.dodgeCounter)} phản DMG lên quái.`,
       startMana: () =>
-        "Khởi động MP · " +
-        pct(a.startMana) +
-        " hồi 1 MP cho bạn một lần/combat.",
+        `Khởi động MP · ${pct(a.startMana)} hồi 1 ${E.mana} cho bạn một lần/combat.`,
       campHeal: () =>
-        "Nghỉ chân · qua tầng không có combat: hồi " +
-        pct(a.campHeal) +
-        " Max HP cho bạn.",
+        `Nghỉ chân · qua tầng không có combat: hồi ${pct(a.campHeal)} Max HP cho bạn.`,
       potionSave: () =>
-        "Tiết kiệm bình · " +
-        pct(a.potionSave) +
-        " giữ lại bình khi dùng hợp lệ; quái vẫn phản công.",
+        `Tiết kiệm bình · ${pct(a.potionSave)} giữ lại bình khi dùng hợp lệ; quái vẫn phản công.`,
       trapResistance: () =>
-        "Chống bẫy · HP mất vì Fake Shrine/bẫy máu Wrong Portal −" +
-        pct(a.trapResistance) +
-        ".",
+        `Chống bẫy · HP mất vì Fake Shrine/bẫy máu Wrong Portal −${pct(a.trapResistance)}.`,
     };
   const lines = Object.keys(CAPS)
     .filter((k) => a[k] > 0)
@@ -316,11 +257,7 @@ function summary(state) {
   const scopes = SCOPES.filter((s) => a.foresight[s] > 0);
   if (scopes.length)
     lines.push(
-      "Tiên tri · " +
-        scopes
-          .map((s) => names[s] + " (" + a.foresight[s] + " lựa chọn)")
-          .join(", ") +
-        ". Chỉ kết quả tức thời, không áp dụng RNGesus.",
+      `Tiên tri · ${scopes.map((s) => names[s] + " (" + a.foresight[s] + " lựa chọn)").join(", ")}. Chỉ kết quả tức thời, không áp dụng RNGesus.`,
     );
   if (a.thorns || a.guardReflect || a.dodgeCounter)
     lines.push(
