@@ -1,5 +1,14 @@
 [
   {
+    "id": "7fbbb7de-4594-4062-9b27-f18231df5d91",
+    "updatedAt": "2026-10-15T11:58:11.518Z",
+    "auditedAt": "2026-10-15T11:58:11.518Z",
+    "title": "Chatbot: lệnh !hoi",
+    "changes": [
+      "Có thể hỏi chatbot nhanh bằng !hoi <câu hỏi> (tương đương /chatbot hoi)."
+    ]
+  },
+  {
     "id": "4bc56a7d-4c56-4f10-971f-4c64089fa272",
     "updatedAt": "2026-10-15T11:53:16.640Z",
     "auditedAt": "2026-10-15T11:53:16.640Z",
