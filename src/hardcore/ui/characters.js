@@ -251,58 +251,58 @@ function payload(
         value:
           "Bộ kỹ năng hiện tại. Các bậc cộng dồn, nâng theo thứ tự S1 → S6.",
       });
-    }
-    fields.push(
-      ...selected.souls.map((s) => ({
-        name:
-          ((owned[id]?.soulLevel || 0) >= s.level ? "✅" : "🔒") +
-          " S" +
-          s.level +
-          " · " +
-          soulIcon(selected, s.level) +
-          " " +
-          s.name,
-        value:
-          s.description +
-          (s.level === 6 &&
-          soulTuning.bossMultipliers[selected.profileKey] !== 1
-            ? "\n" +
-              E.attack +
-              " DMG Tấn công/Skill lên boss +" +
-              number(
-                (soulTuning.bossMultipliers[selected.profileKey] - 1) * 100,
-              ) +
-              "% (gồm hit phụ; không tăng sát thương cố định từ cơ chế boss)."
-            : ""),
-      })),
-    );
-    fields.push({
-      name: "Tinh hồn · cơ chế chiến đấu",
-      value:
-        "S1–S6 đã có hiệu ứng chiến đấu; tài khoản khởi đầu S0. Nâng cấp chỉ áp dụng cho run mới." +
-        (owned[id]
-          ? "\nThẻ " +
-            characters.CLASSES[selected.classKey].name +
+      fields.push(
+        ...selected.souls.map((s) => ({
+          name:
+            ((owned[id]?.soulLevel || 0) >= s.level ? "✅" : "🔒") +
+            " S" +
+            s.level +
+            " · " +
+            soulIcon(selected, s.level) +
             " " +
-            selected.rarity +
-            ": **" +
-            require("../characters/progression").cards(
-              owner,
-              selected.classKey,
-              selected.rarity,
-            ) +
-            "** · " +
-            (owned[id].soulLevel >= 6
-              ? "Đã đạt S6; giữ thẻ cho nhân vật khác cùng class."
-              : "Cần **" +
-                require("../characters/progression").SOUL_COST[
-                  selected.rarity
-                ] +
-                " thẻ** để lên S" +
-                (owned[id].soulLevel + 1) +
-                ".")
-          : ""),
-    });
+            s.name,
+          value:
+            s.description +
+            (s.level === 6 &&
+            soulTuning.bossMultipliers[selected.profileKey] !== 1
+              ? "\n" +
+                E.attack +
+                " DMG Tấn công/Skill lên boss +" +
+                number(
+                  (soulTuning.bossMultipliers[selected.profileKey] - 1) * 100,
+                ) +
+                "% (gồm hit phụ; không tăng sát thương cố định từ cơ chế boss)."
+              : ""),
+        })),
+      );
+      fields.push({
+        name: "Tinh hồn · cơ chế chiến đấu",
+        value:
+          "S1–S6 đã có hiệu ứng chiến đấu; tài khoản khởi đầu S0. Nâng cấp chỉ áp dụng cho run mới." +
+          (owned[id]
+            ? "\nThẻ " +
+              characters.CLASSES[selected.classKey].name +
+              " " +
+              selected.rarity +
+              ": **" +
+              require("../characters/progression").cards(
+                owner,
+                selected.classKey,
+                selected.rarity,
+              ) +
+              "** · " +
+              (owned[id].soulLevel >= 6
+                ? "Đã đạt S6; giữ thẻ cho nhân vật khác cùng class."
+                : "Cần **" +
+                  require("../characters/progression").SOUL_COST[
+                    selected.rarity
+                  ] +
+                  " thẻ** để lên S" +
+                  (owned[id].soulLevel + 1) +
+                  ".")
+            : ""),
+      });
+    }
     embed.addFields(splitRuleFields(fields));
     components.push(
       new ActionRowBuilder().addComponents(

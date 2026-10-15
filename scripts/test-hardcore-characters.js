@@ -204,8 +204,9 @@ async function main() {
     for (const tab of ["stats", "skills", "souls"]) {
       const p = ui.payload(owner, { id: c.id, tab });
       limits(p);
-      for (const soul of c.souls)
-        assert(stringify(p).includes(soulIcon(c, soul.level)));
+      if (tab === "souls")
+        for (const soul of c.souls)
+          assert(stringify(p).includes(soulIcon(c, soul.level)));
       if (c.starter)
         assert.equal(
           component(p, "upgrade_0").emoji.name,
@@ -216,10 +217,13 @@ async function main() {
         assert.equal(
           p.embeds[0].data.fields.filter((f) => /^🔒 S[1-6]/.test(f.name))
             .length,
-          6,
+          tab === "souls" ? 6 : 0,
         );
-        assert(stringify(p).includes("hiệu ứng chiến đấu"));
-        assert(stringify(p).includes("khởi đầu S0"));
+        assert.equal(
+          stringify(p).includes("hiệu ứng chiến đấu"),
+          tab === "souls",
+        );
+        assert.equal(stringify(p).includes("khởi đầu S0"), tab === "souls");
       }
     }
   }
@@ -238,8 +242,8 @@ async function main() {
     result.payload.embeds[0].data.fields.filter((f) =>
       /^🔒 S[1-6]/.test(f.name),
     ).length,
-    6,
-    "all soul levels appear immediately when selecting a character",
+    0,
+    "stats tab does not repeat the dedicated soul tab",
   );
   assert(stringify(result.payload).includes("Wild Growth"));
   result = await click(result.payload, "tab_skills");

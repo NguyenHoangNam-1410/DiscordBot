@@ -1,5 +1,14 @@
 [
   {
+    "id": "18f24377-75e4-450a-a865-3fb8d599da32",
+    "updatedAt": "2026-10-15T09:22:11.266Z",
+    "auditedAt": "2026-10-15T09:22:11.266Z",
+    "title": "Nhân vật · tinh gọn tab chi tiết",
+    "changes": [
+      "Chỉ hiển thị danh sách S1–S6 và thông tin thẻ trong tab Tinh hồn; tab Chỉ số và Kỹ năng không lặp lại nội dung này."
+    ]
+  },
+  {
     "id": "e2a04c67-b95f-418f-b3aa-205b44225494",
     "updatedAt": "2026-10-15T09:07:11.737Z",
     "auditedAt": "2026-10-15T09:07:11.737Z",

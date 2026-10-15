@@ -284,7 +284,7 @@ try {
     s.venanceProfile.coefficient = 99;
     assert.throws(() => core.normalize(s), /INVALID_VENANCE/);
   });
-  test("UI uses live placeholder names and shows all six souls without undefined", () => {
+  test("UI uses live placeholder names and keeps all six souls in the soul tab", () => {
     const icons = require("../src/utils/appEmoji"),
       soulIcon = require("../src/hardcore/shared/icons").soulIcon;
     assert.equal(stats.CLASSES.venance.emoji, "🔮");
@@ -306,7 +306,7 @@ try {
       assert(p.components.length <= 5);
       assert.equal(
         p.embeds[0].data.fields.filter((f) => /^🔒 S[1-6]/.test(f.name)).length,
-        6,
+        tab === "souls" ? 6 : 0,
       );
       assert(p.embeds[0].length <= 6000);
     }
