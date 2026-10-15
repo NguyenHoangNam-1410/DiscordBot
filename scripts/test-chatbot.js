@@ -213,13 +213,67 @@ global.fetch = async (url, init) => {
     reply: async (p) => { out.push(p.content); return { edit: async (q) => out.push(q.content) }; },
   });
   assert.equal(await handleSlashPrefix(pmsg("!chatbot hoi Lorem ipsum dolor")), true);
-  assert.match(out.at(-1), /^echo:Lorem ipsum dolor/);
+  assert.match(out.at(-1), /^<@pfx> echo:Lorem ipsum dolor/);
   assert.equal(await handleSlashPrefix(pmsg("!hoi Xin chào bạn")), true);
-  assert.match(out.at(-1), /^echo:Xin chào bạn/);
+  assert.match(out.at(-1), /^<@pfx> echo:Xin chào bạn/);
   assert.equal(await handleSlashPrefix(pmsg("!HOI abc")), true);
-  assert.match(out.at(-1), /^echo:abc/);
+  assert.match(out.at(-1), /^<@pfx> echo:abc/);
   const count = out.length;
   assert.equal(await handleSlashPrefix(pmsg("!hoivui")), false, "không bắt nhầm lệnh khác bắt đầu bằng hoi");
   assert.equal(out.length, count);
+  // tương tác: ping người được nhắc tới, mention người hỏi, tuyệt đối không ping vai trò / everyone / here, react emoji
+  {
+    const prep = chatbot.prepareQuestion("chào <@111111> và <@!222222> <@111111> <@&999999> @everyone @here <@333333> <@444444> <@555555>", { askerId: "555555", botId: "444444" });
+    assert.deepEqual(prep.pinged, ["111111", "222222", "333333"], "tối đa 3 người, không trùng, bỏ người hỏi và bot");
+    assert(!/<@&|@everyone|@here|<@!/.test(prep.text.replace(/\[vai trò\]/g, "")), "câu hỏi gửi AI không còn ping vai trò/everyone");
+    const safe = chatbot.sanitizeReply("hi <@111111> <@&999999> @everyone @here <@777777> <@!222222>", ["111111", "222222"]);
+    assert.equal(safe, "hi <@111111> [vai trò] everyone here [người dùng] <@222222>");
+
+    const reactions = [], removed = [], payloads = [];
+    chatbot.setChannel(G, C, "admin");
+    let answer = "Chào <@111111>, <@&999999> @everyone đây!";
+    global.fetch = async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: answer } }] }) });
+    const source = {
+      client: { user: { id: "botid" } },
+      react: async (e) => reactions.push(e),
+      reactions: { cache: new Map([["🤔", { users: { remove: async (id) => removed.push(id) } }]]) },
+    };
+    const inter = (user, text, over = {}) => ({
+      guildId: G, channelId: C, user: { id: user }, client: { user: { id: "botid" } }, sourceMessage: source,
+      memberPermissions: { has: () => false },
+      options: { getSubcommand: () => "hoi", getString: () => text },
+      reply: async (p) => payloads.push(p), deferReply: async () => {}, editReply: async (p) => payloads.push(p), ...over,
+    });
+    await command.execute(inter("asker1", "nói xin chào <@111111> nhé <@&999999> @everyone"));
+    const out = payloads.at(-1);
+    assert(out.content.startsWith("<@asker1> "), "mention người hỏi");
+    assert(out.content.includes("<@111111>"), "gọi lại người được nhắc");
+    assert(!/<@&|@everyone|@here/.test(out.content), "không có ping vai trò/everyone/here");
+    assert.deepEqual(out.allowedMentions, { parse: [], users: ["asker1", "111111"], roles: [] });
+    assert.deepEqual(reactions, ["🤔", "✅"]);
+    assert.deepEqual(removed, ["botid"], "bỏ 🤔 sau khi trả lời xong");
+    assert(out.content.length <= 2000);
+    // lỗi: react ❌
+    reactions.length = 0;
+    global.fetch = async () => ({ ok: false, status: 500, text: async () => "", json: async () => ({}) });
+    process.env.CHATBOT_RETRY_DELAY_MS = "1";
+    const warn = console.warn; console.warn = () => {};
+    await command.execute(inter("asker2", "hi"));
+    console.warn = warn;
+    assert.deepEqual(reactions, ["🤔", "❌"]);
+    // hết lượt: react ⛔, trả lời riêng tư
+    reactions.length = 0;
+    chatbot.setDailyLimit(G, 1, "admin");
+    global.fetch = async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: "ok" } }] }) });
+    await command.execute(inter("asker3", "hi"));
+    await command.execute(inter("asker3", "hi"));
+    assert.deepEqual(reactions.slice(-1), ["⛔"]);
+    chatbot.setDailyLimit(G, 20, "admin");
+    // slash thật (không có tin nhắn gốc): không react, vẫn mention
+    const before = reactions.length;
+    await command.execute(inter("asker4", "hi", { sourceMessage: undefined }));
+    assert.equal(reactions.length, before);
+    assert(payloads.at(-1).content.startsWith("<@asker4> "));
+  }
   console.log("chatbot ok");
 })();

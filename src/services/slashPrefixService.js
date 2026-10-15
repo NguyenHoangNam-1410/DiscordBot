@@ -321,6 +321,7 @@ function messageInteraction(message, options = {}) {
     deferred: false,
     lastReply: null,
     isMessagePrefix: true,
+    sourceMessage: message,
     options: {
       getSubcommand: () => options.subcommand || null,
       getSubcommandGroup: () => options.group || null,
