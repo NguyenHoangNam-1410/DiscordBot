@@ -20,6 +20,13 @@ module.exports = function createModule(dependencies) {
   const killerName = (...args) => dependencies.killerName(...args);
 
   function finishRun(session, state, reason) {
+    if (require("../beta").is(state)) {
+      const simulatedPayout = ["cashout", "summit", "beta_end"].includes(reason)
+        ? hardcoreV2.payout(state)
+        : 0;
+      hardcoreRepository.deleteSession(session.id);
+      return require("../beta").result(state, reason, simulatedPayout);
+    }
     godRngesus.recordDeath(session, reason);
     if (["death", "rngesus"].includes(reason))
       state.killedBy = killerName(state, reason);
@@ -78,7 +85,7 @@ module.exports = function createModule(dependencies) {
       const session = hardcoreRepository.getActiveSession(id, guildId);
       if (!session) return null;
       const state = parseState(session);
-      if (!forfeit)
+      if (!forfeit && !require("../beta").is(state))
         creditCoins({
           guildId: session.guild_id,
           userId: session.user_id,
@@ -87,6 +94,7 @@ module.exports = function createModule(dependencies) {
           operationId: `refund:hardcore-admin:${session.id}:${session.user_id}`,
         });
       if (
+        !require("../beta").is(state) &&
         label === "setup-ui-failed" &&
         !forfeit &&
         state.turn === 0 &&
@@ -112,7 +120,7 @@ module.exports = function createModule(dependencies) {
         session,
         state,
         participants: [session.user_id],
-        forfeited: forfeit ? state.stake : 0,
+        forfeited: forfeit && !require("../beta").is(state) ? state.stake : 0,
       };
     })();
   }

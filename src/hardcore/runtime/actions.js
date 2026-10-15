@@ -58,6 +58,15 @@ module.exports = function createModule(dependencies) {
           state.turn += 1;
           let reason = hardcoreV2.act(state, session, action, randomFloat);
           if (
+            require("../beta").is(state) &&
+            ["death", "rngesus"].includes(reason)
+          ) {
+            require("../beta").markDeath(state, reason);
+            saveState(session, state);
+            return { settled: false, state, result: null };
+          }
+          if (
+            !require("../beta").is(state) &&
             ["death", "rngesus"].includes(reason) &&
             hardcoreV2.reviveAfterDeath(state, session, randomFloat, reason)
           )
@@ -70,7 +79,7 @@ module.exports = function createModule(dependencies) {
               result: finishRun(session, state, reason),
             };
           }
-          if (state.cleared > 0)
+          if (state.cleared > 0 && !require("../beta").is(state))
             hardcoreRepository.upsertRecord(session.guild_id, session.user_id, {
               bestFloor: state.cleared,
               runs: 0,

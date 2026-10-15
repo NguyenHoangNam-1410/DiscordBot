@@ -3,6 +3,7 @@ const crypto = require("node:crypto");
 const { db } = require("../../db");
 const WEEK = 7 * 24 * 60 * 60 * 1000;
 function archive(session, state, reason, payout = 0, diamonds = 0) {
+  if (require("../beta").is(state)) return;
   db.prepare(
     `INSERT OR IGNORE INTO hardcore_run_archive
     (session_id,guild_id,user_id,gameplay_version,release_version,class_key,cleared,reason,stake,payout,diamonds,turns,created_at,ended_at,
@@ -30,6 +31,7 @@ function archive(session, state, reason, payout = 0, diamonds = 0) {
   );
 }
 function claim(session, state, now = Date.now()) {
+  if (require("../beta").is(state)) return null;
   db.prepare("DELETE FROM hardcore_echoes WHERE expires_at<=?").run(now);
   const echo = db
     .prepare(
@@ -105,6 +107,7 @@ function snapshot(state) {
   };
 }
 function onDeath(session, state, now = Date.now()) {
+  if (require("../beta").is(state)) return;
   if (state.encounter.echoId) {
     const echo = owns(session, state.encounter.echoId, now);
     if (echo) {

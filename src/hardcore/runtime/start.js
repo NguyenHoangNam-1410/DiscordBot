@@ -34,28 +34,37 @@ module.exports = function createModule(dependencies) {
       loadout = {},
       playerName = String(userId),
       characterId = classKey,
+      beta = false,
     }) => {
+      if (typeof beta !== "boolean") throw Error("INVALID_BETA_STATE");
+      if (beta) {
+        classKey = characterId = "venance";
+        stake = require("../beta").STAKE;
+        loadout = {};
+      }
       const template =
         CLASSES[classKey] ||
-        (useV2() && classKey === "venance"
+        ((useV2() || beta) && classKey === "venance"
           ? hardcoreStats.CLASSES.venance
           : null);
       if (!template) throw new Error("INVALID_CLASS");
       if (!Number.isSafeInteger(stake) || stake < MIN_BET || stake > MAX_BET)
         throw new Error("INVALID_BET");
-      const maxBet = getGameBetLimit(guildId, "hardcore");
+      const maxBet = beta ? MAX_BET : getGameBetLimit(guildId, "hardcore");
       if (stake > maxBet) {
         const error = new Error("BET_LIMIT");
         error.maxBet = maxBet;
         throw error;
       }
       if (getHardcoreByUser(guildId, userId)) throw new Error("ACTIVE_SESSION");
-      const account = spendCoins({
-        guildId,
-        userId,
-        amount: stake,
-        reason: "hardcore:reserve",
-      });
+      const account = beta
+        ? null
+        : spendCoins({
+            guildId,
+            userId,
+            amount: stake,
+            reason: "hardcore:reserve",
+          });
       let state = {
         classKey,
         className: template.name,
@@ -106,11 +115,16 @@ module.exports = function createModule(dependencies) {
       for (const key of Object.keys(ITEM_LIMITS)) state[key] ??= 0;
       state.contract = null;
       state.classShrine = null;
-      if (useV2()) {
+      if (useV2() || beta) {
         const fair = state.fair;
-        state = hardcoreStats.createState(classKey, stake);
+        state = hardcoreStats.createState(
+          classKey,
+          stake,
+          beta ? { gameplayVersion: 3 } : {},
+        );
+        if (beta) require("../beta").activate(state);
         const souls = require("../characters/souls");
-        if (souls.enabled(state)) {
+        if (souls.enabled(state) && !beta) {
           const characters = require("../characters");
           const character = characters.get(characterId);
           const owned = characters.ownedCharacters(String(userId))[characterId];
@@ -139,7 +153,7 @@ module.exports = function createModule(dependencies) {
         state.playerName = String(playerName).slice(0, 80);
         hardcoreInventory.applyLoadout(
           state,
-          hardcoreInventory.consume(guildId, userId, loadout),
+          beta ? {} : hardcoreInventory.consume(guildId, userId, loadout),
         );
       } else
         state.encounter =

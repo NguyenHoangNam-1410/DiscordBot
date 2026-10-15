@@ -148,6 +148,10 @@ module.exports = function createModule(dependencies) {
           }
           if (privateRetreat) {
             const state = parseState(session);
+            if (require("../beta").is(state))
+              return respond(
+                "Run beta không rút thưởng vào tài khoản. Dùng nút Kết thúc beta trên bảng hiện tại.",
+              );
             if (state.turn !== Number(rawTurn))
               return respond(
                 "Lượt chơi đã thay đổi. Hãy bấm Rút thưởng trên bảng hiện tại để xem lại phần thưởng.",

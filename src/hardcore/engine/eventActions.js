@@ -121,7 +121,9 @@ module.exports = function createModule(dependencies) {
       } else if (require("../events/explorationMarks").freeMerchant(state, k)) {
         offer.price = 0;
         paymentLog = "Underworld Lead: mua miễn phí.\n";
-      } else if (k === "diamond_shop")
+      } else if (k === "diamond_shop" && require("../beta").is(state))
+        require("../beta").spendDiamonds(state, offer.price);
+      else if (k === "diamond_shop")
         spendDiamonds(session.guild_id, session.user_id, offer.price, {
           reason: "hardcore:v2:item-shop",
           operationId: `hardcore-shop:${session.id}:${state.turn}`,

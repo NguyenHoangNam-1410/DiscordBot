@@ -67,6 +67,13 @@ module.exports = {
     )
     .addSubcommand((command) =>
       command
+        .setName("beta")
+        .setDescription(
+          "Thử Venance miễn cược, hồi sinh đầy HP; không nhận thưởng thật",
+        ),
+    )
+    .addSubcommand((command) =>
+      command
         .setName("hoso")
         .setDescription("Xem thành tích Sinh tồn")
         .addUserOption((option) =>
@@ -131,6 +138,8 @@ module.exports = {
         flags: MessageFlags.Ephemeral,
       });
     const subcommand = interaction.options.getSubcommand();
+    if (subcommand === "beta")
+      return require("./runtime/beta").open(interaction);
     if (subcommand === "gacha") return require("./gacha/ui").open(interaction);
     if (subcommand === "nhanvat")
       return interaction.reply({

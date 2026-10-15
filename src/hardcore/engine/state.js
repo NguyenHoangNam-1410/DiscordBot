@@ -98,6 +98,7 @@ module.exports = function createModule(dependencies) {
   }
 
   function normalize(state) {
+    require("../beta").validate(state);
     require("../characters/souls").validate(state);
     require("../characters/venance").validate(state);
     require("../events/explorationMarks").normalize(state);

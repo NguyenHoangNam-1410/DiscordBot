@@ -154,6 +154,28 @@ module.exports = function createModule(dependencies) {
     return null;
   }
   function rows(sessionId, state, disabled = false) {
+    const beta = require("../beta").is(state);
+    if (beta && disabled) return [];
+    if (beta && state.beta.awaitingRevive) {
+      const prefix = `hardcore:${sessionId}:${state.turn}:`;
+      return [
+        ...chunkRows([
+          button(
+            prefix + "beta_revive",
+            "Hồi sinh · 100% HP",
+            ButtonStyle.Success,
+            false,
+            E.hp,
+          ),
+          button(prefix + "beta_end", "Kết thúc beta", ButtonStyle.Danger),
+        ]),
+        new ActionRowBuilder().addComponents(
+          viewTabs(state).map((tab) =>
+            button(prefix + `view_${tab}_0`, viewLabel(tab, state)),
+          ),
+        ),
+      ];
+    }
     if (disabled)
       return chunkRows([
         button(
@@ -246,7 +268,12 @@ module.exports = function createModule(dependencies) {
                             : null,
       ),
     );
+    if (beta)
+      buttons.push(
+        button(prefix + "beta_end", "Kết thúc beta", ButtonStyle.Danger),
+      );
     if (
+      !beta &&
       state.encounter.type !== "rngesus" &&
       state.phase !== "boss_chest" &&
       state.encounter.forge?.stage !== "boon" &&

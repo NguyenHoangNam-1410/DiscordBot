@@ -7,6 +7,7 @@ const IDS = Object.freeze([
   "astral_singularity",
 ]);
 function record(session, state, relicId, floor, now = Date.now()) {
+  if (require("../beta").is(state)) return false;
   if (
     !IDS.includes(relicId) ||
     !session?.id ||

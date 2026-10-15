@@ -12,8 +12,11 @@ function frame(state, userId, stage = 0) {
     return covenantReveal.frame(state, userId, stage);
   if (state.encounter?.type !== "god_rngesus") return null;
   const texts = [
-    "…\nKhông gian quanh bạn đột ngột im lặng.\n" + eventIcon("god_rngesus") + " Một ánh mắt dừng lại trên số phận của bạn.",
-    eventIcon("god_rngesus") + " Những con số ngừng chuyển động.\nMột quyền năng vượt trên RNGesus đang hiện diện…",
+    "…\nKhông gian quanh bạn đột ngột im lặng.\n" +
+      eventIcon("god_rngesus") +
+      " Một ánh mắt dừng lại trên số phận của bạn.",
+    eventIcon("god_rngesus") +
+      " Những con số ngừng chuyển động.\nMột quyền năng vượt trên RNGesus đang hiện diện…",
   ];
   return {
     content: "",
@@ -50,7 +53,7 @@ async function play(
     });
   if (
     state.encounter?.type !== "god_rngesus" ||
-    !god.claimReveal(sessionId, state.floor)
+    !god.claimReveal(sessionId, state.floor, Date.now(), state)
   )
     return false;
   try {

@@ -1,5 +1,16 @@
 [
   {
+    "id": "1086c855-2db0-4e5e-9284-54f701665d04",
+    "updatedAt": "2026-10-15T08:55:29.007Z",
+    "auditedAt": "2026-10-15T08:55:29.007Z",
+    "title": "Beta Venance · thử miễn cược",
+    "changes": [
+      "Thêm /sinhton beta: vào Venance SSR S0 với cược giả lập 100.000 xu, dùng giao diện và luật Sinh tồn hiện tại.",
+      "Tử trận có nút hồi sinh 100% HP, giữ tiến trình combat; thêm nút Kết thúc beta và hỗ trợ mở lại phiên thử.",
+      "Beta không trừ cược, không cộng/trừ xu hoặc gem thật, không thưởng khung, thành tích hay thành tựu. Diamond Merchant dùng gem giả lập trong run."
+    ]
+  },
+  {
     "id": "8b09fbba-6f64-4933-8449-84fe1a71a081",
     "updatedAt": "2026-10-15T08:33:08.009Z",
     "auditedAt": "2026-10-15T08:33:08.009Z",

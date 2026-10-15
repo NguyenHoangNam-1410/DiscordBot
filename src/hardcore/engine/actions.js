@@ -59,6 +59,21 @@ module.exports = function createModule(dependencies) {
   const resolveMemory = (...args) => dependencies.resolveMemory(...args);
 
   function act(state, session, action, rng) {
+    const beta = require("../beta");
+    if (action === "beta_end") {
+      if (!beta.is(state)) throw Error("INVALID_ACTION");
+      return "beta_end";
+    }
+    if (beta.is(state) && state.beta.awaitingRevive) {
+      if (action !== "beta_revive") throw Error("INVALID_ACTION");
+      beta.revive(state, session, rng, {
+        recompute,
+        completeFloor,
+        defeatEnemy,
+      });
+      return null;
+    }
+    if (action === "beta_revive") throw Error("INVALID_ACTION");
     const previousEncounter = state.encounter;
     if (action === "retreat") {
       if (

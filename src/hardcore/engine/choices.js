@@ -41,7 +41,10 @@ module.exports = function createModule(dependencies) {
         label: `${i + 1}. ${offer.item.name} · ${offer.price}${k === "blood_shop" ? " Max HP" : k === "diamond_shop" ? " 💎" : " xu"}`,
         disabled:
           (k === "blood_shop" && state.maxHp <= offer.price) ||
-          (k === "payout_shop" && payout(state) < offer.price),
+          (k === "payout_shop" && payout(state) < offer.price) ||
+          (k === "diamond_shop" &&
+            require("../beta").is(state) &&
+            require("../beta").diamonds(state) < offer.price),
       }));
     if (k === "merchant")
       return e.offers.map((offer, i) => ({
@@ -188,6 +191,8 @@ module.exports = function createModule(dependencies) {
   }
 
   function actions(state) {
+    if (require("../beta").is(state) && state.beta.awaitingRevive)
+      return [{ action: "beta_revive", label: "Hồi sinh · 100% HP" }];
     if (state.encounter?.type === "prophecy" && !memories.canQueue(state))
       return [{ action: "prophecy_skip", label: "Đi tiếp · đầy ký ức" }];
     if (state.encounter?.type === "prophecy")

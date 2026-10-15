@@ -68,7 +68,15 @@ const recordEncounter = db.transaction(
     return Boolean(inserted);
   },
 );
-function claimReveal(sessionId, floor, now = Date.now()) {
+function claimReveal(sessionId, floor, now = Date.now(), state = null) {
+  if (require("../beta").is(state))
+    return Boolean(
+      db
+        .prepare(
+          "UPDATE hardcore_sessions SET state_json=json_set(state_json,'$.encounter.revealedAt',?) WHERE id=? AND json_extract(state_json,'$.mode')='beta' AND json_extract(state_json,'$.turn')=? AND json_extract(state_json,'$.floor')=? AND json_extract(state_json,'$.encounter.type')='god_rngesus' AND json_extract(state_json,'$.encounter.revealedAt') IS NULL",
+        )
+        .run(now, String(sessionId), state.turn, floor).changes,
+    );
   return Boolean(
     db
       .prepare(
@@ -90,10 +98,14 @@ function tryEncounter(state, session, rng) {
     return null;
   // Saved with the enclosing game transaction: reopening never rolls this floor again.
   state.godRngesusRollFloor = state.floor;
-  const previous = favor(session.guild_id, session.user_id);
+  const beta = require("../beta").is(state);
+  const previous = beta
+    ? { deaths_since_blessing: state.beta.rngesusDeaths }
+    : favor(session.guild_id, session.user_id);
   const chance = godRngesusChance(previous.deaths_since_blessing);
   if (rng() >= chance) return null;
-  if (!recordEncounter(session, state.floor, chance)) return null;
+  if (!beta && !recordEncounter(session, state.floor, chance)) return null;
+  if (beta) state.beta.rngesusDeaths = 0;
   const blessing = restore(state);
   const { hpBefore, manaBefore } = blessing;
   const definition = RELIC_ITEMS.fatebreaker_seal;
@@ -129,7 +141,8 @@ function tryEncounter(state, session, rng) {
     " → " +
     state.mana +
     "**; giải toàn bộ nguyền UR, xóa mọi ấn Rift.\n" +
-    relicIcon("fatebreaker_seal") + " Nhận **Fatebreaker Seal [LR]**" +
+    relicIcon("fatebreaker_seal") +
+    " Nhận **Fatebreaker Seal [LR]**" +
     (state.activeRelic === definition.id
       ? ": không gặp RNGesus trong phần còn lại của run."
       : ": đang có nội tại LR khác hoạt động.") +

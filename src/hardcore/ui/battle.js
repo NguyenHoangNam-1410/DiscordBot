@@ -23,6 +23,7 @@ module.exports = function createModule(dependencies) {
   const turnText = (...args) => dependencies.turnText(...args);
 
   function embed(state, userId, result = null, sessionId = null) {
+    const beta = require("../beta").is(state);
     const c = stats.CLASSES[state.classKey];
     const compact =
       state.gameplayVersion === 3 &&
@@ -50,7 +51,7 @@ module.exports = function createModule(dependencies) {
       )
       .setTitle(
         compact
-          ? `SINH TỒN v${state.releaseVersion} · TẦNG ${state.floor} · ${world.regionForFloor(state.floor).name}`
+          ? `SINH TỒN${beta ? " BETA 🧪" : ""} v${state.releaseVersion} · TẦNG ${state.floor} · ${world.regionForFloor(state.floor).name}`
           : `${c.emoji} SINH TỒN v${state.releaseVersion} · TẦNG ${state.floor}${state.floor > 100 ? " · OVERRUN" : ""}`,
       )
       .setDescription(
@@ -83,18 +84,20 @@ module.exports = function createModule(dependencies) {
       encounterSummary(state, compact),
     );
     e.addFields({
-      name: `${icon("moneybag", "💰")} Rút thưởng`,
-      value: result
-        ? `Đã nhận **${money(result.payout)} ${icon("coin", "🪙")}** ${STAT_SEPARATOR} **${money(result.diamonds || 0)} ${icon("gem", "💎")}**`
-        : bosses.retreatLocked(state)
-          ? "Kabraxis đã khóa rút thưởng trong trận."
-          : state.cleared
-            ? `Thực nhận: **${money(core.payout(state))} ${E.coin}**${STAT_SEPARATOR}**${money(runDiamondReward(state))} ${icon("gem", "💎")}**`
-            : "Chưa thể rút",
+      name: beta ? "🧪 Thưởng giả lập" : `${icon("moneybag", "💰")} Rút thưởng`,
+      value: beta
+        ? `Cược giả lập **100.000 xu** · ${money(result?.simulatedPayout ?? core.payout(state))} ${E.coin} · ${money(result?.simulatedDiamonds ?? require("../beta").diamonds(state))} ${icon("gem", "💎")}\nKhông trừ/cộng xu, gem tài khoản; không thưởng khung, thành tích hoặc thành tựu.${state.beta.awaitingRevive ? "\n☠️ Đã tử trận — bấm **Hồi sinh · 100% HP** để tiếp tục." : ""}`
+        : result
+          ? `Đã nhận **${money(result.payout)} ${icon("coin", "🪙")}** ${STAT_SEPARATOR} **${money(result.diamonds || 0)} ${icon("gem", "💎")}**`
+          : bosses.retreatLocked(state)
+            ? "Kabraxis đã khóa rút thưởng trong trận."
+            : state.cleared
+              ? `Thực nhận: **${money(core.payout(state))} ${E.coin}**${STAT_SEPARATOR}**${money(runDiamondReward(state))} ${icon("gem", "💎")}**`
+              : "Chưa thể rút",
       inline: false,
     });
     addTextFields(e, `${icon("scroll", "📜")} Lượt vừa rồi`, turnText(state));
-    if (result) {
+    if (result && !beta) {
       const won = ["cashout", "summit"].includes(result.reason);
       e.addFields({
         name: `${icon("checkered_flag", "🏁")} KẾT QUẢ`,
@@ -119,6 +122,12 @@ module.exports = function createModule(dependencies) {
             : `Mất **${money(result.diamondsLost || 0)}** kim cương tạm giữ.`,
         });
     }
+    if (result?.beta)
+      e.addFields({
+        name: "🧪 Đã kết thúc beta",
+        value:
+          "Không có phần thưởng vào tài khoản. Dùng `/sinhton beta` để thử run mới.",
+      });
     if (result?.achievements?.length)
       e.addFields({
         name: "Thành tựu mới",

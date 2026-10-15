@@ -4,6 +4,7 @@ module.exports = function createModule(dependencies) {
   const getHardcoreRun = (...args) => dependencies.getHardcoreRun(...args);
 
   function recordRun(guildId, userId, state, reason) {
+    if (require("../beta").is(state)) return;
     hardcoreRepository.addEventStats(guildId, userId, {
       events: state.evCount || 0,
       chains: state.chainCount || 0,
@@ -44,7 +45,7 @@ module.exports = function createModule(dependencies) {
       .all(String(guildId), String(userId));
     record.activeVersion =
       run?.state.releaseVersion || (run ? "legacy-4" : null);
-    if (!run) return record;
+    if (!run || require("../beta").is(run.state)) return record;
     return {
       ...record,
       best_floor: Math.max(record.best_floor, run.state.cleared),
