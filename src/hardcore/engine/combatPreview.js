@@ -2,6 +2,7 @@
 const awakening = require("../awakening");
 const rift = require("../rift");
 const souls = require("../characters/souls");
+const venance = require("../characters/venance");
 const innate = require("../innate");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
@@ -32,7 +33,10 @@ module.exports = function createModule(dependencies) {
     const afterShield = (n) => {
       const remaining = Math.max(
         0,
-        n - shield - (souls.frame(state)?.guardBarrier || 0),
+        n -
+          shield -
+          (souls.frame(state)?.guardBarrier || 0) -
+          (venance.frame(state)?.barrier || 0),
       );
       return (
         remaining -
@@ -107,7 +111,10 @@ module.exports = function createModule(dependencies) {
   }
 
   function attackManaGain(state) {
+    if (venance.empowered(state) || venance.blockedMana(state)) return 0;
     if (paradox.is(state, "mana_fracture")) return 0;
+    if (venance.enabled(state))
+      return Math.max(0, 1 - (state.attackManaLoss || 0));
     return Math.max(
       0,
       Math.max(
@@ -121,9 +128,14 @@ module.exports = function createModule(dependencies) {
   }
 
   function skillManaCost(state) {
-    if (bosses.brainControl(state) || royal.freeMagic(state)) return 0;
+    if (
+      (!venance.enabled(state) && bosses.brainControl(state)) ||
+      royal.freeMagic(state)
+    )
+      return 0;
     if (awakening.empowered(state)) return 1;
-    const free = state.classKey === "sorceress" && shrineActive(state);
+    const free =
+      ["sorceress", "venance"].includes(state.classKey) && shrineActive(state);
     return bosses.skillCost(
       state,
       paradox.manaCost(state, free) + (free ? 0 : state.skillManaExtra || 0),
@@ -138,6 +150,64 @@ module.exports = function createModule(dependencies) {
   }
 
   function outgoingDamagePreview(state, action) {
+    if (venance.enabled(state)) {
+      if (action === "skill")
+        return { low: 0, high: 0, magic: false, preparation: true };
+      const forecast = (raw) => {
+        const copy = structuredClone(state);
+        dependencies.prepareItemCombat(copy, () => 1);
+        innate.begin(copy, action);
+        venance.begin(copy, action);
+        bosses.beginAction(copy, action);
+        rift.beginAction(copy, action);
+        const target = copy.encounter;
+        if (
+          bosses.on(target)
+            ? bosses.vanished(copy)
+            : target.mechanic === "riftwalker" && target.combatTurn % 3 === 0
+        )
+          return 0;
+        const before = venance.target(copy);
+        const magic = venance.empowered(copy);
+        const h = attackDamage(copy, target, copy, () => 0, {
+          player: true,
+          raw,
+          magic,
+          critical: false,
+          multiplier: magic ? venance.multiplier(copy) : 1,
+        });
+        const rankBonus = ["boss", "final_boss"].includes(target.rank)
+          ? copy.bossDamage
+          : target.rank === "elite"
+            ? copy.eliteDamage
+            : 0;
+        let amount = Math.floor(
+          h.damage * (paradox.active(copy) ? 1 : 1 + rankBonus),
+        );
+        if (
+          !bosses.on(target) &&
+          !paradox.active(copy) &&
+          target.mechanic === "deimoss" &&
+          amount > 0
+        )
+          amount = Math.max(1, Math.floor(amount * 0.75));
+        const strength = bosses.damageStrength(copy, amount);
+        const dealt = bosses.applyDamage(copy, amount);
+        const proc = venance.afterHit(copy, dealt, strength, before, (n) =>
+          bosses.applyDamage(copy, n),
+        );
+        return strength + proc.strength;
+      };
+      const range = venance.empowered(state)
+        ? [state.spellMin, state.spellMax]
+        : physicalRange(state);
+      return {
+        low: forecast(range[0]),
+        high: forecast(range[1]),
+        magic: venance.empowered(state),
+        shots: 1,
+      };
+    }
     const originalInnate = innate.multiplier(state, action);
     if (souls.has(state, 1)) {
       state = structuredClone(state);

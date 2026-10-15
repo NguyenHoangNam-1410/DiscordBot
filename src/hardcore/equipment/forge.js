@@ -1,6 +1,8 @@
 "use strict";
 function prepare(state, targetId) {
-  const main = ["sorceress", "necromancer", "druid"].includes(state.classKey)
+  const main = ["sorceress", "necromancer", "druid", "venance"].includes(
+    state.classKey,
+  )
     ? "ene"
     : ["amazon", "assassin"].includes(state.classKey)
       ? "dex"
@@ -15,7 +17,7 @@ function prepare(state, targetId) {
       {
         key: ["amazon", "assassin"].includes(state.classKey)
           ? "accuracy"
-          : ["sorceress", "necromancer"].includes(state.classKey)
+          : ["sorceress", "necromancer", "venance"].includes(state.classKey)
             ? "resistance"
             : "defense",
         amount: 1,

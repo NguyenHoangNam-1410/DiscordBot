@@ -35,7 +35,11 @@ module.exports = function createModule(dependencies) {
       playerName = String(userId),
       characterId = classKey,
     }) => {
-      const template = CLASSES[classKey];
+      const template =
+        CLASSES[classKey] ||
+        (useV2() && classKey === "venance"
+          ? hardcoreStats.CLASSES.venance
+          : null);
       if (!template) throw new Error("INVALID_CLASS");
       if (!Number.isSafeInteger(stake) || stake < MIN_BET || stake > MAX_BET)
         throw new Error("INVALID_BET");
@@ -113,6 +117,11 @@ module.exports = function createModule(dependencies) {
           if (!owned || character?.profileKey !== classKey)
             throw Error("CHARACTER_NOT_OWNED");
           souls.attach(state, characterId, owned.soulLevel);
+          if (classKey === "venance")
+            require("../characters/venance").attach(
+              state,
+              owned.rarity || "SSR",
+            );
         }
         state.bossRosterVersion =
           process.env.HARDCORE_BOSS_ROSTER_VERSION === "1"

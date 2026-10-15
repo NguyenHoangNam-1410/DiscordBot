@@ -6,6 +6,8 @@ Ngày thiết kế: 14/10/2026. Cập nhật: 15/10/2026.
 
 Chi tiết 42 hiệu ứng: [Tinh hồn 7 nhân vật SR](sr-character-souls-design.md). [Kết quả hiệu chỉnh S6](releases/hardcore-souls-2026-10-15.md).
 
+Bản thiết kế SSR đầu tiên: [Venance — Pháp sư](venance-ssr-character-design.md), chưa phát hành vào banner hoặc chiến đấu.
+
 ## Banner Khởi Hành
 
 - Lần đầu mở **/sinhton gacha**, tài khoản Discord nhận đúng **30 vé tân thủ**. Đọc /sinhton nhanvat không nhận vé.

@@ -25,7 +25,11 @@ module.exports = function createModule(dependencies) {
   function ratesFields(category) {
     const fields = {
       combat: [
-        { name: "✨ Class Innate · từ tầng 1", value: "V3.1: mỗi class có nội tại ngay từ tầng 1, không cần item và không mất sau thức tỉnh. Xem Chỉ số để đọc hiệu ứng, cooldown và tài nguyên. Buff trong combat giữ qua phase, hết khi kết thúc trận; né/chặn không ngăn DMG chuẩn, chi phí HP, bẫy hoặc phản phệ." },
+        {
+          name: "✨ Class Innate · từ tầng 1",
+          value:
+            "V3.1: mỗi class có nội tại ngay từ tầng 1, không cần item và không mất sau thức tỉnh. Xem Chỉ số để đọc hiệu ứng, cooldown và tài nguyên. Buff trong combat giữ qua phase, hết khi kết thúc trận; né/chặn không ngăn DMG chuẩn, chi phí HP, bẫy hoặc phản phệ.",
+        },
         {
           name: "✨ Class Awakening · tầng 100",
           value:
@@ -65,6 +69,11 @@ module.exports = function createModule(dependencies) {
               )
               .join("\n") +
             "\nSkill không hồi MP như đánh thường. Class Shrine của Sorceress cho một lần dùng miễn phí. Quái có cơ chế miễn sát thương vẫn có thể nhận 0 DMG dù phép luôn trúng.",
+        },
+        {
+          name: `${SKILL_ICONS.venance} Venance · Skill chuẩn bị`,
+          value:
+            "Astral Armament tốn 2 MP, không gây DMG; cường hóa đánh thường thành phép trong 3 hành động tiếp theo. Bình, Phòng thủ và thao tác boss tốn lượt đều trừ thời gian. Đòn cường hóa luôn trúng, không Crit, không hồi MP; Phòng thủ hồi tổng 2 MP. Xem Nhân vật để đọc Hồi lưu và Tam trọng.",
         },
         {
           name: `${eventIcon("boss")} Cơ chế boss`,

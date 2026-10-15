@@ -16,6 +16,7 @@ module.exports = function createModule(dependencies) {
     require("../awakening").prepare(state);
     require("../innate").prepare(state);
     require("../characters/souls").prepare(state);
+    require("../characters/venance").prepare(state);
     const rift = require("../rift");
     if (rift.enabled(state)) {
       rift.snapshot(state, e);

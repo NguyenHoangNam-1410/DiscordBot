@@ -50,7 +50,9 @@ module.exports = function createModule(dependencies) {
       embed.addFields(
         {
           name: `${[2, 3].includes(context.gameplayVersion) ? require("../../engine/stats").CLASSES[draft.classKey].emoji : character.emoji} ${character.name}`,
-          value: CLASS_PROFILES[draft.classKey].role,
+          value:
+            CLASS_PROFILES[draft.classKey]?.role ||
+            require("../../ui/index").setupPreview(draft.classKey).role,
         },
         {
           name: "📊 Chỉ số ban đầu",
@@ -58,7 +60,9 @@ module.exports = function createModule(dependencies) {
         },
         {
           name: `✨ ${character.skill} · 2 ENE`,
-          value: CLASS_PROFILES[draft.classKey].effect,
+          value:
+            CLASS_PROFILES[draft.classKey]?.effect ||
+            require("../../ui/index").setupPreview(draft.classKey).skill,
         },
       );
       if ([2, 3].includes(context.gameplayVersion)) {
@@ -105,7 +109,10 @@ module.exports = function createModule(dependencies) {
       embed.setFields(fields);
       for (let i = 0; i < previews.length; i += 3)
         embed.addFields({
-          name: i === 0 ? "🧙 Chọn một trong 7 nhân vật" : "\u200b",
+          name:
+            i === 0
+              ? `🧙 Chọn một trong ${previews.length} nhân vật`
+              : "\u200b",
           value: previews
             .slice(i, i + 3)
             .map((p) => `**${p.name}**\n${p.attributes}\n${p.role}`)
@@ -135,7 +142,7 @@ module.exports = function createModule(dependencies) {
             ? require("../../engine/stats").CLASSES[value].emoji
             : entry.emoji,
           description: [2, 3].includes(context.gameplayVersion)
-            ? require("../../ui/index").setupPreview(value).role
+            ? require("../../ui/index").setupPreview(value).role.slice(0, 100)
             : CLASS_PROFILES[value].role,
           default: value === draft.classKey,
         })),

@@ -393,6 +393,10 @@ const SKILL_ICONS = Object.fromEntries(
     paladin: "skill_devineshield",
   }).map(([key, name]) => [key, icon(name, "✨")]),
 );
+Object.defineProperty(SKILL_ICONS, "venance", {
+  enumerable: true,
+  get: () => icon("skill_venance_astral_armament", "🔮"),
+});
 // Resolve Rift emojis after startup loads the application registry.
 const RIFT_ICONS = Object.freeze(
   Object.defineProperties(

@@ -2,6 +2,8 @@
 const rules = require("./rules");
 const { E } = require("../shared/icons");
 const DESCRIPTIONS = {
+  venance:
+    "Đòn phép cường hóa tăng DMG theo ENE (trần 15%); không hồi MP từ đòn cường hóa.",
   assassin:
     "Né vật lý tự nhiên tạo Shadow Mark; Crit kế tiêu thụ dấu tăng DMG (trần 20%). Shadow Step không tạo dấu.",
   amazon:
@@ -62,6 +64,7 @@ function outgoing(s, magic, crit) {
       return 1 + (!magic ? Math.min(0.15, n * (c.hits || 0)) : 0);
     case "barbarian":
       return 1 + Math.min(0.2, n * 2 * (1 - s.hp / s.maxHp));
+    case "venance":
     case "sorceress":
       return 1 + (magic ? Math.min(0.15, n * Math.min(2, s.ene / 100)) : 0);
     case "paladin":
@@ -167,6 +170,12 @@ function summary(s) {
         "; sát thương nhận −" +
         pct(1 - incoming(s)) +
         " hiện tại."
+      );
+    case "venance":
+      return (
+        "Đòn phép cường hóa: DMG +" +
+        pct(outgoing(s, true, false) - 1) +
+        " theo ENE; không hồi MP khi đánh cường hóa."
       );
     case "sorceress":
       return (

@@ -314,6 +314,8 @@ function preview(classKey, stake, loadout, userId = null) {
       classKey,
       owned?.soulLevel || 0,
     );
+    if (classKey === "venance")
+      require("../characters/venance").attach(state, owned?.rarity || "SSR");
   }
   return applyLoadout(state, loadout);
 }

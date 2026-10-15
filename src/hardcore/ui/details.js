@@ -271,11 +271,17 @@ module.exports = function createModule(dependencies) {
         },
         {
           name: `${E.attack} Tấn công`,
-          value: `- ${E.attack} **Vật lý**: 1 đòn, có thể trượt hoặc ${E.crit} **CRIT ×${Number(royal.critMultiplier(state).toFixed(1)).toLocaleString("vi-VN")}**.\n- ${E.mana} **MP +${core.attackManaGain(state)}**, kể cả trượt (tối đa Max MP).\nQuái còn sống sẽ đánh trả.`,
+          value:
+            state.classKey === "venance"
+              ? require("./index").setupPreview("venance").attack
+              : `- ${E.attack} **Vật lý**: 1 đòn, có thể trượt hoặc ${E.crit} **CRIT ×${Number(royal.critMultiplier(state).toFixed(1)).toLocaleString("vi-VN")}**.\n- ${E.mana} **MP +${core.attackManaGain(state)}**, kể cả trượt (tối đa Max MP).\nQuái còn sống sẽ đánh trả.`,
         },
         {
           name: `${E.defense} Phòng thủ`,
-          value: defenseDescription(),
+          value:
+            state.classKey === "venance"
+              ? require("./index").setupPreview("venance").defend
+              : defenseDescription(),
         },
       );
     } else if (tab === "effects") {

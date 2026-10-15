@@ -6,6 +6,24 @@ const VERSION = 3;
 const MASTERY_VERSION = 1;
 const BALANCE_VERSION = "3.1.0";
 const PROFILES = Object.freeze({
+  venance: {
+    name: "Astral Conduction",
+    accuracy: 1.2,
+    evasion: 0.2,
+    crit: 0.0003,
+    critCap: 0.35,
+    evasionCap: 0.3,
+    hp: 3.3,
+    strDefense: 0.15,
+    vitDefense: 0.18,
+    res: 0.25,
+    mana: 0.05,
+    physicalPower: 1,
+    spellPower: 1.4,
+    vitPhysical: 0,
+    enePhysical: 0,
+    vitSpell: 0,
+  },
   amazon: {
     name: "Marksmanship",
     accuracy: 1.35,
@@ -154,7 +172,10 @@ function snapshot(classKey, core, basePower) {
     version: VERSION,
     masteryVersion: MASTERY_VERSION,
     classKey,
-    core: { ...Object.fromEntries(NUMERIC_CORE.map((key) => [key, core[key]])), ...(classKey === "assassin" ? { baseHp: 46 } : {}) },
+    core: {
+      ...Object.fromEntries(NUMERIC_CORE.map((key) => [key, core[key]])),
+      ...(classKey === "assassin" ? { baseHp: 46 } : {}),
+    },
     initialVitHp: classKey === "amazon" ? 3.5 : classKey === "assassin" ? 4 : 3,
     mastery: { ...mastery },
     powers: { basePower, attributePower: 1, equipmentPower: 1, skillPower: 1 },
@@ -197,7 +218,13 @@ function profile(state) {
     p.mastery.evasionCap > 0.6
   )
     throw new Error("INVALID_HARDCORE_STATS");
-  if (state.balanceVersion === BALANCE_VERSION && (!Number.isFinite(p.initialVitHp) || p.initialVitHp < 1 || p.initialVitHp > 5)) throw Error("INVALID_HARDCORE_STATS");
+  if (
+    state.balanceVersion === BALANCE_VERSION &&
+    (!Number.isFinite(p.initialVitHp) ||
+      p.initialVitHp < 1 ||
+      p.initialVitHp > 5)
+  )
+    throw Error("INVALID_HARDCORE_STATS");
   return p;
 }
 function layers(state) {
@@ -229,11 +256,7 @@ function layers(state) {
       equipment.defense =
         (equipment.defense || 0) - (itemCurses.defenseLoss(item) || 0);
     }
-    add(
-      equipment,
-      effects,
-      equipmentRules.curseScale(state, item),
-    );
+    add(equipment, effects, equipmentRules.curseScale(state, item));
   }
   return { allocated, equipment };
 }
@@ -251,7 +274,10 @@ function apply(state, d, totals, passives, clamp) {
   d.maxHp = Math.max(
     1,
     Math.floor(
-      c.baseHp + c.vit * (state.statProfile.initialVitHp || 3) + extra("vit") * m.hp + (totals.maxHp || 0),
+      c.baseHp +
+        c.vit * (state.statProfile.initialVitHp || 3) +
+        extra("vit") * m.hp +
+        (totals.maxHp || 0),
     ),
   );
   const physical = (value) =>
@@ -343,7 +369,9 @@ function description(state, icons = {}) {
       `${icon(key, label)} ${label} +${f(amount)}${suffix}`;
   const physical = [
     ...(c.strWeight ? [`STR +${f(c.strWeight * 60 * m.physicalPower)}`] : []),
-    ...(c.strWeight < 1 ? [`DEX +${f((1 - c.strWeight) * 60 * m.physicalPower)}`] : []),
+    ...(c.strWeight < 1
+      ? [`DEX +${f((1 - c.strWeight) * 60 * m.physicalPower)}`]
+      : []),
     ...(m.vitPhysical ? [`VIT +${f(m.vitPhysical * 100)}`] : []),
     ...(m.enePhysical ? [`ENE +${f(m.enePhysical * 100)}`] : []),
   ];

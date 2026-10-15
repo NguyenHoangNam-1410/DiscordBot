@@ -37,12 +37,30 @@ module.exports = function createModule(dependencies) {
     };
   }
 
+  function selectableClasses(draft) {
+    if (!useV2()) return CLASSES;
+    const characters = require("../characters"),
+      stats = require("../engine/stats");
+    return Object.fromEntries(
+      Object.values(characters.ownedCharacters(draft.userId))
+        .map((o) => {
+          const c = characters.get(o.characterId),
+            key = c?.profileKey;
+          return key && [key, CLASSES[key] || stats.CLASSES[key]];
+        })
+        .filter(Boolean),
+    );
+  }
   function setupPayload(draft) {
     const context = setupContext(draft);
     return [2, 3].includes(context.gameplayVersion) &&
       ["loadout", "review"].includes(draft.stage)
       ? hardcoreInventoryView.setupPayload(draft, context)
-      : hardcoreView.hardcoreSetupPayload(draft, CLASSES, context);
+      : hardcoreView.hardcoreSetupPayload(
+          draft,
+          selectableClasses(draft),
+          context,
+        );
   }
 
   function closedSetup(content) {
@@ -115,9 +133,7 @@ module.exports = function createModule(dependencies) {
         interaction.user.username ||
         interaction.user.id,
       channelId: interaction.channelId,
-      classKey: Object.hasOwn(CLASSES, initial.classKey)
-        ? initial.classKey
-        : null,
+      classKey: null,
       stake:
         Number.isSafeInteger(initial.stake) &&
         initial.stake >= MIN_BET &&
@@ -133,6 +149,8 @@ module.exports = function createModule(dependencies) {
       busy: false,
       messageId: null,
     };
+    if (Object.hasOwn(selectableClasses(draft), initial.classKey))
+      draft.classKey = initial.classKey;
     setupDrafts.set(draft.id, draft);
     try {
       const response = await interaction.reply({
@@ -192,6 +210,7 @@ module.exports = function createModule(dependencies) {
   }
   return {
     setupContext,
+    selectableClasses,
     setupPayload,
     closedSetup,
     closeSetup,

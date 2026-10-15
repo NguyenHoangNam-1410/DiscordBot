@@ -65,13 +65,15 @@ function ownedCharacters(userId = null) {
       .map((c) => [c.id, { characterId: c.id, soulLevel: 0 }]),
   );
 }
-function preview(id, soulLevel = 0) {
+function preview(id, soulLevel = 0, rarity = null) {
   const c = get(id);
   if (!c) throw Error("INVALID_CHARACTER");
   const state = require("../engine/stats").createState(c.profileKey, 0, {
     gameplayVersion: 3,
   });
   if (soulLevel) require("./souls").attach(state, id, soulLevel);
+  if (c.profileKey === "venance" && rarity)
+    require("./venance").attach(state, rarity);
   return state;
 }
 module.exports = {

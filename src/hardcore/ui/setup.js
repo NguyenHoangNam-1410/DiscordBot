@@ -20,11 +20,13 @@ module.exports = function createModule(dependencies) {
     const c = stats.CLASSES[classKey];
     const characters = require("../characters");
     const character = characters.catalog.characters.find(
-      (c) => c.starter && c.profileKey === classKey,
+      (c) => c.profileKey === classKey,
     );
     const group = character && characters.CLASSES[character.classKey];
     const main = (group?.primaryStat || stats.mainStat(state)).toUpperCase();
     const builds = {
+      venance:
+        "Ưu tiên ENE để tăng phép và MP; thêm VIT để sống qua lượt niệm. Skill → ba đòn phép để kích hoạt Tam trọng; Phòng thủ khi cần MP hoặc Hồi lưu.",
       amazon:
         "Ưu tiên DEX cho sát thương, trúng/né và Crit; thêm VIT khi thiếu HP. Trang bị vật lý, ACC và Crit hợp với hai phát Barrage.",
       barbarian:
@@ -44,16 +46,24 @@ module.exports = function createModule(dependencies) {
     return {
       name: `${c.emoji} ${c.name}`,
       skillIcon: SKILL_ICONS[classKey],
-      role: `${group ? group.name + STAT_SEPARATOR : ""}Build ${main}${STAT_SEPARATOR}${{ amazon: "Hai phát vật lý", barbarian: "Vật lý và chống chịu", assassin: "Crit và né phản công", sorceress: "Skill phép mạnh", druid: "Vật lý và hồi phục", necromancer: "Phép và chặn phản công", paladin: "Vật lý và phòng thủ" }[classKey]}`,
+      role: `${group ? group.name + STAT_SEPARATOR : ""}Build ${main}${STAT_SEPARATOR}${{ venance: "Cường hóa đánh thường thành phép", amazon: "Hai phát vật lý", barbarian: "Vật lý và chống chịu", assassin: "Crit và né phản công", sorceress: "Skill phép mạnh", druid: "Vật lý và hồi phục", necromancer: "Phép và chặn phản công", paladin: "Vật lý và phòng thủ" }[classKey]}`,
       attributes: `${E.str} **STR** **${state.str}**${STAT_SEPARATOR}${E.dex} **DEX** **${state.dex}**${STAT_SEPARATOR}${E.vit} **VIT** **${state.vit}**${STAT_SEPARATOR}${E.ene} **ENE** **${state.ene}**`,
       stats: `${E.str} **STR** **${state.str}**${STAT_SEPARATOR}${E.dex} **DEX** **${state.dex}**${STAT_SEPARATOR}${E.vit} **VIT** **${state.vit}**${STAT_SEPARATOR}${E.ene} **ENE** **${state.ene}**\n${E.hp} **HP** **${state.hp}**${STAT_SEPARATOR}${E.mana} **MP** **${state.mana}**${STAT_SEPARATOR}${E.defense} **DEF** **${state.defense}**${STAT_SEPARATOR}${E.potion} **Bình** **${state.potions}**\n${E.attack} **Vật lý** **${state.damageMin}–${state.damageMax}**${STAT_SEPARATOR}${E.magic} **Phép** **${state.spellMin}–${state.spellMax}**${STAT_SEPARATOR}${E.res} **RES** **${state.resistance}%**${STAT_SEPARATOR}${E.crit} **CRIT** **${percent(state.critChance)}**`,
       build: builds[classKey],
-      attack: `Một đòn **vật lý ${state.damageMin}–${state.damageMax}** trước giảm trừ; có thể trượt, có thể Crit ×1,8. Hồi **${manaGain} MP** ở chỉ số ban đầu (40% Max MP; class phép 70%, làm tròn xuống, tối thiểu 1). Quái còn sống sẽ phản công.`,
-      defend:
-        "Không gây sát thương; hồi **1 MP**. Trong lần phản công này: **DEF ×2** khi nhận vật lý, **+15 RES** khi nhận phép, giảm thêm **15% sát thương** và miễn Crit. Không duy trì sang lượt sau.",
-      skill: `${SKILLS[classKey]} Tốn **2 MP**, không hồi MP như đánh thường. ${["sorceress", "necromancer"].includes(classKey) ? "Sát thương phép chịu RES của quái, không Crit." : "Mỗi đòn vật lý có thể trượt/Crit, chịu DEF của quái."} ${["assassin", "necromancer"].includes(classKey) ? "Chặn phản công của lượt này kể cả skill không gây sát thương." : classKey === "paladin" ? "Nếu quái sống, nhận phản công với hiệu quả DEF; skill không cộng 1 MP." : "Nếu quái sống, nhận phản công bình thường."}`,
-      passive: `Đặc tính thường trực: vật lý lấy **${Math.round(c.strWeight * 100)}% STR + ${Math.round((1 - c.strWeight) * 100)}% DEX**; Crit nền **${percent(c.baseCrit)}**, RES nền **${c.baseRes}%**, cộng thêm từ thuộc tính/trang bị. Hiệu ứng né/chặn/hồi HP của skill chỉ kích hoạt khi dùng skill.\n\n${statsV3.profile(state).mastery.name}: DEX chuyển thành né/Crit theo class; xem Chỉ số để đọc hệ số và trần.`,
-      shrine: `Chỉ có khi nhận **Class Shrine**, tối đa 3 tầng: ${SHRINES[classKey]}`,
+      attack:
+        classKey === "venance"
+          ? "Bình thường: vật lý, hồi cố định **1 MP** trước hiệu ứng giảm hồi. Khi cường hóa: **Phép ×2,2**, luôn trúng, không Crit và **không hồi MP**; tốn một trong 3 hành động cường hóa."
+          : `Một đòn **vật lý ${state.damageMin}–${state.damageMax}** trước giảm trừ; có thể trượt, có thể Crit ×1,8. Hồi **${manaGain} MP** ở chỉ số ban đầu (40% Max MP; class phép 70%, làm tròn xuống, tối thiểu 1). Quái còn sống sẽ phản công.`,
+      defend: `Không gây sát thương; hồi **${classKey === "venance" ? 2 : 1} MP**. Trong lần phản công này: **DEF ×2** khi nhận vật lý, **+15 RES** khi nhận phép, giảm thêm **15% sát thương** và miễn Crit. Không duy trì sang lượt sau.${classKey === "venance" ? " Có Ấn Hồi lưu: tiêu ấn để hồi HP trước phản công." : ""}`,
+      skill:
+        classKey === "venance"
+          ? "Tốn **2 MP**, **không gây DMG**. Cường hóa đánh thường thành phép trong **3 hành động tiếp theo**, gồm cả Phòng thủ/bình/hành động boss tốn lượt. Boss vẫn phản công. Dùng lại đặt về 3 hành động và xóa chuỗi/ấn cũ."
+          : `${SKILLS[classKey]} Tốn **2 MP**, không hồi MP như đánh thường. ${["sorceress", "necromancer"].includes(classKey) ? "Sát thương phép chịu RES của quái, không Crit." : "Mỗi đòn vật lý có thể trượt/Crit, chịu DEF của quái."} ${["assassin", "necromancer"].includes(classKey) ? "Chặn phản công của lượt này kể cả skill không gây sát thương." : classKey === "paladin" ? "Nếu quái sống, nhận phản công với hiệu quả DEF; skill không cộng 1 MP." : "Nếu quái sống, nhận phản công bình thường."}`,
+      passive:
+        classKey === "venance"
+          ? require("../characters/venance").innateText(state)
+          : `Đặc tính thường trực: vật lý lấy **${Math.round(c.strWeight * 100)}% STR + ${Math.round((1 - c.strWeight) * 100)}% DEX**; Crit nền **${percent(c.baseCrit)}**, RES nền **${c.baseRes}%**, cộng thêm từ thuộc tính/trang bị. Hiệu ứng né/chặn/hồi HP của skill chỉ kích hoạt khi dùng skill.\n\n${statsV3.profile(state).mastery.name}: DEX chuyển thành né/Crit theo class; xem Chỉ số để đọc hệ số và trần.`,
+      shrine: `Chỉ có khi nhận **Class Shrine**, tối đa 3 tầng: ${classKey === "venance" ? "Một lần Astral Armament miễn MP, vẫn tốn hành động và nhận phản công." : SHRINES[classKey]}`,
       power: state.gameplayVersion === 3 ? 1 : balance.power(state),
       mastery: statsV3.description(state, E),
     };

@@ -101,7 +101,12 @@ const MATRIX = {
   black_sun: [],
   oathbreaker: ["barbarian", "paladin", "amazon"],
 };
+// Future mage Venance shares spell-oriented affinity pools, with her own on-hit effect.
+for (const classes of Object.values(MATRIX))
+  if (classes.includes("sorceress") || classes.includes("necromancer"))
+    classes.push("venance");
 const CLASSES = [
+  "venance",
   "assassin",
   "amazon",
   "barbarian",
@@ -188,7 +193,9 @@ function validate(items) {
       if (
         item.affinity.type !== "universal" &&
         (!item.affinity.classes.length ||
-          item.affinity.classes.length > 3 ||
+          item.affinity.classes.filter((k) => k !== "venance").length > 3 ||
+          new Set(item.affinity.classes).size !==
+            item.affinity.classes.length ||
           item.affinity.classes.some((k) => !CLASSES.includes(k)))
       )
         throw Error("INVALID_ITEM_AFFINITY");

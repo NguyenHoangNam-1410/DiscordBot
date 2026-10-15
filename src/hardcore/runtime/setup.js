@@ -27,6 +27,8 @@ module.exports = function createModule(dependencies) {
   const hardcoreEmbed = (...args) => dependencies.hardcoreEmbed(...args);
   const hardcoreRows = (...args) => dependencies.hardcoreRows(...args);
 
+  const selectableClasses = (...args) =>
+    dependencies.selectableClasses(...args);
   const setupContext = (...args) => dependencies.setupContext(...args);
   const setupPayload = (...args) => dependencies.setupPayload(...args);
   const closedSetup = (...args) => dependencies.closedSetup(...args);
@@ -109,7 +111,7 @@ module.exports = function createModule(dependencies) {
     }
     if (action === "class" && draft.stage === "class") {
       const classKey = interaction.values?.[0];
-      if (!Object.hasOwn(CLASSES, classKey))
+      if (!Object.hasOwn(selectableClasses(draft), classKey))
         return refreshSetup(interaction, draft, "Nhân vật không hợp lệ.");
       draft.classKey = classKey;
       return refreshSetup(interaction, draft);
@@ -133,7 +135,10 @@ module.exports = function createModule(dependencies) {
         (action === "next" && draft.stage === "class") ||
         (action === "loadout_back" && draft.stage === "review")
       ) {
-        if (!Object.hasOwn(CLASSES, draft.classKey) || draft.stake == null)
+        if (
+          !Object.hasOwn(selectableClasses(draft), draft.classKey) ||
+          draft.stake == null
+        )
           return refreshSetup(
             interaction,
             draft,
@@ -213,7 +218,10 @@ module.exports = function createModule(dependencies) {
     }
     if (action !== "start")
       return refreshSetup(interaction, draft, "Lựa chọn không hợp lệ.");
-    if (!Object.hasOwn(CLASSES, draft.classKey) || draft.stake == null)
+    if (
+      !Object.hasOwn(selectableClasses(draft), draft.classKey) ||
+      draft.stake == null
+    )
       return refreshSetup(
         interaction,
         draft,
@@ -326,7 +334,7 @@ module.exports = function createModule(dependencies) {
     try {
       await interaction.editReply(
         closedSetup(
-          `Đã bắt đầu **${CLASSES[draft.classKey].name}** với **${formatCoins(draft.stake)} xu**.\n${message.url ? `[Mở bảng Sinh tồn](${message.url})` : `Mã ván: ${started.session.id}`}`,
+          `Đã bắt đầu **${selectableClasses(draft)[draft.classKey].name}** với **${formatCoins(draft.stake)} xu**.\n${message.url ? `[Mở bảng Sinh tồn](${message.url})` : `Mã ván: ${started.session.id}`}`,
         ),
       );
     } catch (error) {

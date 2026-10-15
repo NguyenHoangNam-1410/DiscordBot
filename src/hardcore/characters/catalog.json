@@ -339,6 +339,53 @@
         }
       ],
       "profileKey": "paladin"
+    },
+    {
+      "id": "venance",
+      "profileKey": "venance",
+      "classKey": "mage",
+      "name": "Venance",
+      "rarity": "SSR",
+      "starter": false,
+      "role": "Dùng Skill cường hóa đánh thường thành phép trong 3 hành động; chọn tấn công liên tiếp hoặc Phòng thủ để hồi lưu.",
+      "souls": [
+        {
+          "level": 1,
+          "name": "Khắc ấn tinh giới",
+          "description": "Hệ số đòn đánh cường hóa tăng từ ×2,2 lên ×2,5.",
+          "emojiName": "soul_venance_1"
+        },
+        {
+          "level": 2,
+          "name": "Vòng hộ thân",
+          "description": "Skill đầu tiên trong mỗi combat tạo Barrier 6% Max HP trước phản công. Không nạp lại khi dùng Skill lại hoặc chuyển phase.",
+          "emojiName": "soul_venance_2"
+        },
+        {
+          "level": 3,
+          "name": "Tam trọng cộng minh",
+          "description": "Sau thức tỉnh: DMG đòn cường hóa thứ ba tăng từ +35% lên +60%; Barrier từ 10% lên 12% Max HP.",
+          "emojiName": "soul_venance_3"
+        },
+        {
+          "level": 4,
+          "name": "Mạch nguồn không đứt",
+          "description": "Chỉ cần 1 đòn cường hóa hợp lệ để tạo Ấn Hồi lưu, thay vì 2. Vẫn một ấn mỗi lần dùng Skill.",
+          "emojiName": "soul_venance_4"
+        },
+        {
+          "level": 5,
+          "name": "Cổ ngữ hoàn thiện",
+          "description": "Hệ số đòn cường hóa tăng từ ×2,5 lên ×2,8; Hồi lưu hồi 7% Max HP thay vì 5%.",
+          "emojiName": "soul_venance_5"
+        },
+        {
+          "level": 6,
+          "name": "Phán quyết tam trọng",
+          "description": "Sau thức tỉnh: đòn cường hóa hợp lệ thứ ba thêm một xung 40% sức sát thương đòn chính sau kháng. Không Crit, hồi MP, tạo proc hoặc chuyển sang mục tiêu/phase mới.",
+          "emojiName": "soul_venance_6"
+        }
+      ]
     }
   ]
 }

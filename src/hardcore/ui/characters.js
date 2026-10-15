@@ -15,7 +15,8 @@ const { appEmoji, appEmojiObject } = require("../../utils/appEmoji");
 const { splitRuleFields } = require("./rulePages");
 const PAGE_SIZE = 12;
 const TABS = ["stats", "skills", "souls"];
-const icon = (c) => appEmoji("class_" + c.profileKey, "👤");
+const icon = (c) =>
+  appEmoji("class_" + c.profileKey, c.id === "venance" ? "🔮" : "👤");
 const number = (n) => Number(Number(n).toFixed(1)).toLocaleString("vi-VN");
 const pct = (n) => number(n * 100) + "%";
 const row = (component) => new ActionRowBuilder().addComponents(component);
@@ -125,10 +126,19 @@ function payload(
         })),
       );
   } else {
-    const state = characters.preview(id, owned[id]?.soulLevel || 0);
+    const state = characters.preview(
+      id,
+      owned[id]?.soulLevel || 0,
+      owned[id]?.rarity,
+    );
     embed
       .setTitle(
-        icon(selected) + " " + selected.name + " [" + selected.rarity + "]",
+        icon(selected) +
+          " " +
+          selected.name +
+          " [" +
+          (owned[id]?.rarity || selected.rarity) +
+          "]",
       )
       .setDescription(
         "Class **" +

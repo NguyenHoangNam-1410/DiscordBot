@@ -60,6 +60,11 @@ const REWORK_TEXT = {
     "Divine Shield tạo vùng thánh cho 2 action gây DMG kế; phản công nhận +20% DEF/+10% RES. Mỗi hit vật lý trúng thêm Holy DMG = 20% DEF + giá trị RES (10% RES tương ứng 10). Bỏ qua DEF quái thường/tinh anh; boss vẫn giảm bằng DEF.",
 };
 const ARTIFACTS = {
+  venance: [
+    "Astral Codex",
+    "Trinity Mandate",
+    "Đòn cường hóa hợp lệ thứ ba tăng sát thương và tạo Barrier.",
+  ],
   amazon: [
     "Askari War Quiver",
     "Hunter's Rhythm",
@@ -223,6 +228,8 @@ function description(s) {
     return enabled(s)
       ? "Hạ boss tầng 100 và sống sót để thức tỉnh nội tại class."
       : "";
+  if (require("./characters/venance").enabled(s))
+    return require("./characters/venance").awakeningText(s);
   const a = s.classAwakening,
     c = combat(s),
     d = ARTIFACTS[s.classKey];

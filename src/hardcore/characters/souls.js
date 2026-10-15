@@ -67,6 +67,7 @@ function attach(s, id, soulLevel = 0) {
   )
     throw Error("INVALID_CHARACTER_SOUL");
   s.characterSoul = value;
+  if (s.classKey === "venance") require("./venance").attach(s);
   if (s.encounter?.innateCombat?.actions === 0) delete s.encounter.innateCombat;
   return value;
 }

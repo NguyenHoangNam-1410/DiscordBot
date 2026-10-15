@@ -99,6 +99,7 @@ module.exports = function createModule(dependencies) {
 
   function normalize(state) {
     require("../characters/souls").validate(state);
+    require("../characters/venance").validate(state);
     require("../events/explorationMarks").normalize(state);
     const rules = require("../equipment/rules");
     const ITEMS = rules.enabled(state)

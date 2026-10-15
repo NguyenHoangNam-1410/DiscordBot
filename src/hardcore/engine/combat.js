@@ -3,6 +3,7 @@ const affinity = require("../equipment/affinityEffects");
 const awakening = require("../awakening");
 const rift = require("../rift");
 const souls = require("../characters/souls");
+const venance = require("../characters/venance");
 const innate = require("../innate");
 const { soulIcon } = require("../shared/icons");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
@@ -38,7 +39,8 @@ module.exports = function createModule(dependencies) {
       state,
       rng,
       royal.freeMagic(state) ||
-        (state.classKey === "sorceress" && shrineActive(state)),
+        (["sorceress", "venance"].includes(state.classKey) &&
+          shrineActive(state)),
     );
   }
 
@@ -346,13 +348,16 @@ module.exports = function createModule(dependencies) {
         });
     if (!hit.hit && (physical || hit.avoided)) awakening.shadow(state);
     if (hit.avoided) affinity.dodge(state);
-    const shieldBefore = awakening.active(state)
-      ? (state.classAwakening.bark || 0) +
-        (awakening.combat(state)?.barrier || 0)
-      : 0;
+    const shieldBefore =
+      (venance.frame(state)?.barrier || 0) +
+      (awakening.active(state)
+        ? (state.classAwakening.bark || 0) +
+          (awakening.combat(state)?.barrier || 0)
+        : 0);
     let counterDamage = hit.damage;
     let manaShieldLog = "";
     if (innate.enabled(state) && !plan.trueDamage) {
+      counterDamage = venance.absorb(state, counterDamage);
       counterDamage = souls.absorb(state, counterDamage);
       const barkBefore = state.classAwakening?.bark || 0;
       counterDamage = awakening.absorb(state, counterDamage);
@@ -389,6 +394,7 @@ module.exports = function createModule(dependencies) {
       : hurt(state, counterDamage);
     const shieldUsed =
       shieldBefore -
+      (venance.frame(state)?.barrier || 0) -
       (awakening.active(state)
         ? (state.classAwakening.bark || 0) +
           (awakening.combat(state)?.barrier || 0)
@@ -451,6 +457,7 @@ module.exports = function createModule(dependencies) {
   function playerManaLeech(state, dealt, rng) {
     const leech = itemPassives.aggregate(state).mpLeech;
     if (
+      venance.blockedMana(state) ||
       dealt <= 0 ||
       state.mana >= bosses.effectiveMaxMana(state) ||
       leech <= 0 ||
@@ -506,6 +513,8 @@ module.exports = function createModule(dependencies) {
     const e = state.encounter;
     innate.begin(state, action);
     souls.begin(state, action);
+    venance.begin(state, action);
+    const venanceTarget = venance.enabled(state) ? venance.target(state) : null;
     if (awakening.combat(state)) state.encounter.awakeningShadowGranted = false;
     const awakeningAtStart = awakening.active(state)
       ? { fury: awakening.fury(state), shadowStep: awakening.empowered(state) }
@@ -560,12 +569,20 @@ module.exports = function createModule(dependencies) {
             )
           : 0;
       royal.limitGuard(state, action, false);
-      state.mana = Math.min(bosses.effectiveMaxMana(state), state.mana + 1);
+      state.mana = Math.min(
+        bosses.effectiveMaxMana(state),
+        state.mana + (venance.enabled(state) ? 2 : 1),
+      );
+      const refluxLog = venance.enabled(state)
+        ? venance.defend(state, heal)
+        : "";
       const acted = {
         defend: true,
         dodge: false,
         log:
-          `${E.defense} Phòng thủ và hồi 1 ${E.mana} MP.` + souls.defend(state),
+          `${E.defense} Phòng thủ và hồi ${venance.enabled(state) ? 2 : 1} ${E.mana} MP.` +
+          souls.defend(state) +
+          refluxLog,
       };
       if (affinityHeal)
         acted.log +=
@@ -610,7 +627,7 @@ module.exports = function createModule(dependencies) {
         cost === 0 &&
         !bosses.brainControl(state) &&
         !royal.freeMagic(state) &&
-        state.classKey === "sorceress" &&
+        ["sorceress", "venance"].includes(state.classKey) &&
         shrineActive(state)
       )
         state.classShrine.consumed = true;
@@ -632,6 +649,20 @@ module.exports = function createModule(dependencies) {
           a.shadow = 0;
           e.awakeningShadowStep = true;
         }
+      }
+      if (venance.enabled(state)) {
+        royal.limitGuard(state, action, false);
+        const acted = {
+          defend: false,
+          dodge: false,
+          dealt: 0,
+          critical: false,
+          log: venance.cast(state) + healingLog,
+        };
+        e.combatTurn++;
+        rift.endAction(state, 0);
+        bosses.afterPlayer(state, action, acted);
+        return acted;
       }
       if (bosses.brainControl(state)) {
         royal.limitGuard(state, action, false);
@@ -751,10 +782,23 @@ module.exports = function createModule(dependencies) {
         }
       }
     } else if (action === "attack") {
-      hits = [rollPlayerHit({ player: true })];
+      hits = [
+        rollPlayerHit(
+          venance.empowered(state)
+            ? {
+                player: true,
+                magic: true,
+                raw: int(state.spellMin, state.spellMax, rng),
+                multiplier: venance.multiplier(state),
+              }
+            : { player: true },
+        ),
+      ];
       state.mana = Math.min(
         bosses.effectiveMaxMana(state),
-        state.mana + attackManaGain(state) + rift.consumeFracture(state),
+        state.mana +
+          attackManaGain(state) +
+          (venance.blockedMana(state) ? 0 : rift.consumeFracture(state)),
       );
     } else throw new Error("INVALID_ACTION");
     dodge = royal.limitGuard(state, action, dodge);
@@ -911,6 +955,18 @@ module.exports = function createModule(dependencies) {
       delete e.awakeningFurySpent;
       delete e.awakeningShadowStep;
     }
+    if (venance.blockedMana(state)) {
+      const proc = venance.afterHit(
+        state,
+        mainDealt,
+        mainStrength,
+        venanceTarget,
+        (n) => bosses.applyDamage(state, n),
+      );
+      dealt += proc.dealt;
+      reportedDamage += proc.strength;
+      healingLog += proc.log;
+    }
     healingLog += playerManaLeech(state, mainDealt, rng);
     const landed = hits.filter((hit) => hit.hit && hit.damage > 0).length;
     healingLog += innate.afterPlayer(state, action, {
@@ -924,15 +980,18 @@ module.exports = function createModule(dependencies) {
       landed: dealt > 0 ? landed : 0,
       critical: dealt > 0 && hits.some((h) => h.crit),
       magic:
-        action === "skill" &&
-        ["sorceress", "necromancer"].includes(state.classKey),
+        venance.blockedMana(state) ||
+        (action === "skill" &&
+          ["sorceress", "necromancer"].includes(state.classKey)),
       maxMana: bosses.effectiveMaxMana(state),
       paidMana,
     });
     const actionName =
       action === "skill"
         ? `${SKILL_ICONS[state.classKey]} ${stats.CLASSES[state.classKey].skill}`
-        : `${E.attack} Tấn công`;
+        : venance.blockedMana(state)
+          ? `${E.magic} Tấn công cường hóa`
+          : `${E.attack} Tấn công`;
     const outcome = !landed
       ? "Đánh trượt — 0 DMG."
       : immune

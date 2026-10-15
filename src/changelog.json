@@ -1,5 +1,25 @@
 [
   {
+    "id": "8b09fbba-6f64-4933-8449-84fe1a71a081",
+    "updatedAt": "2026-10-15T08:33:08.009Z",
+    "auditedAt": "2026-10-15T08:33:08.009Z",
+    "title": "Venance · nhân vật SSR Pháp sư",
+    "changes": [
+      "Thêm Venance vào danh mục Nhân vật với chỉ số, kỹ năng Astral Armament, Hồi lưu, thức tỉnh Tam trọng và đủ S1–S6.",
+      "Skill cường hóa đánh thường thành phép trong 3 hành động; đòn cường hóa không hồi MP, Phòng thủ hồi tổng 2 MP. Battle UI hiển thị thời gian, ấn và Barrier.",
+      "Dùng icon tạm cho Venance và tinh hồn; chọn đi run theo quyền sở hữu. Giữ banner tân thủ hiện tại, chưa mở banner SSR."
+    ]
+  },
+  {
+    "id": "cb78d9f1-8588-4a00-b225-6fa06692c4d4",
+    "updatedAt": "2026-10-15T08:03:08.544Z",
+    "auditedAt": "2026-10-15T08:03:08.544Z",
+    "title": "Bản thiết kế SSR Venance",
+    "changes": [
+      "Bổ sung bản thiết kế Venance hệ Pháp sư: Skill cường hóa đòn thường thành phép trong 3 hành động, Phòng thủ hồi tổng 2 MP; đề xuất nội tại, thức tỉnh và S1–S6. Nhân vật chưa mở trong banner hoặc chiến đấu; các mốc thắng mới là mục tiêu chưa simulate."
+    ]
+  },
+  {
     "id": "50dc5518-709c-4a0d-8b27-658f9ff85ea2",
     "updatedAt": "2026-10-15T07:25:39.136Z",
     "auditedAt": "2026-10-15T07:25:39.136Z",

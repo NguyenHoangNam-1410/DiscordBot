@@ -87,7 +87,7 @@ async function main() {
     warrior: ["barbarian", "druid"],
     guardian: ["paladin"],
     assassin: ["amazon", "assassin"],
-    mage: ["sorceress", "necromancer"],
+    mage: ["sorceress", "necromancer", "venance"],
   };
   const expectedStats = {
     warrior: "str",
@@ -119,10 +119,10 @@ async function main() {
       .setupPreview("paladin")
       .build.includes("Ưu tiên VIT"),
   );
-  assert.equal(characters.catalog.characters.length, 7);
+  assert.equal(characters.catalog.characters.length, 8);
   assert.equal(
     characters.catalog.characters.flatMap((c) => c.souls).length,
-    42,
+    48,
   );
   const owned = characters.ownedCharacters();
   assert.equal(Object.keys(owned).length, 7);
@@ -142,7 +142,7 @@ async function main() {
       return [s.emojiName, String(1557000000000000500n + BigInt(ci * 6 + si))];
     }),
   );
-  assert.equal(new Set(soulEmojis.map((x) => x[0])).size, 42);
+  assert.equal(new Set(soulEmojis.map((x) => x[0])).size, 48);
   setApplicationEmojisForTest([
     ...soulEmojis,
     ...Object.keys(stats.CLASSES).map((k, i) => [
@@ -206,7 +206,12 @@ async function main() {
       limits(p);
       for (const soul of c.souls)
         assert(stringify(p).includes(soulIcon(c, soul.level)));
-      assert.equal(component(p, "upgrade_0").emoji.name, c.souls[0].emojiName);
+      if (c.starter)
+        assert.equal(
+          component(p, "upgrade_0").emoji.name,
+          c.souls[0].emojiName,
+        );
+      else assert(!component(p, "upgrade_0"));
       {
         assert.equal(
           p.embeds[0].data.fields.filter((f) => /^🔒 S[1-6]/.test(f.name))
@@ -221,8 +226,8 @@ async function main() {
   assert.equal(JSON.stringify(characters.catalog), frozen);
   let result = await click(overview, "rarity", ["SSR"]);
   limits(result.payload);
-  assert(stringify(result.payload).includes("Chưa có nhân vật"));
-  assert(component(result.payload, "character").disabled);
+  assert(stringify(result.payload).includes("Venance"));
+  assert.equal(component(result.payload, "character").options.length, 1);
   assert((await click(result.payload, "character", ["amazon"])).error);
   result = await click(overview, "class", ["warrior"]);
   assert.equal(component(result.payload, "character").options.length, 2);
@@ -312,7 +317,7 @@ async function main() {
   ui.payload(owner, { id: "druid", tab: "souls" });
   assert.equal(JSON.stringify(state), snapshot);
   console.log(
-    "PASS: seven S0 entitlements, 42 combat souls, live S0 stats, all tabs/filters, empty pool, future same-class characters, pagination, ownership/forged guards, command/routes and Discord limits; no simulations.",
+    "PASS: seven S0 entitlements, Venance SSR, 48 combat souls, live S0 stats, all tabs/filters, SSR pool, future same-class characters, pagination, ownership/forged guards, command/routes and Discord limits; no simulations.",
   );
 }
 main()

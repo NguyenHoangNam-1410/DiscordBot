@@ -94,3 +94,5 @@ Giữ public exports tương thích khi tách thêm module. Không tạo thêm b
 - `npm run test:changelog`.
 
 Gacha nhân vật: `gacha/banners.json` khai báo từng banner; `gacha/banners.js` kiểm tra và dựng pool; `gacha/service.js` xử lý giao dịch; `gacha/ui.js` hiển thị banner. Tiến trình toàn tài khoản nằm ở `characters/progression.js`, schema riêng trong `characters/schema.js`. Run mới snapshot cấp từ tài khoản; Tower độc lập.
+
+Venance SSR: `characters/venance.js` giữ snapshot, buff 3 hành động, Hồi lưu, Barrier và Tam trọng/S6. Tham khảo `docs/venance-ssr-character-design.md`; chạy `npm run test:hardcore-venance`. Catalog hiển thị nhân vật, còn setup chỉ cho chọn nhân vật đã sở hữu. Icon tạm dùng tên `class_venance`, `skill_venance_astral_armament`, `soul_venance_1`–`soul_venance_6`. Chưa mở banner SSR hoặc chạy simulate Venance.

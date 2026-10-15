@@ -7,6 +7,22 @@ const emoji = require("../../discordEmojiMap");
 const clamp = (n, lo, hi) => Math.max(lo, Math.min(hi, n));
 const ATTRIBUTES = ["str", "dex", "vit", "ene"];
 const CLASSES = Object.freeze({
+  venance: {
+    name: "Venance",
+    get emoji() {
+      return require("../../utils/appEmoji").appEmoji("class_venance", "🔮");
+    },
+    str: 10,
+    dex: 14,
+    vit: 24,
+    ene: 40,
+    baseHp: 40,
+    baseMana: 3,
+    baseRes: 10,
+    baseCrit: 0.04,
+    strWeight: 0.7,
+    skill: "Astral Armament",
+  },
   amazon: {
     name: "Amazon",
     emoji: emoji[":class_amazon:"],
@@ -228,6 +244,10 @@ function derive(state) {
     0.1,
     0.75,
   );
+  if (state.classKey === "venance")
+    d.maxHp = Math.floor(
+      d.maxHp * require("../characters/venance").config(state).hpMultiplier,
+    );
   return d;
 }
 function recompute(state) {
@@ -275,7 +295,7 @@ function luckyBreakChance(state) {
   return modern ? Math.min(0.5, luck * 0.0025) : Math.min(0.3, luck * 0.015);
 }
 function mainStat(state) {
-  return ["sorceress", "necromancer"].includes(state.classKey)
+  return ["sorceress", "necromancer", "venance"].includes(state.classKey)
     ? "ene"
     : ["amazon", "assassin"].includes(state.classKey)
       ? "dex"
@@ -346,6 +366,10 @@ function createState(
   state.lastLog = "Run Sinh tồn " + state.releaseVersion + " bắt đầu.";
   if (gameplayVersion === 3) equipmentRules.activate(state);
   recompute(state);
+  if (classKey === "venance") {
+    if (gameplayVersion !== 3) throw Error("INVALID_CLASS");
+    require("../characters/venance").attach(state);
+  }
   state.hp = state.maxHp;
   state.mana = state.maxMana;
   if (gameplayVersion === 3)

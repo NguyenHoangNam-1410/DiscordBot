@@ -130,7 +130,9 @@ function accept(s, session, id, complete) {
   const blessing = restore(s);
   s.evKinds = Array.from(new Set([...(s.evKinds || []), id]));
   s.lastLog +=
-    "\n" + eventIcon("royal_invitation") + " **Phước lành Hoàng Gia:** " +
+    "\n" +
+    eventIcon("royal_invitation") +
+    " **Phước lành Hoàng Gia:** " +
     E.hp +
     " HP " +
     blessing.hpBefore +
@@ -142,7 +144,9 @@ function accept(s, session, id, complete) {
     blessing.manaBefore +
     " → **" +
     blessing.manaAfter +
-    "**; giải mọi nguyền UR còn lại, xóa mọi ấn Rift.\n" + relicIcon(id) + " Nhận **" +
+    "**; giải mọi nguyền UR còn lại, xóa mọi ấn Rift.\n" +
+    relicIcon(id) +
+    " Nhận **" +
     RELIC_ITEMS[id].name +
     " [LR]**" +
     (active(s, id)
@@ -214,7 +218,7 @@ function recordBoss(s, e) {
 function freeMagic(s) {
   return (
     active(s, "astral_singularity") &&
-    ["sorceress", "necromancer"].includes(s.classKey)
+    ["sorceress", "necromancer", "venance"].includes(s.classKey)
   );
 }
 function limitGuard(s, action, guard) {
@@ -274,14 +278,18 @@ function details(s) {
       b.cleansedLevels +
       "** lớp nguyền UR và xóa **" +
       b.removedRiftStacks +
-      "** ấn Rift; giữ Paradox/Contract còn hiệu lực.\n" + relicIcon(e.relicId) + " **" +
+      "** ấn Rift; giữ Paradox/Contract còn hiệu lực.\n" +
+      relicIcon(e.relicId) +
+      " **" +
       definition.name +
       " [LR]** · " +
       (active(s, e.relicId)
         ? "Đang hoạt động"
         : "Chưa kích hoạt vì đã có nội tại LR khác") +
       "\n" +
-      passiveIcon(definition.relicPassive.kind) + " " + formatStatText(definition.text) +
+      passiveIcon(definition.relicPassive.kind) +
+      " " +
+      formatStatText(definition.text) +
       status(s) +
       "\nĐã giao nộp toàn bộ năm món và mọi level. Tiếp tục để xử lý checkpoint hoặc tầng kế tiếp."
     );
@@ -293,7 +301,8 @@ function details(s) {
     (e.offers || [])
       .map(
         (o) =>
-          relicIcon(o.setId) + " **Set " +
+          relicIcon(o.setId) +
+          " **Set " +
           SETS[o.setId].name +
           " → " +
           RELIC_ITEMS[o.setId].name +
@@ -311,7 +320,9 @@ function details(s) {
             )
             .join("\n") +
           "\n" +
-          passiveIcon(RELIC_ITEMS[o.setId].relicPassive.kind) + " " + formatStatText(RELIC_ITEMS[o.setId].text),
+          passiveIcon(RELIC_ITEMS[o.setId].relicPassive.kind) +
+          " " +
+          formatStatText(RELIC_ITEMS[o.setId].text),
       )
       .join("\n\n") +
     "\n\n**Đồng ý:** mất **toàn bộ 5 món**, gồm tất cả level, buff và nội tại trang bị; không giữ hiệu ứng như Horadric Forge, không hoàn trả. Nếu đủ hai set, chỉ giao nộp set được chọn. Nhận LR, hồi đầy HP/MP theo chỉ số sau giao nộp, giải mọi nguyền UR còn lại và xóa ấn Rift; giữ Paradox/Contract. " +

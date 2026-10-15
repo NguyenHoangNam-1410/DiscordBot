@@ -17,7 +17,10 @@ const service = require("../src/services/hardcoreService");
 const repo = require("../src/services/hardcoreRepository");
 const passives = require("../src/hardcore/itemPassives");
 const baseline = require("./fixtures/hardcore-v2-stats-baseline.json");
-const keys = Object.keys(stats.CLASSES),
+// Historical V2 comparison covers only profiles that existed in V2.
+const keys = require("../src/hardcore/characters")
+    .catalog.characters.filter((c) => c.starter)
+    .map((c) => c.profileKey),
   groups = [];
 const flatItem = (id, effects, level = 1) => ({
   name: id,
@@ -265,7 +268,10 @@ try {
     Math.ceil(
       stats.derive({
         ...cursed,
-        items: cursed.items.map((item) => ({ ...item, cleansedLevels: item.level })),
+        items: cursed.items.map((item) => ({
+          ...item,
+          cleansedLevels: item.level,
+        })),
       }).defense / 2,
     ),
   );

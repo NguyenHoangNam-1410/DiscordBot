@@ -142,6 +142,7 @@ module.exports = function createModule(dependencies) {
           );
     const awakening = require("../awakening");
     const barrier =
+      (require("../characters/venance").frame(s)?.barrier || 0) +
       (require("../characters/souls").frame(s)?.guardBarrier || 0) +
       (awakening.combat(s)
         ? s.classKey === "druid"
@@ -154,6 +155,8 @@ module.exports = function createModule(dependencies) {
     const detail = bosses.brainControl(s)
       ? "DMG chuẩn 20% Max HP boss; không Crit, không mất MP."
       : {
+          venance:
+            "Skill không gây sát thương; cường hóa đánh thường thành phép trong 3 hành động tiếp theo.",
           amazon: `Hai phát vật lý, trúng/Crit riêng.${skill.extraShot ? " 20% thêm phát thứ ba." : ""}`,
           barbarian: "Vật lý, có thể trượt/Crit.",
           assassin: "Vật lý, có thể trượt/Crit; né phản công.",
@@ -170,7 +173,7 @@ module.exports = function createModule(dependencies) {
     const resources = compact
       ? battleResources(s)
       : `${healthBar(s.hp, s.maxHp)}\n${E.mana} **MP** **${statNumber(s.mana)}/${bosses.effectiveMaxMana(s)}**${STAT_SEPARATOR}${E.potion} **Bình** **${s.potions}**${STAT_SEPARATOR}${E.ticket} **Vé thoát** **${s.escapeTokens}**`;
-    return `${resources}\n${E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${statNumber(defense)}**${STAT_SEPARATOR}${E.res} **RES** **${statNumber(core.effectiveResistance(s, s.resistance, false, !require("../rift").enabled(s) || require("../rift").encounter(s)?.lockedCounterType === "magic"))}%**${core.effectiveResistance(s, s.resistance, false, !require("../rift").enabled(s) || require("../rift").encounter(s)?.lockedCounterType === "magic") !== s.resistance ? ` (gốc ${statNumber(s.resistance)}%)` : ""}\n${bosses.brainControl(s) ? "🧠" : SKILL_ICONS[s.classKey]} **${bosses.brainControl(s) ? "Brain Control" : stats.CLASSES[s.classKey].skill}${compact ? "" : ` (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""})`}: ${skill.low}–${skill.high} DMG**\n${compact ? `${E.accuracy} ACC: **${percent(physicalChance)}**${barrier > 0 ? `${STAT_SEPARATOR}${E.defense} Barrier: **${statNumber(barrier)}**` : ""}` : detail}\n`;
+    return `${resources}\n${attack.magic ? E.magic : E.attack} **${attack.low}–${attack.high} DMG**${STAT_SEPARATOR}${E.defense} **DEF** **${statNumber(defense)}**${STAT_SEPARATOR}${E.res} **RES** **${statNumber(core.effectiveResistance(s, s.resistance, false, !require("../rift").enabled(s) || require("../rift").encounter(s)?.lockedCounterType === "magic"))}%**${core.effectiveResistance(s, s.resistance, false, !require("../rift").enabled(s) || require("../rift").encounter(s)?.lockedCounterType === "magic") !== s.resistance ? ` (gốc ${statNumber(s.resistance)}%)` : ""}\n${bosses.brainControl(s) ? "🧠" : SKILL_ICONS[s.classKey]} **${bosses.brainControl(s) ? "Brain Control" : stats.CLASSES[s.classKey].skill}${compact ? "" : ` (${core.skillManaCost(s)} MP${core.skillHpCost(s) ? `, −${core.skillHpCost(s)} HP` : ""})`}: ${skill.preparation ? "cường hóa 3 hành động" : `${skill.low}–${skill.high} DMG`}**\n${compact ? `${E.accuracy} ACC: **${percent(attack.magic ? 1 : physicalChance)}**${barrier > 0 ? `${STAT_SEPARATOR}${E.defense} Barrier: **${statNumber(barrier)}**` : ""}` : detail}${require("../characters/venance").enabled(s) ? "\n" + require("../characters/venance").status(s) : ""}\n`;
   }
 
   function checkpointPreview(s, key) {

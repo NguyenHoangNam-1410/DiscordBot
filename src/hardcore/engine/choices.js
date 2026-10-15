@@ -77,7 +77,8 @@ module.exports = function createModule(dependencies) {
                       action: "event_healer_blood",
                       label: "Hiến 70% HP hiện tại",
                       disabled:
-                        state.hp <= 1 || !memories.canQueue(state) ||
+                        state.hp <= 1 ||
+                        !memories.canQueue(state) ||
                         Boolean(
                           require("../events/explorationMarks").data(state)
                             .vulnerable ||
@@ -129,7 +130,9 @@ module.exports = function createModule(dependencies) {
           {
             action: "event_rescue",
             label: "Cứu · 1 bình",
-            disabled: state.potions < 1 || (!state.adventurerRescue && !memories.canQueue(state)),
+            disabled:
+              state.potions < 1 ||
+              (!state.adventurerRescue && !memories.canQueue(state)),
           },
           {
             action: "event_rob",
@@ -255,6 +258,7 @@ module.exports = function createModule(dependencies) {
         {
           action: "defend",
           label:
+            require("../characters/venance").enabled(state) ||
             bosses.vanished(state) ||
             (state.encounter?.boss?.id === "gharbad" &&
               state.encounter.boss.surrender)

@@ -2,6 +2,7 @@
 const souls = require("./characters/souls");
 const { E, soulIcon } = require("./shared/icons");
 const NAMES = {
+  venance: "Runic Reflux",
   amazon: "Bloodlust",
   assassin: "AVOID",
   barbarian: "Titan’s Fortitude",
@@ -338,6 +339,8 @@ function validate(s) {
     if (typeof c[k] !== "boolean") throw Error("INVALID_CLASS_INNATE");
 }
 function description(s) {
+  if (require("./characters/venance").enabled(s))
+    return require("./characters/venance").innateText(s);
   if (!enabled(s)) return "";
   const c = combat(s);
   const revised = rebalanced(s);
