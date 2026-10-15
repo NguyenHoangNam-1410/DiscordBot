@@ -81,21 +81,32 @@ module.exports = function createModule(dependencies) {
     if (paradox.active(state)) {
       const p = paradox.active(state);
       const short = {
-        blood_pact: "DMG ×1,3; mỗi Skill mất 5% Max HP (tối thiểu 1, phải còn sống)",
-        mana_fracture: "Skill 1 MP (miễn phí vẫn 0); đánh thường không hồi MP; Phòng thủ +1 MP",
-        inverted_armor: "DMG vật lý nhận ×0,75; RES −20 điểm % (trần −50%–75%)",
-        inverted_magic: "RES +20 điểm % (trần 75%); DMG vật lý nhận ×1,35",
-        hunger: "Hạ quái hồi 12% Max HP (tối thiểu 1); bình ×0,5 (trần hồi 10%–75% Max HP)",
-        time_debt: "2 Attack/Skill đầu trận DMG ×1,25; action thứ 3 quái phản công 2 lần nếu còn sống",
-        blood_mirror: "HP ≤40%: DMG ×1,4 và dùng bình; HP >40%: khóa bình",
-        unstable_soul: "Skill: 25% miễn MP, 15% tốn thêm 1 MP, 60% giá thường; Class Shrine miễn phí giữ 0" + (p.lockedSkillCost != null ? "; hiện tại " + p.lockedSkillCost + " MP" : ""),
+        blood_pact: `DMG ×1,3; mỗi Skill mất 5% Max ${E.hp} (tối thiểu 1, phải còn sống)`,
+        mana_fracture: `Skill 1 ${E.mana} (miễn phí vẫn 0); đánh thường không hồi ${E.mana}; Phòng thủ +1 ${E.mana}`,
+        inverted_armor: `${E.physical} nhận ×0,75; ${E.res} −20 điểm % (trần −50%–75%)`,
+        inverted_magic: `${E.res} +20 điểm % (trần 75%); ${E.attack} nhận ×1,35`,
+        hunger: `Hạ quái hồi 12% Max ${E.hp} (tối thiểu 1); bình ×0,5 (trần hồi 10%–75% Max ${E.hp})`,
+        time_debt: `2 ${E.attack}/Skill đầu trận DMG ×1,25; action thứ 3 quái phản công 2 lần nếu còn sống`,
+        blood_mirror: `HP ≤40% Max ${E.hp}: DMG ×1,4 và được phép dùng bình, ngược lại khóa dùng bình`,
+        unstable_soul:
+          `Skill: 25% miễn ${E.mana}, 15% tốn thêm 1 ${E.mana}, 60% giá thường; Class Shrine miễn phí giữ 0` +
+          (p.lockedSkillCost != null
+            ? "; hiện tại " + p.lockedSkillCost + ` ${E.mana}`
+            : ""),
       };
-      return eventIcon("paradox") + " **Rift Paradox · " + paradox.CATALOG[p.id].name + "** · " + short[p.id] + " · hết tầng " + p.endFloor;
+      return (
+        eventIcon("paradox") +
+        " **Rift Paradox · " +
+        paradox.CATALOG[p.id].name +
+        "** · " +
+        short[p.id] +
+        " · hết tầng " +
+        p.endFloor
+      );
     }
     const p = state.paradox;
-    if (!p || state.floor < p.from || state.floor > p.until)
-      return "";
-    return `${eventIcon("paradox")} **Rift Paradox** · ${p.kind === "blood" ? `Máu là tiền · hệ số thưởng xu ${p.bloodFactor >= 0 ? "+" : ""}${percent(p.bloodFactor)}. Hồi HP tại checkpoint không giảm hệ số.` : "Ngược đời · vật lý lấy DEF, DEF lấy trung bình vật lý gốc."} · hết tầng ${p.until}`;
+    if (!p || state.floor < p.from || state.floor > p.until) return "";
+    return `${eventIcon("paradox")} **Rift Paradox** · ${p.kind === "blood" ? `Máu là tiền · hệ số thưởng xu ${p.bloodFactor >= 0 ? "+" : ""}${percent(p.bloodFactor)}. Hồi ${E.hp} tại checkpoint không làm thay đổi hệ số.` : `Ngược đời · vật lý lấy ${E.defense}, ${E.defense} lấy trung bình ${E.physical} gốc.`} · hết tầng ${p.until}`;
   }
   return {
     riftModifierText,
