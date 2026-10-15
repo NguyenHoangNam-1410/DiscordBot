@@ -16,7 +16,7 @@ function choose(s) {
       b.id === "necrobot"
         ? [
             "Weapon",
-            ["sorceress", "necromancer"].includes(s.classKey)
+            ["sorceress", "necromancer", "venance"].includes(s.classKey)
               ? "Barrier"
               : "Plating",
             "boss",
@@ -39,14 +39,18 @@ function choose(s) {
   }
   if (b.id === "justicar" && m.verdictTurns <= 0)
     return go(
-      "verdict" + (["sorceress", "necromancer"].includes(s.classKey) ? 1 : 0),
+      "verdict" +
+        (["sorceress", "necromancer", "venance"].includes(s.classKey) ? 1 : 0),
     );
   if (b.id === "deimoss") {
     if (b.phase === 2 && m.cores.some((v) => v.choice == null))
       return go("core_burn") || go("core_leave");
     if (b.phase === 3 && m.planeTurns <= 0)
       return go(
-        "plane" + (["sorceress", "necromancer"].includes(s.classKey) ? 1 : 0),
+        "plane" +
+          (["sorceress", "necromancer", "venance"].includes(s.classKey)
+            ? 1
+            : 0),
       );
   }
   if (b.id === "death_projector" && m.zone === u.beamZone(u.current(s)))
@@ -139,6 +143,8 @@ function choose(s) {
     cmd = "rune" + m.code[m.input.length];
   if (b.id === "kabraxis" && m.pending && m.resonance >= 3) cmd = "purify_seal";
   if (cmd && go(cmd)) return go(cmd);
+  if (s.classKey === "venance")
+    return require("./hardcore-venance-policy").choose(s);
   if (
     has("skill") &&
     ["assassin", "necromancer", "paladin", "druid"].includes(s.classKey)

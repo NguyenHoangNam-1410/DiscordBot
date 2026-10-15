@@ -62,6 +62,11 @@ if (backend === "memory") {
   };
 }
 const sourceFiles = [
+  "scripts/simulate-hardcore.js",
+  "scripts/hardcore-boss-policy-v2.js",
+  "scripts/hardcore-boss-policy.js",
+  "scripts/hardcore-venance-policy.js",
+  "src/hardcore/characters/venance.js",
   "src/hardcore/characters/souls.js",
   "src/hardcore/characters/soulTuning.json",
   "src/hardcore/innate.js",
@@ -182,6 +187,7 @@ const bestPolicies = Object.freeze({
   druid: "adaptive",
   necromancer: "adaptive",
   paladin: "adaptive",
+  venance: "balanced",
 });
 const stake = Math.max(
   10,
@@ -205,7 +211,13 @@ const classesToRun =
   selectedClass === "all"
     ? Object.keys(hardcore.CLASSES)
     : selectedClass.split(",");
-if (classesToRun.some((classKey) => !Object.hasOwn(hardcore.CLASSES, classKey)))
+if (
+  classesToRun.some(
+    (classKey) =>
+      !Object.hasOwn(hardcore.CLASSES, classKey) &&
+      !Object.hasOwn(hardcore.V2_CLASSES, classKey),
+  )
+)
   throw new Error("INVALID_CLASS");
 
 function actionFor(state, strategy = policy) {
@@ -468,6 +480,8 @@ function actionForV2(state, strategy) {
   const bossAction = bossPolicy.choose(state);
   if (bossAction) return bossAction;
   if (e.type === "combat") {
+    if (state.classKey === "venance")
+      return require("./hardcore-venance-policy").choose(state);
     const preview = v2.incomingPreview(state);
     const dangerous = state.hp < Math.max(preview.high * 2, state.maxHp * 0.35);
     const protectedSkill =
@@ -551,6 +565,10 @@ for (const classKey of classesToRun) {
   let actualStatProfile = null;
   let actualBossDamageProfile = null;
   let timeouts = 0;
+  const startedAt = Date.now();
+  const actionCounts = {};
+  let interruptedThirdHits = 0;
+  let actualVenanceProfile = null;
   const runOffset = Number(process.env.HARDCORE_SIM_RUN_OFFSET || 0);
   if (!Number.isSafeInteger(runOffset) || runOffset < 0)
     throw Error("INVALID_RUN_OFFSET");
@@ -563,6 +581,13 @@ for (const classKey of classesToRun) {
     db.prepare(
       "UPDATE economy_accounts SET balance=? WHERE guild_id=? AND user_id=?",
     ).run(1_000_000, "simulation", userId);
+    // Explicit ownership exists only in the disposable simulation DB.
+    if (classKey === "venance")
+      require("../src/hardcore/characters/progression").grantCharacter(
+        userId,
+        "venance",
+        Date.now(),
+      );
     const started = hardcore.startHardcore({
       guildId: "simulation",
       userId,
@@ -580,6 +605,9 @@ for (const classKey of classesToRun) {
       );
       repository.saveState(started.session, state);
     }
+    actualVenanceProfile ||= state.venanceProfile
+      ? structuredClone(state.venanceProfile)
+      : null;
     actualBossDamageProfile ||= state.bossDamageProfile
       ? structuredClone(state.bossDamageProfile)
       : null;
@@ -605,6 +633,18 @@ for (const classKey of classesToRun) {
         finalStates.push(structuredClone(state));
         captured = true;
       }
+      if (process.env.HARDCORE_SIM_TRACE === "1" && turn % 1000 === 0)
+        console.error(
+          JSON.stringify({
+            run: i,
+            turn,
+            floor: state.floor,
+            boss: state.encounter.boss?.id,
+            hp: state.hp,
+            enemyHp: state.encounter.hp,
+            mana: state.mana,
+          }),
+        );
       const action = actionFor(state, classPolicy);
       if (
         [2, 3].includes(state.gameplayVersion) &&
@@ -624,6 +664,11 @@ for (const classKey of classesToRun) {
               options: hardcore.V2.actions(state),
             }),
         );
+      actionCounts[action] = (actionCounts[action] || 0) + 1;
+      const cast =
+        classKey === "venance" &&
+        require("../src/hardcore/characters/venance").frame(state);
+      const pendingThird = cast?.remaining > 0 && cast.hits === 2;
       const played = hardcore.playHardcore({
         sessionId: started.session.id,
         userId,
@@ -631,6 +676,12 @@ for (const classKey of classesToRun) {
         action,
       });
       state = played.state;
+      if (
+        pendingThird &&
+        action !== "attack" &&
+        state.venanceState?.remaining === 0
+      )
+        interruptedThirdHits++;
       if (played.settled) break;
     }
     if (
@@ -665,7 +716,10 @@ for (const classKey of classesToRun) {
         { forfeit: true },
       );
     }
-    if ((i - runOffset + 1) % 10 === 0)
+    if (
+      process.env.HARDCORE_SIM_TRACE === "1" ||
+      (i - runOffset + 1) % 10 === 0
+    )
       console.error(
         `${classPolicy}/${classKey}: ${i - runOffset + 1}/${runs} runs, ${floors.filter((floor) => floor >= 999).length} wins`,
       );
@@ -724,6 +778,14 @@ for (const classKey of classesToRun) {
     balanceVersion: actualStatProfile?.balanceVersion || balance.VERSION,
     actualStatProfile,
     actualBossDamageProfile,
+    actualVenanceProfile,
+    venancePolicyVersion:
+      classKey === "venance"
+        ? require("./hardcore-venance-policy").VERSION
+        : null,
+    actionCounts,
+    interruptedThirdHits,
+    elapsedSeconds: (Date.now() - startedAt) / 1000,
     runOffset,
     soulLevel: Number(process.env.HARDCORE_SIM_SOUL_LEVEL || 0),
     soulTuning: require("../src/hardcore/characters/soulTuning.json"),

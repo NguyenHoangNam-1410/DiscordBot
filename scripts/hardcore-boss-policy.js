@@ -10,7 +10,9 @@ function choose(s) {
   if (e.type === "prophecy")
     return (
       "prophecy_" +
-      (["sorceress", "necromancer"].includes(s.classKey) ? "arcane" : "war")
+      (["sorceress", "necromancer", "venance"].includes(s.classKey)
+        ? "arcane"
+        : "war")
     );
   if (e.type === "boss_gate") return "enter_kabraxis";
   if (!boss.on(e)) return null;
