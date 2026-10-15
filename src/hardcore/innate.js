@@ -1,6 +1,6 @@
 "use strict";
 const souls = require("./characters/souls");
-const { E } = require("./shared/icons");
+const { E, soulIcon } = require("./shared/icons");
 const NAMES = {
   amazon: "Bloodlust",
   assassin: "AVOID",
@@ -146,7 +146,14 @@ function absorb(s, amount, skillCost, defend = false) {
     const sf = souls.frame(s);
     if (souls.has(s, 2) && sf && !sf.shieldMana) {
       sf.shieldMana = true;
-      refund = "\n" + E.mana + " Tái lưu chuyển: hồi " + souls.mana(s) + " MP.";
+      refund =
+        "\n" +
+        soulIcon(s.characterSoul.characterId, 2) +
+        " " +
+        E.mana +
+        " Tái lưu chuyển: hồi " +
+        souls.mana(s) +
+        " MP.";
     }
     return {
       remaining: amount - used,
@@ -195,7 +202,7 @@ function afterPlayer(
     c.bloodlust = true;
     if (souls.has(s, 5) && !sf.basicMana) {
       sf.basicMana = true;
-      mana("Tiếp tế");
+      mana(soulIcon(s.characterSoul.characterId, 5) + " Tiếp tế");
     }
   }
   if (s.classKey === "assassin" && critical && landed > 0)
@@ -208,7 +215,7 @@ function afterPlayer(
     !sf.critMana
   ) {
     sf.critMana = true;
-    mana("Thu hồi nhịp thở");
+    mana(soulIcon(s.characterSoul.characterId, 5) + " Thu hồi nhịp thở");
   }
   if (s.classKey === "druid") {
     if (
@@ -220,7 +227,7 @@ function afterPlayer(
       const gained = mana("Mark of the Wild");
       if (souls.has(s, 2) && !sf.wildMana) {
         sf.wildMana = true;
-        mana("Nhịp rừng đầu tiên");
+        mana(soulIcon(s.characterSoul.characterId, 2) + " Nhịp rừng đầu tiên");
       }
       if (gained) c.wildMpReady = c.actions + 2;
     }

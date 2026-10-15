@@ -4,6 +4,7 @@ const awakening = require("../awakening");
 const rift = require("../rift");
 const souls = require("../characters/souls");
 const innate = require("../innate");
+const { soulIcon } = require("../shared/icons");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -873,7 +874,11 @@ module.exports = function createModule(dependencies) {
             f.novaHits++;
             if (souls.has(state, 5) && f.novaHits === 1)
               healingLog +=
-                "\n❤️ Sinh lực từ mộ: hồi " +
+                "\n" +
+                soulIcon(state.characterSoul.characterId, 5) +
+                " " +
+                E.hp +
+                " Sinh lực từ mộ: hồi " +
                 heal(state, state.maxHp * 0.03) +
                 " HP.";
           }
@@ -895,7 +900,13 @@ module.exports = function createModule(dependencies) {
       ) {
         souls.frame(state).furyMana = true;
         healingLog +=
-          "\n💧 Hơi thở chiến binh: hồi " + souls.mana(state) + " MP.";
+          "\n" +
+          soulIcon(state.characterSoul.characterId, 5) +
+          " " +
+          E.mana +
+          " Hơi thở chiến binh: hồi " +
+          souls.mana(state) +
+          " MP.";
       }
       delete e.awakeningFurySpent;
       delete e.awakeningShadowStep;

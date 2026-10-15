@@ -1,7 +1,7 @@
 "use strict";
 const catalog = require("./index");
 const tuning = require("./soulTuning.json");
-const { E } = require("../shared/icons");
+const { E, soulIcon } = require("../shared/icons");
 function enabled(s) {
   return (
     s.gameplayVersion === 3 &&
@@ -235,7 +235,15 @@ function defend(s) {
   ) {
     f.guardUsed = true;
     f.guardBarrier = Math.floor(s.maxHp * 0.03);
-    return "\n🛡️ Tinh hồn S2: lá chắn " + f.guardBarrier + " HP.";
+    return (
+      "\n" +
+      soulIcon(s.characterSoul.characterId, 2) +
+      " " +
+      E.defense +
+      " Tinh hồn S2: lá chắn " +
+      f.guardBarrier +
+      " HP."
+    );
   }
   return "";
 }
@@ -253,7 +261,13 @@ function afterCounter(s, heal) {
     f.barkBroken = false;
     f.barkRescue = true;
     return (
-      "\n" + E.hp + " Rễ bám sinh tồn: hồi " + heal(s, s.maxHp * 0.05) + " HP."
+      "\n" +
+      soulIcon(s.characterSoul.characterId, 6) +
+      " " +
+      E.hp +
+      " Rễ bám sinh tồn: hồi " +
+      heal(s, s.maxHp * 0.05) +
+      " HP."
     );
   }
   f.barkBroken = false;
@@ -273,7 +287,10 @@ function summary(s) {
       ? "\n" +
         c.souls
           .filter((x) => x.level <= v.soulLevel)
-          .map((x) => "S" + x.level + " · " + x.description)
+          .map(
+            (x) =>
+              soulIcon(c, x.level) + " S" + x.level + " · " + x.description,
+          )
           .join("\n")
       : " · Bộ kỹ năng khởi đầu.") +
     (has(s, 6) && v.bossMultiplier !== 1

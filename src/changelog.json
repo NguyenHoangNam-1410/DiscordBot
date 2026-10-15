@@ -1,5 +1,15 @@
 [
   {
+    "id": "50dc5518-709c-4a0d-8b27-658f9ff85ea2",
+    "updatedAt": "2026-10-15T07:25:39.136Z",
+    "auditedAt": "2026-10-15T07:25:39.136Z",
+    "title": "Sinh tồn: icon tinh hồn nhân vật",
+    "changes": [
+      "Thêm 42 icon riêng cho S1–S6 của 7 nhân vật. Hiển thị trong danh sách tinh hồn, Chỉ số, cấp tinh hồn trên Battle UI, nút nâng cấp và thông báo nâng thành công.",
+      "Các log kích hoạt tinh hồn dùng icon tương ứng để dễ nhận biết hiệu ứng. Giữ dấu khóa/đã mở cho từng bậc."
+    ]
+  },
+  {
     "id": "1ca24d3e-a932-40b2-8216-83c1a9bd262f",
     "updatedAt": "2026-10-15T05:46:55.684Z",
     "auditedAt": "2026-10-15T05:46:55.684Z",

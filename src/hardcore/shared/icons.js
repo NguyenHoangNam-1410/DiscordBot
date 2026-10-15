@@ -359,6 +359,16 @@ function itemIcon(item) {
   if (RELIC_ICON_NAMES[id]) return relicIcon(id);
   return icon("item_" + id, E.backpack);
 }
+function soulIcon(character, level) {
+  const c =
+    typeof character === "string"
+      ? require("../characters").get(character)
+      : character;
+  const soul = c?.souls?.find((s) => s.level === level);
+  return soul
+    ? icon(soul.emojiName || "soul_" + c.id + "_" + level, "✨")
+    : "✨";
+}
 function fragmentIcon(key) {
   return ["mimic", "ancient_mimic", "blood_mimic", "mirror_clone"].includes(key)
     ? icon("fragment_" + key, "🧩")
@@ -405,7 +415,8 @@ const RIFT_ICONS = Object.freeze(
   ),
 );
 function eventIcon(key) {
-  if (key === "memory") return icon("tower_remember", icon("event_memory", "📜"));
+  if (key === "memory")
+    return icon("tower_remember", icon("event_memory", "📜"));
   const aliases = {
     shrine: "event_shrine",
     class_shrine: "event_shrine",
@@ -481,5 +492,6 @@ module.exports = {
   relicIcon,
   itemIcon,
   fragmentIcon,
+  soulIcon,
   sealIcon,
 };

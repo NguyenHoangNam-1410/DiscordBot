@@ -1,5 +1,6 @@
 "use strict";
 const bosses = require("../bosses/mechanics");
+const { soulIcon } = require("../shared/icons");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -54,7 +55,7 @@ module.exports = function createModule(dependencies) {
       )
       .setDescription(
         compact
-          ? `${c.emoji} **${c.name}${require("../characters/souls").level(state) ? " · S" + require("../characters/souls").level(state) : ""}** · <@${userId}>\n${character}`
+          ? `${c.emoji} **${c.name}${require("../characters/souls").level(state) ? " · " + soulIcon(state.characterSoul.characterId, require("../characters/souls").level(state)) + " S" + require("../characters/souls").level(state) : ""}** · <@${userId}>\n${character}`
           : `${icon("bust_in_silhouette", "👤")} <@${userId}> · **${world.regionForFloor(state.floor).name}**`,
       );
     if (!compact)

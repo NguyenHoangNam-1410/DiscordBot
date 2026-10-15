@@ -132,7 +132,19 @@ async function main() {
   assert.equal(characters.catalog.soulDesign.completionTarget.min, 0.3);
   assert.equal(characters.catalog.soulDesign.completionTarget.max, 0.35);
   assert.equal(characters.catalog.soulDesign.validated, false);
+  const { soulIcon } = require("../src/hardcore/shared/icons");
+  assert.equal(soulIcon("amazon", 1), "✨");
+  assert.equal(soulIcon("amazon", 0), "✨");
+  assert.equal(soulIcon("unknown", 1), "✨");
+  const soulEmojis = characters.catalog.characters.flatMap((c, ci) =>
+    c.souls.map((s, si) => {
+      assert.equal(s.emojiName, "soul_" + c.id + "_" + s.level);
+      return [s.emojiName, String(1557000000000000500n + BigInt(ci * 6 + si))];
+    }),
+  );
+  assert.equal(new Set(soulEmojis.map((x) => x[0])).size, 42);
   setApplicationEmojisForTest([
+    ...soulEmojis,
     ...Object.keys(stats.CLASSES).map((k, i) => [
       "class_" + k,
       String(1557000000000000000n + BigInt(i)),
@@ -157,6 +169,24 @@ async function main() {
   assert(stringify(overview).includes("class_amazon"));
   const frozen = JSON.stringify(characters.catalog);
   for (const c of characters.catalog.characters) {
+    for (const soul of c.souls) {
+      const expected = soulEmojis.find((x) => x[0] === soul.emojiName);
+      assert.equal(
+        soulIcon(c, soul.level),
+        "<:" + soul.emojiName + ":" + expected[1] + ">",
+      );
+    }
+    const soulState = characters.preview(c.id, 6);
+    const summary = require("../src/hardcore/characters/souls").summary(
+      soulState,
+    );
+    for (const soul of c.souls)
+      assert(summary.includes(soulIcon(c, soul.level)));
+    soulState.encounter = { type: "empty", name: "Fixture" };
+    const battle = require("../src/hardcore/ui")
+      .embed(soulState, owner)
+      .toJSON();
+    assert(battle.description.includes(soulIcon(c, 6)));
     const current = characters.preview(c.id);
     const actual = stats.createState(c.profileKey, 0, { gameplayVersion: 3 });
     for (const k of [
@@ -174,6 +204,9 @@ async function main() {
     for (const tab of ["stats", "skills", "souls"]) {
       const p = ui.payload(owner, { id: c.id, tab });
       limits(p);
+      for (const soul of c.souls)
+        assert(stringify(p).includes(soulIcon(c, soul.level)));
+      assert.equal(component(p, "upgrade_0").emoji.name, c.souls[0].emojiName);
       {
         assert.equal(
           p.embeds[0].data.fields.filter((f) => /^🔒 S[1-6]/.test(f.name))

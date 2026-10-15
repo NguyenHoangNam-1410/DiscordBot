@@ -10,8 +10,8 @@ const {
 } = require("discord.js");
 const characters = require("../characters");
 const stats = require("../engine/stats");
-const { E, SKILL_ICONS } = require("../shared/icons");
-const { appEmoji } = require("../../utils/appEmoji");
+const { E, SKILL_ICONS, soulIcon } = require("../shared/icons");
+const { appEmoji, appEmojiObject } = require("../../utils/appEmoji");
 const { splitRuleFields } = require("./rulePages");
 const PAGE_SIZE = 12;
 const TABS = ["stats", "skills", "souls"];
@@ -249,6 +249,8 @@ function payload(
           " S" +
           s.level +
           " · " +
+          soulIcon(selected, s.level) +
+          " " +
           s.name,
         value:
           s.description +
@@ -328,19 +330,20 @@ function payload(
     const p = require("../characters/progression"),
       n = owned[id].soulLevel,
       cost = p.SOUL_COST[selected.rarity];
-    components.at(-1).addComponents(
-      new ButtonBuilder()
-        .setCustomId(custom("upgrade_" + n))
-        .setLabel(
-          n >= 6 ? "Đã đạt S6" : "Nâng S" + (n + 1) + " · " + cost + " thẻ",
-        )
-        .setStyle(ButtonStyle.Success)
-        .setDisabled(
-          n >= 6 ||
-            !cost ||
-            p.cards(owner, selected.classKey, selected.rarity) < cost,
-        ),
-    );
+    const upgradeButton = new ButtonBuilder()
+      .setCustomId(custom("upgrade_" + n))
+      .setLabel(
+        n >= 6 ? "Đã đạt S6" : "Nâng S" + (n + 1) + " · " + cost + " thẻ",
+      )
+      .setStyle(ButtonStyle.Success)
+      .setDisabled(
+        n >= 6 ||
+          !cost ||
+          p.cards(owner, selected.classKey, selected.rarity) < cost,
+      );
+    const soulEmoji = appEmojiObject(selected.souls[Math.min(n, 5)].emojiName);
+    if (soulEmoji) upgradeButton.setEmoji(soulEmoji);
+    components.at(-1).addComponents(upgradeButton);
   }
   if (require("../characters/progression").account(owner))
     components
@@ -406,7 +409,9 @@ async function handle(interaction) {
         operationId: interaction.id,
       });
       notice =
-        "Đã nâng **" +
+        "Đã nâng " +
+        soulIcon(id, r.soulLevel) +
+        " **" +
         characters.get(id).name +
         " lên S" +
         r.soulLevel +
