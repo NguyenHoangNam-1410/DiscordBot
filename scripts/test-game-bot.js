@@ -21,6 +21,7 @@ const expectedCommandFiles = [
   "quantri",
   "gacha",
   "vtv",
+  "chatbot",
 ];
 const expectedCommands = expectedCommandFiles.map((file) => file);
 assert.deepEqual(

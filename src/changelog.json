@@ -1,5 +1,15 @@
 [
   {
+    "id": "1c176501-295f-4da4-8f8b-3e107e4d2c72",
+    "updatedAt": "2026-10-15T11:27:07.632Z",
+    "auditedAt": "2026-10-15T11:27:07.632Z",
+    "title": "Chatbot AI",
+    "changes": [
+      "Thêm kênh chatbot: admin chọn kênh bằng /chatbot kenh, mọi người chat trực tiếp với bot trong kênh đó.",
+      "Mỗi người có 20 lượt chat mỗi ngày (đặt lại lúc 00:00 giờ Việt Nam); xem số lượt còn lại bằng /chatbot luot."
+    ]
+  },
+  {
     "id": "28242726-c6c0-496e-baa8-0336b76dd567",
     "updatedAt": "2026-10-15T11:24:00.780Z",
     "auditedAt": "2026-10-15T11:24:00.780Z",
