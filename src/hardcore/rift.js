@@ -272,7 +272,7 @@ function finishCounter(s, { hit, physical, defend, blocked = false }) {
   s.mana--;
   r.soulDrainCharges--;
   r.manaFracture = true;
-  return `\n${RIFT_ICONS.soul_drain} Soul Drain: −1 MP; đánh thường kế tiếp hồi thêm 1 MP.`;
+  return `\n${RIFT_ICONS.soul_drain} Soul Drain: −1 ${E.mana}, đánh thường kế tiếp hồi thêm 1 ${E.mana}.`;
 }
 function nextCounter(s, rng, plan) {
   const r = encounter(s);
@@ -505,7 +505,9 @@ function battle(s) {
   if (!r) return "";
   const lines = [];
   if (bossOwnDrain(s) && r.stacks.soul_drain > 0)
-    lines.push(`${RIFT_ICONS.soul_drain} Hút MP riêng của boss thay thế Soul Drain.`);
+    lines.push(
+      `${RIFT_ICONS.soul_drain} Hút MP riêng của boss thay thế Soul Drain.`,
+    );
   if (r.stoneArmorMax > 0) lines.push(stoneStatus(s));
   if (r.bloodlustReady)
     lines.push(
