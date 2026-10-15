@@ -280,7 +280,7 @@ module.exports = function createModule(dependencies) {
       }
       const log = bosses.afterCounter(state, 0, false, defend);
       return (
-        `${E.evasion} Bạn chặn/né hoàn toàn phản công.` +
+        `${E.evasion} Bạn né hoàn toàn phản công.` +
         (log ? "\n" + log : "") +
         reflection
       );
@@ -442,11 +442,7 @@ module.exports = function createModule(dependencies) {
     return (
       "\n" +
       passiveIcon("mpLeech") +
-      " Hút MP: " +
-      before +
-      " → " +
-      state.mana +
-      " MP cho bạn."
+      ` Hút MP: ${before} → ${state.mana} ${E.mana} `
     );
   }
 
