@@ -204,7 +204,7 @@ function status(s) {
   return f
     ? "Cường hóa: **" +
         f.remaining +
-        "/3 hành động** · Giữ qua phòng · Đòn hợp lệ: **" +
+        "/3 hành động** · Đòn hợp lệ: **" +
         f.hits +
         "/3**" +
         (f.ready ? " · ✨ Hồi lưu sẵn sàng" : "")
