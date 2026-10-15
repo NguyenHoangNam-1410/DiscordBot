@@ -48,7 +48,7 @@ function options(s) {
       if (m.charges >= 3 && m.rune) add("purify", "Purify");
       break;
     case "control":
-      trio("frequency", ["Alpha", "Beta", "Gamma"]);
+      if (!u.isOpen(x)) trio("frequency", ["Alpha", "Beta", "Gamma"]);
       break;
     case "necrobot":
     case "akarat":
@@ -406,6 +406,7 @@ function act(s, action, ops) {
       }
       break;
     case "control":
+      if (u.isOpen(x)) throw Error("INVALID_ACTION");
       if (Number(cmd.slice(9)) === m.pattern[m.cursor % 3]) {
         u.open(x, 2);
         m.cursor++;

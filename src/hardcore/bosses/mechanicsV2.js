@@ -296,7 +296,7 @@ function afterPlayer(s, action, acted) {
   if (b.id === "athulua" && b.dealt > 0) m.arrow = (m.arrow + 1) % 3;
   if (b.id === "machine" && u.damaging(action))
     m.heat = Math.min(100, m.heat + b.hitCount * c.amount);
-  if (b.id === "control" && b.hitCount)
+  if (b.id === "control" && !u.isOpen(x) && b.hitCount)
     m.hints = Math.min(2, m.hints + b.hitCount);
   if (b.id === "sescheron" && b.hitCount)
     m.hints = Math.min(3, m.hints + b.hitCount);
@@ -348,6 +348,7 @@ function counter(s, defend = false, extra = false) {
     raw: null,
     trueDamage: false,
   };
+  if (b.id === "control" && u.isOpen(x)) p.skip = true;
   const due = dec.beamDue(x);
   if (b.id === "butcher") {
     p.multiplier *= 1 + m.stack * c.power + (m.distance === 0 ? 0.15 : 0);
@@ -802,7 +803,13 @@ function endAction(s, rng, ops) {
   m.killed = [];
   m.skipCounter = false;
   m.clashWrong = false;
+  const controlWasOpen = b.id === "control" && u.isOpen(x);
   b.round++;
+  if (controlWasOpen && !u.isOpen(x)) {
+    m.hints = 0;
+    m.openUntil = 0;
+    s.lastLog += "\n🛡️ Master Control System: Plasma Shield đã trở lại; tấn công để thu thập manh mối tần số mới.";
+  }
   e.combatTurn = b.round;
   b.inAction = false;
   refresh(s);
