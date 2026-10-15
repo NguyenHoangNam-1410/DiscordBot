@@ -17,6 +17,7 @@ const monitoring = require("./services/monitoringService");
 const { startEconomyMaintenance } = require("./services/economyService");
 const { handlePrefixMessage } = require("./services/prefixCommandService");
 const { handleGameMessage } = require("./services/gameMessageService");
+const { handleChatbotMessage } = require("./services/chatbotMessageService");
 const { handleGamePrefix } = require("./services/gamePrefixService");
 const { resumeOpenRounds } = require("./services/multiplayerGameService");
 const {
@@ -197,6 +198,7 @@ if (messageCommandsEnabled)
     const task = (async () => {
       if (await handlePrefixMessage(message, logger)) return;
       if (await handleGamePrefix(message)) return;
+      if (await handleChatbotMessage(message)) return;
       await handleGameMessage(message);
     })().catch((error) => {
       logger.error({ err: error }, "message command failed");

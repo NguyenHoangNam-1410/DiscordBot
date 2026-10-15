@@ -69,6 +69,10 @@ const PAGES = Object.freeze({
         "`/hoso` — xem hồ sơ; `/xephang` — chọn bảng xếp hạng bằng menu.",
       ],
       [
+        "🤖 Chatbot AI",
+        "Chat trong kênh chatbot do admin chọn (`/chatbot kenh`); mỗi người 20 lượt/ngày, xem `/chatbot luot`.",
+      ],
+      [
         "📋 Cập nhật",
         "`/changelog` — xem cập nhật mới nhất, chuyển trang để xem lịch sử.",
       ],

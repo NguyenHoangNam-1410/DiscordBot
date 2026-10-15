@@ -1414,4 +1414,12 @@ runMigration(43, "allow manual tower rotations inside a weekly window", () => {
 
 require("./hardcore/characters/schema")(db, runMigration);
 
+runMigration(45, "openai chatbot channel and daily usage", () => {
+  db.exec(`CREATE TABLE IF NOT EXISTS chatbot_channels (
+    guild_id TEXT PRIMARY KEY,channel_id TEXT NOT NULL,updated_by TEXT NOT NULL,updated_at INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS chatbot_usage (
+    guild_id TEXT NOT NULL,user_id TEXT NOT NULL,day_key TEXT NOT NULL,used INTEGER NOT NULL DEFAULT 0,
+    PRIMARY KEY(guild_id,user_id,day_key));`);
+});
+
 module.exports = { db, dbPath, runMigration };
