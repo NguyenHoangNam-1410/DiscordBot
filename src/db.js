@@ -1422,4 +1422,9 @@ runMigration(45, "openai chatbot channel and daily usage", () => {
     PRIMARY KEY(guild_id,user_id,day_key));`);
 });
 
+runMigration(46, "chatbot per-server daily limit", () => {
+  db.exec(`CREATE TABLE IF NOT EXISTS chatbot_settings (
+    guild_id TEXT PRIMARY KEY,daily_limit INTEGER NOT NULL,updated_by TEXT NOT NULL,updated_at INTEGER NOT NULL);`);
+});
+
 module.exports = { db, dbPath, runMigration };

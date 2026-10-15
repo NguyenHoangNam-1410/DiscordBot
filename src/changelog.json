@@ -1,5 +1,15 @@
 [
   {
+    "id": "4bc56a7d-4c56-4f10-971f-4c64089fa272",
+    "updatedAt": "2026-10-15T11:53:16.640Z",
+    "auditedAt": "2026-10-15T11:53:16.640Z",
+    "title": "Chatbot dùng lệnh /chatbot hoi",
+    "changes": [
+      "Hỏi chatbot bằng /chatbot hoi trong kênh admin đã chọn, thay cho việc chat thẳng trong kênh.",
+      "Admin chỉnh số lượt chat mỗi người mỗi ngày bằng /chatbot gioihan (1-500, mặc định 20)."
+    ]
+  },
+  {
     "id": "69c418fc-c2cf-436a-8fe3-f3d36a467327",
     "updatedAt": "2026-10-15T11:47:34.664Z",
     "auditedAt": "2026-10-15T11:47:34.664Z",
