@@ -624,11 +624,6 @@ function status(s) {
         "🚶 Di chuyển/không gây sát thương: vẫn ngắm **" +
         zones[aimed] +
         "**." +
-        (avoidBoth.length
-          ? "\n🧭 Vùng tránh cả hai hướng ngắm: **" +
-            avoidBoth.join(" / ") +
-            "**."
-          : "") +
         (blocked != null
           ? "\n🔒 Vùng bị khóa: **" +
             zones[blocked] +
