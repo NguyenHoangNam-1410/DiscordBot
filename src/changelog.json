@@ -1,5 +1,14 @@
 [
   {
+    "id": "f187b584-6b07-4b1f-8815-286e06e8e814",
+    "updatedAt": "2026-10-15T10:21:32.217Z",
+    "auditedAt": "2026-10-15T10:21:32.217Z",
+    "title": "Athulua · làm rõ vị trí và hướng ngắm",
+    "changes": [
+      "Hiển thị rõ vùng bạn đang đứng, vùng Athulua đang ngắm và vùng ngắm sau khi bạn gây sát thương; bổ sung vùng tránh hai hướng ngắm cùng cảnh báo vùng bị khóa."
+    ]
+  },
+  {
     "id": "18f24377-75e4-450a-a865-3fb8d599da32",
     "updatedAt": "2026-10-15T09:22:11.266Z",
     "auditedAt": "2026-10-15T09:22:11.266Z",

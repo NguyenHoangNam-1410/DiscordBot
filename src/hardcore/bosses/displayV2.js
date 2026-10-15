@@ -63,7 +63,7 @@ const RULES = {
   greater_riftwalker:
     "- **Cơ chế chính:** Màu bão quyết định vị trí an toàn.\n  - **Bão xanh:** Gần boss là an toàn.\n  - **Bão đỏ:** Xa boss là an toàn.\n- **Đổi vị trí:** Tốn 1 lượt và không có phản công thường, nhưng vẫn chịu sát thương bão nếu đứng sai.\n- **Cách xử lý:** Xem màu hiện tại và đợt kế tiếp, rồi đổi vị trí trước khi bão đánh.",
   athulua:
-    "- **Cơ chế chính:** Một trong ba vùng Trái/Giữa/Phải bị đánh dấu. Sau mỗi đòn gây sát thương của bạn, dấu ấn dịch theo mũi tên hiển thị.\n- **Đứng trong vùng bị đánh dấu:** Guided Arrow gây nhiều sát thương hơn.\n- **Đứng ở Giữa:** Bạn ở gần boss nên nhận thêm sát thương.\n- **Sky Siege ở Depth III:** Khóa một vùng trong 1–2 lượt theo lịch công bố.\n- **Cần nhớ:** Di chuyển tốn 1 lượt và Guided Arrow vẫn được xử lý trong lượt di chuyển.",
+    "- **Vị trí:** Bạn đứng ở một trong ba vùng **Trái / Giữa / Phải**; bảng Hiện tại ghi rõ vị trí của bạn và vùng boss đang ngắm.\n- **Khi bạn gây DMG:** Mũi tên đổi vùng theo thứ tự **Trái → Giữa → Phải → Trái**, rồi boss mới phản công. Hãy xem vùng ngắm sau khi gây DMG.\n- **Khi di chuyển hoặc không gây DMG:** Vùng ngắm giữ nguyên. Di chuyển ra ngoài vùng đang ngắm để tránh Guided Arrow của lượt đó; di chuyển vẫn tốn **1 lượt**.\n- **Đứng đúng vùng boss ngắm:** Nhận sát thương Guided Arrow tăng mạnh. Đứng ở **Giữa** còn nhận thêm **15% DMG**.\n- **Sky Siege ở độ khó III:** Khóa một vùng; nút di chuyển tới vùng đó bị vô hiệu hóa. Bảng Hiện tại báo vùng đang khóa và vùng sắp khóa.",
   lilith:
     "- **Cơ chế chính:** Bạn có thể hiến 5%, 10% hoặc 20% Max HP để nhận tăng sát thương tương ứng trong 1, 2 hoặc 3 lượt.\n- **Điều kiện:** Sau khi hiến phải còn ít nhất 1 HP. Mỗi lần hiến tốn 1 lượt và boss vẫn phản công.\n- **Khóa hồi máu:** Phần HP đã hiến không thể hồi bằng Bình hoặc Skill cho đến khi hiệu ứng kết thúc.\n- **Cần nhớ:** Không bắt buộc hiến. Chỉ hiến khi lượng sát thương tăng thêm giúp rút ngắn trận đấu đủ nhiều.",
   nemesis:
@@ -603,27 +603,46 @@ function status(s) {
         (c.cycle - (b.round % c.cycle)) +
         " lượt; kế đổi màu.";
       break;
-    case "athulua":
+    case "athulua": {
+      const zones = ["Trái", "Giữa", "Phải"],
+        aimed = mech.arrowZone(x),
+        afterHit = (aimed + 1) % 3,
+        blocked = mech.dec.blockedZone(x),
+        avoidBoth = zones.filter(
+          (_, i) => i !== aimed && i !== afterHit && i !== blocked,
+        );
       text =
-        "Ở " +
-        ["Trái", "Giữa", "Phải"][m.zone] +
-        " · Arrow " +
-        ["Trái", "Giữa", "Phải"][mech.arrowZone(x)] +
-        " → " +
-        ["Trái", "Giữa", "Phải"][(mech.arrowZone(x) + 1) % 3] +
-        (mech.dec.blockedZone(x) != null
-          ? " · ⚠ Sky Siege: " +
-            ["Trái", "Giữa", "Phải"][mech.dec.blockedZone(x)]
+        "👤 Bạn đứng: **" +
+        zones[m.zone] +
+        "** · 🎯 Đang ngắm: **" +
+        zones[aimed] +
+        "**.\n" +
+        E.attack +
+        " Nếu bạn gây sát thương: boss ngắm **" +
+        zones[afterHit] +
+        "** trước khi phản công.\n" +
+        "🚶 Di chuyển/không gây sát thương: vẫn ngắm **" +
+        zones[aimed] +
+        "**." +
+        (avoidBoth.length
+          ? "\n🧭 Vùng tránh cả hai hướng ngắm: **" +
+            avoidBoth.join(" / ") +
+            "**."
+          : "") +
+        (blocked != null
+          ? "\n🔒 Vùng bị khóa: **" +
+            zones[blocked] +
+            "** · còn **" +
+            (m.siegeUntil - b.round) +
+            " lượt**."
           : "") +
         (b.depth === 3 && b.round % c.cycle === c.cycle - 1
-          ? " · ⚠ Cuối lượt này Sky Siege khóa " +
-            ["Trái", "Giữa", "Phải"][
-              m.pattern[Math.floor(b.round / c.cycle) % 3]
-            ] +
-            " trong 2 lượt."
-          : "") +
-        ". Đổi vùng nếu bị khóa.";
+          ? "\n⚠️ Cuối lượt này khóa vùng **" +
+            zones[m.pattern[Math.floor(b.round / c.cycle) % 3]] +
+            "** trong **2 lượt**."
+          : "");
       break;
+    }
     case "lilith":
       text =
         m.bargain > 0
