@@ -90,8 +90,21 @@ function title(debt) {
   const key = typeof debt === "string" ? debt : family(debt);
   return memoryIcon(key) + " " + CATALOG[key].name;
 }
-function canQueue(state) {
-  return (state.debts || []).length < LIMIT;
+function usedSlots(state) {
+  const m = require("./events/explorationMarks").data(state);
+  const current = state.encounter?.type === "memory" ? state.encounter.debt : state.encounter?.memoryDebt;
+  return (state.debts || []).length +
+    Number(Boolean(current && !(state.debts || []).includes(current))) +
+    Number(Boolean(state.adventurerRescue)) + Number(Boolean(state.prophecy)) +
+    Number(Boolean(state.grudge && state.grudge.stage !== "completed")) +
+    Number(Boolean(m.outlaw)) + Number(Boolean(m.underworld || state.encounter?.thiefTrial)) +
+    Number(Boolean(m.vulnerable || m.vitalBlessing)) + Number(require("./events/explorationMarks").boosted(state));
+}
+function canQueue(state, slots = 1) {
+  return usedSlots(state) + slots <= LIMIT;
+}
+function robberySlots(state) {
+  return 1 + Number(require("./events/gildedSoul").enabled(state) && !state.grudge && !require("./events/gildedSoul").owns(state));
 }
 function queue(state, action, rng, data = {}) {
   const key = ACTIONS[action];
@@ -201,22 +214,10 @@ function actions(state, payout) {
 }
 
 function fields(state) {
-  const output = [
-    {
-      name: "The Tower Remembers",
-      value:
-        DEFINITION +
-        "\n\n" +
-        "Hậu quả đang chờ: **" +
-        (state.debts || []).length +
-        "/" +
-        LIMIT +
-        "**. Hậu quả thường đến sau 10–30 tầng, xử lý một lần; boss/RNGesus được ưu tiên. Ân nghĩa bảo hộ theo khu vực; lời tiên tri kích hoạt ở tầng 666." +
-        (!canQueue(state)
-          ? "\nĐã đầy ký ức: cần xử lý bớt trước khi cướp/hiến tế/đập gương. Cầu nguyện RNGesus vẫn dùng được nhưng không thêm thử thách."
-          : ""),
-    },
-  ];
+  const output = [{
+    name: eventIcon("memory") + " The Tower Remembers (" + usedSlots(state) + "/" + LIMIT + ")",
+    value: usedSlots(state) >= LIMIT ? "Đã đầy · không thể nhận thêm ký ức." : usedSlots(state) ? "Ấn vĩnh viễn giữ chỗ đến hết run." : "Chưa có ký ức.",
+  }];
   if (
     state.prophecy &&
     !state.mode?.startsWith("tower") &&
@@ -234,7 +235,7 @@ function fields(state) {
     output.push({
       name: eventIcon("prophecy") + " The Tower Remembers · Threefold Prophecy",
       value:
-        "**Nguồn:** chọn ấn " +
+        "Ấn " +
         sealIcon(kind) +
         " **" +
         seal +
@@ -246,39 +247,11 @@ function fields(state) {
             "."),
     });
   }
-  const encounter = state.encounter || {};
-  const possibilities =
-    encounter.type === "rngesus"
-      ? ["divine"]
-      : encounter.type === "echo"
-        ? ["vengeance"]
-        : encounter.type === "surprise"
-          ? {
-              adventurer: ["rescue", "bounty"],
-              sacrifice: ["blood", "wealth"],
-              mirror: ["mirror"],
-            }[encounter.kind] || []
-          : [];
-  for (const key of possibilities)
-    output.push({
-      name: title(key) + " · Có thể tạo",
-      value:
-        "**Nguồn:** " +
-        CATALOG[key].source +
-        "\n" +
-        CATALOG[key].detail +
-        (key === "mirror"
-          ? "\nĐập gương: 20% +2 LUCK, không tạo ký ức; 80% tạo Dư âm gương."
-          : "") +
-        (key === "vengeance"
-          ? "\nCướp mộ: 50% an toàn; 50% ghi nhận Oán niệm."
-          : ""),
-    });
   if (state.adventurerRescue)
     output.push({
       name: title("rescue"),
       value:
-        CATALOG.rescue.detail +
+        "Bảo hộ 1 lần trong cùng khu vực: hồi sinh 50% HP, ưu tiên trước vé hồi sinh." +
         "\nHiệu lực đến hết tầng **" +
         state.adventurerRescue.until +
         "**.",
@@ -291,6 +264,9 @@ function fields(state) {
   for (const debt of debts) {
     const key = family(debt);
     let detail = CATALOG[key].detail;
+    if (key === "bounty") detail = debt.kind === "tax"
+      ? "Trừ một lần 10% payout hiện tại."
+      : "Gặp Bounty Hunter tinh anh; đánh hoặc trả 20% payout để tránh.";
     if (key === "wealth")
       detail +=
         "\nBonus nếu thắng: **" +
@@ -327,8 +303,7 @@ function fields(state) {
             (state.floor >= debt.due ? " · chờ sau boss/RNGesus." : ".")),
     });
   }
-  if (output.length === 1)
-    output[0].value += "\nChưa có hậu quả hẹn hoặc bảo hộ đang chờ.";
+
   output.push(...require("./events/explorationMarks").fields(state));
   return output;
 }
@@ -339,6 +314,8 @@ module.exports = {
   CATALOG,
   family,
   title,
+  usedSlots,
+  robberySlots,
   canQueue,
   queue,
   makeEncounter,

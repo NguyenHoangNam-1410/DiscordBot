@@ -24,6 +24,7 @@ function normalize(s) {
     "vitalBlessing",
     "mimic",
     "ancientMimic",
+    "mimicBoost",
   ])
     if (m[k] != null && typeof m[k] !== "boolean")
       throw Error("INVALID_EXPLORATION_MARK");
@@ -36,7 +37,7 @@ function normalize(s) {
   )
     throw Error("INVALID_EXPLORATION_MARK");
 }
-const boosted = (s) => Boolean(data(s).mimic && data(s).ancientMimic);
+const boosted = (s) => Boolean(data(s).mimicBoost || (data(s).mimic && data(s).ancientMimic && data(s).mimicBoost !== false));
 const incoming = (s, e = s.encounter) =>
   e?.rank === "elite" && data(s).underworld
     ? 1.3
@@ -59,7 +60,7 @@ const healerDue = (s) =>
   Boolean(data(s).vulnerable && s.cleared >= data(s).vulnerable.due);
 function blood(s) {
   const m = ensure(s);
-  if (m.vulnerable || m.vitalBlessing || s.hp <= 1)
+  if (!require("../towerMemories").canQueue(s) || m.vulnerable || m.vitalBlessing || s.hp <= 1)
     throw Error("INVALID_ACTION");
   const before = s.hp;
   s.hp = Math.max(1, s.hp - Math.ceil(s.hp * 0.7));
@@ -73,31 +74,25 @@ function fields(s) {
     r.push({
       name: eventIcon("tax") + " Royal Outlaw",
       value:
-        "Chống Tax Collector. Đến hết run: không gặp lại Tax Collector; Boss/Final Boss gây thêm 20% DMG lên bạn. Không cộng dồn, không bị giải nguyền UR/xóa Rift gỡ bỏ.",
+        "Đến hết run: không gặp Tax Collector; Boss/Final Boss gây thêm 20% DMG.",
     });
   if (m.underworld)
     r.push({
       name: eventIcon("potion_thief") + " Underworld Lead",
       value:
-        "Hạ The Thief. Đến hết run: Diamond Merchant và Rift Merchant miễn phí; giữ tối đa 1 món/lần gặp và Diamond Merchant tối đa 2 lần gặp/run. Không gặp lại The Thief; Elite gây thêm 30% DMG lên bạn. Không hoàn các khoản mua trước đó; không cộng dồn.",
+        "Đến hết run: miễn phí Diamond/Rift Merchant (1 món/lần; Diamond tối đa 2 lần/run); không gặp The Thief; Elite gây thêm 30% DMG.",
     });
   if (m.vulnerable)
     r.push({
       name: eventIcon("healer") + " Vulnerable",
       value:
-        "Hiến máu cho Healer. Checkpoint không hồi HP ở tầng " +
-        m.vulnerable.from +
-        "–" +
-        m.vulnerable.due +
-        "; vẫn nhận bình và chọn thuộc tính. Sau khi vượt tầng " +
-        m.vulnerable.due +
-        ", Healer trở lại ở tình huống hợp lệ kế tiếp để hồi đầy HP/MP và trao Vital Benediction.",
+        "Checkpoint không hồi HP đến hết tầng " + m.vulnerable.due + "; sau đó Healer trở lại hồi đầy HP/MP và đổi thành Vital Benediction.",
     });
   if (m.vitalBlessing)
     r.push({
       name: eventIcon("healer") + " Vital Benediction",
       value:
-        "Đã hoàn thành Hiến máu: LUCK +40; STR, DEX, VIT, ENE mỗi chỉ số +10 đến hết run. Chỉ một lần/run; đã tính trong chỉ số nhân vật.",
+        "Đến hết run: LUCK +40; STR/DEX/VIT/ENE +10 (đã tính vào chỉ số).",
     });
   if (boosted(s))
     r.push({

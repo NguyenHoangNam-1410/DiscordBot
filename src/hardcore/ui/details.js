@@ -289,8 +289,8 @@ module.exports = function createModule(dependencies) {
           name: `${E.rift} Rift modifier`,
           value: "Chưa có Rift modifier.",
         });
-      addTextFields(e, "Rift Paradox", paradoxEffectText(state));
-      addTextFields(e, "Rift Contract", contractEffectText(state));
+      const specialEffects = [paradoxEffectText(state), contractEffectText(state)].filter(Boolean);
+      if (specialEffects.length) addTextFields(e, "Hiệu ứng Rift", specialEffects.join("\n"));
       for (const field of [...memories.fields(state), ...gilded.fields(state)])
         addTextFields(e, field.name, field.value);
     } else {

@@ -405,6 +405,7 @@ const RIFT_ICONS = Object.freeze(
   ),
 );
 function eventIcon(key) {
+  if (key === "memory") return icon("tower_remember", icon("event_memory", "📜"));
   const aliases = {
     shrine: "event_shrine",
     class_shrine: "event_shrine",

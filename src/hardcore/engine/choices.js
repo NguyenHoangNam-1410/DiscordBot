@@ -77,7 +77,7 @@ module.exports = function createModule(dependencies) {
                       action: "event_healer_blood",
                       label: "Hiến 70% HP hiện tại",
                       disabled:
-                        state.hp <= 1 ||
+                        state.hp <= 1 || !memories.canQueue(state) ||
                         Boolean(
                           require("../events/explorationMarks").data(state)
                             .vulnerable ||
@@ -129,12 +129,12 @@ module.exports = function createModule(dependencies) {
           {
             action: "event_rescue",
             label: "Cứu · 1 bình",
-            disabled: state.potions < 1,
+            disabled: state.potions < 1 || (!state.adventurerRescue && !memories.canQueue(state)),
           },
           {
             action: "event_rob",
             label: "Cướp · SSR/UR",
-            disabled: !memories.canQueue(state),
+            disabled: !memories.canQueue(state, memories.robberySlots(state)),
           },
         ],
         fountain: [{ action: "event_drink", label: "Uống" }],
@@ -185,6 +185,8 @@ module.exports = function createModule(dependencies) {
   }
 
   function actions(state) {
+    if (state.encounter?.type === "prophecy" && !memories.canQueue(state))
+      return [{ action: "prophecy_skip", label: "Đi tiếp · đầy ký ức" }];
     if (state.encounter?.type === "prophecy")
       return [
         { action: "prophecy_war", label: "War · +12 stat chính, +8% DMG boss" },
@@ -314,6 +316,7 @@ module.exports = function createModule(dependencies) {
         {
           action: e.kind === "tax" ? "tax_resist" : "thief_fight",
           label: e.kind === "tax" ? "Chống trả" : "Đánh đuổi",
+          disabled: !memories.canQueue(state),
         },
       ];
     if (e.type === "chest")

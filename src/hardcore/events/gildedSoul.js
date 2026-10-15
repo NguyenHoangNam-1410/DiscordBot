@@ -30,7 +30,7 @@ function active(state) {
 function mark(state) {
   if (!enabled(state) || owns(state) || state.grudge?.stage === "completed")
     return false;
-  if (state.grudge) return false; // Repeat robbery keeps the first due floor.
+  if (state.grudge || !require("../towerMemories").canQueue(state)) return false; // Repeat robbery keeps the first due floor.
   state.grudge = {
     from: state.floor,
     readyFloor: state.floor + DELAY,
@@ -192,17 +192,8 @@ function fields(state) {
     {
       name: memoryIcon("grudge") + " The Tower Remembers · Dấu ấn oán hận",
       value:
-        "**Nguồn:** cướp Lost Adventurer tại tầng **" +
-        mark.from +
-        "**.\n**Đến hạn:** tầng **" +
-        mark.readyFloor +
-        "**; từ đó Shrine có **7 nhánh ngang nhau**, nghi lễ **1/7**. Không ép Shrine xuất hiện, không đổi kết quả Shrine đã khóa. Cướp lại không đẩy lùi mốc; hậu quả payout/Bounty Hunter cũ vẫn áp dụng.\n" +
-        (mark.stage === "trial"
-          ? "**Đang đánh Avarice Revenant.** Hồi sinh giữ nguyên trận và dấu ấn."
-          : ready(state)
-            ? "**Đã đến hạn:** chờ gặp Shrine nghi lễ. Bỏ qua vẫn giữ dấu ấn."
-            : "Chưa đến hạn; sáu nhánh Shrine giữ tỷ lệ cũ.") +
-        "\nThắng boss mới nhận **Gilded Soul [LR]** và kết thúc dấu ấn. Không có phước lành hồi HP/MP hoặc giải nguyền; xem Chi tiết khi gặp nghi lễ.",
+        "Cướp Lost Adventurer · từ tầng " + mark.readyFloor + ": Shrine có nhánh nghi lễ 1/7. " +
+        (mark.stage === "trial" ? "Đang đánh Avarice Revenant." : "Hạ Avarice Revenant nhận Gilded Soul [LR]; không kèm phước lành."),
     },
   ];
 }

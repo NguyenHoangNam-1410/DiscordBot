@@ -339,12 +339,15 @@ module.exports = function createModule(dependencies) {
     } else if (k === "adventurer") {
       if (action === "event_rescue") {
         if (state.potions < 1) throw new Error("NO_RESCUE_POTIONS");
+        if (!state.adventurerRescue && !require("../towerMemories").canQueue(state)) throw new Error("INVALID_ACTION");
         state.potions--;
         receiveItem(state, e.rescueItem);
         const region = world.regionForFloor(state.floor);
         state.adventurerRescue = { from: region.start, until: region.end };
         state.lastLog = `${memoryIcon("rescue")} Cứu người: nhận ${e.rescueItem.name}.\nÂn nghĩa đã ghi nhận. Xem bảo hộ trong Rift.`;
       } else {
+        const memories = require("../towerMemories");
+        if (!memories.canQueue(state, memories.robberySlots(state))) throw new Error("INVALID_ACTION");
         receiveItem(state, e.robItem);
         state.lastLog = `🗡️ Cướp: nhận ${e.robItem.name}.`;
         remember(state, action, rng);

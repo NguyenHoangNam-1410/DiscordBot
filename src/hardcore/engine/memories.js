@@ -71,8 +71,14 @@ module.exports = function createModule(dependencies) {
     state.lastLog += `\n${monsterIcon(e)} Hạ **${e.name}**.`;
     if (require("../events/explorationMarks").enabled(state)) {
       const m = require("../events/explorationMarks").ensure(state);
+      const hadMimicBoost = require("../events/explorationMarks").boosted(state);
+      if (!hadMimicBoost) m.mimicBoost = false;
       if (e.mimicKind === "mimic" || e.name === "Mimic") m.mimic = true;
       if (world.mimicKind(e) === "ancient_mimic") m.ancientMimic = true;
+      if (!hadMimicBoost && m.mimic && m.ancientMimic) {
+        m.mimicBoost = require("../towerMemories").canQueue(state);
+        if (!m.mimicBoost) state.lastLog += "\nĐầy 8 ký ức: chưa nhận được Dấu vết Mimic.";
+      }
       if (e.thiefTrial && !m.underworld) {
         m.underworld = true;
         state.bonus += Math.floor(state.stake * 0.2);

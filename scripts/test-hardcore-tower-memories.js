@@ -432,7 +432,7 @@ try {
     allNames.push(...payload.embeds[0].toJSON().fields.map((f) => f.name));
     allText.push(json(payload));
   }
-  assert.equal(allNames.filter((name) => name.includes("Đang chờ")).length, 8);
+  assert.equal(allNames.filter((name) => name.includes("Đang chờ")).length, 7);
   assert(allNames.some((name) => name.includes("Ân nghĩa")));
   assert(allText.join("").includes("Nguồn"));
   assert.equal(JSON.stringify(panelState.debts), snapshot);
@@ -557,6 +557,62 @@ try {
     "persisted offerings and stale clicks cannot consume supplies or reward twice",
   );
 
+  {
+    const s = fresh();
+    s.gameplayVersion = 3;
+    s.explorationMarks = {version: 1, outlaw: true, underworld: true, vitalBlessing: true};
+    assert.equal(memory.usedSlots(s), 3);
+    for (let i = 0; i < 5; i++) assert(memory.queue(s, "event_sacrifice_hp", rng));
+    assert.equal(memory.usedSlots(s), 8);
+    const locked = JSON.stringify(s);
+    assert.equal(memory.queue(s, "event_sacrifice_hp", rng), null);
+    assert.equal(JSON.stringify(s), locked);
+    s.encounter = {type: "trap", kind: "tax"};
+    assert(core.actions(s).find(a => a.action === "tax_resist").disabled);
+    assert.throws(() => core.act(s, session, "tax_resist", rng));
+    s.debts.pop();
+    assert(memory.canQueue(s));
+    assert(!memory.canQueue(s, 2));
+    s.encounter = {type: "surprise", kind: "adventurer"};
+    assert(core.actions(s).find(a => a.action === "event_rob").disabled);
+    setApplicationEmojisForTest([["event_memory", "123456789012345678"]]);
+    assert(memory.fields(s)[0].name.includes("<:event_memory:123456789012345678> The Tower Remembers (7/8)"));
+    assert(!JSON.stringify(memory.fields(s)).includes("Có thể tạo"));
+    setApplicationEmojisForTest([["tower_remember", "987654321098765432"]]);
+    assert(memory.fields(s)[0].name.startsWith("<:tower_remember:987654321098765432>"));
+    setApplicationEmojisForTest([]);
+    const compact = require("../src/hardcore/ui/rift")({
+      paradox: require("../src/hardcore/events/paradox"), stats,
+      E: require("../src/services/hardcoreIcons").E,
+      SKILL_ICONS: {}, eventIcon: key => key, percent: n => n * 100 + "%", money: String,
+    });
+    assert.equal(compact.paradoxEffectText(s), "");
+    assert.equal(compact.contractEffectText(s), "");
+    for (const id of Object.keys(require("../src/hardcore/events/paradox").CATALOG)) {
+      s.activeParadox = {version: 2, id, startFloor: s.floor, endFloor: s.floor + 4, lockedSkillCost: 0};
+      const line = compact.paradoxEffectText(s);
+      assert(!line.includes("\n"));
+      assert(!line.includes("undefined"));
+      assert(line.includes("hết tầng"));
+    }
+    delete s.activeParadox;
+    s.contract = {kind: "skill", remaining: 5, from: s.floor, until: s.floor + 4};
+    assert(!compact.contractEffectText(s).includes("\n"));
+    s.contract.remaining = 0;
+    assert.equal(compact.contractEffectText(s), "");
+    delete s.contract;
+    s.encounter = {type: "memory", debt: s.debts.shift()};
+    assert.equal(memory.usedSlots(s), 7, "active debt retains its slot");
+    s.encounter = {type: "empty"};
+    assert.equal(memory.usedSlots(s), 6, "resolved debt releases its slot");
+    s.explorationMarks.vitalBlessing = false;
+    s.explorationMarks.vulnerable = {from: 1, due: 11};
+    const before = memory.usedSlots(s);
+    delete s.explorationMarks.vulnerable;
+    s.explorationMarks.vitalBlessing = true;
+    assert.equal(memory.usedSlots(s), before, "blessing conversion keeps one slot");
+    groups.push("permanent marks, active debts, capacity gates, robbery reservation and compact icon header");
+  }
   console.log(
     JSON.stringify({ ok: true, groups: groups.length, towerMemories: groups }),
   );

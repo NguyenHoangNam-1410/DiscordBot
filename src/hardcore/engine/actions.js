@@ -143,9 +143,14 @@ module.exports = function createModule(dependencies) {
         directKeys: [],
       };
     state.discardedTicketsThisTurn = 0;
+    if (state.encounter.type === "prophecy" && action === "prophecy_skip" && !dependencies.memories.canQueue(state)) {
+      state.lastLog = "Đầy ký ức: bỏ qua Threefold Prophecy.";
+      completeFloor(state, session, rng, 0);
+      return null;
+    }
     if (state.encounter.type === "prophecy") {
       const kind = action.slice(9);
-      if (state.prophecy) throw new Error("INVALID_ACTION");
+      if (state.prophecy || !dependencies.memories.canQueue(state)) throw new Error("INVALID_ACTION");
       const effects =
         kind === "war"
           ? { [mainStat(state)]: 12, bossDamage: 0.08 }
@@ -411,12 +416,14 @@ module.exports = function createModule(dependencies) {
             "Bỏ qua Wrong Portal: không nhận thưởng hoặc chịu hiệu ứng của portal.";
           completeFloor(state, session, rng, 0);
         } else if (e.kind === "tax" && action === "tax_resist") {
+          if (!dependencies.memories.canQueue(state)) throw new Error("INVALID_ACTION");
           require("../events/explorationMarks").ensure(state).outlaw = true;
           state.lastLog =
             eventIcon("tax") +
             " Chống trả Tax Collector: nhận Royal Outlaw đến hết run. Không còn gặp Tax Collector; Boss gây thêm 20% DMG. Xem Rift.";
           completeFloor(state, session, rng, 0);
         } else if (e.kind === "potion_thief" && action === "thief_fight") {
+          if (!dependencies.memories.canQueue(state)) throw new Error("INVALID_ACTION");
           state.encounter = world.makeEnemy(state, "elite", "The Thief", rng);
           state.encounter.thiefTrial = true;
           state.lastLog =
