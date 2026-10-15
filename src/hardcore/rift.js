@@ -387,13 +387,7 @@ function damage(s, amount, apply) {
     r.brokenArmor = true;
     s.lastLog =
       (s.lastLog || "") +
-      "\n" +
-      E.defense +
-      " Lá chắn đá đã vỡ: " +
-      E.defres +
-      " DEF/RES quái giảm " +
-      [0, 8, 12, 16][tier(r.stacks.stone_skin)] +
-      "%.";
+      `\n${E.defense} Lá chắn đá đã vỡ: ${E.defres} **DEF/RES quái giảm ${[0, 8, 12, 16][tier(r.stacks.stone_skin)]}%.**\n`;
   }
   const hpDamage = amount > absorbed ? apply(amount - absorbed) : 0;
   thresholds(s, before, s.encounter.hp);
