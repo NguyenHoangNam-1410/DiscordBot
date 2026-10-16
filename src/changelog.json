@@ -1,5 +1,15 @@
 [
   {
+    "id": "7ddb6260-9b55-4f24-affa-dc28fe6866f9",
+    "updatedAt": "2026-10-16T10:11:54.086Z",
+    "auditedAt": "2026-10-16T10:11:54.086Z",
+    "title": "Rift Duelist: hòa đánh lại",
+    "changes": [
+      "Rift Duelist chỉ tính ván có thắng hoặc thua; hòa đánh lại, không tăng số ván, không thưởng hoặc phạt thuộc tính/trang bị.",
+      "Đấu trang bị tính tối đa 5 ván thắng/thua, cần thắng 3 ván; cập nhật mô tả tỷ lệ thắng thử thách thành 50%."
+    ]
+  },
+  {
     "id": "693b7e61-876b-4827-938f-b563a3c6f58d",
     "updatedAt": "2026-10-16T09:21:28.696Z",
     "auditedAt": "2026-10-16T09:21:28.696Z",

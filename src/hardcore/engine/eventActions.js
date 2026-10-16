@@ -166,15 +166,22 @@ module.exports = function createModule(dependencies) {
       return;
     }
     if (k === "duelist") {
+      // Old active events counted draws; keep only decisive games in their progress.
+      e.round = e.history.filter(
+        (h) => h.result === "win" || h.result === "loss",
+      ).length;
       if (action === "duel_stat" || action === "duel_items") {
         e.mode = action === "duel_stat" ? "stat" : "items";
-        state.lastLog = `Rift Duelist · ${e.mode === "stat" ? "Một ván thuộc tính" : "Thắng 3 trong tối đa 5 ván"}.`;
+        state.lastLog = `Rift Duelist · ${e.mode === "stat" ? "Một ván phân thắng/thua thuộc tính" : "Thắng 3 trong tối đa 5 ván thắng/thua; hòa đánh lại"}.`;
         return;
       }
       const hand = Number(action.slice(5));
       if (!/^hand_[012]$/.test(action) || !e.mode)
         throw new Error("INVALID_ACTION");
-      const opponent = e.hands[e.round],
+      const attempt = e.history.length;
+      if (!Number.isInteger(e.hands[attempt]))
+        e.hands[attempt] = Math.min(2, Math.floor(rng() * 3));
+      const opponent = e.hands[attempt],
         won = (hand + 1) % 3 === opponent,
         tie = hand === opponent;
       e.history.push({
@@ -182,9 +189,14 @@ module.exports = function createModule(dependencies) {
         opponent,
         result: won ? "win" : tie ? "draw" : "loss",
       });
-      e.round++;
+      if (!tie) e.round++;
       if (won) e.wins++;
       state.lastLog = `${["Búa", "Kéo", "Bao"][hand]} vs ${["Búa", "Kéo", "Bao"][opponent]}: ${won ? "Thắng" : tie ? "Hòa" : "Thua"}.`;
+      if (tie) {
+        state.lastLog +=
+          " Hòa không tính ván, không thưởng/phạt; chọn lại để tiếp tục.";
+        return;
+      }
       if (e.mode === "stat") {
         if (won) addSource(state, { [["str", "dex", "ene"][hand]]: 6 });
         else

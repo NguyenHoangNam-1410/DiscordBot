@@ -370,7 +370,7 @@ module.exports = function createModule(dependencies) {
       case "duelist":
         return show(
           e.name,
-          "Oẳn tù tì; mỗi ván thắng, hòa, thua có tỷ lệ ngang nhau (1/3).",
+          "Mỗi lần ra tay có tỷ lệ thắng/hòa/thua ngang nhau (1/3). Hòa đánh lại, không tính ván và không thưởng/phạt.",
           [
             option("Đấu thuộc tính · một ván", [
               [
@@ -379,16 +379,16 @@ module.exports = function createModule(dependencies) {
               ],
               [
                 null,
-                "**Hòa/thua:** trừ ngẫu nhiên tối đa 6 điểm thuộc tính, mỗi chỉ số giữ ít nhất 1.",
+                "**Thua:** trừ ngẫu nhiên tối đa 6 điểm thuộc tính, mỗi chỉ số giữ ít nhất 1.",
               ],
             ]),
             option("Đấu trang bị · thắng 3/5 ván, tỷ lệ lúc bắt đầu", [
-              ["≈21%", "Thắng thử thách: đồ [SSR] 75% / [UR] 25%."],
-              ["≈79%", "Mất một món R/SR/SSR đã khóa; giữ đồ UR."],
+              ["50%", "Thắng thử thách: đồ [SSR] 75% / [UR] 25%."],
+              ["50%", "Mất một món R/SR/SSR đã khóa; giữ đồ UR."],
             ]),
             ...(e.mode
               ? [
-                  `**Tiến trình:** ván ${Math.min(5, e.round + 1)}/5 · đã thắng ${e.wins}.`,
+                  `**Tiến trình:** ${e.round}/${e.mode === "stat" ? 1 : 5} ván thắng/thua · đã thắng ${e.wins}; hòa không tính.`,
                 ]
               : []),
           ],

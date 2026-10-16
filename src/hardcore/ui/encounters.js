@@ -307,7 +307,7 @@ ${bossDisplay.status(s)}${require("../rift").battle(s)}
       const target = s.items.find((item) => item.definition.id === e.targetId);
       const context =
         e.kind === "duelist" && e.mode
-          ? `\nVán ${Math.min(5, e.round + 1)}/5 · đã thắng ${e.wins}.`
+          ? `\nĐã đấu ${e.round}/${e.mode === "stat" ? 1 : 5} ván thắng/thua · thắng ${e.wins}. Hòa không tính ván.`
           : e.kind === "treasure_room"
             ? "\nPhải chọn một rương; không được soi hoặc bỏ qua."
             : target
