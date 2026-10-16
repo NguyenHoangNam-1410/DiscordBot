@@ -100,15 +100,24 @@ function get(guildId, code) {
       "SELECT * FROM hardcore_replay_frames WHERE session_id=? ORDER BY seq",
     )
     .all(id)
-    .map((r) => ({
-      seq: r.seq,
-      turn: r.turn,
-      floor: r.floor,
-      action: r.action,
-      context: JSON.parse(r.context_json),
-      at: r.created_at,
-      state: JSON.parse(inflateRawSync(r.state_blob).toString("utf8")).view,
-    }));
+    .map((r) => {
+      const saved = JSON.parse(inflateRawSync(r.state_blob).toString("utf8"));
+      const state = saved.view || publicState(saved.state || saved);
+      if (!state.presentation)
+        state.presentation = {
+          ...require("./presentation").capture(saved.state || saved),
+          supplemented: true,
+        };
+      return {
+        seq: r.seq,
+        turn: r.turn,
+        floor: r.floor,
+        action: r.action,
+        context: JSON.parse(r.context_json),
+        at: r.created_at,
+        state,
+      };
+    });
   return {
     schema: 1,
     id,
@@ -186,6 +195,7 @@ function publicState(s) {
       "critDamage",
       "luck",
       "potions",
+      "potionRate",
       "escapeTokens",
       "barrier",
       "barrierHp",
@@ -203,6 +213,7 @@ function publicState(s) {
       Number(s.encounter?.soulCombat?.guardBarrier || 0) +
       Number(s.encounter?.awakeningCombat?.barrier || 0) +
       (s.classKey === "druid" ? Number(s.classAwakening?.bark || 0) : 0),
+    presentation: require("./presentation").capture(s),
     soul: pick(s.characterSoul, ["characterId", "soulLevel"]),
     encounter: encounter(s.encounter),
     items: (s.items || []).map((i) => ({

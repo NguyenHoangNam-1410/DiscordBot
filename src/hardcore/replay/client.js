@@ -7,8 +7,17 @@
     );
   const clean = (s) =>
     String(s ?? "")
+      .replace(/<a?:(HP|MANA|Mana):\d+>/g, (_, name) =>
+        name === "HP" ? "HP" : "MP",
+      )
       .replace(/<a?:\w+:\d+>/g, "")
+      .replace(/\b(HP|MP)(?:[ \t]+\1)+\b/g, "$1")
       .replace(/<@!?(\d+)>/g, "Người chơi")
+      .replace(
+        /\$\{E\.(\w+)\}/g,
+        (_, key) =>
+          ({ mana: "MP", hp: "HP", defense: "DEF", res: "RES" })[key] || key,
+      )
       .replace(/\*\*/g, "")
       .trim();
   const text = (id, s) => {
@@ -41,6 +50,13 @@
     maxMana: "Max MP",
     spell: "Phép",
     physical: "Vật lý",
+    damageMin: "Vật lý tối thiểu",
+    damageMax: "Vật lý tối đa",
+    spellMin: "Phép tối thiểu",
+    spellMax: "Phép tối đa",
+    potionRate: "Hiệu lực bình",
+    heal: "Hồi HP",
+    startMana: "MP đầu trận",
   };
   const actions = {
     start: "Bắt đầu",
@@ -91,20 +107,147 @@
     wrap.append(line, track);
     el(rootId).append(wrap);
   }
-  function describe(o) {
-    if (!o || !Object.keys(o).length) return "Không có";
-    return Object.entries(o)
-      .map(
-        ([k, v]) =>
-          (labels[k] || k) +
-          ": " +
-          (typeof v === "number"
-            ? number(v)
-            : typeof v === "object"
-              ? JSON.stringify(v, null, 2)
-              : String(v)),
-      )
-      .join(" · ");
+  const percentKeys = new Set([
+    "critChance",
+    "potionRate",
+    "physicalPercent",
+    "spellPercent",
+    "defensePercent",
+    "maxHpPercent",
+    "maxManaPercent",
+  ]);
+  const title = (key) =>
+    labels[key] ||
+    String(key)
+      .replace(/_/g, " ")
+      .replace(/([a-z])([A-Z])/g, "$1 $2");
+  function describe(o, depth = 0) {
+    if (o === null || o === undefined) return "Không có";
+    if (typeof o !== "object")
+      return typeof o === "number"
+        ? number(o)
+        : typeof o === "boolean"
+          ? o
+            ? "Đang bật"
+            : "Chưa kích hoạt"
+          : clean(o);
+    if (depth > 5) return "Trạng thái bổ sung";
+    return (
+      Object.entries(o)
+        .map(
+          ([k, v]) =>
+            title(k) +
+            ": " +
+            (typeof v === "number" && percentKeys.has(k)
+              ? number(v * 100) + "%"
+              : describe(v, depth + 1)),
+        )
+        .join(" · ") || "Không có"
+    );
+  }
+  const collectionPages = { items: 0, rifts: 0, effects: 0 },
+    collectionData = { items: [], rifts: [], effects: [] };
+  function renderCollection(key, records) {
+    collectionData[key] = records;
+    collectionPages[key] = Math.max(
+      0,
+      Math.min(collectionPages[key], records.length - 1),
+    );
+    const page = collectionPages[key],
+      root = el(key);
+    root.replaceChildren();
+    text(
+      key + "Page",
+      records.length ? page + 1 + " / " + records.length : "0 / 0",
+    );
+    el(key + "Prev").disabled = !records.length || page === 0;
+    el(key + "Next").disabled = !records.length || page >= records.length - 1;
+    const record = records[page];
+    if (!record) {
+      root.append(
+        node(
+          "p",
+          {
+            items: "Không có trang bị.",
+            rifts: "Không có Rift đang hoạt động.",
+            effects: "Không có hiệu ứng đang hoạt động.",
+          }[key],
+        ),
+      );
+      return;
+    }
+    root.append(node("h4", record.title));
+    for (const line of clean(record.text).split("\n").filter(Boolean))
+      root.append(node("p", line));
+    if (record.note) root.append(node("p", record.note, "muted"));
+  }
+  for (const key of Object.keys(collectionPages))
+    for (const [suffix, delta] of [
+      ["Prev", -1],
+      ["Next", 1],
+    ])
+      el(key + suffix).addEventListener("click", () => {
+        collectionPages[key] += delta;
+        renderCollection(key, collectionData[key]);
+      });
+  function renderChanges(current, previous) {
+    const root = el("changes");
+    root.replaceChildren();
+    if (!previous) {
+      root.append(
+        node("p", "Mốc bắt đầu, chưa có thay đổi để đối chiếu.", "muted"),
+      );
+      return;
+    }
+    const keys = [
+      "hp",
+      "mana",
+      "energy",
+      "maxHp",
+      "maxMana",
+      "str",
+      "dex",
+      "vit",
+      "ene",
+      "damageMin",
+      "damageMax",
+      "spellMin",
+      "spellMax",
+      "defense",
+      "resistance",
+      "accuracy",
+      "evasion",
+      "critChance",
+      "luck",
+      "potions",
+      "potionRate",
+      "escapeTokens",
+      "barrier",
+    ];
+    let count = 0;
+    for (const key of keys) {
+      if (key === "energy" && current.mana !== undefined) continue;
+      if (!Number.isFinite(current[key]) || !Number.isFinite(previous[key]))
+        continue;
+      const delta =
+        (current[key] - previous[key]) * (percentKeys.has(key) ? 100 : 1);
+      if (Math.abs(delta) < 0.05) continue;
+      const suffix =
+        percentKeys.has(key) || key === "resistance" ? " điểm %" : "";
+      root.append(
+        node(
+          "span",
+          (key === "energy" ? "MP" : title(key)) +
+            ": " +
+            (delta > 0 ? "+" : "") +
+            number(delta) +
+            suffix,
+          "change " + (delta > 0 ? "positive" : "negative"),
+        ),
+      );
+      count++;
+    }
+    if (!count) root.append(node("p", "Không thay đổi chỉ số.", "muted"));
   }
   try {
     if (typeof DecompressionStream === "undefined")
@@ -120,7 +263,8 @@
     ).json();
     const frames = data.frames || [],
       floors = [...new Set(frames.map((f) => f.floor))].sort((a, b) => a - b);
-    let index = 0;
+    let index = 0,
+      lastRendered = -1;
     const result = data.result || {};
     text(
       "summary",
@@ -246,31 +390,54 @@
         .split("\n")
         .filter(Boolean))
         log.append(node("div", line, "logline"));
-      text("changes", JSON.stringify(s.lastStatChanges || {}, null, 2));
-      el("items").replaceChildren();
-      for (const item of s.items || []) {
-        const div = node("div", "", "item");
-        div.append(
-          node(
-            "strong",
-            item.name + " [" + (item.rarity || "?") + "] · Lv." + item.level,
-          ),
-          node("p", describe(item.effects)),
-        );
-        if (item.curse)
-          div.append(node("p", "Lời nguyền: " + describe(item.curse)));
-        el("items").append(div);
+      renderChanges(s, frames[index - 1]?.state);
+      if (lastRendered !== index) {
+        for (const key of Object.keys(collectionPages))
+          collectionPages[key] = 0;
+        lastRendered = index;
       }
-      if (!s.items?.length) el("items").append(node("p", "Không có trang bị."));
-      text("rifts", describe(s.rifts));
-      text(
-        "effects",
-        JSON.stringify(
-          { effects: s.effects, memories: s.memories, boss: e.boss },
-          null,
-          2,
-        ),
+      renderCollection(
+        "items",
+        (s.items || []).map((item) => ({
+          title:
+            item.name + " [" + (item.rarity || "?") + "] · Lv." + item.level,
+          text:
+            describe(item.effects) +
+            (item.curse ? "\nLời nguyền: " + describe(item.curse) : ""),
+        })),
       );
+      const presentation = s.presentation || {};
+      renderCollection(
+        "rifts",
+        presentation.rifts ||
+          Object.entries(s.rifts || {})
+            .filter(([, n]) => n > 0)
+            .map(([key, n]) => ({
+              title: title(key) + " ×" + n,
+              text: "Snapshot cũ chưa lưu diễn giải chi tiết Rift.",
+            })),
+      );
+      renderCollection(
+        "effects",
+        presentation.effects ||
+          Object.entries(s.effects || {})
+            .filter(
+              ([, value]) =>
+                value && typeof value === "object" && Object.keys(value).length,
+            )
+            .map(([key, value]) => ({
+              title: title(key),
+              text: describe(value),
+            })),
+      );
+      if (presentation.supplemented)
+        el("rifts").append(
+          node(
+            "p",
+            "Diễn giải bổ sung khi xuất lại từ snapshot cũ; không tính lại chỉ số.",
+            "muted",
+          ),
+        );
       el("inputLabel").textContent =
         mode === "floor" ? "Nhập tầng" : "Nhập lượt";
       el("position").value = mode === "floor" ? frame.floor : frame.turn;

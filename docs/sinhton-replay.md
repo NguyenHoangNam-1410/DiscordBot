@@ -9,7 +9,7 @@ Dùng **/sinhton replay ma_van:<mã 12 ký tự>**. Mã ván nằm ở cuối b�
 - Thanh tiến trình hỗ trợ kéo nhanh. Nhảy tới tầng mở mốc đầu tiên của tầng đó; đổi sang Lượt để xem các hành động tiếp theo.
 - Tầng của hành động và tầng/phòng sau hành động hiển thị riêng: một lượt kết liễu có thể đưa người chơi sang tầng mới.
 - Mốc ban đầu là lượt 0. Ghi cả hành động chọn mục tiêu/selector hợp lệ, dù hành động không tiêu lượt chiến đấu theo cơ chế boss. Số mốc có thể khác số lượt.
-- Hiện HP/MP, chỉ số, đối thủ, log, trang bị, Rift và trạng thái hiệu ứng đã ghi. Phần chi tiết trạng thái hỗ trợ đối chiếu cơ chế; không chạy lại engine hoặc RNG.
+- Hiện HP/MP, chỉ số, đối thủ, log, trang bị, Rift và trạng thái hiệu ứng đã ghi. Thay đổi chỉ số hiển thị dạng HP: +7, MP: +1 khi đối chiếu hai mốc liên tiếp, thay vì JSON. Trang bị, Rift và hiệu ứng có phân trang riêng (mỗi trang một mục), không làm đổi mốc replay. Mô tả Rift ghi rõ luật và trạng thái của trận như giáp đá còn lại/số lần hút MP. Hành động đặt cạnh tên nhân vật; số mốc thẳng hàng với Tầng/Lượt. Không chạy lại combat hoặc RNG.
 
 ## Phạm vi và dữ liệu cũ
 
@@ -26,7 +26,7 @@ Mã ván được kiểm tra trong server đang gọi lệnh. Thành viên serve
 
 Migration 48 tạo hardcore_replays và hardcore_replay_frames trong database đang dùng. Mỗi hành động thành công lưu snapshot nén riêng, cùng transaction với state, thanh toán và kết thúc run. Action sai/stale/khác người không thêm mốc. Lỗi ghi lịch sử rollback cả lượt và giao dịch thưởng. Snapshot không ghi đè hoặc xóa khi xóa session đã kết thúc.
 
-Mỗi mốc lưu state gốc nén và một bản dữ liệu hiển thị được chụp ngay tại thời điểm đó. Xuất file chỉ dùng bản hiển thị, không normalize state bằng engine hiện tại. Fairness seed, event roll và dữ liệu tài khoản không được xuất trực tiếp. Dữ liệu nằm trong cùng SQLite nên đi theo quy trình backup/restore hiện có. Chưa tự xóa lịch sử; cần theo dõi dung lượng database khi nhiều run dài.
+Mỗi mốc lưu state gốc nén và một bản dữ liệu hiển thị được chụp ngay tại thời điểm đó, gồm mô tả Rift/hiệu ứng bằng chữ. Xuất file chỉ dùng bản hiển thị, không normalize state bằng engine hiện tại. Fairness seed, event roll và dữ liệu tài khoản không được xuất trực tiếp. Dữ liệu nằm trong cùng SQLite nên đi theo quy trình backup/restore hiện có. Chưa tự xóa lịch sử; cần theo dõi dung lượng database khi nhiều run dài.
 
 HTML chứa CSS/JavaScript và dữ liệu gzip dưới dạng base64; không tải thư viện/ảnh bên ngoài, không có API ghi game. Nội dung động dùng textContent; CSP chặn kết nối mạng. Cần trình duyệt hỗ trợ DecompressionStream gzip; nếu không, file hiển thị hướng dẫn đổi trình duyệt. File vượt giới hạn Discord (tối đa 8 MiB hoặc giới hạn interaction nhỏ hơn) sẽ báo lỗi rõ ràng.
 
@@ -35,3 +35,7 @@ HTML chứa CSS/JavaScript và dữ liệu gzip dưới dạng base64; không t�
 Deploy cả src/hardcore/replay, restart bot để chạy migration và đăng ký lại slash commands bằng **npm run register** để có subcommand replay với tham số ma_van. Không có biến môi trường hoặc service web mới.
 
 Chạy **npm run test:hardcore-replay**. Bộ test dùng SQLite trong RAM và thực thi client HTML để kiểm tra lượt/tầng, Prev/Next, slider, input sai, lịch sử trống, snapshot/rollback, kết thúc beta/admin/timeout, seed không bị xuất, dữ liệu cũ và command thật. Kiểm tra bổ sung beta, gacha, latency và module boundaries.
+
+## Nâng cấp file HTML đã xuất
+
+File HTML tự chứa giao diện nên file đã tải không tự cập nhật. Sau khi deploy bản mới, gọi lại /sinhton replay với cùng mã ván để tải giao diện mới. Snapshot cũ chưa lưu diễn giải: bổ sung mô tả từ state gốc lúc xuất và gắn chú thích; giữ nguyên dữ liệu, chỉ số và log lịch sử, không ghi đè snapshot hoặc tính lại combat. Diễn giải bổ sung dùng bộ mô tả hiện có; mô tả đã chụp trong snapshot mới luôn được giữ nguyên.

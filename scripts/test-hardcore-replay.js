@@ -371,10 +371,50 @@ async function main() {
         floor: i < 2 ? 1 : 2,
       })),
     );
+    for (const f of data.frames) {
+      f.state = structuredClone(f.state);
+      f.state.items = [
+        { name: "First Item", rarity: "R", level: 1, effects: { vit: 5 } },
+        { name: "Second Item", rarity: "SR", level: 2, effects: { ene: 7 } },
+      ];
+      f.state.presentation = {
+        rifts: [
+          { title: "Stone Skin ×2", text: "Lá chắn đá còn 12 / 20 HP." },
+          { title: "Soul Drain ×5", text: "Còn 2 lần hút MP." },
+        ],
+        effects: [
+          { title: "Royal Outlaw", text: "Boss gây thêm 20% DMG." },
+          { title: "Vulnerable", text: "Checkpoint không hồi HP đến tầng 30." },
+        ],
+      };
+      f.state.hp = 20;
+      f.state.mana = 1;
+    }
+    data.frames[1].state.hp = 27;
+    data.frames[1].state.mana = 2;
+    data.frames[1].state.lastStatChanges = { hp: 999 };
     const ui = await mount(data);
+    const read = (id) => {
+      const content = (e) => e.textContent + e.children.map(content).join(" ");
+      return content(ui.map.get(id));
+    };
     assert.equal(ui.result.getIndex(), 0);
     ui.fire("next");
     assert.equal(ui.result.getIndex(), 1);
+    assert(read("changes").includes("HP: +7"));
+    assert(read("changes").includes("MP: +1"));
+    assert(!read("changes").includes("999"));
+    ui.fire("itemsNext");
+    assert(read("items").includes("Second Item"));
+    assert(ui.map.get("itemsNext").disabled);
+    assert.equal(ui.result.getIndex(), 1);
+    ui.fire("riftsNext");
+    assert(read("rifts").includes("2 lần hút MP"));
+    ui.fire("effectsNext");
+    assert(read("effects").includes("Vulnerable"));
+    assert(read("items").includes("Second Item"));
+    ui.fire("itemsPrev");
+    assert(read("items").includes("First Item"));
     ui.fire("prev");
     assert.equal(ui.result.getIndex(), 0);
     ui.map.get("position").value = "2";
@@ -402,6 +442,75 @@ async function main() {
     });
     assert(empty.map.get("scene").hidden);
     assert(empty.map.get("next").disabled);
+  });
+  await test("Rift descriptions capture combat status and remain frozen; old frames supplement text without changing stored stats", () => {
+    const raw = JSON.parse(
+      inflateRawSync(rows(finished.session.id)[0].state_blob),
+    ).state;
+    raw.rift.stacks.stone_skin = 2;
+    raw.rift.stacks.soul_drain = 5;
+    raw.encounter = {
+      type: "combat",
+      name: "Snapshot enemy",
+      hp: 100,
+      maxHp: 100,
+      rift: {
+        version: 2,
+        stacks: { ...raw.rift.stacks },
+        stoneArmor: 12,
+        stoneArmorMax: 20,
+        brokenArmor: false,
+        soulDrainCharges: 2,
+        manaFracture: true,
+      },
+    };
+    const before = JSON.stringify(raw),
+      presentation = require("../src/hardcore/replay/presentation").capture(
+        raw,
+      );
+    assert.equal(JSON.stringify(raw), before);
+    assert(
+      presentation.rifts
+        .find((r) => r.title.startsWith("Stone Skin"))
+        .text.includes("12"),
+    );
+    assert(
+      presentation.rifts
+        .find((r) => r.title.startsWith("Soul Drain"))
+        .text.includes("2 lần hút còn lại"),
+    );
+    const saved = rows(finished.session.id)[0],
+      old = JSON.parse(inflateRawSync(saved.state_blob));
+    const frozen = old.view.presentation;
+    const capture = require("../src/hardcore/replay/presentation").capture;
+    require("../src/hardcore/replay/presentation").capture = () => {
+      throw Error("Must not reinterpret frozen presentation");
+    };
+    try {
+      assert.deepEqual(
+        store.get("replay", finished.session.id).frames[0].state.presentation,
+        frozen,
+      );
+    } finally {
+      require("../src/hardcore/replay/presentation").capture = capture;
+    }
+    delete old.view.presentation;
+    const blob = require("node:zlib").deflateRawSync(
+      Buffer.from(JSON.stringify(old)),
+    );
+    db.prepare(
+      "UPDATE hardcore_replay_frames SET state_blob=? WHERE session_id=? AND seq=0",
+    ).run(blob, finished.session.id);
+    try {
+      const supplemented = store.get("replay", finished.session.id);
+      assert(supplemented.frames[0].state.presentation.supplemented);
+      assert.equal(supplemented.frames[0].state.hp, old.view.hp);
+      assert.deepEqual(rows(finished.session.id)[0].state_blob, blob);
+    } finally {
+      db.prepare(
+        "UPDATE hardcore_replay_frames SET state_blob=? WHERE session_id=? AND seq=0",
+      ).run(saved.state_blob, finished.session.id);
+    }
   });
   await test("Real slash command exports completed runs only and checks the invoking server", async () => {
     const command = require("../src/commandRegistry")

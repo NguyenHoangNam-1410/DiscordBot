@@ -282,3 +282,126 @@ footer {
     white-space: nowrap;
   }
 }
+
+/* Compact replay panels with independent collection navigation. */
+.heading {
+  gap: 14px;
+  margin: 8px 0 14px;
+}
+.heading h2 {
+  margin: 0;
+}
+.card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.card-head h3 {
+  margin: 0;
+}
+.action {
+  color: var(--accent);
+  white-space: nowrap;
+  font-size: 11px;
+}
+.pager {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.pager button {
+  padding: 4px 9px;
+  line-height: 1.4;
+}
+.page-count {
+  font-size: 11px;
+  color: var(--muted);
+  min-width: 34px;
+  text-align: center;
+}
+.collections {
+  grid-column: 1/-1;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+.collections h4 {
+  margin: 6px 0 12px;
+  font-size: 14px;
+}
+.collections p {
+  font-size: 13px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.change-section {
+  border-top: 1px solid var(--line);
+  margin-top: 14px;
+  padding-top: 12px;
+}
+.change-section h4 {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0 0 9px;
+}
+.changes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+.change {
+  font-size: 12px;
+  border: 1px solid var(--line);
+  padding: 3px 9px;
+  border-radius: 7px;
+}
+.positive {
+  color: #8fdcd7;
+}
+.negative {
+  color: #f09aae;
+}
+#message:empty {
+  display: none;
+}
+#message {
+  margin: 8px 4px;
+}
+.resource {
+  margin: 8px 0;
+}
+.stats {
+  margin-top: 14px;
+}
+.card {
+  padding: 20px;
+}
+@media (max-width: 1000px) {
+  .collections {
+    grid-template-columns: 1fr 1fr;
+  }
+  .collections > .card:last-child {
+    grid-column: 1/-1;
+  }
+}
+@media (max-width: 760px) {
+  .collections {
+    grid-template-columns: 1fr;
+  }
+  .collections > .card:last-child {
+    grid-column: auto;
+  }
+  .card-head {
+    flex-wrap: wrap;
+  }
+  .collections .card-head {
+    flex-wrap: nowrap;
+  }
+  .card {
+    padding: 18px;
+  }
+}

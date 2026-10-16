@@ -1,5 +1,16 @@
 [
   {
+    "id": "693b7e61-876b-4827-938f-b563a3c6f58d",
+    "updatedAt": "2026-10-16T09:21:28.696Z",
+    "auditedAt": "2026-10-16T09:21:28.696Z",
+    "title": "Nâng cấp giao diện replay",
+    "changes": [
+      "Thay JSON thay đổi chỉ số bằng các mức tăng/giảm dễ đọc như HP +7, MP +1; đối chiếu trực tiếp hai mốc liên tiếp.",
+      "Trang bị, Rift và hiệu ứng có nút chuyển trang riêng ở góc phải. Rift diễn giải cơ chế và trạng thái chiến đấu thay cho dữ liệu thô.",
+      "Đưa hành động cạnh tên nhân vật và số mốc thẳng hàng Tầng/Lượt để tiết kiệm chiều cao. Xuất lại replay để nhận giao diện mới."
+    ]
+  },
+  {
     "id": "bda026fc-82e3-42be-ac58-1f28c536c70f",
     "updatedAt": "2026-10-16T08:55:19.402Z",
     "auditedAt": "2026-10-16T08:55:19.402Z",
