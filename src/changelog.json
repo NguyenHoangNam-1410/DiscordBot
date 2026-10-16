@@ -1,5 +1,23 @@
 [
   {
+    "id": "3679d693-6e5e-427d-ac60-89ab72591e00",
+    "updatedAt": "2026-10-16T07:19:59.761Z",
+    "auditedAt": "2026-10-16T07:19:59.761Z",
+    "title": "Tinh gọn màn hình bắt đầu Sinh tồn",
+    "changes": [
+      "Màn hình bắt đầu chỉ giữ hướng dẫn, mức cược và selector nhân vật; chỉ hiện chi tiết chỉ số, kỹ năng và nội tại sau khi chọn nhân vật."
+    ]
+  },
+  {
+    "id": "55dde6a5-a57d-40a7-b1b5-de47e0da1bd4",
+    "updatedAt": "2026-10-16T07:18:09.905Z",
+    "auditedAt": "2026-10-16T07:18:09.905Z",
+    "title": "Banner gacha công khai",
+    "changes": [
+      "Lệnh /sinhton gacha mở banner công khai trong kênh; chỉ người mở được thao tác và quay bằng tài nguyên của mình."
+    ]
+  },
+  {
     "id": "7f37593c-086c-4185-836e-3ce6ebcbae04",
     "updatedAt": "2026-10-16T07:15:12.597Z",
     "auditedAt": "2026-10-16T07:15:12.597Z",

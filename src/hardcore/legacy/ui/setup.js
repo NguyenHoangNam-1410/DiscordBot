@@ -84,36 +84,6 @@ module.exports = function createModule(dependencies) {
           ]),
         );
       }
-    } else if (![2, 3].includes(context.gameplayVersion))
-      embed.addFields({
-        name: "🧙Chọn một trong 7 nhân vật",
-        value: Object.values(classes)
-          .map(
-            (entry) =>
-              `${entry.emoji} **${entry.name}** · ${STAT_EMOJI.hp} HP ${entry.hp} · ${STAT_EMOJI.attack} ATK ${entry.damageMin}–${entry.damageMax} · ${STAT_EMOJI.defense} DEF ${entry.defense}`,
-          )
-          .join("\n"),
-      });
-    if (!character && [2, 3].includes(context.gameplayVersion)) {
-      const v2View = require("../../ui/index");
-      const previews = Object.keys(classes).map((key) =>
-        v2View.setupPreview(key),
-      );
-      for (let i = 0; i < previews.length; i += 3)
-        embed.addFields(
-          ...splitRuleFields([
-            {
-              name:
-                i === 0
-                  ? `🧙 Chọn một trong ${previews.length} nhân vật`
-                  : "\u200b",
-              value: previews
-                .slice(i, i + 3)
-                .map((p) => `**${p.name}**\n${p.attributes}\n${p.role}`)
-                .join("\n\n"),
-            },
-          ]),
-        );
     }
     embed
       .addFields({

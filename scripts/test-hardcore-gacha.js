@@ -753,15 +753,23 @@ async function main() {
     .loadCommands("./commands")
     .find((c) => c.data.toJSON().name === "sinhton");
   assert(command.data.toJSON().options.some((o) => o.name === "gacha"));
-  let opened;
+  let opened, deferredOptions;
   await command.execute({
     guildId: "g",
     user: { id: "ui-user" },
     options: { getSubcommand: () => "gacha" },
-    deferReply: async () => {},
+    deferReply: async (options) => {
+      deferredOptions = options;
+    },
     editReply: async (x) => (opened = x),
   });
   limits(opened);
+  assert.equal(
+    (deferredOptions?.flags || 0) &
+      require("discord.js").MessageFlags.Ephemeral,
+    0,
+    "Gacha opens publicly",
+  );
   assert.equal(p.wallet("ui-user", "novice_ticket"), 30);
   const pullId = opened.components
     .flatMap((x) => x.toJSON().components)
@@ -787,6 +795,8 @@ async function main() {
   assert.equal(p.wallet("ui-user", "novice_ticket"), 29);
   await ui.handle({ ...interaction, user: { id: "someone-else" } });
   assert(rejected);
+  assert.equal(rejected.flags, require("discord.js").MessageFlags.Ephemeral);
+  assert.equal(p.wallet("ui-user", "novice_ticket"), 29);
   rejected = null;
   await ui.handle({
     ...interaction,

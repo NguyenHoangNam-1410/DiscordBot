@@ -329,7 +329,7 @@ function payload(
   };
 }
 async function open(interaction) {
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  await interaction.deferReply();
   const opened = service.open({ userId: interaction.user.id });
   return interaction.editReply(
     payload(interaction.user.id, {

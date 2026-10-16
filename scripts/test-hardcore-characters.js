@@ -191,8 +191,12 @@ async function main() {
         context,
       );
       limits(screen);
-      const text = stringify(screen);
-      for (const c of Object.values(classes)) assert(text.includes(c.name));
+      const text = JSON.stringify(screen.embeds[0].toJSON());
+      for (const c of Object.values(classes))
+        assert(
+          !text.includes(c.name),
+          "Unselected setup hides character summaries",
+        );
       assert.equal(
         screen.components[0].toJSON().components[0].options.length,
         Object.keys(classes).length,
@@ -209,6 +213,10 @@ async function main() {
           context,
         );
         limits(selected);
+        const selectedText = JSON.stringify(selected.embeds[0].toJSON());
+        assert(selectedText.includes(classes[key].name));
+        assert(selectedText.includes("Hướng build"));
+        assert(selectedText.includes("Phòng thủ"));
         assert(
           !selected.components[1]
             .toJSON()
@@ -257,7 +265,7 @@ async function main() {
     "DELETE FROM hardcore_owned_characters WHERE user_id=? AND character_id='venance'",
   ).run(owner);
   console.log(
-    "PASS Setup overview and every character in V2/V3 fit Discord with custom emojis; real batdau flow opens with eight characters",
+    "PASS Compact setup hides character summaries until selected; V2/V3 details and real batdau flow fit Discord with eight characters",
   );
   const overview = ui.payload(owner);
   limits(overview);
