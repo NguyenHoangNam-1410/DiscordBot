@@ -184,6 +184,7 @@ module.exports = function createModule(dependencies) {
         { ...session, created_at: now, updated_at: now },
         state,
       );
+      require("../replay/store").ensure(session, state);
       return { session, state, account };
     },
   );

@@ -1,5 +1,16 @@
 [
   {
+    "id": "bda026fc-82e3-42be-ac58-1f28c536c70f",
+    "updatedAt": "2026-10-16T08:55:19.402Z",
+    "auditedAt": "2026-10-16T08:55:19.402Z",
+    "title": "Replay Sinh tồn offline",
+    "changes": [
+      "Thêm /sinhton replay ma_van để tải file HTML xem ván đã kết thúc theo lượt hoặc tầng, có nhập số, Trước/Sau và thanh tiến trình.",
+      "Tự lưu snapshot trạng thái và log mỗi hành động, cùng giao dịch xử lý ván; replay giữ dữ liệu tại thời điểm chơi, không chạy lại luật game.",
+      "Chặn xem ván đang chơi. Ván cũ thiếu lịch sử được báo rõ chỉ có tổng kết hoặc chỉ ghi từ giữa ván; hỗ trợ replay cả run beta."
+    ]
+  },
+  {
     "id": "f185917b-5e69-4e5a-9205-163c96ba204a",
     "updatedAt": "2026-10-16T07:25:17.192Z",
     "auditedAt": "2026-10-16T07:25:17.192Z",

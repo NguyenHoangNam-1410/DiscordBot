@@ -52,7 +52,15 @@ module.exports = function createModule(dependencies) {
       if (!session || session.user_id !== String(userId))
         throw new Error("INVALID_SESSION");
       const state = parseState(session);
-      return fairStateContext.run(state, () => {
+      const replay = require("../replay/store");
+      replay.ensure(session, state);
+      const replayFloor = state.floor;
+      const replayContext = {
+        encounter: JSON.parse(
+          JSON.stringify(replay.encounter(state.encounter)),
+        ),
+      };
+      const played = fairStateContext.run(state, () => {
         if (state.turn !== expectedTurn) throw new Error("STALE_ACTION");
         if (isV2(state)) {
           state.turn += 1;
@@ -471,6 +479,8 @@ module.exports = function createModule(dependencies) {
         saveState(session, state);
         return { settled: false, state, result: null };
       });
+      replay.append(session, played.state, action, replayFloor, replayContext);
+      return played;
     },
   );
 

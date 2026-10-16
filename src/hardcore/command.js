@@ -87,6 +87,19 @@ module.exports = {
     )
     .addSubcommand((command) =>
       command
+        .setName("replay")
+        .setDescription("Xuất replay HTML của một ván Sinh tồn đã kết thúc")
+        .addStringOption((option) =>
+          option
+            .setName("ma_van")
+            .setDescription("Mã ván 12 ký tự ở cuối bảng Sinh tồn")
+            .setRequired(true)
+            .setMinLength(12)
+            .setMaxLength(12),
+        ),
+    )
+    .addSubcommand((command) =>
+      command
         .setName("gacha")
         .setDescription("Mở banner nhân vật và nhận 30 vé tân thủ lần đầu"),
     )
@@ -140,6 +153,8 @@ module.exports = {
     const subcommand = interaction.options.getSubcommand();
     if (subcommand === "beta")
       return require("./runtime/beta").open(interaction);
+    if (subcommand === "replay")
+      return require("./replay/command").open(interaction);
     if (subcommand === "gacha") return require("./gacha/ui").open(interaction);
     if (subcommand === "nhanvat")
       return interaction.reply({

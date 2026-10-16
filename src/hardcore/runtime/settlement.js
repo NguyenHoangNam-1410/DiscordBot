@@ -24,8 +24,10 @@ module.exports = function createModule(dependencies) {
       const simulatedPayout = ["cashout", "summit", "beta_end"].includes(reason)
         ? hardcoreV2.payout(state)
         : 0;
+      const result = require("../beta").result(state, reason, simulatedPayout);
+      require("../replay/store").close(session, state, reason, result);
       hardcoreRepository.deleteSession(session.id);
-      return require("../beta").result(state, reason, simulatedPayout);
+      return result;
     }
     godRngesus.recordDeath(session, reason);
     if (["death", "rngesus"].includes(reason))
@@ -60,6 +62,10 @@ module.exports = function createModule(dependencies) {
       hardcoreEchoes.onDeath(session, state);
     hardcoreEchoes.archive(session, state, reason, payout, diamonds);
     hardcoreEchoes.releaseAll(session);
+    require("../replay/store").close(session, state, reason, {
+      payout,
+      diamonds,
+    });
     hardcoreRepository.deleteSession(session.id);
     return {
       reason,
@@ -115,6 +121,17 @@ module.exports = function createModule(dependencies) {
         forfeit ? 0 : state.stake,
       );
       hardcoreEchoes.releaseAll(session);
+      const replay = require("../replay/store");
+      replay.ensure(session, state);
+      replay.append(
+        session,
+        state,
+        "end:" + (forfeit ? "forfeit" : label),
+        state.floor,
+      );
+      replay.close(session, state, forfeit ? "forfeit" : label, {
+        payout: forfeit || require("../beta").is(state) ? 0 : state.stake,
+      });
       hardcoreRepository.deleteSession(session.id);
       return {
         session,

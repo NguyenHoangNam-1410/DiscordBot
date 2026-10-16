@@ -50,11 +50,12 @@ function persist(run, s) {
   repo.saveState(run.session, s);
   return s;
 }
+// Replay/session history is operational data; every economy, achievement and reward table remains checked.
 function ledger() {
   return Object.fromEntries(
     db
       .prepare(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name <> 'hardcore_sessions' ORDER BY name",
+        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT IN ('hardcore_sessions','hardcore_replays','hardcore_replay_frames') ORDER BY name",
       )
       .all()
       .map(({ name }) => [

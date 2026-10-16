@@ -1427,4 +1427,6 @@ runMigration(46, "chatbot per-server daily limit", () => {
     guild_id TEXT PRIMARY KEY,daily_limit INTEGER NOT NULL,updated_by TEXT NOT NULL,updated_at INTEGER NOT NULL);`);
 });
 
+require("./hardcore/replay/schema")(db, runMigration);
+
 module.exports = { db, dbPath, runMigration };
