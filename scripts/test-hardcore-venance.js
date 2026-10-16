@@ -116,6 +116,46 @@ try {
       registry.setApplicationEmojisForTest([]);
     }
   });
+  test("S0 coefficient is 2 and old saved S0 profiles migrate without resetting the cast", () => {
+    const s = fresh();
+    assert.equal(s.venanceProfile.coefficient, 2);
+    act(s, "skill");
+    act(s, "attack");
+    const frame = structuredClone(kit.frame(s)),
+      hp = s.hp,
+      mana = s.mana;
+    s.venanceProfile.coefficient = 2.2;
+    const restored = core.normalize(JSON.parse(JSON.stringify(s)));
+    assert.equal(restored.venanceProfile.coefficient, 2);
+    assert.deepEqual(kit.frame(restored), frame);
+    assert.equal(restored.hp, hp);
+    assert.equal(restored.mana, mana);
+    assert.equal(core.attackDamagePreview(restored).low, 104);
+    assert.equal(kit.snapshot(1).coefficient, 2.3);
+    assert.equal(kit.snapshot(6).coefficient, 2.6);
+  });
+  test("All S1-S6 and evolved snapshots migrate old coefficients without changing resources", () => {
+    for (const n of [1, 2, 3, 4, 5, 6])
+      for (const rarity of n === 6 ? ["SSR", "UR", "LR"] : ["SSR"]) {
+        const s = fresh(n, true, rarity);
+        act(s, "skill");
+        act(s, "attack");
+        const frame = structuredClone(kit.frame(s)),
+          hp = s.hp,
+          mana = s.mana;
+        s.venanceProfile.coefficient = n >= 5 ? 2.8 : 2.5;
+        const restored = core.normalize(JSON.parse(JSON.stringify(s)));
+        assert.equal(restored.venanceProfile.coefficient, n >= 5 ? 2.6 : 2.3);
+        assert.deepEqual(kit.frame(restored), frame);
+        assert.equal(restored.hp, hp);
+        assert.equal(restored.mana, mana);
+        restored.venanceProfile.coefficient = n >= 5 ? 2.5 : 2.8;
+        assert.throws(
+          () => core.normalize(restored),
+          /INVALID_VENANCE_PROFILE/,
+        );
+      }
+  });
   test("Distinct SSR profile, base stats, native cards and seven free starters", () => {
     chars.validate();
     const s = chars.preview("venance");
@@ -160,7 +200,7 @@ try {
         hp = s.encounter.hp;
       act(s, "attack");
       assert.equal(s.mana, mana);
-      assert.equal(hp - s.encounter.hp, 220);
+      assert.equal(hp - s.encounter.hp, 200);
       assert.equal(kit.frame(s).remaining, i);
     }
     const mana = s.mana;
@@ -196,10 +236,10 @@ try {
   });
   test("S1/S4/S5 coefficients and one-hit sigil", () => {
     for (const [n, damage, ready] of [
-      [0, 220, false],
-      [1, 250, false],
-      [4, 250, true],
-      [5, 280, true],
+      [0, 200, false],
+      [1, 230, false],
+      [4, 230, true],
+      [5, 260, true],
     ]) {
       const s = fresh(n);
       act(s, "skill");
@@ -225,9 +265,9 @@ try {
   });
   test("Awakening third hit / S3 / S6 pulse, previews stay pure", () => {
     for (const [n, third] of [
-      [0, 297],
-      [3, 400],
-      [6, 627],
+      [0, 270],
+      [3, 368],
+      [6, 582],
     ]) {
       const s = fresh(n, true);
       act(s, "skill");
@@ -252,7 +292,7 @@ try {
     act(s, "attack");
     const hp = s.encounter.hp;
     act(s, "attack");
-    assert.equal(hp - s.encounter.hp, 280);
+    assert.equal(hp - s.encounter.hp, 260);
     assert(!s.lastLog.includes("Xung tinh giới"));
     const a = fresh(6, true);
     act(a, "skill");
@@ -260,7 +300,7 @@ try {
     act(a, "defend");
     const before = a.encounter.hp;
     act(a, "attack");
-    assert.equal(before - a.encounter.hp, 280);
+    assert.equal(before - a.encounter.hp, 260);
   });
   test("Empowered attack cannot leech MP, gains never hide drains", () => {
     const s = fresh(6);
@@ -308,12 +348,12 @@ try {
     act(s, "attack");
     s.encounter.hp = 10;
     const p = core.attackDamagePreview(s);
-    assert.equal(p.low, 448);
+    assert.equal(p.low, 416);
     const e = s.encounter;
     act(s, "attack");
     assert.equal(e.hp, 0);
     assert(!s.lastLog.includes("Xung tinh giới"));
-    assert(s.lastLog.includes("448 DMG"));
+    assert(s.lastLog.includes("416 DMG"));
   });
   test("UR/LR scales absolute once, snapshots persist, invalid rarity is rejected", () => {
     assert.throws(() => chars.preview("venance", 0, "LR"), /INVALID_VENANCE/);
@@ -664,15 +704,15 @@ try {
     const e = nextRoom(s);
     let hp = e.hp;
     act(s, "attack");
-    assert.equal(hp - e.hp, 220);
+    assert.equal(hp - e.hp, 200);
     assert.equal(kit.frame(s).hits, 2);
     assert.equal(kit.frame(s).remaining, 1);
     const before = JSON.stringify(s);
-    assert.equal(core.attackDamagePreview(s).low, 297);
+    assert.equal(core.attackDamagePreview(s).low, 270);
     assert.equal(JSON.stringify(s), before);
     hp = e.hp;
     act(s, "attack");
-    assert.equal(hp - e.hp, 297);
+    assert.equal(hp - e.hp, 270);
     assert.equal(kit.frame(s).remaining, 0);
     assert.equal(kit.frame(s).hits, 3);
   });

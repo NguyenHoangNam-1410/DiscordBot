@@ -52,7 +52,7 @@ module.exports = function createModule(dependencies) {
       build: builds[classKey],
       attack:
         classKey === "venance"
-          ? "Bình thường: vật lý, hồi cố định **1 MP** trước hiệu ứng giảm hồi. Khi cường hóa: **Phép ×2,2**, luôn trúng, không Crit và **không hồi MP**; tốn một trong 3 hành động cường hóa."
+          ? "Bình thường: vật lý, hồi cố định **1 MP** trước hiệu ứng giảm hồi. Khi cường hóa: **Phép ×2**, luôn trúng, không Crit và **không hồi MP**; tốn một trong 3 hành động cường hóa."
           : `Một đòn **vật lý ${state.damageMin}–${state.damageMax}** trước giảm trừ; có thể trượt, có thể Crit ×1,8. Hồi **${manaGain} MP** ở chỉ số ban đầu (40% Max MP; class phép 70%, làm tròn xuống, tối thiểu 1). Quái còn sống sẽ phản công.`,
       defend: `Không gây sát thương; hồi **${classKey === "venance" ? 2 : 1} MP**. Trong lần phản công này: **DEF ×2** khi nhận vật lý, **+15 RES** khi nhận phép, giảm thêm **15% sát thương** và miễn Crit. Không duy trì sang lượt sau.${classKey === "venance" ? " Có Ấn Hồi lưu: tiêu ấn để hồi HP trước phản công." : ""}`,
       skill:

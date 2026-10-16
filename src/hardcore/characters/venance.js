@@ -17,7 +17,7 @@ function snapshot(n = 0, rarity = "SSR") {
     version: 1,
     rarity,
     duration: 3,
-    coefficient: n >= 5 ? 2.8 : n >= 1 ? 2.5 : 2.2,
+    coefficient: n >= 5 ? 2.6 : n >= 1 ? 2.3 : 2,
     sigilHits: n >= 4 ? 1 : 2,
     sigilHeal: n >= 5 ? 0.07 : 0.05,
     firstBarrier: n >= 2 ? 0.06 : 0,
@@ -258,6 +258,17 @@ function validate(s) {
   }
   const p = s.venanceProfile,
     expected = snapshot(level(s), p?.rarity);
+  // Upgrade only known previous coefficients with otherwise exact snapshots; preserve the cast.
+  const previousCoefficient = level(s) >= 5 ? 2.8 : level(s) >= 1 ? 2.5 : 2.2;
+  if (
+    p &&
+    p.coefficient === previousCoefficient &&
+    Object.keys(p).sort().join() === Object.keys(expected).sort().join() &&
+    Object.keys(expected).every(
+      (k) => k === "coefficient" || p[k] === expected[k],
+    )
+  )
+    p.coefficient = expected.coefficient;
   if (
     !p ||
     Object.keys(p).sort().join() !== Object.keys(expected).sort().join() ||

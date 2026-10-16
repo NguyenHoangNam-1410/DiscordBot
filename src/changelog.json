@@ -1,5 +1,23 @@
 [
   {
+    "id": "92ab258c-5360-4783-8137-d72fa2aa2383",
+    "updatedAt": "2026-10-16T04:32:52.140Z",
+    "auditedAt": "2026-10-16T04:32:52.140Z",
+    "title": "Điều chỉnh cường hóa Venance S1–S6",
+    "changes": [
+      "Hệ số cường hóa Venance: S0 giữ ×2; S1–S4 giảm từ ×2,5 xuống ×2,3; S5–S6 giảm từ ×2,8 xuống ×2,6. Cập nhật mô tả tinh hồn và chuyển run đang chơi sang hệ số mới khi tải lại, giữ nguyên chuỗi cường hóa."
+    ]
+  },
+  {
+    "id": "325585b5-dfc8-45c1-9a95-30a71a0f294c",
+    "updatedAt": "2026-10-16T04:29:52.770Z",
+    "auditedAt": "2026-10-16T04:29:52.770Z",
+    "title": "Điều chỉnh Venance S0",
+    "changes": [
+      "Giảm hệ số đòn đánh cường hóa Venance S0 từ ×2,2 xuống ×2; S1–S4 giữ ×2,5 và S5–S6 giữ ×2,8. Run S0 đang chơi chuyển sang hệ số mới khi tải lại, giữ nguyên chuỗi cường hóa."
+    ]
+  },
+  {
     "id": "fb0cc991-010b-4d9d-9822-3d443f9fa3a9",
     "updatedAt": "2026-10-16T04:22:41.574Z",
     "auditedAt": "2026-10-16T04:22:41.574Z",

@@ -352,7 +352,7 @@
         {
           "level": 1,
           "name": "Khắc ấn tinh giới",
-          "description": "Hệ số đòn đánh cường hóa tăng từ ×2,2 lên ×2,5.",
+          "description": "Hệ số đòn đánh cường hóa tăng từ ×2 lên ×2,3.",
           "emojiName": "soul_venance_1"
         },
         {
@@ -376,7 +376,7 @@
         {
           "level": 5,
           "name": "Cổ ngữ hoàn thiện",
-          "description": "Hệ số đòn cường hóa tăng từ ×2,5 lên ×2,8; Hồi lưu hồi 7% Max HP thay vì 5%.",
+          "description": "Hệ số đòn cường hóa tăng từ ×2,3 lên ×2,6; Hồi lưu hồi 7% Max HP thay vì 5%.",
           "emojiName": "soul_venance_5"
         },
         {
