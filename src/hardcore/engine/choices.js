@@ -241,7 +241,7 @@ module.exports = function createModule(dependencies) {
       return keys.length
         ? keys.map((key) => ({
             action: `sever_${key}`,
-            label: `Xóa ${world.RIFT_MODIFIERS[key].name}`,
+            label: `Xóa ${world.RIFT_MODIFIERS[key].name} ×${state.modifiers[key]}`,
           }))
         : [
             {
@@ -332,7 +332,7 @@ module.exports = function createModule(dependencies) {
       return [
         { action: "inspect", label: "Kiểm tra", disabled: e.inspected },
         { action: "open", label: "Mở hòm" },
-        { action: "sell", label: "Bán · 15% cược" },
+        ...(!e.inspected ? [{ action: "sell", label: "Bán · 15% cược" }] : []),
         ...(e.revealed ? [{ action: "leave", label: "Né Mimic" }] : []),
       ];
     if (e.type === "shrine" && e.kind === "ritual")

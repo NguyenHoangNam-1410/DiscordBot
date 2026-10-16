@@ -207,11 +207,17 @@ function bars(s) {
       .join("\n")
   );
 }
-function details(s) {
+function mechanicDetails(s) {
   if (s.encounter?.boss?.version === 2)
     return require("./displayV2").details(s);
   const b = boss.bstate(s);
   return b ? RULES[b.id] + "\n\n**Hiện tại:** " + status(s) : "";
+}
+function details(s) {
+  const text = mechanicDetails(s);
+  return require("./guardian").active(s)
+    ? require("./guardian").description + "\n\n" + text
+    : text;
 }
 function special(s) {
   if (s.encounter.type === "prophecy" && s.bossRosterVersion === 2)

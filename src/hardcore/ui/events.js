@@ -63,7 +63,7 @@ module.exports = function createModule(dependencies) {
                   .filter(([, p]) => p > 0)
                   .map(([key, p]) => [percent(p), labels[key]]),
           ),
-          `**Kiểm tra:** ${percent(e.detectionChance)} phát hiện nếu có Mimic; không phát hiện chưa chắc an toàn.\n**Bán:** bonus +15% cược.\n${chestPityText(s, e)}`,
+          `**Kiểm tra:** ${percent(e.detectionChance)} phát hiện nếu có Mimic; không phát hiện chưa chắc an toàn. Kiểm tra xong không thể bán hòm.\n${e.inspected ? "**Bán:** không còn khả dụng vì đã kiểm tra." : "**Bán:** bonus +15% cược, chỉ khi chưa kiểm tra."}\n${chestPityText(s, e)}`,
         ],
       );
     }

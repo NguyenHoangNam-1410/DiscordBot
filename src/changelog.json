@@ -1,5 +1,16 @@
 [
   {
+    "id": "fb0cc991-010b-4d9d-9822-3d443f9fa3a9",
+    "updatedAt": "2026-10-16T04:22:41.574Z",
+    "auditedAt": "2026-10-16T04:22:41.574Z",
+    "title": "Tower's Guardian và lựa chọn Rift, rương",
+    "changes": [
+      "Boss có nội tại Tower's Guardian: mỗi đòn và tổng HP boss mất trong một lượt tối đa 20% Max HP, gồm phép, vật lý, hit phụ và phản đòn; vật triệu hồi và mục tiêu phụ không bị giới hạn.",
+      "Lựa chọn xóa Rift hiển thị số stack sẽ xóa, cả trong selector và nút bấm.",
+      "Sau khi Kiểm tra hòm, không thể Bán hòm; cập nhật mô tả để nêu rõ đánh đổi này."
+    ]
+  },
+  {
     "id": "d6a0f991-6854-4d52-a132-d4df3cbd2cf4",
     "updatedAt": "2026-10-16T03:55:58.519Z",
     "auditedAt": "2026-10-16T03:55:58.519Z",

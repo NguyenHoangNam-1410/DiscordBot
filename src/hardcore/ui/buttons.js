@@ -218,7 +218,7 @@ module.exports = function createModule(dependencies) {
       button(
         prefix + a.action,
         state.phase === "severance" && a.action !== "sever_none"
-          ? ""
+          ? "×" + state.modifiers[a.action.slice(6)]
           : (itemPassives.forecastLabel(state.encounter, a.action)
               ? itemPassives.forecastLabel(state.encounter, a.action) + " · "
               : "") +

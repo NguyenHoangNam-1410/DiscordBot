@@ -1,4 +1,5 @@
 "use strict";
+const guardian = require("./guardian");
 const legacy = require("./legacyMechanics"),
   modern = require("./mechanicsV2"),
   roster = require("./roster");
@@ -24,13 +25,15 @@ module.exports = {
         : s.encounter.hp <= legacy.floorHp(s))
     )
       return 0;
-    return rift.damage(s, damage, (damage) => {
-      if (modern.on(s.encounter)) return modern.applyDamage(s, damage);
-      const e = s.encounter,
-        dealt = Math.min(Math.max(0, e.hp - legacy.floorHp(s)), damage);
-      e.hp = Math.max(legacy.floorHp(s), e.hp - damage);
-      return dealt;
-    });
+    return guardian.apply(s, damage, (damage) =>
+      rift.damage(s, damage, (damage) => {
+        if (modern.on(s.encounter)) return modern.applyDamage(s, damage);
+        const e = s.encounter,
+          dealt = Math.min(Math.max(0, e.hp - legacy.floorHp(s)), damage);
+        e.hp = Math.max(legacy.floorHp(s), e.hp - damage);
+        return dealt;
+      }),
+    );
   },
   // Display attack strength without capping it to remaining HP. Settlement still uses dealt.
   damageStrength: (s, damage) => {
@@ -39,15 +42,18 @@ module.exports = {
       return 0;
     if (!modern.on(s.encounter) && s.encounter.hp <= legacy.floorHp(s))
       return 0;
-    return Math.max(0, Math.floor(damage));
+    return guardian.cap(s, damage);
   },
   previewDamage: (s, damage) =>
-    modern.on(s.encounter) ? modern.previewDamage(s, damage) : damage,
+    modern.on(s.encounter)
+      ? modern.previewDamage(s, guardian.cap(s, damage))
+      : guardian.cap(s, damage),
   choices: (s) => (modern.on(s.encounter) ? modern.dec.options(s) : []),
   isFree: (s, a) => modern.on(s.encounter) && modern.dec.free(s, a),
   blocked: (s, a) => modern.on(s.encounter) && modern.dec.blocked(s, a),
   actComponent: (s, a, ops) => modern.dec.act(s, a, ops),
   validate: (s, e) => {
+    guardian.validate(s, e);
     require("./balanceV2").validate(s);
     const enemy = e || s.encounter;
     if (
@@ -88,4 +94,7 @@ for (const key of [
   "advancePhase",
   "retreatLocked",
 ])
-  module.exports[key] = (s, ...args) => dispatch(s)[key](s, ...args);
+  module.exports[key] = (s, ...args) => {
+    if (key === "beginAction") guardian.begin(s);
+    return dispatch(s)[key](s, ...args);
+  };

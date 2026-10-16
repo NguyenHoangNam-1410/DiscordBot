@@ -667,8 +667,7 @@ module.exports = function createModule(dependencies) {
       if (bosses.brainControl(state)) {
         royal.limitGuard(state, action, false);
         const damage = Math.floor(e.maxHp * 0.2);
-        const dealt = Math.min(e.hp, damage);
-        e.hp -= dealt;
+        const dealt = require("../bosses/guardian").direct(state, damage);
         healingLog += playerManaLeech(state, dealt, rng);
         const acted = {
           defend: false,

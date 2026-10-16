@@ -517,8 +517,7 @@ function resolveHeat(s, ops) {
   const x = u.current(s);
   if (x.b.id !== "machine" || x.m.heat < 100) return "";
   const lost = u.lose(x, s.maxHp * x.c.power, ops);
-  const damage = Math.min(x.e.hp, Math.floor(x.e.maxHp * 0.06));
-  x.e.hp = Math.max(0, x.e.hp - damage);
+  const damage = require("./guardian").direct(s, Math.floor(x.e.maxHp * 0.06));
   x.m.heat = x.m.shield = 0;
   return "\n⚠ Meltdown: bạn mất " + lost + " HP; boss mất " + damage + " HP.";
 }
@@ -582,7 +581,7 @@ function endAction(s, rng, ops) {
             Math.floor(echo.damage * 0.15),
           );
           u.lose(x, n, ops);
-          e.hp = Math.max(0, e.hp - n);
+          require("./guardian").direct(s, n);
         }
         if (echo.action === "potion") bossHeal(e.maxHp * 0.03);
         if (echo.action === "defend") m.shieldUntil = r + 3;
@@ -661,7 +660,7 @@ function endAction(s, rng, ops) {
     case "buyard":
       if (m.heat > 70) {
         hurt(c.power);
-        e.hp = Math.max(0, e.hp - Math.floor(e.maxHp * 0.02));
+        require("./guardian").direct(s, Math.floor(e.maxHp * 0.02));
       }
       if ((r + 1) % c.cycle === 0) m.heat = Math.min(100, m.heat + 10);
       break;
@@ -696,7 +695,8 @@ function endAction(s, rng, ops) {
       if (!m.extinguished) m.mark--;
       m.extinguished = false;
       if (m.mark <= 0) {
-        if (m.reflected) e.hp = Math.max(0, e.hp - Math.floor(e.maxHp * 0.05));
+        if (m.reflected)
+          require("./guardian").direct(s, Math.floor(e.maxHp * 0.05));
         else hurt(c.power);
         m.mark = 3;
         m.reflected = false;

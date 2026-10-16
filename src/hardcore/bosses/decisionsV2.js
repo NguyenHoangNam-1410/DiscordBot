@@ -313,8 +313,10 @@ function act(s, action, ops) {
     skipCounter = false,
     dealt = 0;
   const strike = (rate) => {
-    const n = Math.min(e.hp, Math.max(1, Math.floor(e.maxHp * rate)));
-    e.hp -= n;
+    const n = require("./guardian").direct(
+      s,
+      Math.max(1, Math.floor(e.maxHp * rate)),
+    );
     dealt += n;
     log += " · " + n + " DMG chuẩn";
   };
@@ -510,8 +512,7 @@ function act(s, action, ops) {
     case "xazax":
       m.portals--;
       if (cmd === "portal_take") {
-        const n = Math.floor(e.maxHp * 0.04);
-        e.hp = Math.max(0, e.hp - n);
+        const n = require("./guardian").direct(s, Math.floor(e.maxHp * 0.04));
         log += " · " + n + " DMG xuyên RES";
       }
       if (cmd === "portal_enter") {
@@ -542,7 +543,7 @@ function act(s, action, ops) {
       paid(c.amount);
       m.tether = false;
       u.open(x, 2);
-      e.hp = Math.max(0, e.hp - m.golemDamage);
+      require("./guardian").direct(s, m.golemDamage);
       m.golemDamage = 0;
       break;
     case "jitan":
@@ -655,7 +656,10 @@ function act(s, action, ops) {
       } else {
         s.hp = u.clamp(m.anchor.hp, 1, s.maxHp);
         s.mana = u.clamp(m.anchor.mana, 0, s.maxMana);
-        e.hp = u.clamp(m.anchor.enemyHp, 1, e.maxHp);
+        const restoredHp = u.clamp(m.anchor.enemyHp, 1, e.maxHp);
+        if (restoredHp < e.hp)
+          require("./guardian").direct(s, e.hp - restoredHp);
+        else e.hp = restoredHp;
         m.rewound = true;
       }
       break;

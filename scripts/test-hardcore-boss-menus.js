@@ -703,6 +703,67 @@ async function main() {
       app.setApplicationEmojisForTest([]);
     }
   });
+  await test("Rift removal shows exact stacks in selectors and buttons; inspected chests cannot be sold", () => {
+    const stats = require("../src/hardcore/engine/stats");
+    const s = stats.createState("sorceress", 10000);
+    s.phase = "severance";
+    s.encounter = { type: "severance" };
+    s.modifiers = {
+      stone_skin: 2,
+      elemental_dominion: 3,
+      bloodlust: 4,
+      fortified: 5,
+      swift_horror: 6,
+      unstable_rift: 10,
+    };
+    let components = view
+      .rows("rift-count", s)
+      .flatMap((r) => r.toJSON().components);
+    const menu = components.find(
+      (c) => c.type === 3 && c.custom_id.endsWith(":event_select"),
+    );
+    assert(menu);
+    for (const option of menu.options)
+      assert(option.label.endsWith("×" + s.modifiers[option.value.slice(6)]));
+    assert(!menu.options.some((o) => o.value === "sever_unstable_rift"));
+    delete s.modifiers.swift_horror;
+    components = view
+      .rows("rift-count", s)
+      .flatMap((r) => r.toJSON().components);
+    assert.equal(
+      components.find((c) => c.custom_id.endsWith(":sever_stone_skin")).label,
+      "×2",
+    );
+    for (const [kind, detected] of [
+      ["safe", false],
+      ["mimic", true],
+      ["mimic", false],
+    ]) {
+      const c = stats.createState("sorceress", 10000);
+      c.encounter = {
+        ...core.makeChest(c, () => 0.5),
+        kind,
+        detectionSuccess: detected,
+      };
+      assert(core.actions(c).some((a) => a.action === "sell"));
+      core.act(c, { id: "inspect-test", user_id: "u" }, "inspect", () => 0.5);
+      assert(c.encounter.inspected);
+      assert(!core.actions(c).some((a) => a.action === "sell"));
+      assert(core.actions(c).some((a) => a.action === "open"));
+      assert.equal(
+        core.actions(c).some((a) => a.action === "leave"),
+        kind === "mimic" && detected,
+      );
+      const saved = core.normalize(JSON.parse(JSON.stringify(c)));
+      assert(!core.actions(saved).some((a) => a.action === "sell"));
+      const before = JSON.stringify(c);
+      assert.throws(
+        () => core.act(c, { id: "inspect-test" }, "sell", () => 0.5),
+        /INVALID_ACTION/,
+      );
+      assert.equal(JSON.stringify(c), before);
+    }
+  });
   await test("At most four event actions use buttons, five use selector; retreat and tabs do not count", () => {
     const run = runBoss("lilith"),
       s = run.state;
