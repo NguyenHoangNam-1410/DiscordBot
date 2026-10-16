@@ -555,6 +555,29 @@ async function main() {
     assert(log.includes("2.6 → 1"));
     assert(log.includes("1 → 2"));
     assert.equal(JSON.stringify(s), before);
+    const itemLine =
+      "<:item_blood_pact:1555983051811594240> **Blood Pact [UR] · Lv.2**: VIT 158 → 168 · ENE 319 → 359";
+    const curseLine =
+      "☣️ Lời nguyền: Skill của bạn tốn 1.8% Max HP (trần 15%; tối thiểu 1 HP).";
+    const cursedText =
+      "Thông báo chiến đấu. ".repeat(44) + "\n" + itemLine + "\n" + curseLine;
+    const cursedEmbed = new EmbedBuilder();
+    addTextFields(cursedEmbed, "Lượt vừa rồi", cursedText, false, {
+      keepLists: true,
+    });
+    const cursedFields = cursedEmbed.toJSON().fields;
+    assert(
+      cursedFields.length > 1,
+      "Curse fixture must cross a field boundary",
+    );
+    assert(
+      cursedFields
+        .find((f) => f.value.includes(itemLine))
+        .value.includes(curseLine),
+      "Keep the curse with its item receipt",
+    );
+    assert(cursedFields.every((f) => f.value.length <= 1024));
+    assert.equal(cursedFields.map((f) => f.value).join("\n"), cursedText);
     const header = "⚠️ **Do Treasure Chest:**";
     const receipt = [
       header,

@@ -98,9 +98,12 @@ function addTextFields(
   });
   const blocks = [];
   for (let i = 0; i < lines.length; i++) {
-    if (keepLists && lines[i + 1]?.startsWith("- ")) {
+    // Keep item curse continuations with their receipt, just like stat lists.
+    const continuation = (line) =>
+      line?.startsWith("- ") || line?.startsWith("☣️ Lời nguyền:");
+    if (keepLists && continuation(lines[i + 1])) {
       let end = i + 1;
-      while (lines[end]?.startsWith("- ")) end++;
+      while (continuation(lines[end])) end++;
       const block = lines.slice(i, end).join("\n");
       if (block.length <= limit) {
         blocks.push(block);

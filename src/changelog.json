@@ -1,5 +1,14 @@
 [
   {
+    "id": "d6a0f991-6854-4d52-a132-d4df3cbd2cf4",
+    "updatedAt": "2026-10-16T03:55:58.519Z",
+    "auditedAt": "2026-10-16T03:55:58.519Z",
+    "title": "Giữ liền mô tả trang bị và lời nguyền",
+    "changes": [
+      "Log lượt vừa rồi giữ tên trang bị và lời nguyền trong cùng một khối khi chia nội dung, tránh khoảng ngắt giữa hai dòng."
+    ]
+  },
+  {
     "id": "aa2b4b94-efe7-4860-b869-8dd7904de9e2",
     "updatedAt": "2026-10-16T03:29:41.287Z",
     "auditedAt": "2026-10-16T03:29:41.287Z",
