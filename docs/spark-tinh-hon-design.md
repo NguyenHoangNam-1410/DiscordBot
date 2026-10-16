@@ -72,6 +72,8 @@ Banner Venance: **R 80% / SR 19% / SSR 1%**. Roll độ hiếm trước; nếu r
 
 Ví riêng venance_spark: mỗi lượt quay hợp lệ, kể cả ra SSR, cộng 1 Spark. Trong **/sinhton cuahang**, selector **Đổi Spark · Chỉ nhân vật rate-up** trừ đúng 200 Spark để nhận nhân vật; đã sở hữu thì nhận 50 thẻ SSR pháp sư. Nhận SSR ngẫu nhiên không reset Spark. Đổi Spark dùng giao dịch nguyên tử và revision giống quay, retry không phát lại thưởng. Spark/nhân vật/thẻ thuộc toàn tài khoản Discord; gem và item R thuộc server đang quay.
 
+Bảng banner chính chỉ hiển thị tên nhân vật rate-up, mô tả Skill ngắn kèm icon, số dư gem/vé/Spark/thẻ và giá quay x1/x10. Nút **Chi tiết banner** mở tỷ lệ, pool nhân vật và quy tắc roll/rate-up/Spark; có nút **Về banner**. Đổi qua lại không trừ tài nguyên. Spark đổi tại **/sinhton cuahang**.
+
 Graphic nằm trong assets/banners/venance/, bản Discord banner.jpg kích thước 1500 × 500 px. Mỗi banner sau này có thư mục riêng; đường dẫn graphic tương đối từ assets/banners. Bot đính kèm ảnh trực tiếp, không cần URL host ảnh. Khi deploy cần đưa cả thư mục này lên server.
 
 ## Dữ liệu và hướng mở rộng

@@ -1,5 +1,15 @@
 [
   {
+    "id": "fd22da88-431f-4223-877b-e58899f28993",
+    "updatedAt": "2026-10-16T05:45:37.766Z",
+    "auditedAt": "2026-10-16T05:45:37.766Z",
+    "title": "Tinh gọn giao diện banner nhân vật",
+    "changes": [
+      "Bảng banner chính hiển thị nhân vật rate-up, mô tả Skill ngắn kèm icon, số dư tài nguyên và giá quay x1/x10.",
+      "Nút Chi tiết banner chứa tỷ lệ, pool và quy tắc gacha/rate-up/Spark; có nút Về banner. Đổi Spark tại /sinhton cuahang."
+    ]
+  },
+  {
     "id": "56dee426-da6c-4b59-ad50-a8ea1a52bfec",
     "updatedAt": "2026-10-16T05:34:06.045Z",
     "auditedAt": "2026-10-16T05:34:06.045Z",

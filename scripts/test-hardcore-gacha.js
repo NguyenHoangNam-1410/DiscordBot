@@ -613,8 +613,41 @@ async function main() {
     );
     assert.equal(screen.files[0].name, "venance-banner.jpg");
     assert(require("node:fs").existsSync(screen.files[0].attachment));
-    assert(JSON.stringify(screen).includes("SSR 1%"));
-    assert(JSON.stringify(screen).includes("Venance 100%"));
+    assert.equal(screen.embeds[0].data.title, "Venance [SSR]");
+    assert(screen.embeds[0].data.description.includes("Astral Armament"));
+    assert(
+      screen.embeds[0].data.description.includes(
+        require("../src/hardcore/shared/icons").SKILL_ICONS.venance,
+      ),
+    );
+    assert(screen.embeds[0].data.description.includes("**×1:** 300"));
+    assert(screen.embeds[0].data.description.includes("**×10:** 3.000"));
+    assert(screen.embeds[0].data.description.includes("Spark"));
+    assert(
+      !(screen.embeds[0].data.fields || []).some((f) =>
+        ["Tỷ lệ", "Quy tắc", "Rate-up SSR", "Nhân vật trong banner"].includes(
+          f.name,
+        ),
+      ),
+    );
+    const details = ui.payload("venance-paid", {
+      guildId: "g",
+      bannerId: "venance",
+      showDetails: true,
+    });
+    limits(details);
+    assert(JSON.stringify(details).includes("SSR 1%"));
+    assert(JSON.stringify(details).includes("Venance 100%"));
+    assert(JSON.stringify(details).includes("/sinhton cuahang"));
+    assert.equal(details.files.length, 0);
+    assert.equal(details.embeds[0].data.image, undefined);
+    limits(
+      ui.payload("venance-paid", {
+        guildId: "g",
+        bannerId: "novice",
+        showDetails: true,
+      }),
+    );
     assert.deepEqual(screen.attachments, []);
     limits(
       ui.payload("venance-spark", {
@@ -765,7 +798,11 @@ async function main() {
   });
   const controls = gachaScreen.components.flatMap((r) => r.toJSON().components);
   assert(!controls.some((c) => c.custom_id.endsWith(":redeem")));
-  const shopId = controls.find((c) => c.custom_id.endsWith(":shop")).custom_id;
+  assert(!controls.some((c) => c.custom_id.endsWith(":shop")));
+  const detailsId = controls.find((c) =>
+    c.custom_id.endsWith(":details"),
+  ).custom_id;
+  const shopId = detailsId.replace(/details$/, "shop");
   let sparkResponse,
     ack = 0,
     denial;
@@ -787,6 +824,35 @@ async function main() {
       denial = v;
     },
   };
+  const beforeView = JSON.stringify([
+    p.account("spark-ui"),
+    p.wallet("spark-ui", "venance_spark"),
+    levels.getPlayerProgression("g", "spark-ui").diamonds,
+  ]);
+  await ui.handle({
+    ...interactionForSpark,
+    customId: detailsId,
+    id: "view-details",
+  });
+  assert(sparkResponse.embeds[0].data.fields.some((f) => f.name === "Tỷ lệ"));
+  const backId = sparkResponse.components
+    .flatMap((r) => r.toJSON().components)
+    .find((c) => c.custom_id.endsWith(":overview")).custom_id;
+  await ui.handle({
+    ...interactionForSpark,
+    customId: backId,
+    id: "view-overview",
+  });
+  assert(!(sparkResponse.embeds[0].data.fields || []).length);
+  assert.equal(
+    JSON.stringify([
+      p.account("spark-ui"),
+      p.wallet("spark-ui", "venance_spark"),
+      levels.getPlayerProgression("g", "spark-ui").diamonds,
+    ]),
+    beforeView,
+  );
+  ack = 0;
   await ui.handle(interactionForSpark);
   limits(sparkResponse);
   assert(sparkResponse.embeds[0].data.title.includes("CỬA HÀNG"));
@@ -890,7 +956,7 @@ async function main() {
     update: async (x) => (returned = x),
   });
   limits(returned);
-  assert.equal(returned.embeds[0].data.title, "SINH TỒN · GACHA NHÂN VẬT");
+  assert.equal(returned.embeds[0].data.title, "Khởi Hành");
   console.log(groups + " character gacha groups passed; no simulations.");
 }
 main()
