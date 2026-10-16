@@ -67,6 +67,55 @@ const act = (s, a, random = rng) => {
   return result;
 };
 try {
+  test("Action icon resolver supports future characters, partial uploads and late registry loading", () => {
+    const registry = require("../src/utils/appEmoji");
+    const { characterActionIcon } = require("../src/hardcore/shared/icons");
+    const current = fresh();
+    const future = {
+      ...current,
+      characterSoul: { characterId: "future_mage" },
+    };
+    const defaults = Object.fromEntries(
+      ["attack", "defend", "skill"].map((a) => [
+        a,
+        characterActionIcon(current, a),
+      ]),
+    );
+    assert.equal(characterActionIcon(current, "potion"), null);
+    try {
+      registry.setApplicationEmojisForTest([
+        ["attack_future_mage", "1557000000000000200"],
+        ["defend_future_mage", "1557000000000000201"],
+        ["skill_future_mage", "1557000000000000202"],
+      ]);
+      for (const action of ["attack", "defend", "skill"])
+        assert(
+          characterActionIcon(future, action).includes(action + "_future_mage"),
+        );
+      registry.setApplicationEmojisForTest([
+        ["defend_future_mage", "1557000000000000201"],
+      ]);
+      assert.equal(characterActionIcon(future, "attack"), defaults.attack);
+      assert.equal(characterActionIcon(future, "skill"), defaults.skill);
+      assert(
+        characterActionIcon(future, "defend").includes("defend_future_mage"),
+      );
+      act(current, "skill");
+      assert.equal(characterActionIcon(current, "attack"), defaults.attack);
+      registry.setApplicationEmojisForTest([
+        ["attack_venance_empowered", "1557000000000000203"],
+      ]);
+      assert(
+        characterActionIcon(current, "attack").includes(
+          "attack_venance_empowered",
+        ),
+      );
+      kit.frame(current).remaining = 0;
+      assert.equal(characterActionIcon(current, "attack"), defaults.attack);
+    } finally {
+      registry.setApplicationEmojisForTest([]);
+    }
+  });
   test("Distinct SSR profile, base stats, native cards and seven free starters", () => {
     chars.validate();
     const s = chars.preview("venance");
@@ -320,7 +369,20 @@ try {
     for (let n = 1; n <= 6; n++)
       assert(soulIcon("venance", n).includes("soul_venance_" + n));
     const s = fresh(6, true);
+    const attackButton = () =>
+      ui
+        .rows(session.id, s)
+        .flatMap((row) => row.components)
+        .find((component) => component.data.custom_id?.endsWith(":attack"))
+        ?.toJSON();
+    assert.notEqual(attackButton().emoji.name, "attack_venance_empowered");
     act(s, "skill");
+    assert.equal(attackButton().emoji.name, "attack_venance_empowered");
+    assert.equal(attackButton().emoji.id, "1557000000000000100");
+    const remaining = kit.frame(s).remaining;
+    kit.frame(s).remaining = 0;
+    assert.notEqual(attackButton().emoji.name, "attack_venance_empowered");
+    kit.frame(s).remaining = remaining;
     assert(s.lastLog.includes("skill_venance_astral_armament"));
     assert(kit.innateText(s).includes("innate_venance_runic_reflux"));
     assert(kit.awakeningText(s).includes("awaken_venance_astral_codex"));

@@ -414,6 +414,33 @@ const VENANCE_ICONS = Object.freeze(
     ),
   ),
 );
+// Optional special names/state variants. New characters can use the default naming
+// attack_<characterId>, defend_<characterId>, skill_<characterId> without an entry.
+const CHARACTER_ACTION_ICONS = Object.freeze({
+  venance: Object.freeze({
+    attack: (state) =>
+      require("../characters/venance").empowered(state)
+        ? "attack_venance_empowered"
+        : null,
+    skill: "skill_venance_astral_armament",
+  }),
+});
+function characterActionIcon(state, action) {
+  if (!["attack", "defend", "skill"].includes(action)) return null;
+  const fallback =
+    action === "skill"
+      ? SKILL_ICONS[state.classKey] || icon("sparkles", "✨")
+      : action === "attack"
+        ? icon("PHYS", "⚔️")
+        : icon("DEF", "🛡️");
+  const id = state.characterSoul?.characterId || state.classKey;
+  const custom = Object.hasOwn(CHARACTER_ACTION_ICONS, id)
+    ? CHARACTER_ACTION_ICONS[id][action]
+    : null;
+  const name = typeof custom === "function" ? custom(state) : custom;
+  // Look up at render time: registry loads after modules, and uploads may be missing.
+  return (name && appEmoji(name)) || appEmoji(action + "_" + id) || fallback;
+}
 // Resolve Rift emojis after startup loads the application registry.
 const RIFT_ICONS = Object.freeze(
   Object.defineProperties(
@@ -502,6 +529,7 @@ module.exports = {
   passiveIcon,
   SKILL_ICONS,
   VENANCE_ICONS,
+  characterActionIcon,
   RIFT_ICONS,
   eventIcon,
   treasureChestIcon,

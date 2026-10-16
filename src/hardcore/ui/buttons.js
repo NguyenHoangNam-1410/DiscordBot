@@ -1,5 +1,5 @@
 "use strict";
-const { itemIcon } = require("../shared/icons");
+const { itemIcon, characterActionIcon } = require("../shared/icons");
 const purifier = require("../events/purifier");
 const { StringSelectMenuBuilder } = require("discord.js");
 const bosses = require("../bosses/mechanics");
@@ -15,7 +15,6 @@ module.exports = function createModule(dependencies) {
     itemPassives,
     icon,
     E,
-    SKILL_ICONS,
     RIFT_ICONS,
     eventIcon,
     treasureChestIcon,
@@ -242,23 +241,24 @@ module.exports = function createModule(dependencies) {
               ? ButtonStyle.Success
               : ButtonStyle.Secondary,
         a.disabled,
-        actionItem(state, a.action)
-          ? itemIcon(actionItem(state, a.action))
-          : state.phase === "severance" && a.action !== "sever_none"
-            ? RIFT_ICONS[a.action.slice(6)] || E.rift
-            : state.encounter.type === "memory"
-              ? memoryIcon(memories.family(state.encounter.debt))
-              : a.action.startsWith("paradox_") && state.encounter.version === 2
-                ? paradoxIcon(a.action.slice(8))
-                : a.action.startsWith("chest_") &&
-                    state.encounter.kind === "treasure_room"
-                  ? treasureChestIcon(a.action.slice(6))
-                  : a.action.startsWith("boss_")
-                    ? eventIcon("boss_chest")
-                    : a.action === "skill"
-                      ? bosses.brainControl(state)
-                        ? "🧠"
-                        : SKILL_ICONS[state.classKey]
+        ["attack", "defend", "skill"].includes(a.action)
+          ? a.action === "skill" && bosses.brainControl(state)
+            ? "🧠"
+            : characterActionIcon(state, a.action)
+          : actionItem(state, a.action)
+            ? itemIcon(actionItem(state, a.action))
+            : state.phase === "severance" && a.action !== "sever_none"
+              ? RIFT_ICONS[a.action.slice(6)] || E.rift
+              : state.encounter.type === "memory"
+                ? memoryIcon(memories.family(state.encounter.debt))
+                : a.action.startsWith("paradox_") &&
+                    state.encounter.version === 2
+                  ? paradoxIcon(a.action.slice(8))
+                  : a.action.startsWith("chest_") &&
+                      state.encounter.kind === "treasure_room"
+                    ? treasureChestIcon(a.action.slice(6))
+                    : a.action.startsWith("boss_")
+                      ? eventIcon("boss_chest")
                       : a.action.startsWith("forge_")
                         ? E[
                             a.action === "forge_main"

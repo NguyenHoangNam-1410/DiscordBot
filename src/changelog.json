@@ -1,5 +1,23 @@
 [
   {
+    "id": "aa2b4b94-efe7-4860-b869-8dd7904de9e2",
+    "updatedAt": "2026-10-16T03:29:41.287Z",
+    "auditedAt": "2026-10-16T03:29:41.287Z",
+    "title": "Chuẩn hóa icon nút hành động nhân vật",
+    "changes": [
+      "Ba nút Tấn công, Phòng thủ và Skill ưu tiên icon riêng theo nhân vật và trạng thái; tự dùng icon hiện tại nếu chưa có emoji riêng."
+    ]
+  },
+  {
+    "id": "3f82de35-3485-4395-8b4c-90ae82a7a636",
+    "updatedAt": "2026-10-16T03:20:35.522Z",
+    "auditedAt": "2026-10-16T03:20:35.522Z",
+    "title": "Sửa icon nút đánh cường hóa Venance",
+    "changes": [
+      "Nút Tấn công của Venance dùng icon đòn cường hóa khi buff đang hoạt động và tự trở về icon vật lý khi buff hết hạn."
+    ]
+  },
+  {
     "id": "3aa00c56-3d36-44c4-8b23-6fb03e14ad61",
     "updatedAt": "2026-10-16T03:11:21.661Z",
     "auditedAt": "2026-10-16T03:11:21.661Z",
