@@ -1,5 +1,16 @@
 [
   {
+    "id": "da4c1653-b162-4bb2-a27f-a60001ae6dc4",
+    "updatedAt": "2026-10-16T10:30:21.628Z",
+    "auditedAt": "2026-10-16T10:30:21.628Z",
+    "title": "Chuẩn hóa chính tả Vua tiếng Việt",
+    "changes": [
+      "Kiểm tra từ trước khi tạo đề và trộn chữ; thống nhất vị trí dấu như thuỷ → thủy, hoả → hỏa, khoẻ → khỏe, giữ đúng các trường hợp quý/quỷ/quỹ.",
+      "Chuẩn hóa 259 mục từ, gộp từ trùng và loại dữ liệu sai định dạng; đồng bộ chữ xáo trộn với đáp án và sửa câu cũ khi khôi phục mà giữ thời hạn.",
+      "Chấm đáp án thống nhất giữa các cách đặt dấu tương đương, vẫn bắt buộc đúng dấu thanh; không chấp nhận đáp án bỏ dấu."
+    ]
+  },
+  {
     "id": "7ddb6260-9b55-4f24-affa-dc28fe6866f9",
     "updatedAt": "2026-10-16T10:11:54.086Z",
     "auditedAt": "2026-10-16T10:11:54.086Z",

@@ -1,5 +1,8 @@
 const crypto = require("node:crypto");
-const { normalizeVietnamese } = require("../utils/text");
+const {
+  normalizeVuaAnswer,
+  validatedVuaWord,
+} = require("../utils/vietnameseSpelling");
 const { db } = require("../db");
 const { getGameConfig } = require("./gameConfigService");
 const gameWordData = require("../../data/games/vietnamese-game-words.json");
@@ -45,15 +48,18 @@ const CURATED_HARD_VUA_QUESTIONS = [
   { answer: "tương trợ", hint: "Giúp đỡ lẫn nhau" },
 ];
 
-const generatedVuaQuestions = gameWordData.vuaWords.map((answer) => {
-  const syllables = answer.split(/\s+/).length;
-  const letters = Array.from(answer.replace(/\s+/g, "")).length;
-  return { answer, hint: `${syllables} tiếng • ${letters} chữ cái` };
-});
+const generatedVuaQuestions = gameWordData.vuaWords
+  .map(validatedVuaWord)
+  .filter(Boolean)
+  .map((answer) => {
+    const syllables = answer.split(/\s+/).length;
+    const letters = Array.from(answer.replace(/\s+/g, "")).length;
+    return { answer, hint: `${syllables} tiếng • ${letters} chữ cái` };
+  });
 const VUA_QUESTIONS = [
   ...new Map(
     [...generatedVuaQuestions, ...CURATED_VUA_QUESTIONS].map((question) => [
-      normalizeVietnamese(question.answer),
+      normalizeVuaAnswer(question.answer),
       question,
     ]),
   ).values(),
@@ -70,7 +76,7 @@ const HARD_VUA_QUESTIONS = [
     [
       ...VUA_QUESTIONS.filter(isHardVuaQuestion),
       ...CURATED_HARD_VUA_QUESTIONS,
-    ].map((question) => [normalizeVietnamese(question.answer), question]),
+    ].map((question) => [normalizeVuaAnswer(question.answer), question]),
   ).values(),
 ];
 const RECENT_WORD_LIMIT = 2_000;
@@ -174,9 +180,12 @@ function makeVuaQuestion(
   now = Date.now(),
   durationSeconds = HARD_DURATION_MS / 1000,
 ) {
+  const answer = validatedVuaWord(base?.answer);
+  if (!answer) throw new Error("INVALID_VUA_WORD");
   return {
     ...base,
-    mixed: shuffleLetters(base.answer),
+    answer,
+    mixed: shuffleLetters(answer),
     ...challengeMeta(hard, now, durationSeconds),
   };
 }
@@ -184,9 +193,9 @@ function makeVuaQuestion(
 function nextVuaQuestion(recent = [], options = {}) {
   const hard = shouldBeHard(options);
   const pool = hard ? HARD_VUA_QUESTIONS : NORMAL_VUA_QUESTIONS;
-  const recentSet = new Set(recent.map(normalizeVietnamese));
+  const recentSet = new Set(recent.map(normalizeVuaAnswer));
   const candidates = pool.filter(
-    (question) => !recentSet.has(normalizeVietnamese(question.answer)),
+    (question) => !recentSet.has(normalizeVuaAnswer(question.answer)),
   );
   return makeVuaQuestion(
     randomItem(candidates.length ? candidates : pool),
@@ -214,7 +223,7 @@ function startVuaSession(guildId, options = {}) {
   );
   const session = {
     question,
-    recent: [normalizeVietnamese(question.answer)],
+    recent: [normalizeVuaAnswer(question.answer)],
     rounds: 0,
   };
   vuaSessions.set(String(guildId), session);
@@ -222,11 +231,38 @@ function startVuaSession(guildId, options = {}) {
   return session;
 }
 
+function repairVuaQuestion(guildId, session) {
+  const answer = validatedVuaWord(session.question?.answer);
+  if (!answer) {
+    session.question = nextVuaQuestion(
+      session.recent || [],
+      configuredQuestionOptions(guildId),
+    );
+    return true;
+  }
+  const letters = (value) =>
+    Array.from(value.normalize("NFC").replace(/[\s·]/gu, "")).sort().join("");
+  const mixed = session.question.mixed;
+  if (
+    answer !== session.question.answer ||
+    typeof mixed !== "string" ||
+    letters(mixed) !== letters(answer)
+  ) {
+    session.question = {
+      ...session.question,
+      answer,
+      mixed: shuffleLetters(answer),
+    };
+    return true;
+  }
+  return false;
+}
 function getVuaSession(guildId) {
   const key = String(guildId);
   if (!vuaSessions.has(key)) {
     const stored = loadSession(guildId, "vuatiengviet");
     if (stored) {
+      const repaired = repairVuaQuestion(guildId, stored);
       if (!stored.question?.mixed || stored.question.mixed.includes(" / ")) {
         stored.question = makeVuaQuestion(
           stored.question,
@@ -251,11 +287,15 @@ function getVuaSession(guildId) {
       stored.question.durationSeconds ||= stored.question.hard
         ? HARD_DURATION_MS / 1000
         : null;
-      stored.recent ||= [normalizeVietnamese(stored.question.answer)];
+      stored.recent ||= [normalizeVuaAnswer(stored.question.answer)];
       vuaSessions.set(key, stored);
+      if (repaired) saveSession(guildId, "vuatiengviet", stored);
     }
   }
-  return vuaSessions.get(key) || null;
+  const session = vuaSessions.get(key) || null;
+  if (session && repairVuaQuestion(guildId, session))
+    saveSession(guildId, "vuatiengviet", session);
+  return session;
 }
 
 function revealVuaLetter(guildId, userId) {
@@ -316,7 +356,7 @@ function answerVuaSession(guildId, answer, now = Date.now()) {
       expiration: expireVuaChallenge(guildId, now),
     };
   if (
-    normalizeVietnamese(answer) !== normalizeVietnamese(session.question.answer)
+    normalizeVuaAnswer(answer) !== normalizeVuaAnswer(session.question.answer)
   )
     return { ok: true, correct: false, question: session.question };
   const question = session.question;
@@ -326,9 +366,9 @@ function answerVuaSession(guildId, answer, now = Date.now()) {
   );
   session.recent = [
     ...session.recent.filter(
-      (item) => item !== normalizeVietnamese(session.question.answer),
+      (item) => item !== normalizeVuaAnswer(session.question.answer),
     ),
-    normalizeVietnamese(session.question.answer),
+    normalizeVuaAnswer(session.question.answer),
   ].slice(-RECENT_WORD_LIMIT);
   session.rounds += 1;
   saveSession(guildId, "vuatiengviet", session);
@@ -351,9 +391,9 @@ function skipVuaSession(guildId, options = {}) {
   );
   session.recent = [
     ...session.recent.filter(
-      (item) => item !== normalizeVietnamese(session.question.answer),
+      (item) => item !== normalizeVuaAnswer(session.question.answer),
     ),
-    normalizeVietnamese(session.question.answer),
+    normalizeVuaAnswer(session.question.answer),
   ].slice(-RECENT_WORD_LIMIT);
   saveSession(guildId, "vuatiengviet", session);
   return { skipped, nextQuestion: session.question };
@@ -453,7 +493,7 @@ function expireVuaChallenge(guildId, now = Date.now()) {
   session.question = nextVuaQuestion(session.recent, { forceHard: false, now });
   session.recent = [
     ...session.recent,
-    normalizeVietnamese(session.question.answer),
+    normalizeVuaAnswer(session.question.answer),
   ].slice(-RECENT_WORD_LIMIT);
   saveSession(guildId, "vuatiengviet", session);
   return { expired, nextQuestion: session.question };
