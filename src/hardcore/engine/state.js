@@ -154,12 +154,19 @@ module.exports = function createModule(dependencies) {
         ["focus", 2],
         ["shadow", 2],
         ["echo", 1],
-        ["echoProgress", 2],
         ["totems", awakening.tuning(state).totems - 1],
         ["bark", Number.MAX_SAFE_INTEGER],
       ])
         if (!Number.isSafeInteger(a[k]) || a[k] < 0 || a[k] > max)
           throw Error("INVALID_AWAKENING_RESOURCE");
+      // Paid Skill MP can be fractional under item curses. Keep the existing
+      // progress cap while validating the other Awakening counters as integers.
+      if (
+        !Number.isFinite(a.echoProgress) ||
+        a.echoProgress < 0 ||
+        a.echoProgress > 2
+      )
+        throw Error("INVALID_AWAKENING_RESOURCE");
       a.bark = Math.min(
         a.bark,
         Math.floor(state.maxHp * awakening.tuning(state).barkCap),

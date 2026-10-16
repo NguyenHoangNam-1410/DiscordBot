@@ -68,6 +68,38 @@ function fresh(k, awakened = true) {
   return s;
 }
 try {
+  test("Fractional paid MP survives save/load and Defend after Arcane Echo", () => {
+    const s = fresh("sorceress");
+    s.skillManaExtra = 0.6;
+    core.playerAttack(s, "skill", rng);
+    assert.equal(s.classAwakening.echoProgress, 2);
+    s.mana = 10;
+    core.playerAttack(s, "skill", rng);
+    assert.equal(s.classAwakening.echo, 1);
+    assert(Math.abs(s.classAwakening.echoProgress - 1.6) < 1e-12);
+    // Reload the already saved fractional resource, as the next interaction does.
+    const restored = core.normalize(JSON.parse(JSON.stringify(s)));
+    assert.match(awake.description(restored), /Tiến trình 1\.6\/3/);
+    assert.doesNotThrow(() => core.playerAttack(restored, "defend", rng));
+    assert(Math.abs(restored.classAwakening.echoProgress - 1.6) < 1e-12);
+    restored.mana = 10;
+    assert.match(core.playerAttack(restored, "skill", rng).log, /Arcane Echo/);
+    assert(Math.abs(restored.classAwakening.echoProgress - 1.6) < 1e-12);
+    assert.doesNotThrow(() => core.normalize(restored));
+  });
+  test("Awakening rejects invalid progress and fractional discrete resources", () => {
+    for (const value of [NaN, Infinity, -0.1, 2.1, "1.6", null]) {
+      const s = fresh("sorceress");
+      s.classAwakening.echoProgress = value;
+      assert.throws(() => core.normalize(s), /INVALID_AWAKENING_RESOURCE/);
+    }
+    for (const key of ["focus", "shadow", "echo", "totems", "bark"]) {
+      const s = fresh("sorceress");
+      s.classAwakening[key] = 0.5;
+      assert.throws(() => core.normalize(s), /INVALID_AWAKENING_RESOURCE/);
+    }
+  });
+
   test("New revisions and calibrated boss coefficients; saved original rules remain intact", () => {
     for (const [k, v] of Object.entries({
       amazon: 2.1,

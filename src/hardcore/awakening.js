@@ -1,5 +1,6 @@
 "use strict";
 const souls = require("./characters/souls");
+const { statNumber } = require("./shared/ui");
 const innate = require("./innate");
 const OLD_TUNING = Object.freeze({
   furyBarrier: 0.05,
@@ -283,7 +284,8 @@ function description(s) {
   const resource = {
     amazon: "Focus " + a.focus + "/2",
     assassin: "Shadow " + a.shadow + "/2",
-    sorceress: "Echo " + a.echo + "/1 · Tiến trình " + a.echoProgress + "/3",
+    sorceress:
+      "Echo " + a.echo + "/1 · Tiến trình " + statNumber(a.echoProgress) + "/3",
     druid:
       "Bark Barrier " +
       Math.min(a.bark, Math.floor(s.maxHp * tuning(s).barkCap)) +

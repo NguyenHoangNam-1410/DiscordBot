@@ -1,5 +1,15 @@
 [
   {
+    "id": "fa965efe-0d7b-46bc-bca2-8006b411e9e6",
+    "updatedAt": "2026-10-16T02:11:17.084Z",
+    "auditedAt": "2026-10-16T02:11:17.084Z",
+    "title": "Sửa lỗi tiếp tục chiến đấu của Sorceress",
+    "changes": [
+      "Sửa lỗi Arcane Echo khiến run bị chặn khi lời nguyền làm chi phí Skill có phần thập phân; giữ nguyên tiến trình đã lưu.",
+      "Tiến trình Arcane Echo hiển thị tối đa một chữ số thập phân."
+    ]
+  },
+  {
     "id": "62e6dc81-e500-4516-b82c-ed38aabb1028",
     "updatedAt": "2026-10-16T01:50:34.085Z",
     "auditedAt": "2026-10-16T01:50:34.085Z",
