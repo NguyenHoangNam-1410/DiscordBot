@@ -118,6 +118,12 @@ const pull = (args) =>
   require("../../services/playerLevelService").withBusyRetry(() =>
     pullTx.immediate(args),
   );
+// Only the active rate-up character is offered for each banner's own Spark wallet.
+const isSparkOffer = (b) =>
+  b?.enabled &&
+  b.spark?.characterId &&
+  b.groups.some((g) => g.rateUp?.characterId === b.spark.characterId);
+const sparkOffers = () => banners.list().filter(isSparkOffer);
 const redeemTx = db.transaction(
   ({
     userId,
@@ -134,8 +140,7 @@ const redeemTx = db.transaction(
     const previous = progress.operation(user, operationId, "spark", request);
     if (previous) return previous;
     const b = banners.get(bannerId);
-    if (!b?.enabled || !b.spark?.characterId)
-      throw Error("CHARACTER_BANNER_CLOSED");
+    if (!isSparkOffer(b)) throw Error("CHARACTER_BANNER_CLOSED");
     if (poolVersion !== b.version) throw Error("STALE_CHARACTER_POOL");
     const account = progress.account(user);
     if (!account) throw Error("CHARACTER_GACHA_NOT_OPENED");
@@ -182,4 +187,4 @@ function history(userId, limit = 5) {
     .all(progress.identity(userId), Math.max(1, Math.min(10, limit)))
     .map((r) => ({ ...r, results: JSON.parse(r.results_json) }));
 }
-module.exports = { NOVICE_TICKETS, open, pull, redeem, history };
+module.exports = { NOVICE_TICKETS, open, pull, redeem, sparkOffers, history };

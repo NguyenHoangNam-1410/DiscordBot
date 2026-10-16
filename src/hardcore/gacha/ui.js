@@ -12,7 +12,7 @@ const banners = require("./banners"),
   service = require("./service"),
   progress = require("../characters/progression"),
   characters = require("../characters");
-const { itemIcon } = require("../shared/icons");
+const { itemIcon, SKILL_ICONS } = require("../shared/icons");
 const { appEmoji } = require("../../utils/appEmoji");
 const number = (n) => Number(Number(n).toFixed(1)).toLocaleString("vi-VN");
 const row = (...c) => new ActionRowBuilder().addComponents(...c);
@@ -69,6 +69,7 @@ function payload(
     bannerId = "novice",
     receipt = null,
     showHistory = false,
+    showDetails = false,
     notice = "",
   } = {},
 ) {
@@ -105,96 +106,133 @@ function payload(
           ).diamonds,
         ) +
         " gem**";
+  const ssr = b.groups.find((g) => g.rateUp);
+  const featured = ssr ? characters.get(ssr.rateUp.characterId) : null;
+  const paymentSymbol =
+    b.payment.kind === "ticket" ? "🎟️" : appEmoji("gem", "💎");
+  const resources =
+    payment +
+    (b.spark
+      ? " · ✨ **" +
+        number(progress.wallet(userId, b.spark.currencyId)) +
+        " Spark**"
+      : "");
+  const skillLine = featured
+    ? (SKILL_ICONS[featured.profileKey] || "✨") +
+      " **" +
+      require("../engine/stats").CLASSES[featured.profileKey].skill +
+      "** · " +
+      featured.role
+    : b.description || "";
+  const overview = [
+    skillLine,
+    resources,
+    featured
+      ? "🎴 **Thẻ " +
+        characters.CLASSES[featured.classKey].name +
+        ":** SR **" +
+        number(progress.cards(userId, featured.classKey, "SR")) +
+        "** · SSR **" +
+        number(progress.cards(userId, featured.classKey, "SSR")) +
+        "**"
+      : "",
+    "**×1:** " +
+      number(b.payment.unitCost) +
+      " " +
+      paymentSymbol +
+      " · **×10:** " +
+      number(b.payment.unitCost * 10) +
+      " " +
+      paymentSymbol,
+  ]
+    .filter(Boolean)
+    .join("\n");
   const embed = new EmbedBuilder()
     .setColor(0x9b59b6)
-    .setTitle("SINH TỒN · GACHA NHÂN VẬT")
-    .setDescription(
-      "**" +
-        b.name +
-        "**\n" +
-        (b.description || "") +
-        "\n" +
-        payment +
-        " · " +
-        b.payment.unitCost +
-        " " +
-        (b.payment.kind === "ticket" ? "vé" : "gem") +
-        "/lượt\n" +
-        groups.join("\n"),
-    );
-  if (b.graphic) embed.setImage("attachment://" + b.id + "-banner.jpg");
-  const ssr = b.groups.find((g) => g.rateUp);
-  if (ssr) {
-    const chance = ssr.entries.length === 1 ? 1 : ssr.rateUp.chance;
+    .setTitle(
+      showDetails
+        ? "CHI TIẾT BANNER · " + b.name
+        : featured
+          ? featured.name + " [" + featured.rarity + "]"
+          : b.name,
+    )
+    .setDescription(showDetails ? b.description || b.name : overview);
+  if (b.graphic && !showDetails)
+    embed.setImage("attachment://" + b.id + "-banner.jpg");
+  if (showDetails) {
+    embed.addFields({ name: "Tỷ lệ", value: groups.join("\n") });
+    if (ssr) {
+      const chance = ssr.entries.length === 1 ? 1 : ssr.rateUp.chance;
+      embed.addFields({
+        name: "Rate-up SSR",
+        value:
+          "Roll độ hiếm trước: **SSR " +
+          number((ssr.weight / b.totalWeight) * 100) +
+          "%**. Sau khi ra SSR, **" +
+          characters.get(ssr.rateUp.characterId).name +
+          " " +
+          number(chance * 100) +
+          "%** trong nhóm SSR. " +
+          (ssr.entries.length === 1
+            ? "Hiện chưa có SSR khác nên mọi SSR đều là " +
+              characters.get(ssr.rateUp.characterId).name +
+              ". Khi có SSR khác trong pool: rate-up " +
+              number(ssr.rateUp.chance * 100) +
+              "%, còn lại chia đều cho SSR khác."
+            : "SSR khác chia đều phần tỷ lệ còn lại.") +
+          " Không có pity hoặc bảo hiểm 50/50; mỗi lượt độc lập.",
+      });
+    }
+    const sr = b.groups
+      .filter((g) => g.kind === "character")
+      .flatMap((g) => g.entries);
+    if (sr.length)
+      embed.addFields({
+        name: "Nhân vật trong banner",
+        value: sr
+          .map((c) => icon(c) + " " + c.name + " [" + c.rarity + "]")
+          .join(" · "),
+      });
+    for (const rarity of [...new Set(sr.map((c) => c.rarity))]) {
+      const cards = Object.entries(characters.CLASSES)
+        .map(
+          ([k, c]) =>
+            c.name + ": **" + number(progress.cards(userId, k, rarity)) + "**",
+        )
+        .join(" · ");
+      embed.addFields({
+        name: "Thẻ " + rarity,
+        value:
+          cards +
+          "\nNhận trùng " +
+          rarity +
+          ": +" +
+          progress.DUPLICATE_CARDS[rarity] +
+          " thẻ cùng class. **" +
+          progress.SOUL_COST[rarity] +
+          " thẻ** nâng một nhân vật thêm 1 tinh hồn, tối đa S6. Dùng trong bảng Nhân vật.",
+      });
+    }
     embed.addFields({
-      name: "Rate-up SSR",
+      name: "Quy tắc",
       value:
-        "Roll độ hiếm trước: **SSR " +
-        number((ssr.weight / b.totalWeight) * 100) +
-        "%**. Sau khi ra SSR, **" +
-        characters.get(ssr.rateUp.characterId).name +
-        " " +
-        number(chance * 100) +
-        "%** trong nhóm SSR. " +
-        (ssr.entries.length === 1
-          ? "Hiện chưa có SSR khác nên mọi SSR đều là " +
-            characters.get(ssr.rateUp.characterId).name +
-            ". Khi có SSR khác trong pool: rate-up " +
-            number(ssr.rateUp.chance * 100) +
-            "%, còn lại chia đều cho SSR khác."
-          : "SSR khác chia đều phần tỷ lệ còn lại.") +
-        " Không có pity hoặc bảo hiểm 50/50; mỗi lượt độc lập.",
+        "Item R vào Túi Sinh tồn của server đang quay. x10 là 10 lượt độc lập, không bảo đảm nhân vật." +
+        (b.payment.currencyId === "novice_ticket"
+          ? " Vé tân thủ cấp một lần cho tài khoản Discord, không nhận lại khi đổi server."
+          : "") +
+        (b.spark
+          ? " Mỗi lượt +1 Spark; số dư **" +
+            number(progress.wallet(userId, b.spark.currencyId)) +
+            "** / **" +
+            banners.SSR_SPARK_COST +
+            (b.spark.characterId
+              ? "** để đổi **" +
+                characters.get(b.spark.characterId).name +
+                "** tại /sinhton cuahang. Chỉ đổi nhân vật rate-up; trùng nhận thẻ SSR cùng class."
+              : "** để đổi SSR khi cửa hàng tương ứng mở.")
+          : " Banner này không cộng Spark."),
     });
   }
-  const sr = b.groups
-    .filter((g) => g.kind === "character")
-    .flatMap((g) => g.entries);
-  if (sr.length)
-    embed.addFields({
-      name: "Nhân vật trong banner",
-      value: sr
-        .map((c) => icon(c) + " " + c.name + " [" + c.rarity + "]")
-        .join(" · "),
-    });
-  for (const rarity of [...new Set(sr.map((c) => c.rarity))]) {
-    const cards = Object.entries(characters.CLASSES)
-      .map(
-        ([k, c]) =>
-          c.name + ": **" + number(progress.cards(userId, k, rarity)) + "**",
-      )
-      .join(" · ");
-    embed.addFields({
-      name: "Thẻ " + rarity,
-      value:
-        cards +
-        "\nNhận trùng " +
-        rarity +
-        ": +" +
-        progress.DUPLICATE_CARDS[rarity] +
-        " thẻ cùng class. **" +
-        progress.SOUL_COST[rarity] +
-        " thẻ** nâng một nhân vật thêm 1 tinh hồn, tối đa S6. Dùng trong bảng Nhân vật.",
-    });
-  }
-  embed.addFields({
-    name: "Quy tắc",
-    value:
-      "Item R vào Túi Sinh tồn của server đang quay. x10 là 10 lượt độc lập, không bảo đảm nhân vật." +
-      (b.payment.currencyId === "novice_ticket"
-        ? " Vé tân thủ cấp một lần cho tài khoản Discord, không nhận lại khi đổi server."
-        : "") +
-      (b.spark
-        ? " Mỗi lượt +1 Spark; số dư **" +
-          number(progress.wallet(userId, b.spark.currencyId)) +
-          "** / **" +
-          banners.SSR_SPARK_COST +
-          (b.spark.characterId
-            ? "** để đổi **" +
-              characters.get(b.spark.characterId).name +
-              "**. Đổi trùng nhận thẻ SSR cùng class."
-            : "** để đổi SSR khi cửa hàng tương ứng mở.")
-        : " Banner này không cộng Spark."),
-  });
   if (receipt)
     embed.addFields({
       name:
@@ -246,18 +284,19 @@ function payload(
     content: notice,
     embeds: [embed],
     attachments: [],
-    files: b.graphic
-      ? [
-          {
-            attachment: path.resolve(
-              __dirname,
-              "../../../assets/banners",
-              b.graphic,
-            ),
-            name: b.id + "-banner.jpg",
-          },
-        ]
-      : [],
+    files:
+      b.graphic && !showDetails
+        ? [
+            {
+              attachment: path.resolve(
+                __dirname,
+                "../../../assets/banners",
+                b.graphic,
+              ),
+              name: b.id + "-banner.jpg",
+            },
+          ]
+        : [],
     components: [
       row(
         new StringSelectMenuBuilder()
@@ -285,18 +324,10 @@ function payload(
             progress.wallet(userId, b.payment.currencyId) <
               b.payment.unitCost * 10,
         ),
-        ...(b.spark?.characterId
-          ? [
-              button(
-                "redeem",
-                "Đổi " +
-                  characters.get(b.spark.characterId).name +
-                  " · 200 Spark",
-                progress.wallet(userId, b.spark.currencyId) <
-                  banners.SSR_SPARK_COST,
-              ),
-            ]
-          : []),
+        button(
+          showDetails ? "overview" : "details",
+          showDetails ? "Về banner" : "Chi tiết banner",
+        ),
         button("history", "Lịch sử"),
         button("characters", "Nhân vật"),
       ),
@@ -334,9 +365,17 @@ async function handle(interaction, logger = console) {
   )
     return reject("Bảng gacha không hợp lệ hoặc thuộc người chơi khác.");
   if (
-    !["banner", "pull1", "pull10", "redeem", "history", "characters"].includes(
-      action,
-    )
+    ![
+      "banner",
+      "pull1",
+      "pull10",
+      "shop",
+      "redeem",
+      "details",
+      "overview",
+      "history",
+      "characters",
+    ].includes(action)
   )
     return reject("Thao tác gacha không hợp lệ.");
   if (
@@ -345,6 +384,11 @@ async function handle(interaction, logger = console) {
       !banners.list().some((b) => b.id === interaction.values[0]))
   )
     return reject("Banner không có trong danh sách.");
+  if (action === "shop" || action === "redeem")
+    return interaction.update({
+      ...require("../inventory/view").shopPayload(interaction.guildId, owner),
+      attachments: [],
+    });
   if (action === "characters")
     return interaction.update({
       ...require("../ui/characters").payload(owner),
@@ -362,21 +406,14 @@ async function handle(interaction, logger = console) {
           pulls: action === "pull1" ? 1 : 10,
           operationId: interaction.id,
         })
-      : action === "redeem"
-        ? service.redeem({
-            userId: owner,
-            bannerId,
-            poolVersion: Number(rawVersion),
-            expectedRevision: Number(rawRevision),
-            operationId: interaction.id,
-          })
-        : null;
+      : null;
     return interaction.editReply(
       payload(owner, {
         guildId: interaction.guildId,
         bannerId: action === "banner" ? interaction.values[0] : bannerId,
         receipt,
         showHistory: action === "history",
+        showDetails: action === "details",
       }),
     );
   } catch (error) {

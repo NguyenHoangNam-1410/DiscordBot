@@ -64,13 +64,13 @@ Banner Venance dùng các mốc sau:
 | Một lượt  | 300 gem                                                      |
 | Mười lượt | 3.000 gem; không giảm giá                                    |
 | Spark     | Mỗi lượt hợp lệ của banner có Spark nhận 1 Spark             |
-| Đổi SSR   | 200 Spark chọn một SSR đã phát hành trong cửa hàng tương ứng |
+| Đổi SSR   | 200 Spark đổi nhân vật rate-up của banner đang mở tại /sinhton cuahang |
 
 Spark là tiền quy đổi, không phải pity tự ra SSR ở lượt 200. Nhận SSR ngẫu nhiên không xóa Spark. Không bán Spark riêng. Phạm vi Spark, pool và xác suất phải công khai trước khi mở từng banner; cấu hình có mã ví Spark riêng để không gộp nhầm giữa các loại banner.
 
 Banner Venance: **R 80% / SR 19% / SSR 1%**. Roll độ hiếm trước; nếu ra SSR mới quyết định rate-up: Venance 50%, 50% còn lại chia đều cho SSR khác trong pool. Hiện pool SSR chỉ có Venance nên **100% kết quả SSR là Venance** (1% mỗi lượt). Không có pity, không có bảo hiểm sau khi trượt rate-up.
 
-Ví riêng venance_spark: mỗi lượt quay hợp lệ, kể cả ra SSR, cộng 1 Spark. Nút **Đổi Venance · 200 Spark** trừ đúng 200 Spark để nhận nhân vật; đã sở hữu thì nhận 50 thẻ SSR pháp sư. Nhận SSR ngẫu nhiên không reset Spark. Đổi Spark dùng giao dịch nguyên tử và revision giống quay, retry không phát lại thưởng. Spark/nhân vật/thẻ thuộc toàn tài khoản Discord; gem và item R thuộc server đang quay.
+Ví riêng venance_spark: mỗi lượt quay hợp lệ, kể cả ra SSR, cộng 1 Spark. Trong **/sinhton cuahang**, selector **Đổi Spark · Chỉ nhân vật rate-up** trừ đúng 200 Spark để nhận nhân vật; đã sở hữu thì nhận 50 thẻ SSR pháp sư. Nhận SSR ngẫu nhiên không reset Spark. Đổi Spark dùng giao dịch nguyên tử và revision giống quay, retry không phát lại thưởng. Spark/nhân vật/thẻ thuộc toàn tài khoản Discord; gem và item R thuộc server đang quay.
 
 Graphic nằm trong assets/banners/venance/, bản Discord banner.jpg kích thước 1500 × 500 px. Mỗi banner sau này có thư mục riêng; đường dẫn graphic tương đối từ assets/banners. Bot đính kèm ảnh trực tiếp, không cần URL host ảnh. Khi deploy cần đưa cả thư mục này lên server.
 

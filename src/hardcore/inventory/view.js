@@ -15,7 +15,7 @@ const { getAccount } = require("../../services/economyService");
 const { getPlayerProgression } = require("../../services/playerLevelService");
 const v2View = require("../ui/index");
 const { TICKET_TYPES, ticketIcon } = require("../shared/icons");
-const { formatStatText } = require("../shared/ui");
+const { formatStatText, addTextFields } = require("../shared/ui");
 const { appEmoji, appEmojiObject } = require("../../utils/appEmoji");
 const currencyIcon = (currency) =>
   currency === "diamonds" ? appEmoji("gem", "💎") : appEmoji("coin", "🪙");
@@ -75,6 +75,31 @@ function shopPayload(guildId, userId) {
       value: detail(item).slice(0, 1024) || "—",
     }),
   );
+  const gacha = require("../gacha/service"),
+    progress = require("../characters/progression"),
+    banners = require("../gacha/banners");
+  const offers = gacha.sparkOffers();
+  const revision = progress.account(userId)?.revision || 0;
+  if (offers.length)
+    addTextFields(
+      embed,
+      "✨ Spark · Nhân vật rate-up",
+      offers
+        .map((b) => {
+          const character = require("../characters").get(b.spark.characterId);
+          return (
+            "**" +
+            character.name +
+            " [SSR]** · **" +
+            banners.SSR_SPARK_COST +
+            " Spark** · Bạn có **" +
+            money(progress.wallet(userId, b.spark.currencyId)) +
+            "**. Nhận trùng: +50 thẻ SSR cùng class."
+          );
+        })
+        .join("\n") +
+        "\nChỉ đổi nhân vật rate-up của banner đang mở. Spark không được mua riêng bằng xu hoặc gem.",
+    );
   const menu = new StringSelectMenuBuilder()
     .setCustomId(`hardcore-store:${userId}:${today.day}:buy`)
     .setPlaceholder("Chọn sản phẩm để nhập số lượng")
@@ -93,6 +118,38 @@ function shopPayload(guildId, userId) {
     embeds: [embed],
     components: [
       row(menu),
+      ...(offers.length
+        ? [
+            row(
+              new StringSelectMenuBuilder()
+                .setCustomId(`hardcore-store:${userId}:${revision}:spark`)
+                .setPlaceholder("Đổi Spark · Chỉ nhân vật rate-up")
+                .setDisabled(
+                  offers.every(
+                    (b) =>
+                      progress.wallet(userId, b.spark.currencyId) <
+                      banners.SSR_SPARK_COST,
+                  ),
+                )
+                .addOptions(
+                  offers
+                    .slice(0, 25)
+                    .map((b) => ({
+                      label:
+                        require("../characters").get(b.spark.characterId).name +
+                        " · " +
+                        banners.SSR_SPARK_COST +
+                        " Spark",
+                      value: b.id + "@" + b.version,
+                      description:
+                        "Số dư: " +
+                        money(progress.wallet(userId, b.spark.currencyId)) +
+                        " Spark",
+                    })),
+                ),
+            ),
+          ]
+        : []),
       row(
         button(`hardcore-store:${userId}:${today.day}:refresh`, "Làm mới"),
         button(`hardcore-bag:${userId}:all:0:open`, "Túi đồ"),
@@ -148,6 +205,51 @@ async function handleStore(interaction) {
       content: "Đây là cửa hàng của người chơi khác.",
       flags: MessageFlags.Ephemeral,
     });
+  if (action === "spark") {
+    const choice = interaction.values?.[0]?.match(
+      /^([a-z][a-z0-9_]{0,23})@(\d+)$/,
+    );
+    if (
+      interaction.customId.split(":").length !== 4 ||
+      interaction.values?.length !== 1 ||
+      !choice ||
+      !/^\d+$/.test(day) ||
+      !Number.isSafeInteger(Number(day))
+    )
+      return interaction.reply({
+        content: "Lựa chọn Spark không hợp lệ.",
+        flags: MessageFlags.Ephemeral,
+      });
+    await interaction.deferUpdate();
+    let notice;
+    try {
+      const result = require("../gacha/service").redeem({
+        userId: ownerId,
+        bannerId: choice[1],
+        poolVersion: Number(choice[2]),
+        expectedRevision: Number(day),
+        operationId: interaction.id,
+      });
+      notice =
+        (result.duplicate ? "Giao dịch đã xử lý: " : "Đã đổi 200 Spark: ") +
+        require("../gacha/ui").resultText(result.results);
+    } catch (error) {
+      const messages = {
+        INSUFFICIENT_CHARACTER_SPARK: "Không đủ 200 Spark.",
+        STALE_CHARACTER_GACHA: "Bảng đã thay đổi. Hãy chọn lại.",
+        STALE_CHARACTER_POOL: "Banner đã cập nhật. Hãy chọn lại.",
+        CHARACTER_BANNER_CLOSED:
+          "Chỉ đổi được nhân vật rate-up của banner đang mở.",
+        CHARACTER_GACHA_NOT_OPENED: "Mở /sinhton gacha trước khi đổi Spark.",
+      };
+      if (!messages[error.message]) throw error;
+      notice = messages[error.message];
+    }
+    return interaction.editReply({
+      ...shopPayload(interaction.guildId, ownerId),
+      content: notice,
+    });
+  }
   if (action === "refresh")
     return interaction.update(shopPayload(interaction.guildId, ownerId));
   if (action === "buy") {

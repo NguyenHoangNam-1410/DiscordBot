@@ -756,25 +756,29 @@ async function main() {
   console.log(
     "PASS Real command and component routes: owner guard, acknowledgements, replay and stale refresh",
   );
+  const storeUi = require("../src/hardcore/inventory/view");
   gacha.open({ userId: "spark-ui" });
   p.addWallet("spark-ui", "venance_spark", 200, 0);
-  const sparkScreen = ui.payload("spark-ui", {
+  const gachaScreen = ui.payload("spark-ui", {
     guildId: "g",
     bannerId: "venance",
   });
-  const redeemId = sparkScreen.components
-    .flatMap((r) => r.toJSON().components)
-    .find((c) => c.custom_id.endsWith(":redeem")).custom_id;
+  const controls = gachaScreen.components.flatMap((r) => r.toJSON().components);
+  assert(!controls.some((c) => c.custom_id.endsWith(":redeem")));
+  const shopId = controls.find((c) => c.custom_id.endsWith(":shop")).custom_id;
   let sparkResponse,
     ack = 0,
     denial;
-  const sparkInteraction = {
+  const interactionForSpark = {
     guildId: "g",
     user: { id: "spark-ui" },
     id: "spark-ui-exchange",
-    customId: redeemId,
+    customId: shopId,
     deferUpdate: async () => {
       ack++;
+    },
+    update: async (v) => {
+      sparkResponse = v;
     },
     editReply: async (v) => {
       sparkResponse = v;
@@ -783,33 +787,76 @@ async function main() {
       denial = v;
     },
   };
-  await ui.handle({ ...sparkInteraction, user: { id: "wrong-owner" } });
+  await ui.handle(interactionForSpark);
+  limits(sparkResponse);
+  assert(sparkResponse.embeds[0].data.title.includes("CỬA HÀNG"));
+  assert.equal(p.wallet("spark-ui", "venance_spark"), 200);
+  await ui.handle({
+    ...interactionForSpark,
+    customId: shopId.replace(/shop$/, "redeem"),
+  });
+  assert.equal(
+    p.wallet("spark-ui", "venance_spark"),
+    200,
+    "Old gacha redeem buttons only redirect",
+  );
+  const menu = sparkResponse.components
+    .flatMap((r) => r.toJSON().components)
+    .find((c) => c.custom_id.endsWith(":spark"));
+  assert.equal(menu.options.length, 1);
+  assert.equal(menu.options[0].value, "venance@1");
+  const sparkInteraction = {
+    ...interactionForSpark,
+    customId: menu.custom_id,
+    values: ["venance@1"],
+  };
+  await storeUi.handleStore({
+    ...sparkInteraction,
+    user: { id: "wrong-owner" },
+  });
   assert(denial);
   assert.equal(p.wallet("spark-ui", "venance_spark"), 200);
-  await ui.handle(sparkInteraction);
+  await storeUi.handleStore(sparkInteraction);
   assert.equal(ack, 1);
-  assert.equal(p.wallet("spark-ui", "venance_spark"), 0);
   limits(sparkResponse);
-  assert(
-    sparkResponse.embeds[0].data.fields.some((f) => f.name === "Đổi 200 Spark"),
-  );
-  await ui.handle(sparkInteraction);
+  assert.equal(p.wallet("spark-ui", "venance_spark"), 0);
+  assert(sparkResponse.content.includes("Đã đổi 200 Spark"));
+  await storeUi.handleStore(sparkInteraction);
   assert.equal(p.wallet("spark-ui", "venance_spark"), 0);
   assert.equal(p.cards("spark-ui", "mage", "SSR"), 0);
-  await ui.handle({ ...sparkInteraction, id: "spark-ui-stale" });
+  await storeUi.handleStore({ ...sparkInteraction, id: "spark-ui-stale" });
   assert(sparkResponse.content.includes("Bảng đã thay đổi"));
-  const switchId = sparkResponse.components[0].toJSON().components[0].custom_id;
-  await ui.handle({
+  await storeUi.handleStore({
     ...sparkInteraction,
-    id: "switch-novice",
-    customId: switchId,
-    values: ["novice"],
+    id: "spark-ui-forge",
+    values: ["novice@1"],
   });
-  assert.equal(sparkResponse.files.length, 0);
-  assert.deepEqual(sparkResponse.attachments, []);
+  assert(sparkResponse.content.includes("Chỉ đổi được nhân vật rate-up"));
+  const getBanner = banners.get;
+  try {
+    const b = structuredClone(banners.get("venance"));
+    b.id = "not_rate_up";
+    b.groups.forEach((g) => {
+      delete g.rateUp;
+    });
+    banners.get = (id) => (id === b.id ? b : getBanner(id));
+    assert.throws(
+      () =>
+        gacha.redeem({
+          userId: "spark-ui",
+          bannerId: b.id,
+          poolVersion: 1,
+          expectedRevision: p.account("spark-ui").revision,
+          operationId: "outside-rate-up",
+        }),
+      /CHARACTER_BANNER_CLOSED/,
+    );
+  } finally {
+    banners.get = getBanner;
+  }
   groups++;
   console.log(
-    "PASS Real Spark control: owner/replay/stale guards and banner attachment cleanup",
+    "PASS Spark store: rate-up-only offers, owner/replay/stale guards and old gacha buttons redirect",
   );
   const cp = charUi.payload("runner", { id: "druid", tab: "souls" });
   const upgrade = cp.components

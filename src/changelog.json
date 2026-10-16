@@ -1,5 +1,15 @@
 [
   {
+    "id": "56dee426-da6c-4b59-ad50-a8ea1a52bfec",
+    "updatedAt": "2026-10-16T05:34:06.045Z",
+    "auditedAt": "2026-10-16T05:34:06.045Z",
+    "title": "Đổi Spark tại cửa hàng Sinh tồn",
+    "changes": [
+      "Chuyển đổi Spark sang /sinhton cuahang: 200 Spark đổi nhân vật rate-up của banner đang mở, hiện là Venance; trùng nhận 50 thẻ SSR cùng class.",
+      "Bảng gacha dẫn sang cửa hàng Spark; nút đổi cũ chỉ mở cửa hàng, không tự trừ Spark. Chặn đổi nhân vật ngoài rate-up."
+    ]
+  },
+  {
     "id": "5bb5488b-50de-474d-b466-694a7dd0a364",
     "updatedAt": "2026-10-16T05:13:28.585Z",
     "auditedAt": "2026-10-16T05:13:28.585Z",
