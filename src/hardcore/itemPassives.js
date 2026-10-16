@@ -199,7 +199,7 @@ function describe(p) {
       eventLuck: () =>
         `May mắn sự kiện: tăng ${pct(p.amount)} tỷ lệ nhánh tốt ở ${names.fountain}, ${names.doors} và ${names.portal}.`,
       potionCapacity: () =>
-        `Túi bình: tăng ${E.potionCapacity} thêm ${p.amount}.`,
+        `Túi bình: giữ thêm ${p.amount} ${E.potion} bình máu, không tặng bình.`,
       critCap: () =>
         `Trần chí mạng: tăng ${pct(p.amount)} giới hạn ${E.crit} của bạn; không cộng tỷ lệ ${E.crit} hiện tại.`,
       evasionCap: () =>
@@ -227,7 +227,7 @@ function summary(state) {
       mpLeech: () =>
         `Hút MP · Tấn công/Skill gây DMG: ${pct(a.mpLeech)} hồi 1 ${E.mana} cho bạn, một lần/hành động.`,
       guardReflect: () =>
-        `Phản thủ · bấm ${E.guard} và sống sót: phản ${pct(a.guardReflect)} ${E.hp} thực mất lên quái.`,
+        `Phản thủ · bấm ${E.defense} Phòng thủ và sống sót: phản ${pct(a.guardReflect)} ${E.hp} thực mất lên quái.`,
       thorns: () =>
         `Gai · sống sót sau đòn quái: phản ${pct(a.thorns)} ${E.hp} thực mất lên quái.`,
       shopDiscount: () =>

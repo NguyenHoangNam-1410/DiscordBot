@@ -1,5 +1,15 @@
 [
   {
+    "id": "51da9026-e738-499f-9603-47ce8301c5ae",
+    "updatedAt": "2026-10-16T15:13:41.555Z",
+    "auditedAt": "2026-10-16T15:13:41.555Z",
+    "title": "Sửa hiển thị nội tại Túi bình và Phản thủ",
+    "changes": [
+      "Túi bình hiển thị rõ số bình máu có thể giữ thêm và không tặng bình, thay cho chữ undefined.",
+      "Sửa icon hành động Phòng thủ trong mô tả nội tại Phản thủ, loại bỏ chữ undefined."
+    ]
+  },
+  {
     "id": "ee1ad1ca-5bb6-49aa-887a-8477402c6522",
     "updatedAt": "2026-10-16T14:31:00.217Z",
     "auditedAt": "2026-10-16T14:31:00.217Z",
