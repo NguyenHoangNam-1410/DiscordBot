@@ -35,7 +35,7 @@ global.fetch = async (url, init) => {
   const chat = calls.find((c) => c.url.endsWith("/chat/completions"));
   assert.equal(chat.body.model, "gpt-4o-mini");
   assert.equal(chat.auth, "Bearer sk-test");
-  assert(chat.body.max_tokens <= 400);
+  assert(chat.body.max_tokens >= 1000, "đủ chỗ cho cả token suy nghĩ của model");
   assert.equal(chat.body.messages[0].role, "system");
   // trí nhớ hội thoại
   await chatbot.ask({ guildId: G, userId: U, channelId: C, text: "tiếp tục" });
@@ -199,6 +199,20 @@ global.fetch = async (url, init) => {
   assert.equal(calls[0].body.model, "some/model:free");
   delete process.env.OPENAI_MODEL;
   delete process.env.CHATBOT_PROVIDER;
+  // câu trả lời bị cắt vì hết token: đánh dấu rõ; CHATBOT_MAX_TOKENS chỉnh được
+  process.env.CHATBOT_MAX_TOKENS = "2000";
+  let sentMax;
+  global.fetch = async (url, init) => {
+    sentMax = JSON.parse(init.body).max_tokens;
+    return { ok: true, json: async () => ({ choices: [{ finish_reason: "length", message: { content: "Gợi ý top 10 anime siêu" } }] }) };
+  };
+  const cut = await chatbot.ask({ guildId: G, userId: "cut1", channelId: C, text: "top 10 anime" });
+  assert.equal(sentMax, 2000);
+  assert(cut.ok && /bị cắt do giới hạn độ dài/.test(cut.text), "báo rõ khi bị cắt");
+  global.fetch = async () => ({ ok: true, json: async () => ({ choices: [{ finish_reason: "stop", message: { content: "Xong." } }] }) });
+  assert.equal((await chatbot.ask({ guildId: G, userId: "cut2", channelId: C, text: "hi" })).text, "Xong.");
+  delete process.env.CHATBOT_MAX_TOKENS;
+
   // tiền tố: !chatbot hoi ... và bí danh !hoi ...
   chatbot.setChannel(G, C, "admin");
   global.fetch = async (url, init) => ({

@@ -4,7 +4,11 @@ const { db } = require("../db");
 const DEFAULT_MODEL = "gpt-4o-mini";
 const DEFAULT_DAILY_LIMIT = 20;
 const MAX_INPUT_CHARS = 500;
-const MAX_OUTPUT_TOKENS = 400;
+// Model "suy nghĩ" (Gemini 3.x...) tính cả token suy nghĩ vào max_tokens nên 400 làm câu trả lời bị cắt giữa chừng; mặc định 1500, chỉnh bằng CHATBOT_MAX_TOKENS.
+const maxOutputTokens = () => {
+  const n = Number(process.env.CHATBOT_MAX_TOKENS);
+  return Number.isInteger(n) && n >= 100 && n <= 8000 ? n : 1500;
+};
 const HISTORY_TURNS = 6;
 const HISTORY_TTL_MS = 30 * 60 * 1000;
 const DISCORD_LIMIT = 2000;
@@ -204,7 +208,7 @@ async function completeWithFallback(messages, signal) {
   for (let round = 0; round < 2; round += 1) {
     for (const name of list) {
       try {
-        return await openai("chat/completions", { model: name, max_tokens: MAX_OUTPUT_TOKENS, messages }, signal);
+        return await openai("chat/completions", { model: name, max_tokens: maxOutputTokens(), messages }, signal);
       } catch (error) {
         if (signal?.aborted || !RETRYABLE(error)) throw error;
         lastError = error;
@@ -231,8 +235,11 @@ async function ask({ guildId, userId, channelId, text, now = Date.now(), signal 
     }
     const messages = [{ role: "system", content: SYSTEM_PROMPT }, ...getHistory(key, now), { role: "user", content: input }];
     const data = await completeWithFallback(messages, signal);
-    const reply = clipReply(data.choices?.[0]?.message?.content);
+    const choice = data.choices?.[0];
+    let reply = clipReply(choice?.message?.content);
     if (!reply) throw new Error("EMPTY_REPLY");
+    // Hết giới hạn token giữa chừng: đánh dấu rõ thay vì để câu cụt lủn.
+    if (choice?.finish_reason === "length" && !reply.endsWith("…")) reply = `${reply}… *(câu trả lời bị cắt do giới hạn độ dài, hãy hỏi gọn hơn hoặc hỏi tiếp)*`;
     remember(key, input, reply, now);
     return { ok: true, text: reply, ...usage(guildId, userId, now) };
   } catch (error) {

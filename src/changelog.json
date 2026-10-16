@@ -1,5 +1,14 @@
 [
   {
+    "id": "dbcb0319-455a-4115-a95e-a187e50941fe",
+    "updatedAt": "2026-10-16T10:48:42.502Z",
+    "auditedAt": "2026-10-16T10:48:42.502Z",
+    "title": "Chatbot không bị cụt câu",
+    "changes": [
+      "Sửa lỗi câu trả lời của chatbot bị cắt giữa chừng; nếu câu trả lời quá dài vẫn bị cắt thì bot ghi chú rõ."
+    ]
+  },
+  {
     "id": "da4c1653-b162-4bb2-a27f-a60001ae6dc4",
     "updatedAt": "2026-10-16T10:30:21.628Z",
     "auditedAt": "2026-10-16T10:30:21.628Z",
