@@ -1,5 +1,14 @@
 [
   {
+    "id": "3aa00c56-3d36-44c4-8b23-6fb03e14ad61",
+    "updatedAt": "2026-10-16T03:11:21.661Z",
+    "auditedAt": "2026-10-16T03:11:21.661Z",
+    "title": "Hoàn thiện icon Venance",
+    "changes": [
+      "Bổ sung icon riêng cho đòn cường hóa, hiệu ứng Astral Armament, nội tại Hồi lưu và thức tỉnh Tam trọng trong giao diện và log chiến đấu; đồng bộ bộ avatar, Skill và sáu tinh hồn theo tên emoji."
+    ]
+  },
+  {
     "id": "fa965efe-0d7b-46bc-bca2-8006b411e9e6",
     "updatedAt": "2026-10-16T02:11:17.084Z",
     "auditedAt": "2026-10-16T02:11:17.084Z",

@@ -397,6 +397,23 @@ Object.defineProperty(SKILL_ICONS, "venance", {
   enumerable: true,
   get: () => icon("skill_venance_astral_armament", "🔮"),
 });
+// Resolve after startup fetches the application emoji registry, never cache fallbacks.
+const VENANCE_ICONS = Object.freeze(
+  Object.defineProperties(
+    {},
+    Object.fromEntries(
+      Object.entries({
+        attack: ["attack_venance_empowered", "💫"],
+        effect: ["effect_venance_astral_armament", "🔮"],
+        awakening: ["awaken_venance_astral_codex", "📘"],
+        innate: ["innate_venance_runic_reflux", "✨"],
+      }).map(([key, [name, fallback]]) => [
+        key,
+        { enumerable: true, get: () => icon(name, fallback) },
+      ]),
+    ),
+  ),
+);
 // Resolve Rift emojis after startup loads the application registry.
 const RIFT_ICONS = Object.freeze(
   Object.defineProperties(
@@ -455,7 +472,7 @@ function memoryIcon(family) {
     bounty: "⚖️",
     blood: "🩸",
     wealth: "💰",
-    mirror: "🪞",
+    mirror: ":mirror:",
     divine: "🙏",
     vengeance: "👻",
     legacy: "📜",
@@ -484,6 +501,7 @@ module.exports = {
   effectStatLabel,
   passiveIcon,
   SKILL_ICONS,
+  VENANCE_ICONS,
   RIFT_ICONS,
   eventIcon,
   treasureChestIcon,

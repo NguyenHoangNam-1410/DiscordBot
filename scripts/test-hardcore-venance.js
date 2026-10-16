@@ -284,7 +284,7 @@ try {
     s.venanceProfile.coefficient = 99;
     assert.throws(() => core.normalize(s), /INVALID_VENANCE/);
   });
-  test("UI uses live placeholder names and keeps all six souls in the soul tab", () => {
+  test("UI resolves uploaded emoji names dynamically and keeps all six souls in the soul tab", () => {
     const icons = require("../src/utils/appEmoji"),
       soulIcon = require("../src/hardcore/shared/icons").soulIcon;
     assert.equal(stats.CLASSES.venance.emoji, "🔮");
@@ -293,6 +293,13 @@ try {
       ["class_venance", "1557000000000000001"],
       ["skill_venance_astral_armament", "1557000000000000002"],
       ["soul_venance_1", "1557000000000000003"],
+      ...[
+        "attack_venance_empowered",
+        "effect_venance_astral_armament",
+        "awaken_venance_astral_codex",
+        "innate_venance_runic_reflux",
+        ...[2, 3, 4, 5, 6].map((n) => "soul_venance_" + n),
+      ].map((name, i) => [name, String(1557000000000000100n + BigInt(i))]),
     ]);
     assert(stats.CLASSES.venance.emoji.includes("class_venance"));
     assert(soulIcon("venance", 1).includes("soul_venance_1"));
@@ -310,9 +317,18 @@ try {
       );
       assert(p.embeds[0].length <= 6000);
     }
+    for (let n = 1; n <= 6; n++)
+      assert(soulIcon("venance", n).includes("soul_venance_" + n));
     const s = fresh(6, true);
     act(s, "skill");
+    assert(s.lastLog.includes("skill_venance_astral_armament"));
+    assert(kit.innateText(s).includes("innate_venance_runic_reflux"));
+    assert(kit.awakeningText(s).includes("awaken_venance_astral_codex"));
     const b = JSON.stringify(ui.embed(s, "v"));
+    assert(b.includes("effect_venance_astral_armament"));
+    assert(b.includes("attack_venance_empowered"));
+    act(s, "attack");
+    assert(s.lastLog.includes("attack_venance_empowered"));
     assert(b.includes("cường hóa 3 hành động"));
     assert(!/undefined|NaN/.test(b));
   });

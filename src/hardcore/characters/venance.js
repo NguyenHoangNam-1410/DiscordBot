@@ -1,6 +1,6 @@
 "use strict";
 // Venance's kit is independent of the seven starter profiles. Values are saved per run.
-const { E, SKILL_ICONS, soulIcon } = require("../shared/icons");
+const { E, SKILL_ICONS, soulIcon, VENANCE_ICONS } = require("../shared/icons");
 const enabled = (s) =>
   s.classKey === "venance" && require("./souls").enabled(s);
 const level = (s) => require("./souls").level(s);
@@ -129,7 +129,9 @@ function defend(s, heal) {
   f.ready = false;
   f.sigilUsed = true;
   return (
-    "\n✨ Hồi lưu: " +
+    "\n" +
+    VENANCE_ICONS.innate +
+    " Hồi lưu: " +
     E.hp +
     " hồi " +
     heal(s, s.maxHp * config(s).sigilHeal) +
@@ -168,7 +170,9 @@ function afterHit(s, dealt, strength, before, applyDamage) {
   if (!f.sigilUsed && !f.ready && f.hits >= c.sigilHits) {
     f.ready = true;
     log +=
-      "\n✨ Ấn Hồi lưu sẵn sàng: Phòng thủ để hồi " +
+      "\n" +
+      VENANCE_ICONS.innate +
+      " Ấn Hồi lưu sẵn sàng: Phòng thủ để hồi " +
       Math.round(c.sigilHeal * 100) +
       "% " +
       E.hp +
@@ -178,7 +182,8 @@ function afterHit(s, dealt, strength, before, applyDamage) {
     extraStrength = 0;
   if (f.hits === 3 && require("../awakening").active(s) && s.encounter.hp > 0) {
     f.barrier = Math.max(f.barrier, Math.floor(s.maxHp * c.thirdBarrier));
-    log += "\n" + E.defense + " Tam trọng: Barrier " + f.barrier + ".";
+    log +=
+      "\n" + VENANCE_ICONS.awakening + " Tam trọng: Barrier " + f.barrier + ".";
     if (c.pulse > 0 && sameTarget(s, before)) {
       extraStrength = Math.floor(strength * c.pulse);
       extra = applyDamage(extraStrength);
@@ -202,18 +207,20 @@ function absorb(s, amount) {
 function status(s) {
   const f = frame(s);
   return f
-    ? "Cường hóa: **" +
+    ? VENANCE_ICONS.effect +
+        " Cường hóa: **" +
         f.remaining +
         "/3 hành động** · Đòn hợp lệ: **" +
         f.hits +
         "/3**" +
-        (f.ready ? " · ✨ Hồi lưu sẵn sàng" : "")
+        (f.ready ? " · " + VENANCE_ICONS.innate + " Hồi lưu sẵn sàng" : "")
     : "";
 }
 function innateText(s) {
   const c = config(s);
   return (
-    "**Runic Reflux · Hồi Lưu Cổ Ngữ**\nPhòng thủ hồi tổng **2 " +
+    VENANCE_ICONS.innate +
+    " **Runic Reflux · Hồi Lưu Cổ Ngữ**\nPhòng thủ hồi tổng **2 " +
     E.mana +
     "**. Trong cùng một lần cường hóa, **" +
     c.sigilHits +
@@ -228,7 +235,8 @@ function innateText(s) {
 function awakeningText(s) {
   const c = config(s);
   return (
-    "**Trinity Mandate · Mệnh Lệnh Tam Trọng**\nĐòn cường hóa hợp lệ thứ ba trong cùng chuỗi tăng **" +
+    VENANCE_ICONS.awakening +
+    " **Trinity Mandate · Mệnh Lệnh Tam Trọng**\nĐòn cường hóa hợp lệ thứ ba trong cùng chuỗi tăng **" +
     Math.round((c.thirdMultiplier - 1) * 100) +
     "% DMG** và tạo **Barrier " +
     Math.round(c.thirdBarrier * 100) +

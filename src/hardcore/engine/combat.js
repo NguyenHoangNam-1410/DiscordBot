@@ -5,7 +5,7 @@ const rift = require("../rift");
 const souls = require("../characters/souls");
 const venance = require("../characters/venance");
 const innate = require("../innate");
-const { soulIcon } = require("../shared/icons");
+const { soulIcon, VENANCE_ICONS } = require("../shared/icons");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -990,7 +990,7 @@ module.exports = function createModule(dependencies) {
       action === "skill"
         ? `${SKILL_ICONS[state.classKey]} ${stats.CLASSES[state.classKey].skill}`
         : venance.blockedMana(state)
-          ? `${E.magic} Tấn công cường hóa`
+          ? `${VENANCE_ICONS.attack} Tấn công cường hóa`
           : `${E.attack} Tấn công`;
     const outcome = !landed
       ? "Đánh trượt — 0 DMG."
