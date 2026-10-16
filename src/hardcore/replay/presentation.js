@@ -9,6 +9,7 @@ function capture(s) {
     stats,
     paradox: require("../events/paradox"),
     E: icons.E,
+    SKILL_ICONS: icons.SKILL_ICONS,
     eventIcon: icons.eventIcon,
     percent: (n) => format(n * 100) + "%",
     money: format,
