@@ -163,6 +163,102 @@ async function main() {
       "RES",
     ].map((k, i) => [k, String(1557000000000000100n + BigInt(i))]),
   ]);
+  // Exercise the /sinhton batdau payload with custom emoji markup, not only Unicode fallbacks.
+  const setupView = require("../src/hardcore/legacy/ui");
+  const setupDraft = {
+    id: "setup-test",
+    version: 0,
+    classKey: null,
+    stake: null,
+  };
+  const allSetupClasses = Object.fromEntries(
+    characters.catalog.characters.map((c) => [
+      c.profileKey,
+      stats.CLASSES[c.profileKey],
+    ]),
+  );
+  for (const gameplayVersion of [2, 3]) {
+    for (const classes of [
+      Object.fromEntries(
+        Object.entries(allSetupClasses).filter(([k]) => k !== "venance"),
+      ),
+      allSetupClasses,
+    ]) {
+      const context = { gameplayVersion, balance: 100000, maxBet: 100000 };
+      const screen = setupView.hardcoreSetupPayload(
+        setupDraft,
+        classes,
+        context,
+      );
+      limits(screen);
+      const text = stringify(screen);
+      for (const c of Object.values(classes)) assert(text.includes(c.name));
+      assert.equal(
+        screen.components[0].toJSON().components[0].options.length,
+        Object.keys(classes).length,
+      );
+      assert(
+        screen.components[1]
+          .toJSON()
+          .components.find((c) => c.custom_id.endsWith(":next")).disabled,
+      );
+      for (const key of Object.keys(classes)) {
+        const selected = setupView.hardcoreSetupPayload(
+          { ...setupDraft, classKey: key, stake: 100000 },
+          classes,
+          context,
+        );
+        limits(selected);
+        assert(
+          !selected.components[1]
+            .toJSON()
+            .components.find((c) => c.custom_id.endsWith(":next")).disabled,
+        );
+      }
+    }
+  }
+  // Test the actual open/setup flow for a player who owns the eighth character.
+  const progress = require("../src/hardcore/characters/progression");
+  progress.grantCharacter(owner, "venance", 0);
+  const drafts = new Map();
+  const setupFlow = require("../src/hardcore/runtime/setupFlow")({
+    crypto: require("node:crypto"),
+    MessageFlags: require("discord.js").MessageFlags,
+    getAccount: () => ({ balance: 100000 }),
+    getGameBetLimit: () => 100000,
+    requireGameChannel: async () => true,
+    useV2: () => true,
+    MIN_BET: 10,
+    MAX_BET: 100000,
+    CLASSES: allSetupClasses,
+    getHardcoreByUser: () => null,
+    SETUP_IDLE_MS: 300000,
+    setupDrafts: drafts,
+    hardcoreView: setupView,
+  });
+  let opened;
+  const draft = await setupFlow.openHardcoreSetup({
+    guildId: "characters",
+    channelId: "c",
+    user: { id: owner, username: "Test" },
+    reply: async (p) => {
+      limits(p);
+      opened = p;
+      return { id: "setup-message" };
+    },
+    editReply: async () => {},
+  });
+  assert(opened);
+  assert.equal(drafts.size, 1);
+  assert.equal(opened.components[0].toJSON().components[0].options.length, 8);
+  setupFlow.closeSetup(draft);
+  // Keep the remaining character ownership assertions at their original seven-SR baseline.
+  db.prepare(
+    "DELETE FROM hardcore_owned_characters WHERE user_id=? AND character_id='venance'",
+  ).run(owner);
+  console.log(
+    "PASS Setup overview and every character in V2/V3 fit Discord with custom emojis; real batdau flow opens with eight characters",
+  );
   const overview = ui.payload(owner);
   limits(overview);
   assert.equal(component(overview, "class").options.length, 5);

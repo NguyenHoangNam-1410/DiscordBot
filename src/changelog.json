@@ -1,5 +1,15 @@
 [
   {
+    "id": "7f37593c-086c-4185-836e-3ce6ebcbae04",
+    "updatedAt": "2026-10-16T07:15:12.597Z",
+    "auditedAt": "2026-10-16T07:15:12.597Z",
+    "title": "Sửa lỗi mở Sinh tồn",
+    "changes": [
+      "Sửa lỗi /sinhton batdau không mở được bảng chuẩn bị khi danh sách nhân vật dùng emoji riêng vượt giới hạn Discord.",
+      "Chia nội dung giới thiệu theo giới hạn mỗi field, hỗ trợ đầy đủ danh sách có Venance và màn hình xem từng nhân vật."
+    ]
+  },
+  {
     "id": "3704edb3-a246-4f69-b2de-3873ded7f197",
     "updatedAt": "2026-10-16T06:52:02.375Z",
     "auditedAt": "2026-10-16T06:52:02.375Z",

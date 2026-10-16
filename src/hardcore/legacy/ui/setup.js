@@ -1,3 +1,4 @@
+const { splitRuleFields } = require("../../ui/rulePages");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
@@ -47,48 +48,43 @@ module.exports = function createModule(dependencies) {
         },
       );
     if (character) {
-      embed.addFields(
-        {
-          name: `${[2, 3].includes(context.gameplayVersion) ? require("../../engine/stats").CLASSES[draft.classKey].emoji : character.emoji} ${character.name}`,
-          value:
-            CLASS_PROFILES[draft.classKey]?.role ||
-            require("../../ui/index").setupPreview(draft.classKey).role,
-        },
-        {
-          name: "📊 Chỉ số ban đầu",
-          value: `${healthBar(character.hp, character.hp)}\n${STAT_EMOJI.attack} ATK ${character.damageMin}–${character.damageMax} · ${STAT_EMOJI.defense} DEF ${character.defense} · ${STAT_EMOJI.resistance} RES ${character.resistance}%\n${STAT_EMOJI.energy} ENE ${character.energy}/${character.energy} · ${STAT_EMOJI.potions} POT 3 · ${STAT_EMOJI.tickets} Vé thoát 0\n${STAT_EMOJI.accuracy} ACC ${character.accuracy} · ${STAT_EMOJI.evasion} EVA ${character.evasion} · ${STAT_EMOJI.crit} CRIT ${Math.round(character.critChance * 100)}% · ${STAT_EMOJI.luck} LUCK 0`,
-        },
-        {
-          name: `✨ ${character.skill} · 2 ENE`,
-          value:
-            CLASS_PROFILES[draft.classKey]?.effect ||
-            require("../../ui/index").setupPreview(draft.classKey).skill,
-        },
-      );
+      if (![2, 3].includes(context.gameplayVersion))
+        embed.addFields(
+          {
+            name: `${character.emoji} ${character.name}`,
+            value:
+              CLASS_PROFILES[draft.classKey]?.role ||
+              require("../../ui/index").setupPreview(draft.classKey).role,
+          },
+          {
+            name: "📊 Chỉ số ban đầu",
+            value: `${healthBar(character.hp, character.hp)}\n${STAT_EMOJI.attack} ATK ${character.damageMin}–${character.damageMax} · ${STAT_EMOJI.defense} DEF ${character.defense} · ${STAT_EMOJI.resistance} RES ${character.resistance}%\n${STAT_EMOJI.energy} ENE ${character.energy}/${character.energy} · ${STAT_EMOJI.potions} POT 3 · ${STAT_EMOJI.tickets} Vé thoát 0\n${STAT_EMOJI.accuracy} ACC ${character.accuracy} · ${STAT_EMOJI.evasion} EVA ${character.evasion} · ${STAT_EMOJI.crit} CRIT ${Math.round(character.critChance * 100)}% · ${STAT_EMOJI.luck} LUCK 0`,
+          },
+          {
+            name: `✨ ${character.skill} · 2 ENE`,
+            value:
+              CLASS_PROFILES[draft.classKey]?.effect ||
+              require("../../ui/index").setupPreview(draft.classKey).skill,
+          },
+        );
       if ([2, 3].includes(context.gameplayVersion)) {
         const preview = require("../../ui/index").setupPreview(draft.classKey);
-        const fields = embed.data.fields.filter(
-          (field) =>
-            ![
-              `${require("../../engine/stats").CLASSES[draft.classKey].emoji} ${character.name}`,
-              "📊 Chỉ số ban đầu",
-              `✨ ${character.skill} · 2 ENE`,
-            ].includes(field.name),
-        );
-        embed.setFields(fields).addFields(
-          { name: preview.name, value: preview.stats },
-          { name: "🧭 Hướng build", value: preview.build },
-          { name: `${icon("PHYS", "⚔️")} Tấn công`, value: preview.attack },
-          { name: `${icon("DEF", "🛡️")} Phòng thủ`, value: preview.defend },
-          {
-            name: `${preview.skillIcon} ${character.skill} · 2 Mana`,
-            value: preview.skill,
-          },
-          { name: "📖 Đặc tính / nội tại", value: preview.passive },
-          { name: "⛩️ Phước lành có điều kiện", value: preview.shrine },
+        embed.addFields(
+          ...splitRuleFields([
+            { name: preview.name, value: preview.stats },
+            { name: "🧭 Hướng build", value: preview.build },
+            { name: `${icon("PHYS", "⚔️")} Tấn công`, value: preview.attack },
+            { name: `${icon("DEF", "🛡️")} Phòng thủ`, value: preview.defend },
+            {
+              name: `${preview.skillIcon} ${character.skill} · 2 Mana`,
+              value: preview.skill,
+            },
+            { name: "📖 Đặc tính / nội tại", value: preview.passive },
+            { name: "⛩️ Phước lành có điều kiện", value: preview.shrine },
+          ]),
         );
       }
-    } else
+    } else if (![2, 3].includes(context.gameplayVersion))
       embed.addFields({
         name: "🧙Chọn một trong 7 nhân vật",
         value: Object.values(classes)
@@ -99,25 +95,25 @@ module.exports = function createModule(dependencies) {
           .join("\n"),
       });
     if (!character && [2, 3].includes(context.gameplayVersion)) {
-      const fields = embed.data.fields.filter(
-        (field) => field.name !== "🧙Chọn một trong 7 nhân vật",
-      );
       const v2View = require("../../ui/index");
       const previews = Object.keys(classes).map((key) =>
         v2View.setupPreview(key),
       );
-      embed.setFields(fields);
       for (let i = 0; i < previews.length; i += 3)
-        embed.addFields({
-          name:
-            i === 0
-              ? `🧙 Chọn một trong ${previews.length} nhân vật`
-              : "\u200b",
-          value: previews
-            .slice(i, i + 3)
-            .map((p) => `**${p.name}**\n${p.attributes}\n${p.role}`)
-            .join("\n\n"),
-        });
+        embed.addFields(
+          ...splitRuleFields([
+            {
+              name:
+                i === 0
+                  ? `🧙 Chọn một trong ${previews.length} nhân vật`
+                  : "\u200b",
+              value: previews
+                .slice(i, i + 3)
+                .map((p) => `**${p.name}**\n${p.attributes}\n${p.role}`)
+                .join("\n\n"),
+            },
+          ]),
+        );
     }
     embed
       .addFields({
