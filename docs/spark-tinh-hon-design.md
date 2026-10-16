@@ -2,7 +2,7 @@
 
 Ngày thiết kế: 14/10/2026. Cập nhật: 16/10/2026.
 
-**Đã triển khai:** banner tân thủ và banner Venance dùng gem trong /sinhton gacha, kho vé/thẻ/nhân vật, nâng tinh hồn, snapshot chiến đấu và đổi 200 Spark lấy Venance. **Chưa phát hành:** giao dịch nâng độ hiếm.
+**Đã triển khai:** banner tân thủ và banner Venance dùng gem trong /sinhton gacha, kho vé/thẻ/nhân vật, nâng tinh hồn, snapshot chiến đấu và đổi 200 Spark lấy Venance. Đã triển khai nâng SSR S6 → UR S6 → LR S6 bằng cọc thẻ nhân vật cùng class.
 
 Chi tiết 42 hiệu ứng: [Tinh hồn 7 nhân vật SR](sr-character-souls-design.md). [Kết quả hiệu chỉnh S6](releases/hardcore-souls-2026-10-15.md).
 
@@ -15,10 +15,10 @@ Bản thiết kế SSR đầu tiên: [Venance — Pháp sư](venance-ssr-charact
 - **R 80% / SR 20%**, đã được người dùng chọn. Không có SSR trong banner hiện tại. Các kết quả độc lập, không pity hoặc bảo đảm SR ở x10.
 - Nhóm R là trang bị R có thể gacha trong catalog Sinh tồn V3 hiện hành; chia đều giữa các món. Mỗi kết quả nhận một bản, đưa vào Túi Sinh tồn của server đang quay để chọn mang vào run mới. Không cấp thẳng vào run đang chơi.
 - Nhóm SR gồm Amazon, Barbarian, Assassin, Sorceress, Druid, Necromancer, Paladin; chia đều giữa 7 nhân vật, mỗi người khoảng 2,9%/lượt trên tổng pool. Tỷ lệ chính xác là 20% / 7; UI làm tròn một chữ số.
-- Người chơi vẫn sở hữu sẵn cả 7 SR ở S0. Vì vậy nhận SR hiện tại đổi thành **5 thẻ SR cùng class**. Không tự tăng cấp tinh hồn.
+- Người chơi vẫn sở hữu sẵn cả 7 SR ở S0. Vì vậy nhận SR hiện tại đổi thành **5 thẻ của chính nhân vật SR đó**. Không tự tăng cấp tinh hồn.
 - Vé tân thủ hiện **không cộng Spark**, theo phương án đề xuất mặc định; đây là quy tắc riêng có thể cấu hình theo banner.
 
-Ví dụ: nhận trùng Barbarian cho 5 thẻ Chiến binh SR; có thể tích để nâng Barbarian hoặc Druid.
+Ví dụ: nhận trùng Barbarian cho 5 thẻ Barbarian; chỉ dùng nâng tinh hồn Barbarian, không thể dùng cho Druid.
 
 ## Class, thẻ và nâng tinh hồn
 
@@ -35,13 +35,13 @@ Ví dụ: nhận trùng Barbarian cho 5 thẻ Chiến binh SR; có thể tích �
 | Một bậc tinh hồn   |  20 thẻ |                 50 thẻ |
 | S0 → S6            | 120 thẻ |                300 thẻ |
 
-Thẻ có khóa **class + độ hiếm gốc**. Thẻ SR và SSR tách biệt; không đổi class theo build. Nâng từng nhân vật theo thứ tự S0 → S1 → … → S6, không nâng toàn bộ class cùng lúc. Bản đầu tiên của nhân vật chưa sở hữu mở S0, không đồng thời cho thẻ; bản tiếp theo cho thẻ.
+Thẻ có khóa **ID nhân vật**, giữ độ hiếm gốc và class theo catalog. Không gộp số dư theo class; thẻ của nhân vật khác không dùng nâng tinh hồn. Nâng từng nhân vật theo thứ tự S0 → S1 → … → S6, không nâng toàn bộ class cùng lúc. Bản đầu tiên của nhân vật chưa sở hữu mở S0, không đồng thời cho thẻ; bản tiếp theo cho thẻ.
 
 Trong **/sinhton nhanvat**, chọn nhân vật để xem số thẻ, giá và nút nâng cấp kế tiếp. Giữ toàn bộ mô tả S1–S6, đánh dấu bậc đã mở. Nút nâng chỉ tiêu đúng một bậc với giá hiển thị; menu cũ, retry và bấm lặp không thể trừ thẻ/nâng hai lần.
 
 Cấp tinh hồn và thông số được snapshot khi bắt đầu run mới. Nâng tài khoản giữa run không thay run đang chơi. Preview trước khi bắt đầu dùng cấp của tài khoản hiện tại. Tower giữ cơ chế riêng.
 
-Sau S6 vẫn tích thẻ; không xóa hoặc tự tiêu. Thẻ dùng được cho nhân vật khác cùng class và cùng độ hiếm gốc. Nếu tất cả nhân vật phù hợp đã tối đa, tiếp tục giữ thẻ cho nhân vật bổ sung sau này; chưa có quy đổi khác.
+Sau S6 vẫn tích thẻ; không xóa hoặc tự tiêu. Thẻ SR dư được giữ lại. Thẻ nhân vật SSR có thể làm cọc nguyên liệu nâng độ hiếm cho nhân vật SSR cùng class; không dùng nâng tinh hồn nhân vật khác.
 
 ## Hệ độ hiếm đã điều chỉnh
 
@@ -49,9 +49,13 @@ Sau S6 vẫn tích thẻ; không xóa hoặc tự tiêu. Thẻ dùng được ch
 
 **SSR → UR → LR → dừng.**
 
-Bỏ SSR+, UR+ và LR(+n). LR không có bước nâng tiếp theo; nhận trùng vẫn cho thẻ theo độ hiếm gốc để dùng cho nhân vật khác cùng class. Tinh hồn giữ trần S6, không mở S7 và không áp lại S1–S6 mỗi lần đổi độ hiếm.
+Bỏ SSR+, UR+ và LR(+n). LR không có bước nâng tiếp theo; nhận trùng vẫn cho thẻ của chính nhân vật theo độ hiếm gốc, có thể dùng làm cọc nâng độ hiếm cùng class. Tinh hồn giữ trần S6, không mở S7 và không áp lại S1–S6 mỗi lần đổi độ hiếm.
 
-Giá thẻ và mức sức mạnh khi nâng SSR → UR hoặc UR → LR chưa được khai báo. Vì chưa có SSR, chưa mở giao dịch nâng độ hiếm hoặc tự phát minh chỉ số cho các bậc này. Enum, ràng buộc dữ liệu và lộ trình trong code đã loại bỏ các bậc trung gian/vô hạn.
+Mỗi bước SSR → UR và UR → LR cần **S6 và 2 cọc ×50 thẻ nhân vật SSR cùng class**. Mỗi cọc thuộc một nhân vật; hai cọc có thể cùng nhân vật. Chọn một nguồn: dùng 100 thẻ của nguồn đó. Chọn hai nguồn: dùng 50 thẻ mỗi nguồn. Ví dụ 75 +25 không hợp lệ; không gom thẻ lẻ của nhiều nhân vật để đủ cọc. Có thể dùng thẻ của chính nhân vật đích. Nguồn thẻ không bắt buộc đạt S6; chỉ nhân vật đích phải đạt S6.
+
+Trong **/sinhton nhanvat**, nhân vật SSR/UR đã S6 có nút **Nâng UR / Nâng LR**, mở selector chọn nguyên liệu. Giao dịch trừ thẻ và đổi độ hiếm cùng lúc; thiếu một cọc sẽ hoàn tác toàn bộ. Retry không trừ lại. Giữ S6 và chỉ áp dụng cho run mới. Các hệ số UR/LR của Venance đã có trong profile; không thêm hệ số mới trong cập nhật quy tắc thẻ.
+
+Migration 47 đối soát thẻ gộp cũ bằng receipt gacha/đổi Spark/nâng tinh hồn. Chỉ tách về từng nhân vật khi số dư và nguồn thẻ khớp hoàn toàn. Số dư không xác định được (ví dụ từng dùng thẻ Barbarian nâng Druid) giữ riêng trong dữ liệu cũ, hiển thị **Thẻ cũ chờ đối soát**, chưa dùng nâng cấp. Không tự gán thẻ và không thu hồi tinh hồn đã mở.
 
 LR nhân vật là tiến trình tài khoản, khác di vật LR trong run. Nâng độ hiếm không cấp di vật hoặc thay luật một di vật hoạt động mỗi run.
 
@@ -70,7 +74,7 @@ Spark là tiền quy đổi, không phải pity tự ra SSR ở lượt 200. Nh�
 
 Banner Venance: **R 80% / SR 19% / SSR 1%**. Roll độ hiếm trước; nếu ra SSR mới quyết định rate-up: Venance 50%, 50% còn lại chia đều cho SSR khác trong pool. Hiện pool SSR chỉ có Venance nên **100% kết quả SSR là Venance** (1% mỗi lượt). Không có pity, không có bảo hiểm sau khi trượt rate-up.
 
-Ví riêng venance_spark: mỗi lượt quay hợp lệ, kể cả ra SSR, cộng 1 Spark. Trong **/sinhton cuahang**, selector **Đổi Spark · Chỉ nhân vật rate-up** trừ đúng 200 Spark để nhận nhân vật; đã sở hữu thì nhận 50 thẻ SSR pháp sư. Nhận SSR ngẫu nhiên không reset Spark. Đổi Spark dùng giao dịch nguyên tử và revision giống quay, retry không phát lại thưởng. Spark/nhân vật/thẻ thuộc toàn tài khoản Discord; gem và item R thuộc server đang quay.
+Ví riêng venance_spark: mỗi lượt quay hợp lệ, kể cả ra SSR, cộng 1 Spark. Trong **/sinhton cuahang**, selector **Đổi Spark · Chỉ nhân vật rate-up** trừ đúng 200 Spark để nhận nhân vật; đã sở hữu thì nhận 50 thẻ Venance. Nhận SSR ngẫu nhiên không reset Spark. Đổi Spark dùng giao dịch nguyên tử và revision giống quay, retry không phát lại thưởng. Spark/nhân vật/thẻ thuộc toàn tài khoản Discord; gem và item R thuộc server đang quay.
 
 Bảng banner chính chỉ hiển thị tên nhân vật rate-up, mô tả Skill ngắn kèm icon, số dư gem/vé/Spark/thẻ và giá quay x1/x10. Nút **Chi tiết banner** mở tỷ lệ, pool nhân vật và quy tắc roll/rate-up/Spark; có nút **Về banner**. Đổi qua lại không trừ tài nguyên. Spark đổi tại **/sinhton cuahang**.
 
@@ -88,7 +92,7 @@ Mỗi banner có ID ổn định, version, tên, trạng thái, loại thanh to�
 | ----------------------------- | ------------------------------------------------ |
 | Danh mục/4 class/độ hiếm      | src/hardcore/characters/index.js và catalog.json |
 | Tài khoản, thẻ, nâng tinh hồn | src/hardcore/characters/progression.js           |
-| Schema SQLite                 | src/hardcore/characters/schema.js, migration 44  |
+| Schema SQLite                 | src/hardcore/characters/schema.js, migration 44 và 47  |
 | Khai báo banner và xác suất   | src/hardcore/gacha/banners.json                  |
 | Kiểm tra pool và lấy mẫu      | src/hardcore/gacha/banners.js                    |
 | Cấp vé, quay, lịch sử         | src/hardcore/gacha/service.js                    |

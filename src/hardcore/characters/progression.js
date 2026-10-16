@@ -68,7 +68,17 @@ function addWallet(user, currency, amount, now) {
     "INSERT INTO hardcore_character_wallets(user_id,currency_id,quantity,updated_at) VALUES(?,?,?,?) ON CONFLICT(user_id,currency_id) DO UPDATE SET quantity=quantity+excluded.quantity,updated_at=excluded.updated_at",
   ).run(user, currency, amount, now);
 }
-function cards(user, classKey, rarity) {
+function cards(user, characterId) {
+  if (!catalog.get(characterId)) throw Error("INVALID_CHARACTER_CARDS");
+  return (
+    db
+      .prepare(
+        "SELECT quantity FROM hardcore_character_card_balances WHERE user_id=? AND character_id=?",
+      )
+      .get(identity(user), characterId)?.quantity || 0
+  );
+}
+function legacyCards(user, classKey, rarity) {
   return (
     db
       .prepare(
@@ -77,18 +87,23 @@ function cards(user, classKey, rarity) {
       .get(identity(user), classKey, rarity)?.quantity || 0
   );
 }
-function addCards(user, classKey, rarity, n, now) {
+function addCards(user, characterId, n, now = Date.now()) {
   if (
-    !Object.hasOwn(catalog.CLASSES, classKey) ||
-    !Object.hasOwn(SOUL_COST, rarity) ||
+    !catalog.get(characterId) ||
     !Number.isSafeInteger(n) ||
     n < 1 ||
-    !Number.isSafeInteger(cards(user, classKey, rarity) + n)
+    !Number.isSafeInteger(cards(user, characterId) + n)
   )
     throw Error("INVALID_CHARACTER_CARDS");
   db.prepare(
-    "INSERT INTO hardcore_character_cards(user_id,class_key,rarity,quantity,updated_at) VALUES(?,?,?,?,?) ON CONFLICT(user_id,class_key,rarity) DO UPDATE SET quantity=quantity+excluded.quantity,updated_at=excluded.updated_at",
-  ).run(user, classKey, rarity, n, now);
+    "INSERT INTO hardcore_character_card_balances(user_id,character_id,quantity,updated_at) VALUES(?,?,?,?) ON CONFLICT(user_id,character_id) DO UPDATE SET quantity=quantity+excluded.quantity,updated_at=excluded.updated_at",
+  ).run(identity(user), characterId, n, now);
+}
+function ascensionSources(user, characterId) {
+  const target = catalog.get(characterId);
+  return catalog.catalog.characters
+    .filter((c) => c.rarity === "SSR" && c.classKey === target?.classKey)
+    .map((c) => ({ ...c, quantity: cards(user, c.id) }));
 }
 function operation(user, id, kind, request) {
   if (typeof id !== "string" || !id || id.length > 160)
@@ -116,7 +131,7 @@ function grantCharacter(user, id, now) {
   const previous = getOwned(user)[id];
   if (previous) {
     const n = DUPLICATE_CARDS[c.rarity];
-    addCards(user, c.classKey, c.rarity, n, now);
+    addCards(user, id, n, now);
     return {
       kind: "character",
       id,
@@ -158,14 +173,14 @@ const upgradeTx = db.transaction(
       throw Error("STALE_CHARACTER_SOUL");
     const cost = SOUL_COST[c.rarity];
     if (!cost) throw Error("INVALID_CHARACTER_RARITY");
-    if (!account(user) || cards(user, c.classKey, c.rarity) < cost)
+    if (!account(user) || cards(user, characterId) < cost)
       throw Error("INSUFFICIENT_CHARACTER_CARDS");
     ensureOwned(user, now);
     const spent = db
       .prepare(
-        "UPDATE hardcore_character_cards SET quantity=quantity-?,updated_at=? WHERE user_id=? AND class_key=? AND rarity=? AND quantity>=?",
+        "UPDATE hardcore_character_card_balances SET quantity=quantity-?,updated_at=? WHERE user_id=? AND character_id=? AND quantity>=?",
       )
-      .run(cost, now, user, c.classKey, c.rarity, cost);
+      .run(cost, now, user, characterId, cost);
     if (spent.changes !== 1) throw Error("INSUFFICIENT_CHARACTER_CARDS");
     db.prepare(
       "UPDATE hardcore_owned_characters SET soul_level=soul_level+1,updated_at=? WHERE user_id=? AND character_id=? AND soul_level=?",
@@ -188,6 +203,83 @@ const upgrade = (args) =>
   require("../../services/playerLevelService").withBusyRetry(() =>
     upgradeTx.immediate(args),
   );
+const ascendTx = db.transaction(
+  ({
+    userId,
+    characterId,
+    expectedRarity,
+    sourceIds,
+    operationId,
+    now = Date.now(),
+  }) => {
+    const user = identity(userId);
+    if (
+      !Array.isArray(sourceIds) ||
+      sourceIds.length < 1 ||
+      sourceIds.length > 2 ||
+      sourceIds.some((id) => typeof id !== "string")
+    )
+      throw Error("INVALID_ASCENSION_MATERIALS");
+    const packs = new Map();
+    for (const id of sourceIds)
+      packs.set(id, (packs.get(id) || 0) + (sourceIds.length === 1 ? 2 : 1));
+    const materials = [...packs]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([characterId, packs]) => ({ characterId, packs }));
+    const request = { characterId, expectedRarity, materials };
+    const previous = operation(user, operationId, "ascension", request);
+    if (previous) return previous;
+    const c = catalog.get(characterId),
+      owned = getOwned(user)[characterId];
+    if (!c || !owned) throw Error("CHARACTER_NOT_OWNED");
+    const rarity = nextRarity(expectedRarity);
+    if (
+      c.rarity !== "SSR" ||
+      owned.soulLevel !== 6 ||
+      owned.rarity !== expectedRarity ||
+      !rarity
+    )
+      throw Error("STALE_CHARACTER_ASCENSION");
+    if (!account(user)) throw Error("INSUFFICIENT_CHARACTER_CARDS");
+    for (const m of materials) {
+      const source = catalog.get(m.characterId);
+      if (!source || source.rarity !== "SSR" || source.classKey !== c.classKey)
+        throw Error("INVALID_ASCENSION_MATERIALS");
+      const cost = m.packs * 50;
+      if (
+        db
+          .prepare(
+            "UPDATE hardcore_character_card_balances SET quantity=quantity-?,updated_at=? WHERE user_id=? AND character_id=? AND quantity>=?",
+          )
+          .run(cost, now, user, m.characterId, cost).changes !== 1
+      )
+        throw Error("INSUFFICIENT_CHARACTER_CARDS");
+    }
+    if (
+      db
+        .prepare(
+          "UPDATE hardcore_owned_characters SET rarity=?,updated_at=? WHERE user_id=? AND character_id=? AND rarity=? AND soul_level=6",
+        )
+        .run(rarity, now, user, characterId, expectedRarity).changes !== 1
+    )
+      throw Error("STALE_CHARACTER_ASCENSION");
+    db.prepare(
+      "UPDATE hardcore_character_accounts SET revision=revision+1 WHERE user_id=?",
+    ).run(user);
+    const receipt = {
+      characterId,
+      rarity,
+      soulLevel: 6,
+      materials: materials.map((m) => ({ ...m, cost: m.packs * 50 })),
+    };
+    record(user, operationId, "ascension", request, receipt, now);
+    return receipt;
+  },
+);
+const ascend = (args) =>
+  require("../../services/playerLevelService").withBusyRetry(() =>
+    ascendTx.immediate(args),
+  );
 module.exports = {
   SOUL_COST,
   DUPLICATE_CARDS,
@@ -200,6 +292,9 @@ module.exports = {
   wallet,
   addWallet,
   cards,
+  legacyCards,
+  ascensionSources,
+  ascend,
   addCards,
   operation,
   record,

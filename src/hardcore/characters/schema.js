@@ -1,5 +1,5 @@
 "use strict";
-module.exports = (db, migrate) =>
+module.exports = (db, migrate) => {
   migrate(44, "hardcore character accounts and versioned gacha", () => {
     db.exec(`
  CREATE TABLE hardcore_character_accounts (
@@ -28,3 +28,17 @@ module.exports = (db, migrate) =>
  CREATE INDEX idx_hc_character_draws_user ON hardcore_character_draws(user_id,created_at DESC);
  `);
   });
+
+  migrate(47, "per-character soul cards and exact card packs", () => {
+    db.exec(`CREATE TABLE hardcore_character_card_balances (
+      user_id TEXT NOT NULL, character_id TEXT NOT NULL,
+      quantity INTEGER NOT NULL CHECK(quantity BETWEEN 0 AND 9007199254740991), updated_at INTEGER NOT NULL,
+      PRIMARY KEY(user_id,character_id));
+      CREATE TABLE hardcore_character_card_migrations (
+      user_id TEXT NOT NULL,class_key TEXT NOT NULL,rarity TEXT NOT NULL,
+      migrated_quantity INTEGER NOT NULL,unattributed_quantity INTEGER NOT NULL,
+      reason TEXT NOT NULL,allocations_json TEXT NOT NULL,
+      PRIMARY KEY(user_id,class_key,rarity));`);
+    require("./cardMigration")(db);
+  });
+};

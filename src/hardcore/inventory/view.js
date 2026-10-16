@@ -94,7 +94,7 @@ function shopPayload(guildId, userId) {
             banners.SSR_SPARK_COST +
             " Spark** · Bạn có **" +
             money(progress.wallet(userId, b.spark.currencyId)) +
-            "**. Nhận trùng: +50 thẻ SSR cùng class."
+            "**. Nhận trùng: +50 thẻ của chính nhân vật rate-up."
           );
         })
         .join("\n") +

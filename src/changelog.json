@@ -1,5 +1,16 @@
 [
   {
+    "id": "3704edb3-a246-4f69-b2de-3873ded7f197",
+    "updatedAt": "2026-10-16T06:52:02.375Z",
+    "auditedAt": "2026-10-16T06:52:02.375Z",
+    "title": "Thẻ nhân vật và nâng độ hiếm",
+    "changes": [
+      "Tinh hồn chỉ dùng thẻ của chính nhân vật; nhận trùng SR cho 5 thẻ, SSR cho 50 thẻ của nhân vật đó.",
+      "Nhân vật SSR đạt S6 có thể nâng UR rồi LR trong bảng Nhân vật, mỗi bước dùng 2 cọc 50 thẻ SSR cùng class; có thể dùng 100 thẻ từ một nhân vật hoặc 50 thẻ từ hai nhân vật.",
+      "Không ghép thẻ lẻ giữa các nhân vật thành cọc. Giữ S6, chỉ áp dụng cho run mới; thẻ cũ chưa xác định được nguồn được giữ riêng chờ đối soát."
+    ]
+  },
+  {
     "id": "fd22da88-431f-4223-877b-e58899f28993",
     "updatedAt": "2026-10-16T05:45:37.766Z",
     "auditedAt": "2026-10-16T05:45:37.766Z",

@@ -1,6 +1,6 @@
 # Venance — bản thiết kế SSR đầu tiên
 
-Ngày đề xuất: 15/10/2026. **Trạng thái: đã triển khai catalog, bộ kỹ năng, S1–S6, chọn nhân vật theo quyền sở hữu và combat. Chưa mở banner SSR; chưa simulate/kiểm chứng win rate.**
+Ngày đề xuất: 15/10/2026. **Trạng thái: đã triển khai catalog, bộ kỹ năng, S1–S6, quyền sở hữu, combat, banner SSR/Spark và nâng SSR → UR → LR. Các mốc win rate dưới đây là mục tiêu thiết kế.**
 
 Liên quan: [Spark và tiến trình nhân vật](spark-tinh-hon-design.md), [tinh hồn 7 SR](sr-character-souls-design.md).
 
@@ -168,7 +168,7 @@ Giữ trần nền CRIT 35%, né vật lý 30%, RES 70%, Max MP 10. Trang bị v
 
 ## 7. UR và LR
 
-Điều kiện đề xuất: SSR đạt S6 mới nâng lên UR, rồi LR. Không đặt lại hoặc nhân lặp tinh hồn. Chi phí nâng độ hiếm chưa chốt; bản này chỉ đề xuất sức mạnh.
+Điều kiện đề xuất: SSR đạt S6 mới nâng lên UR, rồi LR. Không đặt lại hoặc nhân lặp tinh hồn. Mỗi bước cần 2 cọc ×50 thẻ nhân vật SSR cùng class. Hai cọc có thể từ cùng nhân vật (100 thẻ), hoặc hai nhân vật (50 thẻ mỗi người); không gom thẻ lẻ. Giữ S6, hiệu lực từ run mới.
 
 | Mốc      | Max HP | Damage đòn cường hóa | Lá chắn Mệnh Lệnh Tam Trọng |
 | -------- | -----: | -------------------: | --------------------------: |
@@ -180,7 +180,7 @@ Các hệ số là **mức tuyệt đối theo SSR**, không nhân UR ×LR. Nhâ
 
 Hệ số damage độ hiếm áp một lần trên hit chính. Xung S6 lấy chính hit đã tăng nên không nhân thêm ×1,15 lần thứ hai. Không đổi ba hành động, chi phí cơ bản 2 MP hoặc luật 0 MP hồi từ đánh cường hóa.
 
-LR không thêm hồi sinh/miễn damage và không vượt cơ chế boss. Sau LR vẫn nhận thẻ SSR Pháp sư khi trùng Venance; dùng cho nhân vật SSR gốc khác cùng class đã sở hữu, giữ nguyên trần S6. Không đổi thành thẻ SR, không nâng Venance lên LR+.
+LR không thêm hồi sinh/miễn damage và không vượt cơ chế boss. Sau LR vẫn nhận 50 thẻ Venance khi trùng; dùng làm cọc nâng độ hiếm cho nhân vật SSR cùng class, không nâng tinh hồn nhân vật khác. Giữ nguyên trần S6. Không đổi thành thẻ SR, không nâng Venance lên LR+.
 
 ## 8. Cách hiển thị để người chơi hiểu
 
@@ -227,8 +227,8 @@ Tỷ lệ chiến thắng không thể xác nhận chỉ từ bảng chỉ số 
 - Icon tạm **🔮** cho nhân vật/kỹ năng, **✨** cho tinh hồn. Tên portal: `class_venance`, `skill_venance_astral_armament`, `soul_venance_1` … `soul_venance_6`. Các điểm hiển thị đọc registry lúc render; icon mới thay placeholder khi bot nạp registry.
 - Forge ưu tiên ENE/RES. Venance dùng pool affinity pháp sư hiện tại; affinity riêng tăng damage phép theo ENE (trần 15%), không hoàn MP. Chỉ số/nội tại của bảy SR giữ nguyên.
 - Class Shrine cho một lần Astral Armament miễn MP; Astral Singularity cũng miễn MP của Skill, vẫn tốn một hành động, trả HP nếu có và không gây damage.
-- Đã có hệ số SSR/UR/LR cho snapshot Venance S6. Chưa có thao tác mua nâng độ hiếm vì chi phí chưa được chốt.
-- Banner tân thủ không có Venance. Không tự cấp SSR cho tài khoản và chưa mở banner SSR/Spark shop.
+- Đã có hệ số SSR/UR/LR cho snapshot Venance S6. Đã có thao tác nâng độ hiếm trong /sinhton nhanvat bằng 2 cọc ×50 thẻ SSR cùng class.
+- Banner tân thủ không có Venance. Không tự cấp SSR cho tài khoản; Venance có banner trả gem và đổi 200 Spark tại /sinhton cuahang.
 - Kiểm thử xác định: `npm run test:hardcore-venance`; gồm timer, MP, S1–S6, mục tiêu phụ, selector, chuyển phase, hồi sinh, stale click, rollback, UI và quyền sở hữu. Không dùng kết quả test cơ chế để khẳng định win rate.
 - Policy simulate riêng cho Venance và các lô đo mục tiêu ở mục 10 còn thực hiện khi có yêu cầu simulate; chưa dùng policy Sorceress để đánh giá nhân vật này.
 

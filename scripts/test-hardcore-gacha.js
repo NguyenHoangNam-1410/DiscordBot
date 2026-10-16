@@ -192,7 +192,7 @@ async function main() {
     );
     assert.equal(p.wallet("rollback", "novice_ticket"), 30);
     assert.equal(p.account("rollback").revision, 0);
-    assert.equal(p.cards("rollback", "warrior", "SR"), 0);
+    assert.equal(p.cards("rollback", "barbarian"), 0);
     assert.equal(gacha.history("rollback").length, 0);
     assert.equal(
       db
@@ -218,7 +218,7 @@ async function main() {
     assert.throws(() => draw("u", 1), /INSUFFICIENT_CHARACTER_TICKETS/);
     assert.equal(p.wallet("u", "novice_ticket"), 0);
   });
-  test("Duplicate SR gives five class cards, no automatic levels or overflow loss", () => {
+  test("Duplicate SR gives five own-character cards, no automatic levels or overflow loss", () => {
     gacha.open({ userId: "cards" });
     const r = draw("cards", 10, { rng: rngPairs([0.9, 0.2]) });
     assert(
@@ -226,28 +226,33 @@ async function main() {
         (x) => x.id === "barbarian" && x.duplicate && x.cards === 5,
       ),
     );
-    assert.equal(p.cards("cards", "warrior", "SR"), 50);
-    assert.equal(p.cards("cards", "mage", "SR"), 0);
+    assert.equal(p.cards("cards", "barbarian"), 50);
+    assert.equal(p.cards("cards", "sorceress"), 0);
     assert.equal(characters.ownedCharacters("cards").barbarian.soulLevel, 0);
   });
-  test("Soul upgrade spends 20 shared-class SR cards, stale retry cannot double-upgrade", () => {
+  test("Soul upgrade spends 20 own-character SR cards, stale retry cannot double-upgrade", () => {
     const args = {
       userId: "cards",
-      characterId: "druid",
+      characterId: "barbarian",
       expectedLevel: 0,
       operationId: "upgrade-one",
     };
+    assert.throws(
+      () =>
+        p.upgrade({ ...args, characterId: "druid", operationId: "wrong-char" }),
+      /INSUFFICIENT_CHARACTER_CARDS/,
+    );
     const r = p.upgrade(args);
     assert.equal(r.soulLevel, 1);
-    assert.equal(p.cards("cards", "warrior", "SR"), 30);
-    assert.equal(characters.ownedCharacters("cards").druid.soulLevel, 1);
+    assert.equal(p.cards("cards", "barbarian"), 30);
+    assert.equal(characters.ownedCharacters("cards").barbarian.soulLevel, 1);
     assert(p.upgrade(args).duplicate);
-    assert.equal(p.cards("cards", "warrior", "SR"), 30);
+    assert.equal(p.cards("cards", "barbarian"), 30);
     assert.throws(
       () => p.upgrade({ ...args, operationId: "stale" }),
       /STALE_CHARACTER_SOUL/,
     );
-    assert.equal(p.cards("cards", "warrior", "SR"), 30);
+    assert.equal(p.cards("cards", "barbarian"), 30);
   });
   test("R rewards are consumed once when carried into a new survival run", () => {
     const service = require("../src/hardcore"),
@@ -270,43 +275,47 @@ async function main() {
     assert.deepEqual(run.state.initialLoadout.itemIds, [id]);
     repo.deleteSession(run.session.id);
   });
-  test("S6 caps upgrades and keeps cards available for another character of the same class", () => {
-    p.addCards("cards", "warrior", "SR", 100, Date.now());
+  test("S6 caps upgrades and retains own cards without allowing cross-character soul spending", () => {
+    p.addCards("cards", "barbarian", 100, Date.now());
     for (let n = 1; n < 6; n++)
       p.upgrade({
         userId: "cards",
-        characterId: "druid",
+        characterId: "barbarian",
         expectedLevel: n,
         operationId: "cap-" + n,
       });
-    assert.equal(characters.ownedCharacters("cards").druid.soulLevel, 6);
+    assert.equal(characters.ownedCharacters("cards").barbarian.soulLevel, 6);
     assert.throws(
       () =>
         p.upgrade({
           userId: "cards",
-          characterId: "druid",
+          characterId: "barbarian",
           expectedLevel: 6,
           operationId: "overcap",
         }),
       /STALE_CHARACTER_SOUL/,
     );
-    const before = p.cards("cards", "warrior", "SR");
+    const before = p.cards("cards", "barbarian");
     draw("cards", 1, { rng: rngPairs([0.9, 0.2]) });
-    assert.equal(p.cards("cards", "warrior", "SR"), before + 5);
-    p.upgrade({
-      userId: "cards",
-      characterId: "barbarian",
-      expectedLevel: 0,
-      operationId: "other-warrior",
-    });
-    assert.equal(p.cards("cards", "warrior", "SR"), before + 5 - 20);
-    assert.equal(characters.ownedCharacters("cards").druid.soulLevel, 6);
+    assert.equal(p.cards("cards", "barbarian"), before + 5);
+    assert.throws(
+      () =>
+        p.upgrade({
+          userId: "cards",
+          characterId: "druid",
+          expectedLevel: 0,
+          operationId: "other-warrior",
+        }),
+      /INSUFFICIENT_CHARACTER_CARDS/,
+    );
+    assert.equal(p.cards("cards", "barbarian"), before + 5);
+    assert.equal(characters.ownedCharacters("cards").barbarian.soulLevel, 6);
   });
   test("Run startup snapshots the selected soul; upgrading midrun does not rewrite saved combat", () => {
     const service = require("../src/hardcore"),
       repo = require("../src/hardcore/storage/sessions");
     gacha.open({ userId: "runner" });
-    p.addCards("runner", "warrior", "SR", 40, Date.now());
+    p.addCards("runner", "druid", 40, Date.now());
     db.prepare(
       "INSERT OR IGNORE INTO economy_accounts(guild_id,user_id,balance,created_at,updated_at) VALUES('g','runner',1000000,0,0)",
     ).run();
@@ -403,7 +412,7 @@ async function main() {
       banners.get = (id) => (id === b.id ? b : get(id));
       gacha.open({ userId: "future" });
       levels.addDiamonds("g", "future", 3000);
-      p.addCards("future", "mage", "SR", 20, 0);
+      p.addCards("future", "sorceress", 20, 0);
       const r = draw("future", 10, {
         bannerId: b.id,
         poolVersion: 2,
@@ -412,7 +421,7 @@ async function main() {
       assert.equal(r.payment.cost, 3000);
       assert(!r.results[0].duplicate);
       assert(r.results.slice(1).every((x) => x.cards === 50));
-      assert.equal(p.cards("future", "mage", "SSR"), 450);
+      assert.equal(p.cards("future", extra.id), 450);
       assert.equal(p.wallet("future", "future_spark"), 10);
       assert.equal(levels.getPlayerProgression("g", "future").diamonds, 0);
       p.upgrade({
@@ -421,8 +430,8 @@ async function main() {
         expectedLevel: 0,
         operationId: "future-up",
       });
-      assert.equal(p.cards("future", "mage", "SSR"), 400);
-      assert.equal(p.cards("future", "mage", "SR"), 20);
+      assert.equal(p.cards("future", extra.id), 400);
+      assert.equal(p.cards("future", "sorceress"), 20);
       assert.throws(
         () => draw("future", 1, { bannerId: b.id, poolVersion: 2 }),
         /INSUFFICIENT_DIAMONDS/,
@@ -509,7 +518,7 @@ async function main() {
     levels.addDiamonds("g", "venance-paid", 3000);
     const before = JSON.stringify([
       p.account("venance-paid"),
-      p.cards("venance-paid", "mage", "SSR"),
+      p.cards("venance-paid", "venance"),
       gacha.history("venance-paid"),
     ]);
     let calls = 0;
@@ -532,7 +541,7 @@ async function main() {
     assert.equal(
       JSON.stringify([
         p.account("venance-paid"),
-        p.cards("venance-paid", "mage", "SSR"),
+        p.cards("venance-paid", "venance"),
         gacha.history("venance-paid"),
       ]),
       before,
@@ -588,7 +597,7 @@ async function main() {
     });
     assert(copy.results[0].duplicate);
     assert.equal(copy.results[0].cards, 50);
-    assert.equal(p.cards(user, "mage", "SSR"), 50);
+    assert.equal(p.cards(user, "venance"), 50);
     assert.equal(p.wallet(user, "venance_spark"), 0);
     assert.throws(
       () =>
@@ -697,7 +706,7 @@ async function main() {
     assert.equal(
       copy
         .prepare(
-          "SELECT soul_level FROM hardcore_owned_characters WHERE user_id='cards' AND character_id='druid'",
+          "SELECT soul_level FROM hardcore_owned_characters WHERE user_id='cards' AND character_id='barbarian'",
         )
         .get().soul_level,
       6,
@@ -728,7 +737,7 @@ async function main() {
         },
       }),
     );
-    const screen = charUi.payload("cards", { id: "druid", tab: "souls" });
+    const screen = charUi.payload("cards", { id: "barbarian", tab: "souls" });
     assert.equal(
       screen.embeds[0].data.fields.filter((x) => /^✅ S[1-6]/.test(x.name))
         .length,
@@ -889,7 +898,7 @@ async function main() {
   assert(sparkResponse.content.includes("Đã đổi 200 Spark"));
   await storeUi.handleStore(sparkInteraction);
   assert.equal(p.wallet("spark-ui", "venance_spark"), 0);
-  assert.equal(p.cards("spark-ui", "mage", "SSR"), 0);
+  assert.equal(p.cards("spark-ui", "venance"), 0);
   await storeUi.handleStore({ ...sparkInteraction, id: "spark-ui-stale" });
   assert(sparkResponse.content.includes("Bảng đã thay đổi"));
   await storeUi.handleStore({
@@ -939,7 +948,7 @@ async function main() {
   });
   limits(upgraded);
   assert.equal(characters.ownedCharacters("runner").druid.soulLevel, 2);
-  assert.equal(p.cards("runner", "warrior", "SR"), 0);
+  assert.equal(p.cards("runner", "druid"), 0);
   groups++;
   console.log(
     "PASS Real character upgrade button spends once and refreshes all soul levels",

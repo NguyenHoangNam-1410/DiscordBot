@@ -52,12 +52,7 @@ function resultText(results) {
           r.count +
           "** · " +
           (r.duplicate
-            ? "+" +
-              r.cards * r.count +
-              " thẻ " +
-              characters.CLASSES[r.classKey].name +
-              " " +
-              r.rarity
+            ? "+" + r.cards * r.count + " thẻ " + r.name
             : "Mở nhân vật S0"),
     )
     .join("\n");
@@ -129,11 +124,9 @@ function payload(
     resources,
     featured
       ? "🎴 **Thẻ " +
-        characters.CLASSES[featured.classKey].name +
-        ":** SR **" +
-        number(progress.cards(userId, featured.classKey, "SR")) +
-        "** · SSR **" +
-        number(progress.cards(userId, featured.classKey, "SSR")) +
+        featured.name +
+        ": " +
+        number(progress.cards(userId, featured.id)) +
         "**"
       : "",
     "**×1:** " +
@@ -194,10 +187,10 @@ function payload(
           .join(" · "),
       });
     for (const rarity of [...new Set(sr.map((c) => c.rarity))]) {
-      const cards = Object.entries(characters.CLASSES)
+      const cards = sr
+        .filter((c) => c.rarity === rarity)
         .map(
-          ([k, c]) =>
-            c.name + ": **" + number(progress.cards(userId, k, rarity)) + "**",
+          (c) => c.name + ": **" + number(progress.cards(userId, c.id)) + "**",
         )
         .join(" · ");
       embed.addFields({
@@ -208,9 +201,9 @@ function payload(
           rarity +
           ": +" +
           progress.DUPLICATE_CARDS[rarity] +
-          " thẻ cùng class. **" +
+          " thẻ của chính nhân vật. **" +
           progress.SOUL_COST[rarity] +
-          " thẻ** nâng một nhân vật thêm 1 tinh hồn, tối đa S6. Dùng trong bảng Nhân vật.",
+          " thẻ của đúng nhân vật** nâng nhân vật đó thêm 1 tinh hồn, tối đa S6. Dùng trong bảng Nhân vật.",
       });
     }
     embed.addFields({
@@ -228,7 +221,7 @@ function payload(
             (b.spark.characterId
               ? "** để đổi **" +
                 characters.get(b.spark.characterId).name +
-                "** tại /sinhton cuahang. Chỉ đổi nhân vật rate-up; trùng nhận thẻ SSR cùng class."
+                "** tại /sinhton cuahang. Chỉ đổi nhân vật rate-up; trùng nhận 50 thẻ của chính nhân vật."
               : "** để đổi SSR khi cửa hàng tương ứng mở.")
           : " Banner này không cộng Spark."),
     });

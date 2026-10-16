@@ -281,18 +281,12 @@ function payload(
           "S1–S6 đã có hiệu ứng chiến đấu; tài khoản khởi đầu S0. Nâng cấp chỉ áp dụng cho run mới." +
           (owned[id]
             ? "\nThẻ " +
-              characters.CLASSES[selected.classKey].name +
-              " " +
-              selected.rarity +
+              selected.name +
               ": **" +
-              require("../characters/progression").cards(
-                owner,
-                selected.classKey,
-                selected.rarity,
-              ) +
+              require("../characters/progression").cards(owner, selected.id) +
               "** · " +
               (owned[id].soulLevel >= 6
-                ? "Đã đạt S6; giữ thẻ cho nhân vật khác cùng class."
+                ? "Đã đạt S6. Thẻ SSR dùng làm cọc nâng độ hiếm cùng class; không nâng tinh hồn nhân vật khác."
                 : "Cần **" +
                   require("../characters/progression").SOUL_COST[
                     selected.rarity
@@ -346,11 +340,22 @@ function payload(
         n >= 6 ? "Đã đạt S6" : "Nâng S" + (n + 1) + " · " + cost + " thẻ",
       )
       .setStyle(ButtonStyle.Success)
-      .setDisabled(
-        n >= 6 ||
-          !cost ||
-          p.cards(owner, selected.classKey, selected.rarity) < cost,
-      );
+      .setDisabled(n >= 6 || !cost || p.cards(owner, selected.id) < cost);
+    const next =
+      selected.rarity === "SSR" && n === 6 && p.nextRarity(owned[id].rarity);
+    if (next)
+      upgradeButton
+        .setCustomId(custom("ascend_" + owned[id].rarity))
+        .setLabel("Nâng " + next + " · 2 cọc thẻ")
+        .setDisabled(false);
+    const legacy = p.legacyCards(owner, selected.classKey, selected.rarity);
+    if (legacy)
+      embed.addFields({
+        name: "Thẻ cũ chờ đối soát",
+        value:
+          number(legacy) +
+          " thẻ chưa xác định được nhân vật; được giữ riêng, chưa dùng nâng cấp.",
+      });
     const soulEmoji = appEmojiObject(selected.souls[Math.min(n, 5)].emojiName);
     if (soulEmoji) upgradeButton.setEmoji(soulEmoji);
     components.at(-1).addComponents(upgradeButton);
@@ -375,6 +380,84 @@ function payload(
       " nhân vật phù hợp",
   });
   return { embeds: [embed], components, allowedMentions: { parse: [] } };
+}
+function ascensionPayload(owner, state, expectedRarity) {
+  const p = require("../characters/progression"),
+    c = characters.get(state.id),
+    owned = p.getOwned(owner)[state.id];
+  if (
+    !c ||
+    c.rarity !== "SSR" ||
+    owned?.soulLevel !== 6 ||
+    owned.rarity !== expectedRarity ||
+    !p.nextRarity(expectedRarity)
+  )
+    return payload(owner, { ...state, tab: "souls" });
+  const sources = p
+    .ascensionSources(owner, c.id)
+    .filter((c) => c.quantity >= 50)
+    .slice(0, 25);
+  const enough =
+    sources.reduce((n, c) => n + Math.floor(c.quantity / 50), 0) >= 2;
+  const custom = (kind) =>
+    [
+      "hardcore-char",
+      owner,
+      state.rarity,
+      state.classKey,
+      state.page,
+      state.id,
+      "souls",
+      kind,
+    ].join(":");
+  return {
+    embeds: [
+      new EmbedBuilder()
+        .setColor(0x9b59b6)
+        .setTitle(
+          c.name +
+            " · " +
+            expectedRarity +
+            " → " +
+            p.nextRarity(expectedRarity),
+        )
+        .setDescription(
+          "Giữ S6. Tốn **2 cọc ×50 thẻ SSR cùng class**. Mỗi cọc phải thuộc một nhân vật.\nChọn **1 nhân vật: dùng 100 thẻ**; chọn **2 nhân vật: dùng 50 thẻ mỗi người**. Không ghép thẻ lẻ. Nâng cấp có hiệu lực từ run mới.",
+        ),
+    ],
+    components: [
+      row(
+        new StringSelectMenuBuilder()
+          .setCustomId(custom("ascend_select_" + expectedRarity))
+          .setPlaceholder(
+            enough ? "Chọn nguyên liệu để nâng độ hiếm" : "Chưa đủ 2 cọc thẻ",
+          )
+          .setMinValues(1)
+          .setMaxValues(Math.max(1, Math.min(2, sources.length)))
+          .setDisabled(!enough)
+          .addOptions(
+            sources.length
+              ? sources.map((c) => ({
+                  label: c.name,
+                  value: c.id,
+                  description:
+                    c.quantity +
+                    " thẻ · " +
+                    Math.floor(c.quantity / 50) +
+                    " cọc",
+                }))
+              : [{ label: "Chưa có cọc thẻ phù hợp", value: "none" }],
+          ),
+      ),
+      row(
+        new ButtonBuilder()
+          .setCustomId(custom("tab_souls"))
+          .setLabel("Quay lại tinh hồn")
+          .setStyle(ButtonStyle.Secondary),
+      ),
+    ],
+    allowedMentions: { parse: [] },
+  };
 }
 async function handle(interaction) {
   const parts = interaction.customId.split(":");
@@ -408,6 +491,49 @@ async function handle(interaction) {
     return interaction.update(
       require("../gacha/ui").payload(owner, { guildId: interaction.guildId }),
     );
+  if (/^ascend_(SSR|UR)$/.test(kind) && id !== "all")
+    return interaction.update(
+      ascensionPayload(
+        owner,
+        { rarity, classKey, page, id, tab },
+        kind.slice(7),
+      ),
+    );
+  if (/^ascend_select_(SSR|UR)$/.test(kind) && id !== "all") {
+    await interaction.deferUpdate();
+    let notice;
+    try {
+      const r = require("../characters/progression").ascend({
+        userId: owner,
+        characterId: id,
+        expectedRarity: kind.slice(14),
+        sourceIds: interaction.values,
+        operationId: interaction.id,
+      });
+      notice =
+        "Đã nâng **" +
+        characters.get(id).name +
+        " lên " +
+        r.rarity +
+        " · S6**. Hiệu lực từ run mới.";
+    } catch (error) {
+      if (
+        ![
+          "STALE_CHARACTER_ASCENSION",
+          "INVALID_ASCENSION_MATERIALS",
+          "INSUFFICIENT_CHARACTER_CARDS",
+          "CHARACTER_NOT_OWNED",
+        ].includes(error.message)
+      )
+        throw error;
+      notice =
+        "Không thể nâng: cần S6 và đủ 2 cọc ×50 thẻ SSR cùng class, mỗi cọc từ một nhân vật. Đã làm mới bảng.";
+    }
+    return interaction.editReply({
+      ...payload(owner, { rarity, classKey, page, id, tab: "souls" }),
+      content: notice,
+    });
+  }
   if (/^upgrade_[0-5]$/.test(kind) && id !== "all") {
     await interaction.deferUpdate();
     let notice = "";
@@ -437,7 +563,7 @@ async function handle(interaction) {
         throw error;
       notice =
         error.message === "INSUFFICIENT_CHARACTER_CARDS"
-          ? "Chưa đủ thẻ cùng class và độ hiếm."
+          ? "Chưa đủ thẻ của chính nhân vật này."
           : "Tiến trình đã thay đổi. Đã làm mới bảng nhân vật.";
     }
     return interaction.editReply({
@@ -482,4 +608,4 @@ async function handle(interaction) {
   else return reject("Thao tác nhân vật không hợp lệ.");
   return interaction.update(payload(owner, state));
 }
-module.exports = { PAGE_SIZE, payload, handle };
+module.exports = { PAGE_SIZE, payload, ascensionPayload, handle };
