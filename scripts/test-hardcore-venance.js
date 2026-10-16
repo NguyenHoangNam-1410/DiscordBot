@@ -181,8 +181,8 @@ try {
     progress.grantCharacter("v", "venance", Date.now());
     assert.equal(progress.cards("v", "mage", "SSR"), 50);
     assert(
-      !require("../src/hardcore/gacha/banners.json").banners?.some((b) =>
-        JSON.stringify(b).includes("venance"),
+      require("../src/hardcore/gacha/banners.json").banners?.some(
+        (b) => b.id === "venance" && b.enabled,
       ),
     );
   });

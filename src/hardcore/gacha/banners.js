@@ -25,10 +25,17 @@ function validate(b) {
     b.pool.some((x) => !Number.isSafeInteger(x.weight) || x.weight <= 0)
   )
     throw Error("INVALID_CHARACTER_BANNER");
+  if (b.graphic != null && !/^[a-z][a-z0-9_]*\/banner\.jpg$/.test(b.graphic))
+    throw Error("INVALID_BANNER_GRAPHIC");
   if (
     b.spark &&
     (!/^[a-z][a-z0-9_]{0,39}$/.test(b.spark.currencyId) ||
       b.spark.perPull !== 1)
+  )
+    throw Error("INVALID_BANNER_SPARK");
+  if (
+    b.spark?.characterId &&
+    characters.get(b.spark.characterId)?.rarity !== "SSR"
   )
     throw Error("INVALID_BANNER_SPARK");
   if (!Number.isSafeInteger(b.pool.reduce((n, x) => n + x.weight, 0)))
@@ -77,7 +84,23 @@ function resolve(b) {
       });
     else throw Error("INVALID_BANNER_POOL");
     if (!entries.length) throw Error("EMPTY_CHARACTER_POOL");
-    return { kind: p.kind, rarity: p.rarity, weight: p.weight, entries };
+    if (
+      p.rateUp &&
+      (p.kind !== "character" ||
+        p.rarity !== "SSR" ||
+        !Number.isFinite(p.rateUp.chance) ||
+        p.rateUp.chance <= 0 ||
+        p.rateUp.chance > 1 ||
+        !entries.some((c) => c.id === p.rateUp.characterId))
+    )
+      throw Error("INVALID_BANNER_RATE_UP");
+    return {
+      kind: p.kind,
+      rarity: p.rarity,
+      weight: p.weight,
+      entries,
+      ...(p.rateUp ? { rateUp: structuredClone(p.rateUp) } : {}),
+    };
   });
   return {
     ...structuredClone(b),
@@ -109,6 +132,14 @@ function unit(rng) {
 function roll(b, rng = random) {
   let point = unit(rng) * b.totalWeight;
   const g = b.groups.find((g) => (point -= g.weight) < 0) || b.groups.at(-1);
+  // First select rarity. Only an SSR result can enter the featured/off-banner roll.
+  if (g.rateUp) {
+    const featured = g.entries.find((c) => c.id === g.rateUp.characterId);
+    const others = g.entries.filter((c) => c.id !== featured.id);
+    if (!others.length) return { ...featured }; // No off-banner SSR exists yet.
+    if (unit(rng) < g.rateUp.chance) return { ...featured };
+    return { ...others[Math.floor(unit(rng) * others.length)] };
+  }
   return { ...g.entries[Math.floor(unit(rng) * g.entries.length)] };
 }
 module.exports = {

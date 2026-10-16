@@ -1,0 +1,12 @@
+{
+  "tool": "built-in image_gen",
+  "prompt": "Create a finished, eye-catching premium fantasy character gacha banner, ULTRAWIDE LANDSCAPE EXACT 3:1 aspect ratio (3072 wide x 1024 high), no outer margin. Use attached avatar ONLY as identity/style reference for Venance: same adult female mage, white/silver wavy hair, blue eyes, white-and-sapphire hooded clothing, silver ornament and sapphire gems. New dramatic waist-up pose on RIGHT HALF: looking toward viewer, summoning a luminous white-blue astral spear, flowing silver hair sweeping right, expressive confident elegant face. Cinematic painterly fantasy game illustration with exquisite character art. Deep midnight sapphire celestial temple background, white/cyan comet trails, crystalline four-point stars and swirling astral orbit; luminous blue-white magic sweeps across the width guiding eye toward her face. Very strong contrast, tasteful silver embellishment, spectacular premium collectible SSR mood. LEFT HALF: generous clean dark blue negative space, integrated elegant large serif title exactly 'VENANCE', above it a small elegant badge exactly 'SSR', under title exactly 'ASTRAL ARMAMENT', and below a fine divider exactly 'SPARK BANNER'. Bottom-left small legible rate line exactly 'SSR 1%  |  SR 19%  |  R 80%'. Do not add any other copy or numbers. Text must be clean and readable with breathing room. Keep face and all text within central 90% safe area. Entire composition must be the wide 3:1 rectangle, not a square illustration with a banner inside. Opaque background, no watermark, no UI buttons.",
+  "sourceSize": [
+    2172,
+    724
+  ],
+  "deliverySize": [
+    1500,
+    500
+  ]
+}

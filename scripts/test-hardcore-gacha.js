@@ -433,6 +433,216 @@ async function main() {
       characters.catalog.characters.pop();
     }
   });
+  test("Venance rolls rarity first, then SSR rate-up; lone SSR is always Venance", () => {
+    const b = banners.get("venance");
+    assert.equal(banners.roll(b, rngPairs([0.799999, 0])).rarity, "R");
+    assert.equal(banners.roll(b, rngPairs([0.8, 0])).rarity, "SR");
+    assert.equal(banners.roll(b, rngPairs([0.989999, 0])).rarity, "SR");
+    assert.equal(banners.roll(b, rngPairs([0.99, 0.99])).id, "venance");
+    const extra = {
+      ...characters.get("venance"),
+      id: "offbanner_mage",
+      name: "Other Mage",
+    };
+    characters.catalog.characters.push(extra);
+    try {
+      const definition = structuredClone(
+        require("../src/hardcore/gacha/banners.json").banners.find(
+          (b) => b.id === "venance",
+        ),
+      );
+      definition.pool
+        .find((p) => p.rarity === "SSR")
+        .characterIds.push(extra.id);
+      const future = banners.resolve(definition);
+      assert.equal(
+        banners.roll(future, rngPairs([0.99, 0.499999])).id,
+        "venance",
+      );
+      assert.equal(banners.roll(future, rngPairs([0.99, 0.5, 0])).id, extra.id);
+      assert.equal(banners.roll(future, rngPairs([0.99, 0.9, 0])).id, extra.id);
+      assert.equal(
+        banners.roll(future, rngPairs([0.99, 0.9, 0])).id,
+        extra.id,
+        "No guaranteed featured after losing rate-up",
+      );
+      definition.pool.find((p) => p.rarity === "SSR").rateUp.chance = 2;
+      assert.throws(
+        () => banners.resolve(definition),
+        /INVALID_BANNER_RATE_UP/,
+      );
+    } finally {
+      characters.catalog.characters.pop();
+    }
+    assert.throws(
+      () =>
+        banners.resolve({
+          ...require("../src/hardcore/gacha/banners.json").banners[1],
+          graphic: "../secret.jpg",
+        }),
+      /INVALID_BANNER_GRAPHIC/,
+    );
+  });
+  test("Venance gem pulls cost 300 each, grant Spark on SSR too, retry once and roll back a failed x10", () => {
+    gacha.open({ userId: "venance-paid" });
+    levels.addDiamonds("g", "venance-paid", 3300);
+    const r = draw("venance-paid", 10, { bannerId: "venance", rng: () => 0 });
+    assert.equal(r.payment.cost, 3000);
+    assert.equal(r.sparkGain, 10);
+    assert.equal(p.wallet("venance-paid", "venance_spark"), 10);
+    const args = {
+      guildId: "g",
+      userId: "venance-paid",
+      bannerId: "venance",
+      poolVersion: 1,
+      expectedRevision: p.account("venance-paid").revision,
+      pulls: 1,
+      operationId: "venance-SSR",
+      rng: () => 0.999,
+    };
+    const ssr = gacha.pull(args);
+    assert.equal(ssr.results[0].id, "venance");
+    assert.equal(p.wallet("venance-paid", "venance_spark"), 11);
+    assert(gacha.pull(args).duplicate);
+    assert.equal(p.wallet("venance-paid", "venance_spark"), 11);
+    assert.equal(levels.getPlayerProgression("g", "venance-paid").diamonds, 0);
+    levels.addDiamonds("g", "venance-paid", 3000);
+    const before = JSON.stringify([
+      p.account("venance-paid"),
+      p.cards("venance-paid", "mage", "SSR"),
+      gacha.history("venance-paid"),
+    ]);
+    let calls = 0;
+    assert.throws(
+      () =>
+        draw("venance-paid", 10, {
+          bannerId: "venance",
+          rng: () => {
+            if (++calls === 2) throw Error("FORCED_DRAW_FAILURE");
+            return 0.999;
+          },
+        }),
+      /FORCED_DRAW_FAILURE/,
+    );
+    assert.equal(
+      levels.getPlayerProgression("g", "venance-paid").diamonds,
+      3000,
+    );
+    assert.equal(p.wallet("venance-paid", "venance_spark"), 11);
+    assert.equal(
+      JSON.stringify([
+        p.account("venance-paid"),
+        p.cards("venance-paid", "mage", "SSR"),
+        gacha.history("venance-paid"),
+      ]),
+      before,
+    );
+  });
+  test("200 Spark redemption is atomic, replay-safe, revision-checked and duplicate SSR gives cards", () => {
+    const user = "venance-spark";
+    gacha.open({ userId: user });
+    p.addWallet(user, "venance_spark", 199, 0);
+    const args = {
+      userId: user,
+      bannerId: "venance",
+      poolVersion: 1,
+      expectedRevision: 0,
+      operationId: "spark-first",
+    };
+    assert.throws(() => gacha.redeem(args), /INSUFFICIENT_CHARACTER_SPARK/);
+    assert.equal(p.wallet(user, "venance_spark"), 199);
+    p.addWallet(user, "venance_spark", 1, 0);
+    const first = gacha.redeem(args);
+    assert.equal(first.results[0].id, "venance");
+    assert(!first.results[0].duplicate);
+    assert(gacha.redeem(args).duplicate);
+    assert.equal(p.wallet(user, "venance_spark"), 0);
+    assert.throws(
+      () => gacha.redeem({ ...args, operationId: "spark-stale" }),
+      /STALE_CHARACTER_GACHA/,
+    );
+    p.addWallet(user, "venance_spark", 200, 0);
+    const grant = p.grantCharacter;
+    try {
+      p.grantCharacter = () => {
+        throw Error("FORCED_REDEEM_FAILURE");
+      };
+      assert.throws(
+        () =>
+          gacha.redeem({
+            ...args,
+            expectedRevision: 1,
+            operationId: "spark-fail",
+          }),
+        /FORCED_REDEEM_FAILURE/,
+      );
+      assert.equal(p.wallet(user, "venance_spark"), 200);
+      assert.equal(p.account(user).revision, 1);
+    } finally {
+      p.grantCharacter = grant;
+    }
+    const copy = gacha.redeem({
+      ...args,
+      expectedRevision: 1,
+      operationId: "spark-copy",
+    });
+    assert(copy.results[0].duplicate);
+    assert.equal(copy.results[0].cards, 50);
+    assert.equal(p.cards(user, "mage", "SSR"), 50);
+    assert.equal(p.wallet(user, "venance_spark"), 0);
+    assert.throws(
+      () =>
+        gacha.redeem({
+          ...args,
+          bannerId: "novice",
+          expectedRevision: 2,
+          operationId: "spark-forge",
+        }),
+      /CHARACTER_BANNER_CLOSED/,
+    );
+  });
+  test("Venance graphic attaches from the per-banner folder and Spark controls fit Discord", () => {
+    const screen = ui.payload("venance-paid", {
+      guildId: "g",
+      bannerId: "venance",
+    });
+    limits(screen);
+    assert.equal(
+      screen.embeds[0].data.image.url,
+      "attachment://venance-banner.jpg",
+    );
+    assert.equal(screen.files[0].name, "venance-banner.jpg");
+    assert(require("node:fs").existsSync(screen.files[0].attachment));
+    assert(JSON.stringify(screen).includes("SSR 1%"));
+    assert(JSON.stringify(screen).includes("Venance 100%"));
+    assert.deepEqual(screen.attachments, []);
+    limits(
+      ui.payload("venance-spark", {
+        guildId: "g",
+        bannerId: "venance",
+        receipt: {
+          kind: "spark",
+          sparkSpent: 200,
+          results: [
+            {
+              kind: "character",
+              id: "venance",
+              name: "Venance",
+              rarity: "SSR",
+              duplicate: true,
+              cards: 50,
+              classKey: "mage",
+            },
+          ],
+        },
+      }),
+    );
+    assert.equal(
+      ui.payload("venance-paid", { guildId: "g", bannerId: "novice" }).files
+        .length,
+      0,
+    );
+  });
   test("SQLite snapshot/backup includes accounts, claims, wallets, cards and exact draw results", () => {
     const copy = new Database(db.serialize());
     assert.equal(
@@ -545,6 +755,61 @@ async function main() {
   groups++;
   console.log(
     "PASS Real command and component routes: owner guard, acknowledgements, replay and stale refresh",
+  );
+  gacha.open({ userId: "spark-ui" });
+  p.addWallet("spark-ui", "venance_spark", 200, 0);
+  const sparkScreen = ui.payload("spark-ui", {
+    guildId: "g",
+    bannerId: "venance",
+  });
+  const redeemId = sparkScreen.components
+    .flatMap((r) => r.toJSON().components)
+    .find((c) => c.custom_id.endsWith(":redeem")).custom_id;
+  let sparkResponse,
+    ack = 0,
+    denial;
+  const sparkInteraction = {
+    guildId: "g",
+    user: { id: "spark-ui" },
+    id: "spark-ui-exchange",
+    customId: redeemId,
+    deferUpdate: async () => {
+      ack++;
+    },
+    editReply: async (v) => {
+      sparkResponse = v;
+    },
+    reply: async (v) => {
+      denial = v;
+    },
+  };
+  await ui.handle({ ...sparkInteraction, user: { id: "wrong-owner" } });
+  assert(denial);
+  assert.equal(p.wallet("spark-ui", "venance_spark"), 200);
+  await ui.handle(sparkInteraction);
+  assert.equal(ack, 1);
+  assert.equal(p.wallet("spark-ui", "venance_spark"), 0);
+  limits(sparkResponse);
+  assert(
+    sparkResponse.embeds[0].data.fields.some((f) => f.name === "Đổi 200 Spark"),
+  );
+  await ui.handle(sparkInteraction);
+  assert.equal(p.wallet("spark-ui", "venance_spark"), 0);
+  assert.equal(p.cards("spark-ui", "mage", "SSR"), 0);
+  await ui.handle({ ...sparkInteraction, id: "spark-ui-stale" });
+  assert(sparkResponse.content.includes("Bảng đã thay đổi"));
+  const switchId = sparkResponse.components[0].toJSON().components[0].custom_id;
+  await ui.handle({
+    ...sparkInteraction,
+    id: "switch-novice",
+    customId: switchId,
+    values: ["novice"],
+  });
+  assert.equal(sparkResponse.files.length, 0);
+  assert.deepEqual(sparkResponse.attachments, []);
+  groups++;
+  console.log(
+    "PASS Real Spark control: owner/replay/stale guards and banner attachment cleanup",
   );
   const cp = charUi.payload("runner", { id: "druid", tab: "souls" });
   const upgrade = cp.components

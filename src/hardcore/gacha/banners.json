@@ -35,6 +35,58 @@
           ]
         }
       ]
+    },
+    {
+      "id": "venance",
+      "version": 1,
+      "name": "Venance · Astral Armament",
+      "description": "SSR Venance · Pháp sư tinh giới. Mỗi lượt nhận 1 Spark; 200 Spark đổi Venance.",
+      "enabled": true,
+      "graphic": "venance/banner.jpg",
+      "payment": {
+        "kind": "gems",
+        "currencyId": "gems",
+        "unitCost": 300
+      },
+      "spark": {
+        "currencyId": "venance_spark",
+        "perPull": 1,
+        "characterId": "venance"
+      },
+      "pool": [
+        {
+          "kind": "item",
+          "rarity": "R",
+          "weight": 80,
+          "source": "survival_r"
+        },
+        {
+          "kind": "character",
+          "rarity": "SR",
+          "weight": 19,
+          "characterIds": [
+            "amazon",
+            "barbarian",
+            "assassin",
+            "sorceress",
+            "druid",
+            "necromancer",
+            "paladin"
+          ]
+        },
+        {
+          "kind": "character",
+          "rarity": "SSR",
+          "weight": 1,
+          "characterIds": [
+            "venance"
+          ],
+          "rateUp": {
+            "characterId": "venance",
+            "chance": 0.5
+          }
+        }
+      ]
     }
   ]
 }

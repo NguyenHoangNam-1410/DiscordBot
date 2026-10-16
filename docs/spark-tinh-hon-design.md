@@ -1,12 +1,12 @@
 # Nhân vật, Spark và tinh hồn
 
-Ngày thiết kế: 14/10/2026. Cập nhật: 15/10/2026.
+Ngày thiết kế: 14/10/2026. Cập nhật: 16/10/2026.
 
-**Đã triển khai:** banner tân thủ trong /sinhton gacha, kho vé/thẻ/nhân vật, nâng tinh hồn SR và snapshot chiến đấu. **Chưa phát hành:** banner dùng gem, nhân vật SSR, cửa hàng đổi Spark và giao dịch nâng độ hiếm.
+**Đã triển khai:** banner tân thủ và banner Venance dùng gem trong /sinhton gacha, kho vé/thẻ/nhân vật, nâng tinh hồn, snapshot chiến đấu và đổi 200 Spark lấy Venance. **Chưa phát hành:** giao dịch nâng độ hiếm.
 
 Chi tiết 42 hiệu ứng: [Tinh hồn 7 nhân vật SR](sr-character-souls-design.md). [Kết quả hiệu chỉnh S6](releases/hardcore-souls-2026-10-15.md).
 
-Bản thiết kế SSR đầu tiên: [Venance — Pháp sư](venance-ssr-character-design.md), chưa phát hành vào banner hoặc chiến đấu.
+Bản thiết kế SSR đầu tiên: [Venance — Pháp sư](venance-ssr-character-design.md), đã có trong chiến đấu và banner riêng.
 
 ## Banner Khởi Hành
 
@@ -55,9 +55,9 @@ Giá thẻ và mức sức mạnh khi nâng SSR → UR hoặc UR → LR chưa đ
 
 LR nhân vật là tiến trình tài khoản, khác di vật LR trong run. Nâng độ hiếm không cấp di vật hoặc thay luật một di vật hoạt động mỗi run.
 
-## Banner dùng gem và Spark sau này
+## Banner Venance dùng gem và Spark
 
-Giữ các mốc đã chốt cho giai đoạn phát hành SSR:
+Banner Venance dùng các mốc sau:
 
 | Nội dung  | Quy tắc                                                      |
 | --------- | ------------------------------------------------------------ |
@@ -68,13 +68,17 @@ Giữ các mốc đã chốt cho giai đoạn phát hành SSR:
 
 Spark là tiền quy đổi, không phải pity tự ra SSR ở lượt 200. Nhận SSR ngẫu nhiên không xóa Spark. Không bán Spark riêng. Phạm vi Spark, pool và xác suất phải công khai trước khi mở từng banner; cấu hình có mã ví Spark riêng để không gộp nhầm giữa các loại banner.
 
-Hiện không mở banner trả gem hoặc cửa hàng SSR rỗng. Nền giao dịch đã hỗ trợ giá 300 gem/lượt, x10 đủ 3.000 gem và ví Spark riêng theo cấu hình; đã kiểm thử bằng banner giả trong test, không đưa SSR giả vào pool thật. Tỷ lệ trả gem R/SR/SSR sẽ khai báo khi có roster SSR.
+Banner Venance: **R 80% / SR 19% / SSR 1%**. Roll độ hiếm trước; nếu ra SSR mới quyết định rate-up: Venance 50%, 50% còn lại chia đều cho SSR khác trong pool. Hiện pool SSR chỉ có Venance nên **100% kết quả SSR là Venance** (1% mỗi lượt). Không có pity, không có bảo hiểm sau khi trượt rate-up.
+
+Ví riêng venance_spark: mỗi lượt quay hợp lệ, kể cả ra SSR, cộng 1 Spark. Nút **Đổi Venance · 200 Spark** trừ đúng 200 Spark để nhận nhân vật; đã sở hữu thì nhận 50 thẻ SSR pháp sư. Nhận SSR ngẫu nhiên không reset Spark. Đổi Spark dùng giao dịch nguyên tử và revision giống quay, retry không phát lại thưởng. Spark/nhân vật/thẻ thuộc toàn tài khoản Discord; gem và item R thuộc server đang quay.
+
+Graphic nằm trong assets/banners/venance/, bản Discord banner.jpg kích thước 1500 × 500 px. Mỗi banner sau này có thư mục riêng; đường dẫn graphic tương đối từ assets/banners. Bot đính kèm ảnh trực tiếp, không cần URL host ảnh. Khi deploy cần đưa cả thư mục này lên server.
 
 ## Dữ liệu và hướng mở rộng
 
-Vé, thẻ và sở hữu/tinh hồn là tiến trình toàn tài khoản Discord. Item R và số dư gem/xu vẫn theo server hiện hành. Nếu mở banner trả gem sau này, gem trừ từ server đang quay, còn nhân vật/thẻ thuộc tài khoản Discord; cần công khai điều này khi phát hành.
+Vé, thẻ và sở hữu/tinh hồn là tiến trình toàn tài khoản Discord. Item R và số dư gem/xu vẫn theo server hiện hành. Banner trả gem trừ từ server đang quay; Spark, nhân vật và thẻ thuộc tài khoản Discord.
 
-Mỗi banner có ID ổn định, version, tên, trạng thái, loại thanh toán, giá một lượt, ví Spark và nhóm pool có trọng số. Mỗi pool có danh sách nhân vật cụ thể, không âm thầm tự thêm nhân vật mới rồi giảm tỷ lệ nhân vật cũ. Trong nhóm nhân vật hoặc R, các phần tử hiện được chia đều.
+Mỗi banner có ID ổn định, version, tên, trạng thái, loại thanh toán, giá một lượt, ví Spark và nhóm pool có trọng số. Mỗi pool có danh sách nhân vật cụ thể, không âm thầm tự thêm nhân vật mới rồi giảm tỷ lệ nhân vật cũ. Nhóm R/SR chia đều; nhóm SSR có thể cấu hình rate-up riêng và chia đều nhóm SSR ngoài rate-up.
 
 Đổi nội dung pool/tỷ lệ/giá cần tăng version. UI giữ banner/version và revision tài khoản, chặn nút cũ khi số dư hoặc cấu hình đã đổi. Bổ sung banner độc lập qua registry, không dùng chung vé tân thủ cho loại banner mới nếu chưa được khai báo.
 

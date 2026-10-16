@@ -7,6 +7,7 @@ const {
   ButtonStyle,
   MessageFlags,
 } = require("discord.js");
+const path = require("node:path");
 const banners = require("./banners"),
   service = require("./service"),
   progress = require("../characters/progression"),
@@ -17,6 +18,7 @@ const number = (n) => Number(Number(n).toFixed(1)).toLocaleString("vi-VN");
 const row = (...c) => new ActionRowBuilder().addComponents(...c);
 const icon = (c) => appEmoji("class_" + characters.get(c.id)?.profileKey, "👤");
 const ERRORS = {
+  INSUFFICIENT_CHARACTER_SPARK: "Cần đủ 200 Spark để đổi nhân vật SSR.",
   INSUFFICIENT_CHARACTER_TICKETS: "Không đủ vé cho lựa chọn này.",
   INSUFFICIENT_DIAMONDS: "Không đủ gem.",
   STALE_CHARACTER_GACHA: "Bảng đã thay đổi. Đã cập nhật số dư; hãy chọn lại.",
@@ -87,7 +89,7 @@ function payload(
       g.entries.length +
       " " +
       (g.kind === "item" ? "trang bị" : "nhân vật") +
-      ", chia đều trong nhóm.",
+      (g.rateUp ? "; xem tỷ lệ rate-up bên dưới." : ", chia đều trong nhóm."),
   );
   const payment =
     b.payment.kind === "ticket"
@@ -120,6 +122,30 @@ function payload(
         "/lượt\n" +
         groups.join("\n"),
     );
+  if (b.graphic) embed.setImage("attachment://" + b.id + "-banner.jpg");
+  const ssr = b.groups.find((g) => g.rateUp);
+  if (ssr) {
+    const chance = ssr.entries.length === 1 ? 1 : ssr.rateUp.chance;
+    embed.addFields({
+      name: "Rate-up SSR",
+      value:
+        "Roll độ hiếm trước: **SSR " +
+        number((ssr.weight / b.totalWeight) * 100) +
+        "%**. Sau khi ra SSR, **" +
+        characters.get(ssr.rateUp.characterId).name +
+        " " +
+        number(chance * 100) +
+        "%** trong nhóm SSR. " +
+        (ssr.entries.length === 1
+          ? "Hiện chưa có SSR khác nên mọi SSR đều là " +
+            characters.get(ssr.rateUp.characterId).name +
+            ". Khi có SSR khác trong pool: rate-up " +
+            number(ssr.rateUp.chance * 100) +
+            "%, còn lại chia đều cho SSR khác."
+          : "SSR khác chia đều phần tỷ lệ còn lại.") +
+        " Không có pity hoặc bảo hiểm 50/50; mỗi lượt độc lập.",
+    });
+  }
   const sr = b.groups
     .filter((g) => g.kind === "character")
     .flatMap((g) => g.entries);
@@ -162,14 +188,19 @@ function payload(
           number(progress.wallet(userId, b.spark.currencyId)) +
           "** / **" +
           banners.SSR_SPARK_COST +
-          "** để đổi SSR khi cửa hàng tương ứng mở."
+          (b.spark.characterId
+            ? "** để đổi **" +
+              characters.get(b.spark.characterId).name +
+              "**. Đổi trùng nhận thẻ SSR cùng class."
+            : "** để đổi SSR khi cửa hàng tương ứng mở.")
         : " Banner này không cộng Spark."),
   });
   if (receipt)
     embed.addFields({
       name:
-        "Kết quả ×" +
-        receipt.pulls +
+        (receipt.kind === "spark"
+          ? "Đổi " + receipt.sparkSpent + " Spark"
+          : "Kết quả ×" + receipt.pulls) +
         (receipt.duplicate ? " · đã xử lý trước đó" : ""),
       value: resultText(receipt.results),
     });
@@ -214,6 +245,19 @@ function payload(
   return {
     content: notice,
     embeds: [embed],
+    attachments: [],
+    files: b.graphic
+      ? [
+          {
+            attachment: path.resolve(
+              __dirname,
+              "../../../assets/banners",
+              b.graphic,
+            ),
+            name: b.id + "-banner.jpg",
+          },
+        ]
+      : [],
     components: [
       row(
         new StringSelectMenuBuilder()
@@ -241,6 +285,18 @@ function payload(
             progress.wallet(userId, b.payment.currencyId) <
               b.payment.unitCost * 10,
         ),
+        ...(b.spark?.characterId
+          ? [
+              button(
+                "redeem",
+                "Đổi " +
+                  characters.get(b.spark.characterId).name +
+                  " · 200 Spark",
+                progress.wallet(userId, b.spark.currencyId) <
+                  banners.SSR_SPARK_COST,
+              ),
+            ]
+          : []),
         button("history", "Lịch sử"),
         button("characters", "Nhân vật"),
       ),
@@ -277,7 +333,11 @@ async function handle(interaction, logger = console) {
     !Number.isSafeInteger(Number(rawRevision))
   )
     return reject("Bảng gacha không hợp lệ hoặc thuộc người chơi khác.");
-  if (!["banner", "pull1", "pull10", "history", "characters"].includes(action))
+  if (
+    !["banner", "pull1", "pull10", "redeem", "history", "characters"].includes(
+      action,
+    )
+  )
     return reject("Thao tác gacha không hợp lệ.");
   if (
     action === "banner" &&
@@ -286,7 +346,10 @@ async function handle(interaction, logger = console) {
   )
     return reject("Banner không có trong danh sách.");
   if (action === "characters")
-    return interaction.update(require("../ui/characters").payload(owner));
+    return interaction.update({
+      ...require("../ui/characters").payload(owner),
+      attachments: [],
+    });
   await interaction.deferUpdate();
   try {
     const receipt = action.startsWith("pull")
@@ -299,7 +362,15 @@ async function handle(interaction, logger = console) {
           pulls: action === "pull1" ? 1 : 10,
           operationId: interaction.id,
         })
-      : null;
+      : action === "redeem"
+        ? service.redeem({
+            userId: owner,
+            bannerId,
+            poolVersion: Number(rawVersion),
+            expectedRevision: Number(rawRevision),
+            operationId: interaction.id,
+          })
+        : null;
     return interaction.editReply(
       payload(owner, {
         guildId: interaction.guildId,

@@ -118,6 +118,62 @@ const pull = (args) =>
   require("../../services/playerLevelService").withBusyRetry(() =>
     pullTx.immediate(args),
   );
+const redeemTx = db.transaction(
+  ({
+    userId,
+    bannerId,
+    poolVersion,
+    expectedRevision,
+    operationId,
+    now = Date.now(),
+  }) => {
+    const user = progress.identity(userId);
+    if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 0)
+      throw Error("INVALID_CHARACTER_DRAW");
+    const request = { bannerId, poolVersion, expectedRevision };
+    const previous = progress.operation(user, operationId, "spark", request);
+    if (previous) return previous;
+    const b = banners.get(bannerId);
+    if (!b?.enabled || !b.spark?.characterId)
+      throw Error("CHARACTER_BANNER_CLOSED");
+    if (poolVersion !== b.version) throw Error("STALE_CHARACTER_POOL");
+    const account = progress.account(user);
+    if (!account) throw Error("CHARACTER_GACHA_NOT_OPENED");
+    if (account.revision !== expectedRevision)
+      throw Error("STALE_CHARACTER_GACHA");
+    const spent = db
+      .prepare(
+        "UPDATE hardcore_character_wallets SET quantity=quantity-?,updated_at=? WHERE user_id=? AND currency_id=? AND quantity>=?",
+      )
+      .run(
+        banners.SSR_SPARK_COST,
+        now,
+        user,
+        b.spark.currencyId,
+        banners.SSR_SPARK_COST,
+      );
+    if (spent.changes !== 1) throw Error("INSUFFICIENT_CHARACTER_SPARK");
+    const reward = progress.grantCharacter(user, b.spark.characterId, now);
+    db.prepare(
+      "UPDATE hardcore_character_accounts SET revision=revision+1 WHERE user_id=? AND revision=?",
+    ).run(user, expectedRevision);
+    const receipt = {
+      kind: "spark",
+      bannerId,
+      poolVersion,
+      results: [reward],
+      sparkSpent: banners.SSR_SPARK_COST,
+      sparkCurrency: b.spark.currencyId,
+      revision: expectedRevision + 1,
+    };
+    progress.record(user, operationId, "spark", request, receipt, now);
+    return receipt;
+  },
+);
+const redeem = (args) =>
+  require("../../services/playerLevelService").withBusyRetry(() =>
+    redeemTx.immediate(args),
+  );
 function history(userId, limit = 5) {
   return db
     .prepare(
@@ -126,4 +182,4 @@ function history(userId, limit = 5) {
     .all(progress.identity(userId), Math.max(1, Math.min(10, limit)))
     .map((r) => ({ ...r, results: JSON.parse(r.results_json) }));
 }
-module.exports = { NOVICE_TICKETS, open, pull, history };
+module.exports = { NOVICE_TICKETS, open, pull, redeem, history };
