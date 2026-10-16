@@ -41,7 +41,7 @@ function itemScale(s, i) {
 }
 function curseScale(s, i) {
   return enabled(s)
-    ? scale(i.level) - scale(i.cleansedLevels || 0, s)
+    ? Math.max(0, scale(i.level) - scale(i.cleansedLevels || 0))
     : Math.max(0, i.level - (i.cleansedLevels || 0));
 }
 module.exports = { VERSION, enabled, activate, scale, itemScale, curseScale };

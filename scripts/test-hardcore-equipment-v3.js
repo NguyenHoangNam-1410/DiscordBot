@@ -199,6 +199,46 @@ try {
     stats.recompute(copy);
     assert.deepEqual(stats.derive(copy), stats.derive(s));
   });
+  test("Current buff curve keeps the original curse diminishing returns after cleansing", () => {
+    const s = stats.createState("sorceress", 10000),
+      d = get("soul_leash");
+    s.encounter = { type: "empty" };
+    s.lastReceivedItems = [];
+    core.receiveItem(s, d, 3);
+    const item = s.items[0];
+    assert.equal(rules.itemScale(s, item), 3);
+    assert.equal(rules.curseScale(s, item), 2);
+    core.cleanse(s, item);
+    assert.equal(rules.curseScale(s, item), 0);
+    assert.equal(s.combatManaLoss, 0);
+    s.lastReceivedItems = [];
+    core.receiveItem(s, d);
+    assert(Math.abs(rules.curseScale(s, item) - 0.3) < 1e-12);
+    assert(Math.abs(s.combatManaLoss - 0.3) < 1e-12);
+    assert(Math.abs(s.lastReceivedItems[0].curseScale - 0.3) < 1e-12);
+    s.encounter = {
+      type: "surprise",
+      kind: "blacksmith",
+      targetId: item.definition.id,
+    };
+    const smith = view.encounterText(s);
+    assert(
+      smith.includes("129.5%") && smith.includes("147%"),
+      "Forge buff preview must keep the current buff curve: " + smith,
+    );
+    assert(
+      smith.includes("−0.3") && smith.includes("−0.5"),
+      "Forge curse preview must use the original curse curve: " + smith,
+    );
+
+    core.cleanse(s, item);
+    assert.equal(rules.curseScale(s, item), 0);
+    assert.equal(s.combatManaLoss, 0);
+    s.lastReceivedItems = [];
+    core.receiveItem(s, d);
+    assert(Math.abs(rules.curseScale(s, item) - 0.2) < 1e-12);
+    assert(Math.abs(s.lastReceivedItems[0].curseScale - 0.2) < 1e-12);
+  });
   test("Cleanse then duplicate contributes only curve difference; grind no absorbed stats", () => {
     const s = state("barbarian"),
       d = get("crown_of_ruin");

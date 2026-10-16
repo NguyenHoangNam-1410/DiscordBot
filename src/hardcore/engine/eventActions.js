@@ -56,10 +56,17 @@ module.exports = function createModule(dependencies) {
       if (action === "forge_grind" && f.stage === "grind") {
         const target = itemById(f.targetId);
         if (!target) throw Error("NO_FORGE_ITEM");
-        f.removed = { id: target.definition.id, level: target.level };
+        f.removed = {
+          id: target.definition.id,
+          name: target.name,
+          level: target.level,
+        };
         grind(state, target);
         f.stage = "boon";
-        state.lastLog = "🔨 Đã nghiền 1 level. Chọn một boon để tiếp tục.";
+        state.lastLog =
+          "🔨 Đã nghiền **" +
+          target.name +
+          "** · 1 cấp. Buff của cấp này đã bị gỡ. Chọn một phần thưởng chỉ số trong menu để tiếp tục; không tốn vé.";
         return;
       }
       if (
@@ -71,11 +78,11 @@ module.exports = function createModule(dependencies) {
         f.claimed = true;
         addSource(state, { [boon.key]: boon.amount }, "forgeBoon");
         done(
-          "🔨 Forge: +" +
-            boon.amount +
-            " " +
-            boon.key.toUpperCase() +
-            " cho bạn.",
+          "🔨 Horadric Forge: nhận " +
+            require("../equipment/forge").rewardIcon(boon) +
+            " **" +
+            require("../equipment/forge").rewardLabel(boon) +
+            "** cho run.",
         );
         return;
       }

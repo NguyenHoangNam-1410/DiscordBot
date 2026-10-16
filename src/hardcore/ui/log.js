@@ -1,4 +1,5 @@
 "use strict";
+const { roundStatText } = require("../shared/ui");
 const { itemIcon } = require("../shared/icons");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
@@ -44,7 +45,7 @@ module.exports = function createModule(dependencies) {
             0,
             state,
             purified.cleansedLevels || 0,
-            { defenseLoss: purified.defenseLoss ?? null },
+            { curse: true, defenseLoss: purified.defenseLoss ?? null },
           ),
       );
       if (purified.maxPotionsBefore !== purified.maxPotionsAfter)
@@ -243,7 +244,7 @@ module.exports = function createModule(dependencies) {
         0,
         details.join("\n"),
       );
-    const text = lines.join("\n");
+    const text = roundStatText(lines.join("\n"));
     // Compact forging receipts so Discord does not split the stat list into a continuation field.
     return receipt?.kind === "blacksmith" ||
       received.some((item) => item.upgradedFromLevel != null)

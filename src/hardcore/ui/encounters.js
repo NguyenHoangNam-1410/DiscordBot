@@ -31,6 +31,7 @@ module.exports = function createModule(dependencies) {
   } = dependencies;
   const effectText = (...args) => dependencies.effectText(...args);
   const itemText = (...args) => dependencies.itemText(...args);
+  const horadricText = (...args) => dependencies.horadricText(...args);
   const blacksmithText = (...args) => dependencies.blacksmithText(...args);
   const purifierText = (...args) => dependencies.purifierText(...args);
   const merchantOffer = (...args) => dependencies.merchantOffer(...args);
@@ -174,35 +175,7 @@ module.exports = function createModule(dependencies) {
     if (k === "merchant")
       return `${eventIcon(k)} **${e.name}**\nMua tối đa **một món** bằng xu payout:\n${e.offers.map((o) => `- **${merchantOffer(o).name}** · **${money(o.price)} ${icon("coin", "🪙")}**`).join("\n")}\nXem **Chi tiết** để đọc công dụng và điều kiện mua.`;
     const target = s.items.find((x) => x.definition.id === e.targetId);
-    if (k === "horadric" && e.forge) {
-      if (e.forge.stage === "boon")
-        return (
-          "🔨 Đã nghiền 1 level. Chọn đúng một boon đã khóa: " +
-          e.forge.boons
-            .map((b) => "+" + b.amount + " " + b.key.toUpperCase())
-            .join(" / ") +
-          ". Không giữ lại chỉ số của level đã nghiền."
-        );
-      const cursedLevels = target.level - (target.cleansedLevels || 0);
-      const curseRemoval =
-        cursedLevels > 0 && itemCurses.defenseReduction(target)
-          ? cursedLevels > 1
-            ? `\nCòn cấp nguyền: ${E.defense} **DEF −${itemCurses.defenseLoss(target) ?? 0}** đã lưu giữ nguyên.`
-            : `\nGỡ cấp nguyền cuối: hoàn trả ${E.defense} **DEF +${itemCurses.defenseLoss(target) ?? 0}** đã trừ.`
-          : "";
-      return (
-        "🔨 Horadric Forge · " +
-        itemIcon(target) +
-        " " +
-        target.name +
-        " Lv." +
-        target.level +
-        " → " +
-        (target.level - 1) +
-        ".\nTiêu hao 1 level và gỡ buff/nguyền tương ứng theo đường cong level; nếu hết level thì mất cả nội tại và affinity. Sau đó chọn 1 boon cố định. Không hấp thụ chỉ số. Có thể bỏ qua trước khi nghiền." +
-        curseRemoval
-      );
-    }
+    if (k === "horadric" && e.forge) return horadricText(s, true);
     if (k === "horadric" && target) {
       const retained = Object.fromEntries(
         Object.entries(target.definition.effects).filter(
@@ -300,6 +273,8 @@ ${bossDisplay.status(s)}${require("../rift").battle(s)}
     if (e.type === "surprise" && e.kind.endsWith("_shop"))
       return `${eventIcon(e.kind)} **${e.name}** · mua một món\n${e.offers.map((o, i) => `${i + 1}. **${itemIcon(o.item)} ${o.item.name} [${rarityLabel(o.item.rarity)}]** · ${shopPrice(e.kind, o)}`).join("\n")}\nXem Chi tiết để đọc công dụng và điều kiện mua.`;
     if (e.type === "surprise" && e.kind === "merchant") return encounterText(s);
+    if (e.type === "surprise" && e.kind === "horadric" && e.forge)
+      return horadricText(s);
     if (e.type === "surprise" && e.kind === "blacksmith")
       return blacksmithText(s);
     if (e.type === "surprise" && e.kind === "purifier") return purifierText(s);

@@ -1,5 +1,27 @@
 [
   {
+    "id": "62e6dc81-e500-4516-b82c-ed38aabb1028",
+    "updatedAt": "2026-10-16T01:50:34.085Z",
+    "auditedAt": "2026-10-16T01:50:34.085Z",
+    "title": "Horadric Forge · làm rõ giao dịch và menu",
+    "changes": [
+      "Dùng selector cho bước nghiền trang bị và bước chọn thưởng, với icon chỉ số đúng thay cho icon vé.",
+      "Hiển thị món mất cấp và chỉ số trước → sau trước khi xác nhận; giải thích phần thưởng +1 cố định, không tốn xu/vé và không bù buff đã mất.",
+      "Cho bỏ qua trước khi nghiền; sau khi nghiền hiển thị rõ phần thưởng chưa cộng và cần chọn một để tiếp tục."
+    ]
+  },
+  {
+    "id": "46ebe3eb-6da6-4048-9334-c33928bd6eac",
+    "updatedAt": "2026-10-16T01:38:04.684Z",
+    "auditedAt": "2026-10-16T01:38:04.684Z",
+    "title": "Sinh tồn · sửa số thập phân và log trang bị",
+    "changes": [
+      "Làm tròn mô tả lời nguyền và log MP tới tối đa một chữ số thập phân, kể cả log đã lưu; giữ nguyên diminishing return.",
+      "Giữ phần chỉ số phát sinh từ trang bị liền mạch khi chia field Discord, tránh tách riêng dòng hiệu lực bình.",
+      "Sửa phép tính nguyền sau giải nguyền/nhận đồ trùng bị trộn đường cong level, có thể tạo giá trị âm; đồng bộ preview rèn và giải nguyền."
+    ]
+  },
+  {
     "id": "ef44435c-3806-4575-91ab-3c74f99268fb",
     "updatedAt": "2026-10-15T12:00:40.307Z",
     "auditedAt": "2026-10-15T12:00:40.307Z",

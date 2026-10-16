@@ -516,6 +516,76 @@ async function main() {
     assert.equal(JSON.stringify(s), before);
   });
 
+  await test("Curse decimals and saved MP logs round without changing combat; receipt lists stay together", () => {
+    const {
+      roundStatText,
+      addTextFields,
+    } = require("../src/hardcore/shared/ui");
+    const { EmbedBuilder } = require("discord.js");
+    const curses = require("../src/hardcore/itemCurses");
+    assert(
+      curses
+        .describeEffect("combatManaLoss", 1, 1.6 - 1)
+        .includes("mất 0.6 MP"),
+    );
+    assert(
+      curses
+        .describeEffect("combatManaLoss", 1, 1.6 - 1, true)
+        .includes("MP −0.6"),
+    );
+    assert(
+      curses.describeEffect("healingReduction", 0.025, 1).includes("2.5%"),
+    );
+    const protectedText =
+      "1.284.580 xu · <:MANA:1555983051811594240> · https://example.com/0.6000000000000001 · v3.1.0";
+    assert.equal(roundStatText(protectedText), protectedText);
+    assert.equal(roundStatText("(+0.6000000000000001)"), "(+0.6)");
+    const stats = require("../src/hardcore/engine/stats"),
+      s = stats.createState("sorceress", 10000);
+    s.encounter = { type: "empty" };
+    s.mana = 1.9999999999999996;
+    s.lastLog =
+      "Soul Leash: 2.5999999999999996 → 0.9999999999999996 MP.\nKhởi động MP: 0.9999999999999996 → 1.9999999999999996 MP.";
+    const before = JSON.stringify(s),
+      payload = view.embed(s, "u").toJSON();
+    const log = payload.fields
+      .filter((f) => f.name.includes("Lượt vừa rồi") || f.name === "\u200b")
+      .map((f) => f.value)
+      .join("\n");
+    assert(log.includes("2.6 → 1"));
+    assert(log.includes("1 → 2"));
+    assert.equal(JSON.stringify(s), before);
+    const header = "⚠️ **Do Treasure Chest:**";
+    const receipt = [
+      header,
+      ...Array.from(
+        { length: 7 },
+        (_, i) =>
+          "- <:stat:1555983051811594240> **Chỉ số " + i + "**: 368 → **389**",
+      ),
+      "- <:potion:1555983051811594240> **Bình**: 40.4% → **40.8%**",
+    ].join("\n");
+    const embed = new EmbedBuilder();
+    addTextFields(
+      embed,
+      "Lượt vừa rồi",
+      "Đã mở rương.\n" + "Thông báo chiến đấu. ".repeat(25) + "\n" + receipt,
+      false,
+      { keepLists: true },
+    );
+    const fields = embed.toJSON().fields;
+    assert(fields.length > 1, "Fixture must cross a Discord field boundary");
+    const list = fields.find((f) => f.value.includes(header));
+    assert(
+      list.value.includes("40.8%"),
+      "Do not orphan the final Potion stat in another field",
+    );
+    assert(fields.every((f) => f.value.length <= 1024));
+    assert.equal(
+      fields.map((f) => f.value).join("\n"),
+      "Đã mở rương.\n" + "Thông báo chiến đấu. ".repeat(25) + "\n" + receipt,
+    );
+  });
   await test("Custom icons resolve dynamically for every boss/item and stay consistent across inventory, shop, receipts and controls", () => {
     const icons = require("../src/hardcore/shared/icons"),
       app = require("../src/utils/appEmoji");
@@ -838,6 +908,146 @@ async function main() {
     const copy = structuredClone(s);
     core.normalize(copy);
     assert.equal(copy.encounter.boss.mechanicState.lilithHp, 20);
+    repo.deleteSession(run.session.id);
+  });
+  await test("Horadric Forge previews the trade and routes both selectors without using tickets", async () => {
+    const forge = require("../src/hardcore/equipment/forge"),
+      E = require("../src/hardcore/shared/icons").E;
+    const definition = Object.values(core.ITEMS)
+      .flat()
+      .find((i) => i.id === "predators_instinct");
+    function startForge() {
+      const run = service.startHardcore({
+        guildId: "boss-menus",
+        userId: "u",
+        channelId: "c",
+        stake: 10000,
+        classKey: "sorceress",
+      });
+      service.setMessageId(run.session.id, "public");
+      const s = run.state;
+      s.floor = 151;
+      s.cleared = 150;
+      s.encounter = { type: "empty" };
+      core.receiveItem(s, definition);
+      s.escapeTokens = 1;
+      s.reviveTickets = 1;
+      s.prayerBoost = true;
+      s.encounter = {
+        type: "surprise",
+        kind: "horadric",
+        name: "Horadric Forge",
+        targetId: definition.id,
+        forge: forge.prepare(s, definition.id),
+      };
+      repo.saveState(run.session, s);
+      return run;
+    }
+    const select = (id, s) =>
+      view
+        .rows(id, s)
+        .flatMap((r) => r.toJSON().components)
+        .find((c) => c.custom_id?.endsWith(":event_select"));
+    const tickets = (s) => [s.escapeTokens, s.reviveTickets, s.prayerBoost];
+    const skipped = startForge(),
+      initial = skipped.state,
+      items = structuredClone(initial.items),
+      ownedTickets = tickets(initial);
+    const before = JSON.stringify(initial),
+      description = JSON.stringify(view.embed(initial, "u").toJSON());
+    assert(description.includes("Thay đổi khi nghiền"));
+    assert(description.includes("Xác nhận nghiền 1 cấp"));
+    assert(description.includes("không bù số chỉ số đã mất"));
+    assert(!description.includes("boon"));
+    assert.equal(
+      JSON.stringify(initial),
+      before,
+      "Trade preview cannot grind the real item",
+    );
+    assert.deepEqual(
+      select(skipped.session.id, initial).options.map((o) => o.value),
+      ["forge_grind", "event_skip"],
+    );
+    const skip = mock(skipped.session.id, initial.turn, "event_select", [
+      "event_skip",
+    ]);
+    await route(skip);
+    assert.equal(skip.responses.errors.length, 0);
+    const kept = repo.parseState(repo.getSession(skipped.session.id));
+    assert.deepEqual(kept.items, items);
+    assert.deepEqual(tickets(kept), ownedTickets);
+    assert.equal(kept.floor, 152);
+    repo.deleteSession(skipped.session.id);
+    const run = startForge(),
+      s = run.state,
+      originalTurn = s.turn,
+      originalTickets = tickets(s);
+    const bad = mock(run.session.id, s.turn, "event_select", ["forge_boon_0"]);
+    await route(bad);
+    assert.equal(bad.responses.errors.length, 1);
+    assert.equal(
+      repo.parseState(repo.getSession(run.session.id)).items[0].level,
+      1,
+    );
+    const grind = mock(run.session.id, s.turn, "event_select", ["forge_grind"]);
+    await route(grind);
+    assert.equal(grind.responses.errors.length, 0);
+    let live = repo.parseState(repo.getSession(run.session.id));
+    assert.equal(live.items.length, 0);
+    assert.equal(live.encounter.forge.stage, "boon");
+    assert.deepEqual(tickets(live), originalTickets);
+    assert(!live.sources.forgeBoon);
+    const rewardMenu = select(run.session.id, live);
+    assert.equal(rewardMenu.options.length, 3);
+    assert(rewardMenu.placeholder.includes("không tốn vé"));
+    const codes = [E.ene, E.vit, E.res];
+    rewardMenu.options.forEach((o, i) =>
+      assert.equal(o.emoji.id, codes[i].match(/:(\d+)>$/)[1]),
+    );
+    assert(rewardMenu.options[2].label.includes("RES"));
+    assert(!rewardMenu.options[2].label.includes("RESISTANCE"));
+    const components = view
+      .rows(run.session.id, live)
+      .flatMap((r) => r.toJSON().components);
+    assert(!components.some((c) => c.custom_id?.endsWith(":retreat")));
+    const rewardText = JSON.stringify(view.embed(live, "u").toJSON());
+    assert(rewardText.includes(definition.name));
+    assert(rewardText.includes("chưa được cộng"));
+    assert(rewardText.includes("không thể hoàn tác/bỏ qua"));
+    const oldPending = structuredClone(live);
+    delete oldPending.encounter.forge.removed.name;
+    assert(
+      JSON.stringify(view.embed(oldPending, "u").toJSON()).includes(
+        definition.name,
+      ),
+    );
+    const stale = mock(run.session.id, originalTurn, "event_select", [
+      "event_skip",
+    ]);
+    await route(stale);
+    assert.equal(
+      repo.parseState(repo.getSession(run.session.id)).encounter.forge.stage,
+      "boon",
+    );
+    const claim = mock(run.session.id, live.turn, "event_select", [
+      "forge_boon_2",
+    ]);
+    await route(claim);
+    assert.equal(claim.responses.errors.length, 0);
+    const ended = repo.parseState(repo.getSession(run.session.id));
+    assert.equal(ended.sources.forgeBoon.resistance, 1);
+    assert.equal(ended.floor, 152);
+    assert.deepEqual(tickets(ended), originalTickets);
+    await route(
+      mock(run.session.id, live.turn, "event_select", ["forge_boon_2"]),
+    );
+    assert.equal(
+      repo.parseState(repo.getSession(run.session.id)).sources.forgeBoon
+        .resistance,
+      1,
+    );
+    s.mode = "tower";
+    assert.equal(view.eventMenuActions(s).length, 0);
     repo.deleteSession(run.session.id);
   });
   await test("All 41 boss explanations resolve current difficulty values and fit Discord without changing combat", () => {

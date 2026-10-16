@@ -107,6 +107,21 @@ module.exports = function createModule(dependencies) {
 
   function eventMenuActions(state, actions = core.actions(state)) {
     if (
+      state.gameplayVersion === 3 &&
+      state.phase === "encounter" &&
+      !state.mode?.startsWith("tower") &&
+      !state.towerChallengeId &&
+      state.encounter.type === "surprise" &&
+      state.encounter.kind === "horadric" &&
+      state.encounter.forge
+    )
+      return actions.filter(
+        (a) =>
+          a.action === "event_skip" ||
+          a.action === "forge_grind" ||
+          /^forge_boon_[0-2]$/.test(a.action),
+      );
+    if (
       actions.filter(
         (a) => a.action !== "retreat" && !a.action.startsWith("view_"),
       ).length <= 4 ||
@@ -252,7 +267,18 @@ module.exports = function createModule(dependencies) {
                                 ? state.encounter.forgeStat || "str"
                                 : a.action === "forge_vit"
                                   ? "vit"
-                                  : "ticket"
+                                  : a.action.startsWith("forge_boon_")
+                                    ? { resistance: "res" }[
+                                        state.encounter.forge.boons[
+                                          Number(a.action.slice(-1))
+                                        ].key
+                                      ] ||
+                                      state.encounter.forge.boons[
+                                        Number(a.action.slice(-1))
+                                      ].key
+                                    : a.action === "forge_ticket"
+                                      ? "ticket"
+                                      : "shrine"
                           ]
                         : state.encounter.kind === "merchant" &&
                             a.action.startsWith("buy_")
@@ -303,7 +329,9 @@ module.exports = function createModule(dependencies) {
             : state.phase === "boss_chest"
               ? "Chọn một trang bị từ rương boss"
               : state.encounter.kind === "horadric"
-                ? "Chọn phúc lành của Forge"
+                ? state.encounter.forge?.stage === "boon"
+                  ? "Chọn một phần thưởng chỉ số · không tốn vé"
+                  : "Nghiền 1 cấp trang bị hoặc bỏ qua"
                 : state.encounter.kind?.endsWith("_shop") ||
                     state.encounter.kind === "merchant"
                   ? "Chọn món muốn mua"
@@ -325,33 +353,41 @@ module.exports = function createModule(dependencies) {
                     : "") + a.label
                 ).slice(0, 100),
                 value: a.action,
+                ...(a.description
+                  ? { description: a.description.slice(0, 100) }
+                  : {}),
                 emoji: menuEmoji(
                   actionItem(state, a.action)
                     ? itemIcon(actionItem(state, a.action))
-                    : state.phase === "severance"
-                      ? RIFT_ICONS[a.action.slice(6)] || E.rift
-                      : a.action.startsWith("upgrade_")
-                        ? E[a.action.slice(8)]
-                        : a.action.startsWith("forge_boon_")
-                          ? E[
-                              {
-                                accuracy: "accuracy",
-                                resistance: "res",
-                                defense: "defense",
-                              }[
-                                state.encounter.forge.boons[
-                                  Number(a.action.slice(-1))
-                                ].key
-                              ] ||
-                                state.encounter.forge.boons[
-                                  Number(a.action.slice(-1))
-                                ].key
-                            ] || E.shrine
-                          : a.action.startsWith("buy_")
-                            ? icon("shopping_cart", "🛒")
-                            : eventIcon(
-                                state.encounter.kind || state.encounter.type,
-                              ),
+                    : a.action === "event_skip"
+                      ? icon("walking", "🚶")
+                      : a.action === "forge_grind"
+                        ? icon("hammer", "🔨")
+                        : state.phase === "severance"
+                          ? RIFT_ICONS[a.action.slice(6)] || E.rift
+                          : a.action.startsWith("upgrade_")
+                            ? E[a.action.slice(8)]
+                            : a.action.startsWith("forge_boon_")
+                              ? E[
+                                  {
+                                    accuracy: "accuracy",
+                                    resistance: "res",
+                                    defense: "defense",
+                                  }[
+                                    state.encounter.forge.boons[
+                                      Number(a.action.slice(-1))
+                                    ].key
+                                  ] ||
+                                    state.encounter.forge.boons[
+                                      Number(a.action.slice(-1))
+                                    ].key
+                                ] || E.shrine
+                              : a.action.startsWith("buy_")
+                                ? icon("shopping_cart", "🛒")
+                                : eventIcon(
+                                    state.encounter.kind ||
+                                      state.encounter.type,
+                                  ),
                 ),
               })),
             ),

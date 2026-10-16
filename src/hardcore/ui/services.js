@@ -23,6 +23,133 @@ module.exports = function createModule(dependencies) {
     dependencies.itemEffectChanges(...args);
   const button = (...args) => dependencies.button(...args);
 
+  function horadricText(state, detailed = false) {
+    const f = state.encounter.forge,
+      forge = require("../equipment/forge");
+    const title =
+      eventIcon("horadric") + " **Horadric Forge · đổi trang bị lấy chỉ số**";
+    const rewards = f.boons
+      .map((b) => forge.rewardIcon(b) + " **" + forge.rewardLabel(b) + "**")
+      .join(" / ");
+    if (f.stage === "boon") {
+      const definition = Object.values(core.ITEMS)
+        .flat()
+        .find((i) => i.id === f.removed?.id);
+      const name = f.removed?.name || definition?.name || "trang bị";
+      return (
+        title +
+        "\nĐã nghiền **" +
+        name +
+        "**" +
+        (f.removed?.level
+          ? " · Lv." + f.removed.level + " → " + (f.removed.level - 1)
+          : " · 1 cấp") +
+        ".\n**Chọn một phần thưởng:** " +
+        rewards +
+        "\nChỉ số thưởng chưa được cộng. Không dùng hoặc nhận vé, không tốn thêm xu." +
+        "\n**Đã nghiền nên không thể hoàn tác/bỏ qua.** Chọn một thưởng trong menu để tiếp tục."
+      );
+    }
+    const target = state.items.find((i) => i.definition.id === f.targetId);
+    if (!target)
+      return (
+        title + "\nTrang bị không còn trong túi. Chọn **Bỏ qua** để đi tiếp."
+      );
+    const preview = structuredClone(state);
+    core.grind(
+      preview,
+      preview.items.find((i) => i.definition.id === f.targetId),
+    );
+    const changes = statTransitions(state, preview, true, {
+      empty: true,
+      ...(detailed
+        ? {}
+        : {
+            only: [
+              "luck",
+              ...core.effectStatKeys({
+                ...target.definition.effects,
+                ...target.definition.curse?.effects,
+              }),
+            ],
+          }),
+    });
+    const lines = [
+      title,
+      itemIcon(target) +
+        " **Nghiền " +
+        target.name +
+        " · Lv." +
+        target.level +
+        " → " +
+        (target.level - 1) +
+        "**",
+      "**Thay đổi khi nghiền:**" +
+        (changes
+          ? detailed
+            ? "\n- " + changes.split(STAT_SEPARATOR).join("\n- ")
+            : " " + changes
+          : " Không đổi chỉ số nền; vẫn gỡ hiệu ứng của cấp bị nghiền."),
+      "**Đổi lại, chọn đúng một:** " + rewards,
+    ];
+    if (detailed) {
+      const rules = require("../equipment/rules"),
+        copy = preview.items.find((i) => i.definition.id === f.targetId);
+      const lost =
+        rules.itemScale(state, target) -
+        (copy ? rules.itemScale(preview, copy) : 0);
+      const buffs = Object.fromEntries(
+        Object.entries(target.definition.effects).filter(
+          ([k]) => !["heal", "potions", "escapeTokens"].includes(k),
+        ),
+      );
+      if (Object.keys(buffs).length)
+        lines.push("**Buff bị gỡ:** " + effectText(buffs, lost));
+      const curse =
+        rules.curseScale(state, target) -
+        (copy ? rules.curseScale(preview, copy) : 0);
+      if (target.definition.curse) {
+        const itemCurses = require("../itemCurses"),
+          effects = { ...target.definition.curse.effects };
+        if (
+          itemCurses.defenseReduction(target) &&
+          target.level > (target.cleansedLevels || 0)
+        ) {
+          delete effects.defenseReduction;
+          delete effects.defenseSet;
+          const stillCursed = copy && copy.level > (copy.cleansedLevels || 0);
+          lines.push(
+            stillCursed
+              ? "**Nguyền DEF còn hiệu lực:** khoản DEF đã trừ giữ nguyên; chỉ hoàn trả khi hết cấp nguyền."
+              : "**Gỡ cấp nguyền cuối:** hoàn trả " +
+                  E.defense +
+                  " **" +
+                  (itemCurses.defenseLoss(target) || 0) +
+                  " DEF** đã trừ.",
+          );
+        }
+        if (curse > 0 && Object.keys(effects).length)
+          lines.push(
+            "**Nguyền được gỡ theo cấp:** " + effectText(effects, curse),
+          );
+      }
+      if (target.level === 1)
+        lines.push(
+          "Món về Lv.0 sẽ rời túi; mất cả nội tại và affinity của món đó.",
+        );
+    }
+    lines.push(
+      "Thưởng +1 là cố định, không bù số chỉ số đã mất. Không tốn xu/vé." +
+        (preview.luck < state.luck
+          ? " LUCK giảm do mất hiệu ứng trang bị, không phải phí riêng."
+          : ""),
+    );
+    lines.push(
+      "Chọn **Bỏ qua** để giữ nguyên trang bị, hoặc **Xác nhận nghiền 1 cấp**. Sau khi nghiền phải chọn một thưởng để đi tiếp.",
+    );
+    return lines.join("\n");
+  }
+
   function blacksmithText(state, detailed = false) {
     const target = state.items.find(
       (item) => item.definition.id === state.encounter.targetId,
@@ -89,6 +216,7 @@ module.exports = function createModule(dependencies) {
                 state,
                 target.cleansedLevels || 0,
                 {
+                  curse: true,
                   defenseLoss:
                     target.curseEffects?.defense != null
                       ? -target.curseEffects.defense
@@ -175,6 +303,7 @@ module.exports = function createModule(dependencies) {
           state,
           target.cleansedLevels || 0,
           {
+            curse: true,
             defenseLoss:
               target.curseEffects?.defense != null
                 ? -target.curseEffects.defense
@@ -314,6 +443,7 @@ module.exports = function createModule(dependencies) {
     return `**Bảo hiểm SR+:** ${rare}\n**SSR:** ${ssr}\nBộ đếm tính kết quả mở hòm; đồ từ quái/event khác không đặt lại bộ đếm này.`;
   }
   return {
+    horadricText,
     blacksmithText,
     purifierText,
     merchantOffer,

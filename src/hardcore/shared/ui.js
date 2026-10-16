@@ -55,7 +55,34 @@ function healthBar(hp, maxHp) {
         : 0;
   return `${E.hp} **HP** \`${"█".repeat(filled)}${"░".repeat(10 - filled)}\` **${statNumber(hp).toLocaleString("vi-VN")}/${statNumber(maxHp).toLocaleString("vi-VN")}**`;
 }
-function addTextFields(embed, name, text, inline = false) {
+// Repair floating-point tails in saved display text without touching grouped money,
+// emoji IDs, URLs, version strings, or the underlying combat state.
+function roundStatText(text) {
+  return text
+    .split(/(<a?:\w+:\d+>|https?:\/\/[^\s)]+)/g)
+    .map((part, i) =>
+      i % 2
+        ? part
+        : part.replace(
+            /(?<![\p{L}\p{N}_.])[-+]?\d+(?:\.\d+)+(?![\p{L}\p{N}_.])/gu,
+            (token) => {
+              const pieces = token.split(".");
+              return pieces.length === 2 && pieces[1].length >= 4
+                ? (token.startsWith("+") ? "+" : "") +
+                    String(statNumber(Number(token)))
+                : token;
+            },
+          ),
+    )
+    .join("");
+}
+function addTextFields(
+  embed,
+  name,
+  text,
+  inline = false,
+  { keepLists = false } = {},
+) {
   const limit = 1024;
   let chunk = "";
   let first = true;
@@ -69,7 +96,21 @@ function addTextFields(embed, name, text, inline = false) {
     }
     return [...parts, line];
   });
-  for (const line of lines) {
+  const blocks = [];
+  for (let i = 0; i < lines.length; i++) {
+    if (keepLists && lines[i + 1]?.startsWith("- ")) {
+      let end = i + 1;
+      while (lines[end]?.startsWith("- ")) end++;
+      const block = lines.slice(i, end).join("\n");
+      if (block.length <= limit) {
+        blocks.push(block);
+        i = end - 1;
+        continue;
+      }
+    }
+    blocks.push(lines[i]);
+  }
+  for (const line of blocks) {
     if (chunk.length + line.length + 1 > limit && chunk) {
       embed.addFields({
         name: first ? name : "\u200b",
@@ -91,6 +132,7 @@ function addTextFields(embed, name, text, inline = false) {
 
 module.exports = {
   statNumber,
+  roundStatText,
   healthBar,
   addTextFields,
   highlightStat,

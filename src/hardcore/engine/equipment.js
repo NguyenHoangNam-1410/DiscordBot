@@ -249,12 +249,12 @@ module.exports = function createModule(dependencies) {
           : levels,
         curseScale: equipmentRules.enabled(state)
           ? equipmentRules.curseScale(state, item) -
-            (equipmentRules.scale(previousLevel, state) -
-              equipmentRules.scale(
+            equipmentRules.curseScale(state, {
+              level: previousLevel,
+              cleansedLevels:
                 (item.cleansedLevels || 0) -
-                  Math.min(levels, Math.max(0, cleansedLevels)),
-                state,
-              ))
+                Math.min(levels, Math.max(0, cleansedLevels)),
+            })
           : Math.max(0, levels - cleansedLevels),
         definition: structuredClone(definition),
         curseLevels: Math.max(0, levels - cleansedLevels),

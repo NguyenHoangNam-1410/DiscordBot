@@ -299,7 +299,7 @@ module.exports = function createModule(dependencies) {
       const forge = fields.rewards.find((f) => f.name.includes("Horadric"));
       if (forge)
         forge.value =
-          "Luật trang bị mới: nghiền 1 level, gỡ buff/nguyền tương ứng; hết level thì mất nội tại/affinity. Chọn trực tiếp một boon cố định +1 thuộc tính chính, +1 VIT hoặc +1 chỉ số phụ theo class. Không giữ chỉ số hấp thụ; không tốn xu, không reroll. Run cũ giữ Forge cũ.";
+          "Luật trang bị mới: nghiền 1 level, gỡ buff/nguyền tương ứng; hết level thì mất nội tại/affinity. Đổi lại chọn đúng một phần thưởng chỉ số cố định: +1 thuộc tính chính, +1 VIT hoặc +1 chỉ số phụ theo class. Thưởng không bù buff đã mất; không dùng/nhận vé và không tốn xu. Xem chỉ số trước → sau trước khi xác nhận. Có thể bỏ qua trước khi nghiền; sau khi nghiền phải nhận một thưởng để đi tiếp. Run cũ giữ Forge cũ.";
     }
     return category
       ? fields[category] || fields.combat

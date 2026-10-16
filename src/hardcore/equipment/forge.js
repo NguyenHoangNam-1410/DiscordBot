@@ -25,12 +25,31 @@ function prepare(state, targetId) {
     ],
   };
 }
+function rewardLabel(b) {
+  const label =
+    { accuracy: "ACC", defense: "DEF", resistance: "RES" }[b.key] ||
+    b.key.toUpperCase();
+  return (
+    "+" + b.amount + " " + label + (b.key === "resistance" ? " (điểm %)" : "")
+  );
+}
+function rewardIcon(b) {
+  const { E } = require("../shared/icons");
+  return E[{ resistance: "res" }[b.key] || b.key] || E.shrine;
+}
 function choices(f) {
   return f.stage === "grind"
-    ? [{ action: "forge_grind", label: "Nghiền 1 level · chọn boon" }]
+    ? [
+        {
+          action: "forge_grind",
+          label: "Xác nhận nghiền 1 cấp",
+          description: "Mất buff của cấp này, rồi chọn một phần thưởng chỉ số.",
+        },
+      ]
     : f.boons.map((b, i) => ({
         action: "forge_boon_" + i,
-        label: "+" + b.amount + " " + b.key.toUpperCase(),
+        label: "Nhận " + rewardLabel(b),
+        description: "Cộng chỉ số trong run; không dùng hoặc nhận vé.",
       }));
 }
-module.exports = { prepare, choices };
+module.exports = { prepare, choices, rewardLabel, rewardIcon };

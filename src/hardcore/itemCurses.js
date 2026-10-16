@@ -1,4 +1,5 @@
 "use strict";
+const { statNumber } = require("./shared/ui");
 // Only these new curse effects have caps. Saved legacy effects retain their rules.
 const CAPS = Object.freeze({
   physicalDamageTaken: 1,
@@ -38,17 +39,18 @@ function migrateDefenseCurse(item) {
 }
 function describeEffect(key, value, level = 1, compact = false) {
   const n = Math.min(CAPS[key] ?? Infinity, value * level);
-  const pct = (x) => Math.round(x * 100) + "%";
+  const pct = (x) => statNumber(x * 100) + "%";
+  const amount = statNumber(n);
   const max = CAPS[key];
   if (compact) {
     const text = {
       physicalDamageTaken: `Bạn nhận DMG vật lý +${pct(n)}`,
       magicDamageTaken: `Bạn nhận DMG phép +${pct(n)}`,
-      potionCapacityLoss: `Sức chứa bình −${n} (≥1)`,
+      potionCapacityLoss: `Sức chứa bình −${amount} (≥1)`,
       skillHpCost: `Skill tốn ${pct(n)} Max HP; chừa ≥1`,
-      attackManaLoss: `Tấn công hồi MP −${n} (≥0)`,
-      skillManaExtra: `Skill tốn MP +${n}; Shrine miễn phí: 0`,
-      combatManaLoss: `Đầu combat: MP −${n} (một lần)`,
+      attackManaLoss: `Tấn công hồi MP −${amount} (≥0)`,
+      skillManaExtra: `Skill tốn MP +${amount}; Shrine miễn phí: 0`,
+      combatManaLoss: `Đầu combat: MP −${amount} (một lần)`,
       healingReduction: `HP hồi −${pct(n)}; trừ Checkpoint/hồi sinh`,
       normalDamagePenalty: `Tấn công/Skill: DMG quái thường −${pct(n)}`,
     };
@@ -62,7 +64,7 @@ function describeEffect(key, value, level = 1, compact = false) {
     case "potionCapacityLoss":
       return (
         "Sức chứa bình của bạn −" +
-        n +
+        amount +
         " (còn tối thiểu 1; bỏ bình vượt giới hạn)"
       );
     case "skillHpCost":
@@ -76,19 +78,19 @@ function describeEffect(key, value, level = 1, compact = false) {
     case "attackManaLoss":
       return (
         "Tấn công hồi ít hơn " +
-        n +
+        amount +
         " MP cho bạn (trần −3 MP; tối thiểu hồi 0; Phòng thủ không đổi)"
       );
     case "skillManaExtra":
       return (
         "Skill của bạn tốn thêm " +
-        n +
+        amount +
         " MP (trần +3; cộng sau Paradox; Class Shrine miễn phí vẫn 0 MP)"
       );
     case "combatManaLoss":
       return (
         "Vào combat: bạn mất " +
-        n +
+        amount +
         " MP (trần 3; tối thiểu còn 0; một lần/combat, trước nội tại hồi MP)"
       );
     case "healingReduction":

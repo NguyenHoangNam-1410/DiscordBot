@@ -156,12 +156,12 @@ module.exports = function createModule(dependencies) {
   ) {
     const removed = afterLevel === 0;
     if (rules.enabled(state)) {
-      beforeLevel =
-        rules.scale(beforeLevel, state) - rules.scale(cleansedLevels, state);
-      afterLevel =
-        afterLevel === 0
-          ? 0
-          : rules.scale(afterLevel, state) - rules.scale(cleansedLevels, state);
+      const scaled = (level) =>
+        options.curse
+          ? rules.curseScale(state, { level, cleansedLevels })
+          : rules.scale(level, state);
+      beforeLevel = scaled(beforeLevel);
+      afterLevel = afterLevel === 0 ? 0 : scaled(afterLevel);
     }
     return Object.entries(effects)
       .map(([key, value]) => {

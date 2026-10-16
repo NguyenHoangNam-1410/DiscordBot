@@ -1,4 +1,5 @@
 "use strict";
+const { statNumber } = require("../shared/ui");
 const affinity = require("../equipment/affinityEffects");
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
@@ -30,7 +31,7 @@ module.exports = function createModule(dependencies) {
       state.mana = Math.max(0, state.mana - state.combatManaLoss);
       state.lastLog =
         (state.lastLog || "") +
-        `\n${E.mana} Soul Leash: ${before} → ${state.mana} ${E.mana}.`;
+        `\n${E.mana} Soul Leash: ${statNumber(before)} → ${statNumber(state.mana)} ${E.mana}.`;
     }
     const p = itemPassives.aggregate(state);
     if (
@@ -46,9 +47,9 @@ module.exports = function createModule(dependencies) {
         "\n" +
         passiveIcon("startMana") +
         " Khởi động MP: " +
-        before +
+        statNumber(before) +
         " → " +
-        state.mana +
+        statNumber(state.mana) +
         ` ${E.mana}.`;
     }
   }

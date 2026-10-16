@@ -100,7 +100,13 @@ module.exports = function createModule(dependencies) {
               : "Chưa thể rút",
       inline: false,
     });
-    addTextFields(e, `${icon("scroll", "📜")} Lượt vừa rồi`, turnText(state));
+    addTextFields(
+      e,
+      `${icon("scroll", "📜")} Lượt vừa rồi`,
+      turnText(state),
+      false,
+      { keepLists: true },
+    );
     if (result && !beta) {
       const won = ["cashout", "summit"].includes(result.reason);
       e.addFields({
