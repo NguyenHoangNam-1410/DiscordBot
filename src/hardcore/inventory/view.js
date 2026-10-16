@@ -14,7 +14,7 @@ const bag = require("./service");
 const { getAccount } = require("../../services/economyService");
 const { getPlayerProgression } = require("../../services/playerLevelService");
 const v2View = require("../ui/index");
-const { TICKET_TYPES, ticketIcon } = require("../shared/icons");
+const { TICKET_TYPES, ticketIcon, itemIcon } = require("../shared/icons");
 const { formatStatText, addTextFields } = require("../shared/ui");
 const { appEmoji, appEmojiObject } = require("../../utils/appEmoji");
 const currencyIcon = (currency) =>
@@ -22,6 +22,25 @@ const currencyIcon = (currency) =>
 function ticketOptionEmoji(item) {
   const ticket = TICKET_TYPES[item.id];
   return appEmojiObject(ticket.emojiName) || { name: ticket.fallback };
+}
+function itemOptionEmoji(item) {
+  if (item.typeCode === "ticket") return ticketOptionEmoji(item);
+  const icon = itemIcon(item);
+  const custom = /^<(a?):(\w+):(\d+)>$/.exec(icon);
+  return custom
+    ? { id: custom[3], name: custom[2], animated: custom[1] === "a" }
+    : { name: icon };
+}
+function optionDescription(item) {
+  // Discord select descriptions are plain text; remove markup before truncation.
+  return (
+    detail(item)
+      .replace(/<a?:\w+:\d+>/g, "")
+      .replace(/[*_\n\r]/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .slice(0, 100) || "Trang bị mang vào run"
+  );
 }
 const productName = (item) =>
   item.typeCode === "ticket"
@@ -107,9 +126,7 @@ function shopPayload(guildId, userId) {
       today.products.map((item) => ({
         label: item.name,
         value: item.id,
-        ...(item.typeCode === "ticket"
-          ? { emoji: ticketOptionEmoji(item) }
-          : {}),
+        emoji: itemOptionEmoji(item),
         description: `${money(item.price)} ${item.currency === "diamonds" ? "kim cương" : "xu"} / ${item.typeCode === "ticket" ? "vé" : item.typeCode}`,
       })),
     );
@@ -132,20 +149,18 @@ function shopPayload(guildId, userId) {
                   ),
                 )
                 .addOptions(
-                  offers
-                    .slice(0, 25)
-                    .map((b) => ({
-                      label:
-                        require("../characters").get(b.spark.characterId).name +
-                        " · " +
-                        banners.SSR_SPARK_COST +
-                        " Spark",
-                      value: b.id + "@" + b.version,
-                      description:
-                        "Số dư: " +
-                        money(progress.wallet(userId, b.spark.currencyId)) +
-                        " Spark",
-                    })),
+                  offers.slice(0, 25).map((b) => ({
+                    label:
+                      require("../characters").get(b.spark.characterId).name +
+                      " · " +
+                      banners.SSR_SPARK_COST +
+                      " Spark",
+                    value: b.id + "@" + b.version,
+                    description:
+                      "Số dư: " +
+                      money(progress.wallet(userId, b.spark.currencyId)) +
+                      " Spark",
+                  })),
                 ),
             ),
           ]
@@ -458,7 +473,8 @@ function setupPayload(draft, context) {
               100,
             ),
             value: item.id,
-            description: detail(item).replace(/[*\n]/g, " ").slice(0, 100),
+            emoji: itemOptionEmoji(item),
+            description: optionDescription(item),
             default: loadout.itemIds.includes(item.id),
           }))
         : [{ label: "Chưa có trang bị", value: "none" }],

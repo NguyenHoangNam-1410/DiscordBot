@@ -1,5 +1,15 @@
 [
   {
+    "id": "f185917b-5e69-4e5a-9205-163c96ba204a",
+    "updatedAt": "2026-10-16T07:25:17.192Z",
+    "auditedAt": "2026-10-16T07:25:17.192Z",
+    "title": "Sửa selector trang bị",
+    "changes": [
+      "Selector trang bị mang theo và selector mua hàng hiển thị icon riêng cho từng món, có icon dự phòng khi chưa có emoji.",
+      "Mô tả trang bị trong selector hiển thị chữ rõ ràng, bỏ mã emoji thô trước khi rút gọn để không bị cắt dở mã."
+    ]
+  },
+  {
     "id": "3679d693-6e5e-427d-ac60-89ab72591e00",
     "updatedAt": "2026-10-16T07:19:59.761Z",
     "auditedAt": "2026-10-16T07:19:59.761Z",

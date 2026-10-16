@@ -723,6 +723,106 @@ async function main() {
     );
     copy.close();
   });
+  test("Loadout and store selectors use item icons and plain text descriptions", () => {
+    const view = require("../src/hardcore/inventory/view"),
+      emoji = require("../src/utils/appEmoji");
+    const definitions = Object.values(
+      require("../src/hardcore/item").ITEMS,
+    ).flat();
+    const names = [
+      "Goblin Hook",
+      "Hunter Bow",
+      "Mana Fragment",
+      "Minor Life Charm",
+      "Rabbit Foot",
+    ];
+    const items = names.map((name) => definitions.find((i) => i.name === name));
+    assert(items.every(Boolean));
+    const insert = db.prepare(
+      "INSERT INTO hardcore_inventory(guild_id,user_id,item_id,quantity,updated_at) VALUES('icon-selector','icons',?,4,0)",
+    );
+    for (const item of items) insert.run(item.id);
+    db.prepare(
+      "INSERT INTO hardcore_shop_rotations(guild_id,day,items_json,created_at) VALUES(?,?,?,0)",
+    ).run(
+      "icon-selector",
+      bag.vietnamDay(),
+      JSON.stringify(items.map((i) => i.id)),
+    );
+    const draft = {
+      id: "icon-selector",
+      guildId: "icon-selector",
+      userId: "icons",
+      version: 0,
+      stage: "loadout",
+      classKey: "sorceress",
+      stake: 100000,
+      itemIds: [items[0].id],
+      ticketIds: [],
+    };
+    const context = { balance: 100000, maxBet: 100000 };
+    const check = () => {
+      const screen = view.setupPayload(draft, context);
+      limits(screen);
+      const menu = screen.components
+        .flatMap((r) => r.toJSON().components)
+        .find((c) => c.custom_id.endsWith(":items"));
+      assert.equal(menu.options.length, 5);
+      for (const option of menu.options) {
+        assert(option.emoji);
+        assert(option.description.length <= 100);
+        assert(!/[<>]|:\d{15,}/.test(option.description));
+        assert(!option.description.includes("undefined"));
+        const item = items.find((i) => i.id === option.value);
+        assert(item);
+        assert(option.label.includes(item.name));
+        assert(option.label.includes("×4"));
+        assert.equal(option.default, item.id === items[0].id);
+      }
+      const shop = view.shopPayload("icon-selector", "icons");
+      limits(shop);
+      const options = shop.components
+        .flatMap((r) => r.toJSON().components)
+        .find((c) => c.custom_id.endsWith(":buy")).options;
+      for (const option of options) assert(option.emoji);
+      return { menu, options };
+    };
+    const fallback = check();
+    assert(fallback.menu.options.every((o) => o.emoji.id || o.emoji.name));
+    emoji.setApplicationEmojisForTest(
+      items.map((item, i) => [
+        "item_" + item.id,
+        String(1557000000000000800n + BigInt(i)),
+        i === 0,
+      ]),
+    );
+    try {
+      const { menu, options } = check();
+      for (let i = 0; i < items.length; i++)
+        for (const list of [menu.options, options]) {
+          const option = list.find((o) => o.value === items[i].id);
+          assert.equal(option.emoji.name, "item_" + items[i].id);
+          assert.equal(
+            option.emoji.id,
+            String(1557000000000000800n + BigInt(i)),
+          );
+          assert.equal(option.emoji.animated, i === 0);
+        }
+      assert(
+        menu.options
+          .find((o) => o.value === items[0].id)
+          .description.includes("Bắt Goblin"),
+      );
+    } finally {
+      emoji.setApplicationEmojisForTest([]);
+    }
+    const empty = view.setupPayload(
+      { ...draft, userId: "empty-icons", itemIds: [] },
+      context,
+    );
+    limits(empty);
+    assert(empty.components[2].toJSON().components[0].disabled);
+  });
   test("Banner and character UI fit Discord at S6 and all R/SR result combinations", () => {
     for (const user of ["u", "cards", "runner"]) {
       limits(ui.payload(user));
