@@ -162,12 +162,12 @@ module.exports = function createModule(dependencies) {
         {
           name: `${eventIcon("tax")} Tax Collector · V3`,
           value:
-            "Nộp thuế: trừ 15% payout hiện tại, làm tròn lên; không đổi hệ số payout. Lucky Break = min(50%, LUCK ×0,25%); đạt trần ở 200 LUCK giúp tránh thuế. Chống trả: không nộp thuế; Royal Outlaw đến hết run loại Tax Collector khỏi roster, Boss/Final Boss gây thêm 20% DMG lên bạn. Không cộng dồn; xem Rift.",
+            "Nộp thuế: trừ 15% payout hiện tại, làm tròn lên; không đổi hệ số payout. Lucky Break = min(50%, LUCK ×0,25%); đạt trần ở 200 LUCK giúp tránh thuế và vẫn tính là hợp tác.\n**Chấp hành thuế đầy đủ:** đã nộp ít nhất 1 lần và không chống trả: sau boss 950 nhận 1 lượt giải toàn bộ nguyền của 1 trang bị miễn phí; giữ độ hiếm, level, buff và nội tại. Dùng ngay, để dành cho Purifier hoặc trước trận 999; hết hiệu lực khi kết thúc run. Tax Collector ngừng xuất hiện từ tầng 950.\n**Chống trả:** không nộp thuế; Royal Outlaw đến hết run loại Tax Collector khỏi roster, Boss/Final Boss gây thêm 20% DMG lên bạn; hủy quyền lợi hợp tác đang chờ. Không cộng dồn; xem Rift.",
         },
         {
           name: `${eventIcon("potion_thief")} The Thief · V3`,
           value:
-            "Chấp nhận: Lucky Break = min(50%, LUCK ×0,25%); đạt trần ở 200 LUCK tránh mất mát; nếu thất bại, 50% mất 10% payout hiện tại / 50% mất nửa bình hiện có, làm tròn lên (0 bình không mất). Đánh đuổi: đánh The Thief (Elite) tại tầng này, bạn đi trước. Hạ nhận +20% cược và Underworld Lead: miễn phí Diamond Merchant/Rift Merchant, giữ một món/lần gặp và Diamond Merchant hai lần/run. Không gặp lại The Thief; Elite gây thêm 30% DMG lên bạn đến hết run. Không cộng dồn; xem Rift.",
+            "Chấp nhận: Lucky Break = min(50%, LUCK ×0,25%); đạt trần ở 200 LUCK tránh mất mát; nếu thất bại, 50% mất 10% payout hiện tại / 50% mất nửa bình hiện có, làm tròn lên (0 bình không mất).\n**Dịch vụ hậu mãi:** đã chấp nhận ít nhất 1 lần và không đánh đuổi: sau tầng 998 gặp trùm băng đảng, chọn xóa toàn bộ stack của 1 loại Rift có hại miễn phí, trừ Unstable Rift. Không chiến đấu, không tính thêm tầng; chỉ 1 lần/run. Lucky Break vẫn ghi nhận hợp tác.\n**Đánh đuổi:** đánh The Thief (Elite) ngay, bạn đi trước; hủy quyền lợi hậu mãi. Hạ nhận +20% cược và Underworld Lead: miễn phí Diamond/Rift Merchant, vẫn một món/lần gặp và Diamond hai lần/run. Không gặp lại The Thief; Elite gây thêm 30% DMG đến hết run. Không cộng dồn; xem Rift.",
         },
         {
           name: `${E.luck} Wrong Portal`,
@@ -262,7 +262,7 @@ module.exports = function createModule(dependencies) {
         },
         {
           name: `${eventIcon("purifier")} Purifier · giải lời nguyền`,
-          value: `Chỉ xuất hiện khi có trang bị còn lời nguyền; không xuất hiện ở tầng 1. Trong nhóm event đặc biệt đủ điều kiện, Purifier có trọng số **gấp ${core.PURIFIER_EVENT_WEIGHT}** mỗi event thường (trọng số 1); Royal Invitation có trọng số 10 khi đủ điều kiện. Đây không phải tỷ lệ cố định trên mỗi tầng.\nChọn món còn nguyền trong menu để xem lời nguyền được gỡ, chỉ số trước → sau và giá. Bấm **Giải nguyền món này**: trả **${percent(core.PURIFIER_COST_RATE)} payout hiện tại**, làm tròn lên và tối thiểu 1 xu; gỡ mọi level lời nguyền của món đã chọn, giữ nguyên UR, buff, level và nội tại. Chỉ giải 1 món mỗi lần gặp; chọn hoặc đổi món không tốn xu và không qua tầng.`,
+          value: `Chỉ xuất hiện khi có trang bị còn lời nguyền; không xuất hiện ở tầng 1. Trong nhóm event đặc biệt đủ điều kiện, Purifier có trọng số **gấp ${core.PURIFIER_EVENT_WEIGHT}** mỗi event thường (trọng số 1); Royal Invitation có trọng số 10 khi đủ điều kiện. Đây không phải tỷ lệ cố định trên mỗi tầng.\nChọn món còn nguyền trong menu để xem lời nguyền được gỡ, chỉ số trước → sau và giá. Bấm **Giải nguyền món này**: trả **${percent(core.PURIFIER_COST_RATE)} payout hiện tại**, làm tròn lên và tối thiểu 1 xu; gỡ mọi level lời nguyền của món đã chọn, giữ nguyên UR, buff, level và nội tại. Nếu còn lượt miễn phí Tax Collector, dùng lượt đó thay phí. Chỉ giải 1 món mỗi lần gặp; chọn hoặc đổi món không tốn xu và không qua tầng.`,
         },
         {
           name: `${eventIcon("diamond_shop")} Diamond Merchant`,

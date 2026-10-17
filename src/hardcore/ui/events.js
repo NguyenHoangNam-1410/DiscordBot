@@ -212,6 +212,7 @@ module.exports = function createModule(dependencies) {
                     `Trừ 15% payout hiện tại (${money(core.taxCost(s))} ${E.coin}), làm tròn lên; không đổi hệ số payout.`,
                   ],
                 ]),
+                "**Chấp hành thuế đầy đủ:** chọn Nộp thuế ít nhất 1 lần, kể cả Lucky Break, và không chống trả: sau boss 950 nhận **1 lượt giải toàn bộ nguyền của 1 trang bị miễn phí**. Có thể để dành để dùng tại Purifier hoặc trước trận 999; chỉ trong run này. Tax Collector ngừng xuất hiện từ tầng 950.",
                 "**Chống trả:** không nộp thuế; nhận Royal Outlaw đến hết run: không gặp lại Tax Collector, Boss/Final Boss gây thêm 20% DMG lên bạn. Xem Tower Remembers trong Rift.",
               ]
             : [
@@ -226,6 +227,7 @@ module.exports = function createModule(dependencies) {
                     `Mất một nửa ${E.potion} bình đang có, làm tròn lên; hết bình thì không mất.`,
                   ],
                 ]),
+                "**Dịch vụ hậu mãi:** chấp nhận ít nhất 1 lần, kể cả Lucky Break, và không đánh đuổi: sau tầng 998 gặp trùm băng đảng, miễn phí xóa **toàn bộ stack của 1 loại Rift có hại**, trừ Unstable Rift. Không cần chiến đấu; chỉ 1 lần/run. Đánh đuổi hủy quyền lợi đang chờ.",
                 "**Đánh đuổi:** chiến đấu The Thief (Tinh anh) ngay tại tầng này, bạn đi trước. Hạ nhận +20% cược và Underworld Lead: miễn phí Diamond Merchant/Rift Merchant, giữ giới hạn mua hiện tại; không gặp lại The Thief, Elite gây thêm 30% DMG lên bạn đến hết run. Xem Rift.",
               ],
         );

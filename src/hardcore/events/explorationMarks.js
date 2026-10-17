@@ -25,9 +25,18 @@ function normalize(s) {
     "mimic",
     "ancientMimic",
     "mimicBoost",
+    "taxCompliant",
+    "thiefAccepted",
+    "thiefChallenged",
   ])
     if (m[k] != null && typeof m[k] !== "boolean")
       throw Error("INVALID_EXPLORATION_MARK");
+  if (
+    (m.taxRelief != null && !["ready", "used"].includes(m.taxRelief)) ||
+    (m.thiefAftercare != null &&
+      !["ready", "used", "unavailable"].includes(m.thiefAftercare))
+  )
+    throw Error("INVALID_EXPLORATION_MARK");
   if (
     m.vulnerable &&
     (!Number.isSafeInteger(m.vulnerable.from) ||
@@ -76,9 +85,92 @@ function blood(s) {
   m.vulnerable = { from: s.floor, due: s.floor + 10 };
   return before - s.hp;
 }
+function accept(s, kind) {
+  if (!enabled(s)) return false;
+  const m = ensure(s);
+  if (kind === "tax" && !m.outlaw) {
+    const first = !m.taxCompliant;
+    m.taxCompliant = true;
+    return first;
+  }
+  if (kind === "potion_thief" && !m.thiefChallenged && !m.underworld) {
+    const first = !m.thiefAccepted;
+    m.thiefAccepted = true;
+    return first;
+  }
+  return false;
+}
+function oppose(s, kind) {
+  const m = ensure(s);
+  if (kind === "tax") {
+    m.taxCompliant = false;
+    delete m.taxRelief;
+  } else {
+    m.thiefAccepted = false;
+    m.thiefChallenged = true;
+    delete m.thiefAftercare;
+  }
+}
+const taxReliefAvailable = (s) =>
+  Boolean(data(s).taxCompliant && !data(s).outlaw && data(s).taxRelief === "ready");
+function useTaxRelief(s) {
+  if (!taxReliefAvailable(s)) throw Error("INVALID_ACTION");
+  ensure(s).taxRelief = "used";
+}
+function finishAftercare(s, used) {
+  const m = data(s);
+  if (
+    !m.thiefAccepted || m.thiefChallenged || m.underworld ||
+    m.thiefAftercare !== "ready"
+  )
+    throw Error("INVALID_ACTION");
+  m.thiefAftercare = used ? "used" : "unavailable";
+}
+function awardMilestones(s, floor) {
+  if (!enabled(s)) return;
+  const m = data(s);
+  const queue = (key) => {
+    if (!s.pendingMilestones.includes(key)) s.pendingMilestones.push(key);
+  };
+  if (floor >= 950 && m.taxCompliant && !m.outlaw && !m.taxRelief) {
+    m.taxRelief = "ready";
+    queue("tax_relief");
+    s.lastLog += `\n${eventIcon("tax")} Chấp hành thuế đầy đủ: nhận **1 lượt giải toàn bộ nguyền của 1 trang bị miễn phí**. Có thể để dành; hết hiệu lực khi kết thúc run.`;
+  }
+  if (floor === 998) {
+    if (taxReliefAvailable(s)) queue("tax_relief");
+    if (
+      m.thiefAccepted && !m.thiefChallenged && !m.underworld &&
+      !m.thiefAftercare
+    ) {
+      m.thiefAftercare = "ready";
+      queue("thief_aftercare");
+    }
+  }
+}
 function fields(s) {
   const m = data(s),
     r = [];
+  if (m.taxCompliant && !m.outlaw)
+    r.push({
+      name: eventIcon("tax") + " Chấp hành thuế đầy đủ",
+      value: m.taxRelief === "used"
+        ? "Đã dùng lượt giải nguyền miễn phí cho 1 trang bị. Tax Collector ngừng xuất hiện từ tầng 950."
+        : m.taxRelief === "ready"
+          ? s.encounter?.type === "combat" && s.floor === 999
+            ? "Chưa dùng lượt giải nguyền miễn phí trước trận cuối; quyền lợi hết khi kết thúc run."
+            : "Còn 1 lượt giải toàn bộ nguyền của 1 trang bị miễn phí. Dùng tại Purifier hoặc cuộc gặp trước tầng 999; chỉ dùng trong run này."
+          : "Sau khi vượt boss 950: nhận 1 lượt giải toàn bộ nguyền của 1 trang bị miễn phí. Tax Collector ngừng xuất hiện từ tầng 950. Chống trả sẽ hủy quyền lợi đang chờ; Lucky Break vẫn tính là hợp tác.",
+    });
+  if (m.thiefAccepted && !m.thiefChallenged && !m.underworld)
+    r.push({
+      name: eventIcon("potion_thief") + " Dịch vụ hậu mãi",
+      value: m.thiefAftercare === "used"
+        ? "Đã dùng dịch vụ: xóa toàn bộ stack của 1 loại Rift có hại trước trận tầng 999."
+        : m.thiefAftercare === "unavailable"
+          ? "Đã gặp trùm băng đảng; không có Rift phù hợp để xóa."
+          : "Sau khi vượt tầng 998: gặp trùm băng đảng, chọn xóa toàn bộ stack của 1 loại Rift có hại, trừ Unstable Rift. Không cần chiến đấu; chỉ 1 lần/run. Đánh đuổi sẽ hủy quyền lợi; Lucky Break vẫn tính là hợp tác.",
+    });
   if (m.outlaw)
     r.push({
       name: eventIcon("tax") + " Royal Outlaw",
@@ -124,5 +216,11 @@ module.exports = {
   vulnerable,
   healerDue,
   blood,
+  accept,
+  oppose,
+  taxReliefAvailable,
+  useTaxRelief,
+  finishAftercare,
+  awardMilestones,
   fields,
 };

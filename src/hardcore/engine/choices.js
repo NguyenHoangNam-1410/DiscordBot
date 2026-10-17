@@ -305,7 +305,14 @@ module.exports = function createModule(dependencies) {
         (e.kind === "healer" && e.healerReturn) ||
         (e.kind === "duelist" && e.mode)
           ? []
-          : [{ action: "event_skip", label: "Bỏ qua" }]),
+          : [{
+              action: "event_skip",
+              label: e.taxRelief
+                ? state.cleared >= 998
+                  ? "Bỏ qua, vào trận cuối"
+                  : "Để dành lượt miễn phí"
+                : "Bỏ qua",
+            }]),
       ];
     if (e.type === "trap" && e.kind === "portal")
       return [

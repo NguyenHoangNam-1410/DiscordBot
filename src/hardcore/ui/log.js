@@ -26,7 +26,7 @@ module.exports = function createModule(dependencies) {
     if (purified) {
       details.push(
         eventIcon("purifier") +
-          " **Đã giải nguyền:** " +
+          (purified.freeTaxRelief ? " **Giải nguyền miễn phí:** " : " **Đã giải nguyền:** ") +
           itemIcon(
             state.items.find((i) => i.name === purified.name) || purified,
           ) +

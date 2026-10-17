@@ -68,8 +68,11 @@ module.exports = function createModule(dependencies) {
       return paradox.choicesText(s.encounter);
     if (s.phase === "paradox")
       return `${eventIcon("paradox")} **RIFT PARADOX**\nChọn **một** quy luật đặc biệt cho tầng **${s.floor}–${s.floor + 4}**. Hết hạn, cơ chế trở lại bình thường.\n\n**Máu là tiền · đổi HP lấy thưởng xu**\n- Mất HP do quái/bẫy: tăng hệ số thưởng xu; hồi HP từ bình/skill/event: giảm hệ số. Mỗi 10% Max HP tương ứng 10 điểm %.\n- Hệ số giới hạn từ **−50% đến +50%**, chỉ áp dụng khi hiệu ứng còn hoạt động. Không tác động kim cương.\n- Hồi đầy ${E.hp} HP tại ${E.checkpoint} checkpoint **không giảm hệ số thưởng**. HP dùng để mua đồ/hiến tế không tăng thưởng.\n\n**Ngược đời · ATK chuyển thành DEF và ngược lại**\n- ${E.attack} ATK: **${s.damageMin}–${s.damageMax} → ${Math.max(1, s.defense - 2)}–${Math.max(1, s.defense + 3)}** (paradox). \n- ${E.defense} DEF: **${s.defense} → ${(s.damageMin + s.damageMax) / 2}** (paradox).`;
-    if (s.phase === "severance")
+    if (s.phase === "severance") {
+      if (s.encounter.thiefAftercare)
+        return `${eventIcon("potion_thief")} **TRÙM BĂNG ĐẢNG · DỊCH VỤ HẬU MÃI**\nBạn đã chấp nhận The Thief và không đánh đuổi. Chọn **1 loại Rift có hại** để xóa **toàn bộ stack** miễn phí trước trận tầng 999.\nUnstable Rift được giữ. Dịch vụ chỉ dùng **1 lần/run**, không cần chiến đấu và không tính thêm tầng.`;
       return `${eventIcon("severance")} Xóa **toàn bộ stack** của một Rift có hại. Unstable Rift được giữ.\nChọn icon của Rift muốn xóa. Xem nút **Rift** để đọc hiệu ứng từng loại.`;
+    }
     if (s.phase === "summit")
       return `${eventIcon("boss")} Đã hạ Deimoss tầng 999. Bấm **Rút thưởng** để chốt chiến thắng và phần thưởng.`;
     const e = s.encounter;
@@ -296,8 +299,8 @@ ${bossDisplay.status(s)}${require("../rift").battle(s)}
               : "Chọn vào portal hoặc bỏ qua để vượt tầng."
             : require("../events/explorationMarks").enabled(s)
               ? e.kind === "tax"
-                ? "Chọn nộp thuế hoặc chống trả."
-                : "Chọn chấp nhận hoặc đánh đuổi."
+                ? "Nộp thuế và không chống trả: sau boss 950 được giải toàn bộ nguyền của 1 trang bị miễn phí. Tax Collector ngừng xuất hiện từ tầng 950. Lucky Break vẫn ghi nhận hợp tác."
+                : "Chấp nhận và không đánh đuổi: sau tầng 998 gặp trùm băng đảng, miễn phí xóa toàn bộ stack của 1 loại Rift có hại (trừ Unstable Rift). Lucky Break vẫn ghi nhận hợp tác."
               : "Đi tiếp để xử lý tình huống.",
         echo: "Chọn cách tương tác với mộ.",
         surprise: e.healerReturn

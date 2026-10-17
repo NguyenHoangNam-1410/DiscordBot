@@ -42,7 +42,10 @@ module.exports = function createModule(dependencies) {
       k = e.kind;
     const done = (log) => {
       state.lastLog = log;
-      completeFloor(state, session, rng, 0);
+      if (e.taxRelief) {
+        dependencies.finishEventResult(state);
+        dependencies.nextMilestone(state, session, rng);
+      } else completeFloor(state, session, rng, 0);
     };
     const combat = (enemy, log) => {
       state.encounter = enemy;
@@ -102,8 +105,13 @@ module.exports = function createModule(dependencies) {
       return;
     }
     if (action === "event_skip") {
-      state.lastLog = `Bỏ qua ${e.name}.`;
-      completeFloor(state, session, rng, 0);
+      done(
+        e.taxRelief
+          ? state.cleared >= 998
+            ? `${eventIcon("tax")} Đã bỏ qua lần mời giải nguyền miễn phí cuối cùng trước boss 999.`
+            : `${eventIcon("tax")} Đã để dành lượt giải nguyền miễn phí; có thể dùng tại Purifier hoặc cuộc gặp trước tầng 999, trong run này.`
+          : `Bỏ qua ${e.name}.`,
+      );
       return;
     }
     if (k.endsWith("_shop") || k === "merchant") {
@@ -311,7 +319,10 @@ module.exports = function createModule(dependencies) {
     } else if (k === "purifier") {
       const target = purifier.selected(state);
       if (!target) throw new Error("NO_CURSE");
-      charge(state, purifierCost(state));
+      const freeTaxRelief =
+        require("../events/explorationMarks").taxReliefAvailable(state);
+      if (e.taxRelief && !freeTaxRelief) throw Error("INVALID_ACTION");
+      if (!freeTaxRelief) charge(state, purifierCost(state));
       const purified = {
         name: target.name,
         rarity: target.rarity,
@@ -324,14 +335,18 @@ module.exports = function createModule(dependencies) {
             ? -target.curseEffects.defense
             : null,
         maxPotionsBefore: state.maxPotions,
+        freeTaxRelief,
       };
       cleanse(state, target);
+      if (freeTaxRelief) require("../events/explorationMarks").useTaxRelief(state);
       state.lastPurifiedItem = {
         ...purified,
         maxPotionsAfter: state.maxPotions,
       };
       done(
-        `✨ ${target.name}: giải toàn bộ lời nguyền; giữ UR, level, buff và nội tại.`,
+        freeTaxRelief
+          ? `${eventIcon("tax")} Đã dùng lượt giải nguyền miễn phí của Tax Collector; không trừ payout.`
+          : `✨ ${target.name}: giải toàn bộ lời nguyền; giữ UR, level, buff và nội tại.`,
       );
     } else if (k === "sacrifice") {
       let paid = 0;

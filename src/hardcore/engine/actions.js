@@ -258,12 +258,20 @@ module.exports = function createModule(dependencies) {
     } else if (state.phase === "severance") {
       const key = action.slice(6);
       const removed = state.modifiers[key] || 0;
+      const aftercare = state.encounter.thiefAftercare;
+      if (aftercare)
+        require("../events/explorationMarks").finishAftercare(
+          state,
+          action !== "sever_none",
+        );
       if (action !== "sever_none") {
         if (require("../rift").enabled(state))
           require("../rift").sever(state, key);
         else delete state.modifiers[key];
       }
       state.lastLog = `${eventIcon("severance")} Rift Severance: ${action === "sever_none" ? "không có modifier phù hợp để xóa" : `đã xóa ${RIFT_ICONS[key] || E.rift} ×${removed}, hiệu ứng của loại Rift này không còn áp dụng`}.`;
+      if (aftercare)
+        state.lastLog = `${eventIcon("potion_thief")} Trùm băng đảng · Dịch vụ hậu mãi: ${action === "sever_none" ? "không có Rift phù hợp để xóa" : `đã xóa toàn bộ ${RIFT_ICONS[key] || E.rift} ×${removed}; đã dùng lượt miễn phí`}.`;
       nextMilestone(state, session, rng);
     } else {
       const e = state.encounter;
@@ -362,7 +370,7 @@ module.exports = function createModule(dependencies) {
         require("../characters/venance").end(state, action, e);
       } else if (e.type === "surprise") {
         actSurprise(state, session, action, rng);
-        if (action !== "event_skip")
+        if (action !== "event_skip" && !e.taxRelief)
           noteEvent(state, e.kind, state.encounter?.type === "combat");
       } else if (e.type === "chest") {
         if (action === "inspect") {
@@ -440,6 +448,7 @@ module.exports = function createModule(dependencies) {
         } else if (e.kind === "tax" && action === "tax_resist") {
           if (!dependencies.memories.canQueue(state))
             throw new Error("INVALID_ACTION");
+          require("../events/explorationMarks").oppose(state, "tax");
           require("../events/explorationMarks").ensure(state).outlaw = true;
           state.lastLog =
             eventIcon("tax") +
@@ -448,6 +457,7 @@ module.exports = function createModule(dependencies) {
         } else if (e.kind === "potion_thief" && action === "thief_fight") {
           if (!dependencies.memories.canQueue(state))
             throw new Error("INVALID_ACTION");
+          require("../events/explorationMarks").oppose(state, "potion_thief");
           state.encounter = world.makeEnemy(state, "elite", "The Thief", rng);
           state.encounter.thiefTrial = true;
           state.lastLog =
@@ -455,6 +465,10 @@ module.exports = function createModule(dependencies) {
           finishEventResult(state);
           prepareItemCombat(state, rng);
         } else if (e.kind !== "portal") {
+          const cooperationStarted = require("../events/explorationMarks").accept(
+            state,
+            e.kind,
+          );
           if (e.lucky) state.lastLog = `${E.luck} Lucky Break: tránh bẫy.`;
           else if (e.kind === "tax") {
             const cost = taxCost(state);
@@ -483,6 +497,10 @@ module.exports = function createModule(dependencies) {
               ? "Potion Thief đã cướp bình máu."
               : `Potion Thief không cướp được gì vì bạn có 0 ${E.potion} bình máu.`;
           }
+          if (cooperationStarted)
+            state.lastLog += e.kind === "tax"
+              ? `\n${eventIcon("tax")} Đã ghi nhận hợp tác: sau boss 950 nhận 1 lượt giải nguyền miễn phí cho 1 trang bị; chống trả sẽ hủy quyền lợi đang chờ.`
+              : `\n${eventIcon("potion_thief")} Đã ghi nhận hợp tác: sau tầng 998 gặp trùm băng đảng để xóa 1 loại Rift có hại; đánh đuổi sẽ hủy quyền lợi.`;
           completeFloor(state, session, rng, 0);
         } else if (e.good) {
           let recovery;

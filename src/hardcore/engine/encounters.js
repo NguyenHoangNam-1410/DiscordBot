@@ -38,6 +38,7 @@ module.exports = function createModule(dependencies) {
   const makeShrine = (...args) => dependencies.makeShrine(...args);
 
   function purifierCost(state) {
+    if (require("../events/explorationMarks").taxReliefAvailable(state)) return 0;
     return serviceCost(state, PURIFIER_COST_RATE);
   }
 
@@ -495,7 +496,9 @@ module.exports = function createModule(dependencies) {
               (k) =>
                 !(
                   k === "tax" &&
-                  require("../events/explorationMarks").data(state).outlaw
+                  (require("../events/explorationMarks").data(state).outlaw ||
+                    (require("../events/explorationMarks").enabled(state) &&
+                      state.floor >= 950))
                 ) &&
                 !(
                   k === "potion_thief" &&

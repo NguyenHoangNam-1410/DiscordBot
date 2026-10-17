@@ -246,24 +246,32 @@ module.exports = function createModule(dependencies) {
 
   function purifierText(state, detailed = false) {
     const target = purifier.selected(state);
+    const free = require("../events/explorationMarks").taxReliefAvailable(state);
+    const heading = state.encounter.taxRelief
+      ? `${eventIcon("tax")} **TAX COLLECTOR · QUYỀN LỢI NỘP THUẾ**`
+      : `${eventIcon("purifier")} **Purifier**`;
+    const price = free
+      ? "**Miễn phí:** dùng 1 lượt của Tax Collector để gỡ toàn bộ nguyền của 1 trang bị; giữ nguyên độ hiếm, level, buff và nội tại."
+      : `**Giá:** ${E.coin} **${money(core.purifierCost(state))} xu** (${percent(core.PURIFIER_COST_RATE)} payout hiện tại).`;
+    const confirmation = free
+      ? "Chỉ tiêu lượt miễn phí khi bấm **Giải nguyền món này**. " +
+        (state.encounter.taxRelief && state.cleared >= 998
+          ? "**Đây là lần mời cuối trước boss 999**; bỏ qua sẽ tiếp tục vào trận cuối."
+          : "Bỏ qua giữ lượt; quyền lợi hết khi kết thúc run.")
+      : "Chỉ trả phí khi bấm **Giải nguyền món này**.";
     if (!target && purifier.items(state).length)
       return (
-        eventIcon("purifier") +
-        " **Purifier** · Giải nguyền **1 món mỗi lần gặp**.\nChọn món còn nguyền trong menu để xem lời nguyền được gỡ và chỉ số trước → sau.\n**Giá:** " +
-        E.coin +
-        " **" +
-        money(core.purifierCost(state)) +
-        " xu** (" +
-        percent(core.PURIFIER_COST_RATE) +
-        " payout hiện tại).\nChỉ trả phí khi bấm **Giải nguyền món này**."
+        heading +
+        " · Giải nguyền **1 món mỗi lần gặp**.\nChọn món còn nguyền trong menu để xem lời nguyền được gỡ và chỉ số trước → sau.\n" +
+        price + "\n" + confirmation
       );
     const curseLevels = target
       ? Math.max(0, target.level - (target.cleansedLevels || 0))
       : 0;
     if (!target?.definition.curse || !curseLevels)
       return (
-        eventIcon("purifier") +
-        " **Purifier**\nTrang bị không còn lời nguyền cần giải. Chọn **Bỏ qua** để đi tiếp."
+        heading + "\nTrang bị không còn lời nguyền cần giải. Chọn **Bỏ qua** để đi tiếp." +
+        (free ? " Lượt miễn phí được giữ lại trong run này." : "")
       );
     const preview = structuredClone(state);
     preview.items.find(
@@ -281,8 +289,7 @@ module.exports = function createModule(dependencies) {
           "**"
         : "";
     const lines = [
-      eventIcon("purifier") +
-        " **Purifier** · Giải nguyền **1 món mỗi lần gặp**.",
+      heading + " · Giải nguyền **1 món mỗi lần gặp**.",
       itemIcon(target) +
         " **" +
         target.name +
@@ -325,13 +332,8 @@ module.exports = function createModule(dependencies) {
         ", Lv." +
         target.level +
         ", buff và nội tại.",
-      "**Giá:** " +
-        E.coin +
-        " **" +
-        money(core.purifierCost(state)) +
-        " xu** (" +
-        percent(core.PURIFIER_COST_RATE) +
-        " payout hiện tại).",
+      price,
+      confirmation,
     );
     if (detailed) {
       const buffs = Object.fromEntries(
@@ -344,7 +346,12 @@ module.exports = function createModule(dependencies) {
       const passive = passiveText(target.definition).trim();
       if (passive) lines.push("**Nội tại giữ nguyên:**\n" + passive);
       lines.push(
-        "Không nhận lại HP hồi, bình máu hoặc vé khi nhặt đồ. Nguyền của trang bị khác vẫn còn hiệu lực. Cần đủ payout hiện tại để trả phí. **Bỏ qua:** giữ nguyên trang bị và payout.",
+        "Không nhận lại HP hồi, bình máu hoặc vé khi nhặt đồ. Nguyền của trang bị khác vẫn còn hiệu lực." +
+          (free
+            ? state.encounter.taxRelief && state.cleared >= 998
+              ? " **Bỏ qua:** tiếp tục tới trận cuối, không giải nguyền."
+              : " **Bỏ qua:** giữ lượt miễn phí."
+            : " Cần đủ payout hiện tại để trả phí. **Bỏ qua:** giữ nguyên trang bị và payout."),
       );
     } else {
       lines.push(

@@ -33,6 +33,34 @@ module.exports = function createModule(dependencies) {
 
   function nextMilestone(state, session, rng) {
     const phase = state.pendingMilestones.shift();
+    if (phase === "tax_relief") {
+      if (
+        !require("../events/explorationMarks").taxReliefAvailable(state) ||
+        !require("../events/purifier").items(state).length
+      )
+        return nextMilestone(state, session, rng);
+      state.phase = "encounter";
+      state.encounter = {
+        type: "surprise",
+        kind: "purifier",
+        name: "Tax Collector · Quyền lợi nộp thuế",
+        taxRelief: true,
+      };
+      return;
+    }
+    if (phase === "thief_aftercare") {
+      if (
+        require("../events/explorationMarks").data(state).thiefAftercare !== "ready"
+      )
+        return nextMilestone(state, session, rng);
+      state.phase = "severance";
+      state.encounter = {
+        type: "severance",
+        name: "Trùm băng đảng · Dịch vụ hậu mãi",
+        thiefAftercare: true,
+      };
+      return;
+    }
     if (phase) {
       state.phase = phase;
       state.encounter =
@@ -219,6 +247,7 @@ module.exports = function createModule(dependencies) {
       state.pendingMilestones.push("paradox");
     if ([199, 399, 699, 899].includes(floor))
       state.pendingMilestones.push("severance");
+    require("../events/explorationMarks").awardMilestones(state, floor);
     if (floor >= 100) state.completed = true;
     state.runDiamonds = runDiamondReward(state);
     state.floor = Math.min(999, floor + 1);
