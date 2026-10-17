@@ -39,7 +39,7 @@ try {
         e = s.encounter;
       boss.beginAction(s, "skill");
       const max = e.maxHp,
-        cap = Math.floor(max / 5);
+        cap = Math.floor((max * 2) / 5);
       assert.equal(boss.damageStrength(s, max * 10), cap);
       assert.equal(boss.applyDamage(s, 1), 1);
       assert.equal(boss.applyDamage(s, max * 10), cap - 1);
@@ -60,7 +60,7 @@ try {
       s.spellMin = s.spellMax = s.damageMin = s.damageMax = 1000000;
       s.accuracy = 1000000;
       const before = JSON.stringify(s),
-        cap = Math.floor(e.maxHp / 5);
+        cap = Math.floor((e.maxHp * 2) / 5);
       const forecast = core.skillDamagePreview(s);
       assert(forecast.low <= cap && forecast.high <= cap, key + " preview");
       assert.equal(JSON.stringify(s), before, "preview is read-only");
@@ -87,7 +87,7 @@ try {
     boss.beginAction(s, "attack");
     boss.applyDamage(s, max);
     core.enemyTurn(s, () => 0);
-    assert(max - e.hp <= Math.floor(max / 5));
+    assert(max - e.hp <= Math.floor((max * 2) / 5));
     assert.equal(guardian.direct(s, max), 0);
     boss.beginAction(s, "defend");
     s.passiveCounterUsed = 0;
@@ -98,7 +98,7 @@ try {
       e.hp < beforeReflect,
       "Reflection really triggers when budget is available",
     );
-    assert(beforeReflect - e.hp <= Math.floor(max / 5));
+    assert(beforeReflect - e.hp <= Math.floor((max * 2) / 5));
   });
   test("Auxiliary targets ignore the cap and do not consume the body budget", () => {
     const s = fresh("necrobot"),
@@ -114,13 +114,13 @@ try {
     m.target = "boss";
     assert.equal(
       boss.applyDamage(s, e.maxHp * 100),
-      Math.floor(m.coreMaxHp / 5),
+      Math.floor((m.coreMaxHp * 2) / 5),
     );
   });
   test("Stone Armor consumes no HP budget and each individual hit remains capped", () => {
     const s = fresh(),
       e = s.encounter,
-      cap = Math.floor(e.maxHp / 5),
+      cap = Math.floor((e.maxHp * 2) / 5),
       before = e.hp;
     e.rift.stoneArmor = e.rift.stoneArmorMax = Math.floor(cap / 2);
     e.rift.stacks.stone_skin = 1;
@@ -147,7 +147,7 @@ try {
     for (const definition of [...catalog.POOL, ...catalog.FIXED]) {
       const s = fresh(definition.id),
         cap = Math.floor(
-          (s.encounter.boss.mechanicState.coreMaxHp ?? s.encounter.maxHp) / 5,
+          ((s.encounter.boss.mechanicState.coreMaxHp ?? s.encounter.maxHp) * 2) / 5,
         );
       boss.beginAction(s, "skill");
       assert(guardian.direct(s, s.encounter.maxHp * 100) <= cap, definition.id);
@@ -169,18 +169,18 @@ try {
       "Meltdown cannot exceed a spent turn budget",
     );
   });
-  test("Normal/elite remain uncapped, and the cap does not round above 20 percent", () => {
+  test("Normal/elite remain uncapped, and the cap does not round above 40 percent", () => {
     for (const rank of ["normal", "elite"]) {
       const s = { encounter: { rank, hp: 1000, maxHp: 1000 } };
       assert.equal(guardian.direct(s, 900), 900);
     }
     const s = { encounter: { rank: "boss", hp: 1003, maxHp: 1003 } };
-    assert.equal(guardian.direct(s, 9999), 200);
+    assert.equal(guardian.direct(s, 9999), 401);
   });
   test("Saved progress, healing and phase changes do not refund the turn budget", () => {
     let s = fresh(),
       max = s.encounter.maxHp,
-      cap = Math.floor(max / 5);
+      cap = Math.floor((max * 2) / 5);
     boss.beginAction(s, "skill");
     boss.applyDamage(s, cap - 10);
     s = core.normalize(JSON.parse(JSON.stringify(s)));
@@ -198,7 +198,7 @@ try {
     s.encounter.hp = 0;
     assert(boss.advancePhase(s));
     boss.beginAction(s, "skill");
-    const cap = Math.floor(s.encounter.maxHp / 5);
+    const cap = Math.floor((s.encounter.maxHp * 2) / 5);
     s.encounter.hp = 10;
     assert.equal(boss.applyDamage(s, 1000000), 10);
     assert(boss.advancePhase(s));
@@ -211,7 +211,7 @@ try {
     boss.beginAction(old, "skill");
     assert.equal(
       boss.applyDamage(old, 1000000),
-      Math.floor(old.encounter.maxHp / 5),
+      Math.floor((old.encounter.maxHp * 2) / 5),
     );
     assert.equal(boss.applyDamage(old, 1000000), 0);
   });
@@ -221,7 +221,7 @@ try {
     assert.doesNotThrow(() => core.normalize(s));
     assert.equal(
       boss.applyDamage(s, s.encounter.maxHp * 10),
-      Math.floor(s.encounter.maxHp / 5),
+      Math.floor((s.encounter.maxHp * 2) / 5),
     );
     assert(
       require("../src/hardcore/bosses/display")

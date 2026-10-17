@@ -7,7 +7,7 @@ const auxiliary = (s) => {
 };
 const maxHp = (s) =>
   s.encounter.boss?.mechanicState?.coreMaxHp ?? s.encounter.maxHp;
-const limit = (s) => Math.max(0, Math.floor(maxHp(s) / 5));
+const limit = (s) => Math.max(0, Math.floor((maxHp(s) * 2) / 5));
 function begin(s) {
   if (active(s))
     s.encounter.towerGuardian = { version: 1, limit: limit(s), spent: 0 };
@@ -65,7 +65,7 @@ function validate(s, e = s.encounter) {
     throw Error("INVALID_TOWER_GUARDIAN");
 }
 const description =
-  "🛡️ **Tower's Guardian:** Mỗi đòn và tổng HP boss mất trong một lượt không vượt quá **20% Max HP** (gồm phép, vật lý, gai, phản đòn và hit phụ). Không áp dụng cho vật triệu hồi/mục tiêu phụ.";
+  "🛡️ **Tower's Guardian:** Mỗi đòn và tổng HP boss mất trong một lượt không vượt quá **40% Max HP** (gồm phép, vật lý, gai, phản đòn và hit phụ). Không áp dụng cho vật triệu hồi/mục tiêu phụ.";
 module.exports = {
   active,
   auxiliary,

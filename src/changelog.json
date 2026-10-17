@@ -1,5 +1,14 @@
 [
   {
+    "id": "3939bb7b-4bef-45b1-9bb3-73b757c4846f",
+    "updatedAt": "2026-10-17T08:21:56.774Z",
+    "auditedAt": "2026-10-17T08:21:56.774Z",
+    "title": "Tăng trần Tower's Guardian lên 40%",
+    "changes": [
+      "Tower's Guardian tăng giới hạn HP boss mất từ 20% lên 40% Max HP cho mỗi đòn và tổng mỗi lượt, gồm hit phụ, gai và phản đòn. Mô tả boss hiển thị mức trần mới."
+    ]
+  },
+  {
     "id": "51da9026-e738-499f-9603-47ce8301c5ae",
     "updatedAt": "2026-10-16T15:13:41.555Z",
     "auditedAt": "2026-10-16T15:13:41.555Z",
