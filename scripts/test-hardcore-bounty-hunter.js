@@ -42,7 +42,7 @@ const rngesus = (s) => {
   s.encounter = { type: "rngesus", name: "RNGesus", fleeChance: 1, prayerChance: 0.3, prayerSuccess: true };
 };
 
-test("điều kiện xuất hiện: V3 thường, từ tầng 20, đang giữ vé, chưa gặp", () => {
+test("điều kiện xuất hiện: V3 thường, từ tầng 20, phải đang giữ vé, chưa chống trả", () => {
   assert.equal(marks.bountyAvailable(fresh(20, 1)), true);
   assert.equal(marks.bountyAvailable(fresh(20, 0)), false, "không có vé thì không xuất hiện");
   assert.equal(marks.bountyAvailable(fresh(19, 1)), false, "dưới tầng 20");
@@ -53,8 +53,8 @@ test("điều kiện xuất hiện: V3 thường, từ tầng 20, đang giữ v�
   old.gameplayVersion = 2;
   assert.equal(marks.bountyAvailable(old), false, "V2 không có");
   const met = fresh(20, 1);
-  marks.ensure(met).bountyDone = true;
-  assert.equal(marks.bountyAvailable(met), false, "chỉ gặp 1 lần");
+  marks.ensure(met).bountyResisted = true;
+  assert.equal(marks.bountyAvailable(met), false, "đã chống trả thì không gặp lại");
 });
 
 test("sinh ra trong nhóm bẫy khi đủ điều kiện; không có vé thì không bao giờ sinh", () => {
@@ -77,7 +77,7 @@ test("sinh ra trong nhóm bẫy khi đủ điều kiện; không có vé thì kh
   void named;
 });
 
-test("Giao nộp: mất 1 vé, nhận VIT +40 (hồi phần Max HP tăng), chỉ gặp 1 lần", () => {
+test("Giao nộp: mất 1 vé, cộng thẳng VIT +30 (hồi phần Max HP tăng), không phải phúc ấn, gặp lại được khi còn vé", () => {
   const s = fresh(22); // tầng 22: không phải checkpoint nên không hồi đầy HP
   hunter(s);
   const opts = actions(s);
@@ -87,17 +87,26 @@ test("Giao nộp: mất 1 vé, nhận VIT +40 (hồi phần Max HP tăng), chỉ
   s.hp = 10;
   act(s, "bounty_surrender");
   assert.equal(s.escapeTokens, 0, "mất đúng 1 vé");
-  assert.equal(s.vit, vit + 40);
+  assert.equal(s.vit, vit + 30);
   const gained = s.maxHp - maxHp;
-  assert(gained >= 120, `VIT +40 phải tăng đáng kể Max HP (được +${gained})`);
+  assert(gained >= 90, `VIT +30 phải tăng đáng kể Max HP (được +${gained})`);
   assert.equal(s.hp, 10 + gained, "hồi đúng phần Max HP tăng thêm");
-  console.log(`  VIT +40 => Max HP ${maxHp} -> ${s.maxHp} (+${gained})`);
-  assert.equal(marks.data(s).bountyBlessing, true);
-  assert.equal(marks.data(s).bountyDone, true);
-  assert.equal(marks.data(s).bountyCurse, undefined);
-  assert.equal(marks.bountyAvailable(s), false);
+  console.log(`  VIT +30 => Max HP ${maxHp} -> ${s.maxHp} (+${gained})`);
+  assert.equal(s.sources.event.vit, 30, "cộng thẳng vào nguồn chỉ số, không phải dấu ấn");
+  assert.deepEqual(Object.keys(marks.data(s)).filter((k) => k.startsWith("bounty")), [], "không để lại dấu ấn nào");
+  assert.equal(marks.bountyAvailable(s), false, "hết vé thì chưa gặp lại");
+  s.escapeTokens = 1;
+  assert.equal(marks.bountyAvailable(s), true, "có vé lại thì gặp lại được");
+  // gặp lần hai: cộng dồn
+  hunter(s);
+  s.phase = "encounter";
+  const vit2 = s.vit;
+  s.cleared = 29;
+  s.floor = 31;
+  act(s, "bounty_surrender");
+  assert.equal(s.vit, vit2 + 30, "mỗi lần giao nộp +30 VIT");
+  assert.equal(s.sources.event.vit, 60);
   assert.equal(marks.bribeRate(s), 0.4, "Giao nộp không đổi giá hối lộ");
-  assert(/Bounty Seal/.test(JSON.stringify(marks.fields(s))));
 });
 
 test("Không có vé: Giao nộp bị khóa, không thể thực hiện", () => {
@@ -106,7 +115,7 @@ test("Không có vé: Giao nộp bị khóa, không thể thực hiện", () => 
   assert(actions(s)[0].disabled);
   assert.throws(() => act(s, "bounty_surrender"), /INVALID_ACTION/);
   assert.equal(s.escapeTokens, 0);
-  assert.equal(marks.data(s).bountyDone, undefined, "hành động lỗi không để lại dấu ấn");
+  assert.equal(marks.data(s).bountyResisted, undefined, "hành động lỗi không để lại dấu ấn");
 });
 
 test("Chống trả: giữ vé, không đổi VIT, Hối lộ tăng dần 45% → 50% → 55% (trần 90%)", () => {
@@ -116,7 +125,7 @@ test("Chống trả: giữ vé, không đổi VIT, Hối lộ tăng dần 45% �
   act(s, "bounty_resist");
   assert.equal(s.escapeTokens, 1, "giữ vé");
   assert.equal(s.vit, vit);
-  assert.equal(marks.data(s).bountyDone, true);
+  assert.equal(marks.data(s).bountyResisted, true);
   assert.equal(marks.bountyAvailable(s), false);
   assert(/Bounty Curse/.test(JSON.stringify(marks.fields(s))));
   const rates = [];
@@ -156,9 +165,9 @@ test("dấu ấn được kiểm tra khi lưu/khôi phục", () => {
   marks.ensure(s).bountyCurse = { bribes: -1 };
   assert.throws(() => marks.normalize(s), /INVALID_EXPLORATION_MARK/);
   marks.ensure(s).bountyCurse = { bribes: 2 };
-  marks.ensure(s).bountyDone = "yes";
+  marks.ensure(s).bountyResisted = "yes";
   assert.throws(() => marks.normalize(s), /INVALID_EXPLORATION_MARK/);
-  marks.ensure(s).bountyDone = true;
+  marks.ensure(s).bountyResisted = true;
   marks.normalize(s);
 });
 
@@ -167,7 +176,7 @@ test("giao diện: chi tiết và nút không lỗi, hiển thị đủ hai lự
   hunter(s);
   const detail = JSON.stringify(view.privatePayload(s, session.id, "public", "encounter"));
   assert(/Bounty Hunter/.test(detail));
-  assert(/VIT/.test(detail) && /Bounty Curse/.test(detail));
+  assert(/VIT/.test(detail) && /Bounty Curse/.test(detail) && !/Bounty Seal|phúc ấn/i.test(detail));
   const main = JSON.stringify(view.privatePayload(s, session.id, "public", "main") || {});
   void main;
 });

@@ -172,7 +172,7 @@ module.exports = function createModule(dependencies) {
         {
           name: `${eventIcon("bounty_hunter")} Bounty Hunter · Thợ Săn Tiền Thưởng`,
           value:
-            "Chỉ trong V3 thường (không phải Tháp), từ tầng 20, khi bạn đang giữ Vé thoát; thuộc nhóm bẫy và chỉ gặp 1 lần/run. Lucky Break không áp dụng.\n**Giao nộp:** mất 1 Vé thoát, nhận Bounty Seal: VIT +40 đến hết run (hồi phần Max HP tăng thêm).\n**Chống trả:** giữ vé, không gặp lại Bounty Hunter, nhưng nhận Bounty Curse: Hối lộ RNGesus tốn thêm 5% payout sau mỗi lần hối lộ (45%, 50%, 55%…, tối đa 90%).",
+            "Chỉ trong V3 thường (không phải Tháp), từ tầng 20, và chỉ khi bạn đang giữ Vé thoát; thuộc nhóm bẫy. Lucky Break không áp dụng.\n**Giao nộp:** mất 1 Vé thoát, nhận VIT +30 cộng thẳng vào chỉ số (hồi phần Max HP tăng thêm). Còn vé thì có thể gặp lại và nhận tiếp.\n**Chống trả:** giữ vé, không gặp lại Bounty Hunter trong run, nhưng nhận Bounty Curse: Hối lộ RNGesus tốn thêm 5% payout sau mỗi lần hối lộ (45%, 50%, 55%…, tối đa 90%).",
         },
         {
           name: `${E.luck} Wrong Portal`,

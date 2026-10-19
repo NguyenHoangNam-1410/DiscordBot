@@ -203,12 +203,12 @@ module.exports = function createModule(dependencies) {
         const marks = require("../events/explorationMarks");
         return show(
           e.name,
-          `${E.ticket} Bạn đang giữ ${s.escapeTokens} Vé thoát. Lucky Break không áp dụng; chỉ gặp 1 lần/run.`,
+          `${E.ticket} Bạn đang giữ ${s.escapeTokens} Vé thoát. Lucky Break không áp dụng; mỗi lần giao nộp cộng thẳng VIT, chống trả thì không gặp lại.`,
           [
             option("Giao nộp", [
               [
                 1,
-                `Mất ${E.ticket} **1 Vé thoát**; nhận Bounty Seal: ${E.vit} **VIT +${marks.BOUNTY_VIT}** đến hết run (hồi phần Max ${E.hp} HP tăng thêm).`,
+                `Mất ${E.ticket} **1 Vé thoát**; nhận ${E.vit} **VIT +${marks.BOUNTY_VIT}** cộng thẳng vào chỉ số (hồi phần Max ${E.hp} HP tăng thêm). Còn vé thì có thể gặp lại.`,
               ],
             ]),
             option("Chống trả", [

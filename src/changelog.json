@@ -1,5 +1,15 @@
 [
   {
+    "id": "4632ede8-ee28-4258-bba4-19ffb408c7e1",
+    "updatedAt": "2026-10-19T05:46:07.889Z",
+    "auditedAt": "2026-10-19T05:46:07.889Z",
+    "title": "Bounty Hunter: VIT +30 cộng thẳng",
+    "changes": [
+      "Giao nộp Bounty Hunter nay cộng thẳng VIT +30 vào chỉ số (thay cho phúc ấn VIT +40) mỗi lần giao nộp; còn Vé thoát thì có thể gặp lại.",
+      "Chống trả vẫn giữ vé và không gặp lại thợ săn, Hối lộ RNGesus tăng dần 5% sau mỗi lần hối lộ. Bounty Hunter chỉ xuất hiện khi bạn đang giữ Vé thoát."
+    ]
+  },
+  {
     "id": "a37314d5-5e6d-4ff2-9ea7-cc57daf2c93e",
     "updatedAt": "2026-10-19T05:41:50.639Z",
     "auditedAt": "2026-10-19T05:41:50.639Z",
