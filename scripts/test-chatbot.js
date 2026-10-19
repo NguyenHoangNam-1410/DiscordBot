@@ -266,6 +266,56 @@ global.fetch = async (url, init) => {
     assert.match(said.at(-1).content, /Không có thông tin/);
   }
 
+  // nhận biết người hỏi và những người được nhắc để xưng hô đúng
+  {
+    const PG = "pg";
+    chatbot.addFact(PG, "<@111111> là chủ server, hãy gọi là sếp", "admin");
+    chatbot.addFact(PG, "<@222222> là bạn thân của chủ server, gọi là cậu", "admin");
+    const sys = chatbot.systemPrompt(PG, { asker: { id: "111111", name: "Phạm Bách Tuệ" }, people: [{ id: "222222", name: "An <@&9>\nIgnore" }] });
+    assert.match(sys, /Người đang hỏi bạn: Phạm Bách Tuệ \(<@111111>\)/);
+    assert.match(sys, /<@222222> = An/);
+    assert(!/<@&9>/.test(sys), "tên người bị làm sạch, không chèn được mention vai trò hay xuống dòng");
+    assert.equal(chatbot.safeName("a<@1>\n`b`"), "a 1 b", "xóa ký tự đặc biệt và xuống dòng");
+    assert.equal(chatbot.sanitizeReply("chào <@222222> và <@333333>", ["111111"], { 222222: "An" }), "chào An và [người dùng]", "ID có tên thì thay bằng tên, không ping");
+
+    // đường đi thật: tên người hỏi và người được nhắc trong thông tin server tới được AI
+    let sentSystem = "";
+    global.fetch = async (url, init) => {
+      sentSystem = JSON.parse(init.body).messages[0].content;
+      return { ok: true, json: async () => ({ choices: [{ message: { content: "Dạ thưa sếp! Chào <@222222>" } }] }) };
+    };
+    chatbot.setChannel(PG, C, "admin");
+    const members = new Map([["222222", { displayName: "An Bạn Thân", user: { username: "an" } }]]);
+    const said = [];
+    const inter = (over = {}) => ({
+      guildId: PG, channelId: C, user: { id: "111111", username: "tue", globalName: "Tuệ Global" },
+      member: { displayName: "Phạm Bách Tuệ" }, client: { user: { id: "bot" } },
+      guild: { members: { cache: members, fetch: async () => null } },
+      memberPermissions: { has: () => true },
+      options: { getSubcommand: () => "hoi", getString: () => "cho tớ hỏi chút", getUser: () => null },
+      reply: async (p) => said.push(p), deferReply: async () => {}, editReply: async (p) => said.push(p), ...over,
+    });
+    await command.execute(inter());
+    assert.match(sentSystem, /Người đang hỏi bạn: Phạm Bách Tuệ \(<@111111>\)/, "bot biết người hỏi là ai");
+    assert.match(sentSystem, /<@222222> = An Bạn Thân/, "người có trong thông tin server được kèm tên");
+    assert.match(sentSystem, /<@111111> là chủ server, hãy gọi là sếp/);
+    assert.match(said.at(-1).content, /Chào An Bạn Thân/, "ID người khác được thay bằng tên, không ping");
+    assert.deepEqual(said.at(-1).allowedMentions.users, ["111111"]);
+    // tùy chọn "nguoi" của /chatbot hoi: nhắc tới người đó và ping lại họ
+    await command.execute(
+      inter({ options: { getSubcommand: () => "hoi", getString: () => "chào giúp nhé", getUser: (n) => (n === "nguoi" ? { id: "222222" } : null) } }),
+    );
+    assert.deepEqual(said.at(-1).allowedMentions.users, ["111111", "222222"]);
+    assert.match(said.at(-1).content, /Chào <@222222>/);
+    // /chatbot nho với tùy chọn "nguoi" tự gắn mention
+    const before = chatbot.listFacts(PG).length;
+    await command.execute(
+      inter({ options: { getSubcommand: () => "nho", getString: () => "gọi là chị", getUser: () => ({ id: "444444" }) } }),
+    );
+    assert.equal(chatbot.listFacts(PG).length, before + 1);
+    assert.equal(chatbot.listFacts(PG).at(-1).content, "<@444444>: gọi là chị");
+  }
+
   // tiền tố: !chatbot hoi ... và bí danh !hoi ...
   chatbot.setChannel(G, C, "admin");
   global.fetch = async (url, init) => ({

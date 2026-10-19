@@ -28,6 +28,15 @@ async function unreact(interaction, emoji) {
   await message.reactions?.cache?.get(emoji)?.users?.remove(mine).catch(() => null);
 }
 
+// Tên hiển thị trong server (biệt danh) để bot biết ai là ai.
+async function displayName(interaction, id) {
+  const guild = interaction.guild;
+  const member = guild?.members?.cache?.get(id) || (await guild?.members?.fetch?.(id).catch(() => null));
+  const user = member?.user || interaction.client?.users?.cache?.get(id) || (await interaction.client?.users?.fetch?.(id).catch(() => null));
+  return member?.displayName || user?.globalName || user?.username || null;
+}
+const FACT_MENTION = /<@!?(\d{5,25})>/g;
+
 async function ask(interaction) {
   const channelId = chatbot.getChannelId(interaction.guildId);
   const ephemeral = (content) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
@@ -44,15 +53,30 @@ async function ask(interaction) {
   try {
     await interaction.deferReply();
     await react(interaction, "🤔");
-    const question = chatbot.prepareQuestion(interaction.options.getString("noidung"), {
+    // Lệnh slash không biến "@tên" trong chuỗi thành mention, nên có thêm tùy chọn "nguoi".
+    const target = interaction.options.getUser?.("nguoi");
+    const rawText = `${interaction.options.getString("noidung")}${target ? ` <@${target.id}>` : ""}`;
+    const question = chatbot.prepareQuestion(rawText, {
       askerId: interaction.user.id,
       botId: interaction.client?.user?.id,
     });
+    // Người hỏi + những người được nhắc trong câu hỏi hoặc trong thông tin server của admin.
+    const asker = {
+      id: interaction.user.id,
+      name: interaction.member?.displayName || interaction.user.globalName || interaction.user.username,
+    };
+    const factIds = chatbot
+      .listFacts(interaction.guildId)
+      .flatMap((fact) => [...fact.content.matchAll(FACT_MENTION)].map((m) => m[1]));
+    const ids = [...new Set([...question.pinged, ...factIds])].filter((id) => id !== asker.id).slice(0, 12);
+    const people = (await Promise.all(ids.map(async (id) => ({ id, name: await displayName(interaction, id) })))).filter((p) => p.name);
     const result = await chatbot.ask({
       guildId: interaction.guildId,
       userId: interaction.user.id,
       channelId: interaction.channelId,
       text: question.text,
+      asker,
+      people,
     });
     if (result.error === "API")
       console.warn(
@@ -61,7 +85,7 @@ async function ask(interaction) {
     // Chỉ ping người hỏi và những người họ nhắc tới; tuyệt đối không ping vai trò, @everyone, @here.
     const allowed = [interaction.user.id, ...question.pinged];
     const content = result.ok
-      ? `<@${interaction.user.id}> ${chatbot.sanitizeReply(result.text, allowed)}\n-# Còn ${result.remaining}/${result.limit} lượt hôm nay`
+      ? `<@${interaction.user.id}> ${chatbot.sanitizeReply(result.text, allowed, Object.fromEntries(people.map((p) => [p.id, p.name])))}\n-# Còn ${result.remaining}/${result.limit} lượt hôm nay`
       : errorText(result);
     await interaction.editReply({ content, allowedMentions: { parse: [], users: allowed, roles: [] } });
     await unreact(interaction, "🤔");
@@ -86,7 +110,8 @@ const command = {
             .setRequired(true)
             .setMinLength(1)
             .setMaxLength(chatbot.MAX_INPUT_CHARS),
-        ),
+        )
+        .addUserOption((option) => option.setName("nguoi").setDescription("Người bạn muốn nhắc tới (bot sẽ gọi lại họ)")),
     )
     .addSubcommand((sub) =>
       sub
@@ -120,9 +145,12 @@ const command = {
         .addStringOption((option) =>
           option
             .setName("noidung")
-            .setDescription(`Một thông tin ngắn (tối đa ${chatbot.MAX_FACT_CHARS} ký tự)`)
+            .setDescription(`Một thông tin ngắn (tối đa ${chatbot.FACT_INPUT_CHARS} ký tự)`)
             .setRequired(true)
-            .setMaxLength(chatbot.MAX_FACT_CHARS),
+            .setMaxLength(chatbot.FACT_INPUT_CHARS),
+        )
+        .addUserOption((option) =>
+          option.setName("nguoi").setDescription("Gắn thông tin này cho một người (ví dụ cách xưng hô với họ)"),
         ),
     )
     .addSubcommand((sub) =>
@@ -178,7 +206,13 @@ const command = {
     if (!require("./vuatiengviet").isAdmin(interaction)) return reply("Chỉ admin mới được cấu hình chatbot.");
     if (sub === "nho") {
       try {
-        const count = chatbot.addFact(interaction.guildId, interaction.options.getString("noidung"), interaction.user.id);
+        const about = interaction.options.getUser?.("nguoi");
+        const note = interaction.options.getString("noidung");
+        const count = chatbot.addFact(
+          interaction.guildId,
+          about && !note.includes(`<@${about.id}>`) ? `<@${about.id}>: ${note}` : note,
+          interaction.user.id,
+        );
         return reply(
           `✅ Đã dạy chatbot (${count}/${chatbot.MAX_FACTS}). Thông tin này được gửi tới nhà cung cấp AI và ai cũng xem được bằng \`/chatbot kienthuc\`, **đừng ghi thông tin nhạy cảm**.`,
         );
