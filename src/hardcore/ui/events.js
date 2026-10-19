@@ -416,6 +416,20 @@ module.exports = function createModule(dependencies) {
               : []),
           ],
         );
+      case "seal_altar":
+        return show(
+          e.name,
+          "Bốn ấn nghịch của bốn event đã hội tụ. Chỉ 1 lần/run.",
+          [
+            option("Nhận Vé hồi sinh", [
+              [
+                "100%",
+                `Nhận ${E.reviveTicket} **1 Vé hồi sinh** dùng trong run này: tử trận tự dùng, hồi 50% Max ${E.hp} HP. Các ấn không bị tiêu hao.`,
+              ],
+            ]),
+            `**Tứ Ấn:** ${require("../events/explorationMarks").SEALS.map((seal) => `${seal.name} (${seal.source})`).join("; ")}.`,
+          ],
+        );
       default:
         return null;
     }

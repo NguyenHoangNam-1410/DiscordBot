@@ -228,6 +228,22 @@ module.exports = function createModule(dependencies) {
       }
       return;
     }
+    if (k === "seal_altar") {
+      const marks = require("../events/explorationMarks");
+      if (action !== "event_seal_claim" || !marks.sealAltarDue(state))
+        throw Error("INVALID_ACTION");
+      marks.ensure(state).sealsClaimed = true;
+      state.reviveTickets = 1;
+      done(
+        eventIcon("seal_altar") +
+          " Đàn Tứ Ấn: bốn ấn **" +
+          marks.SEALS.map((seal) => seal.name).join(" · ") +
+          "** hội tụ. Nhận " +
+          E.reviveTicket +
+          " **1 Vé hồi sinh** (dùng trong run này, hồi 50% Max HP khi tử trận). Các ấn vẫn giữ nguyên.",
+      );
+      return;
+    }
     if (k === "healer" && e.healerReturn) {
       const marks = require("../events/explorationMarks"),
         m = marks.ensure(state);

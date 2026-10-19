@@ -476,10 +476,13 @@ function eventIcon(key) {
     royal_blessing: "event_royal_invitation",
     covenant_blessing: "event_covenant",
     bounty_hunter: "monster_bounty_hunter",
+    seal_altar: "event_covenant",
   };
   return icon(
     aliases[key] || `event_${key}`,
-    key === "bounty_hunter"
+    key === "seal_altar"
+      ? "🔱"
+      : key === "bounty_hunter"
       ? "⚖️"
       : key === "boss_chest"
       ? E.chest

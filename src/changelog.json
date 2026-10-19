@@ -1,5 +1,16 @@
 [
   {
+    "id": "c2d75954-d5c2-4cb6-82d7-6c9b07eff548",
+    "updatedAt": "2026-10-19T06:01:31.653Z",
+    "auditedAt": "2026-10-19T06:01:31.653Z",
+    "title": "Đàn Tứ Ấn và Vé hồi sinh",
+    "changes": [
+      "Thêm event Đàn Tứ Ấn: thu thập đủ 4 ấn nghịch (Ấn Phản Vương, Ấn Hắc Giới, Ấn Sinh Mệnh, Ấn Truy Nã) để nhận 1 Vé hồi sinh dùng trong run đó. Chỉ 1 lần mỗi run.",
+      "Vé hồi sinh không còn bán ở cửa hàng Sinh tồn. Vé đang có trong kho được hoàn 300 kim cương mỗi vé; vé đang nằm trong run đang chơi giữ nguyên.",
+      "Rift hiển thị tiến độ Tứ Ấn và đặt tên cho bốn ấn."
+    ]
+  },
+  {
     "id": "4632ede8-ee28-4258-bba4-19ffb408c7e1",
     "updatedAt": "2026-10-19T05:46:07.889Z",
     "auditedAt": "2026-10-19T05:46:07.889Z",

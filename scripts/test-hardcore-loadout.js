@@ -347,9 +347,20 @@ async function run() {
         ...args,
         userId: poor,
         operationId: "poor-diamonds",
-        itemId: "survival_revive",
+        itemId: "survival_prayer",
       }),
     /INSUFFICIENT_DIAMONDS/,
+  );
+  // Vé hồi sinh không còn bán trong cửa hàng (nhận qua Đàn Tứ Ấn)
+  assert.throws(
+    () =>
+      bag.purchase({
+        ...args,
+        userId: poor,
+        operationId: "revive-not-for-sale",
+        itemId: "survival_revive",
+      }),
+    /NOT_FOR_SALE/,
   );
   assert.deepEqual(bag.inventory(guildId, poor), []);
 

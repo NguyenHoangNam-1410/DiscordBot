@@ -9,7 +9,10 @@ const {
   resolveItemId,
 } = require("../item");
 const { spendCoins } = require("../../services/economyService");
-const { spendDiamonds } = require("../../services/playerLevelService");
+const {
+  spendDiamonds,
+  addDiamonds,
+} = require("../../services/playerLevelService");
 const PRICES = Object.freeze({
   R: 10_000,
   SR: 50_000,
@@ -33,6 +36,8 @@ const TICKETS = Object.freeze([
     id: "survival_revive",
     name: TICKET_TYPES.survival_revive.name,
     price: 300,
+    // Không còn bán: nhận qua Đàn Tứ Ấn trong run. Giữ định nghĩa để vé đang tồn tại còn hợp lệ.
+    shop: false,
     text: "Tử trận: tự dùng 1 vé, hồi 50% Max HP. Đánh quái: ở lại đánh tiếp; RNGesus: sang tầng kế.",
   },
 ]);
@@ -99,7 +104,9 @@ function shop(guildId, now = Date.now()) {
   return {
     ...rotation,
     products: [
-      ...TICKETS.map((item) => product(item.id)),
+      ...TICKETS.filter((item) => item.shop !== false).map((item) =>
+        product(item.id),
+      ),
       ...rotation.itemIds.map(product),
     ],
   };
@@ -134,6 +141,33 @@ const migrateInventoryTx = db.transaction((guildId, userId) => {
     ).run(String(guildId), String(userId), row.item_id);
   }
 });
+const REVIVE_REFUND_DIAMONDS = 300;
+// Vé hồi sinh đã bỏ khỏi cửa hàng: hoàn 300 kim cương cho mỗi vé còn trong kho rồi xóa vé (chạy lúc khởi động, an toàn khi chạy lại).
+const refundReviveTx = db.transaction((guildId, userId, quantity) => {
+  addDiamonds(guildId, userId, REVIVE_REFUND_DIAMONDS * quantity, {
+    reason: "hardcore:revive-refund",
+    operationId: `hardcore-revive-refund:${guildId}:${userId}`,
+  });
+  db.prepare(
+    "DELETE FROM hardcore_inventory WHERE guild_id=? AND user_id=? AND item_id='survival_revive'",
+  ).run(String(guildId), String(userId));
+});
+function refundRetiredReviveTickets() {
+  const rows = db
+    .prepare(
+      "SELECT guild_id,user_id,quantity FROM hardcore_inventory WHERE item_id='survival_revive' AND quantity>0",
+    )
+    .all();
+  let tickets = 0;
+  for (const row of rows) {
+    refundReviveTx(row.guild_id, row.user_id, row.quantity);
+    tickets += row.quantity;
+  }
+  db.prepare(
+    "DELETE FROM hardcore_inventory WHERE item_id='survival_revive' AND quantity<=0",
+  ).run();
+  return { players: rows.length, tickets, diamonds: tickets * REVIVE_REFUND_DIAMONDS };
+}
 function inventory(guildId, userId, filter = "all") {
   if (!FILTERS.includes(filter)) throw new Error("INVALID_INVENTORY_FILTER");
   migrateInventoryTx(guildId, userId);
@@ -320,6 +354,8 @@ function preview(classKey, stake, loadout, userId = null) {
   return applyLoadout(state, loadout);
 }
 module.exports = {
+  REVIVE_REFUND_DIAMONDS,
+  refundRetiredReviveTickets,
   PRICES,
   TICKETS,
   CATALOG,

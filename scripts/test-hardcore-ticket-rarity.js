@@ -147,7 +147,7 @@ try {
   }
   const relicShop = bag.shop("lr-catalog", Date.UTC(2026, 9, 7));
   assert.ok(relicShop.itemIds.every((id) => !core.RELIC_ITEMS[id]));
-  assert.equal(bag.product(revive.id).price, 300);
+  assert.equal(bag.product(revive.id).price, 300, "định nghĩa vé còn nguyên cho vé đã tồn tại");
   groups.push(
     "six LR relic designs isolated from all reward/shop/loadout pools; revival ticket unchanged",
   );
@@ -269,9 +269,10 @@ try {
   const tickets = today.products.filter((item) => item.typeCode === "ticket");
   assert.deepEqual(
     tickets.map((item) => item.price),
-    [100, 100, 300],
+    [100, 100],
+    "Vé hồi sinh không còn bán",
   );
-  assert.equal(today.products.length, 8);
+  assert.equal(today.products.length, 7);
   assert.equal(bag.product(escape.id).rarity, "UR");
   assert.equal(bag.product(revive.id).rarity, "LR");
   assert.ok(today.itemIds.every((id) => !core.CONSUMABLE_ITEMS[id]));
@@ -286,11 +287,12 @@ try {
     day: today.day,
     operationId: "buy-lr",
   };
-  bag.purchase(args);
-  assert.equal(bag.purchase(args).duplicate, true);
+  assert.throws(() => bag.purchase(args), /NOT_FOR_SALE/);
+  bag.grant(session.guild_id, session.user_id, revive.id, 2);
   assert.equal(
     levels.getPlayerProgression(session.guild_id, session.user_id).diamonds,
-    400,
+    1000,
+    "mua bị từ chối nên không trừ kim cương",
   );
   bag.grant(session.guild_id, session.user_id, escape.id, 2);
   bag.grant(session.guild_id, session.user_id, core.ITEMS.cursed[0].id, 1);
