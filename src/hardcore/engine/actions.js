@@ -451,15 +451,13 @@ module.exports = function createModule(dependencies) {
           if (action === "bounty_surrender") {
             if (!(state.escapeTokens > 0)) throw new Error("INVALID_ACTION");
             state.escapeTokens -= 1;
-            m.bountyDone = true;
-            m.bountyBlessing = true;
             const maxBefore = state.maxHp;
-            addSource(state, { vit: marks.BOUNTY_VIT }, "bountyBlessing");
+            addSource(state, { vit: marks.BOUNTY_VIT });
             state.hp = Math.min(state.maxHp, state.hp + (state.maxHp - maxBefore));
             noteEvent(state, "bounty_hunter", false);
-            state.lastLog = `${eventIcon("bounty_hunter")} Giao nộp Bounty Hunter: mất ${E.ticket} **1 Vé thoát**, nhận Bounty Seal · ${E.vit} **VIT +${marks.BOUNTY_VIT}** đến hết run (Max ${E.hp} HP ${maxBefore} → ${state.maxHp}). Bounty Hunter không xuất hiện lại.`;
+            state.lastLog = `${eventIcon("bounty_hunter")} Giao nộp Bounty Hunter: mất ${E.ticket} **1 Vé thoát**, nhận ${E.vit} **VIT +${marks.BOUNTY_VIT}** cộng thẳng vào chỉ số (Max ${E.hp} HP ${maxBefore} → ${state.maxHp}). Bạn có thể gặp lại Bounty Hunter nếu còn vé.`;
           } else if (action === "bounty_resist") {
-            m.bountyDone = true;
+            m.bountyResisted = true;
             m.bountyCurse = { bribes: 0 };
             noteEvent(state, "bounty_hunter", false);
             state.lastLog = `${eventIcon("bounty_hunter")} Chống trả Bounty Hunter: giữ lại ${E.ticket} Vé thoát, thợ săn không xuất hiện lại. Nhưng bạn bị Bounty Curse: Hối lộ RNGesus tốn thêm 5% payout sau mỗi lần hối lộ (lần đầu ${Math.round(marks.bribeRate(state) * 100)}%). Xem Rift.`;

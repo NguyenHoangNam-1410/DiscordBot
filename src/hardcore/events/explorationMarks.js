@@ -28,8 +28,7 @@ function normalize(s) {
     "taxCompliant",
     "thiefAccepted",
     "thiefChallenged",
-    "bountyDone",
-    "bountyBlessing",
+    "bountyResisted",
   ])
     if (m[k] != null && typeof m[k] !== "boolean")
       throw Error("INVALID_EXPLORATION_MARK");
@@ -120,16 +119,16 @@ function oppose(s, kind) {
     delete m.thiefAftercare;
   }
 }
-// Bounty Hunter: chỉ xuất hiện 1 lần/run khi đang giữ Vé thoát; Giao nộp đổi vé lấy +40 VIT, Chống trả giữ vé nhưng nâng giá Hối lộ.
+// Bounty Hunter: chỉ xuất hiện khi đang giữ Vé thoát. Giao nộp đổi vé lấy VIT +30 cộng thẳng vào chỉ số (gặp lại được); Chống trả giữ vé, chấm dứt các lần gặp sau và nâng giá Hối lộ.
 const BOUNTY_MIN_FLOOR = 20;
-const BOUNTY_VIT = 40;
+const BOUNTY_VIT = 30;
 const BRIBE_BASE = 0.4;
 const BRIBE_STEP = 0.05;
 const BRIBE_CAP = 0.9;
 const bountyAvailable = (s) =>
   Boolean(
     enabled(s) &&
-    !data(s).bountyDone &&
+    !data(s).bountyResisted &&
     s.floor >= BOUNTY_MIN_FLOOR &&
     Number(s.escapeTokens) >= 1,
   );
@@ -214,11 +213,6 @@ function fields(s) {
       name: eventIcon("potion_thief") + " Underworld Lead",
       value:
         "Đến hết run: miễn phí Diamond/Rift Merchant (1 món/lần; Diamond tối đa 2 lần/run); không gặp The Thief; Elite gây thêm 30% DMG.",
-    });
-  if (m.bountyBlessing)
-    r.push({
-      name: eventIcon("bounty_hunter") + " Bounty Seal · Phúc ấn",
-      value: `Đến hết run: VIT +${BOUNTY_VIT} (đã tính vào chỉ số). Đã giao nộp 1 Vé thoát; Bounty Hunter không xuất hiện lại.`,
     });
   if (m.bountyCurse)
     r.push({
