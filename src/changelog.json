@@ -1,5 +1,14 @@
 [
   {
+    "id": "eb38dac0-594e-45a0-b1cf-7a416b3a3e8b",
+    "updatedAt": "2026-10-19T14:14:30.709Z",
+    "auditedAt": "2026-10-19T14:14:30.709Z",
+    "title": "Sửa lỗi nút tab con Túi/Chỉ số/Rift",
+    "changes": [
+      "Sửa lỗi bảng Chỉ số, Túi đồ và Rift không hiển thị được do hai nút trùng mã (tab chính và tab con đầu tiên)."
+    ]
+  },
+  {
     "id": "bd6ffdd3-748d-4d79-8440-96a3d3b65727",
     "updatedAt": "2026-10-19T14:05:51.522Z",
     "auditedAt": "2026-10-19T14:05:51.522Z",
