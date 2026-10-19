@@ -70,6 +70,13 @@ module.exports = {
         .setName("beta")
         .setDescription(
           "Thử Rha-Kor miễn cược, hồi sinh đầy HP; không nhận thưởng thật",
+        )
+        .addIntegerOption((option) =>
+          option
+            .setName("tinh_hon")
+            .setDescription("Tinh hồn khởi điểm để thử (S0–S6, mặc định S0)")
+            .setMinValue(0)
+            .setMaxValue(6),
         ),
     )
     .addSubcommand((command) =>

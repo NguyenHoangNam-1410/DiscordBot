@@ -138,6 +138,22 @@ async function main() {
     assert(controls(run).some((c) => c.custom_id.endsWith(":beta_end")));
     repo.deleteSession(run.session.id);
   });
+  await test("Beta cho chọn tinh hồn khởi điểm S0–S6 mà không cần sở hữu nhân vật", () => {
+    for (const level of [0, 3, 6]) {
+      const run = start("soul" + level, { soulLevel: level });
+      assert.equal(run.state.characterSoul.soulLevel, level);
+      assert.equal(run.state.characterSoul.characterId, "rha_kor");
+      assert.equal(
+        require("../src/hardcore/characters/rhakor").config(run.state).explodeAt,
+        level >= 2 ? 2 : 3,
+      );
+      assert.equal(run.state.characterSoul.bossMultiplier, level === 6 ? 1 : 1);
+      repo.deleteSession(run.session.id);
+    }
+    for (const bad of [-1, 7, 1.5, "3"])
+      assert.throws(() => start("soulbad", { soulLevel: bad }), /INVALID_CHARACTER_SOUL/);
+    assert.equal(svc.getHardcoreRun("beta-g", "soulbad"), null);
+  });
   await test("Combat death stays saved, gates other actions, revives 100% HP without MP/timer reset or second counter", () => {
     const before = ledger(),
       run = start();

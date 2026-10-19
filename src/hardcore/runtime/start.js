@@ -35,6 +35,7 @@ module.exports = function createModule(dependencies) {
       playerName = String(userId),
       characterId = classKey,
       beta = false,
+      soulLevel = 0,
     }) => {
       if (typeof beta !== "boolean") throw Error("INVALID_BETA_STATE");
       if (beta) {
@@ -122,7 +123,14 @@ module.exports = function createModule(dependencies) {
           stake,
           beta ? { gameplayVersion: 3 } : {},
         );
-        if (beta) require("../beta").activate(state);
+        if (beta) {
+          require("../beta").activate(state);
+          if (!Number.isSafeInteger(soulLevel) || soulLevel < 0 || soulLevel > 6)
+            throw Error("INVALID_CHARACTER_SOUL");
+          // Beta không cần sở hữu nhân vật: tinh hồn chọn tự do để thử nghiệm.
+          if (soulLevel > 0)
+            require("../characters/souls").attach(state, characterId, soulLevel);
+        }
         const souls = require("../characters/souls");
         if (souls.enabled(state) && !beta) {
           const characters = require("../characters");
