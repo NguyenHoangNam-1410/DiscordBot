@@ -244,7 +244,9 @@ function awakeningText(s) {
     E.hp +
     "** trước phản công nếu trận đấu còn tiếp tục. Barrier làm mới, không cộng dồn." +
     (c.pulse
-      ? " S6 thêm một xung **40% DMG đòn chính sau kháng**, không chuyển mục tiêu hay hồi MP."
+      ? " S6 thêm một xung **40% sức sát thương của chính đòn thứ ba** (đã gồm hệ số cường hóa, tính sau kháng; tổng ≈ ×1,4). Xung **hồi 0 " +
+        E.mana +
+        " MP**, không Crit, không tạo proc; chỉ ra đòn nếu vẫn cùng mục tiêu và phase còn sống."
       : "") +
     "\n" +
     status(s)
