@@ -61,7 +61,7 @@ module.exports = function createModule(dependencies) {
     const received = state.lastReceivedItems || [];
     const receivedTitles = received.map(
       (item) =>
-        `${item.upgradedFromLevel != null ? eventIcon("blacksmith") + " **Rèn:** " : ""}${itemIcon(item)} **${item.name} [${rarityLabel(item.rarity)}]**${item.consumable ? " · Vật phẩm" : ` · ${item.upgradedFromLevel != null ? `Lv.${item.upgradedFromLevel} → **Lv.${item.level}**` : item.levels && item.level > item.levels ? `⬆️ Lv.${item.level - item.levels} → **Lv.${item.level}**` : `**Lv.${item.level}**`}`}`,
+        `${item.upgradedFromLevel != null ? eventIcon("blacksmith") + " **Rèn:** " : ""}${itemIcon(item)} **${item.name} [${rarityLabel(item.rarity)}]**${item.consumable ? " · Vật phẩm" : `${item.upgradedFromLevel == null && item.levels && item.level > item.levels ? ":" : " ·"} ${item.upgradedFromLevel != null ? `Lv.${item.upgradedFromLevel} → **Lv.${item.level}**` : item.levels && item.level > item.levels ? `**Lv.${item.level - item.levels} → Lv.${item.level}**` : `**Lv.${item.level}**`}`}`,
     );
     if (state.lastUpgrade)
       details.push(
@@ -142,7 +142,7 @@ module.exports = function createModule(dependencies) {
         ),
       );
       details.push(
-        `${receivedTitles[index]}${direct ? `: ${direct}` : ""}${Object.keys(extraEffects).length ? `\n${effectText(extraEffects, item.effectScale ?? item.levels)}` : ""}${item.curseLevels && Object.keys(extraCurse).length ? `\n☣️ Lời nguyền: ${effectText(extraCurse, item.curseScale ?? item.curseLevels)}` : ""}`,
+        `${receivedTitles[index]}${direct ? `${item.upgradedFromLevel == null && item.levels && item.level > item.levels ? " ·" : ":"} ${direct}` : ""}${Object.keys(extraEffects).length ? `\n${effectText(extraEffects, item.effectScale ?? item.levels)}` : ""}${item.curseLevels && Object.keys(extraCurse).length ? `\n☣️ Lời nguyền: ${effectText(extraCurse, item.curseScale ?? item.curseLevels)}` : ""}`,
       );
       if (!receipt || item.inEventResult === false) {
         const secondary = statTransitions(item.before, item.after, true, {

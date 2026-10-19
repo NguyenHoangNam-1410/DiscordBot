@@ -198,25 +198,17 @@ module.exports = function createModule(dependencies) {
     );
   }
 
-  function bossOfferDescription(state, item) {
-    const level = bossOfferLevel(state, item);
-    if (level === null) return "Vật phẩm";
-    return level
-      ? "Nâng cấp Lv." + level + " → Lv." + (level + 1)
-      : "Món mới · Lv.1";
-  }
-
   function bossOfferLabel(state, item) {
     const level = bossOfferLevel(state, item);
     return (
       item.name +
-      " · " +
+      " " +
       item.typeCode +
       (level === null
         ? ""
         : level
-          ? " · Lv." + level + "→" + (level + 1)
-          : " · Mới")
+          ? ": Lv." + level + " → Lv." + (level + 1)
+          : ": Mới · Lv.1")
     );
   }
 
@@ -241,7 +233,6 @@ module.exports = function createModule(dependencies) {
         ...state.encounter.offers.map((item, i) => ({
           action: "boss_pick_" + i,
           label: bossOfferLabel(state, item),
-          description: bossOfferDescription(state, item),
         })),
         { action: "boss_sell", label: "Bán rương · +100% cược" },
       ];

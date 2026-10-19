@@ -1,5 +1,16 @@
 [
   {
+    "id": "f03b7a71-fcc6-4a33-a957-abf1a28388ec",
+    "updatedAt": "2026-10-19T01:37:33.940Z",
+    "auditedAt": "2026-10-19T01:37:33.940Z",
+    "title": "Rương boss hiển thị cấp gọn hơn",
+    "changes": [
+      "Bảng chính, Chi tiết và nút chọn của rương boss ghi gọn dạng Tên [độ hiếm]: Lv.X → Lv.X+1; món chưa có ghi Mới · Lv.1.",
+      "Chi tiết vẫn hiện chỉ số trước → sau khi nâng cấp.",
+      "Lượt vừa rồi sau khi nhặt đồ trùng hiện Tên [độ hiếm]: Lv cũ → Lv mới."
+    ]
+  },
+  {
     "id": "a324fed0-b11f-41e8-8c47-0284a991290e",
     "updatedAt": "2026-10-19T01:31:16.780Z",
     "auditedAt": "2026-10-19T01:31:16.780Z",

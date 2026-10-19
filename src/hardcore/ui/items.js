@@ -134,18 +134,13 @@ module.exports = function createModule(dependencies) {
     if (definition.category === "consumable") return "Vật phẩm";
     const owned = ownedCopy(state, definition);
     return owned
-      ? "Nâng cấp Lv." + owned.level + " → Lv." + (owned.level + 1)
-      : "Món mới · Lv.1";
+      ? "Lv." + owned.level + " → Lv." + (owned.level + 1)
+      : "Mới · Lv.1";
   }
 
   function offerItemText(state, definition) {
     const owned = ownedCopy(state, definition);
-    if (!owned)
-      return (
-        (definition.category === "consumable"
-          ? ""
-          : "🆕 **Món mới · Lv.1**\n") + itemText(definition, 1, state)
-      );
+    if (!owned) return itemText(definition, 1, state);
     // Duplicates level up the saved copy, so preview from its definition.
     const d = owned.definition;
     const v3 = rules.enabled(state);
@@ -160,7 +155,7 @@ module.exports = function createModule(dependencies) {
         ([key]) => instantKeys.includes(key) && (!v3 || d.receipt?.onDuplicate),
       ),
     );
-    const lines = ["⬆️ **Đã có · nâng cấp Lv." + from + " → Lv." + to + "**"];
+    const lines = [];
     if (Object.keys(buffs).length)
       lines.push(itemEffectChanges(buffs, from, to, state));
     if (Object.keys(instant).length)

@@ -57,7 +57,9 @@ module.exports = function createModule(dependencies) {
               d.name +
               " [" +
               rarityLabel(d.rarity) +
-              "]**\n" +
+              "]: " +
+              offerLevelLabel(s, d) +
+              "**\n" +
               offerItemText(s, d),
           )
           .join("\n\n")
@@ -228,7 +230,7 @@ module.exports = function createModule(dependencies) {
     if (s.phase === "upgrade")
       return `${E.checkpoint} **CHECKPOINT**\nChọn +5 STR, DEX, VIT hoặc ENE. Xem **Chi tiết** để đọc dự báo chỉ số.`;
     if (s.phase === "boss_chest" && s.encounter.offers)
-      return `${eventIcon("boss_chest")} **RƯƠNG BOSS · TẦNG ${s.encounter.bossFloor}**\nChọn 1 trong 3 món hoặc bán rương trước khi đi tiếp hay rút thưởng.\n${s.encounter.offers.map((d, i) => `${i + 1}. ${itemIcon(d)} **${d.name}** [${rarityLabel(d.rarity)}] · ${offerLevelLabel(s, d)}`).join("\n")}\nXem **Chi tiết** để đọc chỉ số thay đổi.`;
+      return `${eventIcon("boss_chest")} **RƯƠNG BOSS · TẦNG ${s.encounter.bossFloor}**\nChọn 1 trong 3 món hoặc bán rương trước khi đi tiếp hay rút thưởng.\n${s.encounter.offers.map((d, i) => `${i + 1}. ${itemIcon(d)} ${d.name} [${rarityLabel(d.rarity)}]: **${offerLevelLabel(s, d)}**`).join("\n")}\nXem **Chi tiết** để đọc chỉ số thay đổi.`;
     if (s.phase === "boss_chest")
       return `${eventIcon("boss_chest")} **RƯƠNG BOSS · TẦNG ${s.encounter.bossFloor}**\nChọn mở hoặc bán rương trước khi đi tiếp hay rút thưởng.\nXem **Chi tiết** để đọc phần thưởng.`;
     if (s.phase === "paradox")
