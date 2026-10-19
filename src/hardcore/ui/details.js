@@ -80,13 +80,15 @@ module.exports = function createModule(dependencies) {
       ["memories", "Ký ức"],
     ],
   });
-  // Tab con và trang được gói vào một số: sub × 100 + trang (giữ nguyên định dạng nút view_/page_).
+  // Tab con và trang được gói vào một số: (sub+1) × 100 + trang. Số < 100 là tab con đầu tiên,
+  // để nút tab chính (view_x_0) không trùng custom_id với nút tab con đầu tiên.
   const decodePage = (tab, value) => {
     const n = Number.isSafeInteger(value) && value >= 0 ? value : 0;
     const count = SUBS[tab]?.length || 1;
-    return { sub: Math.min(count - 1, Math.floor(n / 100)), page: n % 100 };
+    if (n < 100) return { sub: 0, page: n };
+    return { sub: Math.min(count - 1, Math.floor(n / 100) - 1), page: n % 100 };
   };
-  const encodePage = (sub, page) => sub * 100 + page;
+  const encodePage = (sub, page) => (sub + 1) * 100 + page;
 
   // Các mốc tầng sắp tới: tập hợp thông tin đang nằm rải rác ở nhiều nơi.
   function upcoming(state) {

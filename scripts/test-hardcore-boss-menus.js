@@ -663,7 +663,7 @@ async function main() {
         run.session.id,
         "public",
         "items",
-        100,
+        200,
       );
       assert(JSON.stringify(inventory).includes(icons.itemIcon(item)));
       const battle = view.embed(s, "u").toJSON();

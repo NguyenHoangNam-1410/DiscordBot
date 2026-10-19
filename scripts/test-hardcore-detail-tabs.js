@@ -46,6 +46,8 @@ function bounds(p) {
   for (const f of e.fields || []) assert.ok(f.value.length <= 1024 && f.name.length <= 256 && f.value.length > 0);
   const rows = p.components.map((r) => r.toJSON());
   assert.ok(rows.length <= 5);
+  const ids = rows.flatMap((r) => r.components.map((c) => c.custom_id));
+  assert.equal(new Set(ids).size, ids.length, "custom_id không được trùng: " + ids.join(", "));
   for (const r of rows) {
     assert.ok(r.components.length <= 5);
     for (const c of r.components) assert.ok(c.custom_id.length <= 100 && /^hardcore:[^:]+:\d+:(view|page)_(stats|items|effects|encounter)_\d{1,4}:/.test(c.custom_id) && /^(view|page)_/.test(c.custom_id.split(":")[3]));
@@ -58,12 +60,12 @@ test("Mọi tab con vừa giới hạn Discord và có hàng nút tab con", () =
   const { s } = runState();
   for (const [tab, n] of Object.entries(SUBS))
     for (let sub = 0; sub < n; sub++) {
-      const p = view.privatePayload(s, "id", "m", tab, sub * 100);
+      const p = view.privatePayload(s, "id", "m", tab, (sub + 1) * 100);
       bounds(p);
       const rows = p.components.map((r) => r.toJSON());
       assert.equal(rows[1].components.length, n, tab + " có " + n + " tab con");
       assert.equal(rows[1].components.filter((c) => c.style === 3).length, 1, "đúng một tab con đang chọn");
-      assert.ok(rows[1].components.some((c) => c.custom_id.includes(`_${tab}_${sub * 100}:`)));
+      assert.ok(rows[1].components.some((c) => c.custom_id.includes(`_${tab}_${(sub + 1) * 100}:`)));
     }
   bounds(view.privatePayload(s, "id", "m", "encounter", 0));
 });
@@ -79,7 +81,7 @@ test("Chỉ chuyển tab con lấy số liệu: nguồn chỉ số khớp tổng
 
 test("Nhân vật: tinh hồn/innate/affinity/awakening/mastery và trạng thái kit Rha-Kor", () => {
   const { s } = runState();
-  const t = text(view.privatePayload(s, "id", "m", "stats", 100));
+  const t = text(view.privatePayload(s, "id", "m", "stats", 200));
   assert.match(t, /Class Innate/);
   assert.match(t, /Mastery/);
   assert.match(t, /Affinity/);
@@ -88,10 +90,10 @@ test("Nhân vật: tinh hồn/innate/affinity/awakening/mastery và trạng thá
 
 test("Trang bị: tổng hợp, nội tại, giới hạn; Hành động: skill/tấn công/phòng thủ kèm dự kiến sát thương", () => {
   const { s } = runState();
-  const eq = text(view.privatePayload(s, "id", "m", "stats", 200));
+  const eq = text(view.privatePayload(s, "id", "m", "stats", 300));
   assert.match(eq, /Tổng hợp trang bị/);
   assert.match(eq, /Giới hạn của bạn/);
-  const act = text(view.privatePayload(s, "id", "m", "stats", 300));
+  const act = text(view.privatePayload(s, "id", "m", "stats", 400));
   assert.match(act, /Khắc Lệnh Phá Giáp/);
   assert.match(act, /Dự kiến vs quái hiện tại/);
   assert.match(act, /Phòng thủ/);
@@ -100,24 +102,24 @@ test("Trang bị: tổng hợp, nội tại, giới hạn; Hành động: skill/
 test("Túi đồ: vật tư, trang bị có phân trang và mục đang gửi Forge, set & di vật", () => {
   const { s, lent } = runState();
   assert.match(text(view.privatePayload(s, "id", "m", "items", 0)), /Vật tư & vé/);
-  const first = view.privatePayload(s, "id", "m", "items", 100);
+  const first = view.privatePayload(s, "id", "m", "items", 200);
   assert.match(text(first), /Đang gửi Horadric Forge/);
   assert.match(text(first), new RegExp(lent.name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
   const pages = Math.ceil(s.items.length / 5);
   assert.ok(pages > 1);
-  const next = view.privatePayload(s, "id", "m", "items", 101);
+  const next = view.privatePayload(s, "id", "m", "items", 201);
   assert.doesNotMatch(text(next), /Đang gửi Horadric Forge/);
-  assert.ok(next.components.map((r) => r.toJSON()).some((r) => r.components.some((c) => c.custom_id.includes("page_items_102:"))));
+  assert.ok(next.components.map((r) => r.toJSON()).some((r) => r.components.some((c) => c.custom_id.includes("page_items_202:"))));
   bounds(next);
-  bounds(view.privatePayload(s, "id", "m", "items", 200));
+  bounds(view.privatePayload(s, "id", "m", "items", 300));
 });
 
 test("Rift: modifier, Hiệu ứng tạm thời và Ký ức/dấu ấn nằm ở tab riêng", () => {
   const { s } = runState();
   s.modifiers.fortified = 2;
   assert.match(text(view.privatePayload(s, "id", "m", "effects", 0)), /Fortified|Bậc/);
-  assert.match(text(view.privatePayload(s, "id", "m", "effects", 100)), /Hiệu ứng tạm thời|Paradox|Class Shrine/);
-  assert.match(text(view.privatePayload(s, "id", "m", "effects", 200)), /Ký ức|dấu ấn|Dấu/);
+  assert.match(text(view.privatePayload(s, "id", "m", "effects", 200)), /Hiệu ứng tạm thời|Paradox|Class Shrine/);
+  assert.match(text(view.privatePayload(s, "id", "m", "effects", 300)), /Ký ức|dấu ấn|Dấu/);
 });
 
 test("Mục Sắp tới nêu tầng món Forge quay về", () => {
@@ -129,9 +131,9 @@ test("Mục Sắp tới nêu tầng món Forge quay về", () => {
 test("Tab con và trang ngoài phạm vi được kẹp lại, route chấp nhận số gộp", () => {
   const { s } = runState();
   bounds(view.privatePayload(s, "id", "m", "stats", 999));
-  bounds(view.privatePayload(s, "id", "m", "items", 199));
+  bounds(view.privatePayload(s, "id", "m", "items", 299));
   const route = /^(?:view|page)_(stats|items|effects|encounter)_(\d{1,4})$/;
-  assert.ok(route.test("view_items_200") && route.test("page_items_102"));
+  assert.ok(route.test("view_items_300") && route.test("page_items_202"));
 });
 test("Tab Hành động và mọi tab con mở được ở tình huống không phải chiến đấu", () => {
   const { s } = runState();
@@ -147,7 +149,7 @@ test("Tab Hành động và mọi tab con mở được ở tình huống không
     copy.activeParadox = { version: 2, id: "unstable_soul", pairId: "volatility", milestone: 20, startFloor: 21, endFloor: 25, combatActionCount: 0, attackActionCount: 0, lockedSkillCost: null };
     for (const [tab, n] of Object.entries(SUBS))
       for (let sub = 0; sub < n; sub++)
-        bounds(view.privatePayload(copy, "id", "m", tab, sub * 100));
+        bounds(view.privatePayload(copy, "id", "m", tab, (sub + 1) * 100));
   }
 });
 console.log("detail tabs ok (" + count + ")");
