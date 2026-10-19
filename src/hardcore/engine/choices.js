@@ -344,6 +344,15 @@ module.exports = function createModule(dependencies) {
           ? [{ action: "covenant_basement", label: "Xuống tầng hầm · 4 mảnh" }]
           : []),
       ];
+    if (e.type === "trap" && e.kind === "bounty_hunter")
+      return [
+        {
+          action: "bounty_surrender",
+          label: "Giao nộp · mất 1 vé",
+          disabled: !(state.escapeTokens > 0),
+        },
+        { action: "bounty_resist", label: "Chống trả" },
+      ];
     if (
       e.type === "trap" &&
       ["tax", "potion_thief"].includes(e.kind) &&
@@ -389,7 +398,7 @@ module.exports = function createModule(dependencies) {
         },
         {
           action: "bribe",
-          label: "Hối lộ · 40% payout",
+          label: `Hối lộ · ${Math.round(require("../events/explorationMarks").bribeRate(state) * 100)}% payout`,
           disabled: payout(state) < 1000,
         },
         {

@@ -483,6 +483,11 @@ module.exports = function createModule(dependencies) {
     if (roll < 0.83 - extra / 2) return makeShrine(state, rng);
     if (roll < 0.88) return makeChest(state, rng, true);
     if (roll < 0.94) {
+      const bountyPool = require("../events/explorationMarks").bountyAvailable(
+        state,
+      )
+        ? ["bounty_hunter"]
+        : [];
       const kind = pick(
         state.floor === 1
           ? ["potion_thief", "portal"].filter(
@@ -492,7 +497,7 @@ module.exports = function createModule(dependencies) {
                   require("../events/explorationMarks").data(state).underworld
                 ),
             )
-          : ["tax", "potion_thief", "portal"].filter(
+          : ["tax", "potion_thief", "portal", ...bountyPool].filter(
               (k) =>
                 !(
                   k === "tax" &&
@@ -512,7 +517,9 @@ module.exports = function createModule(dependencies) {
         name:
           kind === "portal"
             ? "Wrong Portal"
-            : kind === "tax"
+            : kind === "bounty_hunter"
+              ? "Bounty Hunter · Thợ Săn Tiền Thưởng"
+              : kind === "tax"
               ? "Tax Collector"
               : require("../events/explorationMarks").enabled(state)
                 ? "The Thief"

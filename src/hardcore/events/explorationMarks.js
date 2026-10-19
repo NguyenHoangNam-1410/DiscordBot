@@ -28,9 +28,18 @@ function normalize(s) {
     "taxCompliant",
     "thiefAccepted",
     "thiefChallenged",
+    "bountyDone",
+    "bountyBlessing",
   ])
     if (m[k] != null && typeof m[k] !== "boolean")
       throw Error("INVALID_EXPLORATION_MARK");
+  if (
+    m.bountyCurse != null &&
+    (typeof m.bountyCurse !== "object" ||
+      !Number.isSafeInteger(m.bountyCurse.bribes) ||
+      m.bountyCurse.bribes < 0)
+  )
+    throw Error("INVALID_EXPLORATION_MARK");
   if (
     (m.taxRelief != null && !["ready", "used"].includes(m.taxRelief)) ||
     (m.thiefAftercare != null &&
@@ -111,6 +120,29 @@ function oppose(s, kind) {
     delete m.thiefAftercare;
   }
 }
+// Bounty Hunter: chỉ xuất hiện 1 lần/run khi đang giữ Vé thoát; Giao nộp đổi vé lấy +40 VIT, Chống trả giữ vé nhưng nâng giá Hối lộ.
+const BOUNTY_MIN_FLOOR = 20;
+const BOUNTY_VIT = 40;
+const BRIBE_BASE = 0.4;
+const BRIBE_STEP = 0.05;
+const BRIBE_CAP = 0.9;
+const bountyAvailable = (s) =>
+  Boolean(
+    enabled(s) &&
+    !data(s).bountyDone &&
+    s.floor >= BOUNTY_MIN_FLOOR &&
+    Number(s.escapeTokens) >= 1,
+  );
+// Tỷ lệ Hối lộ RNGesus: 40%; sau khi bị Nguyền ấn, lần hối lộ thứ n tốn thêm 5% × n (tăng dần, tối đa 90%).
+function bribeRate(s) {
+  const curse = data(s).bountyCurse;
+  return curse
+    ? Math.min(BRIBE_CAP, BRIBE_BASE + BRIBE_STEP * (curse.bribes + 1))
+    : BRIBE_BASE;
+}
+function noteBribe(s) {
+  if (data(s).bountyCurse) ensure(s).bountyCurse.bribes += 1;
+}
 const taxReliefAvailable = (s) =>
   Boolean(data(s).taxCompliant && !data(s).outlaw && data(s).taxRelief === "ready");
 function useTaxRelief(s) {
@@ -183,6 +215,16 @@ function fields(s) {
       value:
         "Đến hết run: miễn phí Diamond/Rift Merchant (1 món/lần; Diamond tối đa 2 lần/run); không gặp The Thief; Elite gây thêm 30% DMG.",
     });
+  if (m.bountyBlessing)
+    r.push({
+      name: eventIcon("bounty_hunter") + " Bounty Seal · Phúc ấn",
+      value: `Đến hết run: VIT +${BOUNTY_VIT} (đã tính vào chỉ số). Đã giao nộp 1 Vé thoát; Bounty Hunter không xuất hiện lại.`,
+    });
+  if (m.bountyCurse)
+    r.push({
+      name: eventIcon("bounty_hunter") + " Bounty Curse · Nguyền ấn",
+      value: `Đến hết run: Hối lộ RNGesus tốn thêm 5% payout sau mỗi lần hối lộ (45%, 50%, 55%…, tối đa ${BRIBE_CAP * 100}%); lần kế tiếp: ${Math.round(bribeRate(s) * 100)}%. Đã giữ lại Vé thoát; Bounty Hunter không xuất hiện lại.`,
+    });
   if (m.vulnerable)
     r.push({
       name: eventIcon("healer") + " Vulnerable",
@@ -213,6 +255,11 @@ module.exports = {
   incoming,
   freeMerchant,
   freeOffers,
+  bountyAvailable,
+  bribeRate,
+  noteBribe,
+  BOUNTY_VIT,
+  BOUNTY_MIN_FLOOR,
   vulnerable,
   healerDue,
   blood,

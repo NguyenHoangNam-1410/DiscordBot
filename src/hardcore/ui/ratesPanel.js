@@ -72,7 +72,7 @@ function buildRatesEmbed(category = null) {
       {
         name: "Encounter",
         value:
-          "53% quái thường · 12% Elite · 10% hòm · 8% Shrine · 5% kho báu · 6% bẫy · 4% surprise · 2% phòng trống. Boss mỗi 50 tầng; tầng 999 là Final Boss. RNGesus roll trước pool này.",
+          "53% quái thường · 12% Elite · 10% hòm · 8% Shrine · 5% kho báu · 6% bẫy (Tax/Thief/Portal; thêm Bounty Hunter khi giữ Vé thoát, từ tầng 20, 1 lần/run) · 4% surprise · 2% phòng trống. Boss mỗi 50 tầng; tầng 999 là Final Boss. RNGesus roll trước pool này.",
       },
       {
         name: "Hòm và pity",

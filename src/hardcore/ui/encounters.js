@@ -303,7 +303,9 @@ ${bossDisplay.status(s)}${require("../rift").battle(s)}
             ? covenant.canEnter(s)
               ? "Đủ bốn mảnh: cửa tầng hầm đã mở. Chọn vào portal, bỏ qua hoặc thử thách tầng hầm."
               : "Chọn vào portal hoặc bỏ qua để vượt tầng."
-            : require("../events/explorationMarks").enabled(s)
+            : e.kind === "bounty_hunter"
+              ? "Giao nộp 1 Vé thoát để nhận VIT +40, hoặc chống trả để giữ vé nhưng Hối lộ RNGesus đắt dần. Xem Chi tiết."
+              : require("../events/explorationMarks").enabled(s)
               ? e.kind === "tax"
                 ? "Nộp thuế và không chống trả: sau boss 950 được giải toàn bộ nguyền của 1 trang bị miễn phí. Tax Collector ngừng xuất hiện từ tầng 950. Lucky Break vẫn ghi nhận hợp tác."
                 : "Chấp nhận và không đánh đuổi: sau tầng 998 gặp trùm băng đảng, miễn phí xóa toàn bộ stack của 1 loại Rift có hại (trừ Unstable Rift). Lucky Break vẫn ghi nhận hợp tác."
