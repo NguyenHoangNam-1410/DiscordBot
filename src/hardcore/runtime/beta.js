@@ -6,6 +6,7 @@ async function open(interaction) {
   if (!(await requireGameChannel(interaction, "hardcore"))) return null;
   const runtime = require("./index");
   await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  const soulLevel = interaction.options?.getInteger?.("tinh_hon") ?? 0;
   let run = runtime.getHardcoreRun(interaction.guildId, interaction.user.id),
     created = false;
   if (run && !beta.is(run.state))
@@ -20,6 +21,7 @@ async function open(interaction) {
         userId: interaction.user.id,
         channelId: interaction.channelId,
         beta: true,
+        soulLevel,
         playerName:
           interaction.member?.displayName ||
           interaction.user.globalName ||
@@ -83,7 +85,11 @@ async function open(interaction) {
     }
     return interaction.editReply({
       content:
-        "Đã mở **Rha-Kor · SSR · S0 — BETA**. Cược giả lập 100.000 xu; không tốn cược, không nhận thưởng tài khoản. Tử trận có nút hồi sinh 100% HP.",
+        `Đã mở **Rha-Kor · SSR · S${current.state.characterSoul?.soulLevel || 0} — BETA**.` +
+        (created || !soulLevel
+          ? ""
+          : " Run beta đang diễn ra nên giữ tinh hồn cũ; kết thúc beta rồi mở lại để đổi tinh hồn.") +
+        " Cược giả lập 100.000 xu; không tốn cược, không nhận thưởng tài khoản. Tử trận có nút hồi sinh 100% HP.",
     });
   });
 }

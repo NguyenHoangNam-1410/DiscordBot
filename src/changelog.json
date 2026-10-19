@@ -1,5 +1,14 @@
 [
   {
+    "id": "be31ee3e-d174-4c4a-86f1-30771c633ecd",
+    "updatedAt": "2026-10-19T14:25:34.227Z",
+    "auditedAt": "2026-10-19T14:25:34.227Z",
+    "title": "Beta chọn tinh hồn khởi điểm",
+    "changes": [
+      "/sinhton beta có thêm tùy chọn tinh_hon (S0–S6) để thử nhanh từng bậc tinh hồn của Rha-Kor mà không cần sở hữu nhân vật. Nếu đang có run beta thì giữ tinh hồn cũ; kết thúc beta rồi mở lại để đổi."
+    ]
+  },
+  {
     "id": "eb38dac0-594e-45a0-b1cf-7a416b3a3e8b",
     "updatedAt": "2026-10-19T14:14:30.709Z",
     "auditedAt": "2026-10-19T14:14:30.709Z",
