@@ -29,6 +29,7 @@ function normalize(s) {
     "thiefAccepted",
     "thiefChallenged",
     "bountyResisted",
+    "sealsClaimed",
   ])
     if (m[k] != null && typeof m[k] !== "boolean")
       throw Error("INVALID_EXPLORATION_MARK");
@@ -142,6 +143,18 @@ function bribeRate(s) {
 function noteBribe(s) {
   if (data(s).bountyCurse) ensure(s).bountyCurse.bribes += 1;
 }
+// Tứ Ấn: bốn "ấn nghịch" từ bốn event. Đủ cả bốn thì gặp Đàn Tứ Ấn (1 lần/run) và nhận Vé hồi sinh trong run.
+const SEALS = Object.freeze([
+  { key: "outlaw", name: "Ấn Phản Vương", source: "Royal Outlaw · Chống trả Tax Collector", icon: "tax" },
+  { key: "underworld", name: "Ấn Hắc Giới", source: "Underworld Lead · Đánh đuổi The Thief", icon: "potion_thief" },
+  { key: "vitalBlessing", name: "Ấn Sinh Mệnh", source: "Vital Benediction · Hiến máu cho Healer", icon: "healer" },
+  { key: "bountyResisted", name: "Ấn Truy Nã", source: "Bounty Curse · Chống trả Bounty Hunter", icon: "bounty_hunter" },
+]);
+const ownedSeals = (s) => SEALS.filter((seal) => data(s)[seal.key]);
+const sealsComplete = (s) => enabled(s) && ownedSeals(s).length === SEALS.length;
+// Chỉ kích hoạt khi chưa nhận và không đang cầm Vé hồi sinh (tránh phí thưởng); nếu đang cầm vé thì chờ đến khi vé được dùng.
+const sealAltarDue = (s) =>
+  sealsComplete(s) && !data(s).sealsClaimed && !(Number(s.reviveTickets) > 0);
 const taxReliefAvailable = (s) =>
   Boolean(data(s).taxCompliant && !data(s).outlaw && data(s).taxRelief === "ready");
 function useTaxRelief(s) {
@@ -204,19 +217,19 @@ function fields(s) {
     });
   if (m.outlaw)
     r.push({
-      name: eventIcon("tax") + " Royal Outlaw",
+      name: eventIcon("tax") + " Ấn Phản Vương · Royal Outlaw",
       value:
         "Đến hết run: không gặp Tax Collector; Boss/Final Boss gây thêm 20% DMG.",
     });
   if (m.underworld)
     r.push({
-      name: eventIcon("potion_thief") + " Underworld Lead",
+      name: eventIcon("potion_thief") + " Ấn Hắc Giới · Underworld Lead",
       value:
         "Đến hết run: miễn phí Diamond/Rift Merchant (1 món/lần; Diamond tối đa 2 lần/run); không gặp The Thief; Elite gây thêm 30% DMG.",
     });
   if (m.bountyCurse)
     r.push({
-      name: eventIcon("bounty_hunter") + " Bounty Curse · Nguyền ấn",
+      name: eventIcon("bounty_hunter") + " Ấn Truy Nã · Bounty Curse",
       value: `Đến hết run: Hối lộ RNGesus tốn thêm 5% payout sau mỗi lần hối lộ (45%, 50%, 55%…, tối đa ${BRIBE_CAP * 100}%); lần kế tiếp: ${Math.round(bribeRate(s) * 100)}%. Đã giữ lại Vé thoát; Bounty Hunter không xuất hiện lại.`,
     });
   if (m.vulnerable)
@@ -229,8 +242,17 @@ function fields(s) {
     });
   if (m.vitalBlessing)
     r.push({
-      name: eventIcon("healer") + " Vital Benediction",
+      name: eventIcon("healer") + " Ấn Sinh Mệnh · Vital Benediction",
       value: "Đến hết run: LUCK +40; STR/DEX/VIT/ENE +10 (đã tính vào chỉ số).",
+    });
+  if (ownedSeals(s).length)
+    r.push({
+      name: "🔱 Tứ Ấn " + ownedSeals(s).length + "/" + SEALS.length,
+      value:
+        SEALS.map((seal) => (m[seal.key] ? "✅" : "⬜") + " **" + seal.name + "** — " + seal.source).join("\n") +
+        (m.sealsClaimed
+          ? "\nĐã nhận Vé hồi sinh từ Đàn Tứ Ấn."
+          : "\nĐủ bốn ấn: gặp Đàn Tứ Ấn ở tình huống hợp lệ kế tiếp (khi bạn không cầm Vé hồi sinh) và nhận 1 Vé hồi sinh. Chỉ 1 lần/run; các ấn không bị tiêu hao."),
     });
   if (boosted(s))
     r.push({
@@ -250,6 +272,10 @@ module.exports = {
   freeMerchant,
   freeOffers,
   bountyAvailable,
+  SEALS,
+  ownedSeals,
+  sealsComplete,
+  sealAltarDue,
   bribeRate,
   noteBribe,
   BOUNTY_VIT,

@@ -175,6 +175,11 @@ module.exports = function createModule(dependencies) {
             "Chỉ trong V3 thường (không phải Tháp), từ tầng 20, và chỉ khi bạn đang giữ Vé thoát; thuộc nhóm bẫy. Lucky Break không áp dụng.\n**Giao nộp:** mất 1 Vé thoát, nhận VIT +30 cộng thẳng vào chỉ số (hồi phần Max HP tăng thêm). Còn vé thì có thể gặp lại và nhận tiếp.\n**Chống trả:** giữ vé, không gặp lại Bounty Hunter trong run, nhưng nhận Bounty Curse: Hối lộ RNGesus tốn thêm 5% payout sau mỗi lần hối lộ (45%, 50%, 55%…, tối đa 90%).",
         },
         {
+          name: `🔱 Đàn Tứ Ấn · Vé hồi sinh`,
+          value:
+            "Thu thập đủ **bốn ấn nghịch** trong một run (V3 thường): **Ấn Phản Vương** (Chống trả Tax Collector → Royal Outlaw), **Ấn Hắc Giới** (Đánh đuổi The Thief → Underworld Lead), **Ấn Sinh Mệnh** (Hiến máu cho Healer → Vital Benediction), **Ấn Truy Nã** (Chống trả Bounty Hunter → Bounty Curse). Đủ bốn thì gặp Đàn Tứ Ấn ở tình huống hợp lệ kế tiếp và nhận **1 Vé hồi sinh** dùng trong run này. Chỉ 1 lần/run, các ấn không bị tiêu hao; nếu bạn đang cầm Vé hồi sinh thì event chờ đến khi vé được dùng. Vé hồi sinh không còn bán ở cửa hàng. Xem tiến độ Tứ Ấn trong Rift.",
+        },
+        {
           name: `${E.luck} Wrong Portal`,
           value:
             "Cơ bản 50% tốt / 50% xấu; LUCK không tác động, nội tại may mắn event có thể tăng nhánh tốt. Vào portal nhận kết quả; nhánh xấu gọi Elite đánh phủ đầu, hạ Elite mới vượt tầng. Bỏ qua để vượt tầng không nhận thưởng, chịu hiệu ứng portal hoặc gặp Elite. Tiên tri đánh dấu nút vào portal. Phòng trống cho phép đi tiếp hoặc rút thưởng.",
@@ -254,7 +259,7 @@ module.exports = function createModule(dependencies) {
         },
         {
           name: "Cửa hàng & túi Sinh tồn",
-          value: `Dùng /sinhton cuahang và /sinhton tuido. Giá vé: ${E.ticket} **Vé thoát** 100 💎; ${E.prayerTicket} **Vé cầu nguyện** 100 💎; ${E.reviveTicket} **Vé hồi sinh** 300 💎. Năm trang bị chọn đều từ toàn bộ pool, đổi mỗi ngày lúc 00:00 Việt Nam: R 10.000 / SR 50.000 / SSR 100.000 / UR 200.000 xu. Mua không giới hạn lượt. Trước run chọn tối đa 5 món khác nhau (Lv.1), mỗi loại vé một chiếc; xem chỉ số rồi Bắt đầu. Không hoàn đồ/vé khi chết, rút, bỏ hoặc hết hạn run. ${E.reviveTicket} **Vé hồi sinh** tự cứu một lần với 50% HP; ở lại đánh tiếp nếu chết khi đánh quái, sang tầng kế nếu chết bởi RNGesus.`,
+          value: `Dùng /sinhton cuahang và /sinhton tuido. Giá vé: ${E.ticket} **Vé thoát** 100 💎; ${E.prayerTicket} **Vé cầu nguyện** 100 💎; ${E.reviveTicket} **Vé hồi sinh** không còn bán: nhận 1 vé trong run từ Đàn Tứ Ấn khi đủ bốn ấn (Ấn Phản Vương, Ấn Hắc Giới, Ấn Sinh Mệnh, Ấn Truy Nã). Năm trang bị chọn đều từ toàn bộ pool, đổi mỗi ngày lúc 00:00 Việt Nam: R 10.000 / SR 50.000 / SSR 100.000 / UR 200.000 xu. Mua không giới hạn lượt. Trước run chọn tối đa 5 món khác nhau (Lv.1), mỗi loại vé một chiếc; xem chỉ số rồi Bắt đầu. Không hoàn đồ/vé khi chết, rút, bỏ hoặc hết hạn run. ${E.reviveTicket} **Vé hồi sinh** tự cứu một lần với 50% HP; ở lại đánh tiếp nếu chết khi đánh quái, sang tầng kế nếu chết bởi RNGesus.`,
         },
         {
           name: "Dịch vụ: giá và điều kiện",

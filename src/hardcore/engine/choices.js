@@ -65,6 +65,7 @@ module.exports = function createModule(dependencies) {
     }
     return (
       {
+        seal_altar: [{ action: "event_seal_claim", label: "Nhận Vé hồi sinh" }],
         healer: state.encounter.healerReturn
           ? [{ action: "event_healer_return", label: "Nhận phúc lành" }]
           : [
@@ -325,6 +326,7 @@ module.exports = function createModule(dependencies) {
         ...(e.forge?.stage === "boon" ||
         e.kind === "treasure_room" ||
         (e.kind === "healer" && e.healerReturn) ||
+        e.kind === "seal_altar" ||
         (e.kind === "duelist" && e.mode)
           ? []
           : [{

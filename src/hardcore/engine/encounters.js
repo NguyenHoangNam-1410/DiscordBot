@@ -466,6 +466,13 @@ module.exports = function createModule(dependencies) {
         };
       }
     }
+    if (require("../events/explorationMarks").sealAltarDue(state))
+      return {
+        type: "surprise",
+        kind: "seal_altar",
+        name: "Đàn Tứ Ấn · Altar of Four Seals",
+        sealAltar: true,
+      };
     if (require("../events/explorationMarks").healerDue(state))
       return {
         type: "surprise",

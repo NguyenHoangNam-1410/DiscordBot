@@ -167,6 +167,14 @@ client.once(Events.ClientReady, async () => {
   if (shuttingDown) return;
   const resumedRounds = resumeOpenRounds(client, logger);
   const resumedHorseRaces = resumeHorseRaces(client, logger);
+  try {
+    const refunded =
+      require("./hardcore/inventory/service").refundRetiredReviveTickets();
+    if (refunded.tickets)
+      logger.info(refunded, "refunded retired survival revive tickets");
+  } catch (error) {
+    logger.error({ err: error }, "revive ticket refund failed");
+  }
   maintenanceTimers.push(startTimedChallengeMaintenance(client, logger));
   maintenanceTimers.push(startCommerceMaintenance(client, logger));
   maintenanceTimers.push(startBlackjackDuelMaintenance(client, logger));
