@@ -263,11 +263,11 @@ try {
     assert(kit.frame(s).firstBarrierUsed);
     delete s.encounter.boss;
   });
-  test("Awakening third hit / S3 / S6 pulse, previews stay pure", () => {
+  test("Awakening third hit / S3 / S6 (no pulse any more), previews stay pure", () => {
     for (const [n, third] of [
       [0, 270],
       [3, 368],
-      [6, 582],
+      [6, 416],
     ]) {
       const s = fresh(n, true);
       act(s, "skill");
@@ -341,7 +341,7 @@ try {
     assert.equal(kit.frame(immune).hits, 0);
     assert.equal(kit.frame(immune).remaining, 2);
   });
-  test("S6 overkill reports strength without pulse spilling to a dead target", () => {
+  test("S6 overkill reports strength and never spills to a dead target", () => {
     const s = fresh(6, true);
     act(s, "skill");
     act(s, "attack");

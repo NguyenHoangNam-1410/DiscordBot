@@ -23,7 +23,9 @@ function snapshot(n = 0, rarity = "SSR") {
     firstBarrier: n >= 2 ? 0.06 : 0,
     thirdMultiplier: n >= 3 ? 1.6 : 1.35,
     thirdBarrier: rarity === "LR" ? 0.15 : n >= 3 ? 0.12 : 0.1,
-    pulse: n >= 6 ? 0.4 : 0,
+    // S5: mỗi quái hạ bằng đòn cường hóa tạo 1 stack, hoàn 1 MP/stack khi chuỗi kết thúc. S6: hoàn thêm 2 MP khi chuỗi kết thúc.
+    killMana: n >= 5 ? 1 : 0,
+    endMana: n >= 6 ? 2 : 0,
     hpMultiplier: rarity === "LR" ? 1.2 : rarity === "UR" ? 1.1 : 1,
     damageMultiplier: rarity === "LR" ? 1.15 : rarity === "UR" ? 1.08 : 1,
   };
@@ -87,22 +89,72 @@ function begin(s, action) {
   const f = prepare(s);
   if (f) f.empoweredAction = action === "attack" && f.remaining > 0;
 }
+const MAX_STACKS = 3;
+const gainMana = (s, amount) => {
+  const before = s.mana;
+  s.mana = Math.min(
+    require("../bosses/mechanics").effectiveMaxMana(s),
+    s.mana + amount,
+  );
+  return s.mana - before;
+};
+// Trả MP của chuỗi cường hóa: mỗi stack Dư Âm Cổ Ngữ (S5) hoàn killMana MP, kết thúc tự nhiên hoàn thêm endMana (S6).
+function settle(s, f, natural) {
+  const c = config(s),
+    stacks = f.stacks || 0,
+    gained = gainMana(s, stacks * c.killMana + (natural ? c.endMana : 0));
+  f.stacks = 0;
+  if (!stacks && !(natural && c.endMana > 0)) return "";
+  return (
+    "\n" +
+    soulIcon("venance", natural && c.endMana > 0 ? 6 : 5) +
+    " " +
+    E.mana +
+    " Cổ ngữ hoàn nguyên: hồi " +
+    gained +
+    " MP" +
+    (stacks ? " (" + stacks + " stack Dư Âm" + (natural && c.endMana ? " + " + c.endMana + " kết thúc chuỗi" : "") + ")" : natural && c.endMana ? " (kết thúc chuỗi)" : "") +
+    "."
+  );
+}
 function end(s, action, e = s.encounter) {
   const f = e?.venanceCombat ? frame(s) : null;
-  if (!enabled(s) || !f) return;
+  if (!enabled(s) || !f) return "";
+  const c = config(s);
+  let log = "";
+  // S5: quái hạ bằng chính đòn cường hóa này tạo 1 stack Dư Âm Cổ Ngữ (tối đa 3).
+  if (c.killMana > 0 && f.empoweredAction && f.remaining > 0 && e.hp <= 0) {
+    f.stacks = Math.min(MAX_STACKS, (f.stacks || 0) + 1);
+    log +=
+      "\n" +
+      soulIcon("venance", 5) +
+      " Dư Âm Cổ Ngữ: " +
+      f.stacks +
+      " stack (hoàn " +
+      f.stacks * c.killMana +
+      " MP khi chuỗi cường hóa kết thúc).";
+  }
+  const active = f.remaining > 0;
   if (action !== "skill" && f.remaining > 0) f.remaining--;
   delete f.empoweredAction;
+  if (active && action !== "skill" && f.remaining === 0)
+    log += settle(s, f, true);
+  return log;
 }
 function cast(s) {
   const f = prepare(s),
     c = config(s);
+  // Dùng lại Skill khi chuỗi cũ còn dang dở: trả stack đã kiếm, nhưng không có hoàn MP kết thúc chuỗi (S6).
+  const carry = f.remaining > 0 && (f.stacks || 0) > 0 ? settle(s, f, false) : "";
   Object.assign(f, {
     remaining: c.duration,
     hits: 0,
     ready: false,
     sigilUsed: false,
+    stacks: 0,
   });
-  let log =
+  let log = carry;
+  log +=
     SKILL_ICONS.venance +
     " Astral Armament: cường hóa 3 hành động chiến đấu tiếp theo, giữ qua phòng; đánh thường thành phép ×" +
     c.coefficient +
@@ -184,16 +236,6 @@ function afterHit(s, dealt, strength, before, applyDamage) {
     f.barrier = Math.max(f.barrier, Math.floor(s.maxHp * c.thirdBarrier));
     log +=
       "\n" + VENANCE_ICONS.awakening + " Tam trọng: Barrier " + f.barrier + ".";
-    if (c.pulse > 0 && sameTarget(s, before)) {
-      extraStrength = Math.floor(strength * c.pulse);
-      extra = applyDamage(extraStrength);
-      log +=
-        "\n" +
-        soulIcon("venance", 6) +
-        " Xung tinh giới: +" +
-        extraStrength +
-        " DMG.";
-    }
   }
   return { log, dealt: extra, strength: extraStrength };
 }
@@ -213,6 +255,7 @@ function status(s) {
         "/3 hành động** · Đòn hợp lệ: **" +
         f.hits +
         "/3**" +
+        (f.stacks ? " · " + E.mana + " Dư Âm: **" + f.stacks + "**" : "") +
         (f.ready ? " · " + VENANCE_ICONS.innate + " Hồi lưu sẵn sàng" : "")
     : "";
 }
@@ -228,7 +271,28 @@ function innateText(s) {
     Math.round(c.sigilHeal * 100) +
     "% Max " +
     E.hp +
-    "** trước phản công. Một ấn mỗi lần dùng Skill; dùng lại Skill xóa ấn cũ.\n" +
+    "** trước phản công. Một ấn mỗi lần dùng Skill; dùng lại Skill xóa ấn cũ." +
+    (c.killMana
+      ? "\n" +
+        soulIcon("venance", 5) +
+        " **Dư Âm Cổ Ngữ (S5):** mỗi quái hạ bằng đòn cường hóa tạo **1 stack** (tối đa " +
+        MAX_STACKS +
+        "); khi chuỗi cường hóa kết thúc, mỗi stack hoàn **" +
+        c.killMana +
+        " " +
+        E.mana +
+        " MP**. Dùng lại Skill giữa chừng cũng trả stack đã có."
+      : "") +
+    (c.endMana
+      ? "\n" +
+        soulIcon("venance", 6) +
+        " **Hoàn nguyên (S6):** khi chuỗi cường hóa hết 3 hành động, hoàn thêm **" +
+        c.endMana +
+        " " +
+        E.mana +
+        " MP** (bằng chi phí Skill). Dùng lại Skill giữa chừng không nhận khoản này. MP không vượt Max MP."
+      : "") +
+    "\n" +
     status(s)
   );
 }
@@ -242,13 +306,7 @@ function awakeningText(s) {
     Math.round(c.thirdBarrier * 100) +
     "% Max " +
     E.hp +
-    "** trước phản công nếu trận đấu còn tiếp tục. Barrier làm mới, không cộng dồn." +
-    (c.pulse
-      ? " S6 thêm một xung **40% sức sát thương của chính đòn thứ ba** (đã gồm hệ số cường hóa, tính sau kháng; tổng ≈ ×1,4). Xung **hồi 0 " +
-        E.mana +
-        " MP**, không Crit, không tạo proc; chỉ ra đòn nếu vẫn cùng mục tiêu và phase còn sống."
-      : "") +
-    "\n" +
+    "** trước phản công nếu trận đấu còn tiếp tục. Barrier làm mới, không cộng dồn.\n" +
     status(s)
   );
 }
@@ -260,6 +318,20 @@ function validate(s) {
   }
   const p = s.venanceProfile,
     expected = snapshot(level(s), p?.rarity);
+  // Hồ sơ cũ có "pulse" (xung S6) và chưa có killMana/endMana: nâng lên hồ sơ mới khi mọi trường còn lại khớp.
+  if (
+    p &&
+    "pulse" in p &&
+    !("killMana" in p) &&
+    Object.keys(expected).every(
+      (k) => ["killMana", "endMana", "coefficient"].includes(k) || p[k] === expected[k],
+    )
+  ) {
+    delete p.pulse;
+    p.killMana = expected.killMana;
+    p.endMana = expected.endMana;
+    p.coefficient = expected.coefficient;
+  }
   // Upgrade only known previous coefficients with otherwise exact snapshots; preserve the cast.
   const previousCoefficient = level(s) >= 5 ? 2.8 : level(s) >= 1 ? 2.5 : 2.2;
   if (
@@ -297,6 +369,8 @@ function validate(s) {
     f.hits > 3 ||
     !Number.isSafeInteger(f.barrier) ||
     f.barrier < 0 ||
+    (f.stacks != null &&
+      (!Number.isInteger(f.stacks) || f.stacks < 0 || f.stacks > MAX_STACKS)) ||
     ["ready", "sigilUsed", "firstBarrierUsed"].some(
       (k) => typeof f[k] !== "boolean",
     ) ||

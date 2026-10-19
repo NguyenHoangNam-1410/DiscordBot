@@ -367,7 +367,7 @@ module.exports = function createModule(dependencies) {
           });
         if (state.encounter === e)
           require("../rift").thresholds(state, beforeEnemyHp, e.hp);
-        require("../characters/venance").end(state, action, e);
+        state.lastLog += require("../characters/venance").end(state, action, e);
       } else if (e.type === "surprise") {
         actSurprise(state, session, action, rng);
         if (action !== "event_skip" && !e.taxRelief)
