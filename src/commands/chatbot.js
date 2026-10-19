@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ChannelType, MessageFlags } = require("discord.js");
+const { SlashCommandBuilder, ChannelType, EmbedBuilder, MessageFlags } = require("discord.js");
 const chatbot = require("../services/chatbotService");
 const { getGameByChannel } = require("../services/gameChannelService");
 
@@ -113,6 +113,38 @@ const command = {
             .setMaxValue(chatbot.MAX_LIMIT),
         ),
     )
+    .addSubcommand((sub) =>
+      sub
+        .setName("nho")
+        .setDescription("Admin: dạy chatbot một thông tin về server")
+        .addStringOption((option) =>
+          option
+            .setName("noidung")
+            .setDescription(`Một thông tin ngắn (tối đa ${chatbot.MAX_FACT_CHARS} ký tự)`)
+            .setRequired(true)
+            .setMaxLength(chatbot.MAX_FACT_CHARS),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("quen")
+        .setDescription("Admin: xóa một thông tin đã dạy chatbot")
+        .addIntegerOption((option) =>
+          option.setName("so").setDescription("Số thứ tự trong /chatbot kienthuc").setRequired(true).setMinValue(1),
+        ),
+    )
+    .addSubcommand((sub) => sub.setName("kienthuc").setDescription("Xem những gì chatbot được dạy về server"))
+    .addSubcommand((sub) =>
+      sub
+        .setName("tinhcach")
+        .setDescription("Admin: đặt giọng điệu cho chatbot (bỏ trống để xóa)")
+        .addStringOption((option) =>
+          option
+            .setName("mota")
+            .setDescription(`Ví dụ: hài hước, hay dùng emoji (tối đa ${chatbot.MAX_PERSONA_CHARS} ký tự)`)
+            .setMaxLength(chatbot.MAX_PERSONA_CHARS),
+        ),
+    )
     .addSubcommand((sub) => sub.setName("tat").setDescription("Admin: tắt chatbot (bỏ kênh)"))
     .addSubcommand((sub) => sub.setName("luot").setDescription("Xem số lượt chat còn lại hôm nay")),
   async execute(interaction) {
@@ -128,7 +160,51 @@ const command = {
         `Bạn còn **${u.remaining}/${u.limit} lượt** chat hôm nay (đặt lại lúc 00:00 giờ Việt Nam).${channelId ? `\nKênh chatbot: <#${channelId}>` : "\nServer chưa mở kênh chatbot."}`,
       );
     }
+    if (sub === "kienthuc") {
+      const facts = chatbot.listFacts(interaction.guildId);
+      const persona = chatbot.getPersona(interaction.guildId);
+      const embed = new EmbedBuilder()
+        .setColor(0x5865f2)
+        .setTitle("📚 KIẾN THỨC CỦA CHATBOT")
+        .setDescription(
+          [
+            persona ? `**Giọng điệu:** ${persona}` : "**Giọng điệu:** mặc định",
+            facts.length ? facts.map((f, i) => `**${i + 1}.** ${f.content}`).join("\n") : "Chưa có thông tin nào về server.",
+          ].join("\n\n"),
+        )
+        .setFooter({ text: `${facts.length}/${chatbot.MAX_FACTS} thông tin · Admin thêm bằng /chatbot nho` });
+      return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
+    }
     if (!require("./vuatiengviet").isAdmin(interaction)) return reply("Chỉ admin mới được cấu hình chatbot.");
+    if (sub === "nho") {
+      try {
+        const count = chatbot.addFact(interaction.guildId, interaction.options.getString("noidung"), interaction.user.id);
+        return reply(
+          `✅ Đã dạy chatbot (${count}/${chatbot.MAX_FACTS}). Thông tin này được gửi tới nhà cung cấp AI và ai cũng xem được bằng \`/chatbot kienthuc\`, **đừng ghi thông tin nhạy cảm**.`,
+        );
+      } catch (error) {
+        const text = {
+          EMPTY_FACT: "Nội dung trống.",
+          FACT_TOO_LONG: `Tối đa ${chatbot.MAX_FACT_CHARS} ký tự mỗi thông tin.`,
+          FACT_LIMIT: `Đã đủ ${chatbot.MAX_FACTS} thông tin; hãy xóa bớt bằng \`/chatbot quen\`.`,
+        }[error.message];
+        if (!text) throw error;
+        return reply(text);
+      }
+    }
+    if (sub === "quen") {
+      const removed = chatbot.removeFact(interaction.guildId, interaction.options.getInteger("so"));
+      return reply(removed ? `🗑️ Đã xóa: ${removed.content}` : "Không có thông tin với số thứ tự đó.");
+    }
+    if (sub === "tinhcach") {
+      try {
+        const persona = chatbot.setPersona(interaction.guildId, interaction.options.getString("mota"), interaction.user.id);
+        return reply(persona ? `✅ Giọng điệu mới: ${persona}` : "✅ Đã đặt lại giọng điệu mặc định.");
+      } catch (error) {
+        if (error.message === "PERSONA_TOO_LONG") return reply(`Tối đa ${chatbot.MAX_PERSONA_CHARS} ký tự.`);
+        throw error;
+      }
+    }
     if (sub === "gioihan") {
       const n = chatbot.setDailyLimit(interaction.guildId, interaction.options.getInteger("so"), interaction.user.id);
       return reply(`✅ Mỗi người được **${n} lượt chat mỗi ngày**. Áp dụng ngay, kể cả với lượt đã dùng hôm nay.`);
