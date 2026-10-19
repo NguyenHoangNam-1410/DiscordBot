@@ -9,6 +9,7 @@ const DESCRIPTIONS = {
   amazon:
     "Hành động vật lý đầu tăng ACC (trần +15); hit đã trúng tăng DMG đòn kế (trần 15%).",
   barbarian: "HP càng thấp tăng DMG (trần 20%) và giảm DMG nhận (trần 10%).",
+  rha_kor: "HP càng thấp tăng DMG (trần 20%) và giảm DMG nhận (trần 10%).",
   sorceress:
     "Skill phép tăng DMG theo ENE (trần 15%); mỗi 3 Skill tốn MP hoàn 1 MP còn thiếu.",
   necromancer:
@@ -63,6 +64,7 @@ function outgoing(s, magic, crit) {
     case "amazon":
       return 1 + (!magic ? Math.min(0.15, n * (c.hits || 0)) : 0);
     case "barbarian":
+    case "rha_kor":
       return 1 + Math.min(0.2, n * 2 * (1 - s.hp / s.maxHp));
     case "venance":
     case "sorceress":
@@ -74,7 +76,7 @@ function outgoing(s, magic, crit) {
   }
 }
 function incoming(s) {
-  return s.classKey === "barbarian"
+  return ["barbarian", "rha_kor"].includes(s.classKey)
     ? 1 - Math.min(0.1, strength(s) * (1 - s.hp / s.maxHp))
     : 1;
 }
@@ -164,6 +166,7 @@ function summary(s) {
         " DMG các đòn sau, trần 15%; đánh trượt cả lượt reset chuỗi."
       );
     case "barbarian":
+    case "rha_kor":
       return (
         "Theo HP đã mất: DMG +" +
         pct(affinityOutgoing(s) - 1) +

@@ -1296,6 +1296,7 @@ const HARDCORE_CLASSES = Object.freeze({
   necromancer: "Necromancer",
   paladin: "Paladin",
   venance: "Venance",
+  rha_kor: "Rha-Kor",
 });
 const CLASS_FLOOR_TIERS = Object.freeze([
   { floor: 50, tag: "50", title: "Tân binh", reward: 20_000, diamonds: 60 },

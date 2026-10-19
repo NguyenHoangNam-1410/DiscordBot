@@ -386,6 +386,53 @@
           "emojiName": "soul_venance_6"
         }
       ]
+    },
+    {
+      "id": "rha_kor",
+      "profileKey": "rha_kor",
+      "classKey": "warrior",
+      "name": "Rha-Kor",
+      "rarity": "SSR",
+      "starter": false,
+      "role": "Chiến binh STR: Skill đặt Vết Khắc Cổ Luật, đánh thường để tăng cấp rồi kích nổ phá giáp mục tiêu.",
+      "souls": [
+        {
+          "level": 1,
+          "name": "Nét Chém Khai Luật",
+          "description": "Sát thương Khắc Lệnh Phá Giáp tăng từ 220% lên 250% ST vật lý.",
+          "emojiName": "soul_rha_kor_1"
+        },
+        {
+          "level": 2,
+          "name": "Vết Khắc Sâu",
+          "description": "Vết Khắc phát nổ ở LV2 thay vì LV3; vụ nổ tăng thêm 15% sát thương.",
+          "emojiName": "soul_rha_kor_2"
+        },
+        {
+          "level": 3,
+          "name": "Phán Quyết Phá Giáp",
+          "description": "Vụ nổ tăng từ 280% lên 340% ST vật lý; giảm DEF mục tiêu tăng từ 20% lên 25%.",
+          "emojiName": "soul_rha_kor_3"
+        },
+        {
+          "level": 4,
+          "name": "Bia Đá Hộ Thể",
+          "description": "Khi Vết Khắc phát nổ, giảm thêm 10% sát thương nhận ở phản công kế tiếp (cộng dồn nội tại: tổng 22%).",
+          "emojiName": "soul_rha_kor_4"
+        },
+        {
+          "level": 5,
+          "name": "Chiến Luật Hoàn Chỉnh",
+          "description": "Sát thương Skill tăng từ 250% lên 280% ST vật lý. Vụ nổ đầu tiên mỗi combat hồi thêm 1 MP.",
+          "emojiName": "soul_rha_kor_5"
+        },
+        {
+          "level": 6,
+          "name": "Đoạn Tuyệt Cổ Văn",
+          "description": "Sau vụ nổ, Dư Chấn gây thêm 65% sát thương vụ nổ, có thể Crit; không tạo lại Vết Khắc hay kích hoạt thêm nội tại.",
+          "emojiName": "soul_rha_kor_6"
+        }
+      ]
     }
   ]
 }

@@ -3,6 +3,7 @@ const souls = require("./characters/souls");
 const { E, soulIcon } = require("./shared/icons");
 const NAMES = {
   venance: "Runic Reflux",
+  rha_kor: "Thân Bia Bất Khuất",
   amazon: "Bloodlust",
   assassin: "AVOID",
   barbarian: "Titan’s Fortitude",
@@ -342,6 +343,8 @@ function validate(s) {
 function description(s) {
   if (require("./characters/venance").enabled(s))
     return require("./characters/venance").innateText(s);
+  if (require("./characters/rhakor").enabled(s))
+    return require("./characters/rhakor").innateText(s);
   if (!enabled(s)) return "";
   const c = combat(s);
   const revised = rebalanced(s);

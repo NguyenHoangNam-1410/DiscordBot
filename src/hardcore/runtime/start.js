@@ -38,14 +38,14 @@ module.exports = function createModule(dependencies) {
     }) => {
       if (typeof beta !== "boolean") throw Error("INVALID_BETA_STATE");
       if (beta) {
-        classKey = characterId = "venance";
+        classKey = characterId = "rha_kor";
         stake = require("../beta").STAKE;
         loadout = {};
       }
       const template =
         CLASSES[classKey] ||
-        ((useV2() || beta) && classKey === "venance"
-          ? hardcoreStats.CLASSES.venance
+        ((useV2() || beta) && ["venance", "rha_kor"].includes(classKey)
+          ? hardcoreStats.CLASSES[classKey]
           : null);
       if (!template) throw new Error("INVALID_CLASS");
       if (!Number.isSafeInteger(stake) || stake < MIN_BET || stake > MAX_BET)

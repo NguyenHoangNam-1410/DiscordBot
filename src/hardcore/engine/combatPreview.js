@@ -232,6 +232,7 @@ module.exports = function createModule(dependencies) {
             druid: 1.35,
             necromancer: 1.55,
             paladin: 1.4,
+            rha_kor: require("../characters/rhakor").skillMultiplier(state),
           }[state.classKey]
         : 1) *
       (skill && state.classKey === "barbarian"

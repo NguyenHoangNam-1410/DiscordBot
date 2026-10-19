@@ -23,6 +23,22 @@ const CLASSES = Object.freeze({
     strWeight: 0.7,
     skill: "Astral Armament",
   },
+  rha_kor: {
+    name: "Rha-Kor",
+    get emoji() {
+      return require("../../utils/appEmoji").appEmoji("class_rha_kor", "🪨");
+    },
+    str: 30,
+    dex: 14,
+    vit: 28,
+    ene: 8,
+    baseHp: 46,
+    baseMana: 4,
+    baseRes: 2,
+    baseCrit: 0.05,
+    strWeight: 1,
+    skill: "Khắc Lệnh Phá Giáp",
+  },
   amazon: {
     name: "Amazon",
     emoji: emoji[":class_amazon:"],

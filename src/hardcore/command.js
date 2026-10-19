@@ -69,7 +69,7 @@ module.exports = {
       command
         .setName("beta")
         .setDescription(
-          "Thử Venance miễn cược, hồi sinh đầy HP; không nhận thưởng thật",
+          "Thử Rha-Kor miễn cược, hồi sinh đầy HP; không nhận thưởng thật",
         ),
     )
     .addSubcommand((command) =>

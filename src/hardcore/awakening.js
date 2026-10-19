@@ -61,6 +61,11 @@ const REWORK_TEXT = {
     "Divine Shield tạo vùng thánh cho 2 action gây DMG kế; phản công nhận +20% DEF/+10% RES. Mỗi hit vật lý trúng thêm Holy DMG = 20% DEF + giá trị RES (10% RES tương ứng 10). Bỏ qua DEF quái thường/tinh anh; boss vẫn giảm bằng DEF.",
 };
 const ARTIFACTS = {
+  rha_kor: [
+    "Uru Stone Tablet",
+    "Cổ Luật Đoạn Tuyệt",
+    "Vụ nổ Vết Khắc tăng lên 360% ST vật lý, giảm 25% DEF mục tiêu và tạo Barrier 12% Max HP.",
+  ],
   venance: [
     "Astral Codex",
     "Trinity Mandate",
@@ -231,6 +236,8 @@ function description(s) {
       : "";
   if (require("./characters/venance").enabled(s))
     return require("./characters/venance").awakeningText(s);
+  if (require("./characters/rhakor").enabled(s))
+    return require("./characters/rhakor").awakeningText(s);
   const a = s.classAwakening,
     c = combat(s),
     d = ARTIFACTS[s.classKey];

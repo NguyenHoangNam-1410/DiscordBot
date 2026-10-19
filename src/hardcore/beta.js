@@ -21,7 +21,7 @@ function validate(s) {
   if (
     !is(s) ||
     s.gameplayVersion !== 3 ||
-    s.classKey !== "venance" ||
+    !["rha_kor", "venance"].includes(s.classKey) ||
     s.stake !== STAKE ||
     typeof b.awaitingRevive !== "boolean" ||
     ["deaths", "revivals", "spentDiamonds", "rngesusDeaths"].some(

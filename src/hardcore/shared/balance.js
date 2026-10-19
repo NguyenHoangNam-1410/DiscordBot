@@ -4,6 +4,7 @@
 const VERSION = "2.0.1";
 const PROFILES = Object.freeze({
   venance: Object.freeze({ power: 1.8 }),
+  rha_kor: Object.freeze({ power: 1.64 }),
   amazon: Object.freeze({ power: 2.09 }),
   barbarian: Object.freeze({ power: 1.64 }),
   assassin: Object.freeze({ power: 1 }),
