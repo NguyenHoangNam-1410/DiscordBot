@@ -1429,4 +1429,13 @@ runMigration(46, "chatbot per-server daily limit", () => {
 
 require("./hardcore/replay/schema")(db, runMigration);
 
+runMigration(49, "chatbot server knowledge and persona", () => {
+  db.exec(`CREATE TABLE IF NOT EXISTS chatbot_knowledge (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,guild_id TEXT NOT NULL,content TEXT NOT NULL,
+    added_by TEXT NOT NULL,created_at INTEGER NOT NULL);
+    CREATE INDEX IF NOT EXISTS idx_chatbot_knowledge_guild ON chatbot_knowledge(guild_id,id);
+    CREATE TABLE IF NOT EXISTS chatbot_persona (
+    guild_id TEXT PRIMARY KEY,persona TEXT NOT NULL,updated_by TEXT NOT NULL,updated_at INTEGER NOT NULL);`);
+});
+
 module.exports = { db, dbPath, runMigration };

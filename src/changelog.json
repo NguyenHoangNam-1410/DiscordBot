@@ -1,5 +1,15 @@
 [
   {
+    "id": "3a8c1465-90f2-45d8-aa7e-fe194154707c",
+    "updatedAt": "2026-10-19T03:48:56.740Z",
+    "auditedAt": "2026-10-19T03:48:56.740Z",
+    "title": "Dạy chatbot về server",
+    "changes": [
+      "Admin dạy chatbot kiến thức riêng của server bằng /chatbot nho (tối đa 15 thông tin), xóa bằng /chatbot quen.",
+      "Admin đặt giọng điệu cho chatbot bằng /chatbot tinhcach; mọi người xem bot được dạy gì bằng /chatbot kienthuc."
+    ]
+  },
+  {
     "id": "f03b7a71-fcc6-4a33-a957-abf1a28388ec",
     "updatedAt": "2026-10-19T01:37:33.940Z",
     "auditedAt": "2026-10-19T01:37:33.940Z",
