@@ -1,5 +1,16 @@
 [
   {
+    "id": "1fe46bbb-cc6d-4dc9-83fe-8a9cab0045d9",
+    "updatedAt": "2026-10-19T13:47:33.147Z",
+    "auditedAt": "2026-10-19T13:47:33.147Z",
+    "title": "Chỉ số, Túi đồ, Rift chia tab con",
+    "changes": [
+      "Chỉ số chia 4 tab: Tổng quan (nguồn chỉ số theo từng nguồn, buff/debuff, mục Sắp tới), Nhân vật (tinh hồn, nội tại, affinity, thức tỉnh, mastery), Trang bị (tổng hợp, nội tại, giới hạn) và Hành động (Skill/Tấn công/Phòng thủ kèm sát thương dự kiến).",
+      "Túi đồ chia 3 tab: Vật tư (kèm mảnh), Trang bị (có phân trang và mục món đang gửi Horadric Forge), Set & Di vật.",
+      "Rift chia 3 tab: Rift, Hiệu ứng tạm thời (Paradox, Contract, Shrine, ân huệ) và Ký ức (kèm dấu ấn, Tứ Ấn)."
+    ]
+  },
+  {
     "id": "b766f9f3-3f81-462a-af0b-936164ce348b",
     "updatedAt": "2026-10-19T13:25:50.190Z",
     "auditedAt": "2026-10-19T13:25:50.190Z",
