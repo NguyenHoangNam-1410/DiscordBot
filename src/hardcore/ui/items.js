@@ -121,6 +121,66 @@ module.exports = function createModule(dependencies) {
       affinity.text(item, state?.classKey)
     );
   }
+  function ownedCopy(state, definition) {
+    if (!definition || definition.category === "consumable") return null;
+    return (
+      state?.items?.find(
+        (i) => i.definition.id === definition.id && i.level > 0,
+      ) || null
+    );
+  }
+
+  function offerLevelLabel(state, definition) {
+    if (definition.category === "consumable") return "Vật phẩm";
+    const owned = ownedCopy(state, definition);
+    return owned
+      ? "Lv." + owned.level + " → Lv." + (owned.level + 1)
+      : "Mới · Lv.1";
+  }
+
+  function offerItemText(state, definition) {
+    const owned = ownedCopy(state, definition);
+    if (!owned) return itemText(definition, 1, state);
+    // Duplicates level up the saved copy, so preview from its definition.
+    const d = owned.definition;
+    const v3 = rules.enabled(state);
+    const from = owned.level,
+      to = owned.level + 1;
+    const instantKeys = ["heal", "potions", "escapeTokens"];
+    const buffs = Object.fromEntries(
+      Object.entries(d.effects).filter(([key]) => !instantKeys.includes(key)),
+    );
+    const instant = Object.fromEntries(
+      Object.entries(d.effects).filter(
+        ([key]) => instantKeys.includes(key) && (!v3 || d.receipt?.onDuplicate),
+      ),
+    );
+    const lines = [];
+    if (Object.keys(buffs).length)
+      lines.push(itemEffectChanges(buffs, from, to, state));
+    if (Object.keys(instant).length)
+      lines.push("**Nhận khi nâng cấp:** " + effectText(instant));
+    if (d.curse) {
+      const curseLevels = Math.max(0, from - (owned.cleansedLevels || 0));
+      lines.push(
+        "☣️ **Nguyền thêm 1 lớp:**\n" +
+          itemEffectChanges(
+            d.curse.effects,
+            v3 ? from : curseLevels,
+            v3 ? to : curseLevels + 1,
+            state,
+            owned.cleansedLevels || 0,
+            {
+              curse: true,
+              defenseLoss: itemCurses.defenseLoss(owned) ?? null,
+            },
+          ),
+      );
+    }
+    if (passiveText(d)) lines.push("Nội tại giữ nguyên, không nhân level.");
+    return lines.join("\n");
+  }
+
   function ownedItemText(state, item) {
     const scale = rules.itemScale(state, item),
       curse = rules.curseScale(state, item);
@@ -282,6 +342,8 @@ module.exports = function createModule(dependencies) {
     formatPassiveText,
     passiveText,
     itemText,
+    offerItemText,
+    offerLevelLabel,
     ownedItemText,
     itemEffectChanges,
     equipmentSummary,
