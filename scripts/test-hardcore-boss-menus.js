@@ -879,7 +879,7 @@ async function main() {
           core.act(
             s,
             { guild_id: "boss-menus", user_id: "u" },
-            "forge_grind",
+            "forge_lend",
             () => 0.5,
           );
         },

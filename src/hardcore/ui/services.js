@@ -26,6 +26,44 @@ module.exports = function createModule(dependencies) {
   function horadricText(state, detailed = false) {
     const f = state.encounter.forge,
       forge = require("../equipment/forge");
+    if (f.version === 2) {
+      const item = state.items.find((i) => i.definition.id === f.targetId);
+      const title = eventIcon("horadric") + " **Horadric Forge · mượn và nâng cấp trang bị**";
+      if (!item)
+        return title + "\nTrang bị không còn trong túi. Chọn **Bỏ qua** để đi tiếp.";
+      const wait = forge.delay(item);
+      const label = forge.RARITY_LABEL[item.definition.rarity] || "";
+      return (
+        title +
+        "\n" +
+        itemIcon(item) +
+        " **" +
+        item.name +
+        " [" +
+        label +
+        "] · Lv." +
+        item.level +
+        "**\n" +
+        (wait === 0
+          ? "- Hạng R: nâng cấp ngay, nhận lại tức thì với **Lv." + (item.level + forge.LEVELS) + "** (+" + forge.LEVELS + ")."
+          : "- Trang bị bị lấy đi **hoàn toàn**: mất mọi chỉ số, nội tại và cả lời nguyền ở mọi cấp trong thời gian mượn.\n- Trả lại sau **" +
+            wait +
+            " tầng**, ở tầng hợp lệ kế tiếp (tầng " +
+            forge.dueFloor(state, item) +
+            "), với **Lv." +
+            (item.level + forge.LEVELS) +
+            "** (+" +
+            forge.LEVELS +
+            ").") +
+        (item.definition.curse
+          ? "\n- Trang bị có nguyền: level thêm không tăng cấp nguyền, cấp nguyền hiện tại được giữ nguyên."
+          : "") +
+        (wait === 0
+          ? ""
+          : "\n- Nếu nhặt được món cùng loại trong lúc đó, khi trả lại level sẽ được gộp.") +
+        "\n**Bỏ qua:** giữ nguyên trang bị. Không tốn xu."
+      );
+    }
     const title =
       eventIcon("horadric") + " **Horadric Forge · đổi trang bị lấy chỉ số**";
     const rewards = f.boons

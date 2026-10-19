@@ -319,7 +319,7 @@ module.exports = function createModule(dependencies) {
       const forge = fields.rewards.find((f) => f.name.includes("Horadric"));
       if (forge)
         forge.value =
-          "Luật trang bị mới: nghiền 1 level, gỡ buff/nguyền tương ứng; hết level thì mất nội tại/affinity. Đổi lại chọn đúng một phần thưởng chỉ số cố định: +1 thuộc tính chính, +1 VIT hoặc +1 chỉ số phụ theo class. Thưởng không bù buff đã mất; không dùng/nhận vé và không tốn xu. Xem chỉ số trước → sau trước khi xác nhận. Có thể bỏ qua trước khi nghiền; sau khi nghiền phải nhận một thưởng để đi tiếp. Run cũ giữ Forge cũ.";
+          "Chỉ xuất hiện khi bạn có ít nhất 1 trang bị, và không xuất hiện sau tầng 950. Forge **mượn** món được chỉ định, nâng **+2 level** rồi trả lại. R: nâng ngay lập tức. SR: trả sau 10 tầng; SSR: sau 25 tầng; UR: sau 50 tầng, ở tầng hợp lệ kế tiếp (không phải tầng boss, tối đa tầng 998). Trong lúc mượn, món mất hoàn toàn chỉ số, nội tại và nguyền ở mọi cấp. UR không tăng cấp nguyền (cấp nguyền giữ nguyên). Nếu nhặt được món cùng loại trong lúc đó, khi trả lại level được gộp. Có thể bỏ qua. Run cũ giữ Forge cũ.";
     }
     return category
       ? fields[category] || fields.combat

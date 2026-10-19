@@ -31,7 +31,7 @@ module.exports = function createModule(dependencies) {
     const e = state.encounter,
       k = e.kind;
     if (k === "horadric" && e.forge)
-      return require("../equipment/forge").choices(e.forge);
+      return require("../equipment/forge").choices(e.forge, state);
     if (k === "royal_invitation") return royal.choices(state);
     if (k === "purifier")
       return purifier.choices(state, purifierCost(state), payout(state));
