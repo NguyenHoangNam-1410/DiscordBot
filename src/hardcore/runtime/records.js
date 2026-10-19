@@ -12,6 +12,9 @@ module.exports = function createModule(dependencies) {
       kills: state.kills || 0,
       bossKills: state.bossKills || 0,
       bosses: state.bossTally || {},
+      bountyGive: state.bountyGive || 0,
+      bountyResist: state.bountyResist || 0,
+      sealAltars: state.sealAltars || 0,
     });
     const death = ["death", "rngesus"].includes(reason) ? 1 : 0;
     const escape = ["cashout", "summit"].includes(reason) ? 1 : 0;

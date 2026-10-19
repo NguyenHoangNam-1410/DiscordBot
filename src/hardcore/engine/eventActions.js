@@ -234,6 +234,7 @@ module.exports = function createModule(dependencies) {
         throw Error("INVALID_ACTION");
       marks.ensure(state).sealsClaimed = true;
       state.reviveTickets = 1;
+      state.sealAltars = (state.sealAltars || 0) + 1;
       done(
         eventIcon("seal_altar") +
           " Đàn Tứ Ấn: bốn ấn **" +

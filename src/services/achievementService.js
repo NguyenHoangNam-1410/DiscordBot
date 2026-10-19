@@ -1295,6 +1295,7 @@ const HARDCORE_CLASSES = Object.freeze({
   druid: "Druid",
   necromancer: "Necromancer",
   paladin: "Paladin",
+  venance: "Venance",
 });
 const CLASS_FLOOR_TIERS = Object.freeze([
   { floor: 50, tag: "50", title: "Tân binh", reward: 20_000, diamonds: 60 },
@@ -1464,6 +1465,78 @@ const eventAchievements = [
     600,
     "hardcoreBossKills",
   ],
+  [
+    "hc_bounty_give_1",
+    "Nộp mạng cho thợ săn",
+    "Giao nộp Vé thoát cho Bounty Hunter 1 lần",
+    1,
+    10_000,
+    30,
+    "hardcoreBountyGive",
+  ],
+  [
+    "hc_bounty_give_5",
+    "Khách quen của thợ săn",
+    "Giao nộp Vé thoát cho Bounty Hunter 5 lần",
+    5,
+    60_000,
+    150,
+    "hardcoreBountyGive",
+  ],
+  [
+    "hc_bounty_give_15",
+    "Thể phách vô song",
+    "Giao nộp Vé thoát cho Bounty Hunter 15 lần",
+    15,
+    200_000,
+    500,
+    "hardcoreBountyGive",
+  ],
+  [
+    "hc_bounty_resist_1",
+    "Không khuất phục",
+    "Chống trả Bounty Hunter 1 lần",
+    1,
+    20_000,
+    60,
+    "hardcoreBountyResist",
+  ],
+  [
+    "hc_bounty_resist_5",
+    "Kẻ bị truy nã",
+    "Chống trả Bounty Hunter 5 lần",
+    5,
+    100_000,
+    250,
+    "hardcoreBountyResist",
+  ],
+  [
+    "hc_seals_1",
+    "Tứ Ấn hội tụ",
+    "Nhận Vé hồi sinh từ Đàn Tứ Ấn 1 lần",
+    1,
+    150_000,
+    400,
+    "hardcoreSealAltars",
+  ],
+  [
+    "hc_seals_3",
+    "Chủ nhân Tứ Ấn",
+    "Nhận Vé hồi sinh từ Đàn Tứ Ấn 3 lần",
+    3,
+    400_000,
+    800,
+    "hardcoreSealAltars",
+  ],
+  [
+    "hc_seals_10",
+    "Hồi sinh bất tận",
+    "Nhận Vé hồi sinh từ Đàn Tứ Ấn 10 lần",
+    10,
+    1_000_000,
+    2000,
+    "hardcoreSealAltars",
+  ],
 ].map(([id, name, description, target, reward, diamonds, metric]) => ({
   id,
   name,
@@ -1544,6 +1617,9 @@ const CATEGORY_GROUPS = Object.freeze({
   hardcoreEventKinds: "hardcoreEvents",
   hardcoreKills: "hardcoreEvents",
   hardcoreBossKills: "hardcoreEvents",
+  hardcoreBountyGive: "hardcoreEvents",
+  hardcoreBountyResist: "hardcoreEvents",
+  hardcoreSealAltars: "hardcoreEvents",
   hardcoreRuns: "hardcoreJourney",
   hardcoreEscapes: "hardcoreJourney",
   hardcoreCompletions: "hardcoreJourney",
@@ -1629,7 +1705,7 @@ function metrics(guildId, userId) {
   const eventRow =
     db
       .prepare(
-        "SELECT events, chains, kills, boss_kills, kinds_json FROM hardcore_event_stats WHERE guild_id=? AND user_id=?",
+        "SELECT events, chains, kills, boss_kills, bounty_give, bounty_resist, seal_altars, kinds_json FROM hardcore_event_stats WHERE guild_id=? AND user_id=?",
       )
       .get(guild, user) || {};
   const betting = db
@@ -1796,6 +1872,9 @@ function metrics(guildId, userId) {
     hardcoreChains: eventRow.chains || 0,
     hardcoreKills: eventRow.kills || 0,
     hardcoreBossKills: eventRow.boss_kills || 0,
+    hardcoreBountyGive: eventRow.bounty_give || 0,
+    hardcoreBountyResist: eventRow.bounty_resist || 0,
+    hardcoreSealAltars: eventRow.seal_altars || 0,
     hardcoreEventKinds: eventRow.kinds_json
       ? JSON.parse(eventRow.kinds_json).length
       : 0,

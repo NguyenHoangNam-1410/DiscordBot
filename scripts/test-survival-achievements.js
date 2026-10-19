@@ -86,4 +86,17 @@ assert.equal(
 assert(progress("hc_kinds_5").complete && !progress("hc_kinds_10").complete);
 repo.addEventStats(G, U, { events: 0, chains: 0, kinds: [] });
 assert.equal(progress("hc_event_100").progress, 26);
+
+// Bounty Hunter và Đàn Tứ Ấn
+assert.equal(progress("hc_bounty_give_1").progress, 0);
+assert.equal(progress("hc_seals_1").progress, 0);
+repo.addEventStats(G, U, { bountyGive: 5, bountyResist: 1, sealAltars: 1 });
+repo.addEventStats(G, U, { bountyGive: 1, sealAltars: 0 });
+assert(progress("hc_bounty_give_1").complete && progress("hc_bounty_give_5").complete && !progress("hc_bounty_give_15").complete);
+assert.equal(progress("hc_bounty_give_15").progress, 6, "cộng dồn giữa các run");
+assert(progress("hc_bounty_resist_1").complete && !progress("hc_bounty_resist_5").complete);
+assert(progress("hc_seals_1").complete && !progress("hc_seals_3").complete);
+// ván chỉ có thống kê mới vẫn được ghi (không bị bỏ qua vì events = 0)
+repo.addEventStats("g2", "u2", { bountyResist: 1 });
+assert.equal(getAchievements("g2", "u2").find((a) => a.id === "hc_bounty_resist_1").complete, true);
 console.log("survival achievements ok");

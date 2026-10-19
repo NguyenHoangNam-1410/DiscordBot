@@ -455,11 +455,13 @@ module.exports = function createModule(dependencies) {
             addSource(state, { vit: marks.BOUNTY_VIT });
             state.hp = Math.min(state.maxHp, state.hp + (state.maxHp - maxBefore));
             noteEvent(state, "bounty_hunter", false);
+            state.bountyGive = (state.bountyGive || 0) + 1;
             state.lastLog = `${eventIcon("bounty_hunter")} Giao nộp Bounty Hunter: mất ${E.ticket} **1 Vé thoát**, nhận ${E.vit} **VIT +${marks.BOUNTY_VIT}** cộng thẳng vào chỉ số (Max ${E.hp} HP ${maxBefore} → ${state.maxHp}). Bạn có thể gặp lại Bounty Hunter nếu còn vé.`;
           } else if (action === "bounty_resist") {
             m.bountyResisted = true;
             m.bountyCurse = { bribes: 0 };
             noteEvent(state, "bounty_hunter", false);
+            state.bountyResist = (state.bountyResist || 0) + 1;
             state.lastLog = `${eventIcon("bounty_hunter")} Chống trả Bounty Hunter: giữ lại ${E.ticket} Vé thoát, thợ săn không xuất hiện lại. Nhưng bạn bị Bounty Curse: Hối lộ RNGesus tốn thêm 5% payout sau mỗi lần hối lộ (lần đầu ${Math.round(marks.bribeRate(state) * 100)}%). Xem Rift.`;
           } else throw new Error("INVALID_ACTION");
           completeFloor(state, session, rng, 0);

@@ -87,6 +87,7 @@ test("sinh ra event, nhận 1 Vé hồi sinh, giữ nguyên các ấn, không l�
   assert.deepEqual(opts.map((o) => o.action), ["event_seal_claim"], "chỉ có nút nhận, không bỏ qua");
   core.act(s, session, "event_seal_claim", rng);
   assert.equal(s.reviveTickets, 1);
+  assert.equal(s.sealAltars, 1, "đếm số lần nhận cho thành tựu");
   assert.equal(marks.data(s).sealsClaimed, true);
   assert.equal(marks.ownedSeals(s).length, 4, "các ấn không bị tiêu hao");
   assert.match(s.lastLog, /Vé hồi sinh/);

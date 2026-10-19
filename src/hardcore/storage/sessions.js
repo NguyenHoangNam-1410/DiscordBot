@@ -83,10 +83,29 @@ function upsertRecord(guildId, userId, values, now = Date.now()) {
 function addEventStats(
   guildId,
   userId,
-  { events = 0, chains = 0, kinds = [], kills = 0, bossKills = 0, bosses = {} },
+  {
+    events = 0,
+    chains = 0,
+    kinds = [],
+    kills = 0,
+    bossKills = 0,
+    bosses = {},
+    bountyGive = 0,
+    bountyResist = 0,
+    sealAltars = 0,
+  },
   now = Date.now(),
 ) {
-  if (!events && !chains && !kills && !bossKills) return;
+  if (
+    !events &&
+    !chains &&
+    !kills &&
+    !bossKills &&
+    !bountyGive &&
+    !bountyResist &&
+    !sealAltars
+  )
+    return;
   const row = db
     .prepare(
       "SELECT kinds_json FROM hardcore_event_stats WHERE guild_id=? AND user_id=?",
@@ -96,9 +115,10 @@ function addEventStats(
     new Set([...(row ? JSON.parse(row.kinds_json) : []), ...kinds]),
   );
   db.prepare(
-    `INSERT INTO hardcore_event_stats (guild_id,user_id,events,chains,kinds_json,kills,boss_kills,updated_at) VALUES (?,?,?,?,?,?,?,?)
+    `INSERT INTO hardcore_event_stats (guild_id,user_id,events,chains,kinds_json,kills,boss_kills,bounty_give,bounty_resist,seal_altars,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)
     ON CONFLICT(guild_id,user_id) DO UPDATE SET events=events+excluded.events,chains=chains+excluded.chains,
     kills=kills+excluded.kills,boss_kills=boss_kills+excluded.boss_kills,
+    bounty_give=bounty_give+excluded.bounty_give,bounty_resist=bounty_resist+excluded.bounty_resist,seal_altars=seal_altars+excluded.seal_altars,
     kinds_json=excluded.kinds_json,updated_at=excluded.updated_at`,
   ).run(
     String(guildId),
@@ -108,6 +128,9 @@ function addEventStats(
     JSON.stringify(merged),
     kills,
     bossKills,
+    bountyGive,
+    bountyResist,
+    sealAltars,
     now,
   );
   const bump = db.prepare(
