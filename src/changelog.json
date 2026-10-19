@@ -1,5 +1,17 @@
 [
   {
+    "id": "b766f9f3-3f81-462a-af0b-936164ce348b",
+    "updatedAt": "2026-10-19T13:25:50.190Z",
+    "auditedAt": "2026-10-19T13:25:50.190Z",
+    "title": "Horadric Forge: mượn và nâng cấp trang bị",
+    "changes": [
+      "Horadric Forge không còn đổi level lấy chỉ số. Nay mượn một trang bị, nâng +2 level rồi trả lại.",
+      "Hạng R nâng cấp ngay lập tức; SR trả sau 10 tầng, SSR sau 25 tầng, UR sau 50 tầng, ở tầng hợp lệ kế tiếp (không phải tầng boss, tối đa tầng 998).",
+      "Trong lúc bị mượn, trang bị mất hoàn toàn chỉ số, nội tại và lời nguyền ở mọi cấp. UR khi trả lại không tăng cấp nguyền.",
+      "Nếu nhặt được món cùng loại trong lúc đó, level được gộp khi trả. Event chỉ xuất hiện khi có ít nhất 1 trang bị, không xuất hiện sau tầng 950, và vẫn có thể bỏ qua."
+    ]
+  },
+  {
     "id": "43d3196d-bdf6-43e5-a21b-253f0f471488",
     "updatedAt": "2026-10-19T12:07:19.248Z",
     "auditedAt": "2026-10-19T12:07:19.248Z",

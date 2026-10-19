@@ -253,6 +253,10 @@ module.exports = function createModule(dependencies) {
     if (floor >= 100) state.completed = true;
     state.runDiamonds = runDiamondReward(state);
     state.floor = Math.min(999, floor + 1);
+    state.lastLog += require("../equipment/forge").returnDue(
+      state,
+      receiveItem,
+    );
     expireAdventurer(state);
     if (state.pendingBossChest) state.pendingMilestones.unshift("boss_chest");
     if (!deferEncounter) nextMilestone(state, session, rng);

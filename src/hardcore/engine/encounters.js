@@ -77,6 +77,12 @@ module.exports = function createModule(dependencies) {
       if (["blacksmith", "horadric"].includes(key) && !state.items.length)
         return false;
       if (
+        key === "horadric" &&
+        equipmentRules.enabled(state) &&
+        !require("../equipment/forge").eligible(state)
+      )
+        return false;
+      if (
         key === "purifier" &&
         !state.items.some(
           (x) => x.level > (x.cleansedLevels || 0) && x.definition.curse,
@@ -136,7 +142,7 @@ module.exports = function createModule(dependencies) {
       e.targetId = pick(itemPool, rng)?.definition.id;
       e.forgeStat = rng() < 0.5 ? "str" : "vit";
       if (kind === "horadric" && equipmentRules.enabled(state))
-        e.forge = require("../equipment/forge").prepare(state, e.targetId);
+        e.forge = require("../equipment/forge").prepareV2(e.targetId);
       if (kind === "purifier") {
         e.targetId = null;
         e.purifierPage = 0;

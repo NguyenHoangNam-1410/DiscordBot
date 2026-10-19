@@ -55,6 +55,23 @@ module.exports = function createModule(dependencies) {
       state.items.find((item) => item.definition.id === id);
     if (k === "horadric" && e.forge) {
       const f = e.forge;
+      if (f.version === 2) {
+        if (action === "event_skip") {
+          done(`${eventIcon("horadric")} Bỏ qua Horadric Forge, giữ nguyên trang bị.`);
+          return;
+        }
+        if (action !== "forge_lend") throw Error("STALE_ACTION");
+        const target = itemById(f.targetId);
+        if (!target) throw Error("NO_FORGE_ITEM");
+        const forge = require("../equipment/forge");
+        const result = forge.lend(state, target, receiveItem, recompute);
+        done(
+          result.instant
+            ? `${eventIcon("horadric")} Horadric Forge: nâng cấp ngay ${itemIcon(target)} **${target.name}** [${result.label}] Lv.${result.from} → **${result.to}**.`
+            : `${eventIcon("horadric")} Horadric Forge: mượn ${itemIcon(result.loan)} **${result.loan.name}** [${result.label}] Lv.${result.loan.level}. Món biến mất hoàn toàn (kể cả chỉ số, nội tại và nguyền) đến tầng **${result.loan.due}**, khi trả lại sẽ **+${forge.LEVELS} level** (Lv.${result.loan.level + forge.LEVELS}); nếu nhặt được món cùng loại trong lúc đó, level sẽ gộp lại. Bạn không bị mất vĩnh viễn.`,
+        );
+        return;
+      }
       if (f.version !== 1) throw Error("INVALID_FORGE_VERSION");
       if (action === "forge_grind" && f.stage === "grind") {
         const target = itemById(f.targetId);

@@ -102,6 +102,7 @@ module.exports = function createModule(dependencies) {
     require("../characters/souls").validate(state);
     require("../characters/venance").validate(state);
     require("../characters/rhakor").validate(state);
+    require("../equipment/forge").validateLoans(state);
     require("../events/explorationMarks").normalize(state);
     const rules = require("../equipment/rules");
     const ITEMS = rules.enabled(state)

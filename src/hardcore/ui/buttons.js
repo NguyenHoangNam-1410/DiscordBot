@@ -118,6 +118,7 @@ module.exports = function createModule(dependencies) {
         (a) =>
           a.action === "event_skip" ||
           a.action === "forge_grind" ||
+          a.action === "forge_lend" ||
           /^forge_boon_[0-2]$/.test(a.action),
       );
     if (
@@ -331,7 +332,9 @@ module.exports = function createModule(dependencies) {
               : state.encounter.kind === "horadric"
                 ? state.encounter.forge?.stage === "boon"
                   ? "Chọn một phần thưởng chỉ số · không tốn vé"
-                  : "Nghiền 1 cấp trang bị hoặc bỏ qua"
+                  : state.encounter.forge?.version === 2
+                    ? "Mượn trang bị để nâng cấp hoặc bỏ qua"
+                    : "Nghiền 1 cấp trang bị hoặc bỏ qua"
                 : state.encounter.kind?.endsWith("_shop") ||
                     state.encounter.kind === "merchant"
                   ? "Chọn món muốn mua"
@@ -361,7 +364,7 @@ module.exports = function createModule(dependencies) {
                     ? itemIcon(actionItem(state, a.action))
                     : a.action === "event_skip"
                       ? icon("walking", "🚶")
-                      : a.action === "forge_grind"
+                      : a.action === "forge_grind" || a.action === "forge_lend"
                         ? icon("hammer", "🔨")
                         : state.phase === "severance"
                           ? RIFT_ICONS[a.action.slice(6)] || E.rift
