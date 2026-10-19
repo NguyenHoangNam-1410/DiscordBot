@@ -213,7 +213,11 @@ module.exports = function createModule(dependencies) {
       return `${eventIcon(k)} **HORADRIC FORGE · LÒ CHUYỂN HÓA**\nTiêu hao **1 level trang bị** để giữ hiệu ứng có lợi trong run và chọn thêm một phần thưởng. Không tốn xu.\n\n**${E.backpack} Trang bị dùng để chuyển hóa**\n${itemIcon(target)} **${target.name} [${rarityLabel(target.rarity)}] · Lv.${target.level}**\n- Sau khi dùng: ${target.level === 1 ? "món này biến mất khỏi trang bị" : `level **${target.level}→${target.level - 1}**`}.\n- **Giữ nguyên hiệu ứng của level đã tiêu hao:** ${effectText(retained)}. Đây là hiệu ứng được giữ lại, không cộng thêm lần nữa.\n${curseRemoval}- Không nhận lại ${E.potion} bình máu, ${E.ticket} Vé thoát hoặc ${E.hp} HP hồi khi nhặt đồ.\n\n**Chọn một phần thưởng thêm**\n- ${E[main]} **${main.toUpperCase()} +6**.\n- ${E[guard]} **${guard.toUpperCase()} +7**.\n- ${E.vit} **VIT +4**.${["legendary", "cursed"].includes(target.rarity) ? `\n- ${E.ticket} **Nhận 1 vé thoát** (giữ tối đa 1).` : ""}\n\n**Bỏ qua:** giữ nguyên trang bị, không nhận phần thưởng.`;
     }
     const descriptions = {
-      seal_altar: `**Đàn Tứ Ấn:** ${require("../events/explorationMarks").SEALS.map((seal) => seal.name).join(" · ")} đã hội tụ. Nhận ${E.reviveTicket} **1 Vé hồi sinh** dùng trong run này (hồi 50% Max HP khi tử trận). Các ấn không bị tiêu hao; chỉ 1 lần/run.`,
+      seal_altar: `**Đàn Tứ Ấn:** ${require("../events/explorationMarks")
+        .SEALS.map((seal) => seal.name)
+        .join(
+          " · ",
+        )} đã hội tụ. Nhận ${E.reviveTicket} **1 Vé hồi sinh** dùng trong run này (hồi 50% Max HP khi tử trận). Các ấn không bị tiêu hao; chỉ 1 lần/run.`,
       healer: e.healerReturn
         ? `**Healer trở lại:** hồi đầy ${E.hp} HP/${E.mana} MP; Vulnerable chuyển thành Vital Benediction: ${E.luck} LUCK +40, ${E.str} STR/${E.dex} DEX/${E.vit} VIT/${E.ene} ENE mỗi chỉ số +10 đến hết run. Chỉ một lần/run.`
         : (require("../events/explorationMarks").enabled(s)
@@ -305,18 +309,18 @@ ${bossDisplay.status(s)}${require("../rift").battle(s)}
               ? "Đủ bốn mảnh: cửa tầng hầm đã mở. Chọn vào portal, bỏ qua hoặc thử thách tầng hầm."
               : "Chọn vào portal hoặc bỏ qua để vượt tầng."
             : e.kind === "bounty_hunter"
-              ? "Giao nộp 1 Vé thoát để nhận VIT +30 (cộng thẳng chỉ số), hoặc chống trả để giữ vé nhưng Hối lộ RNGesus đắt dần. Xem Chi tiết."
+              ? `Giao nộp 1 Vé thoát để nhận ${E.vit} VIT +30, hoặc chống trả để giữ vé nhưng Hối lộ RNGesus đắt dần.`
               : require("../events/explorationMarks").enabled(s)
-              ? e.kind === "tax"
-                ? "Nộp thuế và không chống trả: sau boss 950 được giải toàn bộ nguyền của 1 trang bị miễn phí. Tax Collector ngừng xuất hiện từ tầng 950. Lucky Break vẫn ghi nhận hợp tác."
-                : "Chấp nhận và không đánh đuổi: sau tầng 998 gặp trùm băng đảng, miễn phí xóa toàn bộ stack của 1 loại Rift có hại (trừ Unstable Rift). Lucky Break vẫn ghi nhận hợp tác."
-              : "Đi tiếp để xử lý tình huống.",
+                ? e.kind === "tax"
+                  ? "Nộp thuế và không chống trả: sau boss 950 được giải toàn bộ nguyền của 1 trang bị miễn phí. Tax Collector ngừng xuất hiện từ tầng 950. Lucky Break vẫn ghi nhận hợp tác."
+                  : "Chấp nhận và không đánh đuổi: sau tầng 998 gặp trùm băng đảng, miễn phí xóa toàn bộ stack của 1 loại Rift có hại (trừ Unstable Rift). Lucky Break vẫn ghi nhận hợp tác."
+                : "Đi tiếp để xử lý tình huống.",
         echo: "Chọn cách tương tác với mộ.",
         surprise: e.sealAltar
-          ? "Bốn ấn đã hội tụ. Nhận Vé hồi sinh."
+          ? `Bốn ấn đã hội tụ. Nhận ${E.reviveTicket}.`
           : e.healerReturn
-          ? "Healer đã trở lại. Nhận hồi phục và phúc ấn."
-          : "Chọn một hành động bên dưới.",
+            ? `${eventIcon("healer")} đã trở lại. Nhận hồi phục và phúc ấn.`
+            : "Chọn một hành động bên dưới.",
       };
       const target = s.items.find((item) => item.definition.id === e.targetId);
       const context =
