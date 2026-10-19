@@ -170,6 +170,11 @@ module.exports = function createModule(dependencies) {
             "Chấp nhận: Lucky Break = min(50%, LUCK ×0,25%); đạt trần ở 200 LUCK tránh mất mát; nếu thất bại, 50% mất 10% payout hiện tại / 50% mất nửa bình hiện có, làm tròn lên (0 bình không mất).\n**Dịch vụ hậu mãi:** đã chấp nhận ít nhất 1 lần và không đánh đuổi: sau tầng 998 gặp trùm băng đảng, chọn xóa toàn bộ stack của 1 loại Rift có hại miễn phí, trừ Unstable Rift. Không chiến đấu, không tính thêm tầng; chỉ 1 lần/run. Lucky Break vẫn ghi nhận hợp tác.\n**Đánh đuổi:** đánh The Thief (Elite) ngay, bạn đi trước; hủy quyền lợi hậu mãi. Hạ nhận +20% cược và Underworld Lead: miễn phí Diamond/Rift Merchant, vẫn một món/lần gặp và Diamond hai lần/run. Không gặp lại The Thief; Elite gây thêm 30% DMG đến hết run. Không cộng dồn; xem Rift.",
         },
         {
+          name: `${eventIcon("bounty_hunter")} Bounty Hunter · Thợ Săn Tiền Thưởng`,
+          value:
+            "Chỉ trong V3 thường (không phải Tháp), từ tầng 20, khi bạn đang giữ Vé thoát; thuộc nhóm bẫy và chỉ gặp 1 lần/run. Lucky Break không áp dụng.\n**Giao nộp:** mất 1 Vé thoát, nhận Bounty Seal: VIT +40 đến hết run (hồi phần Max HP tăng thêm).\n**Chống trả:** giữ vé, không gặp lại Bounty Hunter, nhưng nhận Bounty Curse: Hối lộ RNGesus tốn thêm 5% payout sau mỗi lần hối lộ (45%, 50%, 55%…, tối đa 90%).",
+        },
+        {
           name: `${E.luck} Wrong Portal`,
           value:
             "Cơ bản 50% tốt / 50% xấu; LUCK không tác động, nội tại may mắn event có thể tăng nhánh tốt. Vào portal nhận kết quả; nhánh xấu gọi Elite đánh phủ đầu, hạ Elite mới vượt tầng. Bỏ qua để vượt tầng không nhận thưởng, chịu hiệu ứng portal hoặc gặp Elite. Tiên tri đánh dấu nút vào portal. Phòng trống cho phép đi tiếp hoặc rút thưởng.",

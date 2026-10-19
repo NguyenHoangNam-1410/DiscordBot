@@ -165,6 +165,7 @@ module.exports = function createModule(dependencies) {
     tax: "Tax Collector",
     portal: "Wrong Portal",
     potion_thief: "Potion Thief",
+    bounty_hunter: "Bounty Hunter",
     wrong_portal: "Wrong Portal",
   });
 

@@ -125,7 +125,7 @@ module.exports = function createModule(dependencies) {
               `Tử trận; Lost Adventurer hoặc ${E.reviveTicket} **Vé hồi sinh** cứu nếu còn.`,
             ],
           ]),
-          "**Hối lộ:** cần payout ≥1.000 xu, trừ một lần 40% payout hiện tại để thoát. **Đánh:** chết.",
+          `**Hối lộ:** cần payout ≥1.000 xu, trừ một lần ${Math.round(require("../events/explorationMarks").bribeRate(s) * 100)}% payout hiện tại để thoát${require("../events/explorationMarks").data(s).bountyCurse ? " (đã gồm Bounty Curse, tăng thêm 5% sau mỗi lần hối lộ)" : ""}. **Đánh:** chết.`,
         ],
       );
     }
@@ -199,6 +199,27 @@ module.exports = function createModule(dependencies) {
           ],
         );
       const lucky = stats.luckyBreakChance(s);
+      if (e.kind === "bounty_hunter") {
+        const marks = require("../events/explorationMarks");
+        return show(
+          e.name,
+          `${E.ticket} Bạn đang giữ ${s.escapeTokens} Vé thoát. Lucky Break không áp dụng; chỉ gặp 1 lần/run.`,
+          [
+            option("Giao nộp", [
+              [
+                1,
+                `Mất ${E.ticket} **1 Vé thoát**; nhận Bounty Seal: ${E.vit} **VIT +${marks.BOUNTY_VIT}** đến hết run (hồi phần Max ${E.hp} HP tăng thêm).`,
+              ],
+            ]),
+            option("Chống trả", [
+              [
+                1,
+                `Giữ ${E.ticket} Vé thoát. Bounty Hunter không xuất hiện lại, nhưng nhận Bounty Curse: Hối lộ RNGesus tốn thêm 5% payout sau mỗi lần hối lộ (45%, 50%, 55%…, tối đa 90%).`,
+              ],
+            ]),
+          ],
+        );
+      }
       if (require("../events/explorationMarks").enabled(s))
         return show(
           e.name,

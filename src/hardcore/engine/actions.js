@@ -445,6 +445,26 @@ module.exports = function createModule(dependencies) {
           state.lastLog =
             "Bỏ qua Wrong Portal: không nhận thưởng hoặc chịu hiệu ứng của portal.";
           completeFloor(state, session, rng, 0);
+        } else if (e.kind === "bounty_hunter") {
+          const marks = require("../events/explorationMarks");
+          const m = marks.ensure(state);
+          if (action === "bounty_surrender") {
+            if (!(state.escapeTokens > 0)) throw new Error("INVALID_ACTION");
+            state.escapeTokens -= 1;
+            m.bountyDone = true;
+            m.bountyBlessing = true;
+            const maxBefore = state.maxHp;
+            addSource(state, { vit: marks.BOUNTY_VIT }, "bountyBlessing");
+            state.hp = Math.min(state.maxHp, state.hp + (state.maxHp - maxBefore));
+            noteEvent(state, "bounty_hunter", false);
+            state.lastLog = `${eventIcon("bounty_hunter")} Giao nộp Bounty Hunter: mất ${E.ticket} **1 Vé thoát**, nhận Bounty Seal · ${E.vit} **VIT +${marks.BOUNTY_VIT}** đến hết run (Max ${E.hp} HP ${maxBefore} → ${state.maxHp}). Bounty Hunter không xuất hiện lại.`;
+          } else if (action === "bounty_resist") {
+            m.bountyDone = true;
+            m.bountyCurse = { bribes: 0 };
+            noteEvent(state, "bounty_hunter", false);
+            state.lastLog = `${eventIcon("bounty_hunter")} Chống trả Bounty Hunter: giữ lại ${E.ticket} Vé thoát, thợ săn không xuất hiện lại. Nhưng bạn bị Bounty Curse: Hối lộ RNGesus tốn thêm 5% payout sau mỗi lần hối lộ (lần đầu ${Math.round(marks.bribeRate(state) * 100)}%). Xem Rift.`;
+          } else throw new Error("INVALID_ACTION");
+          completeFloor(state, session, rng, 0);
         } else if (e.kind === "tax" && action === "tax_resist") {
           if (!dependencies.memories.canQueue(state))
             throw new Error("INVALID_ACTION");
@@ -561,8 +581,11 @@ module.exports = function createModule(dependencies) {
             state.lastLog = `RNGesus: bỏ chạy thành công (tỷ lệ ${Math.round(chance * 100)}%), thoát an toàn. Tỷ lệ chạy lần sau: **${nextChance}%**.`;
         }
         if (action === "bribe") {
-          penalty(state, 0.4);
-          state.lastLog = "Hối lộ: trừ một lần 40% payout hiện tại.";
+          const marks = require("../events/explorationMarks");
+          const rate = marks.bribeRate(state);
+          penalty(state, rate);
+          marks.noteBribe(state);
+          state.lastLog = `Hối lộ: trừ một lần ${Math.round(rate * 100)}% payout hiện tại${rate > 0.4 ? " (đã gồm Bounty Curse)" : ""}.`;
         }
         if (action === "pray") {
           if (!e.prayerSuccess)

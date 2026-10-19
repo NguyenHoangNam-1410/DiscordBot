@@ -1,5 +1,16 @@
 [
   {
+    "id": "a37314d5-5e6d-4ff2-9ea7-cc57daf2c93e",
+    "updatedAt": "2026-10-19T05:41:50.639Z",
+    "auditedAt": "2026-10-19T05:41:50.639Z",
+    "title": "Sinh tồn: Bounty Hunter",
+    "changes": [
+      "Thêm bẫy mới Bounty Hunter · Thợ Săn Tiền Thưởng (từ tầng 20, khi bạn đang giữ Vé thoát, chỉ gặp 1 lần mỗi run).",
+      "Giao nộp: mất 1 Vé thoát, nhận Bounty Seal VIT +40 đến hết run.",
+      "Chống trả: giữ vé, không gặp lại thợ săn, nhưng Hối lộ RNGesus đắt dần (45%, 50%, 55%… tối đa 90% payout)."
+    ]
+  },
+  {
     "id": "d4809562-ebcb-4ee0-b2c1-e73115ba7853",
     "updatedAt": "2026-10-19T04:36:23.783Z",
     "auditedAt": "2026-10-19T04:36:23.783Z",
