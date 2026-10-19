@@ -106,6 +106,7 @@ test("Giao nộp: mất 1 vé, cộng thẳng VIT +30 (hồi phần Max HP tăng
   act(s, "bounty_surrender");
   assert.equal(s.vit, vit2 + 30, "mỗi lần giao nộp +30 VIT");
   assert.equal(s.sources.event.vit, 60);
+  assert.equal(s.bountyGive, 2, "đếm số lần giao nộp cho thành tựu");
   assert.equal(marks.bribeRate(s), 0.4, "Giao nộp không đổi giá hối lộ");
 });
 
@@ -126,6 +127,8 @@ test("Chống trả: giữ vé, không đổi VIT, Hối lộ tăng dần 45% �
   assert.equal(s.escapeTokens, 1, "giữ vé");
   assert.equal(s.vit, vit);
   assert.equal(marks.data(s).bountyResisted, true);
+  assert.equal(s.bountyResist, 1, "đếm số lần chống trả cho thành tựu");
+  assert.equal(s.bountyGive, undefined);
   assert.equal(marks.bountyAvailable(s), false);
   assert(/Bounty Curse/.test(JSON.stringify(marks.fields(s))));
   const rates = [];

@@ -1438,4 +1438,12 @@ runMigration(49, "chatbot server knowledge and persona", () => {
     guild_id TEXT PRIMARY KEY,persona TEXT NOT NULL,updated_by TEXT NOT NULL,updated_at INTEGER NOT NULL);`);
 });
 
+runMigration(50, "hardcore bounty hunter and four seals achievement stats", () => {
+  db.exec(`
+    ALTER TABLE hardcore_event_stats ADD COLUMN bounty_give INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE hardcore_event_stats ADD COLUMN bounty_resist INTEGER NOT NULL DEFAULT 0;
+    ALTER TABLE hardcore_event_stats ADD COLUMN seal_altars INTEGER NOT NULL DEFAULT 0;
+  `);
+});
+
 module.exports = { db, dbPath, runMigration };

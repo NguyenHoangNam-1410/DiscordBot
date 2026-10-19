@@ -1,5 +1,15 @@
 [
   {
+    "id": "a69f88b3-aad6-48c2-b38a-b85371dd1459",
+    "updatedAt": "2026-10-19T06:04:15.341Z",
+    "auditedAt": "2026-10-19T06:04:15.341Z",
+    "title": "Thành tựu Bounty Hunter và Đàn Tứ Ấn",
+    "changes": [
+      "Thêm 8 thành tựu: giao nộp Vé thoát cho Bounty Hunter (1/5/15 lần), chống trả Bounty Hunter (1/5 lần), nhận Vé hồi sinh từ Đàn Tứ Ấn (1/3/10 lần). Xem ở /kiemtra, mục Sinh tồn · sự kiện và chiến đấu.",
+      "Thêm thành tựu mốc tầng 50/150/300/500 cho class Venance."
+    ]
+  },
+  {
     "id": "c2d75954-d5c2-4cb6-82d7-6c9b07eff548",
     "updatedAt": "2026-10-19T06:01:31.653Z",
     "auditedAt": "2026-10-19T06:01:31.653Z",
