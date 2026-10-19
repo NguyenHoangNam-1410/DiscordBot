@@ -190,6 +190,36 @@ module.exports = function createModule(dependencies) {
     );
   }
 
+  function bossOfferLevel(state, item) {
+    if (item.category === "consumable") return null;
+    return (
+      state.items.find((i) => i.definition.id === item.id && i.level > 0)
+        ?.level || 0
+    );
+  }
+
+  function bossOfferDescription(state, item) {
+    const level = bossOfferLevel(state, item);
+    if (level === null) return "Vật phẩm";
+    return level
+      ? "Nâng cấp Lv." + level + " → Lv." + (level + 1)
+      : "Món mới · Lv.1";
+  }
+
+  function bossOfferLabel(state, item) {
+    const level = bossOfferLevel(state, item);
+    return (
+      item.name +
+      " · " +
+      item.typeCode +
+      (level === null
+        ? ""
+        : level
+          ? " · Lv." + level + "→" + (level + 1)
+          : " · Mới")
+    );
+  }
+
   function actions(state) {
     if (require("../beta").is(state) && state.beta.awaitingRevive)
       return [{ action: "beta_revive", label: "Hồi sinh · 100% HP" }];
@@ -210,7 +240,8 @@ module.exports = function createModule(dependencies) {
       return [
         ...state.encounter.offers.map((item, i) => ({
           action: "boss_pick_" + i,
-          label: item.name + " · " + item.typeCode,
+          label: bossOfferLabel(state, item),
+          description: bossOfferDescription(state, item),
         })),
         { action: "boss_sell", label: "Bán rương · +100% cược" },
       ];

@@ -683,6 +683,19 @@ async function main() {
       );
       assert.equal(take.emoji.name, "item_rusted_edge");
       assert(take.label.includes(item.name));
+      const owned = s.items.find((i) => i.definition.id === item.id).level;
+      assert(take.label.includes("Lv." + owned + "→" + (owned + 1)));
+      const offerDetail = JSON.stringify(
+        view.privatePayload(s, run.session.id, "public", "encounter"),
+      );
+      assert(
+        offerDetail.includes("nâng cấp Lv." + owned + " → Lv." + (owned + 1)),
+      );
+      assert(
+        JSON.stringify(view.embed(s, "u").toJSON()).includes(
+          "Nâng cấp Lv." + owned + " → Lv." + (owned + 1),
+        ),
+      );
       assert(
         JSON.stringify(
           view.privatePayload(s, run.session.id, "public", "encounter"),

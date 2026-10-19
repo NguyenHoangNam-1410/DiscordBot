@@ -1,5 +1,16 @@
 [
   {
+    "id": "a324fed0-b11f-41e8-8c47-0284a991290e",
+    "updatedAt": "2026-10-19T01:31:16.780Z",
+    "auditedAt": "2026-10-19T01:31:16.780Z",
+    "title": "Rương boss hiện rõ nâng cấp trang bị",
+    "changes": [
+      "Rương boss cuối khu vực ghi rõ từng món là Món mới (Lv.1) hay Nâng cấp Lv.X → Lv.X+1 ngay trên bảng chính, nút chọn và menu.",
+      "Mục Chi tiết của rương boss hiện chỉ số trang bị trước/sau khi lên level, vật tư nhận lại, lớp nguyền thêm và ghi chú nội tại giữ nguyên.",
+      "Sau khi nhặt đồ trùng, Lượt vừa rồi hiện Lv cũ → Lv mới thay vì chỉ ghi level hiện tại."
+    ]
+  },
+  {
     "id": "a611a8ea-ac7c-45f7-89d0-9930cf0c3cb4",
     "updatedAt": "2026-10-17T13:51:51.642Z",
     "auditedAt": "2026-10-17T13:51:51.642Z",

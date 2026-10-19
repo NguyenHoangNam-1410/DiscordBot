@@ -61,7 +61,7 @@ module.exports = function createModule(dependencies) {
     const received = state.lastReceivedItems || [];
     const receivedTitles = received.map(
       (item) =>
-        `${item.upgradedFromLevel != null ? eventIcon("blacksmith") + " **Rèn:** " : ""}${itemIcon(item)} **${item.name} [${rarityLabel(item.rarity)}]**${item.consumable ? " · Vật phẩm" : ` · ${item.upgradedFromLevel != null ? `Lv.${item.upgradedFromLevel} → **Lv.${item.level}**` : `**Lv.${item.level}**`}`}`,
+        `${item.upgradedFromLevel != null ? eventIcon("blacksmith") + " **Rèn:** " : ""}${itemIcon(item)} **${item.name} [${rarityLabel(item.rarity)}]**${item.consumable ? " · Vật phẩm" : ` · ${item.upgradedFromLevel != null ? `Lv.${item.upgradedFromLevel} → **Lv.${item.level}**` : item.levels && item.level > item.levels ? `⬆️ Lv.${item.level - item.levels} → **Lv.${item.level}**` : `**Lv.${item.level}**`}`}`,
     );
     if (state.lastUpgrade)
       details.push(
