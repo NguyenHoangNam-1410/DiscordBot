@@ -129,10 +129,14 @@ module.exports = function createModule(dependencies) {
     }
     if (
       (state.gameplayVersion === 3) !==
-      ["3.0.0", "3.1.0"].includes(state.releaseVersion)
+      ["3.0.0", "3.1.0", "3.2.0"].includes(state.releaseVersion)
     )
       throw new Error("UNSUPPORTED_HARDCORE_VERSION");
-    if (!["2.0.0", "2.0.1", "3.0.0", "3.1.0"].includes(state.releaseVersion))
+    if (
+      !["2.0.0", "2.0.1", "3.0.0", "3.1.0", "3.2.0"].includes(
+        state.releaseVersion,
+      )
+    )
       throw new Error("UNSUPPORTED_HARDCORE_VERSION");
     require("../rift").normalize(state);
     require("../innate").validate(state);

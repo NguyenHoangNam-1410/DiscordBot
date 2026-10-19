@@ -302,6 +302,22 @@ module.exports = function createModule(dependencies) {
               " điểm % khi nhận phép",
             soul_drain:
               "Bạn: MP −1 khi trúng phản công; Phòng thủ giữ MP; đánh thường sau hút hồi thêm 1 MP",
+            arcane_ward:
+              "Elite thường: RES tiến dần tới 70% (hiện " +
+              Math.round((count / 12) * 100) +
+              "% quãng đường)",
+            deathburst:
+              "Elite thường: nổ " +
+              Math.round((count / 12) * 50) +
+              "% DMG phép khi bị hạ, giảm bởi RES, giữ ≥1 HP",
+            iron_hide:
+              "Elite thường: giảm DMG vật lý bạn gây tới 70% (hiện " +
+              Math.round((count / 12) * 100) +
+              "% quãng đường)",
+            predator:
+              "Elite thường: Crit " +
+              Math.round((6 + (count / 12) * 12) * 10) / 10 +
+              "% (tối đa 18%)",
           };
         if (effects[key])
           lines.push(

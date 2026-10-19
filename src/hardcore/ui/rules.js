@@ -175,6 +175,11 @@ module.exports = function createModule(dependencies) {
             "Chỉ trong V3 thường (không phải Tháp), từ tầng 20, và chỉ khi bạn đang giữ Vé thoát; thuộc nhóm bẫy. Lucky Break không áp dụng.\n**Giao nộp:** mất 1 Vé thoát, nhận VIT +30 cộng thẳng vào chỉ số (hồi phần Max HP tăng thêm). Còn vé thì có thể gặp lại và nhận tiếp.\n**Chống trả:** giữ vé, không gặp lại Bounty Hunter trong run, nhưng nhận Bounty Curse: Hối lộ RNGesus tốn thêm 5% payout sau mỗi lần hối lộ (45%, 50%, 55%…, tối đa 90%).",
         },
         {
+          name: `${E.rift} Rift v3 · Hiệu ứng Elite`,
+          value:
+            "Từ v3.2.0, Rift có thêm 4 loại stack dành cho **Elite sinh từ roll thường** (không áp dụng cho Elite của event như Guardian, Thief, Hunter, Mimic hay mộ). Mỗi Elite mang ngẫu nhiên **1 trong các loại bạn đã có stack**; hiệu ứng mạnh dần theo stack và đạt tối đa ở ×12. Dùng Rift Severance để xóa một loại.\n- 🔮 **Arcane Ward:** RES → 70%.\n- 💥 **Deathburst:** khi bị hạ nổ tối đa 50% DMG phép của nó; giảm bởi RES, để lại ít nhất 1 HP.\n- 🛡️ **Iron Hide:** giảm DMG vật lý bạn gây tới 70%.\n- 🎯 **Predator:** Crit từ 6% tới 18% (chỉ đòn vật lý; Phòng thủ miễn Crit).\nRun đã lưu trước v3.2.0 giữ Rift v2 (8 loại).",
+        },
+        {
           name: `🔱 Đàn Tứ Ấn · Vé hồi sinh`,
           value:
             "Thu thập đủ **bốn ấn nghịch** trong một run (V3 thường): **Ấn Phản Vương** (Chống trả Tax Collector → Royal Outlaw), **Ấn Hắc Giới** (Đánh đuổi The Thief → Underworld Lead), **Ấn Sinh Mệnh** (Hiến máu cho Healer → Vital Benediction), **Ấn Truy Nã** (Chống trả Bounty Hunter → Bounty Curse). Đủ bốn thì gặp Đàn Tứ Ấn ở tình huống hợp lệ kế tiếp và nhận **1 Vé hồi sinh** dùng trong run này. Chỉ 1 lần/run, các ấn không bị tiêu hao; nếu bạn đang cầm Vé hồi sinh thì event chờ đến khi vé được dùng. Vé hồi sinh không còn bán ở cửa hàng. Xem tiến độ Tứ Ấn trong Rift.",

@@ -1,9 +1,9 @@
 "use strict";
 const RELEASE = Object.freeze({
-  version: "3.1.0",
+  version: "3.2.0",
   gameplay: 3,
   catalog: 2,
-  date: "2026-10-13",
+  date: "2026-10-19",
   legacyCommit: "c0c6213",
   legacyRunVersion: 4,
 });

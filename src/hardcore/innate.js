@@ -295,12 +295,13 @@ function endAction(s) {
 function validate(s) {
   if (s.mode?.startsWith("tower") || s.towerChallengeId) return;
   if (s.classInnateVersion == null) {
-    if (s.releaseVersion === "3.1.0") throw Error("MISSING_CLASS_INNATE");
+    if (["3.1.0", "3.2.0"].includes(s.releaseVersion))
+      throw Error("MISSING_CLASS_INNATE");
     return;
   }
   if (
     !enabled(s) ||
-    s.releaseVersion !== "3.1.0" ||
+    !["3.1.0", "3.2.0"].includes(s.releaseVersion) ||
     s.balanceVersion !== "3.1.0"
   )
     throw Error("UNSUPPORTED_CLASS_INNATE");

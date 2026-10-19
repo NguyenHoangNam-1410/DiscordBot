@@ -104,7 +104,7 @@ try {
   test("V3.1 new profiles and saved V3.0 snapshots remain valid; Tower/V2 have no Innate", () => {
     const a = stats.createState("amazon", 10),
       n = stats.createState("assassin", 10);
-    assert.equal(a.releaseVersion, "3.1.0");
+    assert.equal(a.releaseVersion, "3.2.0");
     assert.equal(a.maxHp, 110);
     assert.equal(n.maxHp, 118);
     assert.equal(a.statProfile.mastery.evasion, 0.45);

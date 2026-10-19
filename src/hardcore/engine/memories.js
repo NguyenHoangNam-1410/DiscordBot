@@ -51,6 +51,20 @@ module.exports = function createModule(dependencies) {
     }
   }
 
+  // Deathburst (Rift v3): vụ nổ khi elite bị hạ; bị RES giảm, không bao giờ làm bạn xuống dưới 1 HP.
+  function deathburst(state, e, rng) {
+    const dmg = require("../rift").blastDamage(
+      e,
+      rng,
+      dependencies.effectiveResistance(state, state.resistance, false),
+    );
+    if (!(e?.blast > 0)) return "";
+    const before = state.hp;
+    state.hp = Math.max(1, state.hp - dmg);
+    markDirect(state, ["hp"]);
+    return `\n${require("../shared/icons").RIFT_ICONS.deathburst} **Deathburst**: ${e.name} nổ ${dmg} DMG phép (đã tính RES)${before - state.hp < dmg ? ", giữ lại 1 HP" : ""}; ${E.hp} HP ${before} → ${state.hp}.`;
+  }
+
   function defeatEnemy(state, session, rng, e) {
     if (e.hp > 0 || state.hp <= 0 || e.defeatSettled) return;
     if (bosses.advancePhase(state, e)) return;
@@ -75,6 +89,7 @@ module.exports = function createModule(dependencies) {
       echoes.consume(session, e.echoId);
     }
     state.lastLog += `\n${monsterIcon(e)} Hạ **${e.name}**.`;
+    state.lastLog += deathburst(state, e, rng);
     if (require("../events/explorationMarks").enabled(state)) {
       const m = require("../events/explorationMarks").ensure(state);
       const hadMimicBoost = require("../events/explorationMarks").boosted(

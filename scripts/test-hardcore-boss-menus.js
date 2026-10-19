@@ -350,7 +350,7 @@ async function main() {
       const before = JSON.stringify(s),
         p = core.incomingPreview(s),
         embed = view.embed(s, "u").toJSON();
-      assert.equal(embed.title, "SINH TỒN v3.1.0 · TẦNG 6 · Sanctuary");
+      assert.equal(embed.title, "SINH TỒN v3.2.0 · TẦNG 6 · Sanctuary");
       assert(
         embed.description.startsWith(
           stats.CLASSES[key].emoji +

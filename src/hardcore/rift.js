@@ -1,7 +1,7 @@
 "use strict";
 const { E, RIFT_ICONS } = require("./shared/icons");
-// Rules version 2 is snapshotted only for new Survival V3 runs.
-const KEYS = [
+// Rules version 2 is snapshotted for Survival V3 runs started before 3.2.0; version 3 (3.2.0+) adds the four elite effects.
+const KEYS_V2 = [
   "stone_skin",
   "elemental_dominion",
   "bloodlust",
@@ -11,19 +11,34 @@ const KEYS = [
   "soul_drain",
   "cursed_ground",
 ];
+// Hiệu ứng elite (chỉ elite sinh từ roll encounter thường nhận 1 trong 4):
+// arcane_ward = RES, deathburst = Cảm tử, iron_hide = DEF, predator = tỷ lệ Crit. Mỗi stack tiến dần tới mức tối đa ở stack 12.
+const ELITE_KEYS = ["arcane_ward", "deathburst", "iron_hide", "predator"];
+const KEYS_V3 = [...KEYS_V2, ...ELITE_KEYS];
+const KEYS = KEYS_V3;
+const RULES_VERSIONS = [2, 3];
+const ELITE_MAX = Object.freeze({
+  def: 0.7, // giảm sát thương vật lý tối đa = trần hiện có của defenseReduction
+  res: 70, // RES tối đa (%)
+  crit: 0.18, // Crit gấp 3 lần mức gốc 6%
+  blast: 0.5, // vụ nổ Cảm tử = 50% sát thương phép của quái
+});
+const ELITE_FULL = 12;
+const keysOf = (s) => (s?.rift?.version === 3 ? KEYS_V3 : KEYS_V2);
 const clamp = (n, a, b) => Math.max(a, Math.min(b, n));
 function enabled(s) {
   return (
     s.gameplayVersion === 3 &&
-    s.rift?.version === 2 &&
+    RULES_VERSIONS.includes(s.rift?.version) &&
     !s.mode?.startsWith("tower") &&
     !s.towerChallengeId
   );
 }
-function activate(s) {
+function activate(s, version = 3) {
+  const keys = version === 3 ? KEYS_V3 : KEYS_V2;
   s.rift = {
-    version: 2,
-    stacks: Object.fromEntries(KEYS.map((k) => [k, 0])),
+    version,
+    stacks: Object.fromEntries(keys.map((k) => [k, 0])),
     bag: [],
     bagIndex: 0,
     cycle: 1,
@@ -39,13 +54,14 @@ function tier(n) {
 }
 function normalize(s) {
   if (s.rift == null) return;
-  if (s.rift.version !== 2 || s.gameplayVersion !== 3)
+  if (!RULES_VERSIONS.includes(s.rift.version) || s.gameplayVersion !== 3)
     throw Error("UNSUPPORTED_RIFT_VERSION");
-  const r = s.rift;
+  const r = s.rift,
+    KEYS = keysOf(s);
   if (
     !r.stacks ||
     !Array.isArray(r.bag) ||
-    ![0, 8].includes(r.bag.length) ||
+    ![0, KEYS.length].includes(r.bag.length) ||
     new Set(r.bag).size !== r.bag.length ||
     r.bag.some((k) => !KEYS.includes(k)) ||
     !Number.isInteger(r.bagIndex) ||
@@ -104,7 +120,7 @@ function normalize(s) {
     )
       throw Error("INVALID_RIFT_ENCOUNTER");
     if (
-      e.version !== 2 ||
+      e.version !== r.version ||
       !e.stacks ||
       !["physical", "magic", "true"].includes(e.lockedCounterType) ||
       !Number.isSafeInteger(e.stoneArmor) ||
@@ -117,6 +133,17 @@ function normalize(s) {
     )
       throw Error("INVALID_RIFT_ENCOUNTER");
   }
+  const fx = s.encounter?.eliteEffect;
+  if (
+    fx &&
+    (r.version !== 3 ||
+      s.encounter.rank !== "elite" ||
+      !ELITE_KEYS.includes(fx.key) ||
+      !Number.isInteger(fx.stacks) ||
+      fx.stacks < 1 ||
+      fx.stacks > 12)
+  )
+    throw Error("INVALID_ELITE_EFFECT");
 }
 function award(s, floor, rng) {
   if (
@@ -133,8 +160,8 @@ function award(s, floor, rng) {
     cycle = r.cycle;
   if (index === bag.length) {
     if (bag.length) cycle++;
-    bag = KEYS.slice();
-    for (let i = 7; i > 0; i--) {
+    bag = keysOf(s).slice();
+    for (let i = bag.length - 1; i > 0; i--) {
       const j = Math.floor(rng() * (i + 1));
       [bag[i], bag[j]] = [bag[j], bag[i]];
     }
@@ -178,7 +205,7 @@ function claimPending(s) {
   };
 }
 function sever(s, k) {
-  if (!enabled(s) || k === "unstable_rift" || !KEYS.includes(k))
+  if (!enabled(s) || k === "unstable_rift" || !keysOf(s).includes(k))
     throw Error("INVALID_RIFT_SEVERANCE");
   const old = count(s, k);
   s.rift.stacks[k] = 0;
@@ -187,7 +214,7 @@ function sever(s, k) {
 }
 function clear(s) {
   if (!enabled(s)) return;
-  for (const k of KEYS) s.rift.stacks[k] = 0;
+  for (const k of keysOf(s)) s.rift.stacks[k] = 0;
   s.modifiers = s.rift.stacks;
 }
 function encounter(s) {
@@ -198,7 +225,7 @@ function snapshot(s, e) {
   const stacks = { ...s.rift.stacks },
     stoneArmor = Math.floor(e.maxHp * 0.015 * stacks.stone_skin);
   e.rift = {
-    version: 2,
+    version: s.rift.version,
     stacks,
     stoneArmor,
     stoneArmorMax: stoneArmor,
@@ -376,6 +403,69 @@ function thresholds(s, before, after) {
     r.fortifiedExposed = after > 0;
   }
 }
+// ---- Hiệu ứng elite (Rift v3) ----
+const eliteFraction = (stacks) => clamp(stacks, 0, ELITE_FULL) / ELITE_FULL;
+const ELITE_NAMES = Object.freeze({
+  arcane_ward: "Arcane Ward",
+  deathburst: "Deathburst",
+  iron_hide: "Iron Hide",
+  predator: "Predator",
+});
+// Chỉ gọi cho elite sinh từ roll encounter thường (không phải elite của event). Chọn ngẫu nhiên 1 trong các loại đã có stack.
+function assignEliteEffect(s, e, rng) {
+  if (
+    !enabled(s) ||
+    s.rift.version !== 3 ||
+    e.rank !== "elite" ||
+    e.eliteEffect
+  )
+    return e;
+  const candidates = ELITE_KEYS.filter((k) => count(s, k) > 0);
+  if (!candidates.length) return e;
+  const key = candidates[Math.floor(rng() * candidates.length)],
+    stacks = count(s, key),
+    t = eliteFraction(stacks);
+  e.eliteEffect = { key, stacks, floor: s.floor };
+  if (key === "iron_hide") {
+    const base = e.defense / (e.defense + 100 + s.floor / 2),
+      target = Math.min(ELITE_MAX.def, base + (ELITE_MAX.def - base) * t);
+    if (target > base)
+      e.defense = Math.ceil((target / (1 - target)) * (100 + s.floor / 2));
+  } else if (key === "arcane_ward") {
+    e.resistance = Math.round(
+      e.resistance + (ELITE_MAX.res - e.resistance) * t,
+    );
+  } else if (key === "predator") {
+    e.critChance = Number(
+      (e.critChance + (ELITE_MAX.crit - e.critChance) * t).toFixed(4),
+    );
+  } else {
+    e.blast = Number((ELITE_MAX.blast * t).toFixed(4));
+  }
+  return e;
+}
+// Cảm tử: lúc quái bị hạ gây blast × sát thương phép của nó lên người chơi, giảm bởi RES, không bao giờ hạ dưới 1 HP.
+function blastDamage(e, rng, resistance) {
+  if (!(e?.blast > 0)) return 0;
+  const roll =
+    e.damageMin + Math.floor(rng() * (e.damageMax - e.damageMin + 1));
+  return Math.max(
+    0,
+    Math.floor(roll * e.blast * (1 - clamp(resistance, -50, 75) / 100)),
+  );
+}
+function eliteLine(e) {
+  const fx = e?.eliteEffect;
+  if (!fx) return "";
+  const pct = (x) => Number(x.toFixed(1)).toLocaleString("vi-VN");
+  const detail = {
+    arcane_ward: `RES ${e.resistance}%`,
+    iron_hide: `giảm ${pct((e.defense / (e.defense + 100 + fx.floor / 2)) * 100)}% DMG vật lý`,
+    predator: `Crit ${pct(e.critChance * 100)}%`,
+    deathburst: `nổ ${pct(e.blast * 100)}% DMG phép khi chết`,
+  }[fx.key];
+  return `${RIFT_ICONS[fx.key] || E.rift} **${ELITE_NAMES[fx.key]} ×${fx.stacks}** · ${detail}`;
+}
 function damage(s, amount, apply) {
   const r = encounter(s);
   if (!r) return apply(amount);
@@ -421,6 +511,10 @@ function description(k, n, s) {
     swift_horror: `Phản công vật lý quái +${n} điểm % trúng. Né tự nhiên: action gây DMG kế của bạn +${[0, 8, 12, 16][t]}% DMG và vật lý chắc chắn trúng. Né bảo đảm không kích hoạt; không tăng ${E.evasion} quái.`,
     soul_drain: `Tối đa ${Math.ceil(n / 4)} lần/combat. Phản công trúng hút 1 ${E.mana}; 0 ${E.mana} giữ charge, Phòng thủ tiêu charge không mất ${E.mana}, chặn/né giữ charge. Sau khi bị hút: đánh thường kế hồi thêm 1 ${E.mana}.`,
     cursed_ground: `Khi nhận vật lý: DEF gốc −${fmt(n * 2)}%. Khi nhận phép: RES gốc −${fmt(n * 1.5)} điểm %. Áp dụng trước Consecration/Class Shrine/Phòng thủ; không đổi chỉ số gốc hoặc lá chắn.`,
+    arcane_ward: `Elite thường mang **Arcane Ward**: RES tiến dần tới 70% ở ×12 (hiện ×${n}: ${fmt(eliteFraction(n) * 100)}% quãng đường).`,
+    deathburst: `Elite thường mang **Deathburst**: khi bị hạ nổ gây ${fmt(ELITE_MAX.blast * eliteFraction(n) * 100)}% DMG phép của nó (tối đa 50% ở ×12), giảm bởi RES của bạn, để lại ít nhất 1 ${E.hp}.`,
+    iron_hide: `Elite thường mang **Iron Hide**: giảm DMG vật lý nhận vào tiến dần tới 70% ở ×12 (hiện ×${n}: ${fmt(eliteFraction(n) * 100)}% quãng đường).`,
+    predator: `Elite thường mang **Predator**: tỷ lệ Crit của elite tăng dần từ 6% tới 18% ở ×12 (hiện ${fmt((0.06 + 0.12 * eliteFraction(n)) * 100)}%). Chỉ đòn vật lý Crit; Phòng thủ miễn Crit.`,
   };
   let text =
     "**Rift " + ["", "I", "II", "III"][t] + " · ×" + n + "**\n" + lines[k];
@@ -444,6 +538,7 @@ function battle(s) {
   const r = encounter(s);
   if (!r) return "";
   const lines = [];
+  if (s.encounter?.eliteEffect) lines.push(eliteLine(s.encounter));
   if (bossOwnDrain(s) && r.stacks.soul_drain > 0)
     lines.push(
       `${RIFT_ICONS.soul_drain} Hút ${E.mana} riêng của boss thay thế Soul Drain.`,
@@ -468,6 +563,15 @@ function battle(s) {
 }
 module.exports = {
   KEYS,
+  KEYS_V2,
+  KEYS_V3,
+  ELITE_KEYS,
+  ELITE_NAMES,
+  ELITE_MAX,
+  keysOf,
+  assignEliteEffect,
+  blastDamage,
+  eliteLine,
   enabled,
   activate,
   count,

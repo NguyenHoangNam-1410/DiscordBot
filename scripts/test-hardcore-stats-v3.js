@@ -49,7 +49,7 @@ function bounds(payload) {
   assert(total <= 6000, "Discord embed length: " + total);
 }
 try {
-  assert.equal(RELEASE.version, "3.1.0");
+  assert.equal(RELEASE.version, "3.2.0");
   assert.equal(RELEASE.catalog, 2);
   for (const key of keys) {
     const s = stats.createState(key, 10000),
