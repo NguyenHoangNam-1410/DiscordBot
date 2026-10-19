@@ -1,5 +1,14 @@
 [
   {
+    "id": "bd6ffdd3-748d-4d79-8440-96a3d3b65727",
+    "updatedAt": "2026-10-19T14:05:51.522Z",
+    "auditedAt": "2026-10-19T14:05:51.522Z",
+    "title": "Sửa lỗi không mở được bảng chi tiết",
+    "changes": [
+      "Sửa lỗi bảng Chỉ số > Hành động không mở được khi đang có Paradox Unstable Soul và chưa vào trận (hiện báo \"Không thể mở bảng chi tiết Sinh tồn\")."
+    ]
+  },
+  {
     "id": "1fe46bbb-cc6d-4dc9-83fe-8a9cab0045d9",
     "updatedAt": "2026-10-19T13:47:33.147Z",
     "auditedAt": "2026-10-19T13:47:33.147Z",

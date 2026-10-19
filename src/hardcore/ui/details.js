@@ -317,7 +317,7 @@ module.exports = function createModule(dependencies) {
       };
       e.addFields(
         {
-          name: `${SKILL_ICONS[state.classKey]} ${stats.CLASSES[state.classKey].skill} (${core.skillManaCost(state)} MP)`,
+          name: `${SKILL_ICONS[state.classKey]} ${stats.CLASSES[state.classKey].skill}${inCombat ? ` (${core.skillManaCost(state)} MP)` : ""}`,
           value: (SKILLS[state.classKey] + preview("skill")).slice(0, 1024),
         },
         {

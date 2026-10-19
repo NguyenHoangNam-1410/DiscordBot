@@ -133,4 +133,21 @@ test("Tab con và trang ngoài phạm vi được kẹp lại, route chấp nh�
   const route = /^(?:view|page)_(stats|items|effects|encounter)_(\d{1,4})$/;
   assert.ok(route.test("view_items_200") && route.test("page_items_102"));
 });
+test("Tab Hành động và mọi tab con mở được ở tình huống không phải chiến đấu", () => {
+  const { s } = runState();
+  const encounters = [
+    { type: "empty", name: "Empty" },
+    { type: "chest", kind: "mimic", name: "Chest" },
+    ...["fountain", "horadric", "merchant", "mirror"].map((k) => core.makeSurprise(s, () => 0.5, k)),
+  ];
+  for (const encounter of encounters) {
+    const copy = structuredClone(s);
+    copy.encounter = encounter;
+    // Paradox Unstable Soul chỉ khóa chi phí Skill khi vào trận; ngoài trận không được đọc chi phí.
+    copy.activeParadox = { version: 2, id: "unstable_soul", pairId: "volatility", milestone: 20, startFloor: 21, endFloor: 25, combatActionCount: 0, attackActionCount: 0, lockedSkillCost: null };
+    for (const [tab, n] of Object.entries(SUBS))
+      for (let sub = 0; sub < n; sub++)
+        bounds(view.privatePayload(copy, "id", "m", tab, sub * 100));
+  }
+});
 console.log("detail tabs ok (" + count + ")");
