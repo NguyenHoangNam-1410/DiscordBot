@@ -1,5 +1,16 @@
 [
   {
+    "id": "88c63416-f206-4a95-9356-107b836b7dfd",
+    "updatedAt": "2026-10-19T08:15:51.096Z",
+    "auditedAt": "2026-10-19T08:15:51.096Z",
+    "title": "Venance: làm lại S5 và S6",
+    "changes": [
+      "S5 (Cổ ngữ hoàn thiện): mỗi quái hạ bằng đòn cường hóa tạo 1 stack Dư Âm Cổ Ngữ (tối đa 3); khi chuỗi cường hóa kết thúc, mỗi stack hoàn 1 MP.",
+      "S6 đổi thành Hoàn nguyên cổ ngữ: khi chuỗi cường hóa hết 3 hành động, hoàn thêm 2 MP (bằng chi phí Skill). Xung 40% sát thương của S6 cũ bị bỏ; đòn cường hóa thứ ba chỉ còn hệ số S3.",
+      "Dùng lại Skill giữa chừng vẫn trả stack Dư Âm đã có nhưng không nhận 2 MP của S6. MP không vượt Max MP."
+    ]
+  },
+  {
     "id": "0f16818d-1006-48d7-86e6-c15fc4130b29",
     "updatedAt": "2026-10-19T08:11:12.962Z",
     "auditedAt": "2026-10-19T08:11:12.962Z",

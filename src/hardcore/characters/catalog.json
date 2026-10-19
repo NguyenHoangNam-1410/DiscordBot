@@ -376,13 +376,13 @@
         {
           "level": 5,
           "name": "Cổ ngữ hoàn thiện",
-          "description": "Hệ số đòn cường hóa tăng từ ×2,3 lên ×2,6; Hồi lưu hồi 7% Max HP thay vì 5%.",
+          "description": "Hệ số đòn cường hóa tăng từ ×2,3 lên ×2,6; Hồi lưu hồi 7% Max HP thay vì 5%. Mỗi quái hạ bằng đòn cường hóa tạo 1 stack Dư Âm Cổ Ngữ (tối đa 3); khi chuỗi cường hóa kết thúc, mỗi stack hoàn 1 MP.",
           "emojiName": "soul_venance_5"
         },
         {
           "level": 6,
-          "name": "Phán quyết tam trọng",
-          "description": "Sau thức tỉnh: đòn cường hóa hợp lệ thứ ba thêm 1 xung bằng 40% sức sát thương của chính đòn đó (đã gồm hệ số ×2,6 và +60% của S3, tính sau kháng), tổng ≈ ×1,4. Xung hồi 0 MP, không Crit, không tạo proc; chỉ ra đòn nếu vẫn cùng mục tiêu và phase còn sống.",
+          "name": "Hoàn nguyên cổ ngữ",
+          "description": "Khi chuỗi cường hóa hết 3 hành động, hoàn thêm 2 MP (bằng chi phí Skill), cộng với MP từ các stack Dư Âm của S5. Dùng lại Skill giữa chừng không nhận khoản này; MP không vượt Max MP.",
           "emojiName": "soul_venance_6"
         }
       ]
