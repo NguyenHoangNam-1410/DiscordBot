@@ -83,7 +83,7 @@ async function open(interaction) {
     }
     return interaction.editReply({
       content:
-        "Đã mở **Venance · SSR · S0 — BETA**. Cược giả lập 100.000 xu; không tốn cược, không nhận thưởng tài khoản. Tử trận có nút hồi sinh 100% HP.",
+        "Đã mở **Rha-Kor · SSR · S0 — BETA**. Cược giả lập 100.000 xu; không tốn cược, không nhận thưởng tài khoản. Tử trận có nút hồi sinh 100% HP.",
     });
   });
 }

@@ -11,7 +11,7 @@ const svc = require("../src/hardcore"),
   stats = require("../src/hardcore/engine/stats"),
   repo = require("../src/hardcore/storage/sessions"),
   beta = require("../src/hardcore/beta"),
-  kit = require("../src/hardcore/characters/venance"),
+  kit = require("../src/hardcore/characters/rhakor"),
   god = require("../src/hardcore/events/godRngesus"),
   echoes = require("../src/hardcore/storage/echoes"),
   relicRecords = require("../src/hardcore/storage/relicRecords"),
@@ -109,14 +109,14 @@ function bounds(p) {
   assert(!/undefined|NaN/.test(JSON.stringify(p)));
 }
 async function main() {
-  await test("Beta forces Venance SSR S0 and 100k without account, ownership, inventory or wager debit", () => {
+  await test("Beta forces Rha-Kor SSR S0 and 100k without account, ownership, inventory or wager debit", () => {
     const before = ledger(),
       run = start("fresh", {
         classKey: "barbarian",
         stake: 10,
         loadout: { itemIds: ["cracked_wand"], ticketIds: ["survival_revive"] },
       });
-    assert.equal(run.state.classKey, "venance");
+    assert.equal(run.state.classKey, "rha_kor");
     assert.equal(run.state.stake, 100000);
     assert.equal(run.state.characterSoul.soulLevel, 0);
     assert.equal(run.account, null);
@@ -125,7 +125,7 @@ async function main() {
     assert.equal(run.state.reviveTickets, 0);
     assert.deepEqual(ledger(), before);
     assert.equal(
-      require("../src/hardcore/characters").ownedCharacters("fresh").venance,
+      require("../src/hardcore/characters").ownedCharacters("fresh").rha_kor,
       undefined,
     );
     const p = {
@@ -146,7 +146,7 @@ async function main() {
     assert(!played.settled);
     assert.equal(played.state.hp, 0);
     assert(played.state.beta.awaitingRevive);
-    assert.equal(kit.frame(played.state).remaining, 3);
+    assert.equal(kit.mark(played.state).turns, 3);
     const dead = current(run).state,
       mana = dead.mana,
       turn = dead.encounter.combatTurn,
@@ -158,7 +158,7 @@ async function main() {
     const revived = play(run, "beta_revive").state;
     assert.equal(revived.hp, revived.maxHp);
     assert.equal(revived.mana, mana);
-    assert.equal(kit.frame(revived).remaining, 3);
+    assert.equal(kit.mark(revived).turns, 3);
     assert.equal(revived.encounter.combatTurn, turn);
     assert.equal(revived.encounter.hp, enemyHP);
     assert.equal(revived.beta.revivals, 1);

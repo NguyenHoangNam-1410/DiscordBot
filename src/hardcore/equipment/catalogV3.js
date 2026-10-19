@@ -105,7 +105,11 @@ const MATRIX = {
 for (const classes of Object.values(MATRIX))
   if (classes.includes("sorceress") || classes.includes("necromancer"))
     classes.push("venance");
+// Rha-Kor là chiến binh STR nên dùng chung nhóm affinity với Barbarian.
+for (const classes of Object.values(MATRIX))
+  if (classes.includes("barbarian")) classes.push("rha_kor");
 const CLASSES = [
+  "rha_kor",
   "venance",
   "assassin",
   "amazon",
@@ -193,7 +197,7 @@ function validate(items) {
       if (
         item.affinity.type !== "universal" &&
         (!item.affinity.classes.length ||
-          item.affinity.classes.filter((k) => k !== "venance").length > 3 ||
+          item.affinity.classes.filter((k) => !["venance", "rha_kor"].includes(k)).length > 3 ||
           new Set(item.affinity.classes).size !==
             item.affinity.classes.length ||
           item.affinity.classes.some((k) => !CLASSES.includes(k)))

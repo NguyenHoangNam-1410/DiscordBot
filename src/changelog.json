@@ -1,5 +1,18 @@
 [
   {
+    "id": "43d3196d-bdf6-43e5-a21b-253f0f471488",
+    "updatedAt": "2026-10-19T12:07:19.248Z",
+    "auditedAt": "2026-10-19T12:07:19.248Z",
+    "title": "Rha-Kor · Kẻ Khắc Chiến Luật (SSR)",
+    "changes": [
+      "Thêm nhân vật SSR Rha-Kor (Chiến binh, STR): Max MP khởi đầu 4, Skill Khắc Lệnh Phá Giáp tốn 2 MP gây 220% sát thương vật lý và đặt Vết Khắc Cổ Luật.",
+      "Vết Khắc tăng 1 cấp sau mỗi đòn chính trúng, tồn tại 3 lượt của Rha-Kor và không mang sang phòng sau; đạt LV3 sẽ phát nổ 280% sát thương, giảm 20% DEF mục tiêu trong 2 lượt.",
+      "Nội tại Thân Bia Bất Khuất giảm 12% sát thương phản công kế tiếp sau vụ nổ, hạ mục tiêu bằng vụ nổ hồi 1 MP; boss ra đòn khi Vết Khắc còn tồn tại sẽ tăng 20% vụ nổ.",
+      "Tinh Hồn S1–S6 và thức tỉnh Cổ Luật Đoạn Tuyệt (vụ nổ 360%, Barrier 12% Max HP); thêm thành tựu mốc tầng cho Rha-Kor.",
+      "/sinhton beta nay thử Rha-Kor thay cho Venance."
+    ]
+  },
+  {
     "id": "6987b21d-719e-4891-9b24-bd0da91b1e97",
     "updatedAt": "2026-10-19T11:47:31.119Z",
     "auditedAt": "2026-10-19T11:47:31.119Z",

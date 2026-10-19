@@ -84,7 +84,7 @@ async function main() {
     "mage",
   ]);
   const expectedGroups = {
-    warrior: ["barbarian", "druid"],
+    warrior: ["barbarian", "druid", "rha_kor"],
     guardian: ["paladin"],
     assassin: ["amazon", "assassin"],
     mage: ["sorceress", "necromancer", "venance"],
@@ -119,10 +119,10 @@ async function main() {
       .setupPreview("paladin")
       .build.includes("Ưu tiên VIT"),
   );
-  assert.equal(characters.catalog.characters.length, 8);
+  assert.equal(characters.catalog.characters.length, 9);
   assert.equal(
     characters.catalog.characters.flatMap((c) => c.souls).length,
-    48,
+    54,
   );
   const owned = characters.ownedCharacters();
   assert.equal(Object.keys(owned).length, 7);
@@ -142,7 +142,7 @@ async function main() {
       return [s.emojiName, String(1557000000000000500n + BigInt(ci * 6 + si))];
     }),
   );
-  assert.equal(new Set(soulEmojis.map((x) => x[0])).size, 48);
+  assert.equal(new Set(soulEmojis.map((x) => x[0])).size, 54);
   setApplicationEmojisForTest([
     ...soulEmojis,
     ...Object.keys(stats.CLASSES).map((k, i) => [
@@ -335,10 +335,10 @@ async function main() {
   let result = await click(overview, "rarity", ["SSR"]);
   limits(result.payload);
   assert(stringify(result.payload).includes("Venance"));
-  assert.equal(component(result.payload, "character").options.length, 1);
+  assert.equal(component(result.payload, "character").options.length, 2);
   assert((await click(result.payload, "character", ["amazon"])).error);
   result = await click(overview, "class", ["warrior"]);
-  assert.equal(component(result.payload, "character").options.length, 2);
+  assert.equal(component(result.payload, "character").options.length, 3);
   const filtered = result.payload;
   assert((await click(filtered, "character", ["sorceress"])).error);
   result = await click(filtered, "character", ["druid"]);

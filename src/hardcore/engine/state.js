@@ -101,6 +101,7 @@ module.exports = function createModule(dependencies) {
     require("../beta").validate(state);
     require("../characters/souls").validate(state);
     require("../characters/venance").validate(state);
+    require("../characters/rhakor").validate(state);
     require("../events/explorationMarks").normalize(state);
     const rules = require("../equipment/rules");
     const ITEMS = rules.enabled(state)

@@ -513,6 +513,8 @@ module.exports = function createModule(dependencies) {
         druid: `${E.hp} hồi 5% Max HP và ${E.mana} 5% Max MP mỗi tầng (MP làm tròn lên)`,
         necromancer: `${E.evasion} chặn một phản công, tiêu hao khi kích hoạt`,
         paladin: `${E.res} RES +10 khi nhận phép`,
+        venance: `${SKILL_ICONS.venance} một Astral Armament miễn ${E.mana} MP, tiêu hao khi dùng`,
+        rha_kor: `${SKILL_ICONS.rha_kor} Khắc Lệnh Phá Giáp đặt Vết Khắc ở LV2`,
       };
       done(
         `${E.shrine} Class Shrine · tầng ${state.classShrine.from}–${state.classShrine.until}: ${effects[state.classKey]}.`,

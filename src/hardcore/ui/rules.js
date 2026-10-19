@@ -76,6 +76,11 @@ module.exports = function createModule(dependencies) {
             "Astral Armament tốn 2 MP, không gây DMG; cường hóa đánh thường thành phép trong 3 hành động chiến đấu tiếp theo, giữ qua phòng. Bình, Phòng thủ và thao tác boss tốn lượt đều trừ thời gian. Đòn cường hóa luôn trúng, không Crit, không hồi MP; Phòng thủ hồi tổng 2 MP. Xem Nhân vật để đọc Hồi lưu và Tam trọng.",
         },
         {
+          name: `${SKILL_ICONS.rha_kor} Rha-Kor · Vết Khắc`,
+          value:
+            "Khắc Lệnh Phá Giáp tốn 2 MP, gây 220% ST vật lý và đặt Vết Khắc LV1 (3 lượt của Rha-Kor, không mang sang phòng sau). Mỗi hit chính trúng của Attack/Skill +1 cấp; LV3 phát nổ 280% (luôn trúng, không Crit), giảm 20% DEF mục tiêu 2 lượt. Phòng thủ/Bình trừ thời lượng nhưng không tăng cấp. Max MP khởi đầu 4.",
+        },
+        {
           name: `${eventIcon("boss")} Cơ chế boss`,
           value:
             "- Run V3 mới dùng roster xoay tua: mỗi mốc **50–950** roll đều từ **39 boss**, có thể lặp; Depth I/II/III theo tầng. Giữ 333/666/999 cố định. Boss ưu tiên trước RNGesus, ký ức và event thường.\n- Tầng **333** chọn một ấn War/Protection/Arcane, lưu một lần; tầng **666** có cửa rút thưởng trước trận. Vào Kabraxis thì không rút/bỏ qua. Hạ nhận SSR 66,6% / UR có nguyền 33,4%, bonus 66,6% cược và thức tỉnh ấn; không thêm rương/drop LUCK.\n- **Deimoss:** ba thanh HP độc lập 30/30/40%, không xuyên damage dư, không phản công khi chuyển phase; chỉ trao thưởng sau Phase 3.\n- Bảng boss hiển thị cơ chế, stack, cảnh báo và dự báo damage. **Chi tiết** giải thích cách xử lý. Chọn mục tiêu/Ward/Plane không tốn lượt; hành động boss tốn 1 lượt. Run bắt đầu trước cập nhật giữ roster cũ đến hết run; Tower giữ luật riêng.",

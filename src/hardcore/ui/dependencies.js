@@ -96,6 +96,8 @@ module.exports = function createModule(dependencies) {
     druid: `Vật lý ×1,35; hồi ${E.hp} **HP** cho bạn bằng **12% Max HP**, không vượt Max HP.`,
     necromancer: "Phép ×1,55, luôn trúng, không Crit; chặn phản công.",
     paladin: "Vật lý ×1,40 rồi tự Phòng thủ.",
+    rha_kor:
+      "Vật lý ×2,20 rồi đặt **Vết Khắc Cổ Luật** LV1 lên mục tiêu (3 lượt của Rha-Kor, không mang sang phòng sau). Mỗi hit chính trúng sau đó +1 cấp; LV3 phát nổ 280% ST vật lý, giảm 20% DEF mục tiêu trong 2 lượt.",
   };
 
   const SHRINES = {
@@ -114,6 +116,7 @@ module.exports = function createModule(dependencies) {
     get paladin() {
       return `${E.res} **RES** +10 khi nhận phép.`;
     },
+    rha_kor: "Khắc Lệnh Phá Giáp đặt Vết Khắc ở LV2 thay vì LV1.",
   };
 
   const { statNumber } = require("../shared/ui");

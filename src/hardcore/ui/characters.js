@@ -16,7 +16,7 @@ const { splitRuleFields } = require("./rulePages");
 const PAGE_SIZE = 12;
 const TABS = ["stats", "skills", "souls"];
 const icon = (c) =>
-  appEmoji("class_" + c.profileKey, c.id === "venance" ? "🔮" : "👤");
+  appEmoji("class_" + c.profileKey, c.id === "venance" ? "🔮" : c.id === "rha_kor" ? "🪨" : "👤");
 const number = (n) => Number(Number(n).toFixed(1)).toLocaleString("vi-VN");
 const pct = (n) => number(n * 100) + "%";
 const row = (component) => new ActionRowBuilder().addComponents(component);

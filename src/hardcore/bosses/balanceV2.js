@@ -4,6 +4,7 @@ const VERSION = 1;
 const TARGET = Object.freeze({ min: 0.08, max: 0.12 });
 const FACTORS = Object.freeze({
   venance: 2,
+  rha_kor: 0.504,
   amazon: 2.1,
   barbarian: 0.504,
   assassin: 0.36,
