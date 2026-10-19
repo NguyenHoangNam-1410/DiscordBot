@@ -382,7 +382,7 @@
         {
           "level": 6,
           "name": "Phán quyết tam trọng",
-          "description": "Sau thức tỉnh: đòn cường hóa hợp lệ thứ ba thêm một xung 40% sức sát thương đòn chính sau kháng. Không Crit, hồi MP, tạo proc hoặc chuyển sang mục tiêu/phase mới.",
+          "description": "Sau thức tỉnh: đòn cường hóa hợp lệ thứ ba thêm 1 xung bằng 40% sức sát thương của chính đòn đó (đã gồm hệ số ×2,6 và +60% của S3, tính sau kháng), tổng ≈ ×1,4. Xung hồi 0 MP, không Crit, không tạo proc; chỉ ra đòn nếu vẫn cùng mục tiêu và phase còn sống.",
           "emojiName": "soul_venance_6"
         }
       ]

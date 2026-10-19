@@ -1,5 +1,14 @@
 [
   {
+    "id": "0f16818d-1006-48d7-86e6-c15fc4130b29",
+    "updatedAt": "2026-10-19T08:11:12.962Z",
+    "auditedAt": "2026-10-19T08:11:12.962Z",
+    "title": "Venance S6: mô tả chi tiết hơn",
+    "changes": [
+      "Làm rõ S6 của Venance: xung tinh giới bằng 40% sức sát thương của chính đòn cường hóa thứ ba (tổng khoảng ×1,4), hồi 0 MP, không Crit, không tạo proc. Không thay đổi sức mạnh."
+    ]
+  },
+  {
     "id": "a69f88b3-aad6-48c2-b38a-b85371dd1459",
     "updatedAt": "2026-10-19T06:04:15.341Z",
     "auditedAt": "2026-10-19T06:04:15.341Z",
