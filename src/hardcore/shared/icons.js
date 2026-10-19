@@ -442,22 +442,28 @@ function characterActionIcon(state, action) {
   return (name && appEmoji(name)) || appEmoji(action + "_" + id) || fallback;
 }
 // Resolve Rift emojis after startup loads the application registry.
+// Biểu tượng Rift. Bốn hiệu ứng elite (Rift v3) tạm dùng emoji thường; thêm emoji ứng dụng rift_<key> sau là tự được dùng.
+const RIFT_FALLBACKS = Object.freeze({
+  stone_skin: "🌀",
+  elemental_dominion: "🌀",
+  bloodlust: "🌀",
+  unstable_rift: "🌀",
+  fortified: "🌀",
+  swift_horror: "🌀",
+  soul_drain: "🌀",
+  cursed_ground: "🌀",
+  arcane_ward: "🔮",
+  deathburst: "💥",
+  iron_hide: "🛡️",
+  predator: "🎯",
+});
 const RIFT_ICONS = Object.freeze(
   Object.defineProperties(
     {},
     Object.fromEntries(
-      [
-        "stone_skin",
-        "elemental_dominion",
-        "bloodlust",
-        "unstable_rift",
-        "fortified",
-        "swift_horror",
-        "soul_drain",
-        "cursed_ground",
-      ].map((key) => [
+      Object.entries(RIFT_FALLBACKS).map(([key, fallback]) => [
         key,
-        { enumerable: true, get: () => icon(`rift_${key}`, "🌀") },
+        { enumerable: true, get: () => icon(`rift_${key}`, fallback) },
       ]),
     ),
   ),

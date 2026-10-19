@@ -1,5 +1,16 @@
 [
   {
+    "id": "6987b21d-719e-4891-9b24-bd0da91b1e97",
+    "updatedAt": "2026-10-19T11:47:31.119Z",
+    "auditedAt": "2026-10-19T11:47:31.119Z",
+    "title": "Sinh tồn 3.2.0: Rift v3 và Elite",
+    "changes": [
+      "Bản 3.2.0: Rift v3 thêm 4 hiệu ứng cho Elite thường: Arcane Ward (RES), Deathburst (nổ khi chết, giảm bởi RES, để lại ít nhất 1 HP), Iron Hide (giảm DMG vật lý), Predator (Crit tới 18%).",
+      "Mỗi Elite thường mang ngẫu nhiên 1 loại bạn đã có stack, mạnh dần tới tối đa ở ×12. Elite của event (Guardian, Thief, Hunter…) không nhận. Dùng Rift Severance để xóa một loại.",
+      "Run đang chơi giữ Rift cũ (8 loại); chỉ run mới dùng Rift v3. Rift v3 có 12 loại nên mỗi loại lên chậm hơn."
+    ]
+  },
+  {
     "id": "88c63416-f206-4a95-9356-107b836b7dfd",
     "updatedAt": "2026-10-19T08:15:51.096Z",
     "auditedAt": "2026-10-19T08:15:51.096Z",

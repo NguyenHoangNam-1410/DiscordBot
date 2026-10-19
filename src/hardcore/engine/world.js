@@ -85,6 +85,23 @@ const RIFT_MODIFIERS = {
     name: "Cursed Ground",
     text: "**Bạn** bị giảm RES hiệu dụng khi nhận sát thương phép, tối đa **24 điểm phần trăm**.",
   },
+  // Rift v3 (3.2.0+): hiệu ứng của elite thường, mỗi elite mang ngẫu nhiên 1 loại đã có stack.
+  arcane_ward: {
+    name: "Arcane Ward",
+    text: "**Elite** mang Arcane Ward có **RES** tăng dần, tối đa **70%** ở ×12.",
+  },
+  deathburst: {
+    name: "Deathburst",
+    text: "**Elite** mang Deathburst khi bị hạ nổ gây DMG phép lên **bạn**, tối đa **50%** DMG phép của nó ở ×12; giảm bởi RES, để lại ít nhất 1 HP.",
+  },
+  iron_hide: {
+    name: "Iron Hide",
+    text: "**Elite** mang Iron Hide giảm DMG vật lý bạn gây ra, tối đa **70%** ở ×12.",
+  },
+  predator: {
+    name: "Predator",
+    text: "**Elite** mang Predator có tỷ lệ **Crit** tăng dần, tối đa **18%** (gấp 3 lần gốc) ở ×12.",
+  },
 };
 const BOSSES = [
   { name: "The Butcher", mechanic: "butcher", damageType: "physical" },

@@ -485,7 +485,13 @@ module.exports = function createModule(dependencies) {
         : Math.min(0.16, (state.modifiers.unstable_rift || 0) * 0.02),
       roll = rng();
     if (roll < 0.53 - extra) return world.makeEnemy(state, "normal", null, rng);
-    if (roll < 0.65 - extra) return world.makeEnemy(state, "elite", null, rng);
+    // Chỉ elite sinh từ roll thường nhận hiệu ứng elite của Rift v3; elite của event (Guardian, Thief, Hunter...) không nhận.
+    if (roll < 0.65 - extra)
+      return require("../rift").assignEliteEffect(
+        state,
+        world.makeEnemy(state, "elite", null, rng),
+        rng,
+      );
     if (roll < 0.75 - extra / 2) return makeChest(state, rng);
     if (roll < 0.83 - extra / 2) return makeShrine(state, rng);
     if (roll < 0.88) return makeChest(state, rng, true);

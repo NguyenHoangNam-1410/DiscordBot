@@ -230,7 +230,9 @@ module.exports = function createModule(dependencies) {
     if (require("../rift").enabled(state)) {
       require("../rift").reserve(state, floor, rng);
     } else if (floor % 10 === 0) {
-      const keys = Object.keys(world.RIFT_MODIFIERS),
+      const keys = Object.keys(world.RIFT_MODIFIERS).filter(
+          (key) => !require("../rift").ELITE_KEYS.includes(key),
+        ),
         missing = keys.filter((key) => !state.modifiers[key]);
       const key = pick(missing.length ? missing : keys, rng);
       const previous = state.modifiers[key] || 0;
