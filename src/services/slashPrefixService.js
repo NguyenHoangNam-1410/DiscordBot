@@ -123,7 +123,7 @@ function usage(prefix, route) {
   );
 }
 
-function rawOptions(definitions, tokens) {
+function rawOptions(definitions, tokens, greedyName = null) {
   const named = new Map(),
     positional = [];
   const names = new Set(definitions.map((option) => option.name));
@@ -150,10 +150,11 @@ function rawOptions(definitions, tokens) {
     const option = definitions[index];
     let value = named.get(option.name);
     if (!named.has(option.name) && positional.length) {
+      // greedyName: tùy chọn chuỗi nuốt toàn bộ phần còn lại dù phía sau còn tùy chọn không bắt buộc (vd /chatbot hoi <câu> [nguoi]).
       const isFinalText =
         option.type === T.String &&
         !option.choices?.length &&
-        index === definitions.length - 1;
+        (index === definitions.length - 1 || option.name === greedyName);
       value = isFinalText ? positional.splice(0).join(" ") : positional.shift();
     }
     if (value !== undefined) values.set(option.name, value);
@@ -395,7 +396,7 @@ async function handleSlashPrefix(message) {
     const tokens = tokenize(body.slice(first.length));
     route = commandRoute(schema, tokens);
     if (route.error) throw new Error(route.error);
-    const raw = rawOptions(route.definitions, tokens),
+    const raw = rawOptions(route.definitions, tokens, name === "chatbot" ? "noidung" : null),
       values = new Map();
     for (const option of route.definitions) {
       if (raw.has(option.name))
