@@ -198,6 +198,36 @@ test("S1: Skill đầu tiên mỗi combat hoàn 1 MP khi trúng", () => {
   assert.equal(s1.mana, 1, "Skill thứ hai không hoàn MP");
 });
 
+test("S1: Cổ Luật mở bởi Skill được giữ xuyên phòng; S0 thì không; hành động boss xóa", () => {
+  const room = () => {
+    const next = fixture();
+    return next;
+  };
+  for (const [soul, carries] of [[0, false], [1, true], [6, true]]) {
+    const s = fresh(soul);
+    s.encounter.hp = 100;
+    act(s, "skill"); // hạ quái và mở Cổ Luật
+    s.phase = "encounter";
+    s.floor = 7;
+    s.encounter = room();
+    core.prepareItemCombat(s, rng);
+    s.damageMin = s.damageMax = 100;
+    assert.equal(Boolean(kit.frame(s).law), carries, "S" + soul);
+    const basic = lost(fresh(soul), "attack");
+    const strike = lost(s, "attack");
+    if (carries) assert.ok(strike / basic > 1.35, "Luật Đoạn ở phòng sau");
+    else assert.ok(strike / basic < 1.05);
+    kit.validate(s);
+  }
+  const s = fresh(1);
+  act(s, "skill");
+  assert.ok(s.rhaCarry.law);
+  kit.offAction(s);
+  assert.equal(s.rhaCarry, undefined);
+  s.rhaCarry = { law: { window: 9 } };
+  assert.throws(() => kit.validate(s), /INVALID_RHA_KOR_STATE/);
+});
+
 test("S2: Skill kế tiếp giảm 1 MP (tối thiểu 1), Luật Phán +15%, trượt vẫn giữ hiệu ứng", () => {
   const s = fresh(2),
     s0 = fresh(0);

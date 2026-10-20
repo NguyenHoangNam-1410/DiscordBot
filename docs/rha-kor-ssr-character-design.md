@@ -102,7 +102,7 @@ Các bậc cộng dồn theo hệ thống Tinh Hồn hiện tại. Không mở S
 
 | Bậc | Tên | Hướng | Hiệu ứng |
 | --- | --- | --- | --- |
-| S1 | Bia Khai Mệnh | Vận hành | Skill đầu tiên trong mỗi combat hoàn lại 1 MP nếu gây sát thương chính lên mục tiêu hợp lệ. |
+| S1 | Bia Khai Mệnh | Vận hành | Skill đầu tiên trong mỗi combat hoàn lại 1 MP nếu gây sát thương chính lên mục tiêu hợp lệ. Cổ Luật mở bởi Skill được giữ xuyên phòng; cửa sổ chỉ giảm khi Rha-Kor hành động. |
 | S2 | Nét Khắc Bền Vững | Vận hành | Skill kế tiếp trong vòng 2 action được giảm 1 MP, tối thiểu còn 1 MP, Nếu Skill đó kích hoạt Luật Phán, nhận thêm 15% Damage. Nếu Skill bị trượt, hiệu ứng giảm MP vẫn được giữ lại cho lần Skill kế tiếp. Mỗi Cổ Luật chỉ kích hoạt hiệu ứng này một lần. |
 | S3 | Luật Đoạn Tuyệt | Damage | Bonus Luật Đoạn tăng từ **40% lên 80% DMG**; Luật Phán tăng từ **250% lên 280% STR**; giảm DEF tăng từ 20% lên 25%. |
 | S4 | Luật Hộ Phản Chấn | Vận hành | Barrier Luật Hộ tăng từ 12% lên 24% Max HP. Nếu Barrier hấp thụ damage, Attack kế tiếp nhận thêm +10% Damage. |

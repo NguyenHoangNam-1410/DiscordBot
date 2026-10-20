@@ -1,5 +1,16 @@
 [
   {
+    "id": "dec18876-627d-40e8-9a61-941c6afce570",
+    "updatedAt": "2026-10-20T16:34:24.982Z",
+    "auditedAt": "2026-10-20T16:34:24.982Z",
+    "title": "Rha-Kor S1: Cổ Luật xuyên phòng",
+    "type": "feature",
+    "scope": "survival",
+    "changes": [
+      "Từ S1, Cổ Luật mở bởi Khai Bia Cổ Luật được giữ sang phòng kế tiếp; cửa sổ chỉ giảm khi Rha-Kor hành động, hành động của boss vẫn kết thúc luật. S1 vẫn hoàn 1 MP cho Skill đầu tiên mỗi combat."
+    ]
+  },
+  {
     "id": "a340c2e6-a834-46c3-b83e-c4fc2f4ee962",
     "updatedAt": "2026-10-20T16:27:26.916Z",
     "auditedAt": "2026-10-20T16:27:26.916Z",
