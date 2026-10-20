@@ -145,7 +145,7 @@ async function main() {
       assert.equal(run.state.characterSoul.characterId, "rha_kor");
       assert.equal(
         require("../src/hardcore/characters/rhakor").config(run.state).phan,
-        level >= 3 ? 2.8 : 2.65,
+        level >= 3 ? 2.8 : 2.5,
       );
       assert.equal(run.state.characterSoul.bossMultiplier, level === 6 ? 1 : 1);
       repo.deleteSession(run.session.id);

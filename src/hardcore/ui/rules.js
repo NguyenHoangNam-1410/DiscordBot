@@ -78,7 +78,7 @@ module.exports = function createModule(dependencies) {
         {
           name: `${SKILL_ICONS.rha_kor} Rha-Kor · Cổ Luật`,
           value:
-            "Khai Bia Cổ Luật tốn 2 MP, gây 150% ST vật lý và mở Cổ Luật cho action kế tiếp. Attack = Luật Đoạn (+40% DMG, giảm 20% DEF mục tiêu 2 action); Defense = Luật Hộ (Barrier 12% Max HP, hồi 2 MP, giảm 25% sát thương nhận, Attack kế tiếp −12%); Potion = Luật Dẫn (+15% hồi máu, Attack kế tiếp hồi 12% sát thương gây ra); Skill lần hai = Luật Phán (265% ST, giảm 25% DEF, kết thúc luật). Nội tại: Attack/Skill bỏ qua 15% DEF. Max MP khởi đầu 4.",
+            "Khai Bia Cổ Luật tốn 2 MP, gây 150% ST vật lý và mở Cổ Luật cho action kế tiếp. Attack = Luật Đoạn (+40% DMG, giảm 20% DEF mục tiêu 2 action); Defense = Luật Hộ (Barrier 12% Max HP, hồi 2 MP, giảm 25% sát thương nhận, Attack kế tiếp −12%); Potion = Luật Dẫn (+15% hồi máu, Attack kế tiếp hồi 12% sát thương gây ra); Skill lần hai = Luật Phán (250% ST, giảm 25% DEF, kết thúc luật). Nội tại: Attack/Skill bỏ qua 15% DEF. Max MP khởi đầu 4.",
         },
         {
           name: `${eventIcon("boss")} Cơ chế boss`,
