@@ -75,8 +75,9 @@ module.exports = function createModule(dependencies) {
     const [, sessionId, rawTurn, rawAction, originMessageId] =
       interaction.customId.split(":");
     const action =
-      rawAction === "purifier_select"
-        ? "purifier_select_" +
+      rawAction === "purifier_select" || rawAction === "forge_select"
+        ? rawAction +
+          "_" +
           (interaction.values?.length === 1 ? interaction.values[0] : "")
         : rawAction === "event_select" ||
             rawAction === "boss_select" ||

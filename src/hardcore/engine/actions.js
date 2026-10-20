@@ -123,6 +123,26 @@ module.exports = function createModule(dependencies) {
         return null;
       }
     }
+    if (
+      state.encounter.type === "surprise" &&
+      state.encounter.kind === "horadric" &&
+      state.encounter.forge?.version === 2
+    ) {
+      if (action.startsWith("forge_select_")) {
+        const id = action.slice("forge_select_".length);
+        state.encounter.forge.targetId = id;
+        state.encounter.targetId = id;
+        state.encounter.forgePage = Math.floor(
+          state.items.findIndex((item) => item.definition.id === id) /
+            require("../equipment/forge").PAGE_SIZE,
+        );
+        return null;
+      }
+      if (action.startsWith("forge_page_")) {
+        state.encounter.forgePage = Number(action.slice("forge_page_".length));
+        return null;
+      }
+    }
     if (bosses.isFree(state, action)) {
       const decision = bosses.actComponent(state, action, {
         hurt,

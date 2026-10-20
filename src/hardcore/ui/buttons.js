@@ -113,7 +113,9 @@ module.exports = function createModule(dependencies) {
       state.encounter.type === "surprise" &&
       state.encounter.kind === "horadric" &&
       state.encounter.forge
-    )
+    ) {
+      // Forge v2: chọn món bằng menu riêng; Bỏ qua và Xác nhận là nút ngoài menu.
+      if (state.encounter.forge.version === 2) return [];
       return actions.filter(
         (a) =>
           a.action === "event_skip" ||
@@ -121,6 +123,7 @@ module.exports = function createModule(dependencies) {
           a.action === "forge_lend" ||
           /^forge_boon_[0-2]$/.test(a.action),
       );
+    }
     if (
       actions.filter(
         (a) => a.action !== "retreat" && !a.action.startsWith("view_"),
@@ -212,6 +215,7 @@ module.exports = function createModule(dependencies) {
     const buttonActions = actions.filter(
       (a) =>
         !a.action.startsWith("purifier_select_") &&
+        !a.action.startsWith("forge_select_") &&
         !a.menu &&
         !menuIds.has(a.action),
     );
@@ -455,6 +459,40 @@ module.exports = function createModule(dependencies) {
       result.unshift(new ActionRowBuilder().addComponents(menu));
     }
 
+    if (
+      state.phase === "encounter" &&
+      state.encounter.type === "surprise" &&
+      state.encounter.kind === "horadric" &&
+      state.encounter.forge?.version === 2 &&
+      state.items.length
+    ) {
+      const forge = require("../equipment/forge");
+      const wait = (item) => forge.delay(item);
+      result.unshift(
+        new ActionRowBuilder().addComponents(
+          new StringSelectMenuBuilder()
+            .setCustomId(prefix + "forge_select")
+            .setPlaceholder(
+              "Chọn món để nâng cấp · " + (forge.page(state) + 1) + "/" + forge.pages(state),
+            )
+            .setMinValues(1)
+            .setMaxValues(1)
+            .addOptions(
+              forge.pageItems(state).map((item) => ({
+                label: (item.name + " · Lv." + item.level).slice(0, 100),
+                value: item.definition.id,
+                description: (
+                  (forge.RARITY_LABEL[item.definition.rarity] || "") +
+                  " · " +
+                  (wait(item) === 0 ? "nâng ngay" : "về sau " + wait(item) + " tầng")
+                ).slice(0, 100),
+                default: item.definition.id === state.encounter.forge.targetId,
+                emoji: menuEmoji(itemIcon(item)),
+              })),
+            ),
+        ),
+      );
+    }
     result.push(
       new ActionRowBuilder().addComponents(
         viewTabs(state).map((tab) =>

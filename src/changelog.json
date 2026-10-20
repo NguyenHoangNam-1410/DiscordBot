@@ -1,5 +1,15 @@
 [
   {
+    "id": "91455cc3-76b2-48f5-8719-1a744c1d527c",
+    "updatedAt": "2026-10-20T08:22:53.552Z",
+    "auditedAt": "2026-10-20T08:22:53.552Z",
+    "title": "Horadric Forge: chọn món tự do, nút Bỏ qua riêng",
+    "changes": [
+      "Horadric Forge cho chọn bất kỳ trang bị nào trong túi bằng menu (có phân trang 25 món/trang); chưa chọn thì chưa xác nhận được.",
+      "Nút xác nhận và nút Bỏ qua nằm ngoài menu chọn món; menu hiển thị hạng và thời gian món về."
+    ]
+  },
+  {
     "id": "ed76f8b6-8c23-4e25-85ec-a68510acad51",
     "updatedAt": "2026-10-20T01:59:53.606Z",
     "auditedAt": "2026-10-20T01:59:53.606Z",

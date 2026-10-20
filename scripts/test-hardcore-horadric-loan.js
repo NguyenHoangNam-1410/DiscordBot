@@ -142,4 +142,46 @@ test("Qua tầng thật: completeFloor trả món đến hạn trước khi sinh
   assert.equal(item(s, def).level, 3);
   assert.match(s.lastLog, /Horadric Forge trả lại/);
 });
+test("UX: chọn bất kỳ món trong túi bằng menu, Bỏ qua tách riêng, chưa chọn thì chưa xác nhận", () => {
+  const view = require("../src/hardcore/ui");
+  const s = stats.createState("barbarian", 10000, { gameplayVersion: 3 });
+  const usable = pool.filter((i) => i.category !== "consumable" && !i.effects.escapeTokens);
+  for (const d of usable.slice(0, 30)) core.receiveItem(s, d, 1);
+  s.floor = 21;
+  s.cleared = 20;
+  s.phase = "encounter";
+  s.encounter = core.makeSurprise(s, () => 0.5, "horadric");
+  assert.equal(s.encounter.forge.targetId, null);
+  assert.throws(() => core.act(s, session, "forge_lend", () => 0.99), /INVALID_ACTION/);
+  const ui = () => view.rows("sid", s).map((r) => r.toJSON());
+  let rows = ui();
+  const menu = rows[0].components[0];
+  assert.equal(menu.type, 3);
+  assert.equal(menu.options.length, 25, "một trang menu 25 món");
+  const flat = rows.flatMap((r) => r.components);
+  assert.ok(flat.some((c) => c.custom_id?.endsWith(":event_skip")), "Bỏ qua là nút riêng");
+  assert.ok(!menu.options.some((o) => o.value === "event_skip"), "Bỏ qua không nằm trong menu");
+  assert.ok(flat.find((c) => c.custom_id?.endsWith(":forge_lend")).disabled);
+  // chọn món ở trang 2 qua phân trang, không tốn lượt
+  const turn = s.turn;
+  core.act(s, session, "forge_page_1", () => 0.99);
+  rows = ui();
+  assert.equal(rows[0].components[0].options.length, s.items.length - 25);
+  const pick = s.items[s.items.length - 1];
+  core.act(s, session, "forge_select_" + pick.definition.id, () => 0.99);
+  assert.equal(s.turn, turn, "chọn món không tốn lượt");
+  assert.equal(s.encounter.forge.targetId, pick.definition.id);
+  rows = ui();
+  assert.ok(rows[0].components[0].options.some((o) => o.default && o.value === pick.definition.id));
+  assert.ok(!rows.flatMap((r) => r.components).find((c) => c.custom_id?.endsWith(":forge_lend")).disabled);
+  const ids = rows.flatMap((r) => r.components.map((c) => c.custom_id));
+  assert.equal(new Set(ids).size, ids.length);
+  assert.ok(rows.length <= 5);
+  // chọn một món khác vẫn được, rồi bỏ qua giữ nguyên túi
+  core.act(s, session, "forge_select_" + s.items[0].definition.id, () => 0.99);
+  const owned = s.items.length;
+  core.act(s, session, "event_skip", () => 0.99);
+  assert.equal(s.items.length, owned);
+  assert.equal(s.forgeLoans, undefined);
+});
 console.log("horadric loan ok (" + count + ")");
