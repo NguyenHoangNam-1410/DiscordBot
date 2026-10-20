@@ -34,6 +34,7 @@ function config(s) {
     danHeal: 1.15,
     leech: 0.12,
     s1: n >= 1,
+    carry: n >= 1,
     lawWindow: n >= 6 ? 3 : 1,
     boon: awake,
     boonBonus: n >= 5 ? 0.35 : 0.25,
@@ -45,9 +46,12 @@ function config(s) {
 function frame(s) {
   const e = s.encounter;
   if (!enabled(s) || e?.type !== "combat") return null;
+  // S1: Cổ Luật mở bởi Skill được giữ sang phòng kế tiếp (cửa sổ chỉ trừ khi Rha-Kor hành động).
+  const carried = level(s) >= 1 ? s.rhaCarry?.law : null;
+  if (!e.rhaKor) delete s.rhaCarry;
   e.rhaKor ||= {
     version: 2,
-    law: null,
+    law: carried ? { window: carried.window } : null,
     discount: null,
     boon: null,
     shred: null,
@@ -64,6 +68,15 @@ function frame(s) {
 const peek = (s) => (enabled(s) ? s.encounter?.rhaKor || null : null);
 function validate(s) {
   if (s.rhaGuard !== undefined) throw Error("INVALID_RHA_KOR_STATE");
+  const carry = s.rhaCarry;
+  if (
+    carry != null &&
+    (!enabled(s) ||
+      !Number.isSafeInteger(carry.law?.window) ||
+      carry.law.window < 1 ||
+      carry.law.window > 4)
+  )
+    throw Error("INVALID_RHA_KOR_STATE");
   const f = enabled(s) ? s.encounter?.rhaKor : null;
   if (!f) return;
   const windowOk = (w, max) =>
@@ -314,12 +327,17 @@ function after(s, api = {}) {
     out.log += "\n" + icon() + " Hoàn thành " + NAMES[t.mode] + ": nhận Quyền Khắc (" + c.boonWindow + " action).";
   }
   if (f.shred && --f.shred.turns <= 0) f.shred = null;
+  if (c.carry) {
+    if (f.law) s.rhaCarry = { law: { window: f.law.window } };
+    else delete s.rhaCarry;
+  }
   return out;
 }
 // Hành động của boss (không thuộc Attack/Defense/Potion/Skill) làm Cổ Luật đang mở kết thúc.
 function offAction(s) {
   const f = peek(s);
   if (f?.law) f.law = null;
+  delete s.rhaCarry;
 }
 function lawText(f) {
   return f?.law ? "Cổ Luật mở (" + f.law.window + " action)" : "Chưa mở Cổ Luật";

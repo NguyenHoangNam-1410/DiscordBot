@@ -399,7 +399,7 @@
         {
           "level": 1,
           "name": "Bia Khai Mệnh",
-          "description": "Skill đầu tiên trong mỗi combat hoàn lại 1 MP nếu gây sát thương chính lên mục tiêu hợp lệ.",
+          "description": "Skill đầu tiên trong mỗi combat hoàn lại 1 MP nếu gây sát thương chính lên mục tiêu hợp lệ. Cổ Luật mở bởi Skill được giữ xuyên phòng; cửa sổ chỉ giảm khi Rha-Kor hành động.",
           "emojiName": "soul_rha_kor_1"
         },
         {
