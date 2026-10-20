@@ -11,7 +11,7 @@
 ## Player changelog
 
 - For every update requested by the user, audit the final changes and add an entry to `src/changelog.json` before committing/pushing. Include the actual update time and concise Vietnamese descriptions of what changed for players.
-- Use `npm run changelog:add -- --title "Tiêu đề" --change "Nội dung"`; repeat `--change` for multiple bullets. This records update/audit timestamps automatically.
+- Use `npm run changelog:add -- --title "Tiêu đề" --type <loại> --scope <đối tượng> --change "Nội dung"`; repeat `--change` for multiple bullets. `--type` is one of `feature|fix|balance|improvement|maintenance` (Tính năng, Sửa lỗi, Điều chỉnh, Cải thiện, Bảo trì) and `--scope` is the game/system (`survival|tower|blackjack|poker|coquay|taixiu|baucua|mines|chinchiro|horse|vuatiengviet|chatbot|profile|system`); both are required and drive the `/changelog` filters. This records update/audit timestamps automatically.
 - For historical backfill, pass `--commit <SHA>` to take the update timestamp and full SHA from Git. Verify the commit's changes before describing them; do not invent dates or features.
 - Keep old entries as history. For a later balance change, create a new entry stating the new values instead of rewriting the old release.
 - Never include tokens, credentials, private player data, or raw internal logs in player descriptions.

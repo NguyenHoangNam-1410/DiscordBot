@@ -74,7 +74,7 @@ const PAGES = Object.freeze({
       ],
       [
         "📋 Cập nhật",
-        "`/changelog` — xem cập nhật mới nhất, chuyển trang để xem lịch sử.",
+        "`/changelog` — xem cập nhật mới nhất, chuyển trang hoặc lọc theo loại thay đổi và trò chơi.",
       ],
       [
         "📖 Hướng dẫn cũ",

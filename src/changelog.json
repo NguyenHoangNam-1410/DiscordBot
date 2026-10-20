@@ -1,9 +1,23 @@
 [
   {
+    "id": "9807404d-ce73-4e9d-b2f6-cd190dbfe1a6",
+    "updatedAt": "2026-10-20T11:31:52.384Z",
+    "auditedAt": "2026-10-20T11:31:52.384Z",
+    "title": "Changelog có bộ lọc theo loại và đối tượng",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Mỗi bản cập nhật nay ghi rõ loại thay đổi (Tính năng, Sửa lỗi, Điều chỉnh, Cải thiện, Bảo trì) và đối tượng (trò chơi hoặc hệ thống).",
+      "/changelog có hai menu lọc theo loại và đối tượng, kết hợp được và giữ nguyên khi chuyển trang; cũng lọc sẵn bằng tùy chọn loai và doi_tuong của lệnh. Toàn bộ lịch sử cũ đã được phân loại."
+    ]
+  },
+  {
     "id": "295904d4-0636-4aad-8fc8-e5326ef9bc1d",
     "updatedAt": "2026-10-20T10:26:24.487Z",
     "auditedAt": "2026-10-20T10:26:24.487Z",
     "title": "Chatbot tra cứu Google",
+    "type": "feature",
+    "scope": "chatbot",
     "changes": [
       "Khi dùng Gemini và bật CHATBOT_GOOGLE_SEARCH=1, chatbot tự tìm trên Google cho câu hỏi cần thông tin mới và kèm tối đa 3 link nguồn dưới câu trả lời."
     ]
@@ -13,6 +27,8 @@
     "updatedAt": "2026-10-20T08:22:53.552Z",
     "auditedAt": "2026-10-20T08:22:53.552Z",
     "title": "Horadric Forge: chọn món tự do, nút Bỏ qua riêng",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Horadric Forge cho chọn bất kỳ trang bị nào trong túi bằng menu (có phân trang 25 món/trang); chưa chọn thì chưa xác nhận được.",
       "Nút xác nhận và nút Bỏ qua nằm ngoài menu chọn món; menu hiển thị hạng và thời gian món về."
@@ -23,6 +39,8 @@
     "updatedAt": "2026-10-20T01:59:53.606Z",
     "auditedAt": "2026-10-20T01:59:53.606Z",
     "title": "Kiến thức chatbot chỉ dành cho admin",
+    "type": "improvement",
+    "scope": "chatbot",
     "changes": [
       "/chatbot kienthuc nay chỉ admin xem được; thành viên thường không còn đọc được nội dung server đã dạy cho chatbot."
     ]
@@ -32,6 +50,8 @@
     "updatedAt": "2026-10-19T14:25:34.227Z",
     "auditedAt": "2026-10-19T14:25:34.227Z",
     "title": "Beta chọn tinh hồn khởi điểm",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "/sinhton beta có thêm tùy chọn tinh_hon (S0–S6) để thử nhanh từng bậc tinh hồn của Rha-Kor mà không cần sở hữu nhân vật. Nếu đang có run beta thì giữ tinh hồn cũ; kết thúc beta rồi mở lại để đổi."
     ]
@@ -41,6 +61,8 @@
     "updatedAt": "2026-10-19T14:14:30.709Z",
     "auditedAt": "2026-10-19T14:14:30.709Z",
     "title": "Sửa lỗi nút tab con Túi/Chỉ số/Rift",
+    "type": "fix",
+    "scope": "survival",
     "changes": [
       "Sửa lỗi bảng Chỉ số, Túi đồ và Rift không hiển thị được do hai nút trùng mã (tab chính và tab con đầu tiên)."
     ]
@@ -50,6 +72,8 @@
     "updatedAt": "2026-10-19T14:05:51.522Z",
     "auditedAt": "2026-10-19T14:05:51.522Z",
     "title": "Sửa lỗi không mở được bảng chi tiết",
+    "type": "fix",
+    "scope": "survival",
     "changes": [
       "Sửa lỗi bảng Chỉ số > Hành động không mở được khi đang có Paradox Unstable Soul và chưa vào trận (hiện báo \"Không thể mở bảng chi tiết Sinh tồn\")."
     ]
@@ -59,6 +83,8 @@
     "updatedAt": "2026-10-19T13:47:33.147Z",
     "auditedAt": "2026-10-19T13:47:33.147Z",
     "title": "Chỉ số, Túi đồ, Rift chia tab con",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Chỉ số chia 4 tab: Tổng quan (nguồn chỉ số theo từng nguồn, buff/debuff, mục Sắp tới), Nhân vật (tinh hồn, nội tại, affinity, thức tỉnh, mastery), Trang bị (tổng hợp, nội tại, giới hạn) và Hành động (Skill/Tấn công/Phòng thủ kèm sát thương dự kiến).",
       "Túi đồ chia 3 tab: Vật tư (kèm mảnh), Trang bị (có phân trang và mục món đang gửi Horadric Forge), Set & Di vật.",
@@ -70,6 +96,8 @@
     "updatedAt": "2026-10-19T13:25:50.190Z",
     "auditedAt": "2026-10-19T13:25:50.190Z",
     "title": "Horadric Forge: mượn và nâng cấp trang bị",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Horadric Forge không còn đổi level lấy chỉ số. Nay mượn một trang bị, nâng +2 level rồi trả lại.",
       "Hạng R nâng cấp ngay lập tức; SR trả sau 10 tầng, SSR sau 25 tầng, UR sau 50 tầng, ở tầng hợp lệ kế tiếp (không phải tầng boss, tối đa tầng 998).",
@@ -82,6 +110,8 @@
     "updatedAt": "2026-10-19T12:07:19.248Z",
     "auditedAt": "2026-10-19T12:07:19.248Z",
     "title": "Rha-Kor · Kẻ Khắc Chiến Luật (SSR)",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Thêm nhân vật SSR Rha-Kor (Chiến binh, STR): Max MP khởi đầu 4, Skill Khắc Lệnh Phá Giáp tốn 2 MP gây 220% sát thương vật lý và đặt Vết Khắc Cổ Luật.",
       "Vết Khắc tăng 1 cấp sau mỗi đòn chính trúng, tồn tại 3 lượt của Rha-Kor và không mang sang phòng sau; đạt LV3 sẽ phát nổ 280% sát thương, giảm 20% DEF mục tiêu trong 2 lượt.",
@@ -95,6 +125,8 @@
     "updatedAt": "2026-10-19T11:47:31.119Z",
     "auditedAt": "2026-10-19T11:47:31.119Z",
     "title": "Sinh tồn 3.2.0: Rift v3 và Elite",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Bản 3.2.0: Rift v3 thêm 4 hiệu ứng cho Elite thường: Arcane Ward (RES), Deathburst (nổ khi chết, giảm bởi RES, để lại ít nhất 1 HP), Iron Hide (giảm DMG vật lý), Predator (Crit tới 18%).",
       "Mỗi Elite thường mang ngẫu nhiên 1 loại bạn đã có stack, mạnh dần tới tối đa ở ×12. Elite của event (Guardian, Thief, Hunter…) không nhận. Dùng Rift Severance để xóa một loại.",
@@ -106,6 +138,8 @@
     "updatedAt": "2026-10-19T08:15:51.096Z",
     "auditedAt": "2026-10-19T08:15:51.096Z",
     "title": "Venance: làm lại S5 và S6",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "S5 (Cổ ngữ hoàn thiện): mỗi quái hạ bằng đòn cường hóa tạo 1 stack Dư Âm Cổ Ngữ (tối đa 3); khi chuỗi cường hóa kết thúc, mỗi stack hoàn 1 MP.",
       "S6 đổi thành Hoàn nguyên cổ ngữ: khi chuỗi cường hóa hết 3 hành động, hoàn thêm 2 MP (bằng chi phí Skill). Xung 40% sát thương của S6 cũ bị bỏ; đòn cường hóa thứ ba chỉ còn hệ số S3.",
@@ -117,6 +151,8 @@
     "updatedAt": "2026-10-19T08:11:12.962Z",
     "auditedAt": "2026-10-19T08:11:12.962Z",
     "title": "Venance S6: mô tả chi tiết hơn",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Làm rõ S6 của Venance: xung tinh giới bằng 40% sức sát thương của chính đòn cường hóa thứ ba (tổng khoảng ×1,4), hồi 0 MP, không Crit, không tạo proc. Không thay đổi sức mạnh."
     ]
@@ -126,6 +162,8 @@
     "updatedAt": "2026-10-19T06:04:15.341Z",
     "auditedAt": "2026-10-19T06:04:15.341Z",
     "title": "Thành tựu Bounty Hunter và Đàn Tứ Ấn",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Thêm 8 thành tựu: giao nộp Vé thoát cho Bounty Hunter (1/5/15 lần), chống trả Bounty Hunter (1/5 lần), nhận Vé hồi sinh từ Đàn Tứ Ấn (1/3/10 lần). Xem ở /kiemtra, mục Sinh tồn · sự kiện và chiến đấu.",
       "Thêm thành tựu mốc tầng 50/150/300/500 cho class Venance."
@@ -136,6 +174,8 @@
     "updatedAt": "2026-10-19T06:01:31.653Z",
     "auditedAt": "2026-10-19T06:01:31.653Z",
     "title": "Đàn Tứ Ấn và Vé hồi sinh",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Thêm event Đàn Tứ Ấn: thu thập đủ 4 ấn nghịch (Ấn Phản Vương, Ấn Hắc Giới, Ấn Sinh Mệnh, Ấn Truy Nã) để nhận 1 Vé hồi sinh dùng trong run đó. Chỉ 1 lần mỗi run.",
       "Vé hồi sinh không còn bán ở cửa hàng Sinh tồn. Vé đang có trong kho được hoàn 300 kim cương mỗi vé; vé đang nằm trong run đang chơi giữ nguyên.",
@@ -147,6 +187,8 @@
     "updatedAt": "2026-10-19T05:46:07.889Z",
     "auditedAt": "2026-10-19T05:46:07.889Z",
     "title": "Bounty Hunter: VIT +30 cộng thẳng",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Giao nộp Bounty Hunter nay cộng thẳng VIT +30 vào chỉ số (thay cho phúc ấn VIT +40) mỗi lần giao nộp; còn Vé thoát thì có thể gặp lại.",
       "Chống trả vẫn giữ vé và không gặp lại thợ săn, Hối lộ RNGesus tăng dần 5% sau mỗi lần hối lộ. Bounty Hunter chỉ xuất hiện khi bạn đang giữ Vé thoát."
@@ -157,6 +199,8 @@
     "updatedAt": "2026-10-19T05:41:50.639Z",
     "auditedAt": "2026-10-19T05:41:50.639Z",
     "title": "Sinh tồn: Bounty Hunter",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Thêm bẫy mới Bounty Hunter · Thợ Săn Tiền Thưởng (từ tầng 20, khi bạn đang giữ Vé thoát, chỉ gặp 1 lần mỗi run).",
       "Giao nộp: mất 1 Vé thoát, nhận Bounty Seal VIT +40 đến hết run.",
@@ -168,6 +212,8 @@
     "updatedAt": "2026-10-19T04:36:23.783Z",
     "auditedAt": "2026-10-19T04:36:23.783Z",
     "title": "Chatbot biết ai đang hỏi",
+    "type": "feature",
+    "scope": "chatbot",
     "changes": [
       "Chatbot nhận biết tên người đang hỏi và những người được nhắc, nên làm theo cách xưng hô admin đã dạy (ví dụ gọi chủ server là sếp).",
       "/chatbot hoi và /chatbot nho có thêm tùy chọn nguoi để chọn người cần nhắc tới hoặc gắn thông tin cho họ."
@@ -178,6 +224,8 @@
     "updatedAt": "2026-10-19T03:48:56.740Z",
     "auditedAt": "2026-10-19T03:48:56.740Z",
     "title": "Dạy chatbot về server",
+    "type": "feature",
+    "scope": "chatbot",
     "changes": [
       "Admin dạy chatbot kiến thức riêng của server bằng /chatbot nho (tối đa 15 thông tin), xóa bằng /chatbot quen.",
       "Admin đặt giọng điệu cho chatbot bằng /chatbot tinhcach; mọi người xem bot được dạy gì bằng /chatbot kienthuc."
@@ -188,6 +236,8 @@
     "updatedAt": "2026-10-19T01:37:33.940Z",
     "auditedAt": "2026-10-19T01:37:33.940Z",
     "title": "Rương boss hiển thị cấp gọn hơn",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Bảng chính, Chi tiết và nút chọn của rương boss ghi gọn dạng Tên [độ hiếm]: Lv.X → Lv.X+1; món chưa có ghi Mới · Lv.1.",
       "Chi tiết vẫn hiện chỉ số trước → sau khi nâng cấp.",
@@ -199,6 +249,8 @@
     "updatedAt": "2026-10-19T01:31:16.780Z",
     "auditedAt": "2026-10-19T01:31:16.780Z",
     "title": "Rương boss hiện rõ nâng cấp trang bị",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Rương boss cuối khu vực ghi rõ từng món là Món mới (Lv.1) hay Nâng cấp Lv.X → Lv.X+1 ngay trên bảng chính, nút chọn và menu.",
       "Mục Chi tiết của rương boss hiện chỉ số trang bị trước/sau khi lên level, vật tư nhận lại, lớp nguyền thêm và ghi chú nội tại giữ nguyên.",
@@ -210,6 +262,8 @@
     "updatedAt": "2026-10-17T13:51:51.642Z",
     "auditedAt": "2026-10-17T13:51:51.642Z",
     "title": "Thưởng hợp tác với Tax Collector và The Thief",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Đã nộp thuế ít nhất một lần và không chống trả: sau boss 950 nhận một lượt giải toàn bộ nguyền của một trang bị miễn phí. Tax Collector ngừng xuất hiện từ tầng 950.",
       "Lượt giải nguyền có thể dùng ngay, để dành cho Purifier hoặc dùng ở cuộc gặp trước boss 999; giữ độ hiếm, level, buff và nội tại, không trừ payout, chỉ một lần trong run.",
@@ -222,6 +276,8 @@
     "updatedAt": "2026-10-17T08:21:56.774Z",
     "auditedAt": "2026-10-17T08:21:56.774Z",
     "title": "Tăng trần Tower's Guardian lên 40%",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Tower's Guardian tăng giới hạn HP boss mất từ 20% lên 40% Max HP cho mỗi đòn và tổng mỗi lượt, gồm hit phụ, gai và phản đòn. Mô tả boss hiển thị mức trần mới."
     ]
@@ -231,6 +287,8 @@
     "updatedAt": "2026-10-16T15:13:41.555Z",
     "auditedAt": "2026-10-16T15:13:41.555Z",
     "title": "Sửa hiển thị nội tại Túi bình và Phản thủ",
+    "type": "fix",
+    "scope": "survival",
     "changes": [
       "Túi bình hiển thị rõ số bình máu có thể giữ thêm và không tặng bình, thay cho chữ undefined.",
       "Sửa icon hành động Phòng thủ trong mô tả nội tại Phản thủ, loại bỏ chữ undefined."
@@ -241,6 +299,8 @@
     "updatedAt": "2026-10-16T14:31:00.217Z",
     "auditedAt": "2026-10-16T14:31:00.217Z",
     "title": "Sửa lỗi khi chọn Rift Contract",
+    "type": "fix",
+    "scope": "survival",
     "changes": [
       "Sửa lỗi khiến lượt Sinh tồn không xử lý được khi chọn Rift Contract do thiếu icon kỹ năng lúc ghi replay; áp dụng cho các giao kèo không dùng bình, kỹ năng hoặc phòng thủ."
     ]
@@ -250,6 +310,8 @@
     "updatedAt": "2026-10-16T10:48:42.502Z",
     "auditedAt": "2026-10-16T10:48:42.502Z",
     "title": "Chatbot không bị cụt câu",
+    "type": "fix",
+    "scope": "chatbot",
     "changes": [
       "Sửa lỗi câu trả lời của chatbot bị cắt giữa chừng; nếu câu trả lời quá dài vẫn bị cắt thì bot ghi chú rõ."
     ]
@@ -259,6 +321,8 @@
     "updatedAt": "2026-10-16T10:30:21.628Z",
     "auditedAt": "2026-10-16T10:30:21.628Z",
     "title": "Chuẩn hóa chính tả Vua tiếng Việt",
+    "type": "improvement",
+    "scope": "vuatiengviet",
     "changes": [
       "Kiểm tra từ trước khi tạo đề và trộn chữ; thống nhất vị trí dấu như thuỷ → thủy, hoả → hỏa, khoẻ → khỏe, giữ đúng các trường hợp quý/quỷ/quỹ.",
       "Chuẩn hóa 259 mục từ, gộp từ trùng và loại dữ liệu sai định dạng; đồng bộ chữ xáo trộn với đáp án và sửa câu cũ khi khôi phục mà giữ thời hạn.",
@@ -270,6 +334,8 @@
     "updatedAt": "2026-10-16T10:11:54.086Z",
     "auditedAt": "2026-10-16T10:11:54.086Z",
     "title": "Rift Duelist: hòa đánh lại",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Rift Duelist chỉ tính ván có thắng hoặc thua; hòa đánh lại, không tăng số ván, không thưởng hoặc phạt thuộc tính/trang bị.",
       "Đấu trang bị tính tối đa 5 ván thắng/thua, cần thắng 3 ván; cập nhật mô tả tỷ lệ thắng thử thách thành 50%."
@@ -280,6 +346,8 @@
     "updatedAt": "2026-10-16T09:21:28.696Z",
     "auditedAt": "2026-10-16T09:21:28.696Z",
     "title": "Nâng cấp giao diện replay",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Thay JSON thay đổi chỉ số bằng các mức tăng/giảm dễ đọc như HP +7, MP +1; đối chiếu trực tiếp hai mốc liên tiếp.",
       "Trang bị, Rift và hiệu ứng có nút chuyển trang riêng ở góc phải. Rift diễn giải cơ chế và trạng thái chiến đấu thay cho dữ liệu thô.",
@@ -291,6 +359,8 @@
     "updatedAt": "2026-10-16T08:55:19.402Z",
     "auditedAt": "2026-10-16T08:55:19.402Z",
     "title": "Replay Sinh tồn offline",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Thêm /sinhton replay ma_van để tải file HTML xem ván đã kết thúc theo lượt hoặc tầng, có nhập số, Trước/Sau và thanh tiến trình.",
       "Tự lưu snapshot trạng thái và log mỗi hành động, cùng giao dịch xử lý ván; replay giữ dữ liệu tại thời điểm chơi, không chạy lại luật game.",
@@ -302,6 +372,8 @@
     "updatedAt": "2026-10-16T07:25:17.192Z",
     "auditedAt": "2026-10-16T07:25:17.192Z",
     "title": "Sửa selector trang bị",
+    "type": "fix",
+    "scope": "survival",
     "changes": [
       "Selector trang bị mang theo và selector mua hàng hiển thị icon riêng cho từng món, có icon dự phòng khi chưa có emoji.",
       "Mô tả trang bị trong selector hiển thị chữ rõ ràng, bỏ mã emoji thô trước khi rút gọn để không bị cắt dở mã."
@@ -312,6 +384,8 @@
     "updatedAt": "2026-10-16T07:19:59.761Z",
     "auditedAt": "2026-10-16T07:19:59.761Z",
     "title": "Tinh gọn màn hình bắt đầu Sinh tồn",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Màn hình bắt đầu chỉ giữ hướng dẫn, mức cược và selector nhân vật; chỉ hiện chi tiết chỉ số, kỹ năng và nội tại sau khi chọn nhân vật."
     ]
@@ -321,6 +395,8 @@
     "updatedAt": "2026-10-16T07:18:09.905Z",
     "auditedAt": "2026-10-16T07:18:09.905Z",
     "title": "Banner gacha công khai",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Lệnh /sinhton gacha mở banner công khai trong kênh; chỉ người mở được thao tác và quay bằng tài nguyên của mình."
     ]
@@ -330,6 +406,8 @@
     "updatedAt": "2026-10-16T07:15:12.597Z",
     "auditedAt": "2026-10-16T07:15:12.597Z",
     "title": "Sửa lỗi mở Sinh tồn",
+    "type": "fix",
+    "scope": "survival",
     "changes": [
       "Sửa lỗi /sinhton batdau không mở được bảng chuẩn bị khi danh sách nhân vật dùng emoji riêng vượt giới hạn Discord.",
       "Chia nội dung giới thiệu theo giới hạn mỗi field, hỗ trợ đầy đủ danh sách có Venance và màn hình xem từng nhân vật."
@@ -340,6 +418,8 @@
     "updatedAt": "2026-10-16T06:52:02.375Z",
     "auditedAt": "2026-10-16T06:52:02.375Z",
     "title": "Thẻ nhân vật và nâng độ hiếm",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Tinh hồn chỉ dùng thẻ của chính nhân vật; nhận trùng SR cho 5 thẻ, SSR cho 50 thẻ của nhân vật đó.",
       "Nhân vật SSR đạt S6 có thể nâng UR rồi LR trong bảng Nhân vật, mỗi bước dùng 2 cọc 50 thẻ SSR cùng class; có thể dùng 100 thẻ từ một nhân vật hoặc 50 thẻ từ hai nhân vật.",
@@ -351,6 +431,8 @@
     "updatedAt": "2026-10-16T05:45:37.766Z",
     "auditedAt": "2026-10-16T05:45:37.766Z",
     "title": "Tinh gọn giao diện banner nhân vật",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Bảng banner chính hiển thị nhân vật rate-up, mô tả Skill ngắn kèm icon, số dư tài nguyên và giá quay x1/x10.",
       "Nút Chi tiết banner chứa tỷ lệ, pool và quy tắc gacha/rate-up/Spark; có nút Về banner. Đổi Spark tại /sinhton cuahang."
@@ -361,6 +443,8 @@
     "updatedAt": "2026-10-16T05:34:06.045Z",
     "auditedAt": "2026-10-16T05:34:06.045Z",
     "title": "Đổi Spark tại cửa hàng Sinh tồn",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Chuyển đổi Spark sang /sinhton cuahang: 200 Spark đổi nhân vật rate-up của banner đang mở, hiện là Venance; trùng nhận 50 thẻ SSR cùng class.",
       "Bảng gacha dẫn sang cửa hàng Spark; nút đổi cũ chỉ mở cửa hàng, không tự trừ Spark. Chặn đổi nhân vật ngoài rate-up."
@@ -371,6 +455,8 @@
     "updatedAt": "2026-10-16T05:13:28.585Z",
     "auditedAt": "2026-10-16T05:13:28.585Z",
     "title": "Banner Spark Venance · Astral Armament",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Thêm banner Venance kèm graphic riêng: 300 gem/lượt, x10 giá 3.000 gem; R 80%, SR 19%, SSR 1%.",
       "Roll độ hiếm trước rồi mới xét rate-up SSR 50%; hiện chỉ có Venance trong nhóm SSR nên mọi kết quả SSR đều là Venance. Không có pity hay bảo hiểm trượt rate-up.",
@@ -382,6 +468,8 @@
     "updatedAt": "2026-10-16T04:32:52.140Z",
     "auditedAt": "2026-10-16T04:32:52.140Z",
     "title": "Điều chỉnh cường hóa Venance S1–S6",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Hệ số cường hóa Venance: S0 giữ ×2; S1–S4 giảm từ ×2,5 xuống ×2,3; S5–S6 giảm từ ×2,8 xuống ×2,6. Cập nhật mô tả tinh hồn và chuyển run đang chơi sang hệ số mới khi tải lại, giữ nguyên chuỗi cường hóa."
     ]
@@ -391,6 +479,8 @@
     "updatedAt": "2026-10-16T04:29:52.770Z",
     "auditedAt": "2026-10-16T04:29:52.770Z",
     "title": "Điều chỉnh Venance S0",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Giảm hệ số đòn đánh cường hóa Venance S0 từ ×2,2 xuống ×2; S1–S4 giữ ×2,5 và S5–S6 giữ ×2,8. Run S0 đang chơi chuyển sang hệ số mới khi tải lại, giữ nguyên chuỗi cường hóa."
     ]
@@ -400,6 +490,8 @@
     "updatedAt": "2026-10-16T04:22:41.574Z",
     "auditedAt": "2026-10-16T04:22:41.574Z",
     "title": "Tower's Guardian và lựa chọn Rift, rương",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Boss có nội tại Tower's Guardian: mỗi đòn và tổng HP boss mất trong một lượt tối đa 20% Max HP, gồm phép, vật lý, hit phụ và phản đòn; vật triệu hồi và mục tiêu phụ không bị giới hạn.",
       "Lựa chọn xóa Rift hiển thị số stack sẽ xóa, cả trong selector và nút bấm.",
@@ -411,6 +503,8 @@
     "updatedAt": "2026-10-16T03:55:58.519Z",
     "auditedAt": "2026-10-16T03:55:58.519Z",
     "title": "Giữ liền mô tả trang bị và lời nguyền",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Log lượt vừa rồi giữ tên trang bị và lời nguyền trong cùng một khối khi chia nội dung, tránh khoảng ngắt giữa hai dòng."
     ]
@@ -420,6 +514,8 @@
     "updatedAt": "2026-10-16T03:29:41.287Z",
     "auditedAt": "2026-10-16T03:29:41.287Z",
     "title": "Chuẩn hóa icon nút hành động nhân vật",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Ba nút Tấn công, Phòng thủ và Skill ưu tiên icon riêng theo nhân vật và trạng thái; tự dùng icon hiện tại nếu chưa có emoji riêng."
     ]
@@ -429,6 +525,8 @@
     "updatedAt": "2026-10-16T03:20:35.522Z",
     "auditedAt": "2026-10-16T03:20:35.522Z",
     "title": "Sửa icon nút đánh cường hóa Venance",
+    "type": "fix",
+    "scope": "survival",
     "changes": [
       "Nút Tấn công của Venance dùng icon đòn cường hóa khi buff đang hoạt động và tự trở về icon vật lý khi buff hết hạn."
     ]
@@ -438,6 +536,8 @@
     "updatedAt": "2026-10-16T03:11:21.661Z",
     "auditedAt": "2026-10-16T03:11:21.661Z",
     "title": "Hoàn thiện icon Venance",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Bổ sung icon riêng cho đòn cường hóa, hiệu ứng Astral Armament, nội tại Hồi lưu và thức tỉnh Tam trọng trong giao diện và log chiến đấu; đồng bộ bộ avatar, Skill và sáu tinh hồn theo tên emoji."
     ]
@@ -447,6 +547,8 @@
     "updatedAt": "2026-10-16T02:11:17.084Z",
     "auditedAt": "2026-10-16T02:11:17.084Z",
     "title": "Sửa lỗi tiếp tục chiến đấu của Sorceress",
+    "type": "fix",
+    "scope": "survival",
     "changes": [
       "Sửa lỗi Arcane Echo khiến run bị chặn khi lời nguyền làm chi phí Skill có phần thập phân; giữ nguyên tiến trình đã lưu.",
       "Tiến trình Arcane Echo hiển thị tối đa một chữ số thập phân."
@@ -457,6 +559,8 @@
     "updatedAt": "2026-10-16T01:50:34.085Z",
     "auditedAt": "2026-10-16T01:50:34.085Z",
     "title": "Horadric Forge · làm rõ giao dịch và menu",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Dùng selector cho bước nghiền trang bị và bước chọn thưởng, với icon chỉ số đúng thay cho icon vé.",
       "Hiển thị món mất cấp và chỉ số trước → sau trước khi xác nhận; giải thích phần thưởng +1 cố định, không tốn xu/vé và không bù buff đã mất.",
@@ -468,6 +572,8 @@
     "updatedAt": "2026-10-16T01:38:04.684Z",
     "auditedAt": "2026-10-16T01:38:04.684Z",
     "title": "Sinh tồn · sửa số thập phân và log trang bị",
+    "type": "fix",
+    "scope": "survival",
     "changes": [
       "Làm tròn mô tả lời nguyền và log MP tới tối đa một chữ số thập phân, kể cả log đã lưu; giữ nguyên diminishing return.",
       "Giữ phần chỉ số phát sinh từ trang bị liền mạch khi chia field Discord, tránh tách riêng dòng hiệu lực bình.",
@@ -479,6 +585,8 @@
     "updatedAt": "2026-10-15T12:00:40.307Z",
     "auditedAt": "2026-10-15T12:00:40.307Z",
     "title": "Chatbot tương tác hơn",
+    "type": "feature",
+    "scope": "chatbot",
     "changes": [
       "Chatbot mention người hỏi khi trả lời; nếu câu hỏi ping ai đó, bot gọi lại đúng người đó (tối đa 3 người).",
       "Bot không bao giờ ping vai trò, @everyone hay @here.",
@@ -490,6 +598,8 @@
     "updatedAt": "2026-10-15T11:58:11.518Z",
     "auditedAt": "2026-10-15T11:58:11.518Z",
     "title": "Chatbot: lệnh !hoi",
+    "type": "feature",
+    "scope": "chatbot",
     "changes": [
       "Có thể hỏi chatbot nhanh bằng !hoi <câu hỏi> (tương đương /chatbot hoi)."
     ]
@@ -499,6 +609,8 @@
     "updatedAt": "2026-10-15T11:53:16.640Z",
     "auditedAt": "2026-10-15T11:53:16.640Z",
     "title": "Chatbot dùng lệnh /chatbot hoi",
+    "type": "feature",
+    "scope": "chatbot",
     "changes": [
       "Hỏi chatbot bằng /chatbot hoi trong kênh admin đã chọn, thay cho việc chat thẳng trong kênh.",
       "Admin chỉnh số lượt chat mỗi người mỗi ngày bằng /chatbot gioihan (1-500, mặc định 20)."
@@ -509,6 +621,8 @@
     "updatedAt": "2026-10-15T11:47:34.664Z",
     "auditedAt": "2026-10-15T11:47:34.664Z",
     "title": "Chatbot bớt bị giới hạn",
+    "type": "balance",
+    "scope": "chatbot",
     "changes": [
       "Chatbot tự chuyển sang model dự phòng và thử lại khi nhà cung cấp tạm giới hạn lượt gọi."
     ]
@@ -518,6 +632,8 @@
     "updatedAt": "2026-10-15T11:42:27.524Z",
     "auditedAt": "2026-10-15T11:42:27.524Z",
     "title": "Chatbot dùng OpenRouter",
+    "type": "feature",
+    "scope": "chatbot",
     "changes": [
       "Chatbot hỗ trợ chạy bằng OpenRouter (chọn model qua biến môi trường)."
     ]
@@ -527,6 +643,8 @@
     "updatedAt": "2026-10-15T11:39:30.493Z",
     "auditedAt": "2026-10-15T11:39:30.493Z",
     "title": "Chatbot Gemini cập nhật model",
+    "type": "fix",
+    "scope": "chatbot",
     "changes": [
       "Chatbot Gemini chuyển sang model mới gemini-3.8-flash vì model cũ đã ngừng cấp cho tài khoản mới."
     ]
@@ -536,6 +654,8 @@
     "updatedAt": "2026-10-15T11:37:49.778Z",
     "auditedAt": "2026-10-15T11:37:49.778Z",
     "title": "Chatbot ổn định hơn",
+    "type": "fix",
+    "scope": "chatbot",
     "changes": [
       "Xóa tin nhắn khi chatbot đang trả lời sẽ hủy ngay yêu cầu và hoàn lượt, không tốn thêm token.",
       "Chatbot không còn lỗi khi tin nhắn gốc bị xóa lúc bot đang trả lời."
@@ -546,6 +666,8 @@
     "updatedAt": "2026-10-15T11:32:38.369Z",
     "auditedAt": "2026-10-15T11:32:38.369Z",
     "title": "Chatbot dùng Gemini",
+    "type": "feature",
+    "scope": "chatbot",
     "changes": [
       "Chatbot hỗ trợ chạy bằng Google Gemini ngoài OpenAI."
     ]
@@ -555,6 +677,8 @@
     "updatedAt": "2026-10-15T11:27:07.632Z",
     "auditedAt": "2026-10-15T11:27:07.632Z",
     "title": "Chatbot AI",
+    "type": "feature",
+    "scope": "chatbot",
     "changes": [
       "Thêm kênh chatbot: admin chọn kênh bằng /chatbot kenh, mọi người chat trực tiếp với bot trong kênh đó.",
       "Mỗi người có 20 lượt chat mỗi ngày (đặt lại lúc 00:00 giờ Việt Nam); xem số lượt còn lại bằng /chatbot luot."
@@ -565,6 +689,8 @@
     "updatedAt": "2026-10-15T11:24:00.780Z",
     "auditedAt": "2026-10-15T11:24:00.780Z",
     "title": "Xì dách gọn hơn",
+    "type": "improvement",
+    "scope": "blackjack",
     "changes": [
       "Nút Tách bài chỉ hiện khi bạn thật sự tách được (hai lá đầu cùng hạng và đủ hạn mức cược).",
       "Khi chỉ có một tay bài, bảng không còn hiện nhãn Tay 1; sau khi tách vẫn hiện Tay 1 và Tay 2."
@@ -575,6 +701,8 @@
     "updatedAt": "2026-10-15T10:21:32.217Z",
     "auditedAt": "2026-10-15T10:21:32.217Z",
     "title": "Athulua · làm rõ vị trí và hướng ngắm",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Hiển thị rõ vùng bạn đang đứng, vùng Athulua đang ngắm và vùng ngắm sau khi bạn gây sát thương; bổ sung vùng tránh hai hướng ngắm cùng cảnh báo vùng bị khóa."
     ]
@@ -584,6 +712,8 @@
     "updatedAt": "2026-10-15T09:22:11.266Z",
     "auditedAt": "2026-10-15T09:22:11.266Z",
     "title": "Nhân vật · tinh gọn tab chi tiết",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Chỉ hiển thị danh sách S1–S6 và thông tin thẻ trong tab Tinh hồn; tab Chỉ số và Kỹ năng không lặp lại nội dung này."
     ]
@@ -593,6 +723,8 @@
     "updatedAt": "2026-10-15T09:07:11.737Z",
     "auditedAt": "2026-10-15T09:07:11.737Z",
     "title": "Venance · giữ cường hóa xuyên phòng",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Astral Armament giữ số hành động cường hóa còn lại, tiến trình đòn đánh và Ấn Hồi lưu khi sang phòng mới; không tự nạp lại thời lượng.",
       "Đi qua sự kiện/checkpoint không tiêu thời gian cường hóa. Barrier và giới hạn S2 vẫn theo mỗi trận. Áp dụng cho run thường và beta, hỗ trợ tiếp tục run đang lưu."
@@ -603,6 +735,8 @@
     "updatedAt": "2026-10-15T08:55:29.007Z",
     "auditedAt": "2026-10-15T08:55:29.007Z",
     "title": "Beta Venance · thử miễn cược",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Thêm /sinhton beta: vào Venance SSR S0 với cược giả lập 100.000 xu, dùng giao diện và luật Sinh tồn hiện tại.",
       "Tử trận có nút hồi sinh 100% HP, giữ tiến trình combat; thêm nút Kết thúc beta và hỗ trợ mở lại phiên thử.",
@@ -614,6 +748,8 @@
     "updatedAt": "2026-10-15T08:33:08.009Z",
     "auditedAt": "2026-10-15T08:33:08.009Z",
     "title": "Venance · nhân vật SSR Pháp sư",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Thêm Venance vào danh mục Nhân vật với chỉ số, kỹ năng Astral Armament, Hồi lưu, thức tỉnh Tam trọng và đủ S1–S6.",
       "Skill cường hóa đánh thường thành phép trong 3 hành động; đòn cường hóa không hồi MP, Phòng thủ hồi tổng 2 MP. Battle UI hiển thị thời gian, ấn và Barrier.",
@@ -625,6 +761,8 @@
     "updatedAt": "2026-10-15T08:03:08.544Z",
     "auditedAt": "2026-10-15T08:03:08.544Z",
     "title": "Bản thiết kế SSR Venance",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Bổ sung bản thiết kế Venance hệ Pháp sư: Skill cường hóa đòn thường thành phép trong 3 hành động, Phòng thủ hồi tổng 2 MP; đề xuất nội tại, thức tỉnh và S1–S6. Nhân vật chưa mở trong banner hoặc chiến đấu; các mốc thắng mới là mục tiêu chưa simulate."
     ]
@@ -634,6 +772,8 @@
     "updatedAt": "2026-10-15T07:25:39.136Z",
     "auditedAt": "2026-10-15T07:25:39.136Z",
     "title": "Sinh tồn: icon tinh hồn nhân vật",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Thêm 42 icon riêng cho S1–S6 của 7 nhân vật. Hiển thị trong danh sách tinh hồn, Chỉ số, cấp tinh hồn trên Battle UI, nút nâng cấp và thông báo nâng thành công.",
       "Các log kích hoạt tinh hồn dùng icon tương ứng để dễ nhận biết hiệu ứng. Giữ dấu khóa/đã mở cho từng bậc."
@@ -644,6 +784,8 @@
     "updatedAt": "2026-10-15T05:46:55.684Z",
     "auditedAt": "2026-10-15T05:46:55.684Z",
     "title": "Sinh tồn: banner nhân vật tân thủ",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Thêm /sinhton gacha với banner Khởi Hành: mỗi tài khoản Discord nhận 30 vé tân thủ một lần; R 80% / SR 20%, có quay x1/x10 và lịch sử. Item R vào Túi Sinh tồn của server đang quay.",
       "SR trùng đổi 5 thẻ cùng class. Dùng 20 thẻ để nâng một nhân vật SR thêm một tinh hồn trong bảng Nhân vật, tối đa S6; cấp mới chỉ áp dụng khi bắt đầu run mới.",
@@ -655,6 +797,8 @@
     "updatedAt": "2026-10-15T05:14:56.448Z",
     "auditedAt": "2026-10-15T05:14:56.448Z",
     "title": "Sinh tồn: hiệu chỉnh tinh hồn S6",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Bonus DMG Tấn công/Skill lên boss ở S6: Amazon +240%, Barbarian +55%, Assassin +62%, Sorceress +40%, Druid +50%, Necromancer +160%, Paladin +40%. Gồm hit phụ nội tại, không tăng sát thương cố định của cơ chế boss.",
       "Mẫu hiệu chỉnh 100 run S6 mỗi nhân vật ghi nhận 30–34% hoàn thành tầng 999. Đây chưa phải tỷ lệ đã được xác minh trên mẫu độc lập; S0–S5 giữ nguyên hệ số boss nền."
@@ -665,6 +809,8 @@
     "updatedAt": "2026-10-15T05:02:17.661Z",
     "auditedAt": "2026-10-15T05:02:17.661Z",
     "title": "Sinh tồn: tinh hồn chiến đấu S1–S6",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Bổ sung 42 hiệu ứng tinh hồn cho 7 nhân vật SR: nâng nội tại, kỹ năng thức tỉnh, hồi phục và quản lý MP; các bậc cộng dồn.",
       "Cấp tinh hồn và thông số được lưu cố định theo run. Tài khoản vẫn khởi đầu S0, run cũ không tự nâng cấp; chưa mở gacha hoặc nâng tinh hồn.",
@@ -676,6 +822,8 @@
     "updatedAt": "2026-10-15T04:19:40.138Z",
     "auditedAt": "2026-10-15T04:19:40.138Z",
     "title": "Phân nhân vật thành 4 class",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Chiến binh ưu tiên STR: Barbarian, Druid; Thủ vệ ưu tiên VIT/DEF: Paladin; Sát thủ ưu tiên DEX: Amazon, Assassin; Pháp sư ưu tiên ENE: Sorceress, Necromancer.",
       "Bộ lọc nhân vật dùng 4 class; chi tiết và hướng dẫn chọn nhân vật hiển thị hướng build tương ứng. Giữ nguyên chỉ số, kỹ năng và công thức riêng của từng nhân vật."
@@ -686,6 +834,8 @@
     "updatedAt": "2026-10-15T04:14:41.146Z",
     "auditedAt": "2026-10-15T04:14:41.146Z",
     "title": "Hiển thị đầy đủ tinh hồn trong chi tiết nhân vật",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Khi chọn nhân vật, màn hình chi tiết hiển thị ngay toàn bộ S1–S6 với tên và hiệu ứng từng cấp, kể cả ở tab Chỉ số và Kỹ năng; không cần chuyển riêng sang tab Tinh hồn."
     ]
@@ -695,6 +845,8 @@
     "updatedAt": "2026-10-15T03:58:47.652Z",
     "auditedAt": "2026-10-15T03:58:47.652Z",
     "title": "Danh mục nhân vật và tinh hồn Sinh tồn",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Thêm /sinhton nhanvat: tổng quan có lọc độ hiếm/class, chọn nhân vật và xem Chỉ số, Kỹ năng hoặc Tinh hồn; hỗ trợ phân trang khi danh mục mở rộng.",
       "Mỗi người có sẵn 7 nhân vật SR khởi đầu ở S0. Chỉ số và kỹ năng S0 lấy từ luật game hiện hành; danh mục tách ID nhân vật khỏi class.",
@@ -706,6 +858,8 @@
     "updatedAt": "2026-10-15T03:45:17.847Z",
     "auditedAt": "2026-10-15T03:45:17.847Z",
     "title": "Điều chỉnh Master Control System",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Nhập đúng tần số làm Plasma Shield sập và vô hiệu hóa boss: không phản công ở lượt nhập cùng 2 lượt chiến đấu kế tiếp.",
       "Hết 2 lượt, giáp trở lại, xóa manh mối cũ; các đòn trúng tiếp tục hé lộ tần số mới. Trong lúc boss bị vô hiệu hóa không tích manh mối hoặc nhập lại tần số.",
@@ -717,6 +871,8 @@
     "updatedAt": "2026-10-15T02:14:10.708Z",
     "auditedAt": "2026-10-15T02:14:10.708Z",
     "title": "Tinh gọn Rift và giới hạn Tower Remembers",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Tower Remembers có icon và bộ đếm chỗ đã dùng/8; chỉ hiển thị ký ức đã nhận cùng hiệu ứng đang có, bỏ giới thiệu dài và nhánh chưa nhận.",
       "Ấn vĩnh viễn, bảo hộ và ký ức đang xử lý cùng chiếm chỗ. Đủ 8 thì không nhận thêm; ký ức được xử lý theo điều kiện riêng, không bắt buộc theo thứ tự nhận.",
@@ -728,6 +884,8 @@
     "updatedAt": "2026-10-15T00:56:46.780Z",
     "auditedAt": "2026-10-15T00:56:46.780Z",
     "title": "Chuẩn hóa xúc xắc Tài Xỉu",
+    "type": "improvement",
+    "scope": "taixiu",
     "changes": [
       "Kết quả Tài Xỉu dùng bộ icon xúc xắc trắng giống Chinchiro; có hiển thị dự phòng khi chưa tải được icon."
     ]
@@ -737,6 +895,8 @@
     "updatedAt": "2026-10-14T08:27:26.549Z",
     "auditedAt": "2026-10-14T08:27:26.549Z",
     "title": "Sinh tồn v3.1: cân bằng class và loot",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Run mới dùng luật mới; run đang chơi giữ snapshot cũ. Mục tiêu thắng tầng 999: 8–12%.",
       "Druid: Mark +20%; thức tỉnh hồi 10% HP, Bark 4%, trần 18%. Assassin: Crit hồi 2% HP. Barbarian: Barrier 5% HP/Fury.",
@@ -751,6 +911,8 @@
     "updatedAt": "2026-10-14T05:56:22.239Z",
     "auditedAt": "2026-10-14T05:56:22.239Z",
     "title": "Sinh tồn: tinh gọn tiến độ set",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Bỏ dòng tên di vật LR dưới Set Diệt Vương và Set Tinh Tú trong Túi; giữ tiến độ, danh sách item và trạng thái set."
     ]
@@ -760,6 +922,8 @@
     "updatedAt": "2026-10-14T03:04:14.770Z",
     "auditedAt": "2026-10-14T03:04:14.770Z",
     "title": "Sinh tồn: hiển thị Barrier cạnh ACC",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Battle UI hiển thị lượng Barrier còn lại cạnh ACC khi có Fury Barrier, Echo Shield hoặc Bark; hết Barrier thì tự ẩn."
     ]
@@ -769,6 +933,8 @@
     "updatedAt": "2026-10-14T03:01:18.137Z",
     "auditedAt": "2026-10-14T03:01:18.137Z",
     "title": "Sinh tồn: sửa icon Soul Drain",
+    "type": "fix",
+    "scope": "survival",
     "changes": [
       "Soul Drain trong Lượt vừa rồi dùng đúng icon rift_soul_drain khi hút MP và khi phòng thủ chặn hút MP.",
       "Các icon Rift được tra khi hiển thị để cập nhật đúng emoji ứng dụng sau khi bot tải danh sách icon."
@@ -779,6 +945,8 @@
     "updatedAt": "2026-10-14T02:51:03.677Z",
     "auditedAt": "2026-10-14T02:51:03.677Z",
     "title": "Sinh tồn: chuẩn hóa icon quái và vật phẩm",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Nối icon riêng cho 20 boss còn thiếu theo đúng tên monster_* trong bộ icon mới.",
       "Dùng icon riêng của 100 item và giữ naming vé/di vật; thống nhất tại Túi, shop, rương boss, rèn, giải nguyền, tiến độ set, nút/menu chọn món và Lượt vừa rồi.",
@@ -790,6 +958,8 @@
     "updatedAt": "2026-10-14T01:20:23.873Z",
     "auditedAt": "2026-10-14T01:20:23.873Z",
     "title": "Sinh tồn: nút bấm cho tình huống ít lựa chọn",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "UI có tối đa 4 action dùng nút bấm; trên 4 action tiếp tục dùng selector. Không tính Rút thưởng và các nút Chỉ số, Túi, Rift, Chi tiết vào ngưỡng này.",
       "Các lựa chọn bị khóa vẫn tính vào số action để giao diện không đổi theo MP, bình hoặc xu; menu chọn món giải nguyền vẫn giữ."
@@ -800,6 +970,8 @@
     "updatedAt": "2026-10-13T15:29:17.339Z",
     "auditedAt": "2026-10-13T15:29:17.339Z",
     "title": "Khôi phục nút chọn chỉ số tại checkpoint",
+    "type": "fix",
+    "scope": "survival",
     "changes": [
       "Checkpoint hiển thị lại 4 nút cộng +5 STR, DEX, VIT hoặc ENE với icon chỉ số, thay cho menu chọn thuộc tính."
     ]
@@ -809,6 +981,8 @@
     "updatedAt": "2026-10-13T15:25:39.602Z",
     "auditedAt": "2026-10-13T15:25:39.602Z",
     "title": "Đồng bộ lời nguyền Glass Cannon với Sinh tồn 3.x",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Giữ khoản trừ 50% DEF đã lưu của Glass Cannon khi dùng công thức chỉ số và đường cong level Sinh tồn 3.x; tăng level hoặc cộng chỉ số không trừ DEF thêm.",
       "Túi đồ, rèn, giải nguyền và Horadric Forge của bản 3.x hiển thị đúng khoản DEF cố định và phân biệt gỡ một cấp với gỡ hết nguyền."
@@ -819,6 +993,8 @@
     "updatedAt": "2026-10-13T11:09:45.766Z",
     "auditedAt": "2026-10-13T11:09:45.766Z",
     "title": "Sinh tồn v3.1.0: Nội tại class và buff thức tỉnh",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Bổ sung nội tại riêng cho 7 class từ tầng 1; xem mô tả trong Chỉ số.",
       "Amazon tăng HP/VIT lên 3,5 và EVA/DEX lên 0,45; Assassin tăng HP nền lên 46, HP/VIT lên 4, sát thương đánh boss từ ×0,84 lên ×0,94; Druid từ ×0,48 lên ×0,55.",
@@ -832,6 +1008,8 @@
     "updatedAt": "2026-10-13T08:36:25.871Z",
     "auditedAt": "2026-10-13T08:36:25.871Z",
     "title": "Boss: diễn giải theo hướng dẫn",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Viết lại mô tả 41 boss theo tài liệu hướng dẫn: cơ chế chính, lựa chọn, cách xử lý và điều cần nhớ; vẫn hiển thị thông tin hiện tại của trận.",
       "Các câu trong tài liệu khác cơ chế đang chạy được diễn giải đúng gameplay; giữ Lilith 50/50 HP và các thông số theo độ khó."
@@ -842,6 +1020,8 @@
     "updatedAt": "2026-10-13T08:31:52.288Z",
     "auditedAt": "2026-10-13T08:31:52.288Z",
     "title": "Inarius: Lilith còn 50 HP",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Lilith trong trận Inarius bắt đầu với 50/50 HP; Che chở vẫn hồi 15 HP nhưng tối đa 50. Run đang lưu có HP Lilith vượt 50 được giới hạn về 50, không hồi thêm HP.",
       "Cập nhật mô tả và trạng thái Lilith theo giới hạn mới; giữ nguyên chu kỳ Ritual, lượng HP mất mỗi lượt và cơ chế kết giới."
@@ -852,6 +1032,8 @@
     "updatedAt": "2026-10-13T08:26:20.815Z",
     "auditedAt": "2026-10-13T08:26:20.815Z",
     "title": "Boss: chuẩn hóa hướng dẫn chiến đấu",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Chuẩn hóa Chi tiết của 41 boss theo bố cục Mục tiêu, Cơ chế và Hiện tại; tách hành động, chi phí lượt và hậu quả bằng các mục dễ đọc.",
       "Inarius hiển thị vị trí ô, HP và thời gian che chở Lilith, trạng thái kết giới; giải thích rõ kết giới ngăn kết liễu và lấy mức mất HP/chu kỳ Ritual theo độ khó.",
@@ -863,6 +1045,8 @@
     "updatedAt": "2026-10-13T05:55:17.719Z",
     "auditedAt": "2026-10-13T05:55:17.719Z",
     "title": "Mastery: hiển thị dễ đọc hơn",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Mastery hiển thị hiệu ứng theo mốc +100 điểm thuộc tính, dùng icon chỉ số chuẩn và tách riêng DMG vật lý/phép cùng các mức trần; tránh các giá trị nhỏ bị hiển thị thành +0.",
       "Đây là thay đổi cách trình bày; hệ số Mastery và cách tính chỉ số giữ nguyên."
@@ -873,6 +1057,8 @@
     "updatedAt": "2026-10-13T04:57:54.672Z",
     "auditedAt": "2026-10-13T04:57:54.672Z",
     "title": "Lucky Break: trần 50% tại 200 LUCK",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Lucky Break trong Sinh tồn V3 tăng 0,25 điểm % mỗi LUCK, tối đa 50% khi đạt 200 LUCK; áp dụng cho nộp thuế và chấp nhận The Thief.",
       "Cập nhật mô tả event, luật và bảng tỷ lệ theo công thức mới."
@@ -883,6 +1069,8 @@
     "updatedAt": "2026-10-13T04:53:45.262Z",
     "auditedAt": "2026-10-13T04:53:45.262Z",
     "title": "Blood Fountain: thưởng VIT",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Nhánh 25% cơ bản khi uống Blood Fountain đổi từ +15 Max HP và hồi phục sang +10 VIT trong run; các nhánh khác giữ nguyên.",
       "Cập nhật Chi tiết Blood Fountain để hiển thị đúng phần thưởng mới."
@@ -893,6 +1081,8 @@
     "updatedAt": "2026-10-13T04:45:07.437Z",
     "auditedAt": "2026-10-13T04:45:07.437Z",
     "title": "Làm rõ mô tả toàn bộ boss V3",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Rà lại 39 boss trong pool cùng Kabraxis và Deimoss: Chi tiết nói rõ thao tác, chi phí, thời hạn, điều kiện kết liễu và chỉ số ảnh hưởng đến bạn hay boss; thay thuật ngữ khó hiểu bằng lời giải thích.",
       "Bảng chiến đấu chỉ dẫn rõ các bước giải đố của Assur, Master Control, Lucion, Bul-Kathos, Anomaly, Jitan và Sescheron; tên cơ chế và trạng thái được diễn giải bằng tiếng Việt.",
@@ -904,6 +1094,8 @@
     "updatedAt": "2026-10-13T04:12:08.059Z",
     "auditedAt": "2026-10-13T04:12:08.059Z",
     "title": "Menu chọn cho event nhiều lựa chọn",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Các event có nhiều lựa chọn trên Battle UI Sinh tồn V3 dùng menu thay cho dãy nút: xóa Rift, shop, phúc lành Forge, checkpoint, chọn trang bị rương boss và các tình huống tương tự.",
       "Menu giữ tên, giá, icon và dấu hiệu Tiên tri; lựa chọn không đủ điều kiện không thể thực hiện. Bỏ qua, bán rương, rút thưởng và các nút chiến đấu vẫn dễ truy cập.",
@@ -915,6 +1107,8 @@
     "updatedAt": "2026-10-13T03:51:41.553Z",
     "auditedAt": "2026-10-13T03:51:41.553Z",
     "title": "Rút gọn ACC và đòn kế tiếp",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Battle UI đổi nhãn tỷ lệ đánh vật lý trúng quái thành ACC. Đòn kế tiếp dùng icon loại sát thương, DMG, icon ACC và CRIT kèm tỷ lệ; bỏ các chữ Vật lý, trúng bạn và CRIT dư. Đòn phép vẫn chỉ hiển thị icon và DMG cuối cùng."
     ]
@@ -924,6 +1118,8 @@
     "updatedAt": "2026-10-13T03:47:36.942Z",
     "auditedAt": "2026-10-13T03:47:36.942Z",
     "title": "Chuẩn hóa icon DEF/RES",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Hiệu ứng điều chỉnh chung DEF và RES dùng icon DEFRES cùng nhãn DEF/RES, áp dụng vào log vỡ lá chắn đá, trạng thái combat, mô tả Rift và Chi tiết boss. DEF và RES riêng vẫn giữ icon riêng."
     ]
@@ -933,6 +1129,8 @@
     "updatedAt": "2026-10-13T03:41:54.774Z",
     "auditedAt": "2026-10-13T03:41:54.774Z",
     "title": "Chuẩn hóa một chữ số thập phân cho chỉ số",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Chỉ số trên Battle UI, túi đồ, tab Chỉ số, Chi tiết và log trước → sau hiển thị tối đa một chữ số thập phân; ví dụ 381.200000000005 thành 381.2.",
       "Các hệ số hiển thị cũng được làm tròn; giữ nguyên độ chính xác tính toán và cách hiển thị xu."
@@ -943,6 +1141,8 @@
     "updatedAt": "2026-10-13T03:21:10.535Z",
     "auditedAt": "2026-10-13T03:21:10.535Z",
     "title": "Gọn tài nguyên Battle UI và làm rõ Belial",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "HP và MP cùng một hàng với icon, bỏ nhãn HP/MP; không hiển thị bình máu trên bảng vì đã có trên nút. Dòng vé chỉ xuất hiện khi có vé thoát hoặc hồi sinh, không lặp lại vé hồi sinh.",
       "Bỏ chi phí Mana ở dòng tên Skill trên Battle UI; nút Skill giữ nguyên.",
@@ -954,6 +1154,8 @@
     "updatedAt": "2026-10-13T03:10:11.669Z",
     "auditedAt": "2026-10-13T03:10:11.669Z",
     "title": "Rút gọn dự báo đòn phép",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Đòn kế tiếp là phép chỉ hiển thị loại đòn và DMG cuối cùng sau giảm trừ; bỏ tỷ lệ đánh trúng và CRIT."
     ]
@@ -963,6 +1165,8 @@
     "updatedAt": "2026-10-13T03:07:29.658Z",
     "auditedAt": "2026-10-13T03:07:29.658Z",
     "title": "Tinh gọn Battle UI Sinh tồn V3",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Tiêu đề hiển thị tầng và khu vực; class và người chơi cùng một dòng. Thay mô tả skill trên bảng bằng tỷ lệ vật lý đánh trúng quái.",
       "Bỏ dòng chỉ số gốc của đối thủ và dự báo nhận riêng; Đòn kế tiếp gộp loại sát thương, DMG sau DEF/RES và giảm trừ, tỷ lệ đánh trúng cùng tỷ lệ CRIT. Dải DMG chưa nhân CRIT.",
@@ -974,6 +1178,8 @@
     "updatedAt": "2026-10-13T02:48:28.168Z",
     "auditedAt": "2026-10-13T02:48:28.168Z",
     "title": "Lựa chọn mới cho Tax Collector, Healer và The Thief",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Tax Collector: thêm Chống trả để nhận Royal Outlaw, không gặp lại người thu thuế nhưng Boss gây thêm 20% sát thương đến hết run; Nộp thuế và Lucky Break giữ nguyên.",
       "Healer: thêm Hiến 70% HP hiện tại, khóa hồi HP tại checkpoint trong 10 tầng tiếp theo; Healer trở lại hồi đầy HP/MP và trao phúc ấn LUCK +40, STR/DEX/VIT/ENE mỗi chỉ số +10.",
@@ -987,6 +1193,8 @@
     "updatedAt": "2026-10-12T11:46:40.873Z",
     "auditedAt": "2026-10-12T11:46:40.873Z",
     "title": "Sửa sát thương hiển thị và lựa chọn boss",
+    "type": "fix",
+    "scope": "survival",
     "changes": [
       "Dự báo và log đòn đánh Sinh tồn V3 hiển thị sức sát thương sau kháng thay vì giới hạn theo HP còn lại; HP thực trừ và các hiệu ứng chiến đấu giữ nguyên.",
       "Menu lựa chọn boss đánh dấu mục đang chọn; Necrobot Alpha ghi rõ mục tiêu, tác dụng từng bộ phận và tiến độ mở Core.",
@@ -998,6 +1206,8 @@
     "updatedAt": "2026-10-12T10:09:12.579Z",
     "auditedAt": "2026-10-12T10:09:12.579Z",
     "title": "Tinh gọn mô tả boss và sửa lá chắn đá",
+    "type": "fix",
+    "scope": "survival",
     "changes": [
       "Stone Skin: phá lá chắn giảm cả DEF và RES quái 8%/12%/16% theo bậc Rift; UI hiển thị HP lá chắn ban đầu và còn lại.",
       "Mô tả boss được chia thành ý ngắn và dùng icon chỉ số; Azmodan ghi rõ ấn máu nổ sau bao nhiêu lượt, sát thương lên ai và cách phản ấn/dập lửa.",
@@ -1009,6 +1219,8 @@
     "updatedAt": "2026-10-12T08:45:18.732Z",
     "auditedAt": "2026-10-12T08:45:18.732Z",
     "title": "Làm rõ hiến máu của Lilith",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Chi tiết Lilith liệt kê ba mức hiến máu với lượng HP thực tế, phần trăm DMG Tấn công/Skill tăng cho người chơi và số lượt hiệu lực theo Depth.",
       "Dùng icon HP/DMG chuẩn; hiển thị bonus đang có và mức HP tối đa có thể hồi khi còn hiệu ứng hiến máu. Bỏ thông tin chu kỳ, trần và ngân sách hồi không cần thiết khỏi chi tiết Lilith."
@@ -1019,6 +1231,8 @@
     "updatedAt": "2026-10-12T08:33:26.246Z",
     "auditedAt": "2026-10-12T08:33:26.246Z",
     "title": "Sửa menu hành động boss và dấu hiệu Gharbad",
+    "type": "fix",
+    "scope": "survival",
     "changes": [
       "Menu hành động và chọn mục tiêu của boss Sinh tồn đã nhận tương tác đúng, khắc phục lỗi chọn menu nhưng Discord không phản hồi.",
       "Gharbad hiển thị biểu tượng kèm tên hình, trạng thái đầu hàng thật hoặc giả và lựa chọn tương ứng, thay cho mô tả dấu hiệu khó nhận biết.",
@@ -1030,6 +1244,8 @@
     "updatedAt": "2026-10-12T08:24:00.961Z",
     "auditedAt": "2026-10-12T08:24:00.961Z",
     "title": "Death Projector: hướng bắn ngẫu nhiên",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Trong Sinh tồn V3, Death Projector giữ hướng bắn A/B/C trong 2 lượt, rồi chọn ngẫu nhiên một trong hai vùng còn lại ở mọi Depth, thay cho thứ tự cố định.",
       "UI báo vùng đang bị quét và thời gian đổi hướng; hướng bắn được lưu, không đổi khi mở giao diện hoặc khởi động lại bot."
@@ -1040,6 +1256,8 @@
     "updatedAt": "2026-10-12T08:15:10.334Z",
     "auditedAt": "2026-10-12T08:15:10.334Z",
     "title": "Sinh tồn V3: làm mới tám Rift",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Phát Rift theo túi đủ 8 loại, mỗi 10 tầng đến tầng 960; tối đa 12 stack mỗi loại, có ba cấp hiệu lực và thông báo tăng cấp.",
       "Stone Skin có giáp riêng; Bloodlust chỉ tăng một phản công; Fortified và Swift tạo lợi thế cho lượt gây sát thương kế tiếp. Soul Drain giới hạn lượt hút MP và có hồi MP bù khi đánh thường.",
@@ -1052,6 +1270,8 @@
     "updatedAt": "2026-10-12T07:36:41.080Z",
     "auditedAt": "2026-10-12T07:36:41.080Z",
     "title": "Class Awakening cho Sinh tồn V3",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Run V3 mới: hạ boss tầng 100 và sống sót sẽ nhận Class Artifact và nội tại riêng cho 7 class, trước rương boss.",
       "Thêm Focus, Fury, Shadow, Arcane Echo, Bark Barrier, Bone Totem và Consecration; xem mô tả và tài nguyên hiện tại trong Chỉ số.",
@@ -1064,6 +1284,8 @@
     "updatedAt": "2026-10-12T07:11:29.090Z",
     "auditedAt": "2026-10-12T07:11:29.090Z",
     "title": "Hoàn thiện pool affinity Sinh tồn V3",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Phoenix Blood thêm affinity Sorceress; Hollow Crown thêm Druid để mỗi class có đủ lựa chọn hợp class trong offer ba món, giữ nguyên hiệu ứng chung.",
       "Bảo đảm affinity tại Lost Adventurer chỉ dựa trên các lựa chọn người chơi có thể thực hiện; phần thưởng ẩn không làm đổi pity khi mở lại giao diện.",
@@ -1075,6 +1297,8 @@
     "updatedAt": "2026-10-12T06:58:15.887Z",
     "auditedAt": "2026-10-12T06:58:15.887Z",
     "title": "Chuẩn bị rework trang bị Sinh tồn V3",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Bổ sung catalog 100 trang bị, affinity theo class và bảo đảm lựa chọn hợp class sau 3 nguồn thưởng liên tiếp không phù hợp.",
       "Luật mới có level giảm dần hiệu lực, giải nguyền theo từng phần level, và Forge nghiền một cấp để chọn một boon thay vì giữ chỉ số hấp thụ.",
@@ -1087,6 +1311,8 @@
     "updatedAt": "2026-10-12T04:03:03.705Z",
     "auditedAt": "2026-10-12T04:03:03.705Z",
     "title": "Sinh tồn V3: roster 39 boss",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Run V3 mới roll đều 39 boss ở mỗi mốc 50–950, với cơ chế và ba mức Depth theo tầng.",
       "Làm mới Kabraxis với Resonance và Corrupted Seal; Deimoss có Spire, Flesh Core và Plane qua ba phase.",
@@ -1099,6 +1325,8 @@
     "updatedAt": "2026-10-12T01:23:54.852Z",
     "auditedAt": "2026-10-12T01:23:54.852Z",
     "title": "Sinh tồn v3: chỉ số và bản sắc class",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Run mới dùng v3.0.0: mỗi class chuyển STR/DEX/VIT/ENE theo mastery riêng; Assassin tăng né và Crit tốt hơn, các class khác có hướng sát thương/chống chịu riêng.",
       "Tách sát thương nền class, điểm phân bổ và item/hấp thụ; sát thương cộng thẳng từ item không còn bị nhân hệ số sát thương chung. Tab Chỉ số hiển thị hệ số, trần và đóng góp từng nguồn.",
@@ -1110,6 +1338,8 @@
     "updatedAt": "2026-10-11T13:47:04.142Z",
     "auditedAt": "2026-10-11T13:47:04.142Z",
     "title": "Điều chỉnh lời nguyền Glass Cannon",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Glass Cannon [UR] giảm 50% DEF lúc nhận nguyền thay cho đưa DEF về 0; khoản trừ làm tròn xuống và lưu trên món đồ.",
       "Khoản trừ DEF giữ cố định khi cộng chỉ số hoặc tăng level, không cộng dồn theo cấp nguyền. Giải hết nguyền hoàn trả đúng số DEF đã trừ; gỡ một cấp vẫn giữ khoản trừ nếu còn nguyền.",
@@ -1121,6 +1351,8 @@
     "updatedAt": "2026-10-09T06:13:02.363Z",
     "auditedAt": "2026-10-09T06:13:02.363Z",
     "title": "Sửa Xì bàng trong Xì dách",
+    "type": "fix",
+    "scope": "blackjack",
     "changes": [
       "Hai lá A được tính là Xì bàng, bộ bài mạnh nhất ở chế độ bot, bàn nhiều người và đấu tay đôi; cùng Xì bàng thì hòa.",
       "Xì bàng tự động dừng; nhà cái không rút thêm khi có hai lá A. UI và luật chơi hiển thị đúng tên bộ bài.",
@@ -1132,6 +1364,8 @@
     "updatedAt": "2026-10-09T03:45:55.022Z",
     "auditedAt": "2026-10-09T03:45:55.022Z",
     "title": "Chuẩn hóa icon di vật LR, event và quái Sinh tồn",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Di vật LR có icon riêng cho món đồ và nội tại; chuẩn hóa trong Túi, Chỉ số, phần thưởng và hồ sơ.",
       "Mỗi loài quái và boss có icon nhận diện trên bảng chiến đấu, Chi tiết và kết quả hạ quái, gồm quái từ event và Tower.",
@@ -1143,6 +1377,8 @@
     "updatedAt": "2026-10-08T10:39:33.564Z",
     "auditedAt": "2026-10-08T10:39:33.564Z",
     "title": "Ẩn Phase ở boss một giai đoạn",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Giao diện Sinh tồn không ghi Phase cho boss chỉ có một giai đoạn. Boss nhiều giai đoạn vẫn hiển thị phase hiện tại; Deimoss giữ bảng ba thanh HP."
     ]
@@ -1152,6 +1388,8 @@
     "updatedAt": "2026-10-08T09:49:27.694Z",
     "auditedAt": "2026-10-08T09:49:27.694Z",
     "title": "Tự chọn trang bị giải nguyền tại Purifier",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Purifier có menu chọn món còn nguyền, hiển thị tên, level và số cấp nguyền; hỗ trợ phân trang khi có nhiều món.",
       "Chọn hoặc đổi món chỉ xem trước lời nguyền được gỡ, chỉ số trước → sau và giá; chỉ nút Giải nguyền món này mới trả phí. Giữ giá theo payout hiện tại và chỉ giải 1 món mỗi lần gặp.",
@@ -1163,6 +1401,8 @@
     "updatedAt": "2026-10-08T08:42:06.806Z",
     "auditedAt": "2026-10-08T08:42:06.806Z",
     "title": "Tháp Định Mệnh: reset thủ công",
+    "type": "feature",
+    "scope": "tower",
     "changes": [
       "Thêm lệnh quản trị /quantri thapreset để xoay ngay Tháp Định Mệnh đang hoạt động.",
       "Tháp được reset chỉ hoạt động đến 00:00 thứ Hai; lịch rotation tự động kế tiếp không bị dịch theo thời điểm dùng lệnh.",
@@ -1174,6 +1414,8 @@
     "updatedAt": "2026-10-08T08:16:47.020Z",
     "auditedAt": "2026-10-08T08:16:47.020Z",
     "title": "Tháp Định Mệnh: puzzle nhiều lớp",
+    "type": "feature",
+    "scope": "tower",
     "changes": [
       "Thêm kháng vật lý/phép theo phần trăm và Giáp thích nghi tăng 25% kháng với loại damage vừa nhận.",
       "Thêm Break 0–3: Tấn công và đỡ Trọng kích tích Break, Skill tiêu Break để tăng damage; Skill vẫn dùng tự do khi đủ MP.",
@@ -1187,6 +1429,8 @@
     "updatedAt": "2026-10-08T07:47:10.029Z",
     "auditedAt": "2026-10-08T07:47:10.029Z",
     "title": "Tháp Định Mệnh: Skill tự do và puzzle khó hơn",
+    "type": "feature",
+    "scope": "tower",
     "changes": [
       "Từ rotation kế tiếp, Skill có thể dùng nhiều lần khi đủ MP, gây damage bình thường, không cần làm đòn kết liễu và quái không còn hồi lại damage Skill.",
       "Mỗi lượt combat có trạng thái Kháng phép, Kháng vật lý hoặc Miễn nhiễm sát thương; chuỗi hành động được xáo trộn riêng từng tầng thay cho công thức cố định Thủ rồi Đánh rồi Skill.",
@@ -1199,6 +1443,8 @@
     "updatedAt": "2026-10-08T07:23:03.786Z",
     "auditedAt": "2026-10-08T07:23:03.786Z",
     "title": "Tinh gọn giao diện Tháp Định Mệnh",
+    "type": "improvement",
+    "scope": "tower",
     "changes": [
       "Bảng chiến đấu chỉ giữ tầng hiện tại, HP/MP, damage và MP của ba hành động, HP/ý định quái cùng kết quả lượt trước.",
       "Chuyển các giải thích về Skill, RNG, class và luật qua các tab chi tiết; ẩn tiến độ tuần, phần thưởng và mã challenge khi đang chiến đấu.",
@@ -1210,6 +1456,8 @@
     "updatedAt": "2026-10-08T07:00:35.185Z",
     "auditedAt": "2026-10-08T07:00:35.185Z",
     "title": "Tháp Định Mệnh: checkpoint từng tầng",
+    "type": "feature",
+    "scope": "tower",
     "changes": [
       "Tử trận hoặc chọn sai nhánh sẽ cho thử lại từ đầu tầng hiện tại; các tầng đã vượt không bị đặt lại.",
       "Mỗi tầng nay là một puzzle độc lập: HP, MP, Skill, Ward và hiệu ứng được đặt lại khi bước sang tầng mới, không mang lựa chọn hay tài nguyên từ tầng trước.",
@@ -1221,6 +1469,8 @@
     "updatedAt": "2026-10-08T04:47:41.398Z",
     "auditedAt": "2026-10-08T04:47:41.398Z",
     "title": "Tháp Định Mệnh v4: Combat Puzzle",
+    "type": "feature",
+    "scope": "tower",
     "changes": [
       "Thiết kế lại Tháp thành combat thật: Tấn công, Skill và Phòng thủ luôn xử lý theo damage, HP, MP cùng ý định quái đang hiển thị; không còn phạt vì chọn sai đáp án ẩn.",
       "Skill chỉ dùng một lần mỗi tầng và bị quái hấp thụ toàn bộ damage nếu chưa kết liễu; Trọng kích hiển thị damage khi đỡ, còn Hành quyết chỉ giết người chơi nếu quái vẫn sống.",
@@ -1233,6 +1483,8 @@
     "updatedAt": "2026-10-08T04:32:25.394Z",
     "auditedAt": "2026-10-08T04:32:25.394Z",
     "title": "Event hồi phục cả HP và MP",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Các event hồi HP trong Sinh tồn nay hồi thêm MP theo cùng tỷ lệ Max MP, làm tròn lên và không vượt giới hạn; HP đã đầy vẫn hồi MP. Healer hồi 30% MP, Grave Echo hồi 15%; các nhánh hồi đầy cũng hồi đầy MP.",
       "Áp dụng cho Healing Shrine, Blood Fountain, cửa sáng, Wrong Portal tốt, dịch vụ hồi phục của Rift Merchant, phần thưởng hồi phục Tower Remembers và Class Shrine của Druid (5% MP mỗi tầng hiệu lực).",
@@ -1244,6 +1496,8 @@
     "updatedAt": "2026-10-08T03:08:00.089Z",
     "auditedAt": "2026-10-08T03:08:00.089Z",
     "title": "Sinh tồn: 21 boss và Threefold Prophecy",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Thay vòng 5 boss bằng 21 boss có cơ chế riêng tại các mốc 50 tầng, thêm Kabraxis tầng 666; hiển thị stack, cảnh báo và dự báo sát thương, xem toàn bộ cơ chế trong Chi tiết.",
       "Tầng 333 chọn ấn War, Protection hoặc Arcane một lần. Tầng 666 cho rút thưởng trước cửa; khi vào trận không thể bỏ qua/rút. Hạ Kabraxis nhận trang bị SSR 66,6% hoặc UR có nguyền 33,4%, bonus 66,6% cược và thức tỉnh ấn.",
@@ -1256,6 +1510,8 @@
     "updatedAt": "2026-10-08T01:14:11.177Z",
     "auditedAt": "2026-10-08T01:14:11.177Z",
     "title": "Điều chỉnh mốc Gilded Soul",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Gilded Soul tăng 10/20/30/40/50% DMG khi xu có thể rút trong run đạt 2/3/4/5/7 lần cược, thay cho 2/5/10/20/40.",
       "Đồng bộ mô tả và luật; mức tăng vẫn chốt khi vào combat, trận đang diễn ra giữ mức đã chốt."
@@ -1266,6 +1522,8 @@
     "updatedAt": "2026-10-07T10:38:15.497Z",
     "auditedAt": "2026-10-07T10:38:15.497Z",
     "title": "Tinh gọn Túi đồ Sinh tồn",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Bỏ dòng class và tầng ở đầu Túi đồ; gộp bình và ba loại vé thành một dòng, bỏ mô tả tỷ lệ cầu nguyện và hồi sinh.",
       "Rút gọn Mảnh Chinh Phạt thành tiến độ x/4 và danh sách mảnh.",
@@ -1277,6 +1535,8 @@
     "updatedAt": "2026-10-07T09:56:19.015Z",
     "auditedAt": "2026-10-07T09:56:19.015Z",
     "title": "Tinh gọn mục Rút thưởng Sinh tồn",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Chuyển thống kê xu đã trừ vì thuế, Goblin, event, mua đồ/dịch vụ và giảm thưởng do nguyền sang tab Chỉ số, mục Thống kê xu.",
       "Mục Rút thưởng trên bảng chơi chỉ hiển thị xu thực nhận và kim cương; icon và số tiền vẫn giữ đầy đủ trong Chỉ số."
@@ -1287,6 +1547,8 @@
     "updatedAt": "2026-10-07T09:43:53.902Z",
     "auditedAt": "2026-10-07T09:43:53.902Z",
     "title": "Giảm phản phệ Avarice Revenant",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Avarice Revenant phản phệ 10% sát thương Tấn công/Skill thực tế gây lên boss, giảm từ 30%; làm tròn xuống, áp dụng cả đòn kết liễu.",
       "Chi tiết, luật và log chiến đấu cập nhật mức 10%."
@@ -1297,6 +1559,8 @@
     "updatedAt": "2026-10-07T09:18:55.975Z",
     "auditedAt": "2026-10-07T09:18:55.975Z",
     "title": "Đánh giá checkpoint cuối run Sinh tồn",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Đã mô phỏng 14.000 run, 1.000 run/class/cấu hình, so sánh checkpoint hiện tại với phương án từ tầng 700: mỗi 10 tầng chọn +10 thuộc tính, hồi đầy HP và thêm 2 bình.",
       "Trong chiến thuật cố định được đo, cả 7 class đều giảm tỷ lệ thắng; Barbarian 26,3% → 8,6%, Sorceress 51% → 31,1%, Druid 16,8% → 13,8%. Tổng điểm cuối run không tăng, số lần hồi HP/nhận bình giảm một nửa.",
@@ -1308,6 +1572,8 @@
     "updatedAt": "2026-10-07T09:18:17.882Z",
     "auditedAt": "2026-10-07T09:18:17.882Z",
     "title": "Tháp Suy Luận: tối giản giao diện",
+    "type": "improvement",
+    "scope": "tower",
     "changes": [
       "Trạng thái quái chỉ còn các nhãn ngắn như Kháng vật lý, Kháng phép, Miễn nhiễm sát thương và Chuẩn bị đòn chí tử; không còn giải thích hành động cần chọn.",
       "Bảng chính được rút gọn còn mục tiêu tầng, HP/MP/bình, damage cơ bản, HP quái và tiến trình bước.",
@@ -1319,6 +1585,8 @@
     "updatedAt": "2026-10-07T09:04:45.321Z",
     "auditedAt": "2026-10-07T09:04:45.321Z",
     "title": "Tháp Suy Luận: đòn chí tử kết thúc ngay",
+    "type": "feature",
+    "scope": "tower",
     "changes": [
       "Nếu không Phòng thủ trước đòn chí tử, HP về 0 và attempt kết thúc ngay thay vì chờ hết số bước của tầng.",
       "Các lỗi puzzle không gây chết vẫn tiếp tục được giữ kín và chỉ chấm khi hết bước."
@@ -1329,6 +1597,8 @@
     "updatedAt": "2026-10-07T09:00:00.233Z",
     "auditedAt": "2026-10-07T09:00:00.233Z",
     "title": "Tháp Suy Luận: mechanic dễ hiểu hơn",
+    "type": "improvement",
+    "scope": "tower",
     "changes": [
       "Mỗi tầng hiển thị thẳng mục tiêu hạ quái trong đúng số bước và đưa HP quái về đúng 0 ở bước cuối.",
       "Trạng thái quái được viết rõ bằng tiếng Việt: kháng vật lý, kháng phép, đòn chí tử bắt buộc Phòng thủ hoặc thời điểm dùng bình máu.",
@@ -1341,6 +1611,8 @@
     "updatedAt": "2026-10-07T08:38:36.735Z",
     "auditedAt": "2026-10-07T08:38:36.735Z",
     "title": "Tháp Suy Luận: chấm kết quả cuối tầng",
+    "type": "feature",
+    "scope": "tower",
     "changes": [
       "Sai bước không còn làm dừng lượt hoặc báo lỗi ngay; mọi hành động tiếp tục tiêu hao số bước của tầng.",
       "Khi hết bước mà chưa vượt tầng, hệ thống chỉ đưa một gợi ý trừu tượng rồi cho thử lại từ đầu tầng chưa vượt.",
@@ -1352,6 +1624,8 @@
     "updatedAt": "2026-10-07T08:26:26.439Z",
     "auditedAt": "2026-10-07T08:26:26.439Z",
     "title": "Tháp Suy Luận: quái và luật deterministic",
+    "type": "feature",
+    "scope": "tower",
     "changes": [
       "Thêm bộ 15 quái riêng cho Tháp, mỗi dấu hiệu chiến đấu chỉ có một hành động hợp lệ và lời giải duy nhất.",
       "Loại bỏ Crit, Miss, né và RNG trong lượt chơi; Tấn công, Kỹ năng, Phòng thủ cùng bình máu đều dùng giá trị cố định được kiểm chứng trước khi phát hành.",
@@ -1363,6 +1637,8 @@
     "updatedAt": "2026-10-07T08:10:30.297Z",
     "auditedAt": "2026-10-07T08:10:30.297Z",
     "title": "Tháp Định Mệnh: checkpoint theo tầng",
+    "type": "feature",
+    "scope": "tower",
     "changes": [
       "Thất bại ở tầng nào sẽ thử lại từ đầu tầng đó, giữ nguyên các tầng đã vượt và khôi phục HP, MP, bình cùng hiệu ứng lúc vừa vào tầng.",
       "Sau khi hoàn thành đủ 15 tầng, nút Chơi lại cho phép bắt đầu lại từ tầng 1 nhưng không trao lại phần thưởng đã nhận."
@@ -1373,6 +1649,8 @@
     "updatedAt": "2026-10-07T07:55:58.178Z",
     "auditedAt": "2026-10-07T07:55:58.178Z",
     "title": "Tháp Định Mệnh: đồng bộ dữ liệu theo tuần",
+    "type": "maintenance",
+    "scope": "tower",
     "changes": [
       "Stats và bộ trang bị của mỗi rotation được chụp từ dữ liệu Sinh tồn mới nhất khi tuần đó bắt đầu.",
       "Thay đổi cân bằng trong lúc một tháp đang hoạt động không làm đổi tháp hiện tại và chỉ áp dụng từ 00:00 thứ Hai của tuần kế tiếp."
@@ -1383,6 +1661,8 @@
     "updatedAt": "2026-10-07T07:47:29.504Z",
     "auditedAt": "2026-10-07T07:47:29.504Z",
     "title": "Tháp Định Mệnh: 15 tầng puzzle",
+    "type": "feature",
+    "scope": "tower",
     "changes": [
       "Làm lại Tháp thành 15 puzzle chiến đấu: tầng 1 cần đúng 1 bước, tăng dần đến tầng 15 cần đúng 15 bước; quái phải bị hạ ở bước cuối.",
       "Tháp dùng class, chỉ số, bình máu và bộ trang bị mẫu từ dữ liệu Sinh tồn hiện tại nhưng giữ session, tiến trình và phần thưởng hoàn toàn độc lập.",
@@ -1394,6 +1674,8 @@
     "updatedAt": "2026-10-07T07:09:28.894Z",
     "auditedAt": "2026-10-07T07:09:28.894Z",
     "title": "Royal Invitation: quy đổi set thành di vật LR",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Đủ set Diệt Vương hoặc Tinh Tú với mọi level UR đã giải nguyền sẽ mở Royal Invitation: trọng số 10, Purifier giữ 3, event thường 1.",
       "Nhận lời giao nộp toàn bộ 5 món của set được chọn cùng mọi level để nhận Kingslayer’s Testament hoặc Astral Singularity. Mỗi run quy đổi một set; bỏ đi sẽ khóa thư mời trong cả run.",
@@ -1407,6 +1689,8 @@
     "updatedAt": "2026-10-07T06:19:54.366Z",
     "auditedAt": "2026-10-07T06:19:54.366Z",
     "title": "Nghi lễ Oán Hận và di vật Gilded Soul",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Cướp Lost Adventurer giữ hậu quả cũ và thêm Dấu ấn oán hận trong Rift. Từ tầng cướp +10, Shrine có 7 nhánh ngang nhau; nghi lễ xuất hiện với tỷ lệ 1/7. Bỏ qua giữ dấu ấn, cướp lại không lùi mốc.",
       "Nghi lễ triệu hồi Avarice Revenant: dưới 40% Max HP không dùng bình; phản phệ 30% DMG Tấn công/Skill thực tế, không Crit/né/chặn. Boss chờ một lượt không tấn công, đánh từ lượt thứ hai liên tiếp. Crit chặn đòn thường nhưng vẫn chịu phản phệ.",
@@ -1419,6 +1703,8 @@
     "updatedAt": "2026-10-07T05:42:51.903Z",
     "auditedAt": "2026-10-07T05:42:51.903Z",
     "title": "Sinh tồn: Bốn mảnh Chinh Phạt và di vật LR",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Lần hạ đầu tiên trong run của Mimic, Ancient Mimic, Blood Mimic và Clone sau khi phá Mirror of Fate bảo đảm cho một mảnh mỗi nguồn, độc lập LUCK; giữ nguyên thưởng vật phẩm cũ.",
       "Đủ bốn mảnh: Wrong Portal tiếp theo bảo đảm mở thêm cửa tầng hầm. Thắng Covenant Guardian mới tiêu thụ mảnh; lựa chọn vào portal thường và bỏ qua vẫn giữ nguyên.",
@@ -1432,6 +1718,8 @@
     "updatedAt": "2026-10-07T05:12:26.114Z",
     "auditedAt": "2026-10-07T05:12:26.114Z",
     "title": "Sửa bảng tỷ lệ Sinh tồn",
+    "type": "fix",
+    "scope": "survival",
     "changes": [
       "Sửa lỗi sinhton tyle không gửi được bảng khi emoji của bot làm nội dung vượt giới hạn Discord. Các nhóm dài có phân trang Trước/Sau, chuyển nhóm quay về trang đầu và giữ đủ mô tả.",
       "Luật Sinh tồn cũng tự chia trang để hiển thị đầy đủ với emoji portal và emoji động. Chỉ người mở bảng được chuyển nhóm hoặc trang."
@@ -1442,6 +1730,8 @@
     "updatedAt": "2026-10-07T04:46:41.400Z",
     "auditedAt": "2026-10-07T04:46:41.400Z",
     "title": "Bảo trì cấu trúc Sinh tồn",
+    "type": "maintenance",
+    "scope": "survival",
     "changes": [
       "Tổ chức lại Sinh tồn theo từng chức năng để dễ bảo trì và cập nhật; giữ nguyên luật chơi, phần thưởng và dữ liệu run đang diễn ra.",
       "Tower mode và các game khác giữ nguyên."
@@ -1452,6 +1742,8 @@
     "updatedAt": "2026-10-07T04:20:52.585Z",
     "auditedAt": "2026-10-07T04:20:52.585Z",
     "title": "God of RNGesus và di vật Fatebreaker Seal",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Thêm God of RNGesus: roll riêng từng tầng từ tầng 1 với tỷ lệ ban đầu 0,0001%; mỗi run tử trận thật sự do RNGesus tăng thêm 0,0001 điểm %. Tính cả lịch sử tử trận RNGesus đã lưu, giữ qua các run và restart.",
       "God ban phước hồi đầy HP/MP, giải mọi nguyền UR và xóa mọi ấn Rift; giữ UR, level, Paradox và Contract. Nhận Fatebreaker Seal [LR], không gặp RNGesus trong phần còn lại của run; tỷ lệ God reset về 0,0001%.",
@@ -1463,6 +1755,8 @@
     "updatedAt": "2026-10-07T03:53:41.373Z",
     "auditedAt": "2026-10-07T03:53:41.373Z",
     "title": "Khai báo nhóm di vật LR cho Sinh tồn",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Bổ sung tên và thiết kế nội tại cho 6 di vật LR: Di Chúc Diệt Vương, Điểm Kỳ Dị Tinh Tú, Ấn Phá Mệnh, Màn Chắn Tuyệt Đối, Khế Ước Chinh Phạt và Linh Hồn Hoàng Kim.",
       "Di vật LR không cộng chỉ số cơ bản, không có level; dự kiến chỉ một nội tại được kích hoạt trong mỗi run. Cách nhận và kích hoạt chưa mở; không có trong drop, Gacha, cửa hàng hay loadout.",
@@ -1474,6 +1768,8 @@
     "updatedAt": "2026-10-07T03:17:24.627Z",
     "auditedAt": "2026-10-07T03:17:24.627Z",
     "title": "Treasure Shrine thay Blood Shrine",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Trong Sinh tồn V2, Blood Shrine được thay bằng Treasure Shrine: nhận một vật phẩm ngẫu nhiên theo tỷ lệ R 50%, SR 30%, SSR 15%, UR 5%. Treasure vẫn là một trong sáu loại Shrine xuất hiện đồng đều.",
       "Vật phẩm được khóa khi gặp Shrine, không đổi khi xem bảng hoặc tiếp tục run; tỷ lệ không chịu LUCK/pity hòm. Trang bị trùng tăng một level, UR có thể nhận Vé thoát; Bỏ qua không nhận vật phẩm.",
@@ -1485,6 +1781,8 @@
     "updatedAt": "2026-10-07T02:49:30.749Z",
     "auditedAt": "2026-10-07T02:49:30.749Z",
     "title": "Thống nhất mọi phí xu theo payout hiện tại",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Blacksmith, Purifier, hiến tế xu và khoản cược Cursed Gambler đều tính theo payout hiện tại đang hiển thị, sau lời nguyền, Paradox và các khoản đã chi. Giữ nguyên tỷ lệ phí; cược thắng vẫn thưởng theo khoản đã đặt.",
       "Rift Merchant và Payout Shop chốt giá theo payout hiện tại lúc gặp, áp dụng nội tại giảm giá xu một lần. Điều kiện đủ tiền và thanh toán dùng cùng số payout.",
@@ -1497,6 +1795,8 @@
     "updatedAt": "2026-10-07T02:41:41.820Z",
     "auditedAt": "2026-10-07T02:41:41.820Z",
     "title": "Wrong Portal: cho phép bỏ qua",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Wrong Portal có hai nút Vào portal và Bỏ qua. Bỏ qua giúp vượt tầng, không nhận thưởng, không chịu hiệu ứng portal và không gặp Elite đánh phủ đầu; hiệu ứng cuối tầng và checkpoint vẫn diễn ra bình thường.",
       "Nội tại tiên tri vẫn đánh dấu an toàn/nguy hiểm trên nút Vào portal. Bỏ qua không tính đã tham gia sự kiện; nút cũ bấm lặp không thể vượt thêm tầng."
@@ -1507,6 +1807,8 @@
     "updatedAt": "2026-10-07T02:33:54.568Z",
     "auditedAt": "2026-10-07T02:33:54.568Z",
     "title": "Purifier: phí theo payout hiện tại",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Phí giải nguyền của Purifier là 10% số xu payout hiện tại đang hiển thị trước khi giải, sau lời nguyền, Paradox và các khoản đã chi; làm tròn lên, tối thiểu 1 xu.",
       "Nút giải nguyền, Chi tiết và luật dùng cùng cách tính. Trừ phí một lần, giữ nguyên UR, level, buff và nội tại; không giảm hệ số payout."
@@ -1517,6 +1819,8 @@
     "updatedAt": "2026-10-07T02:30:04.516Z",
     "auditedAt": "2026-10-07T02:30:04.516Z",
     "title": "Sinh tồn: vật phẩm UR và độ hiếm LR",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Vé thoát RNGesus [UR] vào pool vật phẩm của run. Nhặt được nhận tối đa một vé, không có level hoặc lời nguyền và không chiếm ô trang bị; vé dư được ghi trong Lượt vừa rồi.",
       "Vé hồi sinh được xếp [LR], hiện LR chỉ có vật phẩm. LR không nằm trong Gacha hoặc pool rơi đồ ngẫu nhiên; sự kiện đặc biệt cấp LR sẽ có spec sau.",
@@ -1529,6 +1833,8 @@
     "updatedAt": "2026-10-07T02:11:03.095Z",
     "auditedAt": "2026-10-07T02:11:03.095Z",
     "title": "Tinh gọn nút xóa Rift",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Rift Severance hiển thị nút chỉ có icon riêng của từng loại Rift thay cho tên dài; chọn icon để xóa toàn bộ stack của loại đó.",
       "Mô tả hướng dẫn xem nút Rift để đọc hiệu ứng từng loại; Unstable Rift vẫn được giữ."
@@ -1539,6 +1845,8 @@
     "updatedAt": "2026-10-07T02:03:15.777Z",
     "auditedAt": "2026-10-07T02:03:15.777Z",
     "title": "Thống nhất thưởng và phạt xu Sinh tồn V2",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Bán rương boss nhận bonus bằng 100% cược ban đầu; hòm thường giữ 15%. Thử thách Hiến tế tài sản thưởng 150% cược ban đầu khi thắng.",
       "Phạt Wrong Portal, hối lộ RNGesus và bồi thường Tower Remembers trừ xu một lần theo payout hiện tại, không giảm hệ số thưởng hoặc phạt tiền kiếm thêm về sau.",
@@ -1551,6 +1859,8 @@
     "updatedAt": "2026-10-06T15:52:39.757Z",
     "auditedAt": "2026-10-06T15:52:39.757Z",
     "title": "Làm rõ Purifier và kết quả giải nguyền",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Purifier hiển thị ngay trên bảng chính tên, độ hiếm, cấp trang bị, từng lời nguyền sẽ gỡ và dự báo chỉ số trước sang sau, gồm sức chứa bình máu; in đậm kết quả sau.",
       "Hiển thị số xu cần trả theo 10% payout gốc. Chi tiết liệt kê buff và nội tại giữ nguyên, điều kiện trả phí và ảnh hưởng của các trang bị còn nguyền khác.",
@@ -1562,6 +1872,8 @@
     "updatedAt": "2026-10-06T15:36:48.703Z",
     "auditedAt": "2026-10-06T15:36:48.703Z",
     "title": "RNGesus tăng tỷ lệ đều, bỏ spike",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Bỏ spike và biến động ngẫu nhiên của tỷ lệ gặp RNGesus. Bắt đầu từ 0,30%, tăng cố định 0,05 điểm phần trăm sau mỗi tầng có roll nhưng không gặp, tối đa 12%; áp dụng cả ván mới và ván cũ.",
       "Gặp RNGesus thì reset bộ đếm. Tầng ngay sau khi vượt vẫn an toàn 0%, lần roll hợp lệ tiếp theo bắt đầu lại ở 0,30%. Tầng boss và tầng bị chặn không tăng bộ đếm.",
@@ -1573,6 +1885,8 @@
     "updatedAt": "2026-10-06T15:15:38.409Z",
     "auditedAt": "2026-10-06T15:15:38.409Z",
     "title": "Hiển thị rõ kết quả rèn trang bị",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Blacksmith hiển thị trước khi rèn: tên và độ hiếm trang bị, cấp cũ sang cấp mới, từng buff và lời nguyền trước sang sau; in đậm kết quả sau.",
       "Hiển thị số xu cần trả theo 12% payout gốc, nội tại giữ nguyên và điều kiện rèn trong Chi tiết. Trang bị đã giải toàn bộ nguyền được ghi rõ không thêm nguyền khi rèn.",
@@ -1584,6 +1898,8 @@
     "updatedAt": "2026-10-06T15:09:09.224Z",
     "auditedAt": "2026-10-06T15:09:09.224Z",
     "title": "Làm rõ Tấn công và Phòng thủ",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Mô tả Tấn công và Phòng thủ bằng các dòng ngắn, dùng icon chuẩn cho Vật lý, MP, DEF, RES và CRIT.",
       "Làm rõ Phòng thủ tăng RES 15 điểm phần trăm, giảm thêm 15% sát thương nhận và chống CRIT trong lượt hiện tại; đồng bộ mô tả trong Chỉ số và luật giao tranh."
@@ -1594,6 +1910,8 @@
     "updatedAt": "2026-10-06T15:00:30.732Z",
     "auditedAt": "2026-10-06T15:00:30.732Z",
     "title": "Treasure Goblin thưởng thêm trang bị",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Bắt được Treasure Goblin nhận bonus 25% tiền cược và 1 trang bị: 60% SR, 35% SSR, 5% UR kèm lời nguyền. Buff bắt Goblin tiếp tục tăng tỷ lệ bắt, tối đa 90%.",
       "Goblin thoát chỉ trừ một lần 5% payout hiện tại (làm tròn lên 1 xu), thay cho giảm 10% hệ số payout của cả ván.",
@@ -1605,6 +1923,8 @@
     "updatedAt": "2026-10-06T14:45:13.165Z",
     "auditedAt": "2026-10-06T14:45:13.165Z",
     "title": "Chuẩn hóa vé Sinh tồn",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Thống nhất tên ngắn: Vé thoát, Vé cầu nguyện và Vé hồi sinh; mỗi loại dùng icon riêng trên bảng chơi, Chỉ số, cửa hàng, túi đồ và màn chọn đồ.",
       "Mô tả vé cầu nguyện ghi rõ 30% lên 60% trong cả ván; vé hồi sinh ghi rõ hồi 50% Max HP và tiếp tục ở đâu. Rút gọn diễn biến dùng vé, bỏ nhãn Vé bị lặp trong cửa hàng và túi đồ."
@@ -1615,6 +1935,8 @@
     "updatedAt": "2026-10-06T14:30:51.702Z",
     "auditedAt": "2026-10-06T14:30:51.702Z",
     "title": "Thu thuế trừ trực tiếp payout",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Tax Collector thu một lần 15% số xu hiện có thể rút (làm tròn lên 1 xu), thay vì giảm hệ số payout của cả ván.",
       "Cập nhật mô tả và luật thu thuế; Lượt vừa rồi ghi rõ số xu trước và sau khi thu, phần payout phân biệt xu thuế với khoản đã chi."
@@ -1625,6 +1947,8 @@
     "updatedAt": "2026-10-06T14:08:41.722Z",
     "auditedAt": "2026-10-06T14:08:41.722Z",
     "title": "Icon riêng cho chỉ số phụ và nội tại Sinh tồn",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Tách icon riêng cho DMG Boss, DMG Elite, hiệu lực bình, phát hiện Mimic, bắt Goblin, tìm SSR, DMG nhận, HP mất mỗi tầng, tỷ lệ Mimic và Payout.",
       "Mỗi loại nội tại có tên icon riêng; cập nhật mô tả trang bị, giới hạn bình/CRIT/né, Tiên tri, Thương lượng và diễn biến nội tại trong lượt vừa rồi.",
@@ -1636,6 +1960,8 @@
     "updatedAt": "2026-10-06T13:55:15.549Z",
     "auditedAt": "2026-10-06T13:55:15.549Z",
     "title": "Chuẩn hóa icon chỉ số và buff Sinh tồn",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Thống nhất icon và tên chỉ số trong buff trang bị, mô tả nội tại và lời nguyền; bổ sung icon cho Payout, sức chứa bình và hiệu lực bình.",
       "Phân biệt icon sát thương vật lý và phép trong mô tả lời nguyền; các nội tại sử dụng icon theo tác dụng thay cho biểu tượng chung.",
@@ -1647,6 +1973,8 @@
     "updatedAt": "2026-10-06T13:33:06.739Z",
     "auditedAt": "2026-10-06T13:33:06.739Z",
     "title": "Chuẩn hóa icon The Tower Remembers",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Mỗi loại ký ức dùng một icon riêng trên tình huống, nút lựa chọn, quái truy đuổi và kết quả lượt.",
       "Bảng tỷ lệ và luật chơi có chú giải 8 icon: Ân nghĩa, Truy nã, Hiến tế máu, Hiến tế tài sản, Dư âm gương, Thử thách thần linh, Oán niệm và Ký ức cũ."
@@ -1657,6 +1985,8 @@
     "updatedAt": "2026-10-06T10:59:59.000Z",
     "auditedAt": "2026-10-06T10:59:59.000Z",
     "title": "Backup database qua DM Discord",
+    "type": "maintenance",
+    "scope": "system",
     "changes": [
       "Chủ bot nhận snapshot database đã kiểm tra qua tin nhắn riêng, theo lịch backup và khi dừng bình thường.",
       "File được nén và tự chia phần khi lớn, kèm SHA-256 và công cụ ghép/phục hồi.",
@@ -1668,6 +1998,8 @@
     "updatedAt": "2026-10-06T10:44:35.781Z",
     "auditedAt": "2026-10-06T10:44:35.781Z",
     "title": "Củng cố lưu dữ liệu và backup",
+    "type": "maintenance",
+    "scope": "system",
     "changes": [
       "Database đồng bộ dữ liệu mỗi lần commit để tăng độ bền khi máy chủ mất điện hoặc reset cứng.",
       "Backup được kiểm tra toàn vẹn; bot tạo thêm bản khi dừng bình thường và hỗ trợ cấu hình lịch theo phút.",
@@ -1679,6 +2011,8 @@
     "updatedAt": "2026-10-06T10:17:19.566Z",
     "auditedAt": "2026-10-06T10:17:19.566Z",
     "title": "Sinh tồn: giảm nghẽn cập nhật giao diện",
+    "type": "maintenance",
+    "scope": "survival",
     "changes": [
       "Bảng chi tiết và lượt chơi dùng hàng đợi riêng, giúp hạn chế việc chờ nhau khi Discord cập nhật chậm.",
       "Bấm trùng một lượt đang xử lý không gửi lại bảng battle đã cập nhật thành công; lượt chơi vẫn được lưu và cập nhật theo đúng thứ tự.",
@@ -1690,6 +2024,8 @@
     "updatedAt": "2026-10-06T09:40:45.620Z",
     "auditedAt": "2026-10-06T09:40:45.620Z",
     "title": "Tower Remembers: ký ức gắn với hành động",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Phân loại Ân nghĩa, Truy nã, Hiến tế máu/tài sản, Dư âm gương, Thử thách thần linh và Oán niệm; mỗi event có icon placeholder riêng.",
       "Đưa nguồn gốc, hậu quả, tầng đến hạn và bảo hộ vào nút Rift; battle UI chỉ giữ tên và nút xử lý.",
@@ -1703,6 +2039,8 @@
     "updatedAt": "2026-10-06T08:28:53.175Z",
     "auditedAt": "2026-10-06T08:28:53.175Z",
     "title": "Lịch sử cập nhật của bot",
+    "type": "feature",
+    "scope": "system",
     "changes": [
       "Thêm /changelog để xem thời gian và nội dung cập nhật; mới nhất ở trang đầu, có phân trang và chọn trang trực tiếp.",
       "Bổ sung lịch sử các thay đổi gần đây; thời gian hiển thị theo giờ Việt Nam (UTC+7)."
@@ -1714,6 +2052,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "d08afd138546d48e1c1edacd0eb9b64b5ce26542",
     "title": "Sinh tồn: giảm tỷ lệ rơi đồ cơ bản",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Tỷ lệ rơi đồ từ quái: 1% + LUCK × 0,5 điểm %, tối đa 20% (thay mức cơ bản 5%)."
     ]
@@ -1724,6 +2064,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "1f0878e8c74e4a0ceb46c46ed27167961a5ce1a9",
     "title": "Sinh tồn: giá của Blood Merchant",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Mua SR/SSR/UR mất lần lượt 12%/25%/40% Max HP trong run, tính theo Max HP lúc gặp thương nhân.",
       "HP hiện tại chỉ giảm nếu vượt Max HP mới; log ghi chỉ số trước → sau."
@@ -1735,6 +2077,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "7a1bf36d2ba5b17e87da704fdc614eba78163ed6",
     "title": "Sinh tồn: giải nguyền giữ nguyên UR",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Giải nguyền giữ độ hiếm UR, cấp độ, chỉ số và nội tại; không hạ trang bị xuống SSR.",
       "Khôi phục UR cho các món từng bị hạ xuống SSR sau giải nguyền."
@@ -1746,6 +2090,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "3cb961a643d081db4ca25c765d847c8a50e49f97",
     "title": "Sinh tồn: quái có thể rơi trang bị",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Quái thường rơi R/SR; tinh anh rơi SR/SSR; trùm rơi SSR/UR. Độ hiếm thấp/cao chia 60%/40%.",
       "Trùm cuối khu vực có rương không roll thêm; Ancient/Blood Mimic giữ thưởng cũ và roll thêm theo LUCK.",
@@ -1758,6 +2104,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "a7d0a363039d897a31b85ef9cd9a67252691e669",
     "title": "Sinh tồn: vai trò SSR/UR và lời nguyền",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Phân định lại vai trò trang bị SSR/UR, bổ sung lựa chọn cho LUCK và ENE.",
       "Đa dạng hóa lời nguyền UR: chi phí HP/MP, giảm hồi phục, giới hạn bình và tăng sát thương phải nhận; mô tả rõ đối tượng và giới hạn."
@@ -1769,6 +2117,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "ec99bb96ae84c61363401b8d9d53cd6a7797fb1d",
     "title": "Sinh tồn: nội tại trang bị",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Trang bị có nội tại hỗ trợ khám phá và chiến đấu: dự báo sự kiện, phản sát thương, đổi sát thương thành MP, giảm giá và tăng giới hạn chỉ số.",
       "Nội tại không tăng theo cấp item; các món khác nhau có cùng hiệu ứng cộng dồn theo giới hạn. Dự báo không tiết lộ kết quả cầu nguyện RNGesus."
@@ -1780,6 +2130,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "3132cde0f91ac068574e113ca0d7acf91b48d676",
     "title": "Sinh tồn: tinh gọn trang bị R/SR",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Mỗi món R/SR có vai trò chỉ số rõ ràng, giảm các món cùng độ hiếm có công dụng tương tự.",
       "Túi đồ cũ được chuyển sang danh mục mới."
@@ -1791,6 +2143,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "8a27425b49b329f61588b16fa597cb4261badc5a",
     "title": "Sinh tồn: phân bổ lại các bảng thông tin",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Túi chỉ hiển thị vật phẩm; Rift hiển thị Rift, Paradox và Contract.",
       "Chỉ số hiển thị nhân vật, tổng chỉ số item và các hiệu ứng ảnh hưởng đến chỉ số."
@@ -1802,6 +2156,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "aacf186fd5e9907d4cbb7818dc22e690b70cdd21",
     "title": "Sinh tồn: dự báo Checkpoint trong Chi tiết",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Các lựa chọn tăng STR/DEX/VIT/ENE và dự báo chỉ số trước → sau tại Checkpoint chuyển vào nút Chi tiết."
     ]
@@ -1812,6 +2168,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "89c721c08a0167c1a149f30af8ca5957b03cac52",
     "title": "Sinh tồn: rút gọn giao diện chiến đấu",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Bỏ mục Rift modifier trên giao diện chiến đấu; xem hiệu ứng bằng nút Rift."
     ]
@@ -1822,6 +2180,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "d70d9867b026eecb712eb829fe026f2295271da6",
     "title": "Sinh tồn: mục Rút thưởng gọn hơn",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Rút gọn phần xu/kim cương có thể nhận và phần giảm thưởng để dễ đọc."
     ]
@@ -1832,6 +2192,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "4fc4d63d8d0a019e0ed9e8262fc268dd5eb8fdce",
     "title": "Sinh tồn: hiển thị tỷ lệ gặp RNGesus",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Khi gặp RNGesus, tên hiển thị tỷ lệ đã dùng để roll lần gặp đó: RNGesus (X%).",
       "Bỏ mục Tiến trình khỏi giao diện chiến đấu."
@@ -1843,6 +2205,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "d5758e9b34d159db664e3015833351fe47278586",
     "title": "Sinh tồn: phân loại Mimic",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Ancient Mimic và Blood Mimic được phân loại là quái tinh anh."
     ]
@@ -1853,6 +2217,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "d95d1c05530070822b90d4d962538dd72010cfb2",
     "title": "Sinh tồn: tách mô tả sự kiện và trang bị",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Bỏ trang bị/tổng chỉ số item khỏi giao diện chiến đấu.",
       "Giải thích các nhánh kết quả của sự kiện chuyển vào nút Chi tiết."
@@ -1864,6 +2230,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "b4d47e09118d61b950d8e502e937c1e085d9e87e",
     "title": "Sinh tồn: chuyển Paradox/Contract vào Rift",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Hiệu ứng Rift Paradox và Contract nằm trong nút Rift, giảm thông tin trên giao diện chiến đấu."
     ]
@@ -1874,6 +2242,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "23bafb8e21278794b9d16c2bf2267ea33538e858",
     "title": "Sinh tồn: log hồi máu của Druid",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Ghi hồi HP của Druid trong log lượt, gồm lượng hồi và HP trước → sau; chuẩn hóa icon HP."
     ]
@@ -1884,6 +2254,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "e30f4da50908321689954a1884ba9896d73b36d6",
     "title": "Sinh tồn: mô tả Mana Vỡ Vụn",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Bổ sung icon cho lựa chọn Paradox và làm rõ MP tiêu hao/hồi khi dùng kỹ năng, tấn công, phòng thủ."
     ]
@@ -1894,6 +2266,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "7fe144dfd9235388b999373e921c106a4d8998f4",
     "title": "Sinh tồn: sửa icon xu",
+    "type": "fix",
+    "scope": "survival",
     "changes": [
       "Sửa chỗ hiển thị undefined trong phần xu đã chi và chuẩn hóa icon xu ở giao diện/log."
     ]
@@ -1904,6 +2278,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "aafd356316a88fd7a5251ff2e38112ba779fdab4",
     "title": "Sinh tồn: minh bạch biến động tiền thưởng",
+    "type": "balance",
+    "scope": "survival",
     "changes": [
       "Đưa số xu thực nhận sau phạt vào mục Rút thưởng.",
       "Sự kiện cộng/trừ tiền thưởng và bán rương ghi biến động trước → sau trong log."
@@ -1915,6 +2291,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "9d2609eef3a0188926d4a8968e0c8716d639c3cd",
     "title": "Sinh tồn: icon Paradox",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Dùng các icon Paradox đã upload lên ứng dụng Discord trong giao diện sinh tồn."
     ]
@@ -1925,6 +2303,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "bbc2039c65d7b4a5006e614c240c00a24dc331b8",
     "title": "Tháp Định Mệnh: sửa nút Chơi lại",
+    "type": "fix",
+    "scope": "tower",
     "changes": [
       "Run thất bại, đã hoàn thành hoặc thuộc phiên bản cũ có thể chơi lại thử thách đang hoạt động."
     ]
@@ -1935,6 +2315,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "bb01b4e39e6c27042b32cbff65a1c641b4674638",
     "title": "Tháp Định Mệnh: bộ sinh thử thách tuần",
+    "type": "feature",
+    "scope": "tower",
     "changes": [
       "Nâng cấp bộ sinh tháp tuần, kiểm tra chuỗi hoàn hảo cho cả 7 class trước khi đưa thử thách vào chơi."
     ]
@@ -1945,6 +2327,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "7b4dedddec9b58925991ea3491cbd9974f8f3fe4",
     "title": "Sinh tồn: chu kỳ xuất hiện RNGesus",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Sau khi vượt qua RNGesus, tỷ lệ gặp được reset và tăng chậm lại từ đầu.",
       "RNGesus không xuất hiện ở hai tầng liền kề."
@@ -1956,6 +2340,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "c72eb03a3d12305df68ca6014aa499cf8e047da0",
     "title": "Hồ sơ: vòng avatar thành tựu class",
+    "type": "improvement",
+    "scope": "profile",
     "changes": [
       "Đạt tầng 500 với một class nhận vòng avatar riêng của class đó; vòng chỉ nhận qua thành tựu."
     ]
@@ -1966,6 +2352,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "384906b9437417bd15178c003ad0140e3a6bc774",
     "title": "Sinh tồn: mô tả hiệu ứng rõ hơn",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Làm rõ đối tượng chịu/nhận hiệu ứng Rift, chuẩn hóa cách hiển thị chỉ số và mô tả Soul Drain."
     ]
@@ -1976,6 +2364,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "a168a3c2f345cdb5328d125f8666d333aa73110b",
     "title": "Sinh tồn V2: khôi phục cách hiển thị cũ",
+    "type": "fix",
+    "scope": "survival",
     "changes": [
       "Khôi phục nút chiến đấu gọn và nhãn MP trong Sinh tồn V2."
     ]
@@ -1986,6 +2376,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "c305df09cdc528e07a1cab6394419721960005d7",
     "title": "Tháp Định Mệnh: bỏ chỉ số bị lặp",
+    "type": "feature",
+    "scope": "tower",
     "changes": [
       "DEF và RES trên bảng nhân vật không còn hiển thị hai lần."
     ]
@@ -1996,6 +2388,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "579168cfe8e8a32b72e8d64a61724ca7eab85515",
     "title": "Tháp Định Mệnh: đồng bộ giao diện",
+    "type": "improvement",
+    "scope": "tower",
     "changes": [
       "Áp dụng quy tắc hiển thị chỉ số và giao diện chiến đấu của Sinh tồn V2 cho tháp."
     ]
@@ -2006,6 +2400,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "eb66020a0ca323bb062f1c03dd13073d49b623b2",
     "title": "Rift Paradox V2 và Tháp Định Mệnh",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Bổ sung Paradox V2 và thử thách Tháp Định Mệnh theo tuần, độc lập với run sinh tồn."
     ]
@@ -2016,6 +2412,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "1df259eed83b7de93d44a8569f068a83f88f6b5f",
     "title": "Hồ sơ: nền tối",
+    "type": "improvement",
+    "scope": "profile",
     "changes": [
       "Đổi các mảng màu pastel sáng trên hồ sơ sang bảng màu tối."
     ]
@@ -2026,6 +2424,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "e80316ef864635027053c5ed3a66c08cd60ac477",
     "title": "Poker: giao diện kết thúc ván",
+    "type": "improvement",
+    "scope": "poker",
     "changes": [
       "Ẩn mục Bài của bot sau khi ván poker đã kết thúc."
     ]
@@ -2036,6 +2436,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "8f329df5839d842dab7e58f98a18cf831b4a9d12",
     "title": "Sinh tồn: nhánh cướp Lost Adventurer",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Cướp thành công nhận SSR (75%) hoặc UR (25%).",
       "Hậu quả sau đó: 50% mất 10% payout, 50% phải đánh Bounty Hunter tinh anh."
@@ -2047,6 +2449,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "3fdf93f5ca415d04e8180e472cca257fbeca2d3b",
     "title": "Sinh tồn: cửa hàng, túi đồ và loadout",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Thêm /sinhton cuahang và /sinhton tuido. Vé chạy RNGesus/tăng cầu nguyện/hồi sinh giá 100/100/300 kim cương.",
       "Năm món ngẫu nhiên đổi lúc 00:00 Việt Nam; giá R/SR/SSR/UR là 10.000/50.000/100.000/200.000 xu, mua không giới hạn.",
@@ -2060,6 +2464,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "bcaef7957dbe1f07fd1c12cd300c8ff13442026f",
     "title": "Sinh tồn: mô tả trừ HP theo Max HP",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Làm rõ lời nguyền trừ HP hiện tại theo phần trăm Max HP, không phải giảm Max HP."
     ]
@@ -2070,6 +2476,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "62aca60056d54fb12c86f316f9a0ba582a413a5e",
     "title": "Sinh tồn: đồ nhận gần nhất ở đầu túi",
+    "type": "feature",
+    "scope": "survival",
     "changes": [
       "Các món vừa nhận được đẩy lên đầu danh sách túi đồ."
     ]
@@ -2080,6 +2488,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "db27a0abbe2c5e41f47581a0b5478d8d94e95a35",
     "title": "Cò quay Nga: bỏ mục Lượt của bạn",
+    "type": "improvement",
+    "scope": "coquay",
     "changes": [
       "Bỏ nhãn lượt dư thừa khỏi giao diện Cò quay Nga."
     ]
@@ -2090,6 +2500,8 @@
     "auditedAt": "2026-10-06T08:25:05.492Z",
     "commit": "25a3b31a186c3b334ae3a00e6e81044e03e287ed",
     "title": "Sinh tồn: xác nhận rút thưởng",
+    "type": "improvement",
+    "scope": "survival",
     "changes": [
       "Thêm xác nhận riêng tư, cho xem trước phần thưởng trước khi rút."
     ]

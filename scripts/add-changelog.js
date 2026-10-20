@@ -5,6 +5,8 @@ const { execFileSync } = require("node:child_process");
 const {
   sortedEntries,
   validateEntries,
+  TYPES,
+  SCOPES,
 } = require("../src/services/changelogService");
 
 const catalogPath = path.resolve(__dirname, "../src/changelog.json");
@@ -15,12 +17,16 @@ function parseArguments(args) {
     const flag = args[index];
     const value = args[index + 1];
     if (
-      !["--title", "--change", "--commit"].includes(flag) ||
+      !["--title", "--change", "--commit", "--type", "--scope"].includes(flag) ||
       typeof value !== "string" ||
       !value.trim()
     )
       throw new Error(
-        "Dùng --title <tiêu đề> --change <nội dung> [--change ...] [--commit <SHA>].",
+        "Dùng --title <tiêu đề> --type <" +
+          Object.keys(TYPES).join("|") +
+          "> --scope <" +
+          Object.keys(SCOPES).join("|") +
+          "> --change <nội dung> [--change ...] [--commit <SHA>].",
       );
     if (flag === "--change") options.changes.push(value.trim());
     else {
@@ -31,6 +37,12 @@ function parseArguments(args) {
   }
   if (!options.title || !options.changes.length)
     throw new Error("Cần tiêu đề và ít nhất một nội dung thay đổi.");
+  if (!Object.hasOwn(TYPES, options.type))
+    throw new Error("--type phải là một trong: " + Object.keys(TYPES).join(", "));
+  if (!Object.hasOwn(SCOPES, options.scope))
+    throw new Error(
+      "--scope phải là một trong: " + Object.keys(SCOPES).join(", "),
+    );
   if (options.commit && !/^[a-f0-9]{7,40}$/.test(options.commit))
     throw new Error("--commit cần SHA Git, không dùng tên nhánh.");
   return options;
@@ -51,6 +63,8 @@ function createEntry(
     updatedAt: auditedAt,
     auditedAt,
     title: options.title,
+    type: options.type,
+    scope: options.scope,
     changes: options.changes,
   };
   if (options.commit) {
