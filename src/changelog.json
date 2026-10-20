@@ -1,5 +1,14 @@
 [
   {
+    "id": "ed76f8b6-8c23-4e25-85ec-a68510acad51",
+    "updatedAt": "2026-10-20T01:59:53.606Z",
+    "auditedAt": "2026-10-20T01:59:53.606Z",
+    "title": "Kiến thức chatbot chỉ dành cho admin",
+    "changes": [
+      "/chatbot kienthuc nay chỉ admin xem được; thành viên thường không còn đọc được nội dung server đã dạy cho chatbot."
+    ]
+  },
+  {
     "id": "be31ee3e-d174-4c4a-86f1-30771c633ecd",
     "updatedAt": "2026-10-19T14:25:34.227Z",
     "auditedAt": "2026-10-19T14:25:34.227Z",

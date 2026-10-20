@@ -245,7 +245,7 @@ global.fetch = async (url, init) => {
     };
     assert((await chatbot.ask({ guildId: KG, userId: "kgu", channelId: C, text: "hi" })).ok);
     assert.match(sentSystem, /Admin chính là/);
-    // lệnh: chỉ admin sửa, ai cũng xem
+    // lệnh: chỉ admin sửa và xem kiến thức
     const said = [];
     const k = (sub, opts = {}) => ({
       guildId: KG, channelId: C, user: { id: "u1" }, client: { user: { id: "b" } },
@@ -258,6 +258,9 @@ global.fetch = async (url, init) => {
     await command.execute(k("nho", { text: "Có kênh #game rất sôi động" }));
     assert.match(said.at(-1).content, /Đã dạy chatbot/);
     await command.execute(k("kienthuc", { admin: false }));
+    assert.match(said.at(-1).content, /Chỉ admin/);
+    assert.equal(said.at(-1).embeds, undefined);
+    await command.execute(k("kienthuc"));
     assert.match(said.at(-1).embeds[0].data.description, /kênh #game/);
     assert(said.at(-1).embeds[0].data.description.length <= 4096);
     await command.execute(k("tinhcach", { text: "nghiêm túc" }));

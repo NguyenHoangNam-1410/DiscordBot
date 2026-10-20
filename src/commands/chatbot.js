@@ -161,7 +161,7 @@ const command = {
           option.setName("so").setDescription("Số thứ tự trong /chatbot kienthuc").setRequired(true).setMinValue(1),
         ),
     )
-    .addSubcommand((sub) => sub.setName("kienthuc").setDescription("Xem những gì chatbot được dạy về server"))
+    .addSubcommand((sub) => sub.setName("kienthuc").setDescription("Admin: xem những gì chatbot được dạy về server"))
     .addSubcommand((sub) =>
       sub
         .setName("tinhcach")
@@ -189,6 +189,7 @@ const command = {
       );
     }
     if (sub === "kienthuc") {
+      if (!require("./vuatiengviet").isAdmin(interaction)) return reply("Chỉ admin mới được xem kiến thức của chatbot.");
       const facts = chatbot.listFacts(interaction.guildId);
       const persona = chatbot.getPersona(interaction.guildId);
       const embed = new EmbedBuilder()
@@ -214,7 +215,7 @@ const command = {
           interaction.user.id,
         );
         return reply(
-          `✅ Đã dạy chatbot (${count}/${chatbot.MAX_FACTS}). Thông tin này được gửi tới nhà cung cấp AI và ai cũng xem được bằng \`/chatbot kienthuc\`, **đừng ghi thông tin nhạy cảm**.`,
+          `✅ Đã dạy chatbot (${count}/${chatbot.MAX_FACTS}). Thông tin này được gửi tới nhà cung cấp AI và chỉ admin xem được bằng \`/chatbot kienthuc\`, **đừng ghi thông tin nhạy cảm**.`,
         );
       } catch (error) {
         const text = {
