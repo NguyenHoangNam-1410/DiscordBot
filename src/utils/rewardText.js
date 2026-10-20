@@ -74,6 +74,7 @@ function quizAnswerAnnouncement({
   account = {},
   answer,
   via = "",
+  item = null,
 }) {
   const line = resultLine({
     userId,
@@ -84,7 +85,10 @@ function quizAnswerAnnouncement({
     levelUps: account.levelUps,
     reason: `đúng **${answer}**${via ? ` nhờ ${via}` : ""}`,
   });
-  return [`🎉 ${line}`, bonusLine(account.bonusDrops)]
+  const itemLine = item
+    ? `🎁 Vật phẩm Vua tiếng Việt: ${rarityIcon(item.rarity)} [${item.rarity}] **${item.name}**`
+    : "";
+  return [`🎉 ${line}`, itemLine, bonusLine(account.bonusDrops)]
     .filter(Boolean)
     .join("\n");
 }

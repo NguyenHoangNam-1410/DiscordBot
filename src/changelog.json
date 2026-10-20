@@ -1,5 +1,17 @@
 [
   {
+    "id": "e11699e2-4857-4f44-adf8-7c4de1c6d942",
+    "updatedAt": "2026-10-20T15:52:05.768Z",
+    "auditedAt": "2026-10-20T15:52:05.768Z",
+    "title": "Vua tiếng Việt: câu khó tặng vật phẩm",
+    "type": "feature",
+    "scope": "vuatiengviet",
+    "changes": [
+      "Trả lời đúng câu khó (kể cả dùng Từ Điển Sống) nhận thêm 1 vật phẩm Vua tiếng Việt ngẫu nhiên, ngoài xu và 10 kim cương.",
+      "Độ hiếm theo tỷ lệ Gacha, bỏ phần xu: R 44% · SR 28% · SSR 20% · UR 8%; trong cùng độ hiếm các vật phẩm có tỷ lệ bằng nhau. Bảng câu khó hiển thị phần thưởng và tỷ lệ này."
+    ]
+  },
+  {
     "id": "13777e72-65b8-41d6-84d7-7a742ffc57c1",
     "updatedAt": "2026-10-20T11:49:27.618Z",
     "auditedAt": "2026-10-20T11:49:27.618Z",

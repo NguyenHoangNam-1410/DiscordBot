@@ -72,7 +72,21 @@ function questionEmbed(guildId, question, notice = null, outcome = null) {
     .addFields(
       { name: "Thưởng", value: `${formatCoins(reward)} :coin:`, inline: true },
       ...(question.hard
-        ? [{ name: "Thưởng câu khó", value: "10 :gem:", inline: true }]
+        ? [
+            {
+              name: "Thưởng câu khó",
+              value:
+                "10 :gem: + 1 vật phẩm Vua tiếng Việt ngẫu nhiên\n" +
+                require("../services/gameItemDropService")
+                  .questionRewardRates("vuatiengviet", guildId)
+                  .map(
+                    (entry) =>
+                      `${entry.tier} ${Number(entry.rate.toFixed(1))}%`,
+                  )
+                  .join(" · "),
+              inline: false,
+            },
+          ]
         : []),
       {
         name: "Thời gian",
