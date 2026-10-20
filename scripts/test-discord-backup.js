@@ -273,7 +273,8 @@ async function main() {
       info: (data, message) => events.push(message),
       error: (data, message) => events.push(message),
     };
-  const manager = backup.startDatabaseBackups(logger),
+  const immediate = { startupDelayMs: 0, startupSkipMs: 0 };
+  const manager = backup.startDatabaseBackups(logger, immediate),
     readyClient = transport();
   await manager.discordReady(readyClient);
   assert.equal(
@@ -293,7 +294,7 @@ async function main() {
 
   // Local backup status must remain successful when remote transport fails.
   delivery.setBackupDiscordClient(blocked);
-  const failedManager = backup.startDatabaseBackups(logger);
+  const failedManager = backup.startDatabaseBackups(logger, immediate);
   await failedManager.discordReady(blocked);
   await failedManager.stop({ finalBackup: false });
   const health = backup.getBackupStatus();
@@ -311,6 +312,7 @@ async function main() {
   });
   delivery.setBackupDiscordClient(transient);
   const recoveringManager = backup.startDatabaseBackups(logger, {
+    ...immediate,
     retryDelayMs: 10,
   });
   await recoveringManager.discordReady(transient);
@@ -327,6 +329,48 @@ async function main() {
   groups.push(
     "failed delivery automatically retries the latest local snapshot",
   );
+  // Sao lưu khởi động bị dời: không chạy ngay, chạy sau độ trễ; bỏ qua khi đã có bản rất mới; stop() hủy hẹn giờ.
+  {
+    delivery.setBackupDiscordClient(null);
+    const startupLog = [];
+    const quiet = {
+      info: (data, message) => startupLog.push(message),
+      error: (data, message) => startupLog.push("ERR " + message),
+    };
+    const files = () =>
+      fs.readdirSync(backup.backupDir).filter((name) => name.endsWith(".sqlite"));
+    for (const name of files()) fs.unlinkSync(path.join(backup.backupDir, name));
+    assert.equal(await backup.latestBackupAgeMs(), Infinity);
+    const delayed = backup.startDatabaseBackups(quiet, {
+      startupDelayMs: 120,
+      startupSkipMs: 0,
+    });
+    assert.equal(backup.getBackupStatus().running, false);
+    assert.equal(files().length, 0, "chưa sao lưu ngay khi khởi động");
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    assert.equal(files().length, 1, "sao lưu sau độ trễ");
+    await delayed.stop({ finalBackup: false });
+    // Đã có bản mới (< ngưỡng) thì bỏ qua sao lưu khởi động.
+    assert.ok((await backup.latestBackupAgeMs()) < 60_000);
+    const skipped = backup.startDatabaseBackups(quiet, {
+      startupDelayMs: 10,
+      startupSkipMs: 60_000,
+    });
+    await new Promise((resolve) => setTimeout(resolve, 250));
+    assert.equal(files().length, 1, "bỏ qua vì bản gần nhất còn mới");
+    assert.ok(startupLog.includes("database backup skipped: a recent snapshot already exists"));
+    await skipped.stop({ finalBackup: false });
+    // stop() trước khi hết độ trễ hủy hẹn giờ, không tạo thêm bản nào.
+    const cancelled = backup.startDatabaseBackups(quiet, {
+      startupDelayMs: 100,
+      startupSkipMs: 0,
+    });
+    await cancelled.stop({ finalBackup: false });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    assert.equal(files().length, 1);
+    noTemporaryFiles();
+    groups.push("startup backup is delayed, skipped when recent and cancelled by stop");
+  }
   console.log(JSON.stringify({ ok: true, groups }));
 }
 main()

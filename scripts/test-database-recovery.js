@@ -212,7 +212,10 @@ if (process.argv[2] === "--crash-worker") {
           throw data.err;
         },
       };
-    const manager = backup.startDatabaseBackups(logger);
+    const manager = backup.startDatabaseBackups(logger, {
+      startupDelayMs: 0,
+      startupSkipMs: 0,
+    });
     while (backup.getBackupStatus().running) await new Promise(setImmediate);
     // Data changed after the startup snapshot must be included in the final one.
     db.prepare(
