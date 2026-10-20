@@ -246,4 +246,81 @@ test("Ngẫu nhiên: nhiều khoản gửi cùng lúc luôn trả đúng +2 leve
   }
   assert.ok(returns > 50, "phải có nhiều lần trả: " + returns);
 });
+test("Lịch trả: SSR gửi tầng 5, SR gửi tầng 6 → SR về tầng 17, SSR về tầng 31, qua tầng thật", () => {
+  const ssr = first("legendary"),
+    sr = first("rare");
+  const s = fresh(ssr, 2, 5);
+  core.receiveItem(s, sr, 3);
+  lend(s); // gửi SSR ở tầng 5
+  assert.equal(s.floor, 6);
+  s.phase = "encounter";
+  s.encounter = { type: "surprise", kind: "horadric", name: "Forge", targetId: sr.id, forge: forge.prepareV2(sr.id) };
+  lend(s); // gửi SR ở tầng 6
+  const due = Object.fromEntries(s.forgeLoans.map((l) => [l.definition.id, l.due]));
+  assert.equal(due[sr.id], 6 + 10 + 1);
+  assert.equal(due[ssr.id], 5 + 25 + 1);
+  const walk = () => {
+    s.phase = "encounter";
+    s.pendingMilestones = [];
+    if (s.rift) s.rift.pendingAward = null;
+    s.encounter = core.makeSurprise(s, () => 0.5, "fountain");
+    const skip = core.actions(s).find((a) => a.action === "event_skip");
+    core.act(s, session, skip.action, () => 0.99);
+  };
+  while (s.floor < 40) {
+    const before = s.floor;
+    walk();
+    if (before + 1 < 17) assert.equal(item(s, sr), undefined, "SR chưa về ở tầng " + s.floor);
+    if (s.floor === 17) assert.equal(item(s, sr).level, 5, "SR về +2 ở tầng 17");
+    if (s.floor < 31) assert.equal(item(s, ssr), undefined, "SSR chưa về ở tầng " + s.floor);
+    if (s.floor === 31) assert.equal(item(s, ssr).level, 4, "SSR về +2 ở tầng 31");
+  }
+  assert.equal(s.forgeLoans, undefined);
+});
+
+test("Hai món cùng đến hạn một tầng: trả cả hai trong cùng lần, đúng level, đúng log", () => {
+  const a = first("rare"),
+    b = pool.find((i) => i.rarity === "rare" && i.id !== a.id && !i.curse && i.category !== "consumable" && !i.effects.escapeTokens);
+  const s = fresh(a, 2, 20);
+  core.receiveItem(s, b, 4);
+  lend(s);
+  s.phase = "encounter";
+  s.pendingMilestones = [];
+  if (s.rift) s.rift.pendingAward = null;
+  s.floor = 20;
+  s.encounter = { type: "surprise", kind: "horadric", name: "Forge", targetId: b.id, forge: forge.prepareV2(b.id) };
+  lend(s);
+  assert.equal(s.forgeLoans.length, 2);
+  assert.equal(s.forgeLoans[0].due, s.forgeLoans[1].due, "hai món cùng hạn");
+  s.floor = s.forgeLoans[0].due;
+  const log = forge.returnDue(s, core.receiveItem);
+  assert.equal(item(s, a).level, 4);
+  assert.equal(item(s, b).level, 6);
+  assert.equal((log.match(/trả lại/g) || []).length, 2);
+  assert.equal(s.forgeLoans, undefined);
+});
+
+test("Hai khoản cùng loại đến hạn cùng tầng, hoặc đúng tầng boss: gộp một lần và chờ tầng hợp lệ", () => {
+  const def = first("rare");
+  const s = fresh(def, 2, 20);
+  lend(s);
+  core.receiveItem(s, def, 3);
+  s.phase = "encounter";
+  s.pendingMilestones = [];
+  if (s.rift) s.rift.pendingAward = null;
+  s.floor = 20;
+  s.encounter = { type: "surprise", kind: "horadric", name: "Forge", targetId: def.id, forge: forge.prepareV2(def.id) };
+  lend(s);
+  assert.equal(s.forgeLoans.length, 2);
+  assert.equal(new Set(s.forgeLoans.map((l) => l.definition.id)).size, 1);
+  s.forgeLoans.forEach((l) => (l.due = 50));
+  s.floor = 50;
+  assert.equal(forge.returnDue(s, core.receiveItem), "", "tầng boss 50 không hợp lệ");
+  assert.equal(s.forgeLoans.length, 2);
+  s.floor = 51;
+  forge.returnDue(s, core.receiveItem);
+  assert.equal(s.items.filter((x) => x.definition.id === def.id).length, 1);
+  assert.equal(item(s, def).level, 2 + 2 + 3 + 2);
+  assert.equal(s.forgeLoans, undefined);
+});
 console.log("horadric loan ok (" + count + ")");
