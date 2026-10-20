@@ -32,12 +32,19 @@ async function handleVuaMessage(message, answer) {
         reason: "vuatiengviet:hard-answer",
       })
     : null;
+  const item = result.question.hard
+    ? require("./gameItemDropService").grantQuestionItem(
+        message.guildId,
+        message.author.id,
+      )
+    : null;
   const announcement = quizAnswerAnnouncement({
     userId: message.author.id,
     reward,
     gems: diamonds ? 10 : 0,
     account,
     answer: result.question.answer,
+    item,
   });
   await message.channel.send({
     content: announcement,

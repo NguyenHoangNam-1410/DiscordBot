@@ -154,6 +154,10 @@ function useLivingDictionary(guildId, channelId, userId) {
     HARD_QUESTION_DIAMONDS,
     { reason: "vuatiengviet:living-dictionary" },
   );
+  const item = require("./gameItemDropService").grantQuestionItem(
+    guildId,
+    userId,
+  );
   // Coi như người dùng đã trả lời đúng: chỉ trả về thông báo công khai; câu kế tiếp do giao diện Vua tiếng Việt đăng như bình thường.
   return quizAnswerAnnouncement({
     userId,
@@ -162,6 +166,7 @@ function useLivingDictionary(guildId, channelId, userId) {
     account,
     answer,
     via: "📖 Từ Điển Sống",
+    item,
   });
 }
 
