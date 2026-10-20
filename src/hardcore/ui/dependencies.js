@@ -97,7 +97,7 @@ module.exports = function createModule(dependencies) {
     necromancer: "Phép ×1,55, luôn trúng, không Crit; chặn phản công.",
     paladin: "Vật lý ×1,40 rồi tự Phòng thủ.",
     rha_kor:
-      "Vật lý ×2,20 rồi đặt **Vết Khắc Cổ Luật** LV1 lên mục tiêu (3 lượt của Rha-Kor, không mang sang phòng sau). Mỗi hit chính trúng sau đó +1 cấp; LV3 phát nổ 280% ST vật lý, giảm 20% DEF mục tiêu trong 2 lượt.",
+      "Vật lý ×1,50 rồi mở **Cổ Luật** cho action kế tiếp: Attack = Luật Đoạn (+40% DMG, giảm 20% DEF mục tiêu 2 action); Defense = Luật Hộ (Barrier 12% Max HP, hồi 2 MP, giảm 25% sát thương nhận); Potion = Luật Dẫn (+15% hồi máu, Attack kế tiếp hồi 12% sát thương); Skill lần hai = Luật Phán (×2,65, giảm 25% DEF, kết thúc luật).",
   };
 
   const SHRINES = {
@@ -116,7 +116,7 @@ module.exports = function createModule(dependencies) {
     get paladin() {
       return `${E.res} **RES** +10 khi nhận phép.`;
     },
-    rha_kor: "Khắc Lệnh Phá Giáp đặt Vết Khắc ở LV2 thay vì LV1.",
+    rha_kor: "Cổ Luật mở bởi Khai Bia Cổ Luật tồn tại thêm 1 action.",
   };
 
   const { statNumber } = require("../shared/ui");

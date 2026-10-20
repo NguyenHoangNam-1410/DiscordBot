@@ -171,7 +171,7 @@ module.exports = function createModule(dependencies) {
             : "Phép luôn trúng, không Crit; chặn phản công.",
           paladin: "Vật lý, có thể trượt/Crit; tự Phòng thủ.",
           rha_kor:
-            "Vật lý, có thể trượt/Crit; đặt Vết Khắc LV1 lên mục tiêu (3 lượt của Rha-Kor).",
+            "Vật lý ×1,50, có thể trượt/Crit; mở Cổ Luật cho action kế tiếp (Skill lần hai = Luật Phán ×2,65).",
         }[s.classKey];
     const resources = compact
       ? battleResources(s)

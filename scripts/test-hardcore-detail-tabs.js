@@ -94,7 +94,7 @@ test("Trang bị: tổng hợp, nội tại, giới hạn; Hành động: skill/
   assert.match(eq, /Tổng hợp trang bị/);
   assert.match(eq, /Giới hạn của bạn/);
   const act = text(view.privatePayload(s, "id", "m", "stats", 400));
-  assert.match(act, /Khắc Lệnh Phá Giáp/);
+  assert.match(act, /Khai Bia Cổ Luật/);
   assert.match(act, /Dự kiến vs quái hiện tại/);
   assert.match(act, /Phòng thủ/);
 });

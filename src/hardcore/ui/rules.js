@@ -76,9 +76,9 @@ module.exports = function createModule(dependencies) {
             "Astral Armament tốn 2 MP, không gây DMG; cường hóa đánh thường thành phép trong 3 hành động chiến đấu tiếp theo, giữ qua phòng. Bình, Phòng thủ và thao tác boss tốn lượt đều trừ thời gian. Đòn cường hóa luôn trúng, không Crit, không hồi MP; Phòng thủ hồi tổng 2 MP. Xem Nhân vật để đọc Hồi lưu và Tam trọng.",
         },
         {
-          name: `${SKILL_ICONS.rha_kor} Rha-Kor · Vết Khắc`,
+          name: `${SKILL_ICONS.rha_kor} Rha-Kor · Cổ Luật`,
           value:
-            "Khắc Lệnh Phá Giáp tốn 2 MP, gây 220% ST vật lý và đặt Vết Khắc LV1 (3 lượt của Rha-Kor, không mang sang phòng sau). Mỗi hit chính trúng của Attack/Skill +1 cấp; LV3 phát nổ 280% (luôn trúng, không Crit), giảm 20% DEF mục tiêu 2 lượt. Phòng thủ/Bình trừ thời lượng nhưng không tăng cấp. Max MP khởi đầu 4.",
+            "Khai Bia Cổ Luật tốn 2 MP, gây 150% ST vật lý và mở Cổ Luật cho action kế tiếp. Attack = Luật Đoạn (+40% DMG, giảm 20% DEF mục tiêu 2 action); Defense = Luật Hộ (Barrier 12% Max HP, hồi 2 MP, giảm 25% sát thương nhận, Attack kế tiếp −12%); Potion = Luật Dẫn (+15% hồi máu, Attack kế tiếp hồi 12% sát thương gây ra); Skill lần hai = Luật Phán (265% ST, giảm 25% DEF, kết thúc luật). Nội tại: Attack/Skill bỏ qua 15% DEF. Max MP khởi đầu 4.",
         },
         {
           name: `${eventIcon("boss")} Cơ chế boss`,
