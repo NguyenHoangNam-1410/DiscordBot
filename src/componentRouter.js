@@ -55,12 +55,12 @@ const ROUTES = Object.freeze([
     prefix: "hardcore-cg:",
     handle: (i, logger) => require("./hardcore/gacha/ui").handle(i, logger),
   })),
-  {
-    kind: "button",
+  ...["button", "select"].map((kind) => ({
+    kind,
     prefix: "changelog:",
     handle: (interaction) =>
       require("./commands/changelog").handleButton(interaction),
-  },
+  })),
   {
     kind: "button",
     prefix: "hardcore-tower:",
