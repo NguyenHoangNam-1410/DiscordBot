@@ -29,9 +29,21 @@ const validFloor = (floor) =>
   floor % 50 !== 0 && ![333, 666, 999].includes(floor);
 // UR/nguyền: cấp nguyền giữ nguyên vì 2 level thêm được ghi là đã giải.
 const cursedBonus = (definition) => (definition.curse ? LEVELS : 0);
-function prepareV2(targetId) {
+function prepareV2(targetId = null) {
   return { version: 2, targetId };
 }
+const PAGE_SIZE = 25;
+const pages = (state) => Math.max(1, Math.ceil(state.items.length / PAGE_SIZE));
+const page = (state) =>
+  Math.max(
+    0,
+    Math.min(pages(state) - 1, Math.floor(Number(state.encounter.forgePage) || 0)),
+  );
+const pageItems = (state) =>
+  state.items.slice(page(state) * PAGE_SIZE, (page(state) + 1) * PAGE_SIZE);
+const selected = (state) =>
+  state.items.find((x) => x.definition.id === state.encounter.forge?.targetId) ||
+  null;
 function lend(state, item, receive, recompute) {
   const label = RARITY_LABEL[item.definition.rarity] || item.rarity;
   if (instant(item)) {
@@ -156,17 +168,27 @@ function rewardIcon(b) {
 function choices(f, state = null) {
   if (f.version === 2) {
     const item = state?.items.find((x) => x.definition.id === f.targetId);
+    const current = state ? page(state) : 0;
     return [
       {
         action: "forge_lend",
-        label: item && instant(item) ? "Nâng cấp ngay +2 Lv" : "Mượn để nâng +2 Lv",
-        description: item
-          ? instant(item)
-            ? "Nhận lại ngay với +2 level."
-            : "Mất món sau " + delay(item) + " tầng, trả lại +2 level."
-          : "",
+        label: !item
+          ? "Chọn món ở menu"
+          : instant(item)
+            ? "Nâng cấp ngay +2 Lv"
+            : "Mượn để nâng +2 Lv",
         disabled: !item,
       },
+      ...(state?.items || []).map((x) => ({
+        action: "forge_select_" + x.definition.id,
+        label: x.name,
+      })),
+      ...(current > 0
+        ? [{ action: "forge_page_" + (current - 1), label: "Món trước" }]
+        : []),
+      ...(state && current + 1 < pages(state)
+        ? [{ action: "forge_page_" + (current + 1), label: "Món tiếp" }]
+        : []),
     ];
   }
   return f.stage === "grind"
@@ -195,6 +217,11 @@ module.exports = {
   dueFloor,
   validFloor,
   prepareV2,
+  PAGE_SIZE,
+  pages,
+  page,
+  pageItems,
+  selected,
   lend,
   returnDue,
   validateLoans,

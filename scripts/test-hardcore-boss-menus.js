@@ -880,6 +880,12 @@ async function main() {
           core.act(
             s,
             { guild_id: "boss-menus", user_id: "u" },
+            "forge_select_" + gear.id,
+            () => 0.5,
+          );
+          core.act(
+            s,
+            { guild_id: "boss-menus", user_id: "u" },
             "forge_lend",
             () => 0.5,
           );
@@ -1145,6 +1151,61 @@ async function main() {
     s.mode = "tower";
     assert.equal(view.eventMenuActions(s).length, 0);
     repo.deleteSession(run.session.id);
+  });
+  await test("Horadric Forge v2 routes the item menu, the confirm button and the separate skip button", async () => {
+    const forge = require("../src/hardcore/equipment/forge"),
+      definition = Object.values(require("../src/hardcore/item").ITEMS_V3)
+        .flat()
+        .find((i) => i.rarity === "rare" && i.category !== "consumable");
+    function start() {
+      const run = service.startHardcore({
+        guildId: "boss-menus",
+        userId: "u",
+        channelId: "c",
+        stake: 10000,
+        classKey: "sorceress",
+      });
+      service.setMessageId(run.session.id, "public");
+      const s = run.state;
+      s.floor = 151;
+      s.cleared = 150;
+      s.encounter = { type: "empty" };
+      core.receiveItem(s, definition);
+      s.encounter = core.makeSurprise(s, () => 0.5, "horadric");
+      repo.saveState(run.session, s);
+      return run;
+    }
+    const button = (id, turn, raw) =>
+      mock(id, turn, raw, [], { isButton: () => true, isStringSelectMenu: () => false });
+    const run = start(),
+      id = run.session.id;
+    const early = button(id, run.state.turn, "forge_lend");
+    await route(early);
+    assert.equal(early.responses.errors.length, 1, "chưa chọn món thì không xác nhận được");
+    const pick = mock(id, run.state.turn, "forge_select", [definition.id]);
+    await route(pick);
+    assert.equal(pick.responses.errors.length, 0);
+    let live = repo.parseState(repo.getSession(id));
+    assert.equal(live.encounter.forge.targetId, definition.id);
+    const bad = mock(id, live.turn, "forge_select", ["not_an_item"]);
+    await route(bad);
+    assert.equal(bad.responses.errors.length, 1);
+    const confirm = button(id, live.turn, "forge_lend");
+    await route(confirm);
+    assert.equal(confirm.responses.errors.length, 0);
+    live = repo.parseState(repo.getSession(id));
+    assert.equal(live.floor, 152);
+    assert.ok(live.forgeLoans?.length === 1 || live.items.find((x) => x.definition.id === definition.id)?.level === 3);
+    repo.deleteSession(id);
+    const second = start(),
+      skip = button(second.session.id, second.state.turn, "event_skip");
+    await route(skip);
+    assert.equal(skip.responses.errors.length, 0);
+    const kept = repo.parseState(repo.getSession(second.session.id));
+    assert.equal(kept.floor, 152);
+    assert.equal(kept.items.length, 1);
+    assert.equal(kept.forgeLoans, undefined);
+    repo.deleteSession(second.session.id);
   });
   await test("All 41 boss explanations resolve current difficulty values and fit Discord without changing combat", () => {
     const stats = require("../src/hardcore/engine/stats");

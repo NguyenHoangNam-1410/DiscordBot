@@ -141,8 +141,11 @@ module.exports = function createModule(dependencies) {
     if (["blacksmith", "purifier", "horadric"].includes(kind)) {
       e.targetId = pick(itemPool, rng)?.definition.id;
       e.forgeStat = rng() < 0.5 ? "str" : "vit";
-      if (kind === "horadric" && equipmentRules.enabled(state))
-        e.forge = require("../equipment/forge").prepareV2(e.targetId);
+      if (kind === "horadric" && equipmentRules.enabled(state)) {
+        // Người chơi tự chọn bất kỳ món nào trong túi; chưa chọn thì chưa thể xác nhận.
+        e.targetId = null;
+        e.forge = require("../equipment/forge").prepareV2(null);
+      }
       if (kind === "purifier") {
         e.targetId = null;
         e.purifierPage = 0;

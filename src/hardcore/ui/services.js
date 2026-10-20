@@ -30,7 +30,11 @@ module.exports = function createModule(dependencies) {
       const item = state.items.find((i) => i.definition.id === f.targetId);
       const title = eventIcon("horadric") + " **Horadric Forge · mượn và nâng cấp trang bị**";
       if (!item)
-        return title + "\nTrang bị không còn trong túi. Chọn **Bỏ qua** để đi tiếp.";
+        return (
+          title +
+          "\nChọn **bất kỳ trang bị nào trong túi** ở menu bên dưới để xem trước, rồi bấm nút xác nhận. " +
+          "Bấm **Bỏ qua** nếu không muốn dùng Forge; không tốn xu."
+        );
       const wait = forge.delay(item);
       const label = forge.RARITY_LABEL[item.definition.rarity] || "";
       return (
