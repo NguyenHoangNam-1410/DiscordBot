@@ -198,6 +198,63 @@ global.fetch = async (url, init) => {
   assert.equal(calls[0].url, "https://openrouter.ai/api/v1/chat/completions");
   assert.equal(calls[0].body.model, "some/model:free");
   delete process.env.OPENAI_MODEL;
+  // Google Search: chỉ khi provider gemini; gọi API gốc generateContent, kèm tool google_search và nguồn
+  process.env.CHATBOT_GOOGLE_SEARCH = "1";
+  assert.equal(chatbot.useGoogleSearch(), false, "OpenRouter không bật Google Search");
+  process.env.CHATBOT_PROVIDER = "gemini";
+  assert.equal(chatbot.useGoogleSearch(), true);
+  const searchCalls = [];
+  global.fetch = async (url, init) => {
+    searchCalls.push({ url, body: JSON.parse(init.body), headers: init.headers });
+    return {
+      ok: true,
+      json: async () => ({
+        candidates: [
+          {
+            finishReason: "STOP",
+            content: { parts: [{ text: "nháp", thought: true }, { text: "Hôm nay trời nắng." }] },
+            groundingMetadata: {
+              groundingChunks: [
+                { web: { uri: "https://vertexaisearch.cloud.google.com/a", title: "nchmf.gov.vn" } },
+                { web: { uri: "https://vertexaisearch.cloud.google.com/a", title: "trùng" } },
+                { web: { uri: "javascript:alert(1)", title: "xấu" } },
+                { web: { uri: "https://vertexaisearch.cloud.google.com/b", title: "[x](y)" } },
+              ],
+            },
+          },
+        ],
+      }),
+    };
+  };
+  const first = await chatbot.ask({ guildId: G, userId: "gs1", channelId: C, text: "thời tiết hôm nay?" });
+  assert(first.ok);
+  assert.equal(searchCalls.length, 1);
+  assert.equal(
+    searchCalls[0].url,
+    "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
+  );
+  assert.equal(searchCalls[0].headers["x-goog-api-key"], "sk-test");
+  assert.equal(searchCalls[0].headers.authorization, undefined);
+  assert.deepEqual(searchCalls[0].body.tools, [{ google_search: {} }]);
+  assert(searchCalls[0].body.systemInstruction.parts[0].text.length > 0);
+  assert.equal(searchCalls[0].body.contents.at(-1).role, "user");
+  assert.equal(
+    first.text,
+    "Hôm nay trời nắng.\n-# 🔎 Nguồn: [nchmf.gov.vn](<https://vertexaisearch.cloud.google.com/a>) · [x y](<https://vertexaisearch.cloud.google.com/b>)",
+  );
+  // lịch sử không chứa dòng nguồn; vai trò assistant đổi thành model
+  await chatbot.ask({ guildId: G, userId: "gs1", channelId: C, text: "còn mai?" });
+  assert.deepEqual(
+    searchCalls[1].body.contents.map((c) => [c.role, c.parts[0].text]),
+    [["user", "thời tiết hôm nay?"], ["model", "Hôm nay trời nắng."], ["user", "còn mai?"]],
+  );
+  // OPENAI_BASE_URL ghi đè thì quay về endpoint tương thích OpenAI
+  process.env.OPENAI_BASE_URL = "https://proxy.example/v1";
+  assert.equal(chatbot.useGoogleSearch(), false);
+  delete process.env.OPENAI_BASE_URL;
+  process.env.CHATBOT_GOOGLE_SEARCH = "0";
+  assert.equal(chatbot.useGoogleSearch(), false);
+  delete process.env.CHATBOT_GOOGLE_SEARCH;
   delete process.env.CHATBOT_PROVIDER;
   // câu trả lời bị cắt vì hết token: đánh dấu rõ; CHATBOT_MAX_TOKENS chỉnh được
   process.env.CHATBOT_MAX_TOKENS = "2000";

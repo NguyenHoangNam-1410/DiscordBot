@@ -132,6 +132,14 @@ const models = () =>
 const model = () => models()[0] || "";
 const useModeration = () => provider().moderation && !process.env.OPENAI_BASE_URL;
 const isConfigured = () => Boolean(process.env.OPENAI_API_KEY) && Boolean(model());
+// CHATBOT_GOOGLE_SEARCH=1 (chỉ với CHATBOT_PROVIDER=gemini): gọi API gốc generateContent để bật Grounding with Google Search,
+// vì endpoint tương thích OpenAI của Google không hỗ trợ tool google_search cho chat.
+const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta";
+const useGoogleSearch = () =>
+  provider() === PROVIDERS.gemini &&
+  !process.env.OPENAI_BASE_URL &&
+  /^(1|true|on|yes)$/i.test(String(process.env.CHATBOT_GOOGLE_SEARCH || "").trim());
+const MAX_SOURCES = 3;
 
 function dayKey(now = Date.now()) {
   return new Intl.DateTimeFormat("en-CA", {
@@ -200,11 +208,11 @@ function remember(key, user, assistant, now = Date.now()) {
   histories.set(key, { at: now, turns });
 }
 
-async function openai(path, body, signal = null) {
+async function post(url, headers, body, signal = null) {
   const timeout = AbortSignal.timeout(30_000);
-  const response = await fetch(`${baseUrl()}/${path}`, {
+  const response = await fetch(url, {
     method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+    headers: { "content-type": "application/json", ...headers },
     body: JSON.stringify(body),
     signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
   });
@@ -218,6 +226,52 @@ async function openai(path, body, signal = null) {
   }
   return response.json();
 }
+const openai = (path, body, signal = null) =>
+  post(`${baseUrl()}/${path}`, { authorization: `Bearer ${process.env.OPENAI_API_KEY}` }, body, signal);
+
+// Gemini gốc + Google Search; trả về cùng dạng { choices } với chat/completions, kèm danh sách nguồn web.
+async function geminiSearch(name, messages, signal) {
+  const system = messages.filter((m) => m.role === "system").map((m) => m.content).join("\n\n");
+  const contents = messages
+    .filter((m) => m.role !== "system")
+    .map((m) => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: m.content }] }));
+  const data = await post(
+    `${GEMINI_API_URL}/models/${encodeURIComponent(name)}:generateContent`,
+    { "x-goog-api-key": process.env.OPENAI_API_KEY },
+    {
+      ...(system ? { systemInstruction: { parts: [{ text: system }] } } : {}),
+      contents,
+      tools: [{ google_search: {} }],
+      generationConfig: { maxOutputTokens: maxOutputTokens() },
+    },
+    signal,
+  );
+  const candidate = data.candidates?.[0];
+  const content = (candidate?.content?.parts || [])
+    .filter((part) => !part.thought && typeof part.text === "string")
+    .map((part) => part.text)
+    .join("");
+  const sources = [];
+  for (const chunk of candidate?.groundingMetadata?.groundingChunks || []) {
+    const uri = chunk.web?.uri;
+    if (typeof uri === "string" && uri.startsWith("https://") && !sources.some((s) => s.uri === uri))
+      sources.push({ uri, title: String(chunk.web.title || "") });
+  }
+  return {
+    choices: [{ message: { content }, finish_reason: candidate?.finishReason === "MAX_TOKENS" ? "length" : "stop" }],
+    sources,
+  };
+}
+
+// Dòng nguồn nhỏ dưới câu trả lời; link bọc <> để Discord không tạo embed.
+function sourcesFooter(sources = []) {
+  const links = sources.slice(0, MAX_SOURCES).map((s, i) => {
+    const title = s.title.replace(/[\[\]()<>\r\n`*_~|]/g, " ").replace(/\s+/g, " ").trim().slice(0, 40) || `Nguồn ${i + 1}`;
+    return `[${title}](<${s.uri}>)`;
+  });
+  while (links.length && links.join(" · ").length > 900) links.pop();
+  return links.length ? `\n-# 🔎 Nguồn: ${links.join(" · ")}` : "";
+}
 
 async function flagged(text, signal) {
   if (!useModeration()) return false;
@@ -230,9 +284,10 @@ async function flagged(text, signal) {
   }
 }
 
-function clipReply(text) {
+function clipReply(text, reserve = 0) {
   const clean = String(text || "").trim();
-  return clean.length > DISCORD_LIMIT - 160 ? `${clean.slice(0, DISCORD_LIMIT - 161)}…` : clean;
+  const max = DISCORD_LIMIT - 160 - reserve;
+  return clean.length > max ? `${clean.slice(0, max - 1)}…` : clean;
 }
 
 const MAX_PINGED = 3;
@@ -278,7 +333,9 @@ async function completeWithFallback(messages, signal) {
   for (let round = 0; round < 2; round += 1) {
     for (const name of list) {
       try {
-        return await openai("chat/completions", { model: name, max_tokens: maxOutputTokens(), messages }, signal);
+        return useGoogleSearch()
+          ? await geminiSearch(name, messages, signal)
+          : await openai("chat/completions", { model: name, max_tokens: maxOutputTokens(), messages }, signal);
       } catch (error) {
         if (signal?.aborted || !RETRYABLE(error)) throw error;
         lastError = error;
@@ -306,12 +363,13 @@ async function ask({ guildId, userId, channelId, text, now = Date.now(), signal 
     const messages = [{ role: "system", content: systemPrompt(guildId, { asker: asker || { id: userId }, people }) }, ...getHistory(key, now), { role: "user", content: input }];
     const data = await completeWithFallback(messages, signal);
     const choice = data.choices?.[0];
-    let reply = clipReply(choice?.message?.content);
+    const footer = sourcesFooter(data.sources);
+    let reply = clipReply(choice?.message?.content, footer.length);
     if (!reply) throw new Error("EMPTY_REPLY");
     // Hết giới hạn token giữa chừng: đánh dấu rõ thay vì để câu cụt lủn.
     if (choice?.finish_reason === "length" && !reply.endsWith("…")) reply = `${reply}… *(câu trả lời bị cắt do giới hạn độ dài, hãy hỏi gọn hơn hoặc hỏi tiếp)*`;
     remember(key, input, reply, now);
-    return { ok: true, text: reply, ...usage(guildId, userId, now) };
+    return { ok: true, text: reply + footer, ...usage(guildId, userId, now) };
   } catch (error) {
     refundTurn(guildId, userId, now);
     if (signal?.aborted) return { error: "CANCELLED" };
@@ -336,6 +394,7 @@ module.exports = {
   consumeTurn,
   refundTurn,
   isConfigured,
+  useGoogleSearch,
   ask,
   listFacts,
   addFact,
