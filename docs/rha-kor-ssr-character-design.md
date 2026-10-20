@@ -74,7 +74,7 @@ Khi dùng Potion:
 
 Skill lần hai vẫn tốn **2 MP** như Skill bình thường và dùng để chuyển Cổ Luật đang mở thành một đòn kết thúc trực tiếp
 
-- Gây **265% STVL**.
+- Gây **250% STVL**.
 - Mục tiêu bị giảm **25% DEF** trong 1 action.
 - Kết thúc Cổ Luật ngay sau khi thi triển; không tạo hit phụ và không tự mở thêm một Skill khác.
 - Nếu boss đang ở Boss Phase Gate, damage vẫn bị chặn theo gate.

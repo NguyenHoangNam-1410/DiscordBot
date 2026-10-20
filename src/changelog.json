@@ -1,5 +1,16 @@
 [
   {
+    "id": "a340c2e6-a834-46c3-b83e-c4fc2f4ee962",
+    "updatedAt": "2026-10-20T16:27:26.916Z",
+    "auditedAt": "2026-10-20T16:27:26.916Z",
+    "title": "Rha-Kor: Luật Phán 250%",
+    "type": "balance",
+    "scope": "survival",
+    "changes": [
+      "Luật Phán của Rha-Kor (Skill lần hai) gây 250% sát thương vật lý thay vì 265%; từ S3 vẫn là 280%."
+    ]
+  },
+  {
     "id": "7a119973-b5fc-4fb9-9dd3-04082884895f",
     "updatedAt": "2026-10-20T16:21:10.264Z",
     "auditedAt": "2026-10-20T16:21:10.264Z",

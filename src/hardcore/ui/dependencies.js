@@ -97,7 +97,7 @@ module.exports = function createModule(dependencies) {
     necromancer: "Phép ×1,55, luôn trúng, không Crit; chặn phản công.",
     paladin: "Vật lý ×1,40 rồi tự Phòng thủ.",
     rha_kor:
-      "Vật lý ×1,50 rồi mở **Cổ Luật** cho action kế tiếp: Attack = Luật Đoạn (+40% DMG, giảm 20% DEF mục tiêu 2 action); Defense = Luật Hộ (Barrier 12% Max HP, hồi 2 MP, giảm 25% sát thương nhận); Potion = Luật Dẫn (+15% hồi máu, Attack kế tiếp hồi 12% sát thương); Skill lần hai = Luật Phán (×2,65, giảm 25% DEF, kết thúc luật).",
+      "Vật lý ×1,50 rồi mở **Cổ Luật** cho action kế tiếp: Attack = Luật Đoạn (+40% DMG, giảm 20% DEF mục tiêu 2 action); Defense = Luật Hộ (Barrier 12% Max HP, hồi 2 MP, giảm 25% sát thương nhận); Potion = Luật Dẫn (+15% hồi máu, Attack kế tiếp hồi 12% sát thương); Skill lần hai = Luật Phán (×2,50, giảm 25% DEF, kết thúc luật).",
   };
 
   const SHRINES = {

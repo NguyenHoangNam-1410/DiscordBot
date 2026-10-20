@@ -18,7 +18,7 @@ function config(s) {
     awake = awakened(s);
   return {
     open: 1.5,
-    phan: n >= 3 ? 2.8 : 2.65,
+    phan: n >= 3 ? 2.8 : 2.5,
     s2: n >= 2,
     s2Bonus: 1.15,
     doan: n >= 3 ? 0.8 : 0.4,

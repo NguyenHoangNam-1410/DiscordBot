@@ -143,12 +143,12 @@ test("Luật Dẫn: Potion +15% hồi máu; Attack kế tiếp hồi 12% sát th
   assert.equal(f(s).leech, false);
 });
 
-test("Luật Phán: Skill lần hai 265%, tốn 2 MP, giảm 25% DEF 1 action, kết thúc luật", () => {
+test("Luật Phán: Skill lần hai 250%, tốn 2 MP, giảm 25% DEF 1 action, kết thúc luật", () => {
   const s = fresh();
   const open = lost(s, "skill");
   const phan = lost(s, "skill");
   assert.equal(s.mana, 0, "mỗi Skill tốn 2 MP");
-  assert.ok(Math.abs(phan / open - 2.65 / 1.5) < 0.02, phan + " / " + open);
+  assert.ok(Math.abs(phan / open - 2.5 / 1.5) < 0.02, phan + " / " + open);
   assert.equal(f(s).law, null);
   assert.equal(f(s).shred.rate, 0.25);
   assert.equal(f(s).shred.turns, 1);
@@ -224,7 +224,7 @@ test("S3/S4/S5 thông số và S4 +10% Attack sau khi Barrier hấp thụ sát t
   assert.equal(c3.phan, 2.8);
   assert.equal(c3.doan, 0.8);
   assert.equal(c3.doanShred, 0.25);
-  assert.equal(kit.config(fresh(2)).phan, 2.65);
+  assert.equal(kit.config(fresh(2)).phan, 2.5);
   const s = fresh(4);
   s.encounter.damageMin = s.encounter.damageMax = 500;
   s.maxHp = s.hp = 10000;
