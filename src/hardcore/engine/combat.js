@@ -260,6 +260,8 @@ module.exports = function createModule(dependencies) {
   ) {
     prepareItemCombat(state, rng);
     const enemy = state.encounter;
+    // Luật Hộ: phản công kế tiếp vẫn nhận hiệu quả của Defense.
+    if (rhaKor.carryDefend(state)) defend = true;
     const plan = rift.counter(state, bosses.counter(state, defend, extra));
     const physical = !plan.magic && !plan.trueDamage;
     enemy.nextDamageType = plan.magic ? "magic" : "physical";
@@ -354,6 +356,7 @@ module.exports = function createModule(dependencies) {
     if (!hit.hit && (physical || hit.avoided)) awakening.shadow(state);
     if (hit.avoided) affinity.dodge(state);
     const shieldBefore =
+      rhaKor.barrierAmount(state) +
       (venance.frame(state)?.barrier || 0) +
       (awakening.active(state)
         ? (state.classAwakening.bark || 0) +
@@ -363,6 +366,7 @@ module.exports = function createModule(dependencies) {
     let manaShieldLog = "";
     if (innate.enabled(state) && !plan.trueDamage) {
       counterDamage = venance.absorb(state, counterDamage);
+      counterDamage = rhaKor.absorb(state, counterDamage);
       counterDamage = souls.absorb(state, counterDamage);
       const barkBefore = state.classAwakening?.bark || 0;
       counterDamage = awakening.absorb(state, counterDamage);
@@ -399,13 +403,13 @@ module.exports = function createModule(dependencies) {
       : hurt(state, counterDamage);
     const shieldUsed =
       shieldBefore -
+      rhaKor.barrierAmount(state) -
       (venance.frame(state)?.barrier || 0) -
       (awakening.active(state)
         ? (state.classAwakening.bark || 0) +
           (awakening.combat(state)?.barrier || 0)
         : 0);
-    const rhaLog = hit.hit && !plan.skip ? rhaKor.onEnemyDamage(state, actual) : "";
-    if (hit.hit) rhaKor.consumeGuard(state);
+    rhaKor.counterDone(state);
     if (!alive(state))
       state.lastDeathCause = `${enemy.name} gây ${actual} DMG ${enemy.nextDamageType === "magic" ? "phép" : "vật lý"}, khiến HP về 0.`;
     const soulLog = rift.finishCounter(state, {
@@ -457,7 +461,6 @@ module.exports = function createModule(dependencies) {
       soulRecoveryLog +
       reflected +
       soulLog +
-      rhaLog +
       (bossLog ? "\n" + bossLog : "")
     );
   }
@@ -522,6 +525,7 @@ module.exports = function createModule(dependencies) {
     innate.begin(state, action);
     souls.begin(state, action);
     venance.begin(state, action);
+    rhaKor.begin(state, action);
     const venanceTarget = venance.enabled(state) ? venance.target(state) : null;
     if (awakening.combat(state)) state.encounter.awakeningShadowGranted = false;
     const awakeningAtStart = awakening.active(state)
@@ -579,7 +583,9 @@ module.exports = function createModule(dependencies) {
       royal.limitGuard(state, action, false);
       state.mana = Math.min(
         bosses.effectiveMaxMana(state),
-        state.mana + (venance.enabled(state) ? 2 : 1),
+        state.mana +
+          (venance.enabled(state) ? 2 : 1) +
+          rhaKor.defendExtraMana(state),
       );
       const refluxLog = venance.enabled(state)
         ? venance.defend(state, heal)
@@ -588,14 +594,14 @@ module.exports = function createModule(dependencies) {
         defend: true,
         dodge: false,
         log:
-          `${E.defense} Phòng thủ và hồi ${venance.enabled(state) ? 2 : 1} ${E.mana} MP.` +
+          `${E.defense} Phòng thủ và hồi ${(venance.enabled(state) ? 2 : 1) + rhaKor.defendExtraMana(state)} ${E.mana} MP.` +
           souls.defend(state) +
           refluxLog,
       };
       if (affinityHeal)
         acted.log +=
           "\n" + E.hp + " Affinity: hồi " + affinityHeal + " HP cho bạn.";
-      acted.log += rhaKor.tick(state);
+      acted.log += rhaKor.after(state, { shrine: Boolean(shrineActive(state)) }).log;
       bosses.afterPlayer(state, action, acted);
       return acted;
     }
@@ -611,13 +617,15 @@ module.exports = function createModule(dependencies) {
       const gained = heal(
         state,
         Math.max(20, state.maxHp * paradox.potionRate(state)) *
-          affinity.healing(state),
+          affinity.healing(state) *
+          rhaKor.potionFactor(state),
       );
       const acted = {
         defend: false,
         dodge: false,
-        log: `${E.potion} Hồi ${gained} ${E.hp} HP${saved ? ` · ${passiveIcon("potionSave")} **Tiết kiệm bình:** giữ lại bình` : ""}; quái còn sống phản công.${rhaKor.tick(state)}`,
+        log: `${E.potion} Hồi ${gained} ${E.hp} HP${saved ? ` · ${passiveIcon("potionSave")} **Tiết kiệm bình:** giữ lại bình` : ""}; quái còn sống phản công.`,
       };
+      acted.log += rhaKor.after(state, { shrine: Boolean(shrineActive(state)) }).log;
       bosses.afterPlayer(state, action, acted);
       return acted;
     }
@@ -734,7 +742,7 @@ module.exports = function createModule(dependencies) {
                 assassin: 1.3,
                 druid: 1.35,
                 paladin: 1.4,
-                rha_kor: rhaKor.skillMultiplier(state),
+                rha_kor: rhaKor.turnMultiplier(state),
               }[state.classKey] *
               (state.classKey === "barbarian"
                 ? (1 + souls.furyRate(state) * (e.awakeningFurySpent || 0)) *
@@ -800,7 +808,12 @@ module.exports = function createModule(dependencies) {
                 raw: int(state.spellMin, state.spellMax, rng),
                 multiplier: venance.multiplier(state),
               }
-            : { player: true },
+            : {
+                player: true,
+                multiplier: rhaKor.enabled(state)
+                  ? rhaKor.turnMultiplier(state)
+                  : 1,
+              },
         ),
       ];
       state.mana = Math.min(
@@ -977,35 +990,13 @@ module.exports = function createModule(dependencies) {
       healingLog += proc.log;
     }
     if (rhaKor.enabled(state) && ["attack", "skill"].includes(action)) {
-      const proc = rhaKor.afterHit(state, action, immune ? 0 : mainDealt, {
-        alive: () => e.hp > 0,
+      const landedMain = !immune && mainDealt > 0;
+      healingLog += rhaKor.after(state, {
+        landed: landedMain,
+        dealt: landedMain ? mainDealt : 0,
+        heal: (amount) => heal(state, amount),
         shrine: Boolean(shrineActive(state)),
-        explode: (multiplier) => {
-          const h = rollPlayerHit({
-            player: true,
-            multiplier,
-            forceHit: true,
-            critical: false,
-          });
-          return {
-            damage: h.damage,
-            dealt: h.dealt || 0,
-            strength: h.reportedDamage || 0,
-          };
-        },
-        aftershock: (amount) => {
-          const crit = rng() < (state.critChance || 0);
-          const raw = Math.max(
-            1,
-            Math.floor(amount * (crit ? royal.critMultiplier(state) : 1)),
-          );
-          const strength = bosses.damageStrength(state, raw);
-          return { dealt: bosses.applyDamage(state, raw), strength, crit };
-        },
-      });
-      dealt += proc.dealt;
-      reportedDamage += proc.strength;
-      healingLog += proc.log;
+      }).log;
     }
     healingLog += playerManaLeech(state, mainDealt, rng);
     const landed = hits.filter((hit) => hit.hit && hit.damage > 0).length;

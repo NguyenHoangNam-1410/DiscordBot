@@ -394,42 +394,42 @@
       "name": "Rha-Kor",
       "rarity": "SSR",
       "starter": false,
-      "role": "Chiến binh STR: Skill đặt Vết Khắc Cổ Luật, đánh thường để tăng cấp rồi kích nổ phá giáp mục tiêu.",
+      "role": "Chiến binh STR: Skill mở Cổ Luật, action kế tiếp quyết định Luật Đoạn (burst), Hộ (sống sót), Dẫn (hồi phục) hoặc Phán (dồn sát thương).",
       "souls": [
         {
           "level": 1,
-          "name": "Nét Chém Khai Luật",
-          "description": "Sát thương Khắc Lệnh Phá Giáp tăng từ 220% lên 250% ST vật lý.",
+          "name": "Bia Khai Mệnh",
+          "description": "Skill đầu tiên trong mỗi combat hoàn lại 1 MP nếu gây sát thương chính lên mục tiêu hợp lệ.",
           "emojiName": "soul_rha_kor_1"
         },
         {
           "level": 2,
-          "name": "Vết Khắc Sâu",
-          "description": "Vết Khắc phát nổ ở LV2 thay vì LV3; vụ nổ tăng thêm 15% sát thương.",
+          "name": "Nét Khắc Bền Vững",
+          "description": "Sau khi mở Cổ Luật, Skill kế tiếp trong 2 action giảm 1 MP (tối thiểu 1); nếu đó là Luật Phán thì +15% DMG. Skill trượt vẫn giữ hiệu ứng cho lần Skill kế tiếp. Mỗi Cổ Luật chỉ kích hoạt một lần.",
           "emojiName": "soul_rha_kor_2"
         },
         {
           "level": 3,
-          "name": "Phán Quyết Phá Giáp",
-          "description": "Vụ nổ tăng từ 280% lên 340% ST vật lý; giảm DEF mục tiêu tăng từ 20% lên 25%.",
+          "name": "Luật Đoạn Tuyệt",
+          "description": "Luật Đoạn tăng từ +40% lên +80% DMG; Luật Phán từ 265% lên 280% ST; giảm DEF của Luật Đoạn tăng từ 20% lên 25%.",
           "emojiName": "soul_rha_kor_3"
         },
         {
           "level": 4,
-          "name": "Bia Đá Hộ Thể",
-          "description": "Khi Vết Khắc phát nổ, giảm thêm 10% sát thương nhận ở phản công kế tiếp (cộng dồn nội tại: tổng 22%).",
+          "name": "Luật Hộ Phản Chấn",
+          "description": "Barrier Luật Hộ tăng từ 12% lên 24% Max HP. Nếu Barrier hấp thụ sát thương, Attack kế tiếp +10% DMG.",
           "emojiName": "soul_rha_kor_4"
         },
         {
           "level": 5,
-          "name": "Chiến Luật Hoàn Chỉnh",
-          "description": "Sát thương Skill tăng từ 250% lên 280% ST vật lý. Vụ nổ đầu tiên mỗi combat hồi thêm 1 MP.",
+          "name": "Quyền Khắc Toàn Phần",
+          "description": "Sau thức tỉnh: bonus Quyền Khắc tăng từ 25% lên 35% sát thương sau kháng; thời hạn từ 2 lên 3 action.",
           "emojiName": "soul_rha_kor_5"
         },
         {
           "level": 6,
-          "name": "Đoạn Tuyệt Cổ Văn",
-          "description": "Sau vụ nổ, Dư Chấn gây thêm 65% sát thương vụ nổ, có thể Crit; không tạo lại Vết Khắc hay kích hoạt thêm nội tại.",
+          "name": "Cổ Luật Không Thể Xóa",
+          "description": "Cổ Luật mở bởi Skill kéo dài 3 action: mỗi action sau đó thi triển ngay luật tương ứng (Skill kế tiếp đều là Luật Phán).",
           "emojiName": "soul_rha_kor_6"
         }
       ]

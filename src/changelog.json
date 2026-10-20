@@ -1,5 +1,18 @@
 [
   {
+    "id": "7a119973-b5fc-4fb9-9dd3-04082884895f",
+    "updatedAt": "2026-10-20T16:21:10.264Z",
+    "auditedAt": "2026-10-20T16:21:10.264Z",
+    "title": "Rha-Kor làm lại: Cổ Luật",
+    "type": "balance",
+    "scope": "survival",
+    "changes": [
+      "Rha-Kor thiết kế lại quanh Skill Khai Bia Cổ Luật (2 MP, 150% ST vật lý): mở Cổ Luật cho action kế tiếp.",
+      "Attack = Luật Đoạn (+40% DMG, giảm 20% DEF mục tiêu 2 action); Defense = Luật Hộ (Barrier 12% Max HP, hồi 2 MP, giảm 25% sát thương nhận); Potion = Luật Dẫn (+15% hồi máu, Attack kế tiếp hồi 12% sát thương); Skill lần hai = Luật Phán (265% ST, giảm 25% DEF).",
+      "Nội tại Nét Khắc Không Thể Né bỏ qua 15% DEF. Thức tỉnh Quyền Khắc Cổ Luật: hoàn thành một Luật tạo Quyền Khắc (+25% sát thương, bỏ qua thêm 20% DEF). Tinh Hồn S1–S6 mới: Bia Khai Mệnh, Nét Khắc Bền Vững, Luật Đoạn Tuyệt, Luật Hộ Phản Chấn, Quyền Khắc Toàn Phần, Cổ Luật Không Thể Xóa."
+    ]
+  },
+  {
     "id": "e11699e2-4857-4f44-adf8-7c4de1c6d942",
     "updatedAt": "2026-10-20T15:52:05.768Z",
     "auditedAt": "2026-10-20T15:52:05.768Z",

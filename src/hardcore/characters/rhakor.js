@@ -1,102 +1,170 @@
 "use strict";
-// Rha-Kor — Kẻ Khắc Chiến Luật. Vết Khắc là trạng thái tạm thời của một combat, không mang sang phòng sau.
+// Rha-Kor — Kẻ Khắc Chiến Luật. Skill mở Cổ Luật; action kế tiếp (Attack/Defense/Potion/Skill) quyết định luật.
+// Mọi trạng thái nằm trong combat hiện tại (encounter.rhaKor), không mang sang phòng sau.
 const { E, soulIcon } = require("../shared/icons");
 const enabled = (s) => s.classKey === "rha_kor";
 const level = (s) => (enabled(s) ? require("./souls").level(s) : 0);
 const awakened = (s) => require("../awakening").active(s);
-const MARK_TURNS = 3;
-const BREAK_TURNS = 2;
-const NAME = "Vết Khắc Cổ Luật";
+const NAMES = Object.freeze({
+  open: "Khai Bia Cổ Luật",
+  doan: "Luật Đoạn",
+  ho: "Luật Hộ",
+  dan: "Luật Dẫn",
+  phan: "Luật Phán",
+});
+const DEF_IGNORE = 0.15;
 function config(s) {
   const n = level(s),
     awake = awakened(s);
   return {
-    skill: n >= 5 ? 2.8 : n >= 1 ? 2.5 : 2.2,
-    explodeAt: n >= 2 ? 2 : 3,
-    explosion: awake ? 3.6 : n >= 3 ? 3.4 : 2.8,
-    deepBonus: n >= 2 ? 1.15 : 1,
-    paradoxBonus: 1.2,
-    shred: awake || n >= 3 ? 0.25 : 0.2,
-    guard: 0.12 + (n >= 4 ? 0.1 : 0),
-    barrier: awake ? 0.12 : 0,
-    extraMana: n >= 5 ? 1 : 0,
-    aftershock: n >= 6 ? 0.65 : 0,
+    open: 1.5,
+    phan: n >= 3 ? 2.8 : 2.65,
+    s2: n >= 2,
+    s2Bonus: 1.15,
+    doan: n >= 3 ? 0.8 : 0.4,
+    doanShred: n >= 3 ? 0.25 : 0.2,
+    doanShredActions: 2,
+    phanShred: 0.25,
+    phanShredActions: 1,
+    barrier: n >= 4 ? 0.24 : 0.12,
+    hoMana: 1, // Phòng thủ thường hồi 1 MP; Luật Hộ hồi 2 MP
+    hoReduce: 0.25,
+    hoPenalty: 0.12,
+    s4Bonus: n >= 4 ? 0.1 : 0,
+    danHeal: 1.15,
+    leech: 0.12,
+    s1: n >= 1,
+    lawWindow: n >= 6 ? 3 : 1,
+    boon: awake,
+    boonBonus: n >= 5 ? 0.35 : 0.25,
+    boonIgnore: 0.2,
+    boonWindow: n >= 5 ? 3 : 2,
+    discountWindow: 2,
   };
 }
-const skillMultiplier = (s) => config(s).skill;
 function frame(s) {
   const e = s.encounter;
   if (!enabled(s) || e?.type !== "combat") return null;
-  e.rhaKor ||= { version: 1, mark: null, shred: null, manaUsed: false };
+  e.rhaKor ||= {
+    version: 2,
+    law: null,
+    discount: null,
+    boon: null,
+    shred: null,
+    barrier: 0,
+    hoRounds: 0,
+    penalty: false,
+    leech: false,
+    s4: false,
+    skillsCast: 0,
+    turn: null,
+  };
   return e.rhaKor;
 }
-const mark = (s) => (enabled(s) ? s.encounter?.rhaKor?.mark || null : null);
+const peek = (s) => (enabled(s) ? s.encounter?.rhaKor || null : null);
 function validate(s) {
-  if (!enabled(s)) return;
-  const g = s.rhaGuard;
-  if (g != null && (!Number.isFinite(g) || g < 0 || g > 0.5))
-    throw Error("INVALID_RHA_KOR_STATE");
-  const f = s.encounter?.rhaKor;
+  if (s.rhaGuard !== undefined) throw Error("INVALID_RHA_KOR_STATE");
+  const f = enabled(s) ? s.encounter?.rhaKor : null;
   if (!f) return;
-  const m = f.mark;
+  const windowOk = (w, max) =>
+    w == null ||
+    (Number.isSafeInteger(w.window) && w.window >= 1 && w.window <= max);
   if (
-    f.version !== 1 ||
-    (m &&
-      (![1, 2, 3].includes(m.level) ||
-        !Number.isSafeInteger(m.turns) ||
-        m.turns < 1 ||
-        m.turns > MARK_TURNS ||
-        typeof m.bonus !== "boolean")) ||
-    (f.shred &&
+    f.version !== 2 ||
+    !windowOk(f.law, 4) ||
+    !windowOk(f.discount, 3) ||
+    !windowOk(f.boon, 3) ||
+    (f.shred != null &&
       (!Number.isFinite(f.shred.rate) ||
         f.shred.rate < 0 ||
         f.shred.rate > 0.5 ||
         !Number.isSafeInteger(f.shred.turns) ||
         f.shred.turns < 1 ||
-        f.shred.turns > BREAK_TURNS + 1))
+        f.shred.turns > 4)) ||
+    !Number.isFinite(f.barrier) ||
+    f.barrier < 0 ||
+    ![0, 1, 2].includes(f.hoRounds) ||
+    ["penalty", "leech", "s4"].some((k) => typeof f[k] !== "boolean") ||
+    !Number.isSafeInteger(f.skillsCast) ||
+    f.skillsCast < 0
   )
     throw Error("INVALID_RHA_KOR_STATE");
 }
-// Giảm DEF hiệu lực của mục tiêu khi Rha-Kor gây sát thương vật lý.
+// Ghi nhận action của Rha-Kor trước khi tính sát thương: xác định chế độ luật và tiêu thụ Quyền Khắc.
+function begin(s, action) {
+  const f = frame(s);
+  if (!f) return null;
+  const open = Boolean(f.law);
+  const mode =
+    action === "skill"
+      ? open
+        ? "phan"
+        : "open"
+      : open && ["attack", "defend", "potion"].includes(action)
+        ? { attack: "doan", defend: "ho", potion: "dan" }[action]
+        : "basic";
+  const strikes = ["attack", "skill"].includes(action);
+  f.turn = {
+    action,
+    mode,
+    boon: strikes && Boolean(f.boon),
+    discount: action === "skill" && Boolean(f.discount),
+    penalty: action === "attack" && f.penalty,
+    s4: action === "attack" && f.s4,
+    leech: action === "attack" && f.leech,
+  };
+  if (f.turn.boon) f.boon = null;
+  return f.turn;
+}
+const turnOf = (s) => peek(s)?.turn || null;
+function turnMultiplier(s) {
+  const t = turnOf(s),
+    c = config(s);
+  if (!t) return 1;
+  let m = 1;
+  if (t.action === "skill")
+    m = t.mode === "phan" ? c.phan * (t.discount && c.s2 ? c.s2Bonus : 1) : c.open;
+  else if (t.action === "attack")
+    m =
+      (t.mode === "doan" ? 1 + c.doan : 1) *
+      (t.penalty ? 1 - c.hoPenalty : 1) *
+      (t.s4 ? 1 + c.s4Bonus : 1);
+  return m * (t.boon ? 1 + c.boonBonus : 1);
+}
+// Nội tại Nét Khắc Không Thể Né + Quyền Khắc + DEF bị giảm bởi Luật Đoạn/Phán.
 function defenseFactor(s) {
-  const b = enabled(s) ? s.encounter?.rhaKor?.shred : null;
-  return b ? 1 - b.rate : 1;
+  const f = peek(s);
+  if (!f) return 1;
+  const c = config(s);
+  const ignore = Math.min(0.8, DEF_IGNORE + (f.turn?.boon ? c.boonIgnore : 0));
+  return (1 - ignore) * (f.shred ? 1 - f.shred.rate : 1);
 }
-// Giảm sát thương cho phản công kế tiếp sau vụ nổ.
-const guardRate = (s) => (enabled(s) ? s.rhaGuard || 0 : 0);
-function consumeGuard(s) {
-  if (s.rhaGuard) delete s.rhaGuard;
+// S2: Skill kế tiếp trong cửa sổ giảm 1 MP, tối thiểu 1.
+function adjustCost(s, cost) {
+  const f = peek(s);
+  return f?.discount && cost > 1 ? Math.max(1, cost - 1) : cost;
 }
-// Mệnh Đề Phản Nghịch: boss gây sát thương trực tiếp khi Vết Khắc còn tồn tại.
-function onEnemyDamage(s, damage) {
-  const m = mark(s);
-  if (
-    !m ||
-    m.bonus ||
-    !(damage > 0) ||
-    !["boss", "final_boss"].includes(s.encounter.rank)
-  )
-    return "";
-  m.bonus = true;
-  return (
-    "\n" +
-    soulIcon("rha_kor", 0) +
-    " Mệnh Đề Phản Nghịch: vụ nổ Vết Khắc +" +
-    Math.round((config(s).paradoxBonus - 1) * 100) +
-    "% sát thương."
-  );
+const defendExtraMana = (s) =>
+  turnOf(s)?.mode === "ho" ? config(s).hoMana : 0;
+const potionFactor = (s) =>
+  turnOf(s)?.mode === "dan" ? config(s).danHeal : 1;
+// Luật Hộ: giảm sát thương phản công hiện tại và kế tiếp; phản công kế tiếp còn được hưởng hiệu quả Defense.
+const guardRate = (s) => (peek(s)?.hoRounds > 0 ? config(s).hoReduce : 0);
+const carryDefend = (s) => peek(s)?.hoRounds === 1;
+function counterDone(s) {
+  const f = peek(s);
+  if (f?.hoRounds > 0) f.hoRounds--;
 }
-// Mỗi hành động của Rha-Kor (kể cả Phòng thủ/Bình) trừ thời lượng Vết Khắc và hiệu ứng phá giáp.
-function tick(s, { keepMark = false } = {}) {
-  const f = s.encounter?.rhaKor;
-  if (!f || !enabled(s)) return "";
-  let log = "";
-  if (f.shred && --f.shred.turns <= 0) f.shred = null;
-  if (f.mark && !keepMark && --f.mark.turns <= 0) {
-    f.mark = null;
-    log = "\n" + E.attack + " " + NAME + " tan biến vì hết 3 lượt.";
-  }
-  return log;
+function barrierAmount(s) {
+  return peek(s)?.barrier || 0;
+}
+function absorb(s, damage) {
+  const f = peek(s);
+  if (!f || !(f.barrier > 0)) return damage;
+  const used = Math.min(f.barrier, damage);
+  f.barrier -= used;
+  if (used > 0 && config(s).s4Bonus > 0) f.s4 = true;
+  return damage - used;
 }
 function gainMana(s, amount) {
   const before = s.mana;
@@ -106,178 +174,230 @@ function gainMana(s, amount) {
   );
   return s.mana - before;
 }
-const label = (m) => NAME + " LV" + m.level + "/" + "3";
-// Gọi sau khi hit chính của Attack/Skill đã được tính.
-// api: { explode(multiplier) -> {damage,dealt,strength}, aftershock(amount) -> {dealt,strength}, alive() }
-function afterHit(s, action, mainDealt, api) {
-  const out = { dealt: 0, strength: 0, log: "" };
-  const f = frame(s);
-  if (!f) return out;
+const icon = () => soulIcon("rha_kor", 0);
+function setShred(f, rate, actions) {
+  if (f.shred && f.shred.rate > rate) {
+    f.shred.turns = Math.max(f.shred.turns, actions + 1);
+    return;
+  }
+  f.shred = { rate, turns: actions + 1 };
+}
+// Xử lý sau action: hoàn thành luật, hiệu ứng theo luật, Quyền Khắc, S1/S2 và hết hạn các cửa sổ.
+// api: { landed: hit chính gây sát thương, dealt, heal(amount), shrine }
+function after(s, api = {}) {
+  const f = frame(s),
+    out = { log: "" };
+  const t = f?.turn;
+  if (!t) return out;
+  f.turn = null;
   const c = config(s);
-  const landed = mainDealt > 0;
-  if (action === "skill") {
-    if (!landed) {
-      out.log += tick(s);
-      return out;
-    }
-    out.log += f.mark ? "\n" + E.attack + " Vết Khắc cũ bị ghi đè." : "";
-    f.mark = {
-      level: api.shrine ? 2 : 1,
-      turns: MARK_TURNS,
-      bonus: false,
-    };
+  let completed = false,
+    opened = false;
+  if (t.mode === "open") {
+    opened = true;
+    f.law = { window: c.lawWindow + (api.shrine ? 1 : 0) };
     out.log +=
       "\n" +
-      soulIcon("rha_kor", 0) +
-      " Khắc " +
-      NAME +
-      " LV" +
-      f.mark.level +
-      " lên mục tiêu (" +
-      MARK_TURNS +
-      " lượt).";
-    out.log += tick(s, { keepMark: true });
-    return out;
+      icon() +
+      " " +
+      NAMES.open +
+      ": mở Cổ Luật (" +
+      f.law.window +
+      " action); chọn Attack, Defense, Potion hoặc Skill để thi triển.";
+  } else if (t.mode === "doan" && api.landed) {
+    completed = true;
+    setShred(f, c.doanShred, c.doanShredActions);
+    out.log +=
+      "\n" +
+      icon() +
+      " " +
+      NAMES.doan +
+      ": +" +
+      Math.round(c.doan * 100) +
+      "% DMG, giảm " +
+      Math.round(c.doanShred * 100) +
+      "% DEF mục tiêu trong " +
+      c.doanShredActions +
+      " action.";
+  } else if (t.mode === "phan" && api.landed) {
+    completed = true;
+    setShred(f, c.phanShred, c.phanShredActions);
+    out.log +=
+      "\n" +
+      icon() +
+      " " +
+      NAMES.phan +
+      ": " +
+      Math.round(c.phan * (t.discount && c.s2 ? c.s2Bonus : 1) * 100) +
+      "% ST vật lý, giảm " +
+      Math.round(c.phanShred * 100) +
+      "% DEF mục tiêu.";
+  } else if (t.mode === "ho") {
+    completed = true;
+    const barrier = Math.floor(s.maxHp * c.barrier);
+    f.barrier += barrier;
+    f.hoRounds = 2;
+    f.penalty = true;
+    out.log +=
+      "\n" +
+      icon() +
+      " " +
+      NAMES.ho +
+      ": Barrier " +
+      barrier +
+      ", hồi 2 MP, giảm " +
+      Math.round(c.hoReduce * 100) +
+      "% sát thương nhận (phản công này và kế tiếp); Attack kế tiếp −" +
+      Math.round(c.hoPenalty * 100) +
+      "% DMG.";
+  } else if (t.mode === "dan") {
+    completed = true;
+    f.leech = true;
+    out.log +=
+      "\n" +
+      icon() +
+      " " +
+      NAMES.dan +
+      ": hồi thêm " +
+      Math.round((c.danHeal - 1) * 100) +
+      "% HP; Attack kế tiếp hồi " +
+      Math.round(c.leech * 100) +
+      "% sát thương gây ra.";
   }
-  if (f.mark && landed) {
-    f.mark.level = Math.min(3, f.mark.level + 1);
-    if (f.mark.level >= c.explodeAt && api.alive()) {
-      explode(s, f, c, api, out);
-      return out;
+  // Mỗi action sau khi mở luật làm cửa sổ giảm 1 (hết hạn khi về 0).
+  if (!opened && f.law && --f.law.window <= 0) f.law = null;
+  if (t.boon)
+    out.log +=
+      "\n" +
+      icon() +
+      " Quyền Khắc: +" +
+      Math.round(c.boonBonus * 100) +
+      "% DMG, bỏ qua thêm " +
+      Math.round(c.boonIgnore * 100) +
+      "% DEF.";
+  if (t.action === "attack") {
+    if (t.penalty) f.penalty = false;
+    if (t.s4) {
+      f.s4 = false;
+      out.log += "\n" + icon() + " Luật Hộ Phản Chấn: Attack +" + Math.round(c.s4Bonus * 100) + "% DMG.";
     }
-    out.log += "\n" + soulIcon("rha_kor", 0) + " " + label(f.mark) + ".";
+    if (t.leech) {
+      f.leech = false;
+      const gained = api.heal && api.dealt > 0 ? api.heal(Math.floor(api.dealt * c.leech)) : 0;
+      if (api.dealt > 0)
+        out.log += "\n" + E.hp + " Luật Dẫn: hồi " + gained + " HP từ sát thương.";
+    }
   }
-  out.log += tick(s);
+  if (t.action === "skill") {
+    if (c.s1 && f.skillsCast === 0 && api.landed) {
+      const got = gainMana(s, 1);
+      if (got) out.log += "\n" + soulIcon("rha_kor", 1) + " " + E.mana + " Bia Khai Mệnh: hoàn " + got + " MP.";
+    }
+    f.skillsCast++;
+  }
+  // S2: Skill dùng giảm MP; trượt thì giữ lại cho lần Skill kế tiếp.
+  if (t.discount) {
+    f.discount = api.landed ? null : { window: c.discountWindow, fresh: true };
+    if (t.mode === "phan" && c.s2)
+      out.log += "\n" + soulIcon("rha_kor", 2) + " Nét Khắc Bền Vững: giảm 1 MP, Luật Phán +" + Math.round((c.s2Bonus - 1) * 100) + "% DMG.";
+  }
+  // Mỗi Cổ Luật mới chỉ mở một lần giảm MP (S2).
+  if (opened && c.s2) f.discount = { window: c.discountWindow, fresh: true };
+  if (f.discount) {
+    if (f.discount.fresh) delete f.discount.fresh;
+    else if (--f.discount.window <= 0) f.discount = null;
+  }
+  // Quyền Khắc còn từ trước hết hạn dần; Quyền Khắc vừa tạo bắt đầu tính từ action kế tiếp.
+  if (f.boon && --f.boon.window <= 0) f.boon = null;
+  if (completed && c.boon) {
+    f.boon = { window: c.boonWindow };
+    out.log += "\n" + icon() + " Hoàn thành " + NAMES[t.mode] + ": nhận Quyền Khắc (" + c.boonWindow + " action).";
+  }
+  if (f.shred && --f.shred.turns <= 0) f.shred = null;
   return out;
 }
-function explode(s, f, c, api, out) {
-  const m = f.mark;
-  f.mark = null;
-  const multiplier = c.explosion * c.deepBonus * (m.bonus ? c.paradoxBonus : 1);
-  const hit = api.explode(multiplier);
-  out.dealt += hit.dealt;
-  out.strength += hit.strength;
-  out.log +=
-    "\n💥 " +
-    NAME +
-    " phát nổ: +" +
-    hit.strength +
-    " DMG vật lý" +
-    (m.bonus ? " (Mệnh Đề Phản Nghịch)" : "") +
-    ".";
-  f.shred = { rate: c.shred, turns: BREAK_TURNS + 1 };
-  out.log +=
-    "\n" +
-    E.defense +
-    " Giáp mục tiêu −" +
-    Math.round(c.shred * 100) +
-    "% trong " +
-    BREAK_TURNS +
-    " lượt.";
-  s.rhaGuard = c.guard;
-  out.log +=
-    "\n" +
-    soulIcon("rha_kor", 0) +
-    " Thân Bia Bất Khuất: giảm " +
-    Math.round(c.guard * 100) +
-    "% sát thương nhận ở phản công kế tiếp.";
-  const killed = !api.alive();
-  let mana = 0;
-  if (killed) mana += 1;
-  if (c.extraMana && !f.manaUsed) {
-    f.manaUsed = true;
-    mana += c.extraMana;
-  }
-  if (mana) {
-    const got = gainMana(s, mana);
-    out.log += "\n" + E.mana + " Hồi " + got + " MP từ vụ nổ.";
-  }
-  if (c.barrier) {
-    const cb = require("../awakening").combat(s);
-    if (cb) {
-      const amount = Math.floor(s.maxHp * c.barrier);
-      cb.barrier = (cb.barrier || 0) + amount;
-      out.log += "\n🛡️ Cổ Luật Đoạn Tuyệt: Barrier " + amount + ".";
-    }
-  }
-  if (c.aftershock && !killed) {
-    const after = api.aftershock(Math.floor(hit.damage * c.aftershock));
-    out.dealt += after.dealt;
-    out.strength += after.strength;
-    out.log +=
-      "\n" +
-      soulIcon("rha_kor", 6) +
-      " Dư Chấn: +" +
-      after.strength +
-      " DMG" +
-      (after.crit ? " " + E.crit : "") +
-      ".";
-  }
-  out.log += tick(s, { keepMark: true });
-  return out;
+// Hành động của boss (không thuộc Attack/Defense/Potion/Skill) làm Cổ Luật đang mở kết thúc.
+function offAction(s) {
+  const f = peek(s);
+  if (f?.law) f.law = null;
+}
+function lawText(f) {
+  return f?.law ? "Cổ Luật mở (" + f.law.window + " action)" : "Chưa mở Cổ Luật";
 }
 function innateText(s) {
   const c = config(s),
-    m = mark(s);
+    f = peek(s);
   return (
-    "**Thân Bia Bất Khuất** · có từ tầng 1\n" +
-    "Skill đặt " +
-    NAME +
-    " LV1 lên mục tiêu (" +
-    MARK_TURNS +
-    " lượt của Rha-Kor, không mang sang phòng sau). Mỗi hit chính của Attack/Skill trúng thêm +1 cấp; đạt LV" +
-    c.explodeAt +
-    " thì phát nổ " +
-    Math.round(c.explosion * c.deepBonus * 100) +
-    "% ST vật lý (luôn trúng, không Crit) và giảm " +
-    Math.round(c.shred * 100) +
-    "% DEF mục tiêu trong " +
-    BREAK_TURNS +
-    " lượt. Sau nổ: giảm " +
-    Math.round(c.guard * 100) +
-    "% sát thương phản công kế tiếp; hạ mục tiêu bằng vụ nổ hồi 1 MP.\n" +
-    "Mệnh Đề Phản Nghịch: boss gây sát thương trực tiếp khi Vết Khắc còn tồn tại → vụ nổ +20%.\n" +
-    (m
-      ? "**Hiện tại:** " + label(m) + " · còn " + m.turns + " lượt.\n"
-      : "**Hiện tại:** chưa có Vết Khắc.\n")
+    "**Nét Khắc Không Thể Né** · có từ tầng 1\n" +
+    "Attack và Skill bỏ qua 15% DEF hiệu lực của mục tiêu.\n" +
+    "**Khai Bia Cổ Luật** (Skill · 2 MP · " +
+    Math.round(c.open * 100) +
+    "% ST vật lý) mở Cổ Luật cho " +
+    c.lawWindow +
+    " action kế tiếp:\n" +
+    "• **Luật Đoạn** (Attack): +" +
+    Math.round(c.doan * 100) +
+    "% DMG, giảm " +
+    Math.round(c.doanShred * 100) +
+    "% DEF mục tiêu trong 2 action.\n" +
+    "• **Luật Hộ** (Defense): Barrier " +
+    Math.round(c.barrier * 100) +
+    "% Max HP, hồi 2 MP, giảm 25% sát thương nhận và hiệu quả Defense cho action kế tiếp; Attack kế tiếp −12% DMG.\n" +
+    "• **Luật Dẫn** (Potion): hồi thêm 15% HP; Attack kế tiếp hồi 12% sát thương gây ra.\n" +
+    "• **Luật Phán** (Skill lần hai): " +
+    Math.round(c.phan * 100) +
+    "% ST vật lý, giảm 25% DEF mục tiêu trong 1 action, kết thúc luật.\n" +
+    "**Hiện tại:** " +
+    lawText(f) +
+    ".\n"
   );
 }
 function awakeningText(s) {
+  const c = config(s),
+    f = peek(s);
   return (
-    "**Cổ Luật Đoạn Tuyệt** · Uru Stone Tablet\nVụ nổ tăng lên 360% ST vật lý, giảm 25% DEF mục tiêu và tạo Barrier 12% Max HP. " +
-    (mark(s)
-      ? "Hiện tại: " + label(mark(s)) + " · còn " + mark(s).turns + " lượt."
-      : "Hiện tại: chưa có Vết Khắc.")
+    "**Quyền Khắc Cổ Luật** · Uru Stone Tablet\nHoàn thành một Luật tạo 1 Quyền Khắc (" +
+    c.boonWindow +
+    " action). Attack/Skill kế tiếp tự tiêu thụ: +" +
+    Math.round(c.boonBonus * 100) +
+    "% sát thương sau kháng và bỏ qua thêm 20% DEF. " +
+    (f?.boon ? "Hiện tại: đang có Quyền Khắc (" + f.boon.window + " action)." : "Hiện tại: chưa có Quyền Khắc.")
   );
 }
 function status(s) {
-  const m = mark(s),
-    b = s.encounter?.rhaKor?.shred;
-  return (
-    (m ? label(m) + " · " + m.turns + " lượt" : "Chưa có Vết Khắc") +
-    (b
-      ? " · Giáp −" + Math.round(b.rate * 100) + "% (" + b.turns + " lượt)"
-      : "") +
-    (s.rhaGuard
-      ? " · Giảm ST " + Math.round(s.rhaGuard * 100) + "%"
-      : "")
-  );
+  const f = peek(s);
+  if (!f) return "Chưa vào trận";
+  const parts = [lawText(f)];
+  if (f.boon) parts.push("Quyền Khắc (" + f.boon.window + ")");
+  if (f.shred) parts.push("DEF mục tiêu −" + Math.round(f.shred.rate * 100) + "% (" + Math.max(0, f.shred.turns - 1) + " action)");
+  if (f.barrier > 0) parts.push("Barrier " + Math.floor(f.barrier));
+  if (f.hoRounds > 0) parts.push("Giảm sát thương nhận 25%");
+  if (f.penalty) parts.push("Attack kế tiếp −12%");
+  if (f.leech) parts.push("Attack kế tiếp hồi máu");
+  if (f.discount) parts.push("Skill kế tiếp −1 MP");
+  return parts.join(" · ");
 }
 module.exports = {
+  NAMES,
   enabled,
   config,
-  skillMultiplier,
   frame,
-  mark,
+  peek,
   validate,
+  begin,
+  turnMultiplier,
   defenseFactor,
+  adjustCost,
+  defendExtraMana,
+  potionFactor,
   guardRate,
-  consumeGuard,
-  onEnemyDamage,
-  tick,
-  afterHit,
+  carryDefend,
+  counterDone,
+  barrierAmount,
+  absorb,
+  after,
+  offAction,
   innateText,
   awakeningText,
   status,
-  NAME,
 };

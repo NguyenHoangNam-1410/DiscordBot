@@ -28,7 +28,7 @@ module.exports = function createModule(dependencies) {
       venance:
         "Ưu tiên ENE để tăng phép và MP; thêm VIT để sống qua lượt niệm. Skill → ba đòn phép để kích hoạt Tam trọng; Phòng thủ khi cần MP hoặc Hồi lưu.",
       rha_kor:
-        "Ưu tiên STR cho sát thương, VIT cho HP. Dùng Khắc Lệnh Phá Giáp đặt Vết Khắc, rồi đánh thường để tăng cấp và kích nổ; Max MP 4 đủ cho Skill liên tục.",
+        "Ưu tiên STR cho sát thương, VIT cho HP. Skill mở Cổ Luật rồi chọn Attack để burst/phá DEF, Defense để sống sót, Potion để hồi phục hoặc Skill lần hai để dồn sát thương; Max MP 4 đủ cho nhịp Skill → hành động.",
       amazon:
         "Ưu tiên DEX cho sát thương, trúng/né và Crit; thêm VIT khi thiếu HP. Trang bị vật lý, ACC và Crit hợp với hai phát Barrage.",
       barbarian:
@@ -48,7 +48,7 @@ module.exports = function createModule(dependencies) {
     return {
       name: `${c.emoji} ${c.name}`,
       skillIcon: SKILL_ICONS[classKey],
-      role: `${group ? group.name + STAT_SEPARATOR : ""}Build ${main}${STAT_SEPARATOR}${{ venance: "Cường hóa đánh thường thành phép", rha_kor: "Vết Khắc và phá giáp", amazon: "Hai phát vật lý", barbarian: "Vật lý và chống chịu", assassin: "Crit và né phản công", sorceress: "Skill phép mạnh", druid: "Vật lý và hồi phục", necromancer: "Phép và chặn phản công", paladin: "Vật lý và phòng thủ" }[classKey]}`,
+      role: `${group ? group.name + STAT_SEPARATOR : ""}Build ${main}${STAT_SEPARATOR}${{ venance: "Cường hóa đánh thường thành phép", rha_kor: "Cổ Luật, phá DEF và nhịp chiến đấu", amazon: "Hai phát vật lý", barbarian: "Vật lý và chống chịu", assassin: "Crit và né phản công", sorceress: "Skill phép mạnh", druid: "Vật lý và hồi phục", necromancer: "Phép và chặn phản công", paladin: "Vật lý và phòng thủ" }[classKey]}`,
       attributes: `${E.str} **STR** **${state.str}**${STAT_SEPARATOR}${E.dex} **DEX** **${state.dex}**${STAT_SEPARATOR}${E.vit} **VIT** **${state.vit}**${STAT_SEPARATOR}${E.ene} **ENE** **${state.ene}**`,
       stats: `${E.str} **STR** **${state.str}**${STAT_SEPARATOR}${E.dex} **DEX** **${state.dex}**${STAT_SEPARATOR}${E.vit} **VIT** **${state.vit}**${STAT_SEPARATOR}${E.ene} **ENE** **${state.ene}**\n${E.hp} **HP** **${state.hp}**${STAT_SEPARATOR}${E.mana} **MP** **${state.mana}**${STAT_SEPARATOR}${E.defense} **DEF** **${state.defense}**${STAT_SEPARATOR}${E.potion} **Bình** **${state.potions}**\n${E.attack} **Vật lý** **${state.damageMin}–${state.damageMax}**${STAT_SEPARATOR}${E.magic} **Phép** **${state.spellMin}–${state.spellMax}**${STAT_SEPARATOR}${E.res} **RES** **${state.resistance}%**${STAT_SEPARATOR}${E.crit} **CRIT** **${percent(state.critChance)}**`,
       build: builds[classKey],
@@ -59,7 +59,7 @@ module.exports = function createModule(dependencies) {
       defend: `Không gây sát thương; hồi **${classKey === "venance" ? 2 : 1} MP**. Trong lần phản công này: **DEF ×2** khi nhận vật lý, **+15 RES** khi nhận phép, giảm thêm **15% sát thương** và miễn Crit. Không duy trì sang lượt sau.${classKey === "venance" ? " Có Ấn Hồi lưu: tiêu ấn để hồi HP trước phản công." : ""}`,
       skill:
         classKey === "rha_kor"
-          ? `${SKILLS.rha_kor} Tốn **2 MP**. Skill trúng đặt/ghi đè Vết Khắc; Phòng thủ và Bình vẫn trừ thời lượng nhưng không tăng cấp.`
+          ? `${SKILLS.rha_kor} Tốn **2 MP**. Chỉ một luật mỗi lần mở; Skill lần hai khi Cổ Luật còn mở là Luật Phán (cũng tốn 2 MP).`
           : classKey === "venance"
           ? "Tốn **2 MP**, **không gây DMG**. Cường hóa đánh thường thành phép trong **3 hành động chiến đấu tiếp theo**, giữ qua phòng. Phòng thủ/bình/hành động boss tốn lượt đều trừ thời gian. Boss vẫn phản công. Dùng lại đặt về 3 hành động và xóa chuỗi/ấn cũ."
           : `${SKILLS[classKey]} Tốn **2 MP**, không hồi MP như đánh thường. ${["sorceress", "necromancer"].includes(classKey) ? "Sát thương phép chịu RES của quái, không Crit." : "Mỗi đòn vật lý có thể trượt/Crit, chịu DEF của quái."} ${["assassin", "necromancer"].includes(classKey) ? "Chặn phản công của lượt này kể cả skill không gây sát thương." : classKey === "paladin" ? "Nếu quái sống, nhận phản công với hiệu quả DEF; skill không cộng 1 MP." : "Nếu quái sống, nhận phản công bình thường."}`,

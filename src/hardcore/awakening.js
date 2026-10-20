@@ -63,8 +63,8 @@ const REWORK_TEXT = {
 const ARTIFACTS = {
   rha_kor: [
     "Uru Stone Tablet",
-    "Cổ Luật Đoạn Tuyệt",
-    "Vụ nổ Vết Khắc tăng lên 360% ST vật lý, giảm 25% DEF mục tiêu và tạo Barrier 12% Max HP.",
+    "Quyền Khắc Cổ Luật",
+    "Hoàn thành một Luật tạo Quyền Khắc: Attack/Skill kế tiếp +25% sát thương sau kháng và bỏ qua thêm 20% DEF.",
   ],
   venance: [
     "Astral Codex",

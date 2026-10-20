@@ -308,6 +308,8 @@ module.exports = function createModule(dependencies) {
         require("../rift").beginAction(state, action);
         const beforeEnemyHp = e.hp;
         require("../characters/venance").begin(state, action);
+        if (action.startsWith("boss_"))
+          require("../characters/rhakor").offAction(state);
         const acted =
           action === "ritual_claim"
             ? { log: "", dealt: 0, critical: false }

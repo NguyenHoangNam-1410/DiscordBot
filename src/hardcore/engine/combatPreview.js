@@ -136,9 +136,12 @@ module.exports = function createModule(dependencies) {
     if (awakening.empowered(state)) return 1;
     const free =
       ["sorceress", "venance"].includes(state.classKey) && shrineActive(state);
-    return bosses.skillCost(
+    return require("../characters/rhakor").adjustCost(
       state,
-      paradox.manaCost(state, free) + (free ? 0 : state.skillManaExtra || 0),
+      bosses.skillCost(
+        state,
+        paradox.manaCost(state, free) + (free ? 0 : state.skillManaExtra || 0),
+      ),
     );
   }
 
@@ -232,7 +235,7 @@ module.exports = function createModule(dependencies) {
             druid: 1.35,
             necromancer: 1.55,
             paladin: 1.4,
-            rha_kor: require("../characters/rhakor").skillMultiplier(state),
+            rha_kor: 1,
           }[state.classKey]
         : 1) *
       (skill && state.classKey === "barbarian"
@@ -259,6 +262,8 @@ module.exports = function createModule(dependencies) {
           target = copy.encounter;
         bosses.beginAction(copy, action);
         rift.beginAction(copy, action);
+        const rha = require("../characters/rhakor");
+        if (rha.enabled(copy)) rha.begin(copy, action);
         if (skill && bosses.brainControl(copy))
           return Math.floor(target.maxHp * 0.2);
         if (
@@ -270,7 +275,9 @@ module.exports = function createModule(dependencies) {
         if (skill && skillHpCost(copy))
           copy.hp = Math.max(1, copy.hp - skillHpCost(copy));
         const factor = paradox.active(copy) ? 1 : 1 + bonus;
-        const rolls = Array.from({ length: shots }, () => multiplier);
+        const rolls = Array.from({ length: shots }, () =>
+          rha.enabled(copy) ? multiplier * rha.turnMultiplier(copy) : multiplier,
+        );
         if (
           skill &&
           copy.classKey === "amazon" &&

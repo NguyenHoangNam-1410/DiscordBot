@@ -37,7 +37,7 @@ const CLASSES = Object.freeze({
     baseRes: 2,
     baseCrit: 0.05,
     strWeight: 1,
-    skill: "Khắc Lệnh Phá Giáp",
+    skill: "Khai Bia Cổ Luật",
   },
   amazon: {
     name: "Amazon",

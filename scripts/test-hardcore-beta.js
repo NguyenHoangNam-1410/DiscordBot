@@ -144,8 +144,8 @@ async function main() {
       assert.equal(run.state.characterSoul.soulLevel, level);
       assert.equal(run.state.characterSoul.characterId, "rha_kor");
       assert.equal(
-        require("../src/hardcore/characters/rhakor").config(run.state).explodeAt,
-        level >= 2 ? 2 : 3,
+        require("../src/hardcore/characters/rhakor").config(run.state).phan,
+        level >= 3 ? 2.8 : 2.65,
       );
       assert.equal(run.state.characterSoul.bossMultiplier, level === 6 ? 1 : 1);
       repo.deleteSession(run.session.id);
@@ -162,7 +162,7 @@ async function main() {
     assert(!played.settled);
     assert.equal(played.state.hp, 0);
     assert(played.state.beta.awaitingRevive);
-    assert.equal(kit.mark(played.state).turns, 3);
+    assert.equal(kit.peek(played.state).law.window, 1);
     const dead = current(run).state,
       mana = dead.mana,
       turn = dead.encounter.combatTurn,
@@ -174,7 +174,7 @@ async function main() {
     const revived = play(run, "beta_revive").state;
     assert.equal(revived.hp, revived.maxHp);
     assert.equal(revived.mana, mana);
-    assert.equal(kit.mark(revived).turns, 3);
+    assert.equal(kit.peek(revived).law.window, 1);
     assert.equal(revived.encounter.combatTurn, turn);
     assert.equal(revived.encounter.hp, enemyHP);
     assert.equal(revived.beta.revivals, 1);
