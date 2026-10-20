@@ -1,5 +1,14 @@
 [
   {
+    "id": "295904d4-0636-4aad-8fc8-e5326ef9bc1d",
+    "updatedAt": "2026-10-20T10:26:24.487Z",
+    "auditedAt": "2026-10-20T10:26:24.487Z",
+    "title": "Chatbot tra cứu Google",
+    "changes": [
+      "Khi dùng Gemini và bật CHATBOT_GOOGLE_SEARCH=1, chatbot tự tìm trên Google cho câu hỏi cần thông tin mới và kèm tối đa 3 link nguồn dưới câu trả lời."
+    ]
+  },
+  {
     "id": "91455cc3-76b2-48f5-8719-1a744c1d527c",
     "updatedAt": "2026-10-20T08:22:53.552Z",
     "auditedAt": "2026-10-20T08:22:53.552Z",
