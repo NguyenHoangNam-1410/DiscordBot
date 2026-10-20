@@ -1,5 +1,16 @@
 [
   {
+    "id": "4095d652-6382-41d0-8dc8-aaaf97607cb1",
+    "updatedAt": "2026-10-20T11:36:54.274Z",
+    "auditedAt": "2026-10-20T11:36:54.274Z",
+    "title": "Túi đồ gọn hơn khi gửi nhiều món vào Forge",
+    "type": "improvement",
+    "scope": "survival",
+    "changes": [
+      "Danh sách món đang gửi Horadric Forge gom vào một mục duy nhất, không còn tràn bảng khi gửi nhiều món cùng lúc."
+    ]
+  },
+  {
     "id": "9807404d-ce73-4e9d-b2f6-cd190dbfe1a6",
     "updatedAt": "2026-10-20T11:31:52.384Z",
     "auditedAt": "2026-10-20T11:31:52.384Z",

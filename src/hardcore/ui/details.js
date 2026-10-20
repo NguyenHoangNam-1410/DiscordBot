@@ -373,12 +373,26 @@ module.exports = function createModule(dependencies) {
                 .join("\n"),
         });
     } else if (sub === 1) {
-      if (page === 0)
-        for (const loan of state.forgeLoans || [])
-          e.addFields({
-            name: `🔨 Đang gửi Horadric Forge · ${loan.name}`,
-            value: `Lv.${loan.level} → **Lv.${loan.level + 2}** khi về ở tầng **${loan.due}** (còn ${Math.max(0, loan.due - state.floor)} tầng). Trong lúc này món không cho chỉ số hay nội tại.`,
-          });
+      if (page === 0 && state.forgeLoans?.length) {
+        // Một field duy nhất để nhiều khoản gửi cùng lúc không làm tràn giới hạn embed.
+        const lines = state.forgeLoans.map(
+          (loan) =>
+            `• **${loan.name}** Lv.${loan.level} → **Lv.${loan.level + 2}** · về tầng **${loan.due}** (còn ${Math.max(0, loan.due - state.floor)})`,
+        );
+        let value = "";
+        lines.forEach((line, i) => {
+          if ((value + "\n" + line).length > 840 && value) return;
+          value += (value ? "\n" : "") + line;
+        });
+        const shown = value.split("\n").length;
+        if (shown < lines.length) value += `\n…và ${lines.length - shown} món nữa.`;
+        e.addFields({
+          name: `🔨 Đang gửi Horadric Forge (${lines.length})`,
+          value:
+            value +
+            "\nTrong lúc gửi, món không cho chỉ số hay nội tại; khi về được +2 level.",
+        });
+      }
       for (const item of state.items.slice(page * 5, page * 5 + 5))
         e.addFields({
           name: `${itemIcon(item)} ${item.name} Lv.${item.level} [${rarityLabel(item.rarity)}]`,

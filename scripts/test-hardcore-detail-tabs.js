@@ -152,4 +152,18 @@ test("Tab Hành động và mọi tab con mở được ở tình huống không
         bounds(view.privatePayload(copy, "id", "m", tab, (sub + 1) * 100));
   }
 });
+test("Nhiều khoản gửi Forge cùng lúc vẫn nằm trong một field và vừa giới hạn", () => {
+  const { s } = runState();
+  const def = s.forgeLoans[0].definition;
+  s.forgeLoans = Array.from({ length: 30 }, (_, i) => ({
+    version: 1, definition: def, name: "Món có tên khá dài số " + i, level: 3, cleansedLevels: 0, from: 22, due: 40 + i,
+  }));
+  const p = view.privatePayload(s, "id", "m", "items", 200);
+  bounds(p);
+  const e = p.embeds[0].toJSON();
+  const loans = e.fields.filter((f) => f.name.includes("Đang gửi Horadric Forge"));
+  assert.equal(loans.length, 1);
+  assert.match(loans[0].name, /\(30\)/);
+  assert.match(loans[0].value, /và \d+ món nữa/);
+});
 console.log("detail tabs ok (" + count + ")");

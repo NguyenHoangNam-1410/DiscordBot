@@ -184,4 +184,66 @@ test("UX: chọn bất kỳ món trong túi bằng menu, Bỏ qua tách riêng, 
   assert.equal(s.items.length, owned);
   assert.equal(s.forgeLoans, undefined);
 });
+test("Ngẫu nhiên: nhiều khoản gửi cùng lúc luôn trả đúng +2 level và gộp đúng khi trùng loại", () => {
+  let seed = 11,
+    returns = 0;
+  const rng = () => ((seed = (seed * 1664525 + 1013904223) % 4294967296) / 4294967296);
+  const usable = pool.filter((i) => i.category !== "consumable" && !i.effects.escapeTokens);
+  const pickItem = () => {
+    const rarity = ["common", "rare", "legendary", "cursed"][Math.floor(rng() * 4)];
+    const list = usable.filter((i) => i.rarity === rarity);
+    return list[Math.floor(rng() * Math.min(list.length, 3))];
+  };
+  const original = forge.returnDue;
+  forge.returnDue = function (s, receive) {
+    const before = Object.fromEntries(s.items.map((i) => [i.definition.id, { l: i.level, c: i.cleansedLevels || 0 }]));
+    const due = (s.forgeLoans || []).filter((l) => s.floor >= l.due && forge.validFloor(s.floor));
+    const result = original(s, receive);
+    const expect = {};
+    for (const l of due) {
+      expect[l.definition.id] ||= { l: 0, c: 0 };
+      expect[l.definition.id].l += l.level + 2;
+      expect[l.definition.id].c += l.cleansedLevels + (l.definition.curse ? 2 : 0);
+    }
+    for (const [id, x] of Object.entries(expect)) {
+      const item = s.items.find((i) => i.definition.id === id);
+      assert.ok(item, "món trả về phải có trong túi");
+      assert.equal(item.level - (before[id]?.l || 0), x.l);
+      assert.equal((item.cleansedLevels || 0) - (before[id]?.c || 0), x.c);
+      returns++;
+    }
+    return result;
+  };
+  try {
+    for (let run = 0; run < 25; run++) {
+      const s = stats.createState("barbarian", 1000, { gameplayVersion: 3 });
+      for (let i = 0; i < 4; i++) core.receiveItem(s, pickItem(), 1);
+      let floor = 10;
+      for (let step = 0; step < 120 && floor < 990; step++) {
+        s.phase = "encounter";
+        s.pendingMilestones = [];
+        if (s.rift) s.rift.pendingAward = null;
+        s.floor = floor;
+        s.cleared = floor - 1;
+        if (rng() < 0.35) core.receiveItem(s, pickItem(), 1);
+        if (rng() < 0.35 && forge.eligible(s)) {
+          s.encounter = core.makeSurprise(s, () => 0.5, "horadric");
+          const target = s.items[Math.floor(rng() * s.items.length)];
+          core.act(s, session, "forge_select_" + target.definition.id, rng);
+          core.act(s, session, "forge_lend", rng);
+        } else {
+          s.encounter = core.makeSurprise(s, () => 0.5, "fountain");
+          core.act(s, session, "event_skip", rng);
+        }
+        floor = s.floor;
+        forge.validateLoans(s);
+        const ids = s.items.map((x) => x.definition.id);
+        assert.equal(new Set(ids).size, ids.length, "không có món trùng ID");
+      }
+    }
+  } finally {
+    forge.returnDue = original;
+  }
+  assert.ok(returns > 50, "phải có nhiều lần trả: " + returns);
+});
 console.log("horadric loan ok (" + count + ")");
