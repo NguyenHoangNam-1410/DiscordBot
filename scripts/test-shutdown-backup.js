@@ -115,6 +115,8 @@ if (process.argv[2] === "--worker") {
       ...process.env,
       DB_PATH: path.join(directory, "database.sqlite"),
       DB_BACKUP_DIR: path.join(directory, "backups"),
+      DB_BACKUP_STARTUP_DELAY_SECONDS: "0",
+      DB_BACKUP_STARTUP_SKIP_MINUTES: "0",
       LOG_DIR: path.join(directory, "logs"),
     };
     const messages = [],

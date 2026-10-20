@@ -1,5 +1,16 @@
 [
   {
+    "id": "13777e72-65b8-41d6-84d7-7a742ffc57c1",
+    "updatedAt": "2026-10-20T11:49:27.618Z",
+    "auditedAt": "2026-10-20T11:49:27.618Z",
+    "title": "Sao lưu khi khởi động nhẹ hơn",
+    "type": "maintenance",
+    "scope": "system",
+    "changes": [
+      "Bot dời bước sao lưu database sau khi khởi động khoảng 2 phút và bỏ qua nếu đã có bản sao lưu rất mới, giúp bot ổn định hơn ngay sau khi khởi động lại."
+    ]
+  },
+  {
     "id": "4095d652-6382-41d0-8dc8-aaaf97607cb1",
     "updatedAt": "2026-10-20T11:36:54.274Z",
     "auditedAt": "2026-10-20T11:36:54.274Z",

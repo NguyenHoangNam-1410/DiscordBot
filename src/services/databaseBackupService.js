@@ -23,6 +23,12 @@ const BACKUP_INTERVAL_MINUTES = integerEnv(
 );
 const BACKUP_INTERVAL_HOURS = BACKUP_INTERVAL_MINUTES / 60;
 const BACKUP_RETENTION = integerEnv("DB_BACKUP_RETENTION", 14, 2, 90);
+// Sao lưu khi khởi động bị dời để bot phục vụ người chơi trước, và bỏ qua nếu đã có bản rất mới
+// (lần tắt trước đã sao lưu cuối). Đặt 0 để sao lưu ngay như cũ.
+const STARTUP_DELAY_MS =
+  integerEnv("DB_BACKUP_STARTUP_DELAY_SECONDS", 120, 0, 3600) * 1000;
+const STARTUP_SKIP_MS =
+  integerEnv("DB_BACKUP_STARTUP_SKIP_MINUTES", 30, 0, 10080) * 60_000;
 const backupDir = path.resolve(
   process.env.DB_BACKUP_DIR || path.join(path.dirname(dbPath), "backups"),
 );
@@ -53,6 +59,23 @@ async function cleanupBackups(retention = BACKUP_RETENTION) {
       .map((name) => fs.promises.unlink(path.join(backupDir, name))),
   );
   return Math.max(0, files.length - retention);
+}
+// Tuổi của bản sao lưu mới nhất (ms); Infinity nếu chưa có.
+async function latestBackupAgeMs(now = Date.now()) {
+  try {
+    const names = (await fs.promises.readdir(backupDir, { withFileTypes: true }))
+      .filter((entry) => entry.isFile() && BACKUP_FILE.test(entry.name))
+      .map((entry) => entry.name);
+    let newest = 0;
+    for (const name of names)
+      newest = Math.max(
+        newest,
+        (await fs.promises.stat(path.join(backupDir, name))).mtimeMs,
+      );
+    return newest ? Math.max(0, now - newest) : Infinity;
+  } catch {
+    return Infinity;
+  }
 }
 async function syncDirectory(directory) {
   // Node cannot open directory handles for fsync on Windows.
@@ -122,12 +145,17 @@ function runDatabaseBackup(now = new Date()) {
 }
 function startDatabaseBackups(
   logger = console,
-  { retryDelayMs = 5 * 60_000 } = {},
+  {
+    retryDelayMs = 5 * 60_000,
+    startupDelayMs = STARTUP_DELAY_MS,
+    startupSkipMs = STARTUP_SKIP_MS,
+  } = {},
 ) {
   let stopped = false,
     pending = null,
     stopPromise = null,
-    retryTimer = null;
+    retryTimer = null,
+    startupTimer = null;
   const deliver = async (destination) => {
     clearTimeout(retryTimer);
     retryTimer = null;
@@ -167,7 +195,26 @@ function startDatabaseBackups(
     });
     return pending;
   };
-  run();
+  const startup = async () => {
+    startupTimer = null;
+    if (stopped) return;
+    if (startupSkipMs > 0 && (await latestBackupAgeMs()) < startupSkipMs) {
+      logger.info?.(
+        { skippedStartupBackup: true, withinMs: startupSkipMs },
+        "database backup skipped: a recent snapshot already exists",
+      );
+      return;
+    }
+    await run();
+  };
+  if (startupDelayMs > 0) {
+    startupTimer = setTimeout(() => {
+      startup().catch((error) =>
+        logger.error?.({ err: error }, "database backup failed"),
+      );
+    }, startupDelayMs);
+    startupTimer.unref?.();
+  } else run();
   const timer = setInterval(run, BACKUP_INTERVAL_MINUTES * 60 * 1000);
   timer.unref?.();
   return {
@@ -180,6 +227,7 @@ function startDatabaseBackups(
     stop: ({ finalBackup = true } = {}) => {
       if (stopPromise) return stopPromise;
       stopped = true;
+      clearTimeout(startupTimer);
       clearInterval(timer);
       clearTimeout(retryTimer);
       stopPromise = (async () => {
@@ -210,6 +258,7 @@ module.exports = {
   backupDir,
   backupName,
   cleanupBackups,
+  latestBackupAgeMs,
   runDatabaseBackup,
   startDatabaseBackups,
   getBackupStatus,
