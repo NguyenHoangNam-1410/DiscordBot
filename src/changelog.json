@@ -1,5 +1,17 @@
 [
   {
+    "id": "65b47084-eff9-4bef-b35d-0e1360eeaca7",
+    "updatedAt": "2026-10-21T09:48:36.034Z",
+    "auditedAt": "2026-10-21T09:48:36.034Z",
+    "title": "2048: batdau và tieptuc",
+    "type": "improvement",
+    "scope": "game2048",
+    "changes": [
+      "Dùng /2048 batdau để mở ván mới và /2048 tieptuc để đăng lại bảng của ván đang chơi (bảng cũ bị khóa), giống Sinh tồn.",
+      "Ván 2048 giờ giữ đến 7 ngày không thao tác (trước đây 10 phút) rồi mới tự chốt theo điểm hiện có."
+    ]
+  },
+  {
     "id": "47803c05-f2fe-4115-a960-a3f228c3a0c2",
     "updatedAt": "2026-10-21T09:34:34.339Z",
     "auditedAt": "2026-10-21T09:34:34.339Z",

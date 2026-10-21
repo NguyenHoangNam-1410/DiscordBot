@@ -260,6 +260,27 @@ function setMessageId(id, messageId) {
   ).run(String(messageId), Date.now(), String(id));
 }
 
+// Ván 2048 là ván dài như Sinh tồn: không thao tác quá thời hạn này thì tự chốt theo điểm hiện có.
+const IDLE_TTL_MS = 7 * 24 * 60 * 60_000;
+
+// Mở lại ván đang chơi ở bảng mới (kênh hiện tại); bảng cũ do caller khóa.
+function resumeGame2048({ guildId, userId, channelId }) {
+  const session = getGame2048ByUser(guildId, userId);
+  if (!session) return null;
+  const previous = {
+    channelId: session.channel_id,
+    messageId: session.message_id,
+  };
+  db.prepare(
+    "UPDATE game2048_sessions SET channel_id = ?, message_id = NULL, updated_at = ? WHERE id = ?",
+  ).run(String(channelId), Date.now(), session.id);
+  return {
+    session: getSession(session.id),
+    state: parseState(session),
+    previous,
+  };
+}
+
 function startGame2048({ guildId, userId, channelId, random }) {
   if (getGame2048ByUser(guildId, userId)) throw new Error("ACTIVE_SESSION");
   const id = crypto.randomBytes(5).toString("hex");
@@ -390,6 +411,11 @@ async function handleGame2048Button(interaction) {
       content: "Ván 2048 đã kết thúc hoặc nút không còn hợp lệ.",
       flags: MessageFlags.Ephemeral,
     });
+  if (session.message_id && interaction.message?.id !== session.message_id)
+    return interaction.reply({
+      content: "Bảng 2048 này đã cũ. Dùng `/2048 tieptuc` để mở bảng hiện tại.",
+      flags: MessageFlags.Ephemeral,
+    });
   if (session.user_id !== interaction.user.id)
     return interaction.reply({
       content: "Đây là ván 2048 của người chơi khác.",
@@ -437,7 +463,9 @@ module.exports = {
   boardText,
   renderPayload,
   getGame2048ByUser,
+  IDLE_TTL_MS,
   startGame2048,
+  resumeGame2048,
   setMessageId,
   play2048,
   forceEndGame2048,

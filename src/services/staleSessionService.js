@@ -2,7 +2,7 @@ const { EmbedBuilder } = require("discord.js");
 const { db } = require("../db");
 const { forceEndBlackjackSession } = require("./blackjackService");
 const { forceEndMinesSession } = require("./minesService");
-const { forceEndGame2048 } = require("./game2048Service");
+const { forceEndGame2048, IDLE_TTL_MS } = require("./game2048Service");
 const { forceEndCoquaySession } = require("./coquayService");
 const { forceEndChinchiroSession } = require("./chinchiroService");
 const { forceEndHardcoreSession } = require("./hardcoreService");
@@ -24,6 +24,7 @@ const SOLO_GAMES = Object.freeze([
     table: "game2048_sessions",
     name: "2048",
     forceEnd: forceEndGame2048,
+    ttl: IDLE_TTL_MS,
     // Không có cược để mất: ván bị bỏ dở được chốt theo điểm hiện có.
     idleText: (row, result) =>
       `Ván \`${row.id}\` không hoạt động quá lâu nên đã được chốt: <@${row.user_id}> nhận **${result?.result?.coins ?? 0} :coin:** và **${result?.result?.exp ?? 0} EXP** theo điểm đạt được.`,

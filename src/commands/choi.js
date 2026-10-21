@@ -94,7 +94,7 @@ const options = [
     { top: "xephang", rates: "tyle" },
     { class: "nhanvat", user: "nguoidung" },
   ),
-  simpleGame(
+  gameGroup(
     "2048",
     games[2048],
     "Chơi 2048, kết thúc để đổi điểm lấy xu và EXP",
