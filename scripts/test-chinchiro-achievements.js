@@ -155,13 +155,13 @@ assert.equal(
   achievementCategory({ metric: "hardcoreEscapes" }),
   "hardcoreJourney",
 );
-assert.equal(achievementCategory({ metric: "minesStars" }), "minesFeats");
+assert.equal(achievementCategory({ metric: "minesStars" }), "mines");
 assert.equal(achievementCategory({ metric: "games" }), "games");
 for (const category of [
   "chinchiroWins",
   "chinchiroHands",
   "chinchiroStreak",
-  "minesFeats",
+  "mines",
   "gachaRare",
   "hardcoreJourney",
 ]) {

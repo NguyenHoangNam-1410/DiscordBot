@@ -255,4 +255,61 @@ assert.equal(hit.result.result.coins, 700 + 150);
 assert.equal(typeof hit.game.idleText(hit.row, hit.result), "string");
 assert.equal(svc.getGame2048ByUser("g", "w"), null);
 
+// Thành tựu
+{
+  const {
+    getAchievements,
+    ACHIEVEMENTS,
+    achievementCategory,
+  } = require("../src/services/achievementService");
+  for (const metric of ["g2048Plays", "g2048Score", "g2048Tile", "g2048Wins"]) {
+    assert(ACHIEVEMENTS.filter((a) => a.metric === metric).length >= 2, metric);
+    assert.equal(achievementCategory({ metric }), "game2048");
+  }
+  const rec = db
+    .prepare(
+      "SELECT * FROM game2048_records WHERE guild_id='g' AND user_id='w'",
+    )
+    .get();
+  assert.equal(rec.reach_2048, 1);
+  assert.equal(rec.best_tile, 2048);
+  const mine = (id) => getAchievements("g", "w").find((a) => a.id === id);
+  assert(mine("g2048_tile_2048").complete, "ô 2048");
+  assert(mine("g2048_wins_1").complete);
+  assert(mine("g2048_score_20k").complete);
+  assert.equal(mine("g2048_plays_10").progress, 1);
+  assert(!mine("g2048_tile_8192").complete);
+  // Ván không có nước đi nào không tính vào số ván
+  const idle = svc.startGame2048({ guildId: "g", userId: "z", channelId: "c" });
+  svc.play2048({ sessionId: idle.session.id, userId: "z", action: "end" });
+  assert.equal(
+    db
+      .prepare("SELECT COUNT(*) c FROM game2048_records WHERE user_id='z'")
+      .get().c,
+    0,
+  );
+  // Dòng kết quả hiển thị thành tựu mới
+  const s4 = svc.startGame2048({ guildId: "g", userId: "y", channelId: "c" });
+  db.prepare("UPDATE game2048_sessions SET state_json=? WHERE id=?").run(
+    JSON.stringify({
+      board: new Array(16).fill(0),
+      score: 6000,
+      moves: 300,
+      maxTile: 512,
+      gameOver: false,
+    }),
+    s4.session.id,
+  );
+  const fin = svc.play2048({
+    sessionId: s4.session.id,
+    userId: "y",
+    action: "end",
+  });
+  assert(fin.result.achievements.some((a) => a.id === "g2048_score_5k"));
+  assert.match(
+    svc.renderPayload(fin.state, "y", "x", fin.result).content,
+    /🏆 .*Khởi động/,
+  );
+}
+
 console.log("2048 tests passed");
