@@ -8,6 +8,7 @@ const {
 } = require("discord.js");
 const { db } = require("../db");
 const { formatCoins } = require("../utils/economy");
+const { appEmoji } = require("../utils/appEmoji");
 
 const SIZE = 4;
 const TARGET_TILE = 2048;
@@ -153,7 +154,26 @@ function tileCell(value) {
   return color.repeat(left) + label.join("") + color.repeat(pad - left);
 }
 
+// Emoji ứng dụng g2048_<giá trị> (Developer Portal → Bot → Emojis). Đủ bộ thì mỗi ô là 1 emoji,
+// tin nhắn chỉ có emoji nên Discord hiển thị cỡ lớn; thiếu một ô là quay về bàn emoji Unicode.
+function customBoardText(board) {
+  const rows = [];
+  for (let row = 0; row < SIZE; row += 1) {
+    const cells = [];
+    for (let column = 0; column < SIZE; column += 1) {
+      const value = board[row * SIZE + column];
+      const markup = appEmoji(value ? `g2048_${value}` : "g2048_empty", "");
+      if (!markup) return null;
+      cells.push(markup);
+    }
+    rows.push(cells.join(""));
+  }
+  return rows.join("\n");
+}
+
 function boardText(board) {
+  const custom = customBoardText(board);
+  if (custom) return custom;
   const rows = [];
   for (let row = 0; row < SIZE; row += 1)
     rows.push(

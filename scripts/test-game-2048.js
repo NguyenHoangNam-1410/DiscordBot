@@ -85,6 +85,35 @@ assert.match(svc.tileCell(2), /2️⃣/);
 assert.match(svc.tileCell(2048), /2️⃣\u{1F1F0}/u);
 assert.equal(svc.boardText(new Array(16).fill(0)).split("\n").length, 7);
 
+// Emoji ứng dụng: đủ bộ thì dùng, thiếu một ô thì quay về emoji Unicode
+{
+  const { setApplicationEmojisForTest } = require("../src/utils/appEmoji");
+  const names = [
+    "empty",
+    ...Array.from({ length: 17 }, (_, i) => 2 ** (i + 1)),
+  ];
+  setApplicationEmojisForTest(
+    names.map((n, i) => [`g2048_${n}`, String(100 + i)]),
+  );
+  const text = svc.boardText([
+    2, 0, 4, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 131072,
+  ]);
+  assert.equal(text.split("\n").length, 4);
+  assert.match(
+    text.split("\n")[0],
+    /^<:g2048_2:101><:g2048_empty:100><:g2048_4:102><:g2048_8:103>$/,
+  );
+  setApplicationEmojisForTest(
+    names.slice(0, 5).map((n, i) => [`g2048_${n}`, String(100 + i)]),
+  );
+  assert.equal(
+    svc.boardText([2, 0, 4, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64]).split("\n")
+      .length,
+    7,
+  );
+  setApplicationEmojisForTest([]);
+}
+
 // Thưởng
 assert.deepEqual(svc.rewardFor(0, 2), { coins: 0, exp: 0 });
 assert.deepEqual(svc.rewardFor(3000, 256), { coins: 100, exp: 12 });
