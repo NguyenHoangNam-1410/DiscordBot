@@ -3,7 +3,6 @@ const {
   ActionRowBuilder,
   ButtonBuilder,
   ButtonStyle,
-  EmbedBuilder,
   MessageFlags,
 } = require("discord.js");
 const { db } = require("../db");
@@ -180,46 +179,21 @@ function boardText(board) {
       board
         .slice(row * SIZE, row * SIZE + SIZE)
         .map(tileCell)
-        .join("⬛"),
+        .join(""),
     );
-  return rows.join("\n\n");
+  return rows.join("\n");
 }
 
+// Một dòng trạng thái + bàn + một hàng nút: gọn để vừa màn hình điện thoại.
 function renderPayload(state, userId, sessionId, result = null) {
-  const finished = Boolean(result);
-  const preview = rewardFor(state.score, state.maxTile);
-  const embed = new EmbedBuilder()
-    .setColor(
-      finished ? 0x7f8c8d : state.maxTile >= TARGET_TILE ? 0xf1c40f : 0xedc22e,
-    )
-    .setTitle(finished ? "🏁 2048 · KẾT THÚC" : "🔢 2048")
-    .setDescription(
-      finished
-        ? `<@${userId}> kết thúc với **${formatCoins(state.score)}** điểm.`
-        : `<@${userId}> dồn các ô giống nhau để chạm **${TARGET_TILE}**. Bấm 🏁 để chốt điểm và nhận thưởng.`,
-    )
-    .addFields(
-      { name: "Điểm", value: formatCoins(state.score), inline: true },
-      { name: "Ô cao nhất", value: formatCoins(state.maxTile), inline: true },
-      { name: "Số nước", value: formatCoins(state.moves), inline: true },
-      finished
-        ? {
-            name: "Thưởng",
-            value: `+${formatCoins(result.coins)} :coin: · +${formatCoins(result.exp)} EXP${result.leveledUp ? " · 🎉 Lên cấp!" : ""}`,
-            inline: false,
-          }
-        : {
-            name: "Nếu kết thúc bây giờ",
-            value: `+${formatCoins(preview.coins)} :coin: · +${formatCoins(preview.exp)} EXP`,
-            inline: false,
-          },
-    );
-  if (!finished && state.gameOver)
-    embed.setFooter({ text: "Hết nước đi — ván sẽ được chốt." });
+  const stats = `Điểm **${formatCoins(state.score)}** · Cao nhất **${formatCoins(state.maxTile)}** · ${formatCoins(state.moves)} nước`;
+  const line = result
+    ? `🏁 <@${userId}> ${stats} · +${formatCoins(result.coins)} :coin: +${formatCoins(result.exp)} EXP${result.leveledUp ? " 🎉 Lên cấp!" : ""}`
+    : `🔢 <@${userId}> ${stats}`;
   return {
-    content: boardText(state.board),
-    embeds: [embed],
-    components: finished ? [] : controlRows(sessionId),
+    content: `${line}\n${boardText(state.board)}`,
+    embeds: [],
+    components: result ? [] : controlRows(sessionId),
     allowedMentions: { parse: [] },
   };
 }
@@ -230,29 +204,13 @@ function controlRows(sessionId) {
       .setCustomId(`g2048:${sessionId}:${action}`)
       .setEmoji(emoji)
       .setStyle(style);
-  const blank = (id) =>
-    new ButtonBuilder()
-      .setCustomId(`g2048:${sessionId}:blank${id}`)
-      .setLabel("​")
-      .setStyle(ButtonStyle.Secondary)
-      .setDisabled(true);
   return [
     new ActionRowBuilder().addComponents(
-      blank(1),
-      button("up", "⬆️"),
-      blank(2),
-    ),
-    new ActionRowBuilder().addComponents(
       button("left", "⬅️"),
+      button("up", "⬆️"),
       button("down", "⬇️"),
       button("right", "➡️"),
-    ),
-    new ActionRowBuilder().addComponents(
-      new ButtonBuilder()
-        .setCustomId(`g2048:${sessionId}:end`)
-        .setLabel("Kết thúc")
-        .setEmoji("🏁")
-        .setStyle(ButtonStyle.Danger),
+      button("end", "🏁", ButtonStyle.Danger),
     ),
   ];
 }
