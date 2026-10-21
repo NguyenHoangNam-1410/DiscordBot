@@ -1,5 +1,16 @@
 [
   {
+    "id": "42b1339c-9e9c-4468-8657-0a4b579967bf",
+    "updatedAt": "2026-10-21T09:13:30.380Z",
+    "auditedAt": "2026-10-21T09:13:30.380Z",
+    "title": "Icon riêng cho bàn 2048",
+    "type": "improvement",
+    "scope": "game2048",
+    "changes": [
+      "Bàn 2048 hiển thị mỗi ô bằng một icon lớn khi bot có bộ icon 2048; chưa có thì vẫn dùng bàn emoji thường."
+    ]
+  },
+  {
     "id": "e8598d14-e094-44ca-8c72-d884e98cbb47",
     "updatedAt": "2026-10-21T09:10:37.026Z",
     "auditedAt": "2026-10-21T09:10:37.026Z",
