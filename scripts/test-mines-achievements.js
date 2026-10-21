@@ -162,7 +162,7 @@ assert.equal(
   0,
 );
 // Bộ lọc /kiemtra
-for (const category of ["minesWins", "minesFeats"]) {
+for (const category of ["mines"]) {
   const embed = achievementPanel(G, U, "all", category, 0).embeds[0].toJSON();
   assert(
     String(embed.description || "").includes("Dò mìn"),

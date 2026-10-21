@@ -1,5 +1,17 @@
 [
   {
+    "id": "847f8113-5c71-4447-834b-8d3c4fb66897",
+    "updatedAt": "2026-10-21T09:20:04.304Z",
+    "auditedAt": "2026-10-21T09:20:04.304Z",
+    "title": "Thành tựu 2048",
+    "type": "feature",
+    "scope": "game2048",
+    "changes": [
+      "Thêm 11 thành tựu 2048: số ván, điểm cao nhất, ô lớn nhất (512/2048/8192) và số lần chạm 2048.",
+      "Kết quả ván 2048 hiện thành tựu vừa mở khóa; xem và nhận ở /kiemtra, bộ lọc 2048."
+    ]
+  },
+  {
     "id": "c9e270f1-24c5-4c4a-96db-7157095c536c",
     "updatedAt": "2026-10-21T09:17:55.069Z",
     "auditedAt": "2026-10-21T09:17:55.069Z",

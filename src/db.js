@@ -1485,4 +1485,15 @@ runMigration(52, "2048 solo game sessions", () => {
   CREATE INDEX IF NOT EXISTS idx_game2048_channel ON game2048_sessions(guild_id, channel_id)`);
 });
 
+runMigration(53, "2048 achievement records", () => {
+  db.exec(`CREATE TABLE IF NOT EXISTS game2048_records (
+    guild_id TEXT NOT NULL,user_id TEXT NOT NULL,
+    plays INTEGER NOT NULL DEFAULT 0,
+    best_score INTEGER NOT NULL DEFAULT 0,
+    best_tile INTEGER NOT NULL DEFAULT 0,
+    reach_2048 INTEGER NOT NULL DEFAULT 0,
+    updated_at INTEGER NOT NULL,
+    PRIMARY KEY (guild_id,user_id))`);
+});
+
 module.exports = { db, dbPath, runMigration };

@@ -188,7 +188,7 @@ function boardText(board) {
 function renderPayload(state, userId, sessionId, result = null) {
   const stats = `Điểm **${formatCoins(state.score)}** · Cao nhất **${formatCoins(state.maxTile)}** · ${formatCoins(state.moves)} nước`;
   const line = result
-    ? `🏁 <@${userId}> ${stats} · +${formatCoins(result.coins)} :coin: +${formatCoins(result.exp)} EXP${result.leveledUp ? " 🎉 Lên cấp!" : ""}`
+    ? `🏁 <@${userId}> ${stats} · +${formatCoins(result.coins)} :coin: +${formatCoins(result.exp)} EXP${result.leveledUp ? " 🎉 Lên cấp!" : ""}${result.achievements?.length ? ` 🏆 ${result.achievements.map((item) => item.name).join(", ")}` : ""}`
     : `🔢 <@${userId}> ${stats}`;
   return {
     content: `${line}\n${boardText(state.board)}`,
@@ -281,14 +281,32 @@ function settleSession(session, label = "end") {
       .run(session.id).changes;
     if (!removed) return null;
     let leveledUp = false;
+    let achievements = [];
+    // Ghi số liệu thành tựu trước khi trả thưởng để lần dò thành tựu của rewardGame thấy ván này.
+    if (state.moves > 0)
+      db.prepare(
+        `INSERT INTO game2048_records(guild_id,user_id,plays,best_score,best_tile,reach_2048,updated_at)
+        VALUES(?,?,1,?,?,?,?) ON CONFLICT(guild_id,user_id) DO UPDATE SET
+          plays=plays+1,best_score=MAX(best_score,excluded.best_score),
+          best_tile=MAX(best_tile,excluded.best_tile),
+          reach_2048=reach_2048+excluded.reach_2048,updated_at=excluded.updated_at`,
+      ).run(
+        session.guild_id,
+        session.user_id,
+        state.score,
+        state.maxTile,
+        state.maxTile >= TARGET_TILE ? 1 : 0,
+        Date.now(),
+      );
     if (reward.coins > 0) {
-      require("./economyService").rewardGame({
+      const account = require("./economyService").rewardGame({
         guildId: session.guild_id,
         userId: session.user_id,
         amount: reward.coins,
         game: "2048",
         outcome: state.maxTile >= TARGET_TILE ? "win" : "draw",
       });
+      achievements = account.unlockedAchievements || [];
     }
     if (reward.exp > 0) {
       const progress = require("./playerLevelService").addExperience(
@@ -299,7 +317,12 @@ function settleSession(session, label = "end") {
       );
       leveledUp = Boolean(progress.levelUps?.length);
     }
-    return { state, ...reward, leveledUp, label };
+    if (!achievements.length)
+      achievements = require("./achievementService").detectAchievementUnlocks(
+        session.guild_id,
+        session.user_id,
+      );
+    return { state, ...reward, leveledUp, achievements, label };
   })();
 }
 
