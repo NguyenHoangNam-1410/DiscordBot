@@ -296,13 +296,26 @@ module.exports = function createModule(dependencies) {
         );
       }
       case "gambler":
-        return show(e.name, "Trả khoản cược trước khi phân thắng thua.", [
-          ...[10, 25].map((n) =>
-            option(`Cược ${n}% payout`, [
-              ["50%", "Bonus trước lời nguyền bằng 2 lần khoản đã đặt."],
-              ["50%", "Mất khoản đã đặt, không nhận bonus."],
-            ]),
-          ),
+        return show(e.name, "Bắt buộc chơi một ván, chỉ có thắng hoặc thua.", [
+          option("Xì dách", [
+            [
+              "Luật",
+              "Không tách bài; hòa thì chia lại ván cho đến khi phân thắng thua.",
+            ],
+          ]),
+          option("Cò quay Nga", [
+            ["Luật", "Mỗi bên 1 mạng, bạn đi trước, không dùng vật phẩm."],
+          ]),
+          option("Khoản cược", [
+            [
+              "20% payout",
+              "Trả ngay; thắng nhận bonus 2 lần khoản đã đặt (trước lời nguyền).",
+            ],
+            [
+              "10% mọi chỉ số",
+              "Trừ STR/DEX/VIT/ENE; thắng nhận lại gấp đôi phần đã trừ.",
+            ],
+          ]),
         ]);
       case "adventurer":
         return show(e.name, "Cứu hoặc cướp để nhận trang bị.", [
@@ -427,7 +440,9 @@ module.exports = function createModule(dependencies) {
                 `Nhận ${E.reviveTicket} **1 Vé hồi sinh** dùng trong run này: tử trận tự dùng, hồi 50% Max ${E.hp} HP. Các ấn không bị tiêu hao.`,
               ],
             ]),
-            `**Tứ Ấn:** ${require("../events/explorationMarks").SEALS.map((seal) => `${seal.name} (${seal.source})`).join("; ")}.`,
+            `**Tứ Ấn:** ${require("../events/explorationMarks")
+              .SEALS.map((seal) => `${seal.name} (${seal.source})`)
+              .join("; ")}.`,
           ],
         );
       default:

@@ -118,18 +118,19 @@ module.exports = function createModule(dependencies) {
             disabled: payout(state) < 1 || !memories.canQueue(state),
           },
         ],
-        gambler: [
-          {
-            action: "event_gamble_10",
-            label: "Cược 10% payout",
-            disabled: payout(state) < 1,
-          },
-          {
-            action: "event_gamble_25",
-            label: "Cược 25% payout",
-            disabled: payout(state) < 1,
-          },
-        ],
+        gambler: e.gamble
+          ? require("../events/gambler").actions(e.gamble)
+          : ["blackjack", "coquay"].flatMap((game) => [
+              {
+                action: `gamble_${game}_payout`,
+                label: `${require("../events/gambler").GAMES[game].icon} ${require("../events/gambler").GAMES[game].name} · ${serviceCost(state, 0.2).toLocaleString("vi-VN")} xu`,
+                disabled: payout(state) < 1,
+              },
+              {
+                action: `gamble_${game}_stats`,
+                label: `${require("../events/gambler").GAMES[game].icon} ${require("../events/gambler").GAMES[game].name} · 10% chỉ số`,
+              },
+            ]),
         adventurer: [
           {
             action: "event_rescue",
@@ -327,16 +328,19 @@ module.exports = function createModule(dependencies) {
         e.kind === "treasure_room" ||
         (e.kind === "healer" && e.healerReturn) ||
         e.kind === "seal_altar" ||
+        e.kind === "gambler" ||
         (e.kind === "duelist" && e.mode)
           ? []
-          : [{
-              action: "event_skip",
-              label: e.taxRelief
-                ? state.cleared >= 998
-                  ? "Bỏ qua, vào trận cuối"
-                  : "Để dành lượt miễn phí"
-                : "Bỏ qua",
-            }]),
+          : [
+              {
+                action: "event_skip",
+                label: e.taxRelief
+                  ? state.cleared >= 998
+                    ? "Bỏ qua, vào trận cuối"
+                    : "Để dành lượt miễn phí"
+                  : "Bỏ qua",
+              },
+            ]),
       ];
     if (e.type === "trap" && e.kind === "portal")
       return [

@@ -93,8 +93,6 @@ near(
   sectionChance(fountain, "Uống", "Blood Mimic"),
   "fountain mimic",
 );
-freq = tally("gambler", (e) => e.win);
-near(freq(true), 0.5, "gambler");
 freq = tally("mirror", (e) => e.lucky);
 near(
   freq(true),
