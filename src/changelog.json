@@ -1,5 +1,16 @@
 [
   {
+    "id": "3cf7e45c-257a-4da1-975a-a939cbc069a1",
+    "updatedAt": "2026-10-21T10:00:01.982Z",
+    "auditedAt": "2026-10-21T10:00:01.982Z",
+    "title": "2048: xác nhận khi kết thúc",
+    "type": "improvement",
+    "scope": "game2048",
+    "changes": [
+      "Nút Kết thúc trong 2048 giờ hỏi xác nhận (hiện trước số xu và EXP nhận được) trước khi chốt ván; có nút Chơi tiếp để quay lại."
+    ]
+  },
+  {
     "id": "65b47084-eff9-4bef-b35d-0e1360eeaca7",
     "updatedAt": "2026-10-21T09:48:36.034Z",
     "auditedAt": "2026-10-21T09:48:36.034Z",
