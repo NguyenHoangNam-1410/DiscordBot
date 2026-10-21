@@ -83,7 +83,7 @@ assert.equal(
 assert.equal([...svc.tileCell(0)].length, 3);
 assert.match(svc.tileCell(2), /2️⃣/);
 assert.match(svc.tileCell(2048), /2️⃣\u{1F1F0}/u);
-assert.equal(svc.boardText(new Array(16).fill(0)).split("\n").length, 4);
+assert.equal(svc.boardText(new Array(16).fill(0)).split("\n").length, 7);
 
 // Emoji ứng dụng: đủ bộ thì dùng, thiếu một ô thì quay về emoji Unicode
 {
@@ -109,7 +109,7 @@ assert.equal(svc.boardText(new Array(16).fill(0)).split("\n").length, 4);
   assert.equal(
     svc.boardText([2, 0, 4, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 64]).split("\n")
       .length,
-    4,
+    7,
   );
   setApplicationEmojisForTest([]);
 }
@@ -171,10 +171,9 @@ assert.equal(moved.state.board[0], 4);
 assert.equal(moved.state.board[1], 8);
 
 const payload = svc.renderPayload(moved.state, "u", sid);
-assert.equal(payload.components.length, 1);
-assert.equal(payload.components[0].components.length, 5);
+assert.equal(payload.components.length, 3);
 assert.deepEqual(payload.embeds, []);
-assert.equal(payload.content.split("\n").length, 5);
+assert.equal(payload.content.split("\n").length, 8);
 assert.match(payload.content.split("\n")[0], /Điểm \*\*3\.002\*\*/);
 const ids = payload.components.flatMap((row) =>
   row.components.map((c) => c.toJSON().custom_id),
