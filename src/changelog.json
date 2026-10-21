@@ -1,5 +1,16 @@
 [
   {
+    "id": "e80bec20-1e51-4509-a5ac-af63b4b8be20",
+    "updatedAt": "2026-10-21T08:11:55.509Z",
+    "auditedAt": "2026-10-21T08:11:55.509Z",
+    "title": "Chatbot: nới giới hạn thông tin dạy",
+    "type": "improvement",
+    "scope": "chatbot",
+    "changes": [
+      "Mỗi thông tin dạy chatbot (/chatbot nho) nay dài tối đa 600 ký tự thay vì 200, đủ để ghi nhiều emoji. Tổng độ dài mọi thông tin giới hạn 3.400 ký tự và tối đa 15 mục."
+    ]
+  },
+  {
     "id": "dec18876-627d-40e8-9a61-941c6afce570",
     "updatedAt": "2026-10-20T16:34:24.982Z",
     "auditedAt": "2026-10-20T16:34:24.982Z",

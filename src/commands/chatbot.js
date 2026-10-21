@@ -221,6 +221,7 @@ const command = {
         const text = {
           EMPTY_FACT: "Nội dung trống.",
           FACT_TOO_LONG: `Tối đa ${chatbot.MAX_FACT_CHARS} ký tự mỗi thông tin.`,
+          FACT_TOTAL_LIMIT: `Tổng độ dài các thông tin đã đạt giới hạn ${chatbot.MAX_FACTS_TOTAL_CHARS} ký tự; hãy xóa bớt hoặc rút gọn bằng \`/chatbot quen\`.`,
           FACT_LIMIT: `Đã đủ ${chatbot.MAX_FACTS} thông tin; hãy xóa bớt bằng \`/chatbot quen\`.`,
         }[error.message];
         if (!text) throw error;

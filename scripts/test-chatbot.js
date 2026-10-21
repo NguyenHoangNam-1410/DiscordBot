@@ -283,6 +283,20 @@ global.fetch = async (url, init) => {
     assert(!/Thông tin về server/.test(chatbot.systemPrompt("other")), "kiến thức tách theo server");
     assert.throws(() => chatbot.addFact(KG, "", "a"), /EMPTY_FACT/);
     assert.throws(() => chatbot.addFact(KG, "x".repeat(chatbot.MAX_FACT_CHARS + 1), "a"), /FACT_TOO_LONG/);
+    const LG = "long-facts";
+    // Nhập dài (ví dụ nhiều emoji) được chấp nhận đến giới hạn mới, nhưng tổng độ dài có trần.
+    assert.ok(chatbot.FACT_INPUT_CHARS >= 600);
+    const longFact = "Emoji: " + "<:vui:123456789012345678> khi vui, ".repeat(16);
+    assert.ok(longFact.length > 200 && longFact.length <= chatbot.FACT_INPUT_CHARS);
+    chatbot.addFact(LG, longFact, "a");
+    while (chatbot.listFacts(LG).length > 0) chatbot.removeFact(LG, 1);
+    let guard = 0;
+    while (guard++ < 20)
+      try { chatbot.addFact(LG, "x".repeat(chatbot.FACT_INPUT_CHARS), "a"); } catch (error) { assert.match(error.message, /FACT_TOTAL_LIMIT|FACT_LIMIT/); break; }
+    const total = chatbot.listFacts(LG).reduce((n, f) => n + f.content.length, 0);
+    assert.ok(total <= chatbot.MAX_FACTS_TOTAL_CHARS);
+    assert.ok(`**Giọng điệu:** ${"p".repeat(chatbot.MAX_PERSONA_CHARS)}\n\n` .length + total + chatbot.MAX_FACTS * 6 <= 4096, "bảng kienthuc vừa embed");
+    while (chatbot.listFacts(LG).length > 0) chatbot.removeFact(LG, 1);
     while (chatbot.listFacts(KG).length < chatbot.MAX_FACTS) chatbot.addFact(KG, `mục ${chatbot.listFacts(KG).length}`, "a");
     assert.throws(() => chatbot.addFact(KG, "thêm", "a"), /FACT_LIMIT/);
     assert.equal(chatbot.removeFact(KG, 1).content, "Server tên là Hầm Ngục Vui");
