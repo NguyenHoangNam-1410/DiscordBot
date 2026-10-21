@@ -1470,4 +1470,19 @@ runMigration(51, "game channels many-to-many", () => {
   }
 });
 
+runMigration(52, "2048 solo game sessions", () => {
+  db.exec(`CREATE TABLE IF NOT EXISTS game2048_sessions (
+    id TEXT PRIMARY KEY,
+    guild_id TEXT NOT NULL,
+    user_id TEXT NOT NULL,
+    channel_id TEXT NOT NULL,
+    message_id TEXT,
+    state_json TEXT NOT NULL,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    UNIQUE (guild_id, user_id)
+  );
+  CREATE INDEX IF NOT EXISTS idx_game2048_channel ON game2048_sessions(guild_id, channel_id)`);
+});
+
 module.exports = { db, dbPath, runMigration };

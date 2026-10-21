@@ -1,5 +1,18 @@
 [
   {
+    "id": "e8598d14-e094-44ca-8c72-d884e98cbb47",
+    "updatedAt": "2026-10-21T09:10:37.026Z",
+    "auditedAt": "2026-10-21T09:10:37.026Z",
+    "title": "Game mới: 2048",
+    "type": "feature",
+    "scope": "game2048",
+    "changes": [
+      "Thêm /2048: chơi 2048 solo với bàn emoji lớn, dùng nút mũi tên để dồn ô.",
+      "Bấm Kết thúc để chốt điểm: xu = điểm ÷ 30 (tối đa 1.000, +150 khi chạm 2048), EXP = điểm ÷ 250 (tối đa 60).",
+      "Hết nước đi hoặc bỏ dở 10 phút sẽ tự chốt theo điểm hiện có. Admin đặt channel bằng /game setup."
+    ]
+  },
+  {
     "id": "7e454697-feb9-4c50-878f-179ec05f93e4",
     "updatedAt": "2026-10-21T08:57:45.496Z",
     "auditedAt": "2026-10-21T08:57:45.496Z",

@@ -2,6 +2,7 @@ const { EmbedBuilder } = require("discord.js");
 const { db } = require("../db");
 const { forceEndBlackjackSession } = require("./blackjackService");
 const { forceEndMinesSession } = require("./minesService");
+const { forceEndGame2048 } = require("./game2048Service");
 const { forceEndCoquaySession } = require("./coquayService");
 const { forceEndChinchiroSession } = require("./chinchiroService");
 const { forceEndHardcoreSession } = require("./hardcoreService");
@@ -19,6 +20,14 @@ const SOLO_GAMES = Object.freeze([
     forceEnd: forceEndBlackjackSession,
   },
   { table: "mines_sessions", name: "DÒ MÌN", forceEnd: forceEndMinesSession },
+  {
+    table: "game2048_sessions",
+    name: "2048",
+    forceEnd: forceEndGame2048,
+    // Không có cược để mất: ván bị bỏ dở được chốt theo điểm hiện có.
+    idleText: (row, result) =>
+      `Ván \`${row.id}\` không hoạt động quá lâu nên đã được chốt: <@${row.user_id}> nhận **${result?.result?.coins ?? 0} :coin:** và **${result?.result?.exp ?? 0} EXP** theo điểm đạt được.`,
+  },
   {
     table: "coquay_sessions",
     name: "CÒ QUAY NGA",
@@ -54,7 +63,7 @@ function expireStaleSoloSessionsSync(now = Date.now()) {
         label: forfeit ? "timeout-forfeit" : "timeout-refund",
         forfeit,
       });
-      if (result) expired.push({ game, row, forfeit });
+      if (result) expired.push({ game, row, forfeit, result });
     }
   }
   return expired;
@@ -66,7 +75,7 @@ async function expireStaleSoloSessions(
   now = Date.now(),
 ) {
   const expired = expireStaleSoloSessionsSync(now);
-  for (const { game, row, forfeit } of expired) {
+  for (const { game, row, forfeit, result } of expired) {
     if (!row.message_id || !client?.channels?.fetch) continue;
     try {
       const channel = await client.channels.fetch(row.channel_id);
@@ -80,7 +89,8 @@ async function expireStaleSoloSessions(
               .setColor(0x7f8c8d)
               .setTitle(`⌛ ${game.name} ĐÃ HẾT THỜI GIAN`)
               .setDescription(
-                `Ván \`${row.id}\` không hoạt động quá lâu nên đã đóng. ${forfeit ? `<@${row.user_id}> không thao tác kịp nên **mất tiền cược**.` : `Tiền cược đã được hoàn lại cho <@${row.user_id}>.`}`,
+                game.idleText?.(row, result) ||
+                  `Ván \`${row.id}\` không hoạt động quá lâu nên đã đóng. ${forfeit ? `<@${row.user_id}> không thao tác kịp nên **mất tiền cược**.` : `Tiền cược đã được hoàn lại cho <@${row.user_id}>.`}`,
               ),
           ],
           components: [],

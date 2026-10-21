@@ -22,6 +22,7 @@ const GAME_LABELS = {
   mines: "Dò mìn",
   coquay: "Cò quay Nga",
   hardcore: "Sinh tồn",
+  2048: "2048",
 };
 function transactionLabel(reason) {
   const value = String(reason || "");

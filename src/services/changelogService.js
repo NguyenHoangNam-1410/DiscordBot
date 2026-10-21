@@ -28,6 +28,7 @@ const SCOPES = Object.freeze({
   chinchiro: "Chinchiro",
   horse: "Đua ngựa",
   vuatiengviet: "Vua Tiếng Việt",
+  game2048: "2048",
   chatbot: "Chatbot",
   profile: "Hồ sơ",
   system: "Hệ thống",

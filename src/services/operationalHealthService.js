@@ -12,6 +12,7 @@ function getOperationalHealth() {
     (SELECT COUNT(*) FROM blackjack_sessions) +
     (SELECT COUNT(*) FROM poker_sessions) +
     (SELECT COUNT(*) FROM mines_sessions) +
+    (SELECT COUNT(*) FROM game2048_sessions) +
     (SELECT COUNT(*) FROM coquay_sessions) +
     (SELECT COUNT(*) FROM chinchiro_sessions) +
     (SELECT COUNT(*) FROM hardcore_sessions) AS count`);
