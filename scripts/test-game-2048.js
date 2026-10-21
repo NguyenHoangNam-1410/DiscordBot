@@ -311,4 +311,99 @@ assert.equal(svc.getGame2048ByUser("g", "w"), null);
   );
 }
 
-console.log("2048 tests passed");
+// batdau / tieptuc
+(async () => {
+  const command = require("../src/commands/2048");
+  assert.deepEqual(
+    command.data.toJSON().options.map((o) => o.name),
+    ["batdau", "tieptuc"],
+  );
+  const replies = [];
+  const edits = [];
+  const fake = (sub, userId, channelId = "c") => ({
+    guildId: "g",
+    channelId,
+    user: { id: userId },
+    options: { getSubcommand: () => sub },
+    client: {
+      channels: {
+        fetch: async () => ({
+          messages: {
+            fetch: async (id) => ({ edit: async (p) => edits.push([id, p]) }),
+          },
+        }),
+      },
+    },
+    reply: async (payload) => {
+      replies.push(payload);
+      return { resource: { message: { id: `m${replies.length}` } } };
+    },
+  });
+  // Chưa có ván: tieptuc báo lỗi
+  await command.execute(fake("tieptuc", "r1"));
+  assert.match(replies.pop().content, /không có ván 2048/);
+  // batdau tạo ván và lưu id tin nhắn
+  await command.execute(fake("batdau", "r1"));
+  const first = svc.getGame2048ByUser("g", "r1");
+  assert(first.message_id);
+  // batdau lần hai bị từ chối, trỏ sang tieptuc
+  await command.execute(fake("batdau", "r1"));
+  assert.match(replies.pop().content, /\/2048 tieptuc/);
+  assert.equal(svc.getGame2048ByUser("g", "r1").id, first.id);
+  // tieptuc đăng bảng mới (kênh khác được phép) và khóa bảng cũ
+  channels.addGameChannel("g", "2048", "c2");
+  await command.execute(fake("tieptuc", "r1", "c2"));
+  const resumed = svc.getGame2048ByUser("g", "r1");
+  assert.equal(resumed.id, first.id);
+  assert.equal(resumed.channel_id, "c2");
+  assert.notEqual(resumed.message_id, first.message_id);
+  assert.deepEqual(edits.pop(), [first.message_id, { components: [] }]);
+  // Nút trên bảng cũ không còn hiệu lực, bảng mới thì có
+  const press = (messageId, channelId, action = "left") => {
+    const out = [];
+    return svc
+      .handleGame2048Button({
+        customId: `g2048:${first.id}:${action}`,
+        guildId: "g",
+        channelId,
+        user: { id: "r1" },
+        message: { id: messageId },
+        reply: async (p) => out.push(p),
+        update: async (p) => out.push({ updated: true, ...p }),
+      })
+      .then(() => out[0]);
+  };
+  assert.match((await press(first.message_id, "c2")).content, /đã cũ/);
+  const ok = await press(resumed.message_id, "c2", "end");
+  assert(ok.updated || ok.content, "bảng mới hoạt động");
+  // Ván bỏ dở 7 ngày mới bị chốt, 1 ngày thì chưa
+  const idle = svc.startGame2048({
+    guildId: "g",
+    userId: "r2",
+    channelId: "c",
+  });
+  svc.setMessageId(idle.session.id, "mm");
+  const stale = require("../src/services/staleSessionService");
+  db.prepare("UPDATE game2048_sessions SET updated_at=? WHERE id=?").run(
+    Date.now() - 24 * 60 * 60_000,
+    idle.session.id,
+  );
+  assert(
+    !stale
+      .expireStaleSoloSessionsSync(Date.now())
+      .some((e) => e.row.id === idle.session.id),
+  );
+  db.prepare("UPDATE game2048_sessions SET updated_at=? WHERE id=?").run(
+    Date.now() - svc.IDLE_TTL_MS - 1000,
+    idle.session.id,
+  );
+  assert(
+    stale
+      .expireStaleSoloSessionsSync(Date.now())
+      .some((e) => e.row.id === idle.session.id),
+  );
+  console.log("2048 tests passed");
+})().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

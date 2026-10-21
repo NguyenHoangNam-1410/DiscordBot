@@ -57,7 +57,7 @@ const RULES = {
   ],
   2048: [
     "2048",
-    "**Cách chơi**\n- Dùng nút mũi tên để dồn toàn bộ ô về một phía. Hai ô cùng số chạm nhau sẽ gộp thành ô gấp đôi và cộng điểm bằng giá trị ô mới. Sau mỗi nước đi hợp lệ xuất hiện thêm một ô 2 (hoặc 4).\n- Chạm ô **2048** vẫn chơi tiếp được. Ván tự chốt khi hết nước đi; bấm **Kết thúc** để chốt sớm. Bỏ dở 10 phút cũng tự chốt theo điểm hiện có.\n\n**Thưởng (không có cược)**\n- Xu = điểm ÷ 30, tối đa 1.000; chạm ô 2048 được cộng thêm 150 xu.\n- EXP = điểm ÷ 250, tối đa 60.\n- Ô ≥ 1000 hiển thị gọn: 2🇰 = 2048.",
+    "**Cách chơi**\n- Dùng nút mũi tên để dồn toàn bộ ô về một phía. Hai ô cùng số chạm nhau sẽ gộp thành ô gấp đôi và cộng điểm bằng giá trị ô mới. Sau mỗi nước đi hợp lệ xuất hiện thêm một ô 2 (hoặc 4).\n- Chạm ô **2048** vẫn chơi tiếp được. Ván tự chốt khi hết nước đi; bấm **Kết thúc** để chốt sớm.\n- `/2048 batdau` mở ván mới; `/2048 tieptuc` đăng lại bảng của ván đang chơi (bảng cũ bị khóa). Mỗi người một ván/server. Không thao tác **7 ngày** thì ván tự chốt theo điểm hiện có.\n\n**Thưởng (không có cược)**\n- Xu = điểm ÷ 30, tối đa 1.000; chạm ô 2048 được cộng thêm 150 xu.\n- EXP = điểm ÷ 250, tối đa 60.\n- Ô ≥ 1000 hiển thị gọn: 2🇰 = 2048.",
   ],
 };
 
