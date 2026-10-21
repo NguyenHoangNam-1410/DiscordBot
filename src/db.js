@@ -1446,4 +1446,28 @@ runMigration(50, "hardcore bounty hunter and four seals achievement stats", () =
   `);
 });
 
+runMigration(51, "game channels many-to-many", () => {
+  const tableSql =
+    db
+      .prepare(
+        "SELECT sql FROM sqlite_master WHERE type='table' AND name='game_channels'",
+      )
+      .get()?.sql || "";
+  if (!/PRIMARY KEY\s*\(\s*guild_id\s*,\s*game\s*,\s*channel_id\s*\)/i.test(tableSql)) {
+    db.exec(`DROP TABLE IF EXISTS game_channels_v51;
+      CREATE TABLE game_channels_v51 (
+        guild_id TEXT NOT NULL,
+        game TEXT NOT NULL,
+        channel_id TEXT NOT NULL,
+        updated_at INTEGER NOT NULL,
+        PRIMARY KEY (guild_id, game, channel_id)
+      );
+      INSERT INTO game_channels_v51(guild_id,game,channel_id,updated_at)
+        SELECT guild_id,game,channel_id,updated_at FROM game_channels;
+      DROP TABLE game_channels;
+      ALTER TABLE game_channels_v51 RENAME TO game_channels;
+      CREATE INDEX IF NOT EXISTS idx_game_channels_channel ON game_channels(guild_id, channel_id)`);
+  }
+});
+
 module.exports = { db, dbPath, runMigration };

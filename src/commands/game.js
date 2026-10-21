@@ -13,7 +13,10 @@ const {
 } = require("discord.js");
 const {
   GAMES,
-  setGameChannel,
+  addGameChannel,
+  removeGameChannel,
+  getGameChannels,
+  SINGLE_CHANNEL_GAMES,
   listGameChannels,
 } = require("../services/gameChannelService");
 const {
@@ -193,7 +196,9 @@ module.exports = {
     .addSubcommand((command) =>
       command
         .setName("setup")
-        .setDescription("Chọn channel cho một game")
+        .setDescription(
+          "Thêm/gỡ channel được chơi một game (Vua tiếng Việt chỉ 1)",
+        )
         .addStringOption((option) =>
           option
             .setName("trochoi")
@@ -207,6 +212,15 @@ module.exports = {
             .setDescription("Channel chứa game; có thể dùng chung")
             .setRequired(true)
             .addChannelTypes(ChannelType.GuildText),
+        )
+        .addStringOption((option) =>
+          option
+            .setName("hanhdong")
+            .setDescription("Thêm hoặc gỡ channel (mặc định: thêm)")
+            .addChoices(
+              { name: "Thêm channel", value: "add" },
+              { name: "Gỡ channel", value: "remove" },
+            ),
         ),
     )
     .addSubcommand((command) =>
@@ -408,9 +422,27 @@ module.exports = {
         });
       const game = interaction.options.getString("trochoi", true);
       const channel = interaction.options.getChannel("channel", true);
-      setGameChannel(interaction.guildId, game, channel.id);
+      if (interaction.options.getString("hanhdong") === "remove") {
+        const removed = removeGameChannel(
+          interaction.guildId,
+          game,
+          channel.id,
+        );
+        return interaction.reply({
+          content: removed
+            ? `✅ Đã gỡ <#${channel.id}> khỏi **${LABELS[game]}**.`
+            : `<#${channel.id}> không nằm trong danh sách channel của **${LABELS[game]}**.`,
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+      addGameChannel(interaction.guildId, game, channel.id);
+      const all = getGameChannels(interaction.guildId, game)
+        .map((row) => `<#${row.channel_id}>`)
+        .join(", ");
       return interaction.reply({
-        content: `✅ Đã đặt <#${channel.id}> làm channel chơi **${LABELS[game]}**. Channel này có thể chứa thêm game khác.`,
+        content: SINGLE_CHANNEL_GAMES.includes(game)
+          ? `✅ Đã đặt <#${channel.id}> làm channel duy nhất của **${LABELS[game]}**.`
+          : `✅ Đã thêm <#${channel.id}> cho **${LABELS[game]}**. Các channel hiện tại: ${all}.`,
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -835,15 +867,22 @@ ${health.backup.discord?.lastError ? "⚠️ " + health.backup.discord.lastError
         flags: MessageFlags.Ephemeral,
       });
     }
-    const settings = new Map(
-      listGameChannels(interaction.guildId).map((row) => [
-        row.game,
+    const settings = new Map();
+    for (const row of listGameChannels(interaction.guildId))
+      settings.set(row.game, [
+        ...(settings.get(row.game) || []),
         row.channel_id,
-      ]),
-    );
+      ]);
     const description = GAMES.map(
       (game) =>
-        `**${LABELS[game]}:** ${settings.has(game) ? `<#${settings.get(game)}>` : "Chưa thiết lập"}`,
+        `**${LABELS[game]}:** ${
+          settings.has(game)
+            ? settings
+                .get(game)
+                .map((id) => `<#${id}>`)
+                .join(", ")
+            : "Chưa thiết lập"
+        }`,
     ).join("\n");
     return interaction.reply({
       embeds: [

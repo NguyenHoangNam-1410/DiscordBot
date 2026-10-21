@@ -40,7 +40,10 @@ module.exports = function createModule(dependencies) {
 
   const { getGameBetLimit } = require("../../services/gameBetLimitService");
 
-  const { getGameChannel } = require("../../services/gameChannelService");
+  const {
+    getGameChannel,
+    channelHasGame,
+  } = require("../../services/gameChannelService");
 
   const { requireGameChannel } = require("../../utils/gameChannel");
 
@@ -194,6 +197,7 @@ module.exports = function createModule(dependencies) {
     getAccount,
     getGameBetLimit,
     getGameChannel,
+    channelHasGame,
     requireGameChannel,
     createFairness,
     fairInt,

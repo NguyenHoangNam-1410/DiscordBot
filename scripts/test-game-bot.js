@@ -213,6 +213,43 @@ assert.equal(
   channelSettings.channelHasGame("shared-channel-guild", "casino", "taixiu"),
   true,
 );
+// N-N: một game nhiều kênh, trừ Vua tiếng Việt chỉ một kênh.
+channelSettings.addGameChannel("shared-channel-guild", "baucua", "casino-2");
+assert.deepEqual(
+  channelSettings
+    .getGameChannels("shared-channel-guild", "baucua")
+    .map((row) => row.channel_id)
+    .sort(),
+  ["casino", "casino-2"],
+);
+assert.equal(
+  channelSettings.channelHasGame("shared-channel-guild", "casino-2", "baucua"),
+  true,
+);
+assert.equal(
+  channelSettings.channelHasGame("shared-channel-guild", "casino-2", "taixiu"),
+  false,
+);
+assert.equal(
+  channelSettings.removeGameChannel("shared-channel-guild", "baucua", "casino"),
+  true,
+);
+assert.equal(
+  channelSettings.removeGameChannel("shared-channel-guild", "baucua", "casino"),
+  false,
+);
+assert.equal(
+  channelSettings.channelHasGame("shared-channel-guild", "casino", "baucua"),
+  false,
+);
+channelSettings.addGameChannel("shared-channel-guild", "vuatiengviet", "vtv-1");
+channelSettings.addGameChannel("shared-channel-guild", "vuatiengviet", "vtv-2");
+assert.deepEqual(
+  channelSettings
+    .getGameChannels("shared-channel-guild", "vuatiengviet")
+    .map((row) => row.channel_id),
+  ["vtv-2"],
+);
 const { listCatalog } = require("../src/services/itemCatalogService");
 const catalog = listCatalog();
 assert.equal(catalog.filter((item) => item.type === "consumable").length, 34);

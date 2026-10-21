@@ -1,5 +1,18 @@
 [
   {
+    "id": "7e454697-feb9-4c50-878f-179ec05f93e4",
+    "updatedAt": "2026-10-21T08:57:45.496Z",
+    "auditedAt": "2026-10-21T08:57:45.496Z",
+    "title": "Một game chơi được ở nhiều channel",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Admin có thể thêm nhiều channel cho cùng một game và gỡ bớt bằng /game setup (chọn hành động Thêm/Gỡ).",
+      "/game channels hiển thị đầy đủ các channel của từng game; một channel vẫn có thể chứa nhiều game.",
+      "Vua tiếng Việt vẫn chỉ dùng một channel duy nhất."
+    ]
+  },
+  {
     "id": "e80bec20-1e51-4509-a5ac-af63b4b8be20",
     "updatedAt": "2026-10-21T08:11:55.509Z",
     "auditedAt": "2026-10-21T08:11:55.509Z",
