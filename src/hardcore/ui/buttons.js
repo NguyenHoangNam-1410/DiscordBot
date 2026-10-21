@@ -308,6 +308,10 @@ module.exports = function createModule(dependencies) {
       state.encounter.type !== "rngesus" &&
       state.phase !== "boss_chest" &&
       state.encounter.forge?.stage !== "boon" &&
+      !(
+        state.encounter.type === "surprise" &&
+        state.encounter.kind === "gambler"
+      ) &&
       !bosses.retreatLocked(state)
     )
       buttons.push(

@@ -163,6 +163,8 @@ module.exports = function createModule(dependencies) {
               );
             if (
               state.encounter.type === "rngesus" ||
+              (state.encounter.type === "surprise" &&
+                state.encounter.kind === "gambler") ||
               (isV2(state) &&
                 (state.phase === "boss_chest" || bosses.retreatLocked(state)))
             )

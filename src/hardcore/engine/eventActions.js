@@ -37,6 +37,14 @@ module.exports = function createModule(dependencies) {
   const purifierCost = (...args) => dependencies.purifierCost(...args);
   const serviceCost = (...args) => dependencies.serviceCost(...args);
 
+  function stakeText(stake) {
+    return stake.type === "payout"
+      ? `${stake.amount.toLocaleString("vi-VN")} xu payout`
+      : `10% mọi chỉ số (${Object.entries(stake.deduct)
+          .map(([key, loss]) => `${key.toUpperCase()} −${loss}`)
+          .join(", ")})`;
+  }
+
   function actSurprise(state, session, action, rng) {
     const e = state.encounter,
       k = e.kind;
@@ -57,7 +65,9 @@ module.exports = function createModule(dependencies) {
       const f = e.forge;
       if (f.version === 2) {
         if (action === "event_skip") {
-          done(`${eventIcon("horadric")} Bỏ qua Horadric Forge, giữ nguyên trang bị.`);
+          done(
+            `${eventIcon("horadric")} Bỏ qua Horadric Forge, giữ nguyên trang bị.`,
+          );
           return;
         }
         if (action !== "forge_lend") throw Error("STALE_ACTION");
@@ -372,7 +382,8 @@ module.exports = function createModule(dependencies) {
         freeTaxRelief,
       };
       cleanse(state, target);
-      if (freeTaxRelief) require("../events/explorationMarks").useTaxRelief(state);
+      if (freeTaxRelief)
+        require("../events/explorationMarks").useTaxRelief(state);
       state.lastPurifiedItem = {
         ...purified,
         maxPotionsAfter: state.maxPotions,
@@ -397,15 +408,68 @@ module.exports = function createModule(dependencies) {
       remember(state, action, rng, { paid });
       completeFloor(state, session, rng, 0);
     } else if (k === "gambler") {
-      const amount = serviceCost(
-        state,
-        action === "event_gamble_10" ? 0.1 : 0.25,
-      );
-      charge(state, amount);
-      if (e.roll < 0.5) state.bonus += amount * 2;
-      done(
-        `${eventIcon("gambler")} ${e.roll < 0.5 ? "Thắng" : "Thua"}: đã trả ${amount.toLocaleString("vi-VN")} xu payout; ${e.roll < 0.5 ? `nhận bonus ${(amount * 2).toLocaleString("vi-VN")} xu trước lời nguyền` : "không nhận bonus"}.`,
-      );
+      const gambler = require("../events/gambler");
+      let intro = "";
+      if (!e.gamble) {
+        const pick = /^gamble_(blackjack|coquay)_(payout|stats)$/.exec(action);
+        if (!pick) throw new Error("INVALID_ACTION");
+        const [, game, wager] = pick;
+        if (wager === "payout") {
+          const amount = serviceCost(state, gambler.WAGERS.payout.fraction);
+          charge(state, amount);
+          e.stake = { type: "payout", amount };
+        } else {
+          const deduct = {};
+          for (const key of ["str", "dex", "vit", "ene"]) {
+            const loss = Math.min(
+              Math.max(
+                1,
+                Math.floor(state[key] * gambler.WAGERS.stats.fraction),
+              ),
+              Math.max(0, state[key] - 1),
+            );
+            if (loss) deduct[key] = loss;
+          }
+          addSource(
+            state,
+            Object.fromEntries(
+              Object.entries(deduct).map(([key, loss]) => [key, -loss]),
+            ),
+          );
+          e.stake = { type: "stats", deduct };
+        }
+        e.gamble = gambler.newGame(game, rng);
+        intro = `${eventIcon("gambler")} Đã đặt cược ${stakeText(e.stake)} vào ${gambler.GAMES[game].name}. `;
+      } else gambler.act(e.gamble, action, rng);
+      if (gambler.finished(e.gamble)) {
+        const win = gambler.won(e.gamble);
+        let result;
+        if (e.stake.type === "payout") {
+          if (win) state.bonus += e.stake.amount * 2;
+          result = win
+            ? `nhận bonus ${(e.stake.amount * 2).toLocaleString("vi-VN")} xu trước lời nguyền`
+            : "không nhận lại khoản cược";
+        } else {
+          if (win)
+            addSource(
+              state,
+              Object.fromEntries(
+                Object.entries(e.stake.deduct).map(([key, loss]) => [
+                  key,
+                  loss * 2,
+                ]),
+              ),
+            );
+          result = win
+            ? `nhận lại gấp đôi chỉ số đã cược (${Object.entries(e.stake.deduct)
+                .map(([key, loss]) => `${key.toUpperCase()} +${loss * 2}`)
+                .join(", ")})`
+            : "không nhận lại chỉ số đã cược";
+        }
+        done(
+          `${eventIcon("gambler")} ${gambler.GAMES[e.gamble.game].name}: **${win ? "THẮNG" : "THUA"}**. Đã cược ${stakeText(e.stake)}; ${result}.\n${gambler.text(e.gamble, { reveal: true })}`,
+        );
+      } else state.lastLog = intro || "Cược đang diễn ra.";
     } else if (k === "adventurer") {
       if (action === "event_rescue") {
         if (state.potions < 1) throw new Error("NO_RESCUE_POTIONS");

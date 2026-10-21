@@ -1,5 +1,18 @@
 [
   {
+    "id": "83bd2aae-18c9-484a-9b02-22bf02e10b2e",
+    "updatedAt": "2026-10-21T09:32:00.340Z",
+    "auditedAt": "2026-10-21T09:32:00.340Z",
+    "title": "Cursed Gambler đổi sang chơi trò chơi",
+    "type": "balance",
+    "scope": "survival",
+    "changes": [
+      "Cursed Gambler giờ bắt buộc chơi một ván: Xì dách (không tách bài, hòa thì chia lại) hoặc Cò quay Nga (mỗi bên 1 mạng, không dùng vật phẩm).",
+      "Chọn khoản cược: 20% payout hoặc 10% mọi chỉ số (STR/DEX/VIT/ENE). Thắng nhận lại gấp đôi khoản cược, thua mất khoản cược; không có thưởng thêm như Xì dách tự nhiên.",
+      "Đã gặp Gambler thì không thể bỏ qua hoặc rút thưởng giữa ván."
+    ]
+  },
+  {
     "id": "847f8113-5c71-4447-834b-8d3c4fb66897",
     "updatedAt": "2026-10-21T09:20:04.304Z",
     "auditedAt": "2026-10-21T09:20:04.304Z",

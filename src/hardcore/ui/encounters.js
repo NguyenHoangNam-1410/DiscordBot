@@ -182,6 +182,7 @@ module.exports = function createModule(dependencies) {
     if (k === "merchant")
       return `${eventIcon(k)} **${e.name}**\nMua tối đa **một món** bằng xu payout:\n${e.offers.map((o) => `- **${merchantOffer(o).name}** · **${money(o.price)} ${icon("coin", "🪙")}**`).join("\n")}\nXem **Chi tiết** để đọc công dụng và điều kiện mua.`;
     const target = s.items.find((x) => x.definition.id === e.targetId);
+    if (k === "gambler") return gamblerText(s);
     if (k === "horadric" && e.forge) return horadricText(s, true);
     if (k === "horadric" && target) {
       const retained = Object.fromEntries(
@@ -229,6 +230,20 @@ module.exports = function createModule(dependencies) {
       class_shrine: `Hiệu lực ba tầng tiếp theo: ${SHRINES[s.classKey]}`,
     };
     return `${eventIcon(e.kind)} **${e.name}**\n${descriptions[k] || "Chọn một hành động."}`;
+  }
+
+  function gamblerText(s) {
+    const e = s.encounter;
+    const gambler = require("../events/gambler");
+    if (!e.gamble)
+      return `${eventIcon("gambler")} **${e.name}**\nBắt buộc chơi một ván với Gambler. Chọn trò và khoản cược bằng nút bên dưới; **chỉ có thắng hoặc thua**, không thưởng thêm.\n- ${gambler.GAMES.blackjack.icon} **Xì dách:** không tách bài, hòa thì chia lại ván.\n- ${gambler.GAMES.coquay.icon} **Cò quay Nga:** mỗi bên 1 mạng, không dùng vật phẩm.\n**Cược:** 20% payout hiện tại **hoặc** 10% mọi chỉ số (STR/DEX/VIT/ENE). Thắng nhận lại gấp đôi khoản cược (trước lời nguyền).`;
+    const stake =
+      e.stake?.type === "payout"
+        ? `${money(e.stake.amount)} xu payout`
+        : `10% mọi chỉ số (${Object.entries(e.stake?.deduct || {})
+            .map(([key, loss]) => `${key.toUpperCase()} −${loss}`)
+            .join(", ")})`;
+    return `${eventIcon("gambler")} **${e.name}** · ${gambler.GAMES[e.gamble.game].name}\n**Đang cược:** ${stake}. Thắng nhận lại gấp đôi.\n${gambler.text(e.gamble)}`;
   }
 
   function encounterSummary(s, compact = false) {
@@ -287,6 +302,7 @@ ${bossDisplay.status(s)}${require("../rift").battle(s)}
     if (e.type === "surprise" && e.kind.endsWith("_shop"))
       return `${eventIcon(e.kind)} **${e.name}** · mua một món\n${e.offers.map((o, i) => `${i + 1}. **${itemIcon(o.item)} ${o.item.name} [${rarityLabel(o.item.rarity)}]** · ${shopPrice(e.kind, o)}`).join("\n")}\nXem Chi tiết để đọc công dụng và điều kiện mua.`;
     if (e.type === "surprise" && e.kind === "merchant") return encounterText(s);
+    if (e.type === "surprise" && e.kind === "gambler") return gamblerText(s);
     if (e.type === "surprise" && e.kind === "horadric" && e.forge)
       return horadricText(s);
     if (e.type === "surprise" && e.kind === "blacksmith")

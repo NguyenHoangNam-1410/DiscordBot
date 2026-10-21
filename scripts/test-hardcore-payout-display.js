@@ -315,10 +315,8 @@ for (const bloodFactor of [-0.5, 0.5]) {
     core.receiveItem(s, gear);
     s.encounter = core.makeSurprise(s, () => 0.5, kind);
     if (kind === "blacksmith") s.encounter.targetId = gear.id;
-    // Ensure the gambler's locked win branch follows the actual paid wager.
-    s.encounter.roll = 0.49;
     const fraction =
-      kind === "blacksmith" ? 0.12 : kind === "gambler" ? 0.25 : 0.1;
+      kind === "blacksmith" ? 0.12 : kind === "gambler" ? 0.2 : 0.1;
     const before = core.payout(s),
       spent = s.payoutSpent,
       bonus = s.bonus,
@@ -327,7 +325,7 @@ for (const bloodFactor of [-0.5, 0.5]) {
     const action = {
       blacksmith: "event_smith",
       sacrifice: "event_sacrifice_payout",
-      gambler: "event_gamble_25",
+      gambler: "gamble_blackjack_payout",
     }[kind];
     assert.equal(core.serviceCost(s, fraction), cost);
     assert(core.actions(s).some((a) => a.action === action && !a.disabled));
@@ -335,11 +333,13 @@ for (const bloodFactor of [-0.5, 0.5]) {
       view.privatePayload(s, "fee-test", "message", "encounter"),
     );
     assert(!detail.includes("payout gốc"));
-    play(s, action);
+    if (kind === "gambler") core.act(s, session, action, rng);
+    else play(s, action);
     assert.equal(s.payoutSpent, spent + cost, kind);
     assert.equal(s.payoutFactor, factor, kind);
     assert.equal(s.eventPayoutFactor, 1, kind);
-    assert.equal(s.bonus, bonus + (kind === "gambler" ? 2 * cost : 0), kind);
+    // Gambler: khoản cược bị trừ ngay, bonus chỉ cộng khi thắng ván.
+    assert.equal(s.bonus, bonus, kind);
   }
   for (const shopRoll of [0.1, 0.5, 0.9]) {
     for (const kind of ["merchant", "payout_shop"]) {
@@ -440,12 +440,13 @@ for (const kind of [
   const action = {
     blacksmith: "event_smith",
     sacrifice: "event_sacrifice_payout",
-    gambler: "event_gamble_10",
+    gambler: "gamble_coquay_payout",
     merchant: "buy_0",
     payout_shop: "buy_0",
   }[kind];
   assert(!core.actions(s).find((a) => a.action === action).disabled, kind);
-  play(s, action);
+  if (kind === "gambler") core.act(s, session, action, rng);
+  else play(s, action);
   const zero = create({ type: "empty", name: "Trống" });
   core.receiveItem(zero, core.ITEMS.common[0]);
   zero.payoutSpent = core.payout(zero);
@@ -670,24 +671,22 @@ for (const overrides of [
   core.normalize(s);
   assert.equal(JSON.stringify(s), saved, "normalization must not charge twice");
 }
-// Gambling is the explicit exception: rewards follow the actual event wager.
-for (const fraction of [0.1, 0.25]) {
-  for (const roll of [0.49, 0.5]) {
-    const s = create(
-      { type: "surprise", name: "Cursed Gambler", kind: "gambler", roll },
-      {
-        bonus: 50000,
-        payoutSpent: 2000,
-      },
-    );
-    const wager = core.serviceCost(s, fraction),
-      bonus = s.bonus;
-    play(s, fraction === 0.1 ? "event_gamble_10" : "event_gamble_25");
-    assert.equal(s.payoutSpent, 2000 + wager);
-    assert.equal(s.bonus, bonus + (roll < 0.5 ? wager * 2 : 0));
-    assert.equal(s.eventPayoutFactor, 1);
-    assert.ok(!s.lastLog.includes("lãi ròng"));
-  }
+// Gambling is the explicit exception: the wager is paid up front (20% payout), rewards come only on a win.
+{
+  const s = create(
+    { type: "surprise", name: "Cursed Gambler", kind: "gambler" },
+    {
+      bonus: 50000,
+      payoutSpent: 2000,
+    },
+  );
+  const wager = core.serviceCost(s, 0.2),
+    bonus = s.bonus;
+  core.act(s, session, "gamble_coquay_payout", rng);
+  assert.equal(s.payoutSpent, 2000 + wager);
+  assert.equal(s.bonus, bonus);
+  assert.equal(s.eventPayoutFactor, 1);
+  assert.ok(!s.lastLog.includes("lãi ròng"));
 }
 // Boss sales are independent of accumulated payout; ordinary sales stay at 15% stake.
 for (const bonus of [0, 500000]) {
