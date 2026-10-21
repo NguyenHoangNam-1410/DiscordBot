@@ -11,6 +11,7 @@ const GAME_LABELS = Object.freeze({
   coquay: "🔫 Cò quay Nga",
   hardcore: "⚔️ Sinh tồn",
   vuatiengviet: "🇻🇳 Vua tiếng Việt",
+  2048: "🔢 2048",
 });
 
 function getAllGameStats(guildId, userId) {

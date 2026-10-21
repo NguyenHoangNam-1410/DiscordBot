@@ -12,6 +12,7 @@ const COMMAND_FILES = Object.freeze([
   "domin",
   "coquay",
   "sinhton",
+  "2048",
   "luat",
   "hoso",
   "xu",

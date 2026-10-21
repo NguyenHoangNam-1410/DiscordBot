@@ -16,6 +16,7 @@ const games = {
   coquay: require("./coquay"),
   sinhton: require("./hardcore"),
   vuatiengviet: require("./vuatiengviet"),
+  2048: require("./2048"),
 };
 
 const GAME_ALIASES = {
@@ -92,6 +93,11 @@ const options = [
     "Chơi Sinh tồn vượt tầng",
     { top: "xephang", rates: "tyle" },
     { class: "nhanvat", user: "nguoidung" },
+  ),
+  simpleGame(
+    "2048",
+    games[2048],
+    "Chơi 2048, kết thúc để đổi điểm lấy xu và EXP",
   ),
   simpleGame("vtv", games.vuatiengviet, "Admin: bắt đầu phiên Vua tiếng Việt"),
 ];

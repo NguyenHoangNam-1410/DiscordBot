@@ -55,6 +55,10 @@ const RULES = {
     "Vua tiếng Việt",
     "**Cách chơi**\n- Admin mở bằng `/vtv batdau`. Sắp xếp chữ thành từ/cụm từ và gửi đáp án trực tiếp trong kênh game.\n- Đáp án phải đúng dấu tiếng Việt; không phân biệt chữ hoa/thường. Người trả lời đúng trước nhận thưởng, rồi chuyển câu mới.\n\n**Câu thường**\n- Không giới hạn thời gian; thưởng xu theo cấu hình server. Có thể bấm Bỏ qua: giới hạn lượt/ngày theo server (tối đa 5), mỗi người hồi chiêu 5 phút.\n\n**Câu khó**\n- Phải trả lời trong thời gian trên bảng; không được bỏ qua. Trả lời đúng nhận **10 lần thưởng xu cơ bản và 10 kim cương**.",
   ],
+  2048: [
+    "2048",
+    "**Cách chơi**\n- Dùng nút mũi tên để dồn toàn bộ ô về một phía. Hai ô cùng số chạm nhau sẽ gộp thành ô gấp đôi và cộng điểm bằng giá trị ô mới. Sau mỗi nước đi hợp lệ xuất hiện thêm một ô 2 (hoặc 4).\n- Chạm ô **2048** vẫn chơi tiếp được. Ván tự chốt khi hết nước đi; bấm **Kết thúc** để chốt sớm. Bỏ dở 10 phút cũng tự chốt theo điểm hiện có.\n\n**Thưởng (không có cược)**\n- Xu = điểm ÷ 30, tối đa 1.000; chạm ô 2048 được cộng thêm 150 xu.\n- EXP = điểm ÷ 250, tối đa 60.\n- Ô ≥ 1000 hiển thị gọn: 2🇰 = 2048.",
+  ],
 };
 
 function survivalRules() {

@@ -1,0 +1,222 @@
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+
+const testDb = path.resolve(__dirname, "../data/test-game-2048.sqlite");
+for (const suffix of ["", "-wal", "-shm"])
+  fs.rmSync(`${testDb}${suffix}`, { force: true });
+process.env.DB_PATH = testDb;
+
+const { db } = require("../src/db");
+const svc = require("../src/services/game2048Service");
+const channels = require("../src/services/gameChannelService");
+const { getAccount } = require("../src/services/economyService");
+const { getPlayerProgression } = require("../src/services/playerLevelService");
+
+// Logic gộp ô
+assert.deepEqual(svc.slideLine([2, 2, 2, 2]), {
+  values: [4, 4, 0, 0],
+  gained: 8,
+});
+assert.deepEqual(svc.slideLine([2, 2, 4, 0]), {
+  values: [4, 4, 0, 0],
+  gained: 4,
+});
+assert.deepEqual(svc.slideLine([4, 2, 2, 0]), {
+  values: [4, 4, 0, 0],
+  gained: 4,
+});
+assert.deepEqual(svc.slideLine([2, 4, 8, 16]), {
+  values: [2, 4, 8, 16],
+  gained: 0,
+});
+assert.deepEqual(svc.slideLine([0, 0, 0, 2]), {
+  values: [2, 0, 0, 0],
+  gained: 0,
+});
+// 4 4 8 -> 8 8 (mỗi ô chỉ gộp một lần)
+assert.deepEqual(svc.slideLine([4, 4, 8, 0]), {
+  values: [8, 8, 0, 0],
+  gained: 8,
+});
+
+// Hướng dồn
+const b = new Array(16).fill(0);
+b[3] = 2; // hàng 0, cột 3
+assert.equal(svc.shift(b, "left").board[0], 2);
+assert.equal(svc.shift(b, "down").board[15], 2);
+assert.equal(svc.shift(b, "right").moved, false);
+assert.equal(svc.shift(b, "up").moved, false);
+const col = new Array(16).fill(0);
+col[0] = 2;
+col[4] = 2;
+col[8] = 4;
+const down = svc.shift(col, "down");
+assert.equal(down.board[12], 4);
+assert.equal(down.board[8], 4);
+assert.equal(down.gained, 4);
+
+// Hết nước đi
+const full = [2, 4, 2, 4, 4, 2, 4, 2, 2, 4, 2, 4, 4, 2, 4, 2];
+assert.equal(svc.canMove(full), false);
+full[15] = 4;
+assert.equal(svc.canMove(full), true);
+
+// Khởi tạo: 2 ô, spawn chỉ vào ô trống
+const board = svc.newBoard();
+assert.equal(board.filter(Boolean).length, 2);
+assert(board.every((v) => v === 0 || v === 2 || v === 4));
+assert.equal(
+  svc.applyMove(
+    {
+      board: full.map(() => 2).map((v, i) => (i % 2 ? 4 : 2)),
+      score: 0,
+      moves: 0,
+      maxTile: 4,
+    },
+    "left",
+  ),
+  null,
+);
+
+// Hiển thị: mỗi ô rộng 3 emoji, ô ≥1000 viết gọn
+assert.equal([...svc.tileCell(0)].length, 3);
+assert.match(svc.tileCell(2), /2️⃣/);
+assert.match(svc.tileCell(2048), /2️⃣\u{1F1F0}/u);
+assert.equal(svc.boardText(new Array(16).fill(0)).split("\n").length, 7);
+
+// Thưởng
+assert.deepEqual(svc.rewardFor(0, 2), { coins: 0, exp: 0 });
+assert.deepEqual(svc.rewardFor(3000, 256), { coins: 100, exp: 12 });
+assert.deepEqual(svc.rewardFor(24000, 2048), { coins: 800 + 150, exp: 60 });
+assert.deepEqual(svc.rewardFor(10_000_000, 2048), {
+  coins: svc.MAX_SCORE_COINS + svc.TARGET_BONUS_COINS,
+  exp: svc.MAX_EXP,
+});
+
+// Kênh game
+channels.addGameChannel("g", "2048", "c");
+assert(channels.channelHasGame("g", "c", "2048"));
+
+// Phiên chơi
+const started = svc.startGame2048({
+  guildId: "g",
+  userId: "u",
+  channelId: "c",
+});
+assert.throws(
+  () => svc.startGame2048({ guildId: "g", userId: "u", channelId: "c" }),
+  /ACTIVE_SESSION/,
+);
+const sid = started.session.id;
+const before = getAccount("g", "u").balance;
+// Đặt bàn cố định: có thể gộp để ghi điểm
+db.prepare("UPDATE game2048_sessions SET state_json=? WHERE id=?").run(
+  JSON.stringify({
+    board: [2, 2, 4, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    score: 2990,
+    moves: 50,
+    maxTile: 256,
+    gameOver: false,
+  }),
+  sid,
+);
+assert.throws(
+  () => svc.play2048({ sessionId: sid, userId: "other", action: "left" }),
+  /SESSION_NOT_FOUND/,
+);
+assert.throws(
+  () => svc.play2048({ sessionId: sid, userId: "u", action: "up" }),
+  /NO_CHANGE/,
+);
+const moved = svc.play2048({
+  sessionId: sid,
+  userId: "u",
+  action: "left",
+  random: (n) => 0,
+});
+assert.equal(moved.result, null);
+assert.equal(moved.state.score, 2990 + 4 + 8);
+assert.equal(moved.state.moves, 51);
+assert.equal(moved.state.board[0], 4);
+assert.equal(moved.state.board[1], 8);
+
+const payload = svc.renderPayload(moved.state, "u", sid);
+assert.equal(payload.components.length, 3);
+const ids = payload.components.flatMap((row) =>
+  row.components.map((c) => c.toJSON().custom_id),
+);
+assert.equal(new Set(ids).size, ids.length);
+assert(ids.includes(`g2048:${sid}:end`));
+assert(payload.embeds[0].toJSON().fields.length >= 4);
+
+const expBefore = getPlayerProgression("g", "u").experience;
+const ended = svc.play2048({ sessionId: sid, userId: "u", action: "end" });
+assert.equal(ended.result.coins, Math.floor(3002 / 30));
+assert.equal(ended.result.exp, Math.floor(3002 / 250));
+assert.equal(getAccount("g", "u").balance - before, ended.result.coins);
+const progress = getPlayerProgression("g", "u");
+assert(
+  progress.level > 1 || progress.experience - expBefore === ended.result.exp,
+);
+assert.equal(svc.getGame2048ByUser("g", "u"), null);
+// Bấm kết thúc lần hai không nhận lại thưởng
+assert.throws(
+  () => svc.play2048({ sessionId: sid, userId: "u", action: "end" }),
+  /SESSION_NOT_FOUND/,
+);
+const finalPayload = svc.renderPayload(ended.state, "u", sid, ended.result);
+assert.deepEqual(finalPayload.components, []);
+
+// Hết nước đi tự chốt và trả thưởng
+const s2 = svc.startGame2048({ guildId: "g", userId: "v", channelId: "c" });
+db.prepare("UPDATE game2048_sessions SET state_json=? WHERE id=?").run(
+  JSON.stringify({
+    board: [2, 4, 2, 4, 4, 2, 4, 2, 2, 4, 2, 4, 2, 4, 2, 0],
+    score: 3000,
+    moves: 20,
+    maxTile: 4,
+    gameOver: false,
+  }),
+  s2.session.id,
+);
+const over = svc.play2048({
+  sessionId: s2.session.id,
+  userId: "v",
+  action: "right",
+  random: () => 0,
+});
+assert(over.result, "hết nước đi phải tự chốt");
+assert.equal(over.result.label, "over");
+assert.equal(over.result.coins, 100);
+assert.equal(svc.getGame2048ByUser("g", "v"), null);
+
+// Chạm 2048 được cộng thưởng; hết giờ chốt theo điểm
+const s3 = svc.startGame2048({ guildId: "g", userId: "w", channelId: "c" });
+db.prepare(
+  "UPDATE game2048_sessions SET state_json=?, updated_at=? WHERE id=?",
+).run(
+  JSON.stringify({
+    board: new Array(16).fill(0),
+    score: 21000,
+    moves: 900,
+    maxTile: 2048,
+    gameOver: false,
+  }),
+  1,
+  s3.session.id,
+);
+db.prepare("UPDATE game2048_sessions SET message_id='m' WHERE id=?").run(
+  s3.session.id,
+);
+const stale =
+  require("../src/services/staleSessionService").expireStaleSoloSessionsSync(
+    Date.now(),
+  );
+const hit = stale.find((e) => e.game.table === "game2048_sessions");
+assert(hit, "ván bị bỏ dở phải được chốt");
+assert.equal(hit.result.result.coins, 700 + 150);
+assert.equal(typeof hit.game.idleText(hit.row, hit.result), "string");
+assert.equal(svc.getGame2048ByUser("g", "w"), null);
+
+console.log("2048 tests passed");

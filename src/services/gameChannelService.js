@@ -11,6 +11,7 @@ const GAMES = Object.freeze([
   "coquay",
   "hardcore",
   "vuatiengviet",
+  "2048",
 ]);
 
 const GAME_LABELS = Object.freeze({
@@ -24,6 +25,7 @@ const GAME_LABELS = Object.freeze({
   coquay: "Cò quay Nga",
   hardcore: "Sinh tồn",
   vuatiengviet: "Vua tiếng Việt",
+  2048: "2048",
 });
 
 function isGameMaintenance(guildId, game) {
