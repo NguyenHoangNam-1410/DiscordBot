@@ -1,5 +1,16 @@
 [
   {
+    "id": "c9e270f1-24c5-4c4a-96db-7157095c536c",
+    "updatedAt": "2026-10-21T09:17:55.069Z",
+    "auditedAt": "2026-10-21T09:17:55.069Z",
+    "title": "Gọn lại giao diện 2048",
+    "type": "improvement",
+    "scope": "game2048",
+    "changes": [
+      "2048 chỉ còn một dòng trạng thái, bàn chơi và một hàng nút, dễ chơi hơn trên điện thoại."
+    ]
+  },
+  {
     "id": "42b1339c-9e9c-4468-8657-0a4b579967bf",
     "updatedAt": "2026-10-21T09:13:30.380Z",
     "auditedAt": "2026-10-21T09:13:30.380Z",
