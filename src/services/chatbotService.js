@@ -23,8 +23,10 @@ const SYSTEM_PROMPT =
 
 // Kiến thức riêng của từng server (admin nhập) và phong cách trả lời; được đưa vào lời nhắc hệ thống mỗi lần hỏi.
 const MAX_FACTS = 15;
-const FACT_INPUT_CHARS = 200; // người dùng nhập tối đa; phần gắn mention người được cộng thêm
-const MAX_FACT_CHARS = 240;
+const FACT_INPUT_CHARS = 600; // người dùng nhập tối đa; phần gắn mention người được cộng thêm
+const MAX_FACT_CHARS = 650;
+// Tổng độ dài mọi thông tin: giữ lời nhắc gọn và bảng /chatbot kienthuc vừa giới hạn embed 4096 ký tự.
+const MAX_FACTS_TOTAL_CHARS = 3400;
 const MAX_PERSONA_CHARS = 300;
 function listFacts(guildId) {
   return db
@@ -35,7 +37,10 @@ function addFact(guildId, content, adminId, now = Date.now()) {
   const text = String(content || "").replace(/\s+/g, " ").trim();
   if (!text) throw new Error("EMPTY_FACT");
   if (text.length > MAX_FACT_CHARS) throw new Error("FACT_TOO_LONG");
-  if (listFacts(guildId).length >= MAX_FACTS) throw new Error("FACT_LIMIT");
+  const existing = listFacts(guildId);
+  if (existing.length >= MAX_FACTS) throw new Error("FACT_LIMIT");
+  if (existing.reduce((n, fact) => n + fact.content.length, 0) + text.length > MAX_FACTS_TOTAL_CHARS)
+    throw new Error("FACT_TOTAL_LIMIT");
   db.prepare("INSERT INTO chatbot_knowledge(guild_id,content,added_by,created_at) VALUES(?,?,?,?)").run(
     String(guildId),
     text,
@@ -405,6 +410,7 @@ module.exports = {
   safeName,
   MAX_FACTS,
   MAX_FACT_CHARS,
+  MAX_FACTS_TOTAL_CHARS,
   FACT_INPUT_CHARS,
   MAX_PERSONA_CHARS,
   prepareQuestion,
