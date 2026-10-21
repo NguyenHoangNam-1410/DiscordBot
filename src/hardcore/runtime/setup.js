@@ -6,7 +6,7 @@ module.exports = function createModule(dependencies) {
     formatCoins,
     getAccount,
     getGameBetLimit,
-    getGameChannel,
+    channelHasGame,
     requireGameChannel,
     godReveal,
     hardcoreView,
@@ -227,8 +227,7 @@ module.exports = function createModule(dependencies) {
         draft,
         "Hãy chọn nhân vật và nhập số xu trước khi bắt đầu.",
       );
-    const channel = getGameChannel(draft.guildId, "hardcore");
-    if (!channel || channel.channel_id !== draft.channelId) {
+    if (!channelHasGame(draft.guildId, draft.channelId, "hardcore")) {
       closeSetup(draft);
       return interaction.update(
         closedSetup(

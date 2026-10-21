@@ -1,6 +1,6 @@
 const { MessageFlags } = require("discord.js");
 const {
-  getGameChannel,
+  getGameChannels,
   isGameMaintenance,
   GAME_LABELS,
 } = require("../services/gameChannelService");
@@ -13,11 +13,11 @@ async function requireGameChannel(interaction, game) {
     });
     return false;
   }
-  const setting = getGameChannel(interaction.guildId, game);
-  const content = !setting
-    ? `Game **${game}** chưa được thiết lập channel. Admin dùng \`/quantri datkenh\` trước.`
-    : interaction.channelId !== setting.channel_id
-      ? `Game **/${game}** chỉ được chơi tại <#${setting.channel_id}>.`
+  const settings = getGameChannels(interaction.guildId, game);
+  const content = !settings.length
+    ? `Game **${game}** chưa được thiết lập channel. Admin dùng \`/game setup\` trước.`
+    : !settings.some((row) => row.channel_id === interaction.channelId)
+      ? `Game **/${game}** chỉ được chơi tại ${settings.map((row) => `<#${row.channel_id}>`).join(", ")}.`
       : null;
   if (!content) return true;
   await interaction.reply({ content, flags: MessageFlags.Ephemeral });
