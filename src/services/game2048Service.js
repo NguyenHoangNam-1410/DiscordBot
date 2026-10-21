@@ -179,12 +179,12 @@ function boardText(board) {
       board
         .slice(row * SIZE, row * SIZE + SIZE)
         .map(tileCell)
-        .join(""),
+        .join("⬛"),
     );
-  return rows.join("\n");
+  return rows.join("\n\n");
 }
 
-// Một dòng trạng thái + bàn + một hàng nút: gọn để vừa màn hình điện thoại.
+// Một dòng trạng thái ở đầu tin nhắn, rồi bàn chơi và bảng nút điều hướng.
 function renderPayload(state, userId, sessionId, result = null) {
   const stats = `Điểm **${formatCoins(state.score)}** · Cao nhất **${formatCoins(state.maxTile)}** · ${formatCoins(state.moves)} nước`;
   const line = result
@@ -204,13 +204,29 @@ function controlRows(sessionId) {
       .setCustomId(`g2048:${sessionId}:${action}`)
       .setEmoji(emoji)
       .setStyle(style);
+  const blank = (id) =>
+    new ButtonBuilder()
+      .setCustomId(`g2048:${sessionId}:blank${id}`)
+      .setLabel("\u200b")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(true);
   return [
     new ActionRowBuilder().addComponents(
-      button("left", "⬅️"),
+      blank(1),
       button("up", "⬆️"),
+      blank(2),
+    ),
+    new ActionRowBuilder().addComponents(
+      button("left", "⬅️"),
       button("down", "⬇️"),
       button("right", "➡️"),
-      button("end", "🏁", ButtonStyle.Danger),
+    ),
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`g2048:${sessionId}:end`)
+        .setLabel("Kết thúc")
+        .setEmoji("🏁")
+        .setStyle(ButtonStyle.Danger),
     ),
   ];
 }
