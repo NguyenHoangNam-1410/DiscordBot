@@ -179,7 +179,7 @@ const ids = payload.components.flatMap((row) =>
   row.components.map((c) => c.toJSON().custom_id),
 );
 assert.equal(new Set(ids).size, ids.length);
-assert(ids.includes(`g2048:${sid}:end`));
+assert(ids.includes(`g2048:${sid}:endask`));
 
 const expBefore = getPlayerProgression("g", "u").experience;
 const ended = svc.play2048({ sessionId: sid, userId: "u", action: "end" });
@@ -374,8 +374,25 @@ assert.equal(svc.getGame2048ByUser("g", "w"), null);
       .then(() => out[0]);
   };
   assert.match((await press(first.message_id, "c2")).content, /đã cũ/);
+  // Bấm Kết thúc chỉ hỏi xác nhận, chưa chốt
+  const ask = await press(resumed.message_id, "c2", "endask");
+  assert(ask.updated);
+  assert.match(ask.content, /kết thúc ván\?/);
+  const askIds = ask.components[0].components.map((c) => c.toJSON().custom_id);
+  assert.deepEqual(askIds, [
+    `g2048:${first.id}:end`,
+    `g2048:${first.id}:endno`,
+  ]);
+  assert(svc.getGame2048ByUser("g", "r1"), "chưa chốt khi mới hỏi");
+  // Chơi tiếp → trả lại bảng điều khiển
+  const back = await press(resumed.message_id, "c2", "endno");
+  assert.equal(back.components.length, 3);
+  assert(svc.getGame2048ByUser("g", "r1"));
+  // Xác nhận → chốt ván
   const ok = await press(resumed.message_id, "c2", "end");
-  assert(ok.updated || ok.content, "bảng mới hoạt động");
+  assert(ok.updated);
+  assert.deepEqual(ok.components, []);
+  assert.equal(svc.getGame2048ByUser("g", "r1"), null);
   // Ván bỏ dở 7 ngày mới bị chốt, 1 ngày thì chưa
   const idle = svc.startGame2048({
     guildId: "g",

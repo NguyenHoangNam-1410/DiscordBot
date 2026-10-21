@@ -223,12 +223,33 @@ function controlRows(sessionId) {
     ),
     new ActionRowBuilder().addComponents(
       new ButtonBuilder()
-        .setCustomId(`g2048:${sessionId}:end`)
+        .setCustomId(`g2048:${sessionId}:endask`)
         .setLabel("Kết thúc")
         .setEmoji("🏁")
         .setStyle(ButtonStyle.Danger),
     ),
   ];
+}
+
+// Hỏi xác nhận trước khi chốt: giữ nguyên bàn, thay bảng nút bằng Xác nhận / Chơi tiếp.
+function confirmPayload(state, userId, sessionId) {
+  const reward = rewardFor(state.score, state.maxTile);
+  const payload = renderPayload(state, userId, sessionId);
+  payload.content = `⚠️ <@${userId}> kết thúc ván? Nhận **+${formatCoins(reward.coins)} :coin:** · **+${formatCoins(reward.exp)} EXP** theo **${formatCoins(state.score)}** điểm.\n${boardText(state.board)}`;
+  payload.components = [
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`g2048:${sessionId}:end`)
+        .setLabel("Xác nhận kết thúc")
+        .setEmoji("🏁")
+        .setStyle(ButtonStyle.Danger),
+      new ButtonBuilder()
+        .setCustomId(`g2048:${sessionId}:endno`)
+        .setLabel("Chơi tiếp")
+        .setStyle(ButtonStyle.Secondary),
+    ),
+  ];
+  return payload;
 }
 
 // ---- Phiên chơi -----------------------------------------------------------
@@ -421,6 +442,15 @@ async function handleGame2048Button(interaction) {
       content: "Đây là ván 2048 của người chơi khác.",
       flags: MessageFlags.Ephemeral,
     });
+  if (action === "endask" || action === "endno") {
+    const state = parseState(session);
+    saveState(session, state);
+    return interaction.update(
+      action === "endask"
+        ? confirmPayload(state, interaction.user.id, sessionId)
+        : renderPayload(state, interaction.user.id, sessionId),
+    );
+  }
   try {
     const played = play2048({
       sessionId,
