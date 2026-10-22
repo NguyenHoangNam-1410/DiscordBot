@@ -25,6 +25,8 @@ const BACKUP_INTERVAL_HOURS = BACKUP_INTERVAL_MINUTES / 60;
 const BACKUP_RETENTION = integerEnv("DB_BACKUP_RETENTION", 14, 2, 90);
 // Sao lưu khi khởi động bị dời để bot phục vụ người chơi trước, và bỏ qua nếu đã có bản rất mới
 // (lần tắt trước đã sao lưu cuối). Đặt 0 để sao lưu ngay như cũ.
+// Gửi DM thất bại: thử lại tối đa chừng này lần cho mỗi bản backup (bản kế tiếp được gửi riêng).
+const MAX_DELIVERY_ATTEMPTS = 6;
 const STARTUP_DELAY_MS =
   integerEnv("DB_BACKUP_STARTUP_DELAY_SECONDS", 120, 0, 3600) * 1000;
 const STARTUP_SKIP_MS =
@@ -63,7 +65,9 @@ async function cleanupBackups(retention = BACKUP_RETENTION) {
 // Tuổi của bản sao lưu mới nhất (ms); Infinity nếu chưa có.
 async function latestBackupAgeMs(now = Date.now()) {
   try {
-    const names = (await fs.promises.readdir(backupDir, { withFileTypes: true }))
+    const names = (
+      await fs.promises.readdir(backupDir, { withFileTypes: true })
+    )
       .filter((entry) => entry.isFile() && BACKUP_FILE.test(entry.name))
       .map((entry) => entry.name);
     let newest = 0;
@@ -155,25 +159,37 @@ function startDatabaseBackups(
     pending = null,
     stopPromise = null,
     retryTimer = null,
-    startupTimer = null;
+    startupTimer = null,
+    deliveryFailures = 0;
   const deliver = async (destination) => {
     clearTimeout(retryTimer);
     retryTimer = null;
     try {
       const result = await discordBackup.sendDiscordBackup(destination);
+      deliveryFailures = 0;
       if (result.status === "sent")
         logger.info?.(result, "database backup delivered to Discord DM");
     } catch (error) {
+      deliveryFailures += 1;
       logger.error?.(
-        { code: error.code || error.name },
+        {
+          code: error.code || error.name,
+          reason: error.name === "AbortError" ? "timeout" : error.message,
+          attempt: deliveryFailures,
+        },
         "database backup Discord delivery failed",
       );
-      if (!stopped) {
+      if (!stopped && deliveryFailures < MAX_DELIVERY_ATTEMPTS) {
         clearTimeout(retryTimer);
+        // Thử lại giãn dần (5 phút → 10 → 20 …, tối đa 1 giờ) thay vì gửi lại cả file mỗi 5 phút.
+        const delay = Math.min(
+          60 * 60_000,
+          retryDelayMs * 2 ** (deliveryFailures - 1),
+        );
         retryTimer = setTimeout(() => {
           if (!stopped && backupStatus.lastDestination)
             void deliver(backupStatus.lastDestination);
-        }, retryDelayMs);
+        }, delay);
         retryTimer.unref?.();
       }
     }
@@ -182,6 +198,7 @@ function startDatabaseBackups(
     promise
       .then(async (result) => {
         logger.info?.(result, "database backup completed");
+        deliveryFailures = 0;
         await deliver(result.destination);
         return result;
       })

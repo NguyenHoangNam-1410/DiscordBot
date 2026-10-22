@@ -23,6 +23,7 @@ const timeoutMs =
     : 60) * 1000;
 const PART_BYTES = 8 * 1024 * 1024;
 const MAX_PARTS = 100;
+const COMPRESS_MIN_MS = 5 * 60_000;
 let client = null,
   tail = Promise.resolve();
 const pendingFiles = new Map();
@@ -79,32 +80,43 @@ async function performDelivery(destination, options = {}) {
   const filename = path.basename(destination);
   const compressed =
     destination + ".discord-" + crypto.randomBytes(8).toString("hex") + ".gz";
-  const controller = new AbortController();
-  const timer = setTimeout(
-    () => controller.abort(),
-    options.timeoutMs || timeoutMs,
-  );
-  timer.unref?.();
+  // Mỗi bước (nén, mở DM, từng phần file) có đồng hồ riêng: database lớn nhiều phần không còn bị
+  // một giới hạn chung cắt ngang, và mỗi lần gọi REST có signal riêng nên không dồn listener.
+  const stepMs = options.timeoutMs || timeoutMs;
+  const withTimeout = async (ms, run) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ms);
+    timer.unref?.();
+    try {
+      return await run(controller.signal);
+    } finally {
+      clearTimeout(timer);
+    }
+  };
   const sourceHash = crypto.createHash("sha256"),
     archiveHash = crypto.createHash("sha256");
   status.running = true;
   try {
     const sourceStat = await fs.promises.stat(destination);
-    await pipeline(
-      fs.createReadStream(destination),
-      digestStream(sourceHash),
-      createGzip(),
-      digestStream(archiveHash),
-      fs.createWriteStream(compressed, { flags: "wx" }),
-      { signal: controller.signal },
+    await withTimeout(Math.max(stepMs, COMPRESS_MIN_MS), (signal) =>
+      pipeline(
+        fs.createReadStream(destination),
+        digestStream(sourceHash),
+        createGzip(),
+        digestStream(archiveHash),
+        fs.createWriteStream(compressed, { flags: "wx" }),
+        { signal },
+      ),
     );
     const compressedBytes = (await fs.promises.stat(compressed)).size;
     const total = Math.ceil(compressedBytes / partBytes);
     if (total > MAX_PARTS) throw new Error("DISCORD_BACKUP_TOO_MANY_PARTS");
-    const dm = await client.rest.post(Routes.userChannels(), {
-      body: { recipient_id: recipient },
-      signal: controller.signal,
-    });
+    const dm = await withTimeout(stepMs, (signal) =>
+      client.rest.post(Routes.userChannels(), {
+        body: { recipient_id: recipient },
+        signal,
+      }),
+    );
     const manifest = {
       format: "discord-sqlite-backup-v1",
       createdAt: new Date().toISOString(),
@@ -151,23 +163,25 @@ async function performDelivery(destination, options = {}) {
             name: filename + ".manifest.json",
             contentType: "application/json",
           });
-        receipt = await client.rest.post(Routes.channelMessages(dm.id), {
-          body: {
-            content:
-              total === 1
-                ? `✅ Backup database: **${filename}**\nSnapshot đã kiểm tra toàn vẹn. Tải file .gz và manifest để phục hồi; giữ tin nhắn này.`
-                : `📦 Backup **${filename}** · phần ${i + 1}/${total}. Chỉ hoàn tất khi nhận thông báo cuối kèm manifest.`,
-            allowed_mentions: { parse: [] },
-            nonce: crypto
-              .createHash("sha256")
-              .update(recipient + ":" + filename + ":" + i)
-              .digest("hex")
-              .slice(0, 24),
-            enforce_nonce: true,
-          },
-          files,
-          signal: controller.signal,
-        });
+        receipt = await withTimeout(stepMs, (signal) =>
+          client.rest.post(Routes.channelMessages(dm.id), {
+            body: {
+              content:
+                total === 1
+                  ? `✅ Backup database: **${filename}**\nSnapshot đã kiểm tra toàn vẹn. Tải file .gz và manifest để phục hồi; giữ tin nhắn này.`
+                  : `📦 Backup **${filename}** · phần ${i + 1}/${total}. Chỉ hoàn tất khi nhận thông báo cuối kèm manifest.`,
+              allowed_mentions: { parse: [] },
+              nonce: crypto
+                .createHash("sha256")
+                .update(recipient + ":" + filename + ":" + i)
+                .digest("hex")
+                .slice(0, 24),
+              enforce_nonce: true,
+            },
+            files,
+            signal,
+          }),
+        );
         if (!receipt?.id) throw new Error("DISCORD_BACKUP_MISSING_RECEIPT");
         if (total > 1) part.messageId = receipt.id;
       }
@@ -175,26 +189,28 @@ async function performDelivery(destination, options = {}) {
       await file.close();
     }
     if (total > 1) {
-      receipt = await client.rest.post(Routes.channelMessages(dm.id), {
-        body: {
-          content: `✅ Đã gửi đủ **${total} phần** của **${filename}**. Tải toàn bộ file và manifest, đặt cùng thư mục để phục hồi. Giữ các tin nhắn này.`,
-          allowed_mentions: { parse: [] },
-          nonce: crypto
-            .createHash("sha256")
-            .update(recipient + ":" + filename + ":manifest")
-            .digest("hex")
-            .slice(0, 24),
-          enforce_nonce: true,
-        },
-        files: [
-          {
-            data: Buffer.from(JSON.stringify(manifest, null, 2)),
-            name: filename + ".manifest.json",
-            contentType: "application/json",
+      receipt = await withTimeout(stepMs, (signal) =>
+        client.rest.post(Routes.channelMessages(dm.id), {
+          body: {
+            content: `✅ Đã gửi đủ **${total} phần** của **${filename}**. Tải toàn bộ file và manifest, đặt cùng thư mục để phục hồi. Giữ các tin nhắn này.`,
+            allowed_mentions: { parse: [] },
+            nonce: crypto
+              .createHash("sha256")
+              .update(recipient + ":" + filename + ":manifest")
+              .digest("hex")
+              .slice(0, 24),
+            enforce_nonce: true,
           },
-        ],
-        signal: controller.signal,
-      });
+          files: [
+            {
+              data: Buffer.from(JSON.stringify(manifest, null, 2)),
+              name: filename + ".manifest.json",
+              contentType: "application/json",
+            },
+          ],
+          signal,
+        }),
+      );
       if (!receipt?.id) throw new Error("DISCORD_BACKUP_MISSING_RECEIPT");
     }
     status.lastSuccessAt = new Date().toISOString();
@@ -215,7 +231,6 @@ async function performDelivery(destination, options = {}) {
         : errorText(error);
     throw error;
   } finally {
-    clearTimeout(timer);
     status.running = false;
     await fs.promises.rm(compressed, { force: true }).catch(() => {});
   }

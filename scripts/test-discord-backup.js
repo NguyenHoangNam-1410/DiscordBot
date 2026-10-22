@@ -255,6 +255,40 @@ async function main() {
   noTemporaryFiles();
   groups.push("deadline aborts REST/compression and releases temporary files");
 
+  // Nhiều phần: mỗi bước dưới hạn mức nhưng tổng thời gian vượt hạn mức một bước vẫn gửi xong,
+  // và mỗi lần gọi REST dùng signal riêng (không dồn listener trên một AbortSignal).
+  const slowSnapshot = await create();
+  const warnings = [];
+  const onWarning = (warning) => warnings.push(warning.name);
+  process.on("warning", onWarning);
+  const signals = new Set();
+  const slow = transport(async (route, request) => {
+    signals.add(request.signal);
+    await new Promise((resolve) => setTimeout(resolve, 40));
+  });
+  delivery.setBackupDiscordClient(slow);
+  const slowResult = await delivery.sendDiscordBackup(
+    slowSnapshot.destination,
+    {
+      partBytes: 8 * 1024,
+      timeoutMs: 100,
+    },
+  );
+  assert(slowResult.parts >= 14, "cần đủ nhiều phần để vượt hạn mức chung");
+  assert(
+    slow.calls.length * 40 > 100,
+    "tổng thời gian vượt timeoutMs của một bước",
+  );
+  assert.equal(
+    signals.size,
+    slow.calls.length,
+    "mỗi lần gọi REST một signal riêng",
+  );
+  await new Promise((resolve) => setImmediate(resolve));
+  process.off("warning", onWarning);
+  assert(!warnings.includes("MaxListenersExceededWarning"));
+  groups.push("each upload step has its own deadline and signal");
+
   const oversized = await create();
   delivery.setBackupDiscordClient(transport());
   await assert.rejects(
@@ -338,8 +372,11 @@ async function main() {
       error: (data, message) => startupLog.push("ERR " + message),
     };
     const files = () =>
-      fs.readdirSync(backup.backupDir).filter((name) => name.endsWith(".sqlite"));
-    for (const name of files()) fs.unlinkSync(path.join(backup.backupDir, name));
+      fs
+        .readdirSync(backup.backupDir)
+        .filter((name) => name.endsWith(".sqlite"));
+    for (const name of files())
+      fs.unlinkSync(path.join(backup.backupDir, name));
     assert.equal(await backup.latestBackupAgeMs(), Infinity);
     const delayed = backup.startDatabaseBackups(quiet, {
       startupDelayMs: 120,
@@ -358,7 +395,11 @@ async function main() {
     });
     await new Promise((resolve) => setTimeout(resolve, 250));
     assert.equal(files().length, 1, "bỏ qua vì bản gần nhất còn mới");
-    assert.ok(startupLog.includes("database backup skipped: a recent snapshot already exists"));
+    assert.ok(
+      startupLog.includes(
+        "database backup skipped: a recent snapshot already exists",
+      ),
+    );
     await skipped.stop({ finalBackup: false });
     // stop() trước khi hết độ trễ hủy hẹn giờ, không tạo thêm bản nào.
     const cancelled = backup.startDatabaseBackups(quiet, {
@@ -369,7 +410,9 @@ async function main() {
     await new Promise((resolve) => setTimeout(resolve, 300));
     assert.equal(files().length, 1);
     noTemporaryFiles();
-    groups.push("startup backup is delayed, skipped when recent and cancelled by stop");
+    groups.push(
+      "startup backup is delayed, skipped when recent and cancelled by stop",
+    );
   }
   console.log(JSON.stringify({ ok: true, groups }));
 }
