@@ -61,7 +61,7 @@ function payload(
   userId,
   {
     guildId = null,
-    bannerId = "novice",
+    bannerId = null,
     receipt = null,
     showHistory = false,
     showDetails = false,
@@ -172,7 +172,14 @@ function payload(
               ". Khi có SSR khác trong pool: rate-up " +
               number(ssr.rateUp.chance * 100) +
               "%, còn lại chia đều cho SSR khác."
-            : "SSR khác chia đều phần tỷ lệ còn lại.") +
+            : "SSR khác (" +
+              ssr.entries
+                .filter((c) => c.id !== ssr.rateUp.characterId)
+                .map((c) => c.name)
+                .join(", ") +
+              ") chia đều phần tỷ lệ còn lại. Spark chỉ đổi " +
+              characters.get(ssr.rateUp.characterId).name +
+              ".") +
           " Không có pity hoặc bảo hiểm 50/50; mỗi lượt độc lập.",
       });
     }

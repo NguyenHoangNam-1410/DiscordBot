@@ -1,0 +1,12 @@
+{
+  "tool": "imagegen (do chủ bot cung cấp)",
+  "note": "Ảnh gốc original.png 2172x724; banner.jpg là bản 1500x500 dùng trong Discord.",
+  "sourceSize": [
+    2172,
+    724
+  ],
+  "deliverySize": [
+    1500,
+    500
+  ]
+}
