@@ -442,12 +442,22 @@ async function main() {
       characters.catalog.characters.pop();
     }
   });
-  test("Venance rolls rarity first, then SSR rate-up; lone SSR is always Venance", () => {
-    const b = banners.get("venance");
+  test("Rha-Kor banner rolls rarity first, then 50% SSR rate-up; the other SSR is Venance", () => {
+    const b = banners.get("rha_kor");
     assert.equal(banners.roll(b, rngPairs([0.799999, 0])).rarity, "R");
     assert.equal(banners.roll(b, rngPairs([0.8, 0])).rarity, "SR");
     assert.equal(banners.roll(b, rngPairs([0.989999, 0])).rarity, "SR");
+    assert.equal(banners.roll(b, rngPairs([0.99, 0])).id, "rha_kor");
+    assert.equal(banners.roll(b, rngPairs([0.99, 0.499999])).id, "rha_kor");
+    assert.equal(banners.roll(b, rngPairs([0.99, 0.5])).id, "venance");
     assert.equal(banners.roll(b, rngPairs([0.99, 0.99])).id, "venance");
+    assert.equal(b.limited, true);
+    assert.deepEqual(
+      banners.list().map((x) => x.id),
+      ["rha_kor", "novice"],
+      "banner limited luôn đứng trước, Venance đã đóng",
+    );
+    assert.equal(banners.get("venance").enabled, false);
     const extra = {
       ...characters.get("venance"),
       id: "offbanner_mage",
@@ -457,7 +467,7 @@ async function main() {
     try {
       const definition = structuredClone(
         require("../src/hardcore/gacha/banners.json").banners.find(
-          (b) => b.id === "venance",
+          (b) => b.id === "rha_kor",
         ),
       );
       definition.pool
@@ -466,13 +476,19 @@ async function main() {
       const future = banners.resolve(definition);
       assert.equal(
         banners.roll(future, rngPairs([0.99, 0.499999])).id,
+        "rha_kor",
+      );
+      assert.equal(
+        banners.roll(future, rngPairs([0.99, 0.5, 0])).id,
         "venance",
       );
-      assert.equal(banners.roll(future, rngPairs([0.99, 0.5, 0])).id, extra.id);
-      assert.equal(banners.roll(future, rngPairs([0.99, 0.9, 0])).id, extra.id);
       assert.equal(
-        banners.roll(future, rngPairs([0.99, 0.9, 0])).id,
+        banners.roll(future, rngPairs([0.99, 0.9, 0.99])).id,
         extra.id,
+      );
+      assert.notEqual(
+        banners.roll(future, rngPairs([0.99, 0.9, 0])).id,
+        "rha_kor",
         "No guaranteed featured after losing rate-up",
       );
       definition.pool.find((p) => p.rarity === "SSR").rateUp.chance = 2;
@@ -495,37 +511,37 @@ async function main() {
   test("Venance gem pulls cost 300 each, grant Spark on SSR too, retry once and roll back a failed x10", () => {
     gacha.open({ userId: "venance-paid" });
     levels.addDiamonds("g", "venance-paid", 3300);
-    const r = draw("venance-paid", 10, { bannerId: "venance", rng: () => 0 });
+    const r = draw("venance-paid", 10, { bannerId: "rha_kor", rng: () => 0 });
     assert.equal(r.payment.cost, 3000);
     assert.equal(r.sparkGain, 10);
-    assert.equal(p.wallet("venance-paid", "venance_spark"), 10);
+    assert.equal(p.wallet("venance-paid", "rha_kor_spark"), 10);
     const args = {
       guildId: "g",
       userId: "venance-paid",
-      bannerId: "venance",
+      bannerId: "rha_kor",
       poolVersion: 1,
       expectedRevision: p.account("venance-paid").revision,
       pulls: 1,
       operationId: "venance-SSR",
-      rng: () => 0.999,
+      rng: rngPairs([0.999, 0]),
     };
     const ssr = gacha.pull(args);
-    assert.equal(ssr.results[0].id, "venance");
-    assert.equal(p.wallet("venance-paid", "venance_spark"), 11);
+    assert.equal(ssr.results[0].id, "rha_kor");
+    assert.equal(p.wallet("venance-paid", "rha_kor_spark"), 11);
     assert(gacha.pull(args).duplicate);
-    assert.equal(p.wallet("venance-paid", "venance_spark"), 11);
+    assert.equal(p.wallet("venance-paid", "rha_kor_spark"), 11);
     assert.equal(levels.getPlayerProgression("g", "venance-paid").diamonds, 0);
     levels.addDiamonds("g", "venance-paid", 3000);
     const before = JSON.stringify([
       p.account("venance-paid"),
-      p.cards("venance-paid", "venance"),
+      p.cards("venance-paid", "rha_kor"),
       gacha.history("venance-paid"),
     ]);
     let calls = 0;
     assert.throws(
       () =>
         draw("venance-paid", 10, {
-          bannerId: "venance",
+          bannerId: "rha_kor",
           rng: () => {
             if (++calls === 2) throw Error("FORCED_DRAW_FAILURE");
             return 0.999;
@@ -537,11 +553,11 @@ async function main() {
       levels.getPlayerProgression("g", "venance-paid").diamonds,
       3000,
     );
-    assert.equal(p.wallet("venance-paid", "venance_spark"), 11);
+    assert.equal(p.wallet("venance-paid", "rha_kor_spark"), 11);
     assert.equal(
       JSON.stringify([
         p.account("venance-paid"),
-        p.cards("venance-paid", "venance"),
+        p.cards("venance-paid", "rha_kor"),
         gacha.history("venance-paid"),
       ]),
       before,
@@ -550,27 +566,27 @@ async function main() {
   test("200 Spark redemption is atomic, replay-safe, revision-checked and duplicate SSR gives cards", () => {
     const user = "venance-spark";
     gacha.open({ userId: user });
-    p.addWallet(user, "venance_spark", 199, 0);
+    p.addWallet(user, "rha_kor_spark", 199, 0);
     const args = {
       userId: user,
-      bannerId: "venance",
+      bannerId: "rha_kor",
       poolVersion: 1,
       expectedRevision: 0,
       operationId: "spark-first",
     };
     assert.throws(() => gacha.redeem(args), /INSUFFICIENT_CHARACTER_SPARK/);
-    assert.equal(p.wallet(user, "venance_spark"), 199);
-    p.addWallet(user, "venance_spark", 1, 0);
+    assert.equal(p.wallet(user, "rha_kor_spark"), 199);
+    p.addWallet(user, "rha_kor_spark", 1, 0);
     const first = gacha.redeem(args);
-    assert.equal(first.results[0].id, "venance");
+    assert.equal(first.results[0].id, "rha_kor");
     assert(!first.results[0].duplicate);
     assert(gacha.redeem(args).duplicate);
-    assert.equal(p.wallet(user, "venance_spark"), 0);
+    assert.equal(p.wallet(user, "rha_kor_spark"), 0);
     assert.throws(
       () => gacha.redeem({ ...args, operationId: "spark-stale" }),
       /STALE_CHARACTER_GACHA/,
     );
-    p.addWallet(user, "venance_spark", 200, 0);
+    p.addWallet(user, "rha_kor_spark", 200, 0);
     const grant = p.grantCharacter;
     try {
       p.grantCharacter = () => {
@@ -585,7 +601,7 @@ async function main() {
           }),
         /FORCED_REDEEM_FAILURE/,
       );
-      assert.equal(p.wallet(user, "venance_spark"), 200);
+      assert.equal(p.wallet(user, "rha_kor_spark"), 200);
       assert.equal(p.account(user).revision, 1);
     } finally {
       p.grantCharacter = grant;
@@ -597,8 +613,8 @@ async function main() {
     });
     assert(copy.results[0].duplicate);
     assert.equal(copy.results[0].cards, 50);
-    assert.equal(p.cards(user, "venance"), 50);
-    assert.equal(p.wallet(user, "venance_spark"), 0);
+    assert.equal(p.cards(user, "rha_kor"), 50);
+    assert.equal(p.wallet(user, "rha_kor_spark"), 0);
     assert.throws(
       () =>
         gacha.redeem({
@@ -610,23 +626,27 @@ async function main() {
       /CHARACTER_BANNER_CLOSED/,
     );
   });
-  test("Venance graphic attaches from the per-banner folder and Spark controls fit Discord", () => {
+  test("Rha-Kor graphic attaches from the per-banner folder and Spark controls fit Discord", () => {
     const screen = ui.payload("venance-paid", {
       guildId: "g",
-      bannerId: "venance",
+      bannerId: "rha_kor",
     });
     limits(screen);
     assert.equal(
       screen.embeds[0].data.image.url,
-      "attachment://venance-banner.jpg",
+      "attachment://rha_kor-banner.jpg",
     );
-    assert.equal(screen.files[0].name, "venance-banner.jpg");
+    assert.equal(screen.files[0].name, "rha_kor-banner.jpg");
     assert(require("node:fs").existsSync(screen.files[0].attachment));
-    assert.equal(screen.embeds[0].data.title, "Venance [SSR]");
-    assert(screen.embeds[0].data.description.includes("Astral Armament"));
+    assert.equal(screen.embeds[0].data.title, "Rha-Kor [SSR]");
     assert(
       screen.embeds[0].data.description.includes(
-        require("../src/hardcore/shared/icons").SKILL_ICONS.venance,
+        require("../src/hardcore/engine/stats").CLASSES.rha_kor.skill,
+      ),
+    );
+    assert(
+      screen.embeds[0].data.description.includes(
+        require("../src/hardcore/shared/icons").SKILL_ICONS.rha_kor,
       ),
     );
     assert(screen.embeds[0].data.description.includes("**×1:** 300"));
@@ -641,12 +661,13 @@ async function main() {
     );
     const details = ui.payload("venance-paid", {
       guildId: "g",
-      bannerId: "venance",
+      bannerId: "rha_kor",
       showDetails: true,
     });
     limits(details);
     assert(JSON.stringify(details).includes("SSR 1%"));
-    assert(JSON.stringify(details).includes("Venance 100%"));
+    assert(JSON.stringify(details).includes("Rha-Kor 50%"));
+    assert(JSON.stringify(details).includes("Spark chỉ đổi Rha-Kor"));
     assert(JSON.stringify(details).includes("/sinhton cuahang"));
     assert.equal(details.files.length, 0);
     assert.equal(details.embeds[0].data.image, undefined);
@@ -661,7 +682,7 @@ async function main() {
     limits(
       ui.payload("venance-spark", {
         guildId: "g",
-        bannerId: "venance",
+        bannerId: "rha_kor",
         receipt: {
           kind: "spark",
           sparkSpent: 200,
@@ -864,6 +885,19 @@ async function main() {
     editReply: async (x) => (opened = x),
   });
   limits(opened);
+  // Banner limited đứng đầu và là màn hình mặc định; banner Khởi Hành vẫn chọn được ngay sau đó.
+  assert.equal(opened.embeds[0].data.title, "Rha-Kor [SSR]");
+  const selector = opened.components
+    .flatMap((x) => x.toJSON().components)
+    .find((x) => x.custom_id.endsWith(":banner"));
+  assert.deepEqual(
+    selector.options.map((o) => o.value),
+    ["rha_kor", "novice"],
+  );
+  assert.equal(selector.options[0].default, true);
+  const defaultScreen = opened;
+  opened = ui.payload("ui-user", { guildId: "g", bannerId: "novice" });
+  limits(defaultScreen);
   assert.equal(
     (deferredOptions?.flags || 0) &
       require("discord.js").MessageFlags.Ephemeral,
@@ -910,10 +944,10 @@ async function main() {
   );
   const storeUi = require("../src/hardcore/inventory/view");
   gacha.open({ userId: "spark-ui" });
-  p.addWallet("spark-ui", "venance_spark", 200, 0);
+  p.addWallet("spark-ui", "rha_kor_spark", 200, 0);
   const gachaScreen = ui.payload("spark-ui", {
     guildId: "g",
-    bannerId: "venance",
+    bannerId: "rha_kor",
   });
   const controls = gachaScreen.components.flatMap((r) => r.toJSON().components);
   assert(!controls.some((c) => c.custom_id.endsWith(":redeem")));
@@ -945,7 +979,7 @@ async function main() {
   };
   const beforeView = JSON.stringify([
     p.account("spark-ui"),
-    p.wallet("spark-ui", "venance_spark"),
+    p.wallet("spark-ui", "rha_kor_spark"),
     levels.getPlayerProgression("g", "spark-ui").diamonds,
   ]);
   await ui.handle({
@@ -966,7 +1000,7 @@ async function main() {
   assert.equal(
     JSON.stringify([
       p.account("spark-ui"),
-      p.wallet("spark-ui", "venance_spark"),
+      p.wallet("spark-ui", "rha_kor_spark"),
       levels.getPlayerProgression("g", "spark-ui").diamonds,
     ]),
     beforeView,
@@ -975,13 +1009,13 @@ async function main() {
   await ui.handle(interactionForSpark);
   limits(sparkResponse);
   assert(sparkResponse.embeds[0].data.title.includes("CỬA HÀNG"));
-  assert.equal(p.wallet("spark-ui", "venance_spark"), 200);
+  assert.equal(p.wallet("spark-ui", "rha_kor_spark"), 200);
   await ui.handle({
     ...interactionForSpark,
     customId: shopId.replace(/shop$/, "redeem"),
   });
   assert.equal(
-    p.wallet("spark-ui", "venance_spark"),
+    p.wallet("spark-ui", "rha_kor_spark"),
     200,
     "Old gacha redeem buttons only redirect",
   );
@@ -989,26 +1023,26 @@ async function main() {
     .flatMap((r) => r.toJSON().components)
     .find((c) => c.custom_id.endsWith(":spark"));
   assert.equal(menu.options.length, 1);
-  assert.equal(menu.options[0].value, "venance@1");
+  assert.equal(menu.options[0].value, "rha_kor@1");
   const sparkInteraction = {
     ...interactionForSpark,
     customId: menu.custom_id,
-    values: ["venance@1"],
+    values: ["rha_kor@1"],
   };
   await storeUi.handleStore({
     ...sparkInteraction,
     user: { id: "wrong-owner" },
   });
   assert(denial);
-  assert.equal(p.wallet("spark-ui", "venance_spark"), 200);
+  assert.equal(p.wallet("spark-ui", "rha_kor_spark"), 200);
   await storeUi.handleStore(sparkInteraction);
   assert.equal(ack, 1);
   limits(sparkResponse);
-  assert.equal(p.wallet("spark-ui", "venance_spark"), 0);
+  assert.equal(p.wallet("spark-ui", "rha_kor_spark"), 0);
   assert(sparkResponse.content.includes("Đã đổi 200 Spark"));
   await storeUi.handleStore(sparkInteraction);
-  assert.equal(p.wallet("spark-ui", "venance_spark"), 0);
-  assert.equal(p.cards("spark-ui", "venance"), 0);
+  assert.equal(p.wallet("spark-ui", "rha_kor_spark"), 0);
+  assert.equal(p.cards("spark-ui", "rha_kor"), 0);
   await storeUi.handleStore({ ...sparkInteraction, id: "spark-ui-stale" });
   assert(sparkResponse.content.includes("Bảng đã thay đổi"));
   await storeUi.handleStore({
@@ -1019,7 +1053,7 @@ async function main() {
   assert(sparkResponse.content.includes("Chỉ đổi được nhân vật rate-up"));
   const getBanner = banners.get;
   try {
-    const b = structuredClone(banners.get("venance"));
+    const b = structuredClone(banners.get("rha_kor"));
     b.id = "not_rate_up";
     b.groups.forEach((g) => {
       delete g.rateUp;
@@ -1075,7 +1109,7 @@ async function main() {
     update: async (x) => (returned = x),
   });
   limits(returned);
-  assert.equal(returned.embeds[0].data.title, "Khởi Hành");
+  assert.equal(returned.embeds[0].data.title, "Rha-Kor [SSR]");
   console.log(groups + " character gacha groups passed; no simulations.");
 }
 main()

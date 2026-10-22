@@ -121,7 +121,11 @@ for (const b of definitions.banners) {
   registry.set(b.id, freeze(resolve(b)));
 }
 const get = (id) => registry.get(id) || null;
-const list = () => [...registry.values()].filter((b) => b.enabled);
+// Banner giới hạn (limited) luôn đứng trước trong danh sách chọn; còn lại giữ thứ tự khai báo.
+const list = () =>
+  [...registry.values()]
+    .filter((b) => b.enabled)
+    .sort((a, b) => Number(Boolean(b.limited)) - Number(Boolean(a.limited)));
 const random = () => crypto.randomInt(2 ** 32) / 2 ** 32;
 function unit(rng) {
   const n = rng();

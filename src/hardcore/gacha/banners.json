@@ -37,11 +37,65 @@
       ]
     },
     {
+      "id": "rha_kor",
+      "version": 1,
+      "name": "Rha-Kor · The Stone Sentinel",
+      "description": "SSR Rha-Kor · Lính canh đá cổ luật. Mỗi lượt nhận 1 Spark; 200 Spark đổi Rha-Kor.",
+      "enabled": true,
+      "limited": true,
+      "graphic": "rha_kor/banner.jpg",
+      "payment": {
+        "kind": "gems",
+        "currencyId": "gems",
+        "unitCost": 300
+      },
+      "spark": {
+        "currencyId": "rha_kor_spark",
+        "perPull": 1,
+        "characterId": "rha_kor"
+      },
+      "pool": [
+        {
+          "kind": "item",
+          "rarity": "R",
+          "weight": 80,
+          "source": "survival_r"
+        },
+        {
+          "kind": "character",
+          "rarity": "SR",
+          "weight": 19,
+          "characterIds": [
+            "amazon",
+            "barbarian",
+            "assassin",
+            "sorceress",
+            "druid",
+            "necromancer",
+            "paladin"
+          ]
+        },
+        {
+          "kind": "character",
+          "rarity": "SSR",
+          "weight": 1,
+          "characterIds": [
+            "rha_kor",
+            "venance"
+          ],
+          "rateUp": {
+            "characterId": "rha_kor",
+            "chance": 0.5
+          }
+        }
+      ]
+    },
+    {
       "id": "venance",
       "version": 1,
       "name": "Venance · Astral Armament",
       "description": "SSR Venance · Pháp sư tinh giới. Mỗi lượt nhận 1 Spark; 200 Spark đổi Venance.",
-      "enabled": true,
+      "enabled": false,
       "graphic": "venance/banner.jpg",
       "payment": {
         "kind": "gems",
@@ -86,7 +140,8 @@
             "chance": 0.5
           }
         }
-      ]
+      ],
+      "limited": true
     }
   ]
 }

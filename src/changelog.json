@@ -1,5 +1,18 @@
 [
   {
+    "id": "c28ada97-c85e-469b-92a0-28185fcf9aee",
+    "updatedAt": "2026-10-22T11:11:49.426Z",
+    "auditedAt": "2026-10-22T11:11:49.426Z",
+    "title": "Banner Rha-Kor thay Venance",
+    "type": "feature",
+    "scope": "survival",
+    "changes": [
+      "Mở banner giới hạn Rha-Kor · The Stone Sentinel (300 gem/lượt, 1 Spark/lượt, 200 Spark đổi Rha-Kor), thay banner Venance.",
+      "Tỷ lệ giữ nguyên: R 80% · SR 19% · SSR 1%. Khi ra SSR: 50% là Rha-Kor, 50% là SSR khác (Venance); không có pity.",
+      "Danh sách chọn banner đưa banner giới hạn lên trước; Rha-Kor dùng icon riêng cho nút Tấn công, Phòng thủ và Skill."
+    ]
+  },
+  {
     "id": "aa6c98fa-bcbc-4c8f-a953-ee8d5161037e",
     "updatedAt": "2026-10-22T11:04:07.307Z",
     "auditedAt": "2026-10-22T11:04:07.307Z",

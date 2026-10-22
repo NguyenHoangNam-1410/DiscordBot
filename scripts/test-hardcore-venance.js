@@ -182,7 +182,7 @@ try {
     assert.equal(progress.cards("v", "venance"), 50);
     assert(
       require("../src/hardcore/gacha/banners.json").banners?.some(
-        (b) => b.id === "venance" && b.enabled,
+        (b) => b.id === "rha_kor" && b.enabled && b.limited,
       ),
     );
   });
