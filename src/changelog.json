@@ -1,5 +1,17 @@
 [
   {
+    "id": "dd469c89-185f-4b3d-a24c-12ea08d8479b",
+    "updatedAt": "2026-10-22T06:01:10.456Z",
+    "auditedAt": "2026-10-22T06:01:10.456Z",
+    "title": "Lệnh /embed đổi link YouTube, Facebook",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Thêm /embed: dán link video YouTube hoặc Facebook, bot trả lại link dạng Discord hiển thị khung xem trước.",
+      "Link YouTube được chuẩn hóa (bỏ tham số theo dõi, giữ mốc thời gian); link Facebook được đổi sang dịch vụ embed."
+    ]
+  },
+  {
     "id": "cb2c9926-dec8-4fe7-b886-0be724398396",
     "updatedAt": "2026-10-22T00:57:46.384Z",
     "auditedAt": "2026-10-22T00:57:46.384Z",
