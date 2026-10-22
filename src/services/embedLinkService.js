@@ -106,4 +106,83 @@ function convertLink(input, env = null) {
   return { ok: false, error: "UNSUPPORTED_HOST" };
 }
 
-module.exports = { convertLink, embedHost, DEFAULT_FACEBOOK_EMBED_HOST };
+// ---- Tự nhận diện trong kênh ---------------------------------------------------
+// Chỉ xử lý Facebook: Discord đã tự nhúng YouTube nên trả lời thêm sẽ thành tin trùng lặp.
+const AUTO_KEY = "embed_auto";
+const MAX_AUTO_LINKS = 3;
+
+function isAutoEnabled(guildId) {
+  const row = require("../db")
+    .db.prepare(
+      "SELECT setting_value FROM game_settings WHERE guild_id=? AND setting_key=?",
+    )
+    .get(String(guildId), AUTO_KEY);
+  return row ? Number(row.setting_value) !== 0 : true;
+}
+
+function setAutoEnabled(guildId, enabled, adminId) {
+  require("../db")
+    .db.prepare(
+      `INSERT INTO game_settings(guild_id,setting_key,setting_value,updated_by,updated_at)
+      VALUES(?,?,?,?,?) ON CONFLICT(guild_id,setting_key) DO UPDATE SET
+      setting_value=excluded.setting_value,updated_by=excluded.updated_by,updated_at=excluded.updated_at`,
+    )
+    .run(
+      String(guildId),
+      AUTO_KEY,
+      enabled ? 1 : 0,
+      String(adminId),
+      Date.now(),
+    );
+}
+
+// Link bọc trong <...> là cố ý tắt embed nên bỏ qua.
+function extractFacebookLinks(content) {
+  const found = [];
+  for (const match of String(content || "").matchAll(
+    /(?<!<)https?:\/\/[^\s<>]+/gi,
+  )) {
+    const result = convertLink(match[0].replace(/[).,;!?]+$/, ""));
+    if (result.ok && result.kind === "facebook" && !found.includes(result.url))
+      found.push(result.url);
+    if (found.length >= MAX_AUTO_LINKS) break;
+  }
+  return found;
+}
+
+async function handleEmbedMessage(message) {
+  if (!message.guildId || message.author?.bot || message.webhookId)
+    return false;
+  const links = extractFacebookLinks(message.content);
+  if (!links.length || !isAutoEnabled(message.guildId)) return false;
+  // Chỉ trả lời ở kênh bot có quyền: xem, gửi (hoặc gửi trong thread), đọc lịch sử để reply, nhúng link.
+  const { PermissionFlagsBits: Flags } = require("discord.js");
+  const perms = message.channel?.permissionsFor?.(message.guild?.members?.me);
+  const send = message.channel?.isThread?.()
+    ? Flags.SendMessagesInThreads
+    : Flags.SendMessages;
+  if (
+    !perms?.has([
+      Flags.ViewChannel,
+      send,
+      Flags.ReadMessageHistory,
+      Flags.EmbedLinks,
+    ])
+  )
+    return false;
+  await message.reply({
+    content: links.join("\n"),
+    allowedMentions: { parse: [], repliedUser: false },
+  });
+  return true;
+}
+
+module.exports = {
+  convertLink,
+  embedHost,
+  DEFAULT_FACEBOOK_EMBED_HOST,
+  isAutoEnabled,
+  setAutoEnabled,
+  extractFacebookLinks,
+  handleEmbedMessage,
+};
