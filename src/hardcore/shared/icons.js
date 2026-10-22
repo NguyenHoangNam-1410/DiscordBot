@@ -391,7 +391,7 @@ const SKILL_ICONS = Object.fromEntries(
     druid: "skill_windgeneration",
     necromancer: "skill_totemward",
     paladin: "skill_devineshield",
-    rha_kor: "skill_rha_kor_carve",
+    rha_kor: "skill_rha_kor",
   }).map(([key, name]) => [key, icon(name, "✨")]),
 );
 Object.defineProperty(SKILL_ICONS, "venance", {

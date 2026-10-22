@@ -1,5 +1,16 @@
 [
   {
+    "id": "aa6c98fa-bcbc-4c8f-a953-ee8d5161037e",
+    "updatedAt": "2026-10-22T11:04:07.307Z",
+    "auditedAt": "2026-10-22T11:04:07.307Z",
+    "title": "Rha-Kor dùng icon kỹ năng mới",
+    "type": "improvement",
+    "scope": "survival",
+    "changes": [
+      "Skill và log Cổ Luật của Rha-Kor dùng icon kỹ năng riêng thay cho ký hiệu tạm."
+    ]
+  },
+  {
     "id": "98295989-6f16-4b95-86bb-080b96903652",
     "updatedAt": "2026-10-22T06:04:24.046Z",
     "auditedAt": "2026-10-22T06:04:24.046Z",

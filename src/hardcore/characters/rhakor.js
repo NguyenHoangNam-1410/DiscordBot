@@ -1,7 +1,7 @@
 "use strict";
 // Rha-Kor — Kẻ Khắc Chiến Luật. Skill mở Cổ Luật; action kế tiếp (Attack/Defense/Potion/Skill) quyết định luật.
 // Mọi trạng thái nằm trong combat hiện tại (encounter.rhaKor), không mang sang phòng sau.
-const { E, soulIcon } = require("../shared/icons");
+const { E, SKILL_ICONS, soulIcon } = require("../shared/icons");
 const enabled = (s) => s.classKey === "rha_kor";
 const level = (s) => (enabled(s) ? require("./souls").level(s) : 0);
 const awakened = (s) => require("../awakening").active(s);
@@ -187,7 +187,7 @@ function gainMana(s, amount) {
   );
   return s.mana - before;
 }
-const icon = () => soulIcon("rha_kor", 0);
+const icon = () => SKILL_ICONS.rha_kor;
 function setShred(f, rate, actions) {
   if (f.shred && f.shred.rate > rate) {
     f.shred.turns = Math.max(f.shred.turns, actions + 1);
