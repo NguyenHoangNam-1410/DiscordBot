@@ -1,5 +1,17 @@
 [
   {
+    "id": "cb2c9926-dec8-4fe7-b886-0be724398396",
+    "updatedAt": "2026-10-22T00:57:46.384Z",
+    "auditedAt": "2026-10-22T00:57:46.384Z",
+    "title": "Sửa lỗi gửi backup database qua Discord",
+    "type": "fix",
+    "scope": "system",
+    "changes": [
+      "Backup lớn nhiều phần không còn bị hủy giữa chừng do hết thời gian chung; mỗi bước (nén, mở DM, từng phần file) có thời gian chờ riêng.",
+      "Gửi lại khi lỗi giãn dần thay vì gửi lại mỗi 5 phút, và dừng sau 6 lần cho mỗi bản backup."
+    ]
+  },
+  {
     "id": "3cf7e45c-257a-4da1-975a-a939cbc069a1",
     "updatedAt": "2026-10-21T10:00:01.982Z",
     "auditedAt": "2026-10-21T10:00:01.982Z",
