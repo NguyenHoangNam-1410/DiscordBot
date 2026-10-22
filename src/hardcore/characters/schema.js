@@ -1,4 +1,21 @@
 "use strict";
+// Spark là tiền tệ gắn với tài khoản, dùng chung giữa các banner: gộp số dư theo banner cũ vào ví "spark".
+const SHARED_SPARK = "spark";
+const LEGACY_SPARK = ["venance_spark", "rha_kor_spark"];
+function mergeSparkWallets(db) {
+  const marks = LEGACY_SPARK.map(() => "?").join(",");
+  db.prepare(
+    `INSERT INTO hardcore_character_wallets(user_id,currency_id,quantity,updated_at)
+    SELECT user_id,'${SHARED_SPARK}',SUM(quantity),MAX(updated_at) FROM hardcore_character_wallets
+    WHERE currency_id IN (${marks}) GROUP BY user_id
+    ON CONFLICT(user_id,currency_id) DO UPDATE SET
+      quantity=quantity+excluded.quantity,updated_at=MAX(updated_at,excluded.updated_at)`,
+  ).run(...LEGACY_SPARK);
+  db.prepare(
+    `DELETE FROM hardcore_character_wallets WHERE currency_id IN (${marks})`,
+  ).run(...LEGACY_SPARK);
+}
+
 module.exports = (db, migrate) => {
   migrate(44, "hardcore character accounts and versioned gacha", () => {
     db.exec(`
@@ -41,4 +58,10 @@ module.exports = (db, migrate) => {
       PRIMARY KEY(user_id,class_key,rarity));`);
     require("./cardMigration")(db);
   });
+
+  migrate(54, "shared account-wide Spark wallet across banners", () => {
+    mergeSparkWallets(db);
+  });
 };
+module.exports.mergeSparkWallets = mergeSparkWallets;
+module.exports.SHARED_SPARK = SHARED_SPARK;

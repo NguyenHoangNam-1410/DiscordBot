@@ -514,7 +514,7 @@ async function main() {
     const r = draw("venance-paid", 10, { bannerId: "rha_kor", rng: () => 0 });
     assert.equal(r.payment.cost, 3000);
     assert.equal(r.sparkGain, 10);
-    assert.equal(p.wallet("venance-paid", "rha_kor_spark"), 10);
+    assert.equal(p.wallet("venance-paid", "spark"), 10);
     const args = {
       guildId: "g",
       userId: "venance-paid",
@@ -527,9 +527,9 @@ async function main() {
     };
     const ssr = gacha.pull(args);
     assert.equal(ssr.results[0].id, "rha_kor");
-    assert.equal(p.wallet("venance-paid", "rha_kor_spark"), 11);
+    assert.equal(p.wallet("venance-paid", "spark"), 11);
     assert(gacha.pull(args).duplicate);
-    assert.equal(p.wallet("venance-paid", "rha_kor_spark"), 11);
+    assert.equal(p.wallet("venance-paid", "spark"), 11);
     assert.equal(levels.getPlayerProgression("g", "venance-paid").diamonds, 0);
     levels.addDiamonds("g", "venance-paid", 3000);
     const before = JSON.stringify([
@@ -553,7 +553,7 @@ async function main() {
       levels.getPlayerProgression("g", "venance-paid").diamonds,
       3000,
     );
-    assert.equal(p.wallet("venance-paid", "rha_kor_spark"), 11);
+    assert.equal(p.wallet("venance-paid", "spark"), 11);
     assert.equal(
       JSON.stringify([
         p.account("venance-paid"),
@@ -566,7 +566,7 @@ async function main() {
   test("200 Spark redemption is atomic, replay-safe, revision-checked and duplicate SSR gives cards", () => {
     const user = "venance-spark";
     gacha.open({ userId: user });
-    p.addWallet(user, "rha_kor_spark", 199, 0);
+    p.addWallet(user, "spark", 199, 0);
     const args = {
       userId: user,
       bannerId: "rha_kor",
@@ -575,18 +575,18 @@ async function main() {
       operationId: "spark-first",
     };
     assert.throws(() => gacha.redeem(args), /INSUFFICIENT_CHARACTER_SPARK/);
-    assert.equal(p.wallet(user, "rha_kor_spark"), 199);
-    p.addWallet(user, "rha_kor_spark", 1, 0);
+    assert.equal(p.wallet(user, "spark"), 199);
+    p.addWallet(user, "spark", 1, 0);
     const first = gacha.redeem(args);
     assert.equal(first.results[0].id, "rha_kor");
     assert(!first.results[0].duplicate);
     assert(gacha.redeem(args).duplicate);
-    assert.equal(p.wallet(user, "rha_kor_spark"), 0);
+    assert.equal(p.wallet(user, "spark"), 0);
     assert.throws(
       () => gacha.redeem({ ...args, operationId: "spark-stale" }),
       /STALE_CHARACTER_GACHA/,
     );
-    p.addWallet(user, "rha_kor_spark", 200, 0);
+    p.addWallet(user, "spark", 200, 0);
     const grant = p.grantCharacter;
     try {
       p.grantCharacter = () => {
@@ -601,7 +601,7 @@ async function main() {
           }),
         /FORCED_REDEEM_FAILURE/,
       );
-      assert.equal(p.wallet(user, "rha_kor_spark"), 200);
+      assert.equal(p.wallet(user, "spark"), 200);
       assert.equal(p.account(user).revision, 1);
     } finally {
       p.grantCharacter = grant;
@@ -614,7 +614,7 @@ async function main() {
     assert(copy.results[0].duplicate);
     assert.equal(copy.results[0].cards, 50);
     assert.equal(p.cards(user, "rha_kor"), 50);
-    assert.equal(p.wallet(user, "rha_kor_spark"), 0);
+    assert.equal(p.wallet(user, "spark"), 0);
     assert.throws(
       () =>
         gacha.redeem({
@@ -705,6 +705,50 @@ async function main() {
         .length,
       0,
     );
+  });
+  test("Spark là ví theo tài khoản dùng chung giữa các banner; số dư banner cũ được gộp", () => {
+    const schema = require("../src/hardcore/characters/schema");
+    assert.equal(schema.SHARED_SPARK, "spark");
+    assert.equal(banners.get("rha_kor").spark.currencyId, "spark");
+    assert.equal(banners.get("venance").spark.currencyId, "spark");
+    const mem = new Database(":memory:");
+    mem.exec(
+      "CREATE TABLE hardcore_character_wallets(user_id TEXT NOT NULL,currency_id TEXT NOT NULL,quantity INTEGER NOT NULL,updated_at INTEGER NOT NULL,PRIMARY KEY(user_id,currency_id))",
+    );
+    const put = mem.prepare(
+      "INSERT INTO hardcore_character_wallets VALUES(?,?,?,?)",
+    );
+    put.run("a", "venance_spark", 120, 10);
+    put.run("a", "rha_kor_spark", 30, 20);
+    put.run("a", "spark", 5, 15);
+    put.run("b", "venance_spark", 200, 10);
+    put.run("c", "novice_ticket", 7, 10);
+    schema.mergeSparkWallets(mem);
+    const wallet = (user, currency) =>
+      mem
+        .prepare(
+          "SELECT quantity FROM hardcore_character_wallets WHERE user_id=? AND currency_id=?",
+        )
+        .get(user, currency)?.quantity;
+    assert.equal(wallet("a", "spark"), 155);
+    assert.equal(wallet("b", "spark"), 200);
+    assert.equal(wallet("a", "venance_spark"), undefined);
+    assert.equal(wallet("a", "rha_kor_spark"), undefined);
+    assert.equal(wallet("c", "novice_ticket"), 7, "ví khác không bị đụng");
+    schema.mergeSparkWallets(mem); // chạy lại không nhân đôi
+    assert.equal(wallet("a", "spark"), 155);
+    // Số dư Spark đã gộp đổi được nhân vật rate-up của banner hiện hành
+    gacha.open({ userId: "shared-spark" });
+    p.addWallet("shared-spark", "spark", 200, 0);
+    const redeemed = gacha.redeem({
+      userId: "shared-spark",
+      bannerId: "rha_kor",
+      poolVersion: 1,
+      expectedRevision: p.account("shared-spark").revision,
+      operationId: "shared-spark-redeem",
+    });
+    assert.equal(redeemed.results[0].id, "rha_kor");
+    assert.equal(p.wallet("shared-spark", "spark"), 0);
   });
   test("SQLite snapshot/backup includes accounts, claims, wallets, cards and exact draw results", () => {
     const copy = new Database(db.serialize());
@@ -944,7 +988,7 @@ async function main() {
   );
   const storeUi = require("../src/hardcore/inventory/view");
   gacha.open({ userId: "spark-ui" });
-  p.addWallet("spark-ui", "rha_kor_spark", 200, 0);
+  p.addWallet("spark-ui", "spark", 200, 0);
   const gachaScreen = ui.payload("spark-ui", {
     guildId: "g",
     bannerId: "rha_kor",
@@ -979,7 +1023,7 @@ async function main() {
   };
   const beforeView = JSON.stringify([
     p.account("spark-ui"),
-    p.wallet("spark-ui", "rha_kor_spark"),
+    p.wallet("spark-ui", "spark"),
     levels.getPlayerProgression("g", "spark-ui").diamonds,
   ]);
   await ui.handle({
@@ -1000,7 +1044,7 @@ async function main() {
   assert.equal(
     JSON.stringify([
       p.account("spark-ui"),
-      p.wallet("spark-ui", "rha_kor_spark"),
+      p.wallet("spark-ui", "spark"),
       levels.getPlayerProgression("g", "spark-ui").diamonds,
     ]),
     beforeView,
@@ -1009,13 +1053,13 @@ async function main() {
   await ui.handle(interactionForSpark);
   limits(sparkResponse);
   assert(sparkResponse.embeds[0].data.title.includes("CỬA HÀNG"));
-  assert.equal(p.wallet("spark-ui", "rha_kor_spark"), 200);
+  assert.equal(p.wallet("spark-ui", "spark"), 200);
   await ui.handle({
     ...interactionForSpark,
     customId: shopId.replace(/shop$/, "redeem"),
   });
   assert.equal(
-    p.wallet("spark-ui", "rha_kor_spark"),
+    p.wallet("spark-ui", "spark"),
     200,
     "Old gacha redeem buttons only redirect",
   );
@@ -1034,14 +1078,14 @@ async function main() {
     user: { id: "wrong-owner" },
   });
   assert(denial);
-  assert.equal(p.wallet("spark-ui", "rha_kor_spark"), 200);
+  assert.equal(p.wallet("spark-ui", "spark"), 200);
   await storeUi.handleStore(sparkInteraction);
   assert.equal(ack, 1);
   limits(sparkResponse);
-  assert.equal(p.wallet("spark-ui", "rha_kor_spark"), 0);
+  assert.equal(p.wallet("spark-ui", "spark"), 0);
   assert(sparkResponse.content.includes("Đã đổi 200 Spark"));
   await storeUi.handleStore(sparkInteraction);
-  assert.equal(p.wallet("spark-ui", "rha_kor_spark"), 0);
+  assert.equal(p.wallet("spark-ui", "spark"), 0);
   assert.equal(p.cards("spark-ui", "rha_kor"), 0);
   await storeUi.handleStore({ ...sparkInteraction, id: "spark-ui-stale" });
   assert(sparkResponse.content.includes("Bảng đã thay đổi"));

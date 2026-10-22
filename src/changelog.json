@@ -1,5 +1,17 @@
 [
   {
+    "id": "c8458fb2-92a0-4421-b513-7e4e324d83c1",
+    "updatedAt": "2026-10-22T11:13:52.572Z",
+    "auditedAt": "2026-10-22T11:13:52.572Z",
+    "title": "Spark dùng chung giữa các banner",
+    "type": "improvement",
+    "scope": "survival",
+    "changes": [
+      "Spark là tiền tệ gắn với tài khoản, dùng chung cho mọi banner thay vì tách riêng từng banner.",
+      "Số Spark Venance và Rha-Kor đã tích lũy được gộp vào một ví Spark, đổi được nhân vật rate-up của banner đang mở."
+    ]
+  },
+  {
     "id": "c28ada97-c85e-469b-92a0-28185fcf9aee",
     "updatedAt": "2026-10-22T11:11:49.426Z",
     "auditedAt": "2026-10-22T11:11:49.426Z",
