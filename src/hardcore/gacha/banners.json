@@ -50,7 +50,7 @@
         "unitCost": 300
       },
       "spark": {
-        "currencyId": "rha_kor_spark",
+        "currencyId": "spark",
         "perPull": 1,
         "characterId": "rha_kor"
       },
@@ -103,7 +103,7 @@
         "unitCost": 300
       },
       "spark": {
-        "currencyId": "venance_spark",
+        "currencyId": "spark",
         "perPull": 1,
         "characterId": "venance"
       },
