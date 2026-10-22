@@ -308,4 +308,37 @@ test("Trạng thái hợp lệ sau lưu/đọc; dữ liệu hỏng bị từ ch�
   beta.activate(bad);
   assert.throws(() => beta.validate(bad), /INVALID_BETA_STATE/);
 });
+test("Nút trận Tấn công/Phòng thủ/Skill dùng icon attack_rha_kor, defend_rha_kor, skill_rha_kor", () => {
+  const { setApplicationEmojisForTest } = require("../src/utils/appEmoji");
+  const view = require("../src/hardcore/ui");
+  const emojiOf = (state) =>
+    Object.fromEntries(
+      view
+        .rows("sid", state)
+        .flatMap((row) => row.toJSON().components)
+        .filter((c) => ["attack", "defend", "skill"].includes(c.custom_id.split(":").pop()))
+        .map((c) => [c.custom_id.split(":").pop(), c.emoji?.id]),
+    );
+  setApplicationEmojisForTest([
+    ["attack_rha_kor", "111111111111111111"],
+    ["defend_rha_kor", "222222222222222222"],
+    ["skill_rha_kor", "333333333333333333"],
+  ]);
+  try {
+    assert.deepEqual(emojiOf(fresh()), {
+      attack: "111111111111111111",
+      defend: "222222222222222222",
+      skill: "333333333333333333",
+    });
+    // Class khác không bị ảnh hưởng: dùng icon chung
+    const other = stats.createState("barbarian", 10000, { gameplayVersion: 3 });
+    Object.assign(other, { floor: 3, cleared: 2, phase: "encounter", encounter: fixture() });
+    stats.recompute(other);
+    const icons = emojiOf(other);
+    assert.notEqual(icons.attack, "111111111111111111");
+    assert.notEqual(icons.defend, "222222222222222222");
+  } finally {
+    setApplicationEmojisForTest([]);
+  }
+});
 console.log("rha-kor ok (" + count + ")");
