@@ -3,6 +3,7 @@ const COMMAND_FILES = Object.freeze([
   "trogiup",
   "huongdan",
   "changelog",
+  "embed",
   "baucua",
   "taixiu",
   "chinchiro",
