@@ -1,5 +1,17 @@
 [
   {
+    "id": "98295989-6f16-4b95-86bb-080b96903652",
+    "updatedAt": "2026-10-22T06:04:24.046Z",
+    "auditedAt": "2026-10-22T06:04:24.046Z",
+    "title": "Bot tự đổi link Facebook trong mọi kênh",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Khi ai đó dán link video Facebook, bot tự trả lời link dạng xem trước được ở mọi kênh bot có quyền gửi tin nhắn và nhúng link.",
+      "Admin bật/tắt bằng /embed tudong; /embed chuyendoi dùng để đổi tay một link YouTube hoặc Facebook. Link bọc trong <...> được bỏ qua."
+    ]
+  },
+  {
     "id": "dd469c89-185f-4b3d-a24c-12ea08d8479b",
     "updatedAt": "2026-10-22T06:01:10.456Z",
     "auditedAt": "2026-10-22T06:01:10.456Z",
