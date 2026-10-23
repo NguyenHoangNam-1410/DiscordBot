@@ -1,5 +1,16 @@
 [
   {
+    "id": "d36474d9-18d7-44a5-a5b4-5286f48a6ef1",
+    "updatedAt": "2026-10-23T11:29:51.758Z",
+    "auditedAt": "2026-10-23T11:29:51.758Z",
+    "title": "Tự dọn file backup dở dang",
+    "type": "maintenance",
+    "scope": "system",
+    "changes": [
+      "Bot tự xóa các file sao lưu dở dang hoặc file nén tạm gửi Discord bị bỏ lại (quá 1 giờ) để thư mục backup không làm đầy ổ đĩa."
+    ]
+  },
+  {
     "id": "c42d23af-6f7c-4bd6-a6d5-ba88cac7449d",
     "updatedAt": "2026-10-23T11:25:47.212Z",
     "auditedAt": "2026-10-23T11:25:47.212Z",

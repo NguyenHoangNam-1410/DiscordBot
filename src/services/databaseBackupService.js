@@ -47,6 +47,34 @@ function backupName(now = new Date()) {
 }
 const BACKUP_FILE =
   /^game-bot-\d{4}-\d{2}-\d{2}T\d{2}-\d{2}-\d{2}-\d{3}Z(?:-[a-f0-9]{8})?\.sqlite$/;
+// File dở dang do bot bị tắt/crash giữa lúc sao lưu (`.sqlite.partial`, `-journal`…) hoặc file nén tạm gửi Discord bị bỏ lại
+// (`.sqlite.discord-*.gz`). Không nằm trong giới hạn số bản nên trước đây tích tụ vô hạn và làm đầy ổ đĩa.
+const STALE_BACKUP_FILE =
+  /^game-bot-[\w-]+\.sqlite(?:\.partial(?:-(?:wal|shm|journal))?|\.discord-[a-f0-9]+\.gz)$/;
+const STALE_BACKUP_AGE_MS = 60 * 60_000;
+async function cleanupStaleBackupFiles({
+  maxAgeMs = STALE_BACKUP_AGE_MS,
+  now = Date.now(),
+} = {}) {
+  let removed = 0;
+  let entries;
+  try {
+    entries = await fs.promises.readdir(backupDir, { withFileTypes: true });
+  } catch {
+    return 0;
+  }
+  for (const entry of entries) {
+    if (!entry.isFile() || !STALE_BACKUP_FILE.test(entry.name)) continue;
+    const file = path.join(backupDir, entry.name);
+    try {
+      // Chỉ xóa file đủ cũ để không đụng bản đang sao lưu/đang gửi.
+      if (now - (await fs.promises.stat(file)).mtimeMs < maxAgeMs) continue;
+      await fs.promises.unlink(file);
+      removed += 1;
+    } catch {}
+  }
+  return removed;
+}
 async function cleanupBackups(retention = BACKUP_RETENTION) {
   if (!Number.isSafeInteger(retention) || retention < 1)
     throw new Error("INVALID_BACKUP_RETENTION");
@@ -60,6 +88,7 @@ async function cleanupBackups(retention = BACKUP_RETENTION) {
       .slice(retention)
       .map((name) => fs.promises.unlink(path.join(backupDir, name))),
   );
+  await cleanupStaleBackupFiles();
   return Math.max(0, files.length - retention);
 }
 // Tuổi của bản sao lưu mới nhất (ms); Infinity nếu chưa có.
@@ -155,6 +184,8 @@ function startDatabaseBackups(
     startupSkipMs = STARTUP_SKIP_MS,
   } = {},
 ) {
+  // Dọn ngay file dở dang còn sót từ lần chạy trước (không chờ tới lần sao lưu đầu).
+  cleanupStaleBackupFiles().catch(() => {});
   let stopped = false,
     pending = null,
     stopPromise = null,
@@ -275,6 +306,7 @@ module.exports = {
   backupDir,
   backupName,
   cleanupBackups,
+  cleanupStaleBackupFiles,
   latestBackupAgeMs,
   runDatabaseBackup,
   startDatabaseBackups,
