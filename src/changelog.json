@@ -1,5 +1,16 @@
 [
   {
+    "id": "267ae8d1-c353-4c7f-8676-47a3d695e961",
+    "updatedAt": "2026-10-23T01:17:55.012Z",
+    "auditedAt": "2026-10-23T01:17:55.012Z",
+    "title": "Sửa S2 Rha-Kor không giảm MP khi luật mang sang phòng",
+    "type": "fix",
+    "scope": "survival",
+    "changes": [
+      "Khi Cổ Luật được mang sang phòng sau nhờ Tinh Hồn S1, hiệu ứng giảm 1 MP của S2 (Nét Khắc Bền Vững) giờ đi cùng luật; trước đây bị mất nên Luật Phán ở phòng sau vẫn tốn đủ MP."
+    ]
+  },
+  {
     "id": "3d768e6b-10c6-4fef-955f-8e81c9f8376a",
     "updatedAt": "2026-10-23T01:03:45.179Z",
     "auditedAt": "2026-10-23T01:03:45.179Z",

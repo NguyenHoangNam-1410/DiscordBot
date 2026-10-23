@@ -301,6 +301,53 @@ test("S2: Skill kế tiếp giảm 1 MP (tối thiểu 1), Luật Phán +15%, tr
   assert.equal(core.skillManaCost(m), 1);
 });
 
+test("S2: giảm 1 MP của Luật Phán đi cùng Cổ Luật sang phòng sau; S1 không có giảm MP", () => {
+  const nextRoom = (s) => {
+    s.phase = "encounter";
+    s.floor += 1;
+    s.encounter = fixture();
+    core.prepareItemCombat(s, rng);
+    s.damageMin = s.damageMax = 100;
+    s.mana = s.maxMana;
+    kit.frame(s);
+  };
+  for (const [soul, discounted] of [
+    [1, false],
+    [2, true],
+    [6, true],
+  ]) {
+    const s = fresh(soul);
+    s.encounter.hp = 100;
+    act(s, "skill"); // hạ quái, mở Cổ Luật (+ giảm MP nếu S2)
+    assert.equal(
+      Boolean(s.rhaCarry.discount),
+      discounted,
+      "mang theo S" + soul,
+    );
+    nextRoom(s);
+    assert.ok(kit.frame(s).law, "luật mang sang");
+    assert.equal(Boolean(kit.frame(s).discount), discounted, "S" + soul);
+    assert.equal(
+      core.skillManaCost(s),
+      discounted ? 1 : 2,
+      "chi phí Skill S" + soul,
+    );
+    const before = s.mana;
+    act(s, "skill"); // Luật Phán ở phòng sau
+    const refund = soul >= 1 && s.encounter.rhaKor.skillsCast === 1 ? 1 : 0;
+    assert.equal(
+      before - s.mana,
+      (discounted ? 1 : 2) - refund,
+      "MP thực tế S" + soul,
+    );
+    kit.validate(s);
+  }
+  // Giảm MP mang theo vẫn bị từ chối nếu hỏng
+  const bad = fresh(2);
+  bad.rhaCarry = { law: { window: 1 }, discount: { window: 9 } };
+  assert.throws(() => kit.validate(bad), /INVALID_RHA_KOR_STATE/);
+});
+
 test("S3/S4/S5 thông số và S4 +10% Attack sau khi Barrier hấp thụ sát thương", () => {
   const c3 = kit.config(fresh(3));
   assert.equal(c3.phan, 2.8);

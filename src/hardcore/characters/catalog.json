@@ -405,7 +405,7 @@
         {
           "level": 2,
           "name": "Nét Khắc Bền Vững",
-          "description": "Sau khi mở Cổ Luật, Skill kế tiếp trong 2 action giảm 1 MP (tối thiểu 1); nếu đó là Luật Phán thì +15% DMG. Skill trượt vẫn giữ hiệu ứng cho lần Skill kế tiếp. Mỗi Cổ Luật chỉ kích hoạt một lần.",
+          "description": "Sau khi mở Cổ Luật, Skill kế tiếp trong 2 action giảm 1 MP (tối thiểu 1); nếu đó là Luật Phán thì +15% DMG. Skill trượt vẫn giữ hiệu ứng cho lần Skill kế tiếp. Mỗi Cổ Luật chỉ kích hoạt một lần; Cổ Luật mang sang phòng sau (S1) mang theo cả giảm MP.",
           "emojiName": "soul_rha_kor_2"
         },
         {
