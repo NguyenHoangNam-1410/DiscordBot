@@ -276,12 +276,13 @@ async function readLimited(response) {
   return Buffer.concat(chunks).toString("utf8").slice(0, MAX_PAGE_BYTES);
 }
 
-// Trả về link video trực tiếp hoặc null (lỗi mạng, trang không có video, bài riêng tư…).
-async function resolveVideoUrl(embedUrl, env = null) {
+// Lấy link video trực tiếp từ trang của dịch vụ embed. Trả về { video, reason }: reason cho biết vì sao không lấy được (để ghi log).
+const VIDEO_FILE = /\.(mp4|webm|mov|m4v)$/i;
+async function resolveVideoDetails(embedUrl, env = null) {
   try {
     let url = new URL(embedUrl);
     if (url.protocol !== "https:" || !isEmbedHost(url.hostname, env))
-      return null;
+      return { video: null, reason: "host_not_allowed" };
     for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
       const response = await globalThis.fetch(url.href, {
         redirect: "manual",
@@ -295,17 +296,31 @@ async function resolveVideoUrl(embedUrl, env = null) {
       });
       if ([301, 302, 303, 307, 308].includes(response.status)) {
         const next = new URL(response.headers.get("location") || "", url);
-        // Chỉ theo chuyển hướng trong cùng host embed: không để trang trỏ bot sang nơi khác.
-        if (next.protocol !== "https:" || !isEmbedHost(next.hostname, env))
-          return null;
-        url = next;
-        continue;
+        if (next.protocol !== "https:")
+          return { video: null, reason: "redirect_insecure" };
+        // Chuyển hướng trong các host embed thì theo tiếp; chuyển thẳng tới file video (.mp4…) thì dùng luôn làm link video.
+        if (isEmbedHost(next.hostname, env)) {
+          url = next;
+          continue;
+        }
+        if (VIDEO_FILE.test(next.pathname) && next.href.length <= 2000)
+          return { video: next.href, reason: null };
+        return { video: null, reason: "redirect_blocked" };
       }
-      if (!response.ok) return null;
-      return parseVideoUrl(await readLimited(response), url.href);
+      if (!response.ok)
+        return { video: null, reason: `status_${response.status}` };
+      const video = parseVideoUrl(await readLimited(response), url.href);
+      return video
+        ? { video, reason: null }
+        : { video: null, reason: "no_video_meta" };
     }
-  } catch {}
-  return null;
+    return { video: null, reason: "too_many_redirects" };
+  } catch (error) {
+    return { video: null, reason: `error_${error?.name || "unknown"}` };
+  }
+}
+async function resolveVideoUrl(embedUrl, env = null) {
+  return (await resolveVideoDetails(embedUrl, env)).video;
 }
 
 // Link video trực tiếp của Facebook rất dài (nhiều trăm ký tự). Gói thành link ẩn `[🎬](url)` để tin nhắn chỉ hiện biểu tượng
@@ -315,6 +330,23 @@ function videoMessage(videoUrl) {
   const safe = String(videoUrl).replace(/\(/g, "%28").replace(/\)/g, "%29");
   const text = `[🎬](${safe})`;
   return text.length <= MESSAGE_LIMIT ? text : null;
+}
+
+// Nội dung tin nhắn cho một link embed: link video ẩn nếu lấy được; không thì link embed cũng ẩn sau biểu tượng (Discord vẫn dựng khung xem trước).
+async function renderEmbedLink(embedUrl, env = null) {
+  const { video, reason } = await resolveVideoDetails(embedUrl, env);
+  if (!video && reason && reason !== "host_not_allowed") {
+    // Log chẩn đoán: giúp biết dịch vụ embed đang trả gì khi không có video.
+    console.warn(
+      JSON.stringify({
+        level: 40,
+        msg: "embed video not resolved",
+        host: new URL(embedUrl).hostname,
+        reason,
+      }),
+    );
+  }
+  return (video && videoMessage(video)) || videoMessage(embedUrl) || embedUrl;
 }
 
 // Link bọc trong <...> là cố ý tắt embed nên bỏ qua.
@@ -352,12 +384,7 @@ async function handleEmbedMessage(message) {
   )
     return false;
   // Gửi riêng link video nếu lấy được (khung chỉ có video); không thì giữ link embed.
-  const targets = await Promise.all(
-    links.map(async (link) => {
-      const video = await resolveVideoUrl(link);
-      return (video && videoMessage(video)) || link;
-    }),
-  );
+  const targets = await Promise.all(links.map((link) => renderEmbedLink(link)));
   await message.reply({
     content: targets.join("\n"),
     allowedMentions: { parse: [], repliedUser: false },
@@ -376,6 +403,8 @@ module.exports = {
   isEmbedHost,
   parseVideoUrl,
   resolveVideoUrl,
+  resolveVideoDetails,
+  renderEmbedLink,
   videoMessage,
   handleEmbedMessage,
 };

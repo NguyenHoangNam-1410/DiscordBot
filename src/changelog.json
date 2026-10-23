@@ -1,5 +1,17 @@
 [
   {
+    "id": "ba63f65c-b6d8-4f90-b996-2bab650ae247",
+    "updatedAt": "2026-10-23T11:55:38.132Z",
+    "auditedAt": "2026-10-23T11:55:38.132Z",
+    "title": "Embed Instagram/Facebook gọn hơn",
+    "type": "fix",
+    "scope": "system",
+    "changes": [
+      "Khi chưa lấy được video, bot cũng không in cả link dài nữa mà chỉ hiện biểu tượng nhỏ cùng khung xem trước.",
+      "Link chuyển thẳng tới file video (.mp4) được dùng làm video; lý do không lấy được video được ghi vào log để dễ chẩn đoán."
+    ]
+  },
+  {
     "id": "75ce0a42-45ac-49b5-ab87-8b66c28ec7e5",
     "updatedAt": "2026-10-23T11:51:57.600Z",
     "auditedAt": "2026-10-23T11:51:57.600Z",

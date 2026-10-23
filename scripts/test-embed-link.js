@@ -5,6 +5,8 @@ const testDb = path.resolve(__dirname, "../data/test-embed-link.sqlite");
 for (const suffix of ["", "-wal", "-shm"])
   fs.rmSync(`${testDb}${suffix}`, { force: true });
 process.env.DB_PATH = testDb;
+const warnings = [];
+console.warn = (line) => warnings.push(JSON.parse(line));
 global.fetch = async () => {
   throw new Error("offline");
 };
@@ -17,6 +19,8 @@ const {
   handleEmbedMessage,
   parseVideoUrl,
   resolveVideoUrl,
+  resolveVideoDetails,
+  renderEmbedLink,
   videoMessage,
 } = require("../src/services/embedLinkService");
 const { PermissionFlagsBits: Flags } = require("discord.js");
@@ -240,7 +244,7 @@ bad("a".repeat(2500), "INVALID_URL");
   const link = "https://www.facebook.com/reel/42?fbclid=x";
   let m = fakeMessage(`hay ${link}`);
   assert.equal(await handleEmbedMessage(m), true);
-  assert.equal(m.replies[0].content, "https://facebed.com/reel/42");
+  assert.equal(m.replies[0].content, "[🎬](https://facebed.com/reel/42)");
   assert.deepEqual(m.replies[0].allowedMentions, {
     parse: [],
     repliedUser: false,
@@ -430,7 +434,7 @@ bad("a".repeat(2500), "INVALID_URL");
   );
   vm = fakeMessage(`xem ${link}`);
   assert.equal(await handleEmbedMessage(vm), true);
-  assert.equal(vm.replies[0].content, "https://facebed.com/reel/42");
+  assert.equal(vm.replies[0].content, "[🎬](https://facebed.com/reel/42)");
   // Lệnh /embed chuyendoi cho Facebook cũng trả link video
   fetchWith(() =>
     asResponse(200, page(["og:video", "https://v.example.com/cmd.mp4"])),
@@ -442,7 +446,7 @@ bad("a".repeat(2500), "INVALID_URL");
   fetchWith(() => asResponse(404, ""));
   assert.equal(
     (await run("https://www.facebook.com/reel/42")).content,
-    "https://facebed.com/reel/42",
+    "[🎬](https://facebed.com/reel/42)",
   );
   // Link dài: gói ẩn, thoát ngoặc đơn, quá giới hạn thì dùng link ngắn
   const longVideo =
@@ -465,7 +469,7 @@ bad("a".repeat(2500), "INVALID_URL");
   );
   assert.equal(
     (await run("https://www.facebook.com/reel/42")).content,
-    "https://facebed.com/reel/42",
+    "[🎬](https://facebed.com/reel/42)",
     "link video quá dài: dùng link embed ngắn",
   );
   // Tự nhận diện cả Instagram/TikTok (Douyin bỏ qua khi chưa cấu hình), không đụng YouTube
@@ -508,6 +512,66 @@ bad("a".repeat(2500), "INVALID_URL");
   const noService = await run("https://www.douyin.com/video/1");
   assert.match(noService.content, /DOUYIN_EMBED_HOST/);
   assert.ok(noService.flags);
+  // Chẩn đoán: lý do không lấy được video; chuyển thẳng tới file video; link dự phòng cũng ẩn
+  const detail = async (handler, url = base) => {
+    fetchWith(handler);
+    return resolveVideoDetails(url);
+  };
+  assert.deepEqual(await detail(() => asResponse(403, "")), {
+    video: null,
+    reason: "status_403",
+  });
+  assert.deepEqual(
+    await detail(() =>
+      asResponse(200, page(["og:image", "https://i.example.com/a.jpg"])),
+    ),
+    { video: null, reason: "no_video_meta" },
+  );
+  assert.deepEqual(await resolveVideoDetails("https://evil.example.com/x"), {
+    video: null,
+    reason: "host_not_allowed",
+  });
+  global.fetch = async () => {
+    throw Object.assign(new Error("t"), { name: "TimeoutError" });
+  };
+  assert.deepEqual(await resolveVideoDetails(base), {
+    video: null,
+    reason: "error_TimeoutError",
+  });
+  assert.deepEqual(
+    await detail(() =>
+      asResponse(302, "", {
+        location: "https://cdn.example.com/v/clip.mp4?sig=1",
+      }),
+    ),
+    { video: "https://cdn.example.com/v/clip.mp4?sig=1", reason: null },
+    "chuyển hướng thẳng tới file video",
+  );
+  assert.deepEqual(
+    await detail(() =>
+      asResponse(302, "", { location: "https://cdn.example.com/page.html" }),
+    ),
+    { video: null, reason: "redirect_blocked" },
+  );
+  assert.deepEqual(
+    await detail(() =>
+      asResponse(302, "", { location: "http://cdn.example.com/clip.mp4" }),
+    ),
+    { video: null, reason: "redirect_insecure" },
+  );
+  warnings.length = 0;
+  fetchWith(() => asResponse(403, ""));
+  const hiddenFallback = await renderEmbedLink(
+    "https://www.kkinstagram.com/reel/AAA111/",
+  );
+  assert.equal(
+    hiddenFallback,
+    "[🎬](https://www.kkinstagram.com/reel/AAA111/)",
+    "link dự phòng cũng ẩn",
+  );
+  assert.equal(warnings.length, 1);
+  assert.equal(warnings[0].reason, "status_403");
+  assert.equal(warnings[0].host, "www.kkinstagram.com");
   console.log("embed link tests passed");
 })().catch((error) => {
   console.error(error);

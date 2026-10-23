@@ -2,8 +2,7 @@ const { SlashCommandBuilder, MessageFlags } = require("discord.js");
 const {
   convertLink,
   setAutoEnabled,
-  resolveVideoUrl,
-  videoMessage,
+  renderEmbedLink,
 } = require("../services/embedLinkService");
 
 const ERRORS = {
@@ -87,9 +86,8 @@ module.exports = {
       });
     // Facebook/Instagram/TikTok/Douyin: lấy link video trực tiếp (chỉ có video); không có thì trả link embed.
     await interaction.deferReply();
-    const video = await resolveVideoUrl(result.url);
     return interaction.editReply({
-      content: (video && videoMessage(video)) || result.url,
+      content: await renderEmbedLink(result.url),
       allowedMentions: { parse: [] },
     });
   },
