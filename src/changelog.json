@@ -1,5 +1,16 @@
 [
   {
+    "id": "75ce0a42-45ac-49b5-ab87-8b66c28ec7e5",
+    "updatedAt": "2026-10-23T11:51:57.600Z",
+    "auditedAt": "2026-10-23T11:51:57.600Z",
+    "title": "Sửa embed Instagram",
+    "type": "fix",
+    "scope": "system",
+    "changes": [
+      "Đổi dịch vụ embed Instagram mặc định sang kkinstagram vì dịch vụ cũ không còn hiện video."
+    ]
+  },
+  {
     "id": "42923731-dfee-486d-b151-332f2fb50060",
     "updatedAt": "2026-10-23T11:49:18.848Z",
     "auditedAt": "2026-10-23T11:49:18.848Z",

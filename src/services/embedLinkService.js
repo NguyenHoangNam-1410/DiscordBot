@@ -40,7 +40,7 @@ const PROVIDERS = Object.freeze({
   },
   instagram: {
     hosts: new Set(["instagram.com", "www.instagram.com", "instagr.am"]),
-    fallback: "ddinstagram.com",
+    fallback: "www.kkinstagram.com",
     keep: () => false,
   },
   tiktok: {
