@@ -70,7 +70,7 @@ const PAGES = Object.freeze({
       ],
       [
         "🤖 Chatbot AI",
-        "Hỏi bằng `/chatbot hoi` (hoặc `!hoi <câu hỏi>`; admin dạy bot về server bằng `/chatbot nho`) trong kênh admin đã chọn (`/chatbot kenh`); xem số lượt còn lại bằng `/chatbot luot`.",
+        "Hỏi bằng `/chatbot hoi` (hoặc `!hoi <câu hỏi>`; admin dạy bot về server bằng `/chatbot nho`) ở bất kỳ kênh nào (admin có thể giới hạn một kênh bằng `/chatbot kenh`); xem số lượt còn lại bằng `/chatbot luot`.",
       ],
       [
         "📋 Cập nhật",

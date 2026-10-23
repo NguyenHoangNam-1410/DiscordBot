@@ -1496,4 +1496,9 @@ runMigration(53, "2048 achievement records", () => {
     PRIMARY KEY (guild_id,user_id))`);
 });
 
+runMigration(55, "chatbot usable in every channel", () => {
+  // Trước đây bắt buộc đặt một kênh; từ nay mặc định mọi kênh, nên bỏ các kênh đã đặt (admin vẫn giới hạn lại được bằng /chatbot kenh).
+  db.exec("DELETE FROM chatbot_channels");
+});
+
 module.exports = { db, dbPath, runMigration };

@@ -1,6 +1,5 @@
 const { SlashCommandBuilder, ChannelType, EmbedBuilder, MessageFlags } = require("discord.js");
 const chatbot = require("../services/chatbotService");
-const { getGameByChannel } = require("../services/gameChannelService");
 
 const busy = new Set(); // một yêu cầu một lúc cho mỗi người
 
@@ -40,8 +39,9 @@ const FACT_MENTION = /<@!?(\d{5,25})>/g;
 async function ask(interaction) {
   const channelId = chatbot.getChannelId(interaction.guildId);
   const ephemeral = (content) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
-  if (!channelId) return ephemeral("Server chưa mở kênh chatbot. Hãy nhờ admin dùng `/chatbot kenh`.");
-  if (interaction.channelId !== channelId) return ephemeral(`Hãy dùng \`/chatbot hoi\` trong kênh <#${channelId}>.`);
+  // Mặc định dùng được ở mọi kênh; chỉ khi admin đã giới hạn bằng `/chatbot kenh` mới phải đúng kênh đó.
+  if (channelId && interaction.channelId !== channelId)
+    return ephemeral(`Admin đã giới hạn chatbot ở kênh <#${channelId}>. Hãy dùng \`/chatbot hoi\` ở đó.`);
   const u = chatbot.usage(interaction.guildId, interaction.user.id);
   if (u.remaining <= 0) {
     await react(interaction, "⛔");
@@ -116,11 +116,11 @@ const command = {
     .addSubcommand((sub) =>
       sub
         .setName("kenh")
-        .setDescription("Admin: chọn kênh được dùng chatbot")
+        .setDescription("Admin: (tùy chọn) chỉ cho dùng chatbot ở một kênh")
         .addChannelOption((option) =>
           option
             .setName("kenh")
-            .setDescription("Kênh văn bản dùng /chatbot hoi")
+            .setDescription("Kênh duy nhất được dùng /chatbot hoi")
             .addChannelTypes(ChannelType.GuildText)
             .setRequired(true),
         ),
@@ -173,7 +173,7 @@ const command = {
             .setMaxLength(chatbot.MAX_PERSONA_CHARS),
         ),
     )
-    .addSubcommand((sub) => sub.setName("tat").setDescription("Admin: tắt chatbot (bỏ kênh)"))
+    .addSubcommand((sub) => sub.setName("tat").setDescription("Admin: bỏ giới hạn kênh (chatbot dùng ở mọi kênh)"))
     .addSubcommand((sub) => sub.setName("luot").setDescription("Xem số lượt chat còn lại hôm nay")),
   async execute(interaction) {
     if (!interaction.guildId)
@@ -185,7 +185,7 @@ const command = {
       const u = chatbot.usage(interaction.guildId, interaction.user.id);
       const channelId = chatbot.getChannelId(interaction.guildId);
       return reply(
-        `Bạn còn **${u.remaining}/${u.limit} lượt** chat hôm nay (đặt lại lúc 00:00 giờ Việt Nam).${channelId ? `\nKênh chatbot: <#${channelId}>` : "\nServer chưa mở kênh chatbot."}`,
+        `Bạn còn **${u.remaining}/${u.limit} lượt** chat hôm nay (đặt lại lúc 00:00 giờ Việt Nam).${channelId ? `\nAdmin đã giới hạn chatbot ở kênh <#${channelId}>.` : "\nChatbot dùng được ở mọi kênh."}`,
       );
     }
     if (sub === "kienthuc") {
@@ -246,14 +246,16 @@ const command = {
       return reply(`✅ Mỗi người được **${n} lượt chat mỗi ngày**. Áp dụng ngay, kể cả với lượt đã dùng hôm nay.`);
     }
     if (sub === "tat")
-      return reply(chatbot.clearChannel(interaction.guildId) ? "🛑 Đã tắt chatbot." : "Server chưa mở kênh chatbot.");
+      return reply(
+        chatbot.clearChannel(interaction.guildId)
+          ? "✅ Đã bỏ giới hạn kênh: chatbot dùng được ở mọi kênh."
+          : "Chatbot chưa bị giới hạn kênh, đang dùng được ở mọi kênh.",
+      );
     if (!chatbot.isConfigured()) return reply("Chưa đặt `OPENAI_API_KEY` hoặc model nên chưa thể bật chatbot.");
     const channel = interaction.options.getChannel("kenh");
-    if (getGameByChannel(interaction.guildId, channel.id))
-      return reply("Kênh này đang dùng cho game, hãy chọn kênh khác.");
     chatbot.setChannel(interaction.guildId, channel.id, interaction.user.id);
     return reply(
-      `✅ Chatbot dùng được ở <#${channel.id}> bằng \`/chatbot hoi\`. Mỗi người có **${chatbot.dailyLimit(interaction.guildId)} lượt/ngày**. Câu hỏi sẽ được gửi tới nhà cung cấp AI để trả lời.`,
+      `✅ Chatbot chỉ dùng được ở <#${channel.id}> (dùng \`/chatbot tat\` để bỏ giới hạn). Mỗi người có **${chatbot.dailyLimit(interaction.guildId)} lượt/ngày**. Câu hỏi sẽ được gửi tới nhà cung cấp AI để trả lời.`,
     );
   },
   errorText,
