@@ -117,6 +117,7 @@ if (process.argv[2] === "--worker") {
       DB_BACKUP_DIR: path.join(directory, "backups"),
       DB_BACKUP_STARTUP_DELAY_SECONDS: "0",
       DB_BACKUP_STARTUP_SKIP_MINUTES: "0",
+      DB_BACKUP_SHUTDOWN_SKIP_MINUTES: "0",
       LOG_DIR: path.join(directory, "logs"),
     };
     const messages = [],

@@ -31,6 +31,9 @@ const STARTUP_DELAY_MS =
   integerEnv("DB_BACKUP_STARTUP_DELAY_SECONDS", 120, 0, 3600) * 1000;
 const STARTUP_SKIP_MS =
   integerEnv("DB_BACKUP_STARTUP_SKIP_MINUTES", 30, 0, 10080) * 60_000;
+// Khi tắt bot: bỏ qua bản backup cuối nếu đã có bản mới hơn chừng này phút (0 = luôn tạo). Restart nhanh hơn nhiều với database lớn.
+const SHUTDOWN_SKIP_MS =
+  integerEnv("DB_BACKUP_SHUTDOWN_SKIP_MINUTES", 30, 0, 10080) * 60_000;
 const backupDir = path.resolve(
   process.env.DB_BACKUP_DIR || path.join(path.dirname(dbPath), "backups"),
 );
@@ -272,7 +275,7 @@ function startDatabaseBackups(
       else if (backupStatus.lastDestination)
         await deliver(backupStatus.lastDestination);
     },
-    stop: ({ finalBackup = true } = {}) => {
+    stop: ({ finalBackup = true, skipIfRecentMs = 0 } = {}) => {
       if (stopPromise) return stopPromise;
       stopped = true;
       clearTimeout(startupTimer);
@@ -281,7 +284,19 @@ function startDatabaseBackups(
       stopPromise = (async () => {
         await pending;
         await discordBackup.waitForDiscordBackups();
-        if (finalBackup) return report(runDatabaseBackup());
+        if (finalBackup) {
+          if (
+            skipIfRecentMs > 0 &&
+            (await latestBackupAgeMs()) < skipIfRecentMs
+          ) {
+            logger.info?.(
+              { skippedShutdownBackup: true, withinMs: skipIfRecentMs },
+              "shutdown backup skipped: a recent snapshot already exists",
+            );
+            return null;
+          }
+          return report(runDatabaseBackup());
+        }
       })();
       return stopPromise;
     },
@@ -303,6 +318,7 @@ module.exports = {
   BACKUP_INTERVAL_HOURS,
   BACKUP_INTERVAL_MINUTES,
   BACKUP_RETENTION,
+  SHUTDOWN_SKIP_MS,
   backupDir,
   backupName,
   cleanupBackups,

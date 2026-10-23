@@ -1,5 +1,16 @@
 [
   {
+    "id": "a718c2c6-9589-490d-b925-570aae886cb2",
+    "updatedAt": "2026-10-23T11:44:57.111Z",
+    "auditedAt": "2026-10-23T11:44:57.111Z",
+    "title": "Restart bot nhanh hơn",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Khi tắt hoặc restart, bot bỏ qua bản sao lưu cuối nếu đã có bản mới trong 30 phút gần nhất, nên restart nhanh hơn nhiều với database lớn."
+    ]
+  },
+  {
     "id": "4e3523f9-3161-4262-a2ad-84d8f5b55237",
     "updatedAt": "2026-10-23T11:42:11.230Z",
     "auditedAt": "2026-10-23T11:42:11.230Z",

@@ -117,7 +117,10 @@ async function shutdown(signal, exitCode = 0) {
       "shutdown drain timed out; backing up committed state",
     );
   await backupManager
-    ?.stop({ finalBackup: signal !== "uncaughtException" })
+    ?.stop({
+      finalBackup: signal !== "uncaughtException",
+      skipIfRecentMs: require("./services/databaseBackupService").SHUTDOWN_SKIP_MS,
+    })
     .catch((error) =>
       logger.error({ err: error }, "could not finish database backup"),
     );
