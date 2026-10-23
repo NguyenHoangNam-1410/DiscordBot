@@ -1,5 +1,17 @@
 [
   {
+    "id": "48c1b751-4fff-430a-92ff-2ff766b67be5",
+    "updatedAt": "2026-10-23T06:37:00.310Z",
+    "auditedAt": "2026-10-23T06:37:00.310Z",
+    "title": "Chatbot dùng được ở mọi kênh",
+    "type": "improvement",
+    "scope": "chatbot",
+    "changes": [
+      "Không cần admin đặt kênh nữa: /chatbot hoi (hoặc !hoi) dùng được ở bất kỳ kênh nào bot có quyền.",
+      "Admin vẫn có thể giới hạn một kênh bằng /chatbot kenh và bỏ giới hạn bằng /chatbot tat; các kênh đã đặt trước đây được bỏ giới hạn."
+    ]
+  },
+  {
     "id": "267ae8d1-c353-4c7f-8676-47a3d695e961",
     "updatedAt": "2026-10-23T01:17:55.012Z",
     "auditedAt": "2026-10-23T01:17:55.012Z",

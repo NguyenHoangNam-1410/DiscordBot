@@ -86,10 +86,17 @@ global.fetch = async (url, init) => {
     ...over,
   });
   const cmd = command;
-  // hỏi: sai kênh / chưa mở kênh
-  await cmd.execute(slash("hoi", {}, { channelId: "other" }));
-  assert.match(replies.at(-1), /trong kênh <#c>/);
+  // chưa đặt kênh: hỏi được ở bất kỳ kênh nào
+  chatbot.clearChannel(G);
+  assert.equal(chatbot.getChannelId(G), null);
+  await cmd.execute(slash("hoi", { user: "any-user" }, { channelId: "anywhere" }));
+  assert.equal(replies.at(-1), "<defer>");
+  assert.match(edits.at(-1).content, /Xin chào!/);
+  chatbot.setChannel(G, C, "admin"); // admin giới hạn lại một kênh
+  await cmd.execute(slash("hoi", {}, { channelId: "other", user: "other-user" }));
+  assert.match(replies.at(-1), /giới hạn chatbot ở kênh <#c>/);
   // hỏi đúng kênh
+  edits.length = 0;
   await cmd.execute(slash("hoi"));
   assert.equal(replies.at(-1), "<defer>");
   assert.match(edits[0].content, /Xin chào!/);
@@ -138,11 +145,21 @@ global.fetch = async (url, init) => {
   await cmd.execute(slash("kenh"));
   assert.equal(chatbot.getChannelId(G), "newch");
   await cmd.execute(slash("hoi"));
-  assert.match(replies.at(-1), /trong kênh <#newch>/);
+  assert.match(replies.at(-1), /giới hạn chatbot ở kênh <#newch>/);
+  await cmd.execute(slash("luot"));
+  assert.match(replies.at(-1), /giới hạn chatbot ở kênh <#newch>/);
+  await cmd.execute(slash("tat", { admin: false }));
+  assert.equal(chatbot.getChannelId(G), "newch", "member không bỏ được giới hạn");
   await cmd.execute(slash("tat"));
   assert.equal(chatbot.getChannelId(G), null);
-  await cmd.execute(slash("hoi"));
-  assert.match(replies.at(-1), /chưa mở kênh chatbot/);
+  assert.match(replies.at(-1), /mọi kênh/);
+  await cmd.execute(slash("luot"));
+  assert.match(replies.at(-1), /mọi kênh/);
+  await cmd.execute(slash("tat"));
+  assert.match(replies.at(-1), /chưa bị giới hạn kênh/);
+  replies.length = 0;
+  await cmd.execute(slash("hoi", { user: "free-user" }, { channelId: "bất kỳ" }));
+  assert.equal(replies.at(-1), "<defer>", "không cần đặt kênh vẫn hỏi được");
 
   // 429: chuyển model dự phòng; hết danh sách thì thử lại một lần; lỗi khác (403) không thử lại
   process.env.CHATBOT_RETRY_DELAY_MS = "5";
