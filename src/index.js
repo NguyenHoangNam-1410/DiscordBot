@@ -183,6 +183,9 @@ client.once(Events.ClientReady, async () => {
   maintenanceTimers.push(startPokerMaintenance(client, logger));
   maintenanceTimers.push(startStaleSessionMaintenance(client, logger));
   maintenanceTimers.push(
+    require("./hardcore/replay/store").startReplayMaintenance(logger),
+  );
+  maintenanceTimers.push(
     require("./hardcore/tower/challengeCatalog").startWeeklyMaintenance(logger),
   );
   logger.info(
