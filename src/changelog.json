@@ -1,5 +1,17 @@
 [
   {
+    "id": "2d581d65-9122-446a-935b-f4e92534b152",
+    "updatedAt": "2026-10-23T00:54:02.295Z",
+    "auditedAt": "2026-10-23T00:54:02.295Z",
+    "title": "Icon nút trận Rha-Kor theo Cổ Luật",
+    "type": "improvement",
+    "scope": "survival",
+    "changes": [
+      "Nút Tấn công, Phòng thủ và Bình của Rha-Kor chỉ hiện icon riêng khi Cổ Luật đang mở (kể cả Luật mang sang phòng kế tiếp); không có hiệu ứng thì dùng icon thường.",
+      "Luật Dẫn: Bình khi Cổ Luật đang mở hồi thêm 15%, nút Bình có icon riêng potion_rha_kor."
+    ]
+  },
+  {
     "id": "bf22eb48-1f1f-4fa6-9582-395c1c1776c4",
     "updatedAt": "2026-10-22T11:18:40.411Z",
     "auditedAt": "2026-10-22T11:18:40.411Z",

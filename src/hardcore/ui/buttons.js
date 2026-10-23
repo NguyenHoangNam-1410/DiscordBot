@@ -250,7 +250,9 @@ module.exports = function createModule(dependencies) {
           ? a.action === "skill" && bosses.brainControl(state)
             ? "🧠"
             : characterActionIcon(state, a.action)
-          : actionItem(state, a.action)
+          : a.action === "potion" && characterActionIcon(state, "potion")
+            ? characterActionIcon(state, "potion")
+            : actionItem(state, a.action)
             ? itemIcon(actionItem(state, a.action))
             : state.phase === "severance" && a.action !== "sever_none"
               ? RIFT_ICONS[a.action.slice(6)] || E.rift
