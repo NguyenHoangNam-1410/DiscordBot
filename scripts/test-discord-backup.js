@@ -409,6 +409,45 @@ async function main() {
     await cancelled.stop({ finalBackup: false });
     await new Promise((resolve) => setTimeout(resolve, 300));
     assert.equal(files().length, 1);
+    // Tắt bot: bỏ qua bản backup cuối nếu bản gần nhất còn mới; bản cũ hoặc ngưỡng 0 thì vẫn tạo.
+    const shutdownLog = [];
+    const shutdownLogger = {
+      info: (data, message) => shutdownLog.push(message),
+      error: (data, message) => shutdownLog.push("ERR " + message),
+    };
+    const quick = backup.startDatabaseBackups(shutdownLogger, {
+      startupDelayMs: 3_600_000,
+      startupSkipMs: 60_000,
+    });
+    const before = files().length;
+    await quick.stop({ finalBackup: true, skipIfRecentMs: 60_000 });
+    assert.equal(files().length, before, "bỏ qua backup cuối vì còn bản mới");
+    assert.ok(
+      shutdownLog.includes(
+        "shutdown backup skipped: a recent snapshot already exists",
+      ),
+    );
+    const forced = backup.startDatabaseBackups(shutdownLogger, {
+      startupDelayMs: 3_600_000,
+      startupSkipMs: 60_000,
+    });
+    await forced.stop({ finalBackup: true, skipIfRecentMs: 0 });
+    assert.equal(files().length, before + 1, "ngưỡng 0 luôn tạo backup cuối");
+    const old = fs
+      .readdirSync(backup.backupDir)
+      .filter((name) => name.endsWith(".sqlite"));
+    for (const name of old) {
+      const file = path.join(backup.backupDir, name);
+      const time = new Date(Date.now() - 3 * 3600_000);
+      fs.utimesSync(file, time, time);
+    }
+    const stale = backup.startDatabaseBackups(shutdownLogger, {
+      startupDelayMs: 3_600_000,
+      startupSkipMs: 1,
+    });
+    const beforeStale = files().length;
+    await stale.stop({ finalBackup: true, skipIfRecentMs: 60_000 });
+    assert.ok(files().length >= beforeStale, "bản cũ: vẫn tạo backup cuối");
     noTemporaryFiles();
     groups.push(
       "startup backup is delayed, skipped when recent and cancelled by stop",
