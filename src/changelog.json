@@ -1,5 +1,16 @@
 [
   {
+    "id": "c76cbe8f-edc5-420d-8348-dea7fa2d568f",
+    "updatedAt": "2026-10-23T11:19:08.663Z",
+    "auditedAt": "2026-10-23T11:19:08.663Z",
+    "title": "Link Facebook chỉ hiện video",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Khi đổi link Facebook (tự động hoặc /embed chuyendoi), bot lấy link video trực tiếp để Discord chỉ hiện trình phát video, bỏ thẻ tiêu đề và số liệu; bài không có video vẫn dùng link xem trước như cũ."
+    ]
+  },
+  {
     "id": "48c1b751-4fff-430a-92ff-2ff766b67be5",
     "updatedAt": "2026-10-23T06:37:00.310Z",
     "auditedAt": "2026-10-23T06:37:00.310Z",

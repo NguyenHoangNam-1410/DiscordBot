@@ -136,6 +136,109 @@ function setAutoEnabled(guildId, enabled, adminId) {
     );
 }
 
+// ---- Chỉ lấy video ---------------------------------------------------------------
+// Muốn khung chỉ có video (không thẻ tiêu đề/số liệu của trang embed), bot đọc thẻ meta của trang embed để lấy
+// link video trực tiếp rồi gửi riêng link đó; Discord sẽ hiện trình phát video trần. Không có video thì dùng lại link embed.
+const PAGE_TIMEOUT_MS = 6000;
+const MAX_PAGE_BYTES = 400_000;
+const MAX_REDIRECTS = 3;
+const VIDEO_META = [
+  "og:video:secure_url",
+  "og:video:url",
+  "og:video",
+  "twitter:player:stream",
+];
+const ENTITIES = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  "#39": "'",
+};
+
+function metaTags(html) {
+  const tags = [];
+  for (const tag of String(html).matchAll(/<meta\b[^>]*>/gi)) {
+    const attrs = {};
+    for (const a of tag[0].matchAll(
+      /([a-zA-Z:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g,
+    ))
+      attrs[a[1].toLowerCase()] = (a[2] ?? a[3] ?? "").replace(
+        /&(amp|lt|gt|quot|apos|#39);/g,
+        (_, name) => ENTITIES[name],
+      );
+    const key = (attrs.property || attrs.name || "").toLowerCase();
+    if (key && attrs.content) tags.push([key, attrs.content]);
+  }
+  return tags;
+}
+
+function parseVideoUrl(html, pageUrl) {
+  const tags = metaTags(html);
+  for (const name of VIDEO_META) {
+    for (const [key, content] of tags) {
+      if (key !== name) continue;
+      try {
+        const url = new URL(content, pageUrl);
+        if (
+          url.protocol === "https:" &&
+          url.href.length <= 2000 &&
+          url.href !== pageUrl
+        )
+          return url.href;
+      } catch {}
+    }
+  }
+  return null;
+}
+
+async function readLimited(response) {
+  const reader = response.body?.getReader?.();
+  if (!reader) return String(await response.text()).slice(0, MAX_PAGE_BYTES);
+  const chunks = [];
+  let size = 0;
+  while (size < MAX_PAGE_BYTES) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    size += value.length;
+  }
+  reader.cancel().catch(() => {});
+  return Buffer.concat(chunks).toString("utf8").slice(0, MAX_PAGE_BYTES);
+}
+
+// Trả về link video trực tiếp hoặc null (lỗi mạng, trang không có video, bài riêng tư…).
+async function resolveVideoUrl(embedUrl, env = null) {
+  try {
+    const host = embedHost(env);
+    let url = new URL(embedUrl);
+    if (url.protocol !== "https:" || url.hostname !== host) return null;
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
+      const response = await globalThis.fetch(url.href, {
+        redirect: "manual",
+        signal: AbortSignal.timeout(PAGE_TIMEOUT_MS),
+        headers: {
+          // Dịch vụ embed trả thẻ meta cho trình thu thập của Discord.
+          "user-agent":
+            "Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)",
+          accept: "text/html",
+        },
+      });
+      if ([301, 302, 303, 307, 308].includes(response.status)) {
+        const next = new URL(response.headers.get("location") || "", url);
+        // Chỉ theo chuyển hướng trong cùng host embed: không để trang trỏ bot sang nơi khác.
+        if (next.protocol !== "https:" || next.hostname !== host) return null;
+        url = next;
+        continue;
+      }
+      if (!response.ok) return null;
+      return parseVideoUrl(await readLimited(response), url.href);
+    }
+  } catch {}
+  return null;
+}
+
 // Link bọc trong <...> là cố ý tắt embed nên bỏ qua.
 function extractFacebookLinks(content) {
   const found = [];
@@ -170,8 +273,12 @@ async function handleEmbedMessage(message) {
     ])
   )
     return false;
+  // Gửi riêng link video nếu lấy được (khung chỉ có video); không thì giữ link embed.
+  const targets = await Promise.all(
+    links.map(async (link) => (await resolveVideoUrl(link)) || link),
+  );
   await message.reply({
-    content: links.join("\n"),
+    content: targets.join("\n"),
     allowedMentions: { parse: [], repliedUser: false },
   });
   return true;
@@ -184,5 +291,7 @@ module.exports = {
   isAutoEnabled,
   setAutoEnabled,
   extractFacebookLinks,
+  parseVideoUrl,
+  resolveVideoUrl,
   handleEmbedMessage,
 };

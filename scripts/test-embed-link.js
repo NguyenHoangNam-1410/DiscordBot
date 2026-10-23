@@ -5,6 +5,9 @@ const testDb = path.resolve(__dirname, "../data/test-embed-link.sqlite");
 for (const suffix of ["", "-wal", "-shm"])
   fs.rmSync(`${testDb}${suffix}`, { force: true });
 process.env.DB_PATH = testDb;
+global.fetch = async () => {
+  throw new Error("offline");
+};
 const {
   convertLink,
   embedHost,
@@ -12,6 +15,8 @@ const {
   setAutoEnabled,
   extractFacebookLinks,
   handleEmbedMessage,
+  parseVideoUrl,
+  resolveVideoUrl,
 } = require("../src/services/embedLinkService");
 const { PermissionFlagsBits: Flags } = require("discord.js");
 const embed = require("../src/commands/embed");
@@ -94,8 +99,10 @@ bad("a".repeat(2500), "INVALID_URL");
     await embed.execute({
       options: { getSubcommand: () => "chuyendoi", getString: () => link },
       reply: async (payload) => out.push(payload),
+      deferReply: async () => out.push({ deferred: true }),
+      editReply: async (payload) => out.push(payload),
     });
-    return out[0];
+    return out.at(-1);
   };
   const good = await run("https://youtu.be/dQw4w9WgXcQ");
   assert.equal(good.content, yt);
@@ -223,6 +230,139 @@ bad("a".repeat(2500), "INVALID_URL");
   assert.equal(isAutoEnabled("gC"), false);
   assert.match((await toggle(true, "on")).content, /Đã bật/);
   assert.equal(isAutoEnabled("gC"), true);
+  // ---- Chỉ lấy video ----
+  const page = (...metas) =>
+    `<html><head><title>x</title>${metas.map(([k, v]) => `<meta property="${k}" content="${v}">`).join("")}</head></html>`;
+  const base = "https://facebed.com/reel/42";
+  assert.equal(
+    parseVideoUrl(
+      page(["og:video", "https://v.example.com/a.mp4?x=1&amp;y=2"]),
+      base,
+    ),
+    "https://v.example.com/a.mp4?x=1&y=2",
+  );
+  assert.equal(
+    parseVideoUrl(
+      page(
+        ["og:video", "https://v.example.com/plain.mp4"],
+        ["og:video:secure_url", "https://v.example.com/secure.mp4"],
+      ),
+      base,
+    ),
+    "https://v.example.com/secure.mp4",
+    "ưu tiên secure_url",
+  );
+  assert.equal(
+    parseVideoUrl(page(["og:video", "/media/42.mp4"]), base),
+    "https://facebed.com/media/42.mp4",
+  );
+  assert.equal(
+    parseVideoUrl(
+      page(["og:video", "http://insecure.example.com/a.mp4"]),
+      base,
+    ),
+    null,
+    "chỉ https",
+  );
+  assert.equal(
+    parseVideoUrl(page(["og:video", "javascript:alert(1)"]), base),
+    null,
+  );
+  assert.equal(
+    parseVideoUrl(page(["og:image", "https://i.example.com/a.jpg"]), base),
+    null,
+    "ảnh không phải video",
+  );
+  assert.equal(
+    parseVideoUrl(
+      `<meta name='twitter:player:stream' content='https://v.example.com/t.mp4'>`,
+      base,
+    ),
+    "https://v.example.com/t.mp4",
+  );
+  assert.equal(parseVideoUrl("<html>không có meta</html>", base), null);
+
+  const asResponse = (status, body, headers = {}) => ({
+    status,
+    ok: status >= 200 && status < 300,
+    headers: { get: (name) => headers[name.toLowerCase()] ?? null },
+    text: async () => body,
+  });
+  const calls = [];
+  const fetchWith = (handler) => {
+    global.fetch = async (url, init) => {
+      calls.push({ url, init });
+      return handler(url);
+    };
+  };
+  fetchWith(() =>
+    asResponse(200, page(["og:video", "https://v.example.com/a.mp4"])),
+  );
+  assert.equal(await resolveVideoUrl(base), "https://v.example.com/a.mp4");
+  assert.match(calls.at(-1).init.headers["user-agent"], /Discordbot/);
+  assert.equal(calls.at(-1).init.redirect, "manual");
+  assert(calls.at(-1).init.signal instanceof AbortSignal);
+  // Chỉ gọi tới host embed đã cấu hình
+  calls.length = 0;
+  assert.equal(await resolveVideoUrl("https://evil.example.com/reel/1"), null);
+  assert.equal(await resolveVideoUrl("http://facebed.com/reel/1"), null);
+  assert.equal(calls.length, 0, "không gọi mạng với host lạ");
+  // Chuyển hướng cùng host được theo, sang host khác thì bỏ
+  fetchWith((url) =>
+    url.endsWith("/reel/42")
+      ? asResponse(302, "", { location: "/reel/42/canonical" })
+      : asResponse(200, page(["og:video", "https://v.example.com/c.mp4"])),
+  );
+  assert.equal(await resolveVideoUrl(base), "https://v.example.com/c.mp4");
+  fetchWith(() =>
+    asResponse(302, "", { location: "https://evil.example.com/x" }),
+  );
+  assert.equal(await resolveVideoUrl(base), null);
+  fetchWith(() => asResponse(302, "", { location: "/loop" }));
+  assert.equal(
+    await resolveVideoUrl(base),
+    null,
+    "chuyển hướng vòng dừng sau vài lần",
+  );
+  // Lỗi mạng, 404, trang không có video → null
+  fetchWith(() => asResponse(404, "nope"));
+  assert.equal(await resolveVideoUrl(base), null);
+  fetchWith(() =>
+    asResponse(200, page(["og:image", "https://i.example.com/a.jpg"])),
+  );
+  assert.equal(await resolveVideoUrl(base), null);
+  global.fetch = async () => {
+    throw new Error("offline");
+  };
+  assert.equal(await resolveVideoUrl(base), null);
+
+  // Tin nhắn tự động: chỉ gửi link video; không có video thì giữ link embed
+  fetchWith(() =>
+    asResponse(200, page(["og:video", "https://v.example.com/auto.mp4"])),
+  );
+  let vm = fakeMessage(`xem ${link}`);
+  assert.equal(await handleEmbedMessage(vm), true);
+  assert.equal(vm.replies[0].content, "https://v.example.com/auto.mp4");
+  assert(!vm.replies[0].content.includes("facebed.com"), "không kèm thẻ embed");
+  fetchWith(() =>
+    asResponse(200, page(["og:image", "https://i.example.com/a.jpg"])),
+  );
+  vm = fakeMessage(`xem ${link}`);
+  assert.equal(await handleEmbedMessage(vm), true);
+  assert.equal(vm.replies[0].content, "https://facebed.com/reel/42");
+  // Lệnh /embed chuyendoi cho Facebook cũng trả link video
+  fetchWith(() =>
+    asResponse(200, page(["og:video", "https://v.example.com/cmd.mp4"])),
+  );
+  assert.equal(
+    (await run("https://www.facebook.com/reel/42")).content,
+    "https://v.example.com/cmd.mp4",
+  );
+  fetchWith(() => asResponse(404, ""));
+  assert.equal(
+    (await run("https://www.facebook.com/reel/42")).content,
+    "https://facebed.com/reel/42",
+  );
   console.log("embed link tests passed");
 })().catch((error) => {
   console.error(error);

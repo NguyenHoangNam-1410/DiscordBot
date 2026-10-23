@@ -1,5 +1,9 @@
 const { SlashCommandBuilder, MessageFlags } = require("discord.js");
-const { convertLink, setAutoEnabled } = require("../services/embedLinkService");
+const {
+  convertLink,
+  setAutoEnabled,
+  resolveVideoUrl,
+} = require("../services/embedLinkService");
 
 const ERRORS = {
   INVALID_URL: "Link không hợp lệ. Hãy dán nguyên link YouTube hoặc Facebook.",
@@ -65,8 +69,15 @@ module.exports = {
         content: ERRORS[result.error] || ERRORS.INVALID_URL,
         flags: MessageFlags.Ephemeral,
       });
-    return interaction.reply({
-      content: result.url,
+    if (result.kind !== "facebook")
+      return interaction.reply({
+        content: result.url,
+        allowedMentions: { parse: [] },
+      });
+    // Facebook: lấy link video trực tiếp (chỉ có video); không có thì trả link embed.
+    await interaction.deferReply();
+    return interaction.editReply({
+      content: (await resolveVideoUrl(result.url)) || result.url,
       allowedMentions: { parse: [] },
     });
   },
