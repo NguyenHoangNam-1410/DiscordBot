@@ -70,20 +70,20 @@ ok(
 );
 bad("https://www.facebook.com/", "NO_VIDEO");
 
-// Instagram → ddinstagram.com, bỏ toàn bộ query theo dõi
+// Instagram → www.kkinstagram.com, bỏ toàn bộ query theo dõi
 ok(
   "https://www.instagram.com/reel/C8abcDEFghi/?igsh=MWx4&utm_source=ig",
-  "https://ddinstagram.com/reel/C8abcDEFghi/",
+  "https://www.kkinstagram.com/reel/C8abcDEFghi/",
   "instagram",
 );
 ok(
   "https://instagram.com/p/Cxyz123/",
-  "https://ddinstagram.com/p/Cxyz123/",
+  "https://www.kkinstagram.com/p/Cxyz123/",
   "instagram",
 );
 ok(
   "https://www.instagram.com/someone/reel/C8abcDEFghi/",
-  "https://ddinstagram.com/someone/reel/C8abcDEFghi/",
+  "https://www.kkinstagram.com/someone/reel/C8abcDEFghi/",
   "instagram",
 );
 bad("https://www.instagram.com/", "NO_VIDEO");
@@ -143,7 +143,7 @@ ok(
 );
 bad("https://www.douyin.com/", "NO_VIDEO");
 assert.equal(embedHost({ DOUYIN_EMBED_HOST: "evil.com/x" }, "douyin"), null);
-assert.equal(embedHost({}, "instagram"), "ddinstagram.com");
+assert.equal(embedHost({}, "instagram"), "www.kkinstagram.com");
 assert.equal(embedHost({}, "tiktok"), "vxtiktok.com");
 // Link giả host của các nền tảng mới
 bad("https://instagram.com.evil.io/reel/1", "UNSUPPORTED_HOST");
@@ -473,7 +473,10 @@ bad("a".repeat(2500), "INVALID_URL");
     extractFacebookLinks(
       "a https://www.instagram.com/reel/AAA111/?igsh=x b https://vm.tiktok.com/ZS9/ c https://www.douyin.com/video/1 d https://youtu.be/dQw4w9WgXcQ",
     ),
-    ["https://ddinstagram.com/reel/AAA111/", "https://vm.vxtiktok.com/ZS9/"],
+    [
+      "https://www.kkinstagram.com/reel/AAA111/",
+      "https://vm.vxtiktok.com/ZS9/",
+    ],
   );
   // Chỉ mở trang của host embed (kể cả tiền tố vm.) khi lấy video; host lạ thì không gọi mạng
   const tiktokPage = (url) =>
@@ -485,7 +488,7 @@ bad("a".repeat(2500), "INVALID_URL");
     "https://v.example.com/tt.mp4",
   );
   assert.equal(
-    await resolveVideoUrl("https://ddinstagram.com/reel/AAA111/"),
+    await resolveVideoUrl("https://www.kkinstagram.com/reel/AAA111/"),
     "https://v.example.com/tt.mp4",
   );
   const before = calls.length;
