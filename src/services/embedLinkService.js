@@ -242,16 +242,16 @@ function metaTags(html) {
   return tags;
 }
 
-function parseVideoUrl(html, pageUrl) {
+function firstMetaUrl(html, pageUrl, names, maxLength = 2000) {
   const tags = metaTags(html);
-  for (const name of VIDEO_META) {
+  for (const name of names) {
     for (const [key, content] of tags) {
       if (key !== name) continue;
       try {
         const url = new URL(content, pageUrl);
         if (
           url.protocol === "https:" &&
-          url.href.length <= 2000 &&
+          url.href.length <= maxLength &&
           url.href !== pageUrl
         )
           return url.href;
@@ -260,6 +260,15 @@ function parseVideoUrl(html, pageUrl) {
   }
   return null;
 }
+// Link video có thể dài hơn giới hạn tin nhắn (khi đó dùng link embed ngắn thay vì link ẩn), nên nới giới hạn đọc.
+const parseVideoUrl = (html, pageUrl) =>
+  firstMetaUrl(html, pageUrl, VIDEO_META, 8000);
+const parseImageUrl = (html, pageUrl) =>
+  firstMetaUrl(html, pageUrl, [
+    "og:image:secure_url",
+    "og:image",
+    "twitter:image",
+  ]);
 
 async function readLimited(response) {
   const reader = response.body?.getReader?.();
@@ -309,10 +318,15 @@ async function resolveVideoDetails(embedUrl, env = null) {
       }
       if (!response.ok)
         return { video: null, reason: `status_${response.status}` };
-      const video = parseVideoUrl(await readLimited(response), url.href);
+      const html = await readLimited(response);
+      const video = parseVideoUrl(html, url.href);
       return video
         ? { video, reason: null }
-        : { video: null, reason: "no_video_meta" };
+        : {
+            video: null,
+            image: parseImageUrl(html, url.href),
+            reason: "no_video_meta",
+          };
     }
     return { video: null, reason: "too_many_redirects" };
   } catch (error) {
@@ -333,9 +347,34 @@ function videoMessage(videoUrl) {
 }
 
 // Nội dung tin nhắn cho một link embed: link video ẩn nếu lấy được; không thì link embed cũng ẩn sau biểu tượng (Discord vẫn dựng khung xem trước).
-async function renderEmbedLink(embedUrl, env = null) {
-  const { video, reason } = await resolveVideoDetails(embedUrl, env);
-  if (!video && reason && reason !== "host_not_allowed") {
+const FAILURE_REASONS = {
+  status_401: "dịch vụ embed từ chối truy cập",
+  status_403: "dịch vụ embed từ chối truy cập",
+  status_404: "dịch vụ embed không tìm thấy bài này",
+  status_429: "dịch vụ embed đang giới hạn lượt truy cập, thử lại sau",
+  no_video_meta:
+    "bài không có video hoặc ảnh công khai (có thể là bài riêng tư)",
+  error_TimeoutError: "dịch vụ embed phản hồi quá chậm",
+  too_many_redirects: "dịch vụ embed chuyển hướng quá nhiều lần",
+};
+function failureText(reason, originalUrl) {
+  const why =
+    FAILURE_REASONS[reason] ||
+    (String(reason).startsWith("status_5")
+      ? "dịch vụ embed đang lỗi"
+      : "dịch vụ embed không phản hồi đúng");
+  return `❌ Không đổi được link này: ${why}.${originalUrl ? ` Link gốc: <${originalUrl}>` : ""}`;
+}
+
+// Kết quả đổi một link embed: { ok, content } hoặc { ok:false, reason, content: thông báo thất bại }.
+//  - có video: link video ẩn `[🎬](url)`;
+//  - chỉ có ảnh (bài ảnh): link embed để Discord hiện ảnh;
+//  - không có gì: báo thất bại thay vì gửi một tin nhắn trống để người dùng chờ vô ích.
+async function renderEmbedLink(embedUrl, env = null, originalUrl = null) {
+  const { video, image, reason } = await resolveVideoDetails(embedUrl, env);
+  if (video) return { ok: true, content: videoMessage(video) || embedUrl };
+  if (image) return { ok: true, content: embedUrl, image: true };
+  if (reason && reason !== "host_not_allowed") {
     // Log chẩn đoán: giúp biết dịch vụ embed đang trả gì khi không có video.
     console.warn(
       JSON.stringify({
@@ -346,7 +385,11 @@ async function renderEmbedLink(embedUrl, env = null) {
       }),
     );
   }
-  return (video && videoMessage(video)) || videoMessage(embedUrl) || embedUrl;
+  return {
+    ok: false,
+    reason: reason || "unknown",
+    content: failureText(reason || "unknown", originalUrl),
+  };
 }
 
 // Link bọc trong <...> là cố ý tắt embed nên bỏ qua.
@@ -383,10 +426,16 @@ async function handleEmbedMessage(message) {
     ])
   )
     return false;
-  // Gửi riêng link video nếu lấy được (khung chỉ có video); không thì giữ link embed.
-  const targets = await Promise.all(links.map((link) => renderEmbedLink(link)));
+  // Gửi riêng link video nếu lấy được (khung chỉ có video); bài ảnh thì link embed; không lấy được gì thì không trả lời tin,
+  // chỉ thả ❌ lên tin gốc để người dùng biết không đổi được thay vì chờ vô ích.
+  const results = await Promise.all(links.map((link) => renderEmbedLink(link)));
+  const good = results.filter((result) => result.ok);
+  if (!good.length) {
+    await Promise.resolve(message.react?.("❌")).catch(() => {});
+    return true;
+  }
   await message.reply({
-    content: targets.join("\n"),
+    content: good.map((result) => result.content).join("\n"),
     allowedMentions: { parse: [], repliedUser: false },
   });
   return true;
@@ -402,9 +451,11 @@ module.exports = {
   extractFacebookLinks: extractEmbedLinks,
   isEmbedHost,
   parseVideoUrl,
+  parseImageUrl,
   resolveVideoUrl,
   resolveVideoDetails,
   renderEmbedLink,
+  failureText,
   videoMessage,
   handleEmbedMessage,
 };

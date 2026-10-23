@@ -7,9 +7,14 @@ for (const suffix of ["", "-wal", "-shm"])
 process.env.DB_PATH = testDb;
 const warnings = [];
 console.warn = (line) => warnings.push(JSON.parse(line));
-global.fetch = async () => {
-  throw new Error("offline");
-};
+// Mặc định: dịch vụ embed trả bài chỉ có ảnh (không video) → bot gửi link embed để Discord hiện ảnh.
+global.fetch = async () => ({
+  status: 200,
+  ok: true,
+  headers: { get: () => null },
+  text: async () =>
+    '<meta property="og:image" content="https://i.example.com/a.jpg">',
+});
 const {
   convertLink,
   embedHost,
@@ -21,6 +26,7 @@ const {
   resolveVideoUrl,
   resolveVideoDetails,
   renderEmbedLink,
+  parseImageUrl,
   videoMessage,
 } = require("../src/services/embedLinkService");
 const { PermissionFlagsBits: Flags } = require("discord.js");
@@ -244,7 +250,7 @@ bad("a".repeat(2500), "INVALID_URL");
   const link = "https://www.facebook.com/reel/42?fbclid=x";
   let m = fakeMessage(`hay ${link}`);
   assert.equal(await handleEmbedMessage(m), true);
-  assert.equal(m.replies[0].content, "[🎬](https://facebed.com/reel/42)");
+  assert.equal(m.replies[0].content, "https://facebed.com/reel/42");
   assert.deepEqual(m.replies[0].allowedMentions, {
     parse: [],
     repliedUser: false,
@@ -434,7 +440,7 @@ bad("a".repeat(2500), "INVALID_URL");
   );
   vm = fakeMessage(`xem ${link}`);
   assert.equal(await handleEmbedMessage(vm), true);
-  assert.equal(vm.replies[0].content, "[🎬](https://facebed.com/reel/42)");
+  assert.equal(vm.replies[0].content, "https://facebed.com/reel/42");
   // Lệnh /embed chuyendoi cho Facebook cũng trả link video
   fetchWith(() =>
     asResponse(200, page(["og:video", "https://v.example.com/cmd.mp4"])),
@@ -443,11 +449,15 @@ bad("a".repeat(2500), "INVALID_URL");
     (await run("https://www.facebook.com/reel/42")).content,
     "[🎬](https://v.example.com/cmd.mp4)",
   );
+  // Không lấy được gì: báo thất bại rõ ràng (kèm link gốc không bung embed) thay vì tin nhắn trống
   fetchWith(() => asResponse(404, ""));
-  assert.equal(
-    (await run("https://www.facebook.com/reel/42")).content,
-    "[🎬](https://facebed.com/reel/42)",
+  const failed = await run("https://www.facebook.com/reel/42");
+  assert.match(
+    failed.content,
+    /^❌ Không đổi được link này: dịch vụ embed không tìm thấy bài này\./,
   );
+  assert.ok(failed.content.includes("<https://www.facebook.com/reel/42>"));
+  assert.ok(!failed.content.includes("facebed.com"));
   // Link dài: gói ẩn, thoát ngoặc đơn, quá giới hạn thì dùng link ngắn
   const longVideo =
     "https://video.fna.fbcdn.net/o1/v/t2/f2/m366/AQPw?" +
@@ -469,7 +479,7 @@ bad("a".repeat(2500), "INVALID_URL");
   );
   assert.equal(
     (await run("https://www.facebook.com/reel/42")).content,
-    "[🎬](https://facebed.com/reel/42)",
+    "https://facebed.com/reel/42",
     "link video quá dài: dùng link embed ngắn",
   );
   // Tự nhận diện cả Instagram/TikTok (Douyin bỏ qua khi chưa cấu hình), không đụng YouTube
@@ -525,7 +535,11 @@ bad("a".repeat(2500), "INVALID_URL");
     await detail(() =>
       asResponse(200, page(["og:image", "https://i.example.com/a.jpg"])),
     ),
-    { video: null, reason: "no_video_meta" },
+    {
+      video: null,
+      image: "https://i.example.com/a.jpg",
+      reason: "no_video_meta",
+    },
   );
   assert.deepEqual(await resolveVideoDetails("https://evil.example.com/x"), {
     video: null,
@@ -561,17 +575,56 @@ bad("a".repeat(2500), "INVALID_URL");
   );
   warnings.length = 0;
   fetchWith(() => asResponse(403, ""));
-  const hiddenFallback = await renderEmbedLink(
+  const refused = await renderEmbedLink(
     "https://www.kkinstagram.com/reel/AAA111/",
+    null,
+    "https://www.instagram.com/reel/AAA111/",
   );
-  assert.equal(
-    hiddenFallback,
-    "[🎬](https://www.kkinstagram.com/reel/AAA111/)",
-    "link dự phòng cũng ẩn",
-  );
+  assert.equal(refused.ok, false);
+  assert.equal(refused.reason, "status_403");
+  assert.match(refused.content, /từ chối truy cập/);
   assert.equal(warnings.length, 1);
   assert.equal(warnings[0].reason, "status_403");
   assert.equal(warnings[0].host, "www.kkinstagram.com");
+  // Bài ảnh: link embed; có video: link video ẩn
+  fetchWith(() =>
+    asResponse(200, page(["og:image", "https://i.example.com/a.jpg"])),
+  );
+  assert.deepEqual(await renderEmbedLink("https://www.kkinstagram.com/p/X/"), {
+    ok: true,
+    content: "https://www.kkinstagram.com/p/X/",
+    image: true,
+  });
+  assert.equal(
+    parseImageUrl(page(["og:image", "http://x.example.com/a.jpg"]), base),
+    null,
+  );
+  // Tự động: tất cả thất bại → không trả lời, thả ❌; một phần thành công → chỉ trả phần thành công
+  fetchWith(() => asResponse(403, ""));
+  const reactions = [];
+  vm = fakeMessage(`xem ${link}`);
+  vm.react = async (emoji) => reactions.push(emoji);
+  assert.equal(await handleEmbedMessage(vm), true);
+  assert.deepEqual(vm.replies, []);
+  assert.deepEqual(reactions, ["❌"]);
+  vm = fakeMessage(`xem ${link}`);
+  vm.react = async () => {
+    throw new Error("Missing Permissions");
+  };
+  assert.equal(
+    await handleEmbedMessage(vm),
+    true,
+    "thiếu quyền thả emoji không gây lỗi",
+  );
+  fetchWith((url) =>
+    url.includes("/reel/42")
+      ? asResponse(200, page(["og:video", "https://v.example.com/ok.mp4"]))
+      : asResponse(403, ""),
+  );
+  vm = fakeMessage(`${link} https://www.facebook.com/reel/99`);
+  vm.react = async (emoji) => reactions.push(emoji);
+  assert.equal(await handleEmbedMessage(vm), true);
+  assert.equal(vm.replies[0].content, "[🎬](https://v.example.com/ok.mp4)");
   console.log("embed link tests passed");
 })().catch((error) => {
   console.error(error);

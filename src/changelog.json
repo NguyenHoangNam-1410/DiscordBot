@@ -1,5 +1,17 @@
 [
   {
+    "id": "b6dfcd69-3df6-4212-a2fa-1754bc2ed660",
+    "updatedAt": "2026-10-23T12:00:27.901Z",
+    "auditedAt": "2026-10-23T12:00:27.901Z",
+    "title": "Embed báo thất bại rõ ràng",
+    "type": "fix",
+    "scope": "system",
+    "changes": [
+      "Khi không đổi được link (bài riêng tư, dịch vụ embed lỗi hoặc quá chậm), /embed chuyendoi báo lý do thay vì để tin nhắn trống; chế độ tự động thả ❌ lên tin gốc.",
+      "Bài chỉ có ảnh vẫn hiện ảnh qua link xem trước."
+    ]
+  },
+  {
     "id": "ba63f65c-b6d8-4f90-b996-2bab650ae247",
     "updatedAt": "2026-10-23T11:55:38.132Z",
     "auditedAt": "2026-10-23T11:55:38.132Z",
