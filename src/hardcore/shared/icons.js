@@ -425,22 +425,48 @@ const CHARACTER_ACTION_ICONS = Object.freeze({
         : null,
     skill: "skill_venance_astral_armament",
   }),
+  // Rha-Kor: icon riêng chỉ khi action kế tiếp có hiệu ứng của Cổ Luật; còn lại dùng icon chung.
+  rha_kor: Object.freeze({
+    attack: (state) =>
+      require("../characters/rhakor").actionBoosted(state, "attack")
+        ? "attack_rha_kor"
+        : null,
+    defend: (state) =>
+      require("../characters/rhakor").actionBoosted(state, "defend")
+        ? "defend_rha_kor"
+        : null,
+    potion: (state) =>
+      require("../characters/rhakor").actionBoosted(state, "potion")
+        ? "potion_rha_kor"
+        : null,
+    skill: "skill_rha_kor",
+  }),
 });
 function characterActionIcon(state, action) {
-  if (!["attack", "defend", "skill"].includes(action)) return null;
+  if (!["attack", "defend", "skill", "potion"].includes(action)) return null;
   const fallback =
     action === "skill"
       ? SKILL_ICONS[state.classKey] || icon("sparkles", "✨")
       : action === "attack"
         ? icon("PHYS", "⚔️")
-        : icon("DEF", "🛡️");
+        : action === "defend"
+          ? icon("DEF", "🛡️")
+          : null;
   const id = state.characterSoul?.characterId || state.classKey;
-  const custom = Object.hasOwn(CHARACTER_ACTION_ICONS, id)
-    ? CHARACTER_ACTION_ICONS[id][action]
+  const table = Object.hasOwn(CHARACTER_ACTION_ICONS, id)
+    ? CHARACTER_ACTION_ICONS[id]
     : null;
+  // Nhân vật khai báo riêng một action thì chỉ dùng khai báo đó (null = không có hiệu ứng → icon chung);
+  // action chưa khai báo mới thử tên mặc định <action>_<id>.
+  const declared = Boolean(table) && Object.hasOwn(table, action);
+  const custom = declared ? table[action] : null;
   const name = typeof custom === "function" ? custom(state) : custom;
   // Look up at render time: registry loads after modules, and uploads may be missing.
-  return (name && appEmoji(name)) || appEmoji(action + "_" + id) || fallback;
+  return (
+    (name && appEmoji(name)) ||
+    (!declared && appEmoji(action + "_" + id)) ||
+    fallback
+  );
 }
 // Resolve Rift emojis after startup loads the application registry.
 // Biểu tượng Rift. Bốn hiệu ứng elite (Rift v3) tạm dùng emoji thường; thêm emoji ứng dụng rift_<key> sau là tự được dùng.
@@ -490,16 +516,16 @@ function eventIcon(key) {
     key === "seal_altar"
       ? "🔱"
       : key === "bounty_hunter"
-      ? "⚖️"
-      : key === "boss_chest"
-      ? E.chest
-      : key === "god_rngesus"
-        ? "🌟"
-        : key === "royal_invitation"
-          ? "🏰"
-          : key === "ritual"
-            ? "🕯️"
-            : "⚠️",
+        ? "⚖️"
+        : key === "boss_chest"
+          ? E.chest
+          : key === "god_rngesus"
+            ? "🌟"
+            : key === "royal_invitation"
+              ? "🏰"
+              : key === "ritual"
+                ? "🕯️"
+                : "⚠️",
   );
 }
 function treasureChestIcon(color) {

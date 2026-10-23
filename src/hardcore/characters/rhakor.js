@@ -136,7 +136,10 @@ function turnMultiplier(s) {
   if (!t) return 1;
   let m = 1;
   if (t.action === "skill")
-    m = t.mode === "phan" ? c.phan * (t.discount && c.s2 ? c.s2Bonus : 1) : c.open;
+    m =
+      t.mode === "phan"
+        ? c.phan * (t.discount && c.s2 ? c.s2Bonus : 1)
+        : c.open;
   else if (t.action === "attack")
     m =
       (t.mode === "doan" ? 1 + c.doan : 1) *
@@ -159,8 +162,7 @@ function adjustCost(s, cost) {
 }
 const defendExtraMana = (s) =>
   turnOf(s)?.mode === "ho" ? config(s).hoMana : 0;
-const potionFactor = (s) =>
-  turnOf(s)?.mode === "dan" ? config(s).danHeal : 1;
+const potionFactor = (s) => (turnOf(s)?.mode === "dan" ? config(s).danHeal : 1);
 // Luật Hộ: giảm sát thương phản công hiện tại và kế tiếp; phản công kế tiếp còn được hưởng hiệu quả Defense.
 const guardRate = (s) => (peek(s)?.hoRounds > 0 ? config(s).hoReduce : 0);
 const carryDefend = (s) => peek(s)?.hoRounds === 1;
@@ -188,6 +190,23 @@ function gainMana(s, amount) {
   return s.mana - before;
 }
 const icon = () => SKILL_ICONS.rha_kor;
+// Cổ Luật đang mở: đã mở trong phòng này, hoặc S1 mang từ phòng trước sang (chưa có khung combat mới).
+function lawOpen(s) {
+  if (!enabled(s) || s.encounter?.type !== "combat") return false;
+  const f = peek(s);
+  return Boolean(f ? f.law : level(s) >= 1 && s.rhaCarry?.law);
+}
+// Action kế tiếp có hiệu ứng riêng của Rha-Kor không (dùng chọn icon nút: có hiệu ứng → icon đặc biệt, không → icon chung).
+function actionBoosted(s, action) {
+  if (!enabled(s) || s.encounter?.type !== "combat") return false;
+  const law = lawOpen(s);
+  if (action === "defend" || action === "potion") return law;
+  if (action === "attack") {
+    const f = peek(s);
+    return law || Boolean(f && (f.boon || f.penalty || f.s4 || f.leech));
+  }
+  return false;
+}
 function setShred(f, rate, actions) {
   if (f.shred && f.shred.rate > rate) {
     f.shred.turns = Math.max(f.shred.turns, actions + 1);
@@ -292,19 +311,36 @@ function after(s, api = {}) {
     if (t.penalty) f.penalty = false;
     if (t.s4) {
       f.s4 = false;
-      out.log += "\n" + icon() + " Luật Hộ Phản Chấn: Attack +" + Math.round(c.s4Bonus * 100) + "% DMG.";
+      out.log +=
+        "\n" +
+        icon() +
+        " Luật Hộ Phản Chấn: Attack +" +
+        Math.round(c.s4Bonus * 100) +
+        "% DMG.";
     }
     if (t.leech) {
       f.leech = false;
-      const gained = api.heal && api.dealt > 0 ? api.heal(Math.floor(api.dealt * c.leech)) : 0;
+      const gained =
+        api.heal && api.dealt > 0
+          ? api.heal(Math.floor(api.dealt * c.leech))
+          : 0;
       if (api.dealt > 0)
-        out.log += "\n" + E.hp + " Luật Dẫn: hồi " + gained + " HP từ sát thương.";
+        out.log +=
+          "\n" + E.hp + " Luật Dẫn: hồi " + gained + " HP từ sát thương.";
     }
   }
   if (t.action === "skill") {
     if (c.s1 && f.skillsCast === 0 && api.landed) {
       const got = gainMana(s, 1);
-      if (got) out.log += "\n" + soulIcon("rha_kor", 1) + " " + E.mana + " Bia Khai Mệnh: hoàn " + got + " MP.";
+      if (got)
+        out.log +=
+          "\n" +
+          soulIcon("rha_kor", 1) +
+          " " +
+          E.mana +
+          " Bia Khai Mệnh: hoàn " +
+          got +
+          " MP.";
     }
     f.skillsCast++;
   }
@@ -312,7 +348,12 @@ function after(s, api = {}) {
   if (t.discount) {
     f.discount = api.landed ? null : { window: c.discountWindow, fresh: true };
     if (t.mode === "phan" && c.s2)
-      out.log += "\n" + soulIcon("rha_kor", 2) + " Nét Khắc Bền Vững: giảm 1 MP, Luật Phán +" + Math.round((c.s2Bonus - 1) * 100) + "% DMG.";
+      out.log +=
+        "\n" +
+        soulIcon("rha_kor", 2) +
+        " Nét Khắc Bền Vững: giảm 1 MP, Luật Phán +" +
+        Math.round((c.s2Bonus - 1) * 100) +
+        "% DMG.";
   }
   // Mỗi Cổ Luật mới chỉ mở một lần giảm MP (S2).
   if (opened && c.s2) f.discount = { window: c.discountWindow, fresh: true };
@@ -324,7 +365,14 @@ function after(s, api = {}) {
   if (f.boon && --f.boon.window <= 0) f.boon = null;
   if (completed && c.boon) {
     f.boon = { window: c.boonWindow };
-    out.log += "\n" + icon() + " Hoàn thành " + NAMES[t.mode] + ": nhận Quyền Khắc (" + c.boonWindow + " action).";
+    out.log +=
+      "\n" +
+      icon() +
+      " Hoàn thành " +
+      NAMES[t.mode] +
+      ": nhận Quyền Khắc (" +
+      c.boonWindow +
+      " action).";
   }
   if (f.shred && --f.shred.turns <= 0) f.shred = null;
   if (c.carry) {
@@ -340,7 +388,9 @@ function offAction(s) {
   delete s.rhaCarry;
 }
 function lawText(f) {
-  return f?.law ? "Cổ Luật mở (" + f.law.window + " action)" : "Chưa mở Cổ Luật";
+  return f?.law
+    ? "Cổ Luật mở (" + f.law.window + " action)"
+    : "Chưa mở Cổ Luật";
 }
 function innateText(s) {
   const c = config(s),
@@ -379,7 +429,9 @@ function awakeningText(s) {
     " action). Attack/Skill kế tiếp tự tiêu thụ: +" +
     Math.round(c.boonBonus * 100) +
     "% sát thương sau kháng và bỏ qua thêm 20% DEF. " +
-    (f?.boon ? "Hiện tại: đang có Quyền Khắc (" + f.boon.window + " action)." : "Hiện tại: chưa có Quyền Khắc.")
+    (f?.boon
+      ? "Hiện tại: đang có Quyền Khắc (" + f.boon.window + " action)."
+      : "Hiện tại: chưa có Quyền Khắc.")
   );
 }
 function status(s) {
@@ -387,7 +439,14 @@ function status(s) {
   if (!f) return "Chưa vào trận";
   const parts = [lawText(f)];
   if (f.boon) parts.push("Quyền Khắc (" + f.boon.window + ")");
-  if (f.shred) parts.push("DEF mục tiêu −" + Math.round(f.shred.rate * 100) + "% (" + Math.max(0, f.shred.turns - 1) + " action)");
+  if (f.shred)
+    parts.push(
+      "DEF mục tiêu −" +
+        Math.round(f.shred.rate * 100) +
+        "% (" +
+        Math.max(0, f.shred.turns - 1) +
+        " action)",
+    );
   if (f.barrier > 0) parts.push("Barrier " + Math.floor(f.barrier));
   if (f.hoRounds > 0) parts.push("Giảm sát thương nhận 25%");
   if (f.penalty) parts.push("Attack kế tiếp −12%");
@@ -408,6 +467,8 @@ module.exports = {
   adjustCost,
   defendExtraMana,
   potionFactor,
+  lawOpen,
+  actionBoosted,
   guardRate,
   carryDefend,
   counterDone,

@@ -21,9 +21,22 @@ function test(name, fn) {
   console.log("PASS " + name);
 }
 const fixture = (extra = {}) => ({
-  type: "combat", name: "Fixture", rank: "normal", hp: 1e8, maxHp: 1e8, defense: 0, resistance: 0,
-  evasion: 0, accuracy: 100000, critChance: 0, damageMin: 1, damageMax: 1, damageType: "physical",
-  nextDamageType: "physical", combatTurn: 1, ...extra,
+  type: "combat",
+  name: "Fixture",
+  rank: "normal",
+  hp: 1e8,
+  maxHp: 1e8,
+  defense: 0,
+  resistance: 0,
+  evasion: 0,
+  accuracy: 100000,
+  critChance: 0,
+  damageMin: 1,
+  damageMax: 1,
+  damageType: "physical",
+  nextDamageType: "physical",
+  combatTurn: 1,
+  ...extra,
 });
 function fresh(n = 0, awakened = false, enemy = {}) {
   const s = chars.preview("rha_kor", n, "SSR");
@@ -54,13 +67,24 @@ const f = (s) => s.encounter.rhaKor;
 const taken = (s) => Number(/nhận (\d+) DMG/.exec(s.lastLog)?.[1] || 0);
 
 test("Max MP 4; catalog SSR chiến binh với 6 Tinh Hồn mới", () => {
-  assert.equal(stats.createState("rha_kor", 10, { gameplayVersion: 3 }).maxMana, 4);
+  assert.equal(
+    stats.createState("rha_kor", 10, { gameplayVersion: 3 }).maxMana,
+    4,
+  );
   const c = chars.get("rha_kor");
   assert.equal(c.rarity, "SSR");
   assert.equal(c.classKey, "warrior");
-  assert.deepEqual(c.souls.map((x) => x.name), [
-    "Bia Khai Mệnh", "Nét Khắc Bền Vững", "Luật Đoạn Tuyệt", "Luật Hộ Phản Chấn", "Quyền Khắc Toàn Phần", "Cổ Luật Không Thể Xóa",
-  ]);
+  assert.deepEqual(
+    c.souls.map((x) => x.name),
+    [
+      "Bia Khai Mệnh",
+      "Nét Khắc Bền Vững",
+      "Luật Đoạn Tuyệt",
+      "Luật Hộ Phản Chấn",
+      "Quyền Khắc Toàn Phần",
+      "Cổ Luật Không Thể Xóa",
+    ],
+  );
   assert.equal(stats.CLASSES.rha_kor.skill, "Khai Bia Cổ Luật");
 });
 
@@ -74,7 +98,10 @@ test("Skill: 2 MP, mở Cổ Luật 1 action; không dùng thì hết; nội t�
   // Không có nội tại sẽ yếu hơn: so với cùng hit khi DEF không bị bỏ qua.
   const base = fresh(0, false, { defense: 30 });
   kit.frame(base);
-  assert.ok(kit.defenseFactor(base) < 1 && Math.abs(kit.defenseFactor(base) - 0.85) < 1e-9);
+  assert.ok(
+    kit.defenseFactor(base) < 1 &&
+      Math.abs(kit.defenseFactor(base) - 0.85) < 1e-9,
+  );
   act(s, "defend"); // Luật Hộ dùng luật
   assert.equal(f(s).law, null);
 });
@@ -104,24 +131,42 @@ test("Luật Hộ: Barrier 12% Max HP, hồi 2 MP, giảm sát thương 2 phản
   s.mana = 2;
   act(s, "defend");
   assert.equal(s.mana, 4, "hồi 2 MP (thường chỉ 1)");
-  assert.match(s.lastLog, new RegExp("Barrier " + Math.floor(s.maxHp * 0.12) + "\\b"), "Barrier 12% Max HP");
+  assert.match(
+    s.lastLog,
+    new RegExp("Barrier " + Math.floor(s.maxHp * 0.12) + "\\b"),
+    "Barrier 12% Max HP",
+  );
   assert.ok(f(s).barrier >= 0 && f(s).barrier <= Math.floor(s.maxHp * 0.12));
   assert.equal(f(s).hoRounds, 1, "đã qua phản công đầu, còn phản công kế tiếp");
   assert.equal(kit.guardRate(s), 0.25);
-  assert.equal(kit.carryDefend(s), true, "phản công kế tiếp có hiệu quả Defense");
+  assert.equal(
+    kit.carryDefend(s),
+    true,
+    "phản công kế tiếp có hiệu quả Defense",
+  );
   const penalised = lost(s, "attack");
-  assert.ok(Math.abs(penalised / basic - 0.88) < 0.02, penalised + " vs " + basic);
+  assert.ok(
+    Math.abs(penalised / basic - 0.88) < 0.02,
+    penalised + " vs " + basic,
+  );
   assert.equal(f(s).hoRounds, 0);
   assert.equal(f(s).penalty, false, "chỉ Attack kế tiếp bị giảm");
   assert.equal(kit.guardRate(s), 0);
   // Giảm 25% sát thương nhận so với phản công không có Luật Hộ.
   const a = fresh(),
     b = fresh();
-  a.encounter.damageMin = a.encounter.damageMax = b.encounter.damageMin = b.encounter.damageMax = 4000;
+  a.encounter.damageMin =
+    a.encounter.damageMax =
+    b.encounter.damageMin =
+    b.encounter.damageMax =
+      4000;
   b.encounter.rhaKor = { ...kit.frame(b), hoRounds: 2 };
   act(a, "attack");
   act(b, "attack");
-  assert.ok(taken(b) < taken(a) && Math.abs(taken(b) / taken(a) - 0.75) < 0.03, taken(b) + " vs " + taken(a));
+  assert.ok(
+    taken(b) < taken(a) && Math.abs(taken(b) / taken(a) - 0.75) < 0.03,
+    taken(b) + " vs " + taken(a),
+  );
 });
 
 test("Luật Dẫn: Potion +15% hồi máu; Attack kế tiếp hồi 12% sát thương gây ra", () => {
@@ -134,7 +179,10 @@ test("Luật Dẫn: Potion +15% hồi máu; Attack kế tiếp hồi 12% sát th
   act(s, "skill");
   s.hp = 1;
   act(s, "potion");
-  assert.ok(Math.abs(heal(s) / heal(plain) - 1.15) < 0.04, heal(s) + " vs " + heal(plain));
+  assert.ok(
+    Math.abs(heal(s) / heal(plain) - 1.15) < 0.04,
+    heal(s) + " vs " + heal(plain),
+  );
   assert.equal(f(s).leech, true);
   s.hp = 5;
   const dealt = lost(s, "attack");
@@ -203,7 +251,11 @@ test("S1: Cổ Luật mở bởi Skill được giữ xuyên phòng; S0 thì kh�
     const next = fixture();
     return next;
   };
-  for (const [soul, carries] of [[0, false], [1, true], [6, true]]) {
+  for (const [soul, carries] of [
+    [0, false],
+    [1, true],
+    [6, true],
+  ]) {
     const s = fresh(soul);
     s.encounter.hp = 100;
     act(s, "skill"); // hạ quái và mở Cổ Luật
@@ -260,7 +312,11 @@ test("S3/S4/S5 thông số và S4 +10% Attack sau khi Barrier hấp thụ sát t
   s.maxHp = s.hp = 10000;
   act(s, "skill");
   act(s, "defend");
-  assert.equal(f(s).barrier >= 0 && f(s).barrier <= Math.floor(s.maxHp * 0.24), true, "Barrier 24% Max HP");
+  assert.equal(
+    f(s).barrier >= 0 && f(s).barrier <= Math.floor(s.maxHp * 0.24),
+    true,
+    "Barrier 24% Max HP",
+  );
   assert.equal(f(s).s4, true);
   const boost = fresh(4),
     plain = fresh(0);
@@ -304,39 +360,75 @@ test("Trạng thái hợp lệ sau lưu/đọc; dữ liệu hỏng bị từ ch�
     beta.activate(b);
     beta.validate(b);
   }
-  const bad = stats.createState("barbarian", beta.STAKE, { gameplayVersion: 3 });
+  const bad = stats.createState("barbarian", beta.STAKE, {
+    gameplayVersion: 3,
+  });
   beta.activate(bad);
   assert.throws(() => beta.validate(bad), /INVALID_BETA_STATE/);
 });
-test("Nút trận Tấn công/Phòng thủ/Skill dùng icon attack_rha_kor, defend_rha_kor, skill_rha_kor", () => {
+test("Icon nút trận: có hiệu ứng Cổ Luật → icon riêng, không có → icon chung (kể cả nút bình)", () => {
   const { setApplicationEmojisForTest } = require("../src/utils/appEmoji");
   const view = require("../src/hardcore/ui");
+  const ids = {
+    attack_rha_kor: "111111111111111111",
+    defend_rha_kor: "222222222222222222",
+    skill_rha_kor: "333333333333333333",
+    potion_rha_kor: "444444444444444444",
+  };
   const emojiOf = (state) =>
     Object.fromEntries(
       view
         .rows("sid", state)
         .flatMap((row) => row.toJSON().components)
-        .filter((c) => ["attack", "defend", "skill"].includes(c.custom_id.split(":").pop()))
+        .filter((c) =>
+          ["attack", "defend", "skill", "potion"].includes(
+            c.custom_id.split(":").pop(),
+          ),
+        )
         .map((c) => [c.custom_id.split(":").pop(), c.emoji?.id]),
     );
-  setApplicationEmojisForTest([
-    ["attack_rha_kor", "111111111111111111"],
-    ["defend_rha_kor", "222222222222222222"],
-    ["skill_rha_kor", "333333333333333333"],
-  ]);
+  const custom = (name) => ids[name];
+  setApplicationEmojisForTest(Object.entries(ids));
   try {
-    assert.deepEqual(emojiOf(fresh()), {
-      attack: "111111111111111111",
-      defend: "222222222222222222",
-      skill: "333333333333333333",
-    });
-    // Class khác không bị ảnh hưởng: dùng icon chung
+    // Chưa có Cổ Luật: Tấn công/Phòng thủ/Bình dùng icon chung, Skill luôn là icon kỹ năng
+    const s = fresh();
+    let icons = emojiOf(s);
+    assert.notEqual(icons.attack, custom("attack_rha_kor"));
+    assert.notEqual(icons.defend, custom("defend_rha_kor"));
+    assert.notEqual(icons.potion, custom("potion_rha_kor"));
+    assert.equal(icons.skill, custom("skill_rha_kor"));
+    assert.equal(kit.actionBoosted(s, "attack"), false);
+    // Skill mở Cổ Luật → mọi nút (trừ Skill) có hiệu ứng luật → icon riêng
+    act(s, "skill");
+    assert.ok(f(s).law);
+    icons = emojiOf(s);
+    assert.equal(icons.attack, custom("attack_rha_kor"));
+    assert.equal(icons.defend, custom("defend_rha_kor"));
+    assert.equal(icons.potion, custom("potion_rha_kor"));
+    assert.equal(icons.skill, custom("skill_rha_kor"));
+    // Dùng hết luật → quay về icon chung
+    act(s, "defend");
+    assert.equal(f(s).law, null);
+    icons = emojiOf(s);
+    assert.notEqual(icons.defend, custom("defend_rha_kor"));
+    assert.notEqual(icons.potion, custom("potion_rha_kor"));
+    // Luật S1 mang sang phòng sau (chưa hành động) vẫn hiện icon riêng
+    const carried = fresh(1);
+    carried.rhaCarry = { law: { window: 1 } };
+    assert.equal(kit.lawOpen(carried), true);
+    assert.equal(emojiOf(carried).defend, custom("defend_rha_kor"));
+    // Class khác không bị ảnh hưởng
     const other = stats.createState("barbarian", 10000, { gameplayVersion: 3 });
-    Object.assign(other, { floor: 3, cleared: 2, phase: "encounter", encounter: fixture() });
+    Object.assign(other, {
+      floor: 3,
+      cleared: 2,
+      phase: "encounter",
+      encounter: fixture(),
+    });
     stats.recompute(other);
-    const icons = emojiOf(other);
-    assert.notEqual(icons.attack, "111111111111111111");
-    assert.notEqual(icons.defend, "222222222222222222");
+    icons = emojiOf(other);
+    assert.notEqual(icons.attack, custom("attack_rha_kor"));
+    assert.notEqual(icons.potion, custom("potion_rha_kor"));
   } finally {
     setApplicationEmojisForTest([]);
   }
