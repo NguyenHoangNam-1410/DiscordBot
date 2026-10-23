@@ -48,11 +48,13 @@ function frame(s) {
   if (!enabled(s) || e?.type !== "combat") return null;
   // S1: Cổ Luật mở bởi Skill được giữ sang phòng kế tiếp (cửa sổ chỉ trừ khi Rha-Kor hành động).
   const carried = level(s) >= 1 ? s.rhaCarry?.law : null;
+  const carriedDiscount = carried && level(s) >= 2 ? s.rhaCarry.discount : null;
   if (!e.rhaKor) delete s.rhaCarry;
   e.rhaKor ||= {
     version: 2,
     law: carried ? { window: carried.window } : null,
-    discount: null,
+    // S2: giảm 1 MP của Luật Phán đi cùng Cổ Luật được mang sang phòng sau.
+    discount: carriedDiscount ? { window: carriedDiscount.window } : null,
     boon: null,
     shred: null,
     barrier: 0,
@@ -74,7 +76,11 @@ function validate(s) {
     (!enabled(s) ||
       !Number.isSafeInteger(carry.law?.window) ||
       carry.law.window < 1 ||
-      carry.law.window > 4)
+      carry.law.window > 4 ||
+      (carry.discount != null &&
+        (!Number.isSafeInteger(carry.discount.window) ||
+          carry.discount.window < 1 ||
+          carry.discount.window > 3)))
   )
     throw Error("INVALID_RHA_KOR_STATE");
   const f = enabled(s) ? s.encounter?.rhaKor : null;
@@ -376,7 +382,13 @@ function after(s, api = {}) {
   }
   if (f.shred && --f.shred.turns <= 0) f.shred = null;
   if (c.carry) {
-    if (f.law) s.rhaCarry = { law: { window: f.law.window } };
+    if (f.law)
+      s.rhaCarry = {
+        law: { window: f.law.window },
+        ...(f.discount && c.s2
+          ? { discount: { window: f.discount.window } }
+          : {}),
+      };
     else delete s.rhaCarry;
   }
   return out;
