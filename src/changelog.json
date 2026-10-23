@@ -1,5 +1,16 @@
 [
   {
+    "id": "ea82d250-90ee-45be-a560-80159b947378",
+    "updatedAt": "2026-10-23T11:32:50.888Z",
+    "auditedAt": "2026-10-23T11:32:50.888Z",
+    "title": "Lệnh /healthcheck xem tải hệ thống",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Admin dùng /healthcheck để xem tải CPU, RAM, ổ đĩa, dung lượng backup, độ trễ của bot và Discord; có cảnh báo khi vượt ngưỡng."
+    ]
+  },
+  {
     "id": "d36474d9-18d7-44a5-a5b4-5286f48a6ef1",
     "updatedAt": "2026-10-23T11:29:51.758Z",
     "auditedAt": "2026-10-23T11:29:51.758Z",
