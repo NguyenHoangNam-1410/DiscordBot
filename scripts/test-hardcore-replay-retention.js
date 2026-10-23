@@ -65,6 +65,35 @@ assert.equal(
     .get().c,
   0,
 );
+// Nén replay: replay đã kết thúc quá 3 ngày chỉ giữ view, vẫn xem được
+const zlib = require("node:zlib");
+const blob = (o) => zlib.deflateRawSync(Buffer.from(JSON.stringify(o)));
+const view = { floor: 3, presentation: { a: 1 } };
+const putFrame = (id, o) =>
+  db
+    .prepare("UPDATE hardcore_replay_frames SET state_blob=? WHERE session_id=?")
+    .run(blob(o), id);
+addRun("c-old", { created: NOW - 9 * DAY, ended: NOW - 5 * DAY, frames: 2 });
+addRun("c-new", { created: NOW - 2 * DAY, ended: NOW - 1 * DAY, frames: 2 });
+addRun("c-live", { created: NOW - 9 * DAY, frames: 2 });
+for (const id of ["c-old", "c-new", "c-live"])
+  putFrame(id, { schema: 1, state: { big: "x".repeat(2000) }, view });
+assert.equal(store.COMPACT_AFTER_DAYS, 3);
+assert.equal(store.compactOldReplays({ now: NOW }).replays, 1);
+const frameOf = (id) =>
+  JSON.parse(
+    zlib
+      .inflateRawSync(
+        db
+          .prepare("SELECT state_blob FROM hardcore_replay_frames WHERE session_id=?")
+          .get(id).state_blob,
+      )
+      .toString(),
+  );
+assert.equal(frameOf("c-old").state, undefined);
+assert.deepEqual(frameOf("c-old").view, view);
+assert.ok(frameOf("c-new").state && frameOf("c-live").state);
+assert.equal(store.compactOldReplays({ now: NOW }).replays, 0);
 // Bộ hẹn giờ trả về timer có thể dừng
 const timer = store.startReplayMaintenance({ info() {}, warn() {} });
 assert.equal(typeof timer.unref, "function");

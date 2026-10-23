@@ -1501,4 +1501,8 @@ runMigration(55, "chatbot usable in every channel", () => {
   db.exec("DELETE FROM chatbot_channels");
 });
 
+runMigration(56, "survival replay compaction marker", () => {
+  db.exec("ALTER TABLE hardcore_replays ADD COLUMN compacted_at INTEGER");
+});
+
 module.exports = { db, dbPath, runMigration };

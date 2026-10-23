@@ -1,5 +1,17 @@
 [
   {
+    "id": "f778d8fd-5fb4-444a-a561-2433d9b10b8e",
+    "updatedAt": "2026-10-23T17:36:43.930Z",
+    "auditedAt": "2026-10-23T17:36:43.930Z",
+    "title": "Nén replay Sinh tồn cũ",
+    "type": "improvement",
+    "scope": "survival",
+    "changes": [
+      "Replay Sinh tồn đã kết thúc quá 3 ngày được nén gọn (giảm khoảng 60% dung lượng) nhưng vẫn xem lại bình thường",
+      "Replay vẫn được xóa sau 14 ngày như trước"
+    ]
+  },
+  {
     "id": "b6dfcd69-3df6-4212-a2fa-1754bc2ed660",
     "updatedAt": "2026-10-23T12:00:27.901Z",
     "auditedAt": "2026-10-23T12:00:27.901Z",

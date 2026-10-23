@@ -260,6 +260,11 @@ const REPLAY_RETENTION_DAYS = (() => {
     ? value
     : 14;
 })();
+// Replay đã kết thúc quá COMPACT_AFTER_DAYS chỉ cần phần hiển thị (view); bỏ state engine để giảm ~60% dung lượng.
+const COMPACT_AFTER_DAYS = (() => {
+  const value = Number(process.env.HARDCORE_REPLAY_COMPACT_DAYS);
+  return Number.isSafeInteger(value) && value >= 1 && value <= 3650 ? value : 3;
+})();
 const PRUNE_BATCH = 50;
 const PRUNE_MAX_BATCHES = 40;
 
@@ -297,9 +302,61 @@ function pruneOldReplays({
   }
   return { replays };
 }
+function compactOldReplays({
+  days = COMPACT_AFTER_DAYS,
+  now = Date.now(),
+  batches = PRUNE_MAX_BATCHES,
+} = {}) {
+  const cutoff = now - days * DAY_MS;
+  const pending = db.prepare(
+    `SELECT session_id FROM hardcore_replays
+     WHERE ended_at IS NOT NULL AND ended_at < ? AND compacted_at IS NULL LIMIT ?`,
+  );
+  const frames = db.prepare(
+    "SELECT seq,state_blob FROM hardcore_replay_frames WHERE session_id=?",
+  );
+  const update = db.prepare(
+    "UPDATE hardcore_replay_frames SET state_blob=? WHERE session_id=? AND seq=?",
+  );
+  const mark = db.prepare(
+    "UPDATE hardcore_replays SET compacted_at=? WHERE session_id=?",
+  );
+  let replays = 0;
+  for (let batch = 0; batch < batches; batch += 1) {
+    const ids = pending.all(cutoff, PRUNE_BATCH);
+    if (!ids.length) break;
+    db.transaction(() => {
+      for (const { session_id: id } of ids) {
+        for (const row of frames.all(id)) {
+          let saved;
+          try {
+            saved = JSON.parse(inflateRawSync(row.state_blob).toString("utf8"));
+          } catch {
+            continue;
+          }
+          if (!saved.state) continue;
+          const view = saved.view || publicState(saved.state);
+          update.run(
+            deflateRawSync(Buffer.from(JSON.stringify({ schema: 1, view })), {
+              level: 6,
+            }),
+            id,
+            row.seq,
+          );
+        }
+        mark.run(now, id);
+      }
+    })();
+    replays += ids.length;
+  }
+  return { replays };
+}
 function startReplayMaintenance(logger = console) {
   const run = () => {
     try {
+      const compacted = compactOldReplays().replays;
+      if (compacted)
+        logger.info?.({ replays: compacted }, "compacted survival replays");
       const { replays } = pruneOldReplays();
       if (replays)
         logger.info?.({ replays }, "pruned expired survival replays");
@@ -322,6 +379,8 @@ module.exports = {
   encounter,
   publicState,
   pruneOldReplays,
+  compactOldReplays,
+  COMPACT_AFTER_DAYS,
   startReplayMaintenance,
   REPLAY_RETENTION_DAYS,
 };
