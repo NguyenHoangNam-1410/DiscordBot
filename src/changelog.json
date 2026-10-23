@@ -1,5 +1,17 @@
 [
   {
+    "id": "4e3523f9-3161-4262-a2ad-84d8f5b55237",
+    "updatedAt": "2026-10-23T11:42:11.230Z",
+    "auditedAt": "2026-10-23T11:42:11.230Z",
+    "title": "Embed cho Instagram, TikTok, Douyin",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Bot tự đổi link Instagram và TikTok sang dạng chỉ hiện video (giống Facebook); /embed chuyendoi cũng dùng được.",
+      "Douyin cần admin đặt dịch vụ embed (DOUYIN_EMBED_HOST) vì chưa có dịch vụ mặc định; chưa đặt thì bot bỏ qua link Douyin."
+    ]
+  },
+  {
     "id": "6f731a51-554b-4eed-a74e-43b297128fae",
     "updatedAt": "2026-10-23T11:33:51.834Z",
     "auditedAt": "2026-10-23T11:33:51.834Z",

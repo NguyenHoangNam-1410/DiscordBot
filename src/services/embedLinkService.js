@@ -30,17 +30,77 @@ const TRACKING_PARAMS = new Set([
 ]);
 const MAX_LENGTH = 2000;
 
-// `env` chỉ để test truyền cấu hình khác; mặc định đọc process.env.FACEBOOK_EMBED_HOST.
-function embedHost(env = null) {
-  const configured = env
-    ? env.FACEBOOK_EMBED_HOST
-    : process.env.FACEBOOK_EMBED_HOST;
-  const host = String(configured || DEFAULT_FACEBOOK_EMBED_HOST)
+// Mỗi nền tảng: các host nhận diện, host dịch vụ embed mặc định (null = bắt buộc tự cấu hình) và cách giữ tham số.
+// Instagram/TikTok bỏ toàn bộ query (mã video nằm trong đường dẫn); Douyin chỉ giữ modal_id; Facebook bỏ tham số theo dõi.
+const PROVIDERS = Object.freeze({
+  facebook: {
+    hosts: FACEBOOK_HOSTS,
+    fallback: DEFAULT_FACEBOOK_EMBED_HOST,
+    keep: (key) => !TRACKING_PARAMS.has(key) && !key.startsWith("__"),
+  },
+  instagram: {
+    hosts: new Set(["instagram.com", "www.instagram.com", "instagr.am"]),
+    fallback: "ddinstagram.com",
+    keep: () => false,
+  },
+  tiktok: {
+    hosts: new Set([
+      "tiktok.com",
+      "www.tiktok.com",
+      "m.tiktok.com",
+      "vm.tiktok.com",
+      "vt.tiktok.com",
+    ]),
+    fallback: "vxtiktok.com",
+    keep: () => false,
+    // Link rút gọn giữ tiền tố: vm.tiktok.com → vm.<host embed>
+    subdomains: new Set(["vm", "vt"]),
+  },
+  douyin: {
+    hosts: new Set([
+      "douyin.com",
+      "www.douyin.com",
+      "v.douyin.com",
+      "iesdouyin.com",
+      "www.iesdouyin.com",
+    ]),
+    fallback: null,
+    keep: (key) => key === "modal_id",
+    subdomains: new Set(["v"]),
+  },
+});
+const HOST_PATTERN = /^(?=.{4,253}$)([a-z0-9-]+\.)+[a-z]{2,}$/;
+
+// Cấu hình host dịch vụ embed từng nền tảng (đọc process.env, hoặc `env` do test truyền vào).
+const CONFIGURED_HOST = Object.freeze({
+  facebook: (env) =>
+    env ? env.FACEBOOK_EMBED_HOST : process.env.FACEBOOK_EMBED_HOST,
+  instagram: (env) =>
+    env ? env.INSTAGRAM_EMBED_HOST : process.env.INSTAGRAM_EMBED_HOST,
+  tiktok: (env) =>
+    env ? env.TIKTOK_EMBED_HOST : process.env.TIKTOK_EMBED_HOST,
+  douyin: (env) =>
+    env ? env.DOUYIN_EMBED_HOST : process.env.DOUYIN_EMBED_HOST,
+});
+function embedHost(env = null, kind = "facebook") {
+  const host = String(CONFIGURED_HOST[kind]?.(env) || "")
     .trim()
     .toLowerCase();
-  return /^(?=.{4,253}$)([a-z0-9-]+\.)+[a-z]{2,}$/.test(host)
-    ? host
-    : DEFAULT_FACEBOOK_EMBED_HOST;
+  if (HOST_PATTERN.test(host)) return host;
+  return PROVIDERS[kind]?.fallback ?? null;
+}
+
+// Host nào là host dịch vụ embed (kể cả tiền tố vm./vt./v. của link rút gọn): chỉ những host này bot mới mở để lấy video.
+function isEmbedHost(hostname, env = null) {
+  const name = String(hostname || "").toLowerCase();
+  for (const [kind, provider] of Object.entries(PROVIDERS)) {
+    const base = embedHost(env, kind);
+    if (!base) continue;
+    if (name === base) return true;
+    const [sub, ...rest] = name.split(".");
+    if (provider.subdomains?.has(sub) && rest.join(".") === base) return true;
+  }
+  return false;
 }
 
 function parse(input) {
@@ -93,21 +153,29 @@ function convertLink(input, env = null) {
       url: `https://www.youtube.com/watch?v=${id}${start ? `&t=${start}s` : ""}`,
     };
   }
-  if (FACEBOOK_HOSTS.has(host)) {
-    if (url.pathname.replace(/\//g, "") === "")
+  for (const [kind, provider] of Object.entries(PROVIDERS)) {
+    if (!provider.hosts.has(host)) continue;
+    const modalId = kind === "douyin" && url.searchParams.get("modal_id");
+    if (url.pathname.replace(/\//g, "") === "" && !modalId)
       return { ok: false, error: "NO_VIDEO" };
-    const target = new URL(`https://${embedHost(env)}`);
+    const base = embedHost(env, kind);
+    if (!base) return { ok: false, error: "NO_EMBED_SERVICE", kind };
+    const sub = host.split(".")[0];
+    const targetHost =
+      provider.subdomains?.has(sub) && host !== `${sub}.${base}`
+        ? `${sub}.${base}`
+        : base;
+    const target = new URL(`https://${targetHost}`);
     target.pathname = url.pathname;
     for (const [key, value] of url.searchParams)
-      if (!TRACKING_PARAMS.has(key) && !key.startsWith("__"))
-        target.searchParams.append(key, value);
-    return { ok: true, kind: "facebook", url: target.toString() };
+      if (provider.keep(key)) target.searchParams.append(key, value);
+    return { ok: true, kind, url: target.toString() };
   }
   return { ok: false, error: "UNSUPPORTED_HOST" };
 }
 
 // ---- Tự nhận diện trong kênh ---------------------------------------------------
-// Chỉ xử lý Facebook: Discord đã tự nhúng YouTube nên trả lời thêm sẽ thành tin trùng lặp.
+// Xử lý Facebook, Instagram, TikTok, Douyin; bỏ YouTube vì Discord đã tự nhúng nên trả lời thêm sẽ thành tin trùng lặp.
 const AUTO_KEY = "embed_auto";
 const MAX_AUTO_LINKS = 3;
 
@@ -211,9 +279,9 @@ async function readLimited(response) {
 // Trả về link video trực tiếp hoặc null (lỗi mạng, trang không có video, bài riêng tư…).
 async function resolveVideoUrl(embedUrl, env = null) {
   try {
-    const host = embedHost(env);
     let url = new URL(embedUrl);
-    if (url.protocol !== "https:" || url.hostname !== host) return null;
+    if (url.protocol !== "https:" || !isEmbedHost(url.hostname, env))
+      return null;
     for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
       const response = await globalThis.fetch(url.href, {
         redirect: "manual",
@@ -228,7 +296,8 @@ async function resolveVideoUrl(embedUrl, env = null) {
       if ([301, 302, 303, 307, 308].includes(response.status)) {
         const next = new URL(response.headers.get("location") || "", url);
         // Chỉ theo chuyển hướng trong cùng host embed: không để trang trỏ bot sang nơi khác.
-        if (next.protocol !== "https:" || next.hostname !== host) return null;
+        if (next.protocol !== "https:" || !isEmbedHost(next.hostname, env))
+          return null;
         url = next;
         continue;
       }
@@ -249,13 +318,13 @@ function videoMessage(videoUrl) {
 }
 
 // Link bọc trong <...> là cố ý tắt embed nên bỏ qua.
-function extractFacebookLinks(content) {
+function extractEmbedLinks(content) {
   const found = [];
   for (const match of String(content || "").matchAll(
     /(?<!<)https?:\/\/[^\s<>]+/gi,
   )) {
     const result = convertLink(match[0].replace(/[).,;!?]+$/, ""));
-    if (result.ok && result.kind === "facebook" && !found.includes(result.url))
+    if (result.ok && result.kind !== "youtube" && !found.includes(result.url))
       found.push(result.url);
     if (found.length >= MAX_AUTO_LINKS) break;
   }
@@ -265,7 +334,7 @@ function extractFacebookLinks(content) {
 async function handleEmbedMessage(message) {
   if (!message.guildId || message.author?.bot || message.webhookId)
     return false;
-  const links = extractFacebookLinks(message.content);
+  const links = extractEmbedLinks(message.content);
   if (!links.length || !isAutoEnabled(message.guildId)) return false;
   // Chỉ trả lời ở kênh bot có quyền: xem, gửi (hoặc gửi trong thread), đọc lịch sử để reply, nhúng link.
   const { PermissionFlagsBits: Flags } = require("discord.js");
@@ -302,7 +371,9 @@ module.exports = {
   DEFAULT_FACEBOOK_EMBED_HOST,
   isAutoEnabled,
   setAutoEnabled,
-  extractFacebookLinks,
+  extractEmbedLinks,
+  extractFacebookLinks: extractEmbedLinks,
+  isEmbedHost,
   parseVideoUrl,
   resolveVideoUrl,
   videoMessage,

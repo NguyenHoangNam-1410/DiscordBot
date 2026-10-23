@@ -70,6 +70,86 @@ ok(
 );
 bad("https://www.facebook.com/", "NO_VIDEO");
 
+// Instagram → ddinstagram.com, bỏ toàn bộ query theo dõi
+ok(
+  "https://www.instagram.com/reel/C8abcDEFghi/?igsh=MWx4&utm_source=ig",
+  "https://ddinstagram.com/reel/C8abcDEFghi/",
+  "instagram",
+);
+ok(
+  "https://instagram.com/p/Cxyz123/",
+  "https://ddinstagram.com/p/Cxyz123/",
+  "instagram",
+);
+ok(
+  "https://www.instagram.com/someone/reel/C8abcDEFghi/",
+  "https://ddinstagram.com/someone/reel/C8abcDEFghi/",
+  "instagram",
+);
+bad("https://www.instagram.com/", "NO_VIDEO");
+ok(
+  "https://www.instagram.com/reel/1",
+  "https://ig.example.org/reel/1",
+  "instagram",
+  { INSTAGRAM_EMBED_HOST: "ig.example.org" },
+);
+// TikTok → vxtiktok.com; link rút gọn giữ tiền tố vm./vt.
+ok(
+  "https://www.tiktok.com/@user/video/7300000000000000000?is_from_webapp=1&sender_device=pc",
+  "https://vxtiktok.com/@user/video/7300000000000000000",
+  "tiktok",
+);
+ok(
+  "https://vm.tiktok.com/ZSabc123/",
+  "https://vm.vxtiktok.com/ZSabc123/",
+  "tiktok",
+);
+ok(
+  "https://vt.tiktok.com/ZSabc123/",
+  "https://vt.vxtiktok.com/ZSabc123/",
+  "tiktok",
+);
+ok(
+  "https://m.tiktok.com/v/7300000000000000000.html",
+  "https://vxtiktok.com/v/7300000000000000000.html",
+  "tiktok",
+);
+ok("https://vm.tiktok.com/ZS1/", "https://vm.tt.example.org/ZS1/", "tiktok", {
+  TIKTOK_EMBED_HOST: "tt.example.org",
+});
+bad("https://www.tiktok.com/", "NO_VIDEO");
+// Douyin: chưa có dịch vụ mặc định → báo cần cấu hình; có cấu hình thì đổi host, chỉ giữ modal_id
+assert.deepEqual(
+  convertLink("https://www.douyin.com/video/7300000000000000000"),
+  { ok: false, error: "NO_EMBED_SERVICE", kind: "douyin" },
+);
+ok(
+  "https://www.douyin.com/video/7300000000000000000?previous_page=x",
+  "https://dy.example.org/video/7300000000000000000",
+  "douyin",
+  { DOUYIN_EMBED_HOST: "dy.example.org" },
+);
+ok(
+  "https://www.douyin.com/?modal_id=7300000000000000000&foo=bar",
+  "https://dy.example.org/?modal_id=7300000000000000000",
+  "douyin",
+  { DOUYIN_EMBED_HOST: "dy.example.org" },
+);
+ok(
+  "https://v.douyin.com/iAbCdEf/",
+  "https://v.dy.example.org/iAbCdEf/",
+  "douyin",
+  { DOUYIN_EMBED_HOST: "dy.example.org" },
+);
+bad("https://www.douyin.com/", "NO_VIDEO");
+assert.equal(embedHost({ DOUYIN_EMBED_HOST: "evil.com/x" }, "douyin"), null);
+assert.equal(embedHost({}, "instagram"), "ddinstagram.com");
+assert.equal(embedHost({}, "tiktok"), "vxtiktok.com");
+// Link giả host của các nền tảng mới
+bad("https://instagram.com.evil.io/reel/1", "UNSUPPORTED_HOST");
+bad("https://tiktok.com.evil.io/@a/video/1", "UNSUPPORTED_HOST");
+bad("https://douyin.com.evil.io/video/1", "UNSUPPORTED_HOST");
+
 // Host embed tự cấu hình phải hợp lệ, nếu không dùng mặc định
 assert.equal(embedHost({}), "facebed.com");
 assert.equal(
@@ -110,7 +190,7 @@ bad("a".repeat(2500), "INVALID_URL");
   assert.deepEqual(good.allowedMentions, { parse: [] });
   assert.equal(good.flags, undefined);
   const rejected = await run("https://example.com");
-  assert.match(rejected.content, /YouTube và Facebook/);
+  assert.match(rejected.content, /Chỉ hỗ trợ link/);
   assert.ok(rejected.flags);
   // ---- Tự nhận diện ----
   assert.deepEqual(
@@ -388,6 +468,43 @@ bad("a".repeat(2500), "INVALID_URL");
     "https://facebed.com/reel/42",
     "link video quá dài: dùng link embed ngắn",
   );
+  // Tự nhận diện cả Instagram/TikTok (Douyin bỏ qua khi chưa cấu hình), không đụng YouTube
+  assert.deepEqual(
+    extractFacebookLinks(
+      "a https://www.instagram.com/reel/AAA111/?igsh=x b https://vm.tiktok.com/ZS9/ c https://www.douyin.com/video/1 d https://youtu.be/dQw4w9WgXcQ",
+    ),
+    ["https://ddinstagram.com/reel/AAA111/", "https://vm.vxtiktok.com/ZS9/"],
+  );
+  // Chỉ mở trang của host embed (kể cả tiền tố vm.) khi lấy video; host lạ thì không gọi mạng
+  const tiktokPage = (url) =>
+    asResponse(200, page(["og:video", "https://v.example.com/tt.mp4"]));
+  calls.length = 0;
+  fetchWith(tiktokPage);
+  assert.equal(
+    await resolveVideoUrl("https://vm.vxtiktok.com/ZS9/"),
+    "https://v.example.com/tt.mp4",
+  );
+  assert.equal(
+    await resolveVideoUrl("https://ddinstagram.com/reel/AAA111/"),
+    "https://v.example.com/tt.mp4",
+  );
+  const before = calls.length;
+  assert.equal(await resolveVideoUrl("https://vm.evil.example.com/ZS9/"), null);
+  assert.equal(
+    await resolveVideoUrl("https://www.tiktok.com/@a/video/1"),
+    null,
+    "link gốc không bị mở",
+  );
+  assert.equal(calls.length, before);
+  // Tin nhắn tự động cho TikTok: gửi riêng link video
+  fetchWith(tiktokPage);
+  vm = fakeMessage("xem https://vm.tiktok.com/ZS9/");
+  assert.equal(await handleEmbedMessage(vm), true);
+  assert.equal(vm.replies[0].content, "[🎬](https://v.example.com/tt.mp4)");
+  // /embed chuyendoi với Douyin chưa cấu hình: báo lỗi riêng
+  const noService = await run("https://www.douyin.com/video/1");
+  assert.match(noService.content, /DOUYIN_EMBED_HOST/);
+  assert.ok(noService.flags);
   console.log("embed link tests passed");
 })().catch((error) => {
   console.error(error);
