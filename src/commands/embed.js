@@ -3,6 +3,7 @@ const {
   convertLink,
   setAutoEnabled,
   resolveVideoUrl,
+  videoMessage,
 } = require("../services/embedLinkService");
 
 const ERRORS = {
@@ -76,8 +77,9 @@ module.exports = {
       });
     // Facebook: lấy link video trực tiếp (chỉ có video); không có thì trả link embed.
     await interaction.deferReply();
+    const video = await resolveVideoUrl(result.url);
     return interaction.editReply({
-      content: (await resolveVideoUrl(result.url)) || result.url,
+      content: (video && videoMessage(video)) || result.url,
       allowedMentions: { parse: [] },
     });
   },

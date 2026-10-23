@@ -1,5 +1,16 @@
 [
   {
+    "id": "6f731a51-554b-4eed-a74e-43b297128fae",
+    "updatedAt": "2026-10-23T11:33:51.834Z",
+    "auditedAt": "2026-10-23T11:33:51.834Z",
+    "title": "Link video Facebook gọn hơn",
+    "type": "fix",
+    "scope": "system",
+    "changes": [
+      "Khi đổi link video Facebook, bot không còn in cả đường dẫn rất dài mà chỉ hiện biểu tượng nhỏ và trình phát video."
+    ]
+  },
+  {
     "id": "ea82d250-90ee-45be-a560-80159b947378",
     "updatedAt": "2026-10-23T11:32:50.888Z",
     "auditedAt": "2026-10-23T11:32:50.888Z",
