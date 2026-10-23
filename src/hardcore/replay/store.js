@@ -250,4 +250,78 @@ function publicState(s) {
     ]),
   };
 }
-module.exports = { ensure, append, close, get, encounter, publicState };
+// ---- Dọn replay cũ ---------------------------------------------------------------
+// Mỗi lượt lưu một ảnh chụp trạng thái nén nên bảng frame phình rất nhanh (hàng trăm MB, nhân lên ở mọi bản backup).
+// Replay đã kết thúc quá hạn bị xóa; hardcore_run_archive vẫn giữ bản tóm tắt nên mã replay cũ vẫn xem được kết quả.
+const DAY_MS = 24 * 60 * 60_000;
+const REPLAY_RETENTION_DAYS = (() => {
+  const value = Number(process.env.HARDCORE_REPLAY_RETENTION_DAYS);
+  return Number.isSafeInteger(value) && value >= 1 && value <= 3650
+    ? value
+    : 14;
+})();
+const PRUNE_BATCH = 50;
+const PRUNE_MAX_BATCHES = 40;
+
+function pruneOldReplays({
+  days = REPLAY_RETENTION_DAYS,
+  now = Date.now(),
+  batches = PRUNE_MAX_BATCHES,
+} = {}) {
+  const cutoff = now - days * DAY_MS;
+  // Replay không bao giờ được đóng (run bị xóa sót) chỉ xóa khi không còn phiên chơi và đã quá 2× hạn.
+  const stale = db.prepare(
+    `SELECT session_id FROM hardcore_replays r
+     WHERE (r.ended_at IS NOT NULL AND r.ended_at < ?)
+        OR (r.ended_at IS NULL AND r.created_at < ?
+            AND NOT EXISTS (SELECT 1 FROM hardcore_sessions s WHERE s.id=r.session_id))
+     LIMIT ?`,
+  );
+  const removeFrames = db.prepare(
+    "DELETE FROM hardcore_replay_frames WHERE session_id=?",
+  );
+  const removeRun = db.prepare(
+    "DELETE FROM hardcore_replays WHERE session_id=?",
+  );
+  let replays = 0;
+  for (let batch = 0; batch < batches; batch += 1) {
+    const ids = stale.all(cutoff, now - 2 * days * DAY_MS, PRUNE_BATCH);
+    if (!ids.length) break;
+    db.transaction(() => {
+      for (const { session_id: id } of ids) {
+        removeFrames.run(id);
+        removeRun.run(id);
+      }
+    })();
+    replays += ids.length;
+  }
+  return { replays };
+}
+function startReplayMaintenance(logger = console) {
+  const run = () => {
+    try {
+      const { replays } = pruneOldReplays();
+      if (replays)
+        logger.info?.({ replays }, "pruned expired survival replays");
+    } catch (error) {
+      logger.warn?.({ err: error }, "survival replay pruning failed");
+    }
+  };
+  // Trễ một chút sau khi khởi động để không cạnh tranh với backup và việc nạp bot.
+  setTimeout(run, 90_000).unref?.();
+  const timer = setInterval(run, 6 * 60 * 60_000);
+  timer.unref?.();
+  return timer;
+}
+
+module.exports = {
+  ensure,
+  append,
+  close,
+  get,
+  encounter,
+  publicState,
+  pruneOldReplays,
+  startReplayMaintenance,
+  REPLAY_RETENTION_DAYS,
+};

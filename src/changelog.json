@@ -1,5 +1,16 @@
 [
   {
+    "id": "c42d23af-6f7c-4bd6-a6d5-ba88cac7449d",
+    "updatedAt": "2026-10-23T11:25:47.212Z",
+    "auditedAt": "2026-10-23T11:25:47.212Z",
+    "title": "Tự dọn replay Sinh tồn cũ",
+    "type": "maintenance",
+    "scope": "survival",
+    "changes": [
+      "Replay Sinh tồn đã kết thúc quá 14 ngày được tự xóa để dữ liệu bot không phình to; bản tóm tắt kết quả của run vẫn được giữ."
+    ]
+  },
+  {
     "id": "c76cbe8f-edc5-420d-8348-dea7fa2d568f",
     "updatedAt": "2026-10-23T11:19:08.663Z",
     "auditedAt": "2026-10-23T11:19:08.663Z",
