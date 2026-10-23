@@ -134,6 +134,7 @@ async function shutdown(signal, exitCode = 0) {
   process.exitCode = exitCode;
   // Release a supervisor IPC channel after backup and connection cleanup.
   if (process.connected) process.disconnect();
+  require("./utils/forceExit").scheduleForcedExit(logger, exitCode);
 }
 process.once("SIGINT", () => {
   shutdown("SIGINT").catch(() => {
