@@ -161,7 +161,13 @@ function sumEffects(state) {
         totals.defense =
           (totals.defense || 0) - (itemCurses.defenseLoss(item) || 0);
       }
-      add(effects, equipmentRules.curseScale(state, item));
+      // Sức chứa bình giảm theo số cấp nguyền (nguyên, tuyến tính); không dùng thang giảm dần của các hiệu ứng khác nên không ra số lẻ.
+      const { potionCapacityLoss, ...scaled } = effects;
+      add(scaled, equipmentRules.curseScale(state, item));
+      if (potionCapacityLoss)
+        totals.potionCapacityLoss =
+          (totals.potionCapacityLoss || 0) +
+          itemCurses.potionLoss(potionCapacityLoss, curses);
       curseFactor *=
         (1 - (item.definition.curse?.effects.bonusPenalty || 0)) **
         equipmentRules.curseScale(state, item);
@@ -294,7 +300,7 @@ function recompute(state) {
   if (typeof state.mana === "number")
     state.mana = clamp(state.mana, 0, state.maxMana);
   if (typeof state.potions === "number")
-    state.potions = clamp(state.potions, 0, state.maxPotions);
+    state.potions = Math.floor(clamp(state.potions, 0, state.maxPotions));
   return state;
 }
 function addSource(state, effects, source = "event") {

@@ -391,9 +391,13 @@ const SKILL_ICONS = Object.fromEntries(
     druid: "skill_windgeneration",
     necromancer: "skill_totemward",
     paladin: "skill_devineshield",
-    rha_kor: "skill_rha_kor",
   }).map(([key, name]) => [key, icon(name, "✨")]),
 );
+// Icon kỹ năng Cổ Luật (tên emoji skill_skill_rha_kor); phân giải lúc render vì registry emoji nạp sau khi module khởi tạo.
+Object.defineProperty(SKILL_ICONS, "rha_kor", {
+  enumerable: true,
+  get: () => icon("skill_skill_rha_kor", icon("skill_rha_kor", "✨")),
+});
 Object.defineProperty(SKILL_ICONS, "venance", {
   enumerable: true,
   get: () => icon("skill_venance_astral_armament", "🔮"),
@@ -439,7 +443,9 @@ const CHARACTER_ACTION_ICONS = Object.freeze({
       require("../characters/rhakor").actionBoosted(state, "potion")
         ? "potion_rha_kor"
         : null,
-    skill: "skill_rha_kor",
+    // Ưu tiên icon Cổ Luật riêng nếu đã upload, không thì dùng icon kỹ năng chung của Rha-Kor.
+    skill: () =>
+      appEmoji("skill_skill_rha_kor") ? "skill_skill_rha_kor" : "skill_rha_kor",
   }),
 });
 function characterActionIcon(state, action) {
