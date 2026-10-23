@@ -4,6 +4,7 @@ const COMMAND_FILES = Object.freeze([
   "huongdan",
   "changelog",
   "embed",
+  "healthcheck",
   "baucua",
   "taixiu",
   "chinchiro",
