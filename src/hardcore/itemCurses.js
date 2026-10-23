@@ -11,6 +11,10 @@ const CAPS = Object.freeze({
   healingReduction: 0.6,
   normalDamagePenalty: 0.6,
 });
+// Khoản giảm sức chứa bình của một món nguyền: `value` mỗi cấp chưa giải, `curseLevels` là số cấp nguyên → luôn nguyên.
+function potionLoss(value, curseLevels) {
+  return Math.max(0, Math.floor(value) * Math.max(0, Math.floor(curseLevels)));
+}
 function derive(totals) {
   return Object.fromEntries(
     Object.entries(CAPS).map(([key, cap]) => [
@@ -46,7 +50,7 @@ function describeEffect(key, value, level = 1, compact = false) {
     const text = {
       physicalDamageTaken: `Bạn nhận DMG vật lý +${pct(n)}`,
       magicDamageTaken: `Bạn nhận DMG phép +${pct(n)}`,
-      potionCapacityLoss: `Sức chứa bình −${amount} (≥1)`,
+      potionCapacityLoss: `Sức chứa bình −${value} mỗi cấp nguyền (≥1)`,
       skillHpCost: `Skill tốn ${pct(n)} Max HP; chừa ≥1`,
       attackManaLoss: `Tấn công hồi MP −${amount} (≥0)`,
       skillManaExtra: `Skill tốn MP +${amount}; Shrine miễn phí: 0`,
@@ -64,8 +68,8 @@ function describeEffect(key, value, level = 1, compact = false) {
     case "potionCapacityLoss":
       return (
         "Sức chứa bình của bạn −" +
-        amount +
-        " (còn tối thiểu 1; bỏ bình vượt giới hạn)"
+        value +
+        " mỗi cấp nguyền chưa giải (còn tối thiểu 1; bỏ bình vượt giới hạn)"
       );
     case "skillHpCost":
       return (
@@ -116,6 +120,7 @@ function describeEffect(key, value, level = 1, compact = false) {
 module.exports = {
   CAPS,
   derive,
+  potionLoss,
   describeEffect,
   defenseReduction,
   defenseLoss,

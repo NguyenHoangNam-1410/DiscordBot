@@ -1,5 +1,17 @@
 [
   {
+    "id": "3d768e6b-10c6-4fef-955f-8e81c9f8376a",
+    "updatedAt": "2026-10-23T01:03:45.179Z",
+    "auditedAt": "2026-10-23T01:03:45.179Z",
+    "title": "Sửa lỗi sức chứa bình bị số lẻ",
+    "type": "fix",
+    "scope": "survival",
+    "changes": [
+      "Lời nguyền giảm sức chứa bình (ví dụ Crown of Ruin) giờ giảm đúng 1 bình mỗi cấp nguyền chưa giải, không còn ra số lẻ; sức chứa vẫn tối thiểu 1.",
+      "Run đang có số bình lẻ được làm tròn xuống. Icon kỹ năng Cổ Luật của Rha-Kor dùng skill_skill_rha_kor."
+    ]
+  },
+  {
     "id": "2d581d65-9122-446a-935b-f4e92534b152",
     "updatedAt": "2026-10-23T00:54:02.295Z",
     "auditedAt": "2026-10-23T00:54:02.295Z",
