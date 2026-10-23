@@ -86,8 +86,13 @@ module.exports = {
       });
     // Facebook/Instagram/TikTok/Douyin: lấy link video trực tiếp (chỉ có video); không có thì trả link embed.
     await interaction.deferReply();
+    const rendered = await renderEmbedLink(
+      result.url,
+      null,
+      interaction.options.getString("link", true).trim(),
+    );
     return interaction.editReply({
-      content: await renderEmbedLink(result.url),
+      content: rendered.content,
       allowedMentions: { parse: [] },
     });
   },
