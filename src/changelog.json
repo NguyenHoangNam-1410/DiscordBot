@@ -1,5 +1,16 @@
 [
   {
+    "id": "42923731-dfee-486d-b151-332f2fb50060",
+    "updatedAt": "2026-10-23T11:49:18.848Z",
+    "auditedAt": "2026-10-23T11:49:18.848Z",
+    "title": "Restart bot không còn treo",
+    "type": "fix",
+    "scope": "system",
+    "changes": [
+      "Bot tự thoát ngay sau khi lưu xong thay vì treo chờ PM2 ép tắt (khoảng 2 phút mỗi lần restart), và ghi log tài nguyên còn sót nếu có."
+    ]
+  },
+  {
     "id": "a718c2c6-9589-490d-b925-570aae886cb2",
     "updatedAt": "2026-10-23T11:44:57.111Z",
     "auditedAt": "2026-10-23T11:44:57.111Z",
