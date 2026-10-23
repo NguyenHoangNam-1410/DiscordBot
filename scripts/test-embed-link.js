@@ -17,6 +17,7 @@ const {
   handleEmbedMessage,
   parseVideoUrl,
   resolveVideoUrl,
+  videoMessage,
 } = require("../src/services/embedLinkService");
 const { PermissionFlagsBits: Flags } = require("discord.js");
 const embed = require("../src/commands/embed");
@@ -342,7 +343,7 @@ bad("a".repeat(2500), "INVALID_URL");
   );
   let vm = fakeMessage(`xem ${link}`);
   assert.equal(await handleEmbedMessage(vm), true);
-  assert.equal(vm.replies[0].content, "https://v.example.com/auto.mp4");
+  assert.equal(vm.replies[0].content, "[🎬](https://v.example.com/auto.mp4)");
   assert(!vm.replies[0].content.includes("facebed.com"), "không kèm thẻ embed");
   fetchWith(() =>
     asResponse(200, page(["og:image", "https://i.example.com/a.jpg"])),
@@ -356,12 +357,36 @@ bad("a".repeat(2500), "INVALID_URL");
   );
   assert.equal(
     (await run("https://www.facebook.com/reel/42")).content,
-    "https://v.example.com/cmd.mp4",
+    "[🎬](https://v.example.com/cmd.mp4)",
   );
   fetchWith(() => asResponse(404, ""));
   assert.equal(
     (await run("https://www.facebook.com/reel/42")).content,
     "https://facebed.com/reel/42",
+  );
+  // Link dài: gói ẩn, thoát ngoặc đơn, quá giới hạn thì dùng link ngắn
+  const longVideo =
+    "https://video.fna.fbcdn.net/o1/v/t2/f2/m366/AQPw?" +
+    "a=1&b=2&".repeat(150) +
+    "x=(1)";
+  const hidden = videoMessage(longVideo);
+  assert.ok(
+    hidden.startsWith("[🎬](https://video.fna.fbcdn.net/") &&
+      hidden.endsWith(")"),
+  );
+  assert.ok(hidden.length <= 2000);
+  assert.ok(hidden.includes("x=%281%29") && !hidden.includes("x=(1)"));
+  assert.equal(videoMessage("https://v.example.com/" + "a".repeat(2100)), null);
+  fetchWith(() =>
+    asResponse(
+      200,
+      page(["og:video", "https://v.example.com/" + "a".repeat(2100)]),
+    ),
+  );
+  assert.equal(
+    (await run("https://www.facebook.com/reel/42")).content,
+    "https://facebed.com/reel/42",
+    "link video quá dài: dùng link embed ngắn",
   );
   console.log("embed link tests passed");
 })().catch((error) => {

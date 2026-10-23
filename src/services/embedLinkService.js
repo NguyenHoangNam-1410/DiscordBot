@@ -239,6 +239,15 @@ async function resolveVideoUrl(embedUrl, env = null) {
   return null;
 }
 
+// Link video trực tiếp của Facebook rất dài (nhiều trăm ký tự). Gói thành link ẩn `[🎬](url)` để tin nhắn chỉ hiện biểu tượng
+// nhỏ và trình phát video, không in nguyên đường dẫn. Dài quá giới hạn tin nhắn thì trả null để dùng link embed ngắn.
+const MESSAGE_LIMIT = 2000;
+function videoMessage(videoUrl) {
+  const safe = String(videoUrl).replace(/\(/g, "%28").replace(/\)/g, "%29");
+  const text = `[🎬](${safe})`;
+  return text.length <= MESSAGE_LIMIT ? text : null;
+}
+
 // Link bọc trong <...> là cố ý tắt embed nên bỏ qua.
 function extractFacebookLinks(content) {
   const found = [];
@@ -275,7 +284,10 @@ async function handleEmbedMessage(message) {
     return false;
   // Gửi riêng link video nếu lấy được (khung chỉ có video); không thì giữ link embed.
   const targets = await Promise.all(
-    links.map(async (link) => (await resolveVideoUrl(link)) || link),
+    links.map(async (link) => {
+      const video = await resolveVideoUrl(link);
+      return (video && videoMessage(video)) || link;
+    }),
   );
   await message.reply({
     content: targets.join("\n"),
@@ -293,5 +305,6 @@ module.exports = {
   extractFacebookLinks,
   parseVideoUrl,
   resolveVideoUrl,
+  videoMessage,
   handleEmbedMessage,
 };
