@@ -7,23 +7,31 @@ const {
 } = require("../services/embedLinkService");
 
 const ERRORS = {
-  INVALID_URL: "Link không hợp lệ. Hãy dán nguyên link YouTube hoặc Facebook.",
+  INVALID_URL:
+    "Link không hợp lệ. Hãy dán nguyên link YouTube, Facebook, Instagram, TikTok hoặc Douyin.",
   NO_VIDEO: "Link này không trỏ tới một video cụ thể.",
-  UNSUPPORTED_HOST: "Chỉ hỗ trợ link YouTube và Facebook.",
+  UNSUPPORTED_HOST:
+    "Chỉ hỗ trợ link YouTube, Facebook, Instagram, TikTok và Douyin.",
+  NO_EMBED_SERVICE:
+    "Chưa cấu hình dịch vụ embed cho nền tảng này. Admin đặt biến `DOUYIN_EMBED_HOST` trong `.env` (Douyin chưa có dịch vụ mặc định).",
 };
 
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("embed")
-    .setDescription("Đổi link YouTube/Facebook sang dạng hiện khung xem trước")
+    .setDescription(
+      "Đổi link YouTube/Facebook/Instagram/TikTok/Douyin sang dạng hiện khung xem trước",
+    )
     .addSubcommand((command) =>
       command
         .setName("chuyendoi")
-        .setDescription("Đổi một link YouTube/Facebook")
+        .setDescription("Đổi một link video mạng xã hội")
         .addStringOption((option) =>
           option
             .setName("link")
-            .setDescription("Link video YouTube hoặc Facebook")
+            .setDescription(
+              "Link video YouTube, Facebook, Instagram, TikTok hoặc Douyin",
+            )
             .setRequired(true)
             .setMaxLength(2000),
         ),
@@ -31,7 +39,9 @@ module.exports = {
     .addSubcommand((command) =>
       command
         .setName("tudong")
-        .setDescription("Admin: bật/tắt tự đổi link Facebook trong mọi kênh")
+        .setDescription(
+          "Admin: bật/tắt tự đổi link Facebook/Instagram/TikTok/Douyin",
+        )
         .addStringOption((option) =>
           option
             .setName("trangthai")
@@ -59,8 +69,8 @@ module.exports = {
       setAutoEnabled(interaction.guildId, enabled, interaction.user.id);
       return interaction.reply({
         content: enabled
-          ? "✅ Đã bật: bot tự trả link Facebook dạng xem trước ở mọi kênh bot có quyền gửi tin nhắn."
-          : "✅ Đã tắt tự đổi link Facebook. `/embed chuyendoi` vẫn dùng được.",
+          ? "✅ Đã bật: bot tự trả link Facebook, Instagram, TikTok, Douyin dạng xem trước ở mọi kênh bot có quyền gửi tin nhắn."
+          : "✅ Đã tắt tự đổi link. `/embed chuyendoi` vẫn dùng được.",
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -70,12 +80,12 @@ module.exports = {
         content: ERRORS[result.error] || ERRORS.INVALID_URL,
         flags: MessageFlags.Ephemeral,
       });
-    if (result.kind !== "facebook")
+    if (result.kind === "youtube")
       return interaction.reply({
         content: result.url,
         allowedMentions: { parse: [] },
       });
-    // Facebook: lấy link video trực tiếp (chỉ có video); không có thì trả link embed.
+    // Facebook/Instagram/TikTok/Douyin: lấy link video trực tiếp (chỉ có video); không có thì trả link embed.
     await interaction.deferReply();
     const video = await resolveVideoUrl(result.url);
     return interaction.editReply({
