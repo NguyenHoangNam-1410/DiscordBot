@@ -1,5 +1,16 @@
 [
   {
+    "id": "1eb68c6c-8a34-45de-92a4-7de7a87a2839",
+    "updatedAt": "2026-10-24T01:31:01.944Z",
+    "auditedAt": "2026-10-24T01:31:01.944Z",
+    "title": "Công cụ hỗ trợ hạ tầng bot",
+    "type": "maintenance",
+    "scope": "system",
+    "changes": [
+      "Bổ sung script nội bộ phục vụ vận hành máy chủ bot, không ảnh hưởng gameplay"
+    ]
+  },
+  {
     "id": "f778d8fd-5fb4-444a-a561-2433d9b10b8e",
     "updatedAt": "2026-10-23T17:36:43.930Z",
     "auditedAt": "2026-10-23T17:36:43.930Z",
