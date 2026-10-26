@@ -49,7 +49,7 @@ const GAME_NAMES = {
   maxbets: "xemgioihan",
   economy: "kinhte",
   health: "trangthai",
-  configs: "xemcauhinh",
+  configs: "cauhinh",
   configreset: "khoiphuc",
   gachaadd: "themgacha",
   gachatoggle: "batgacha",

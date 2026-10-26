@@ -1,14 +1,11 @@
 "use strict";
 const { db } = require("../db");
+const { getGameConfig } = require("./gameConfigService");
 
 const DEFAULT_MODEL = "gpt-4o-mini";
-const DEFAULT_DAILY_LIMIT = 20;
 const MAX_INPUT_CHARS = 500;
 // Model "suy nghĩ" (Gemini 3.x...) tính cả token suy nghĩ vào max_tokens nên 400 làm câu trả lời bị cắt giữa chừng; mặc định 1500, chỉnh bằng CHATBOT_MAX_TOKENS.
-const maxOutputTokens = () => {
-  const n = Number(process.env.CHATBOT_MAX_TOKENS);
-  return Number.isInteger(n) && n >= 100 && n <= 8000 ? n : 1500;
-};
+const maxOutputTokens = guildId => getGameConfig(guildId, "CHATBOT_MAX_TOKENS");
 const HISTORY_TURNS = 6;
 const HISTORY_TTL_MS = 30 * 60 * 1000;
 const DISCORD_LIMIT = 2000;
@@ -99,13 +96,7 @@ function systemPrompt(guildId, context = {}) {
 const MIN_LIMIT = 1;
 const MAX_LIMIT = 500;
 // Giới hạn lượt/ngày: admin chỉnh theo server (/chatbot gioihan); chưa chỉnh thì lấy CHATBOT_DAILY_LIMIT hoặc 20.
-const defaultLimit = () => {
-  const n = Number(process.env.CHATBOT_DAILY_LIMIT);
-  return Number.isInteger(n) && n > 0 ? n : DEFAULT_DAILY_LIMIT;
-};
-const dailyLimit = (guildId) =>
-  db.prepare("SELECT daily_limit FROM chatbot_settings WHERE guild_id=?").get(String(guildId))?.daily_limit ||
-  defaultLimit();
+const dailyLimit = guildId => getGameConfig(guildId, "CHATBOT_DAILY_LIMIT");
 function setDailyLimit(guildId, limit, adminId, now = Date.now()) {
   const n = Math.floor(Number(limit));
   if (!Number.isFinite(n) || n < MIN_LIMIT || n > MAX_LIMIT) throw new Error("INVALID_LIMIT");
@@ -126,24 +117,24 @@ const PROVIDERS = Object.freeze({
   // OpenRouter: chọn model có hậu tố ":free" ở openrouter.ai/models rồi đặt OPENAI_MODEL (tên model free thay đổi thường xuyên).
   openrouter: { baseUrl: "https://openrouter.ai/api/v1", model: "", moderation: false },
 });
-const provider = () => PROVIDERS[String(process.env.CHATBOT_PROVIDER || "openai").toLowerCase()] || PROVIDERS.openai;
-const baseUrl = () => String(process.env.OPENAI_BASE_URL || provider().baseUrl).replace(/\/+$/, "");
+const provider = guildId => PROVIDERS[getGameConfig(guildId, "CHATBOT_PROVIDER")] || PROVIDERS.openai;
+const baseUrl = guildId => String(process.env.OPENAI_BASE_URL || provider(guildId).baseUrl).replace(/\/+$/, "");
 // OPENAI_MODEL có thể là danh sách phân tách bằng dấu phẩy: model đầu là chính, các model sau là dự phòng khi bị giới hạn/lỗi.
-const models = () =>
-  String(process.env.OPENAI_MODEL || provider().model)
+const models = guildId =>
+  String(getGameConfig(guildId, "OPENAI_MODEL") || provider(guildId).model)
     .split(",")
     .map((name) => name.trim())
     .filter(Boolean);
-const model = () => models()[0] || "";
-const useModeration = () => provider().moderation && !process.env.OPENAI_BASE_URL;
-const isConfigured = () => Boolean(process.env.OPENAI_API_KEY) && Boolean(model());
+const model = guildId => models(guildId)[0] || "";
+const useModeration = guildId => provider(guildId).moderation && !process.env.OPENAI_BASE_URL;
+const isConfigured = guildId => Boolean(process.env.OPENAI_API_KEY) && Boolean(model(guildId));
 // CHATBOT_GOOGLE_SEARCH=1 (chỉ với CHATBOT_PROVIDER=gemini): gọi API gốc generateContent để bật Grounding with Google Search,
 // vì endpoint tương thích OpenAI của Google không hỗ trợ tool google_search cho chat.
 const GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta";
-const useGoogleSearch = () =>
-  provider() === PROVIDERS.gemini &&
+const useGoogleSearch = guildId =>
+  provider(guildId) === PROVIDERS.gemini &&
   !process.env.OPENAI_BASE_URL &&
-  /^(1|true|on|yes)$/i.test(String(process.env.CHATBOT_GOOGLE_SEARCH || "").trim());
+  getGameConfig(guildId, "CHATBOT_GOOGLE_SEARCH") === 1;
 const MAX_SOURCES = 3;
 
 function dayKey(now = Date.now()) {
@@ -231,11 +222,11 @@ async function post(url, headers, body, signal = null) {
   }
   return response.json();
 }
-const openai = (path, body, signal = null) =>
-  post(`${baseUrl()}/${path}`, { authorization: `Bearer ${process.env.OPENAI_API_KEY}` }, body, signal);
+const openai = (path, body, signal = null, guildId = null) =>
+  post(`${baseUrl(guildId)}/${path}`, { authorization: `Bearer ${process.env.OPENAI_API_KEY}` }, body, signal);
 
 // Gemini gốc + Google Search; trả về cùng dạng { choices } với chat/completions, kèm danh sách nguồn web.
-async function geminiSearch(name, messages, signal) {
+async function geminiSearch(name, messages, signal, guildId) {
   const system = messages.filter((m) => m.role === "system").map((m) => m.content).join("\n\n");
   const contents = messages
     .filter((m) => m.role !== "system")
@@ -247,7 +238,7 @@ async function geminiSearch(name, messages, signal) {
       ...(system ? { systemInstruction: { parts: [{ text: system }] } } : {}),
       contents,
       tools: [{ google_search: {} }],
-      generationConfig: { maxOutputTokens: maxOutputTokens() },
+      generationConfig: { maxOutputTokens: maxOutputTokens(guildId) },
     },
     signal,
   );
@@ -278,10 +269,10 @@ function sourcesFooter(sources = []) {
   return links.length ? `\n-# 🔎 Nguồn: ${links.join(" · ")}` : "";
 }
 
-async function flagged(text, signal) {
-  if (!useModeration()) return false;
+async function flagged(text, signal, guildId) {
+  if (!useModeration(guildId)) return false;
   try {
-    const result = await openai("moderations", { model: "omni-moderation-latest", input: text }, signal);
+    const result = await openai("moderations", { model: "omni-moderation-latest", input: text }, signal, guildId);
     return Boolean(result.results?.[0]?.flagged);
   } catch (error) {
     if (signal?.aborted) throw error;
@@ -321,7 +312,7 @@ function sanitizeReply(text, allowedIds = [], names = {}) {
 }
 
 const RETRYABLE = (error) => error.status === 429 || error.status >= 500;
-const RETRY_DELAY_MS = () => Number(process.env.CHATBOT_RETRY_DELAY_MS ?? 2000);
+const RETRY_DELAY_MS = guildId => getGameConfig(guildId, "CHATBOT_RETRY_DELAY_MS");
 const sleep = (ms, signal) =>
   new Promise((resolve, reject) => {
     const timer = setTimeout(resolve, ms);
@@ -332,28 +323,28 @@ const sleep = (ms, signal) =>
   });
 
 // Thử lần lượt từng model; bị giới hạn (429) hoặc lỗi máy chủ thì chuyển model dự phòng, hết danh sách thì thử lại model đầu một lần sau vài giây.
-async function completeWithFallback(messages, signal) {
-  const list = models();
+async function completeWithFallback(messages, signal, guildId) {
+  const list = models(guildId);
   let lastError;
   for (let round = 0; round < 2; round += 1) {
     for (const name of list) {
       try {
-        return useGoogleSearch()
-          ? await geminiSearch(name, messages, signal)
-          : await openai("chat/completions", { model: name, max_tokens: maxOutputTokens(), messages }, signal);
+        return useGoogleSearch(guildId)
+          ? await geminiSearch(name, messages, signal, guildId)
+          : await openai("chat/completions", { model: name, max_tokens: maxOutputTokens(guildId), messages }, signal, guildId);
       } catch (error) {
         if (signal?.aborted || !RETRYABLE(error)) throw error;
         lastError = error;
       }
     }
-    if (round === 0) await sleep(RETRY_DELAY_MS(), signal);
+    if (round === 0) await sleep(RETRY_DELAY_MS(guildId), signal);
   }
   throw lastError;
 }
 
 // Trả về { ok, text } hoặc { error } với: DISABLED | TOO_LONG | LIMIT | FLAGGED | API
 async function ask({ guildId, userId, channelId, text, now = Date.now(), signal = null, asker = null, people = [] }) {
-  if (!isConfigured()) return { error: "DISABLED" };
+  if (!isConfigured(guildId)) return { error: "DISABLED" };
   const input = String(text || "").trim();
   if (!input) return { error: "EMPTY" };
   if (input.length > MAX_INPUT_CHARS) return { error: "TOO_LONG", max: MAX_INPUT_CHARS };
@@ -361,12 +352,12 @@ async function ask({ guildId, userId, channelId, text, now = Date.now(), signal 
   if (!consumeTurn(guildId, userId, now)) return { error: "LIMIT", ...usage(guildId, userId, now) };
   const key = `${guildId}:${channelId}:${userId}`;
   try {
-    if (await flagged(input, signal)) {
+    if (await flagged(input, signal, guildId)) {
       refundTurn(guildId, userId, now);
       return { error: "FLAGGED" };
     }
     const messages = [{ role: "system", content: systemPrompt(guildId, { asker: asker || { id: userId }, people }) }, ...getHistory(key, now), { role: "user", content: input }];
-    const data = await completeWithFallback(messages, signal);
+    const data = await completeWithFallback(messages, signal, guildId);
     const choice = data.choices?.[0];
     const footer = sourcesFooter(data.sources);
     let reply = clipReply(choice?.message?.content, footer.length);

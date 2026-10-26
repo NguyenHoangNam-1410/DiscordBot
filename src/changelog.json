@@ -1,5 +1,18 @@
 [
   {
+    "id": "c7521799-fe31-4682-860e-7412ce1c65eb",
+    "updatedAt": "2026-10-26T11:14:49.304Z",
+    "auditedAt": "2026-10-26T11:14:49.304Z",
+    "title": "Tách cấu hình theo trò chơi",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Mỗi trò chơi và chatbot có lệnh cauhinh riêng với menu thống nhất; chỉ admin được xem và chỉnh sửa.",
+      "Bảng quantri cauhinh chỉ giữ xu khởi đầu, EXP/cấp và phần thưởng rơi dùng chung. Token, khóa API và khóa bí mật không thể chỉnh qua Discord.",
+      "Các game đặt cược dùng lệnh con choi; cú pháp prefix cũ vẫn hoạt động. Rút gọn cấu hình môi trường và giữ thiết lập server đã lưu."
+    ]
+  },
+  {
     "id": "1eb68c6c-8a34-45de-92a4-7de7a87a2839",
     "updatedAt": "2026-10-24T01:31:01.944Z",
     "auditedAt": "2026-10-24T01:31:01.944Z",

@@ -126,7 +126,7 @@ module.exports = function createModule(dependencies) {
       closeSetup(draft);
       return interaction.update(closedSetup("Đã hủy chuẩn bị run."));
     }
-    if (useV2()) {
+    if (useV2(draft.guildId)) {
       if (action === "class_back" && draft.stage === "loadout") {
         draft.stage = "class";
         return refreshSetup(interaction, draft);

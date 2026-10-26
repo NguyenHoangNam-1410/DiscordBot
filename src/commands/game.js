@@ -1,5 +1,7 @@
 const {
   ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
   ChannelType,
   EmbedBuilder,
   MessageFlags,
@@ -35,7 +37,7 @@ const {
   getOperationalHealth,
 } = require("../services/operationalHealthService");
 const {
-  GAME_CONFIG_KEYS,
+  configKeysForScope,
   GAME_CONFIG_SPECS,
   listGameConfigs,
   setGameConfig,
@@ -76,7 +78,7 @@ const betChoices = BET_GAMES.map((game) => ({
   name: LABELS[game],
   value: game,
 }));
-const configChoices = GAME_CONFIG_KEYS.map((key) => ({
+const configChoices = configKeysForScope("system").map((key) => ({
   name: `${GAME_CONFIG_SPECS[key].label} (${key})`,
   value: key,
 }));
@@ -133,64 +135,145 @@ function configValueText(item) {
     : String(item.value);
 }
 
-function configPanel(guildId, status = null) {
-  const configs = listGameConfigs(guildId);
+const CONFIG_LABELS = {
+  system: "HỆ THỐNG",
+  ...LABELS,
+  chatbot: "CHATBOT",
+  gacha: "GACHA",
+};
+const CONFIG_PAGE_SIZE = 8;
+function configPanel(
+  guildId,
+  status = null,
+  scope = "system",
+  ownerId = "",
+  requestedPage = 0,
+) {
+  if (!Object.hasOwn(CONFIG_LABELS, scope))
+    throw new Error("INVALID_CONFIG_SCOPE");
+  const all = listGameConfigs(guildId, scope);
+  const pages = Math.max(1, Math.ceil(all.length / CONFIG_PAGE_SIZE));
+  const page = Math.max(0, Math.min(pages - 1, requestedPage));
+  const configs = all.slice(
+    page * CONFIG_PAGE_SIZE,
+    (page + 1) * CONFIG_PAGE_SIZE,
+  );
   const description = configs
     .map(
       (item) =>
-        `**${item.label}** · \`${item.key}\`\n${configValueText(item)} · ${item.customized ? "🟢 tùy chỉnh" : "⚪ mặc định"}\n_${item.note}_`,
+        `**${item.label}** · \`${item.key}\`\n${configValueText(item).slice(0, 180) || "(trống)"} · ${item.customized ? "🟢 tùy chỉnh" : "⚪ mặc định"}\n_${item.note}_`,
     )
     .join("\n\n");
   const select = new StringSelectMenuBuilder()
-    .setCustomId("game-config-select")
+    .setCustomId(`game-config-select:${scope}:${ownerId}:${page}`)
     .setPlaceholder("Chọn cấu hình muốn chỉnh sửa…")
     .addOptions(
       configs.map((item) =>
         new StringSelectMenuOptionBuilder()
           .setLabel(item.label.slice(0, 100))
           .setValue(item.key)
-          .setDescription(
-            `${configValueText(item)} · ${item.type === "integer" ? `số nguyên ${item.min}–${item.max}` : `số ${item.min}–${item.max}`}`.slice(
-              0,
-              100,
-            ),
-          ),
+          .setDescription((configValueText(item) || "(trống)").slice(0, 100)),
       ),
     );
+  const navigation = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId(
+        `game-config-page:${scope}:${ownerId}:${Math.max(0, page - 1)}`,
+      )
+      .setLabel("Trước")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(page === 0),
+    new ButtonBuilder()
+      .setCustomId(
+        `game-config-page:${scope}:${ownerId}:${Math.min(pages - 1, page + 1)}`,
+      )
+      .setLabel("Sau")
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(page === pages - 1),
+  );
   return {
+    allowedMentions: { parse: [] },
     embeds: [
       new EmbedBuilder()
         .setColor(0x5865f2)
-        .setTitle("⚙️ CẤU HÌNH CÂN BẰNG GAME")
-        .setDescription(`${status ? `${status}\n\n` : ""}${description}`)
+        .setTitle(`⚙️ CẤU HÌNH ${CONFIG_LABELS[scope]}`)
+        .setDescription(`${status ? status + "\n\n" : ""}${description}`)
         .setFooter({
-          text: "Chọn một mục bên dưới để sửa • Thay đổi áp dụng ngay cho server này",
+          text: `Trang ${page + 1}/${pages} • Chọn mục để sửa hoặc khôi phục • Chỉ admin • Theo server`,
         }),
     ],
-    components: [new ActionRowBuilder().addComponents(select)],
+    components: [
+      new ActionRowBuilder().addComponents(select),
+      ...(pages > 1 ? [navigation] : []),
+    ],
   };
 }
-
-function configEditModal(guildId, key) {
-  const item = listGameConfigs(guildId).find((config) => config.key === key);
+function configEditModal(guildId, key, scope, ownerId, page) {
+  const item = listGameConfigs(guildId, scope).find(
+    (config) => config.key === key,
+  );
   if (!item) throw new Error("INVALID_GAME_CONFIG");
+  const hint =
+    item.choices?.join(" | ") ||
+    (item.type === "string"
+      ? item.note
+      : `${item.min} đến ${item.max}${item.type === "integer" ? " · số nguyên" : ""}`);
   const input = new TextInputBuilder()
     .setCustomId("value")
-    .setLabel(`Giá trị mới · ${item.label}`.slice(0, 45))
+    .setLabel(("Giá trị mới · " + item.label).slice(0, 45))
     .setStyle(TextInputStyle.Short)
-    .setRequired(true)
-    .setMaxLength(24)
-    .setValue(String(item.value))
-    .setPlaceholder(
-      `${item.min} đến ${item.max}${item.type === "integer" ? " · số nguyên" : ""}`,
-    );
+    .setRequired(false)
+    .setMaxLength(item.maxLength || 24)
+    .setPlaceholder(hint.slice(0, 100));
+  if (String(item.value)) input.setValue(String(item.value));
+  const reset = new TextInputBuilder()
+    .setCustomId("reset")
+    .setLabel("Gõ MACDINH để khôi phục (tùy chọn)")
+    .setStyle(TextInputStyle.Short)
+    .setRequired(false)
+    .setMaxLength(7);
   return new ModalBuilder()
-    .setCustomId(`game-config-modal:${key}`)
-    .setTitle("Chỉnh cấu hình game")
-    .addComponents(new ActionRowBuilder().addComponents(input));
+    .setCustomId(`game-config-modal:${scope}:${ownerId}:${page}:${key}`)
+    .setTitle("Chỉnh cấu hình " + CONFIG_LABELS[scope].slice(0, 25))
+    .addComponents(
+      new ActionRowBuilder().addComponents(input),
+      new ActionRowBuilder().addComponents(reset),
+    );
+}
+function configContext(interaction, key = null) {
+  const [, scope, ownerId, rawPage] = interaction.customId.split(":");
+  const page = Number(rawPage);
+  if (
+    !interaction.guildId ||
+    !isAdmin(interaction) ||
+    interaction.user.id !== ownerId ||
+    !Object.hasOwn(CONFIG_LABELS, scope) ||
+    !Number.isSafeInteger(page) ||
+    page < 0 ||
+    page >= Math.ceil(configKeysForScope(scope).length / CONFIG_PAGE_SIZE) ||
+    (key !== null && !configKeysForScope(scope).includes(key))
+  )
+    return null;
+  return { scope, ownerId, page };
+}
+const deniedConfig = (interaction) =>
+  interaction.reply({
+    content:
+      "Cấu hình không hợp lệ hoặc bạn không có quyền. Chỉ admin đã mở bảng mới được thao tác; hãy mở lại lệnh cấu hình.",
+    flags: MessageFlags.Ephemeral,
+  });
+async function openConfig(interaction, scope = "system") {
+  if (!interaction.guildId || !isAdmin(interaction))
+    return deniedConfig(interaction);
+  return interaction.reply({
+    ...configPanel(interaction.guildId, null, scope, interaction.user.id),
+    flags: MessageFlags.Ephemeral,
+  });
 }
 
 module.exports = {
+  configPanel,
+  openConfig,
   data: new SlashCommandBuilder()
     .setName("game")
     .setDescription("Quản trị trò chơi, economy và vận hành bot")
@@ -290,12 +373,12 @@ module.exports = {
     .addSubcommand((command) =>
       command
         .setName("configs")
-        .setDescription("Xem và chỉnh các giá trị cân bằng game bằng menu"),
+        .setDescription("Xem và chỉnh cấu hình chung của bot"),
     )
     .addSubcommand((command) =>
       command
         .setName("config")
-        .setDescription("Thay đổi một biến cân bằng game")
+        .setDescription("Thay đổi một biến chung của hệ thống")
         .addStringOption((option) =>
           option
             .setName("bien")
@@ -645,7 +728,12 @@ ${health.backup.discord?.lastError ? "⚠️ " + health.backup.discord.lastError
           flags: MessageFlags.Ephemeral,
         });
       return interaction.reply({
-        ...configPanel(interaction.guildId),
+        ...configPanel(
+          interaction.guildId,
+          null,
+          "system",
+          interaction.user.id,
+        ),
         flags: MessageFlags.Ephemeral,
       });
     }
@@ -656,6 +744,8 @@ ${health.backup.discord?.lastError ? "⚠️ " + health.backup.discord.lastError
           flags: MessageFlags.Ephemeral,
         });
       const key = interaction.options.getString("bien", true);
+      if (!configKeysForScope("system").includes(key))
+        return deniedConfig(interaction);
       const value = interaction.options.getNumber("giatri", true);
       try {
         const item = setGameConfig(
@@ -690,6 +780,8 @@ ${health.backup.discord?.lastError ? "⚠️ " + health.backup.discord.lastError
           flags: MessageFlags.Ephemeral,
         });
       const key = interaction.options.getString("bien", true);
+      if (!configKeysForScope("system").includes(key))
+        return deniedConfig(interaction);
       const item = resetGameConfig(interaction.guildId, key);
       return interaction.reply({
         content: `↩️ **${item.label}** đã trở về **${configValueText(item)}** từ .env/mặc định.`,
@@ -797,7 +889,7 @@ ${health.backup.discord?.lastError ? "⚠️ " + health.backup.discord.lastError
             .setTitle("🎰 POOL GACHA")
             .setDescription(description.slice(0, 4096))
             .setFooter({
-              text: "Tỷ lệ bậc cố định (chỉnh bằng /quantri config GACHA_RATE_*); vật phẩm trong bậc ngẫu nhiên đều.",
+              text: "Tỷ lệ bậc cố định (chỉnh bằng /gacha cauhinh); vật phẩm trong bậc ngẫu nhiên đều.",
             }),
         ],
         flags: MessageFlags.Ephemeral,
@@ -895,51 +987,91 @@ ${health.backup.discord?.lastError ? "⚠️ " + health.backup.discord.lastError
       flags: MessageFlags.Ephemeral,
     });
   },
-  async handleConfigSelect(interaction) {
-    if (!isAdmin(interaction))
-      return interaction.reply({
-        content: "Chỉ admin mới được thay đổi cấu hình game.",
-        flags: MessageFlags.Ephemeral,
-      });
-    const key = interaction.values[0];
-    if (!GAME_CONFIG_KEYS.includes(key))
-      return interaction.reply({
-        content: "Cấu hình không hợp lệ.",
-        flags: MessageFlags.Ephemeral,
-      });
-    return interaction.showModal(configEditModal(interaction.guildId, key));
+  async handleConfigPage(interaction) {
+    const ctx = configContext(interaction);
+    if (!ctx) return deniedConfig(interaction);
+    return interaction.update(
+      configPanel(interaction.guildId, null, ctx.scope, ctx.ownerId, ctx.page),
+    );
   },
-  async handleConfigModal(interaction) {
-    if (!isAdmin(interaction))
-      return interaction.reply({
-        content: "Chỉ admin mới được thay đổi cấu hình game.",
-        flags: MessageFlags.Ephemeral,
-      });
-    const [, key] = interaction.customId.split(":");
-    try {
-      const item = setGameConfig(
+  async handleConfigSelect(interaction) {
+    const key = interaction.values?.[0];
+    if (typeof key !== "string") return deniedConfig(interaction);
+    const ctx = configContext(interaction, key);
+    if (!ctx) return deniedConfig(interaction);
+    return interaction.showModal(
+      configEditModal(
         interaction.guildId,
         key,
-        interaction.fields.getTextInputValue("value"),
-        interaction.user.id,
-      );
+        ctx.scope,
+        ctx.ownerId,
+        ctx.page,
+      ),
+    );
+  },
+  async handleConfigModal(interaction) {
+    const key = interaction.customId.split(":")[4];
+    if (typeof key !== "string") return deniedConfig(interaction);
+    const ctx = configContext(interaction, key);
+    if (!ctx) return deniedConfig(interaction);
+    try {
+      const reset = interaction.fields.getTextInputValue("reset").trim();
+      if (reset && reset !== "MACDINH")
+        return interaction.reply({
+          content:
+            "Để khôi phục, nhập đúng MACDINH; để trống nếu chỉ sửa giá trị.",
+          flags: MessageFlags.Ephemeral,
+        });
+      const value = interaction.fields.getTextInputValue("value");
+      const spec = GAME_CONFIG_SPECS[key];
+      if (
+        !reset &&
+        ["channels", "chatbot_channel"].includes(spec.storage) &&
+        value.trim()
+      ) {
+        for (const id of value.split(/\s*,\s*/)) {
+          const channel = await interaction.guild?.channels
+            .fetch(id.trim())
+            .catch(() => null);
+          if (
+            !channel ||
+            channel.guildId !== interaction.guildId ||
+            channel.type !== ChannelType.GuildText
+          )
+            return interaction.reply({
+              content: "Chỉ nhận ID kênh văn bản thuộc server này.",
+              flags: MessageFlags.Ephemeral,
+            });
+        }
+      }
+      // Recheck privileges after channel lookup before writing.
+      if (!configContext(interaction, key)) return deniedConfig(interaction);
+      const item = reset
+        ? resetGameConfig(interaction.guildId, key)
+        : setGameConfig(interaction.guildId, key, value, interaction.user.id);
       return interaction.update(
         configPanel(
           interaction.guildId,
-          `✅ **${item.label}** đã đổi thành **${configValueText(item)}**.`,
+          `✅ **${item.label}**: ${configValueText(item) || "(trống)"}${reset ? " · đã khôi phục" : ""}.`,
+          ctx.scope,
+          ctx.ownerId,
+          ctx.page,
         ),
       );
     } catch (error) {
       if (error.message === "INVALID_DROP_RANGE")
         return interaction.reply({
-          content:
-            "Khoảng drop không hợp lệ: giá trị tối thiểu không được lớn hơn giá trị tối đa.",
+          content: "Giá trị tối thiểu không được lớn hơn giá trị tối đa.",
           flags: MessageFlags.Ephemeral,
         });
       if (error.message !== "INVALID_GAME_CONFIG_VALUE") throw error;
       const spec = error.spec;
+      const range =
+        spec.type === "string"
+          ? spec.choices?.join(" | ") || spec.note
+          : `${spec.min}–${spec.max}${spec.type === "integer" ? " (số nguyên)" : ""}`;
       return interaction.reply({
-        content: `Giá trị không hợp lệ. **${spec.label}** nhận ${spec.type === "integer" ? "số nguyên " : "số "}từ **${spec.min}** đến **${spec.max}**.`,
+        content: `Giá trị không hợp lệ. **${spec.label}**: ${range}`,
         flags: MessageFlags.Ephemeral,
       });
     }

@@ -189,6 +189,7 @@ async function handleButton(interaction) {
 module.exports = {
   data: new SlashCommandBuilder()
     .setName("gacha")
+    .addSubcommand(sub => sub.setName("cauhinh").setDescription("Admin: cấu hình tỷ lệ Gacha"))
     .setDescription("Quay Gacha bằng vé hoặc kim cương")
     .addSubcommand((command) =>
       command
@@ -209,6 +210,8 @@ module.exports = {
       command.setName("lichsu").setDescription("Xem lịch sử Gacha của bạn"),
     ),
   async execute(interaction) {
+    if (interaction.options.getSubcommand?.(false) === "cauhinh")
+      return require("./game").openConfig(interaction, "gacha");
     if (!interaction.guildId)
       return interaction.reply({
         content: "Lệnh này chỉ dùng trong server.",

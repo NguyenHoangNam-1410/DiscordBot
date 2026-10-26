@@ -152,8 +152,26 @@ const standaloneCommands = Object.fromEntries(
       return [
         key,
         {
-          data: commandData(key, option.description, option.options || []),
+          data: commandData(key, option.description, [
+            ...(option.type === ApplicationCommandOptionType.SubcommandGroup
+              ? option.options
+              : [
+                  {
+                    type: ApplicationCommandOptionType.Subcommand,
+                    name: "choi",
+                    description: option.description,
+                    options: option.options || [],
+                  },
+                ]),
+            {
+              type: ApplicationCommandOptionType.Subcommand,
+              name: "cauhinh",
+              description: "Admin: cấu hình riêng trò chơi này",
+            },
+          ]),
           async execute(interaction) {
+            if (interaction.options.getSubcommand?.(false) === "cauhinh")
+              return require("./game").openConfig(interaction, gameKey);
             const {
               isGameMaintenance,
               GAME_LABELS,

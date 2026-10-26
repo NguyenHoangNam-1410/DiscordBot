@@ -23,7 +23,18 @@ const SUB_ALIASES = {
   sinhton: { start: "batdau", profile: "hoso", top: "xephang", rates: "tyle" },
   vtv: { start: "batdau", skip: "boqua", end: "ketthuc" },
 };
-const DEFAULT_SUBCOMMANDS = { sinhton: "batdau", vtv: "batdau" };
+const DEFAULT_SUBCOMMANDS = {
+  baucua: "choi",
+  taixiu: "choi",
+  chinchiro: "choi",
+  xidach: "choi",
+  poker: "choi",
+  duangua: "choi",
+  domin: "choi",
+  coquay: "choi",
+  sinhton: "batdau",
+  vtv: "batdau",
+};
 const normalize = (value) => normalizeSearch(String(value)).replace(/\s/g, "");
 let registeredCommands;
 
@@ -81,13 +92,17 @@ function commandRoute(schema, tokens) {
     )
   ) {
     const raw = tokens[0];
-    const name =
+    let name =
       SUB_ALIASES[schema.name]?.[normalize(raw || "")] ||
       normalize(raw || DEFAULT_SUBCOMMANDS[schema.name] || "");
+    const implicitPlay =
+      !definitions.some((option) => option.name === name) &&
+      DEFAULT_SUBCOMMANDS[schema.name] === "choi";
+    if (implicitPlay) name = "choi";
     const selected = definitions.find((option) => option.name === name);
     if (!selected)
       return { path, definitions, error: "Chọn chức năng con của lệnh." };
-    if (raw !== undefined) tokens.shift();
+    if (raw !== undefined && !implicitPlay) tokens.shift();
     path.push(selected.name);
     if (selected.type === T.SubcommandGroup) group = selected.name;
     else subcommand = selected.name;
@@ -378,7 +393,8 @@ async function handleSlashPrefix(message) {
   if (!content.startsWith(prefix)) return false;
   let body = content.slice(prefix.length).trim();
   const head = normalize(body.match(/^\S+/)?.[0] || "");
-  if (EXPANSIONS[head]) body = `${EXPANSIONS[head]}${body.slice(body.match(/^\S+/)[0].length)}`;
+  if (EXPANSIONS[head])
+    body = `${EXPANSIONS[head]}${body.slice(body.match(/^\S+/)[0].length)}`;
   const first = body.match(/^\S+/)?.[0] || "";
   const name = ALIASES[normalize(first)] || normalize(first);
   const command = commandMap(message).get(name);
@@ -396,7 +412,11 @@ async function handleSlashPrefix(message) {
     const tokens = tokenize(body.slice(first.length));
     route = commandRoute(schema, tokens);
     if (route.error) throw new Error(route.error);
-    const raw = rawOptions(route.definitions, tokens, name === "chatbot" ? "noidung" : null),
+    const raw = rawOptions(
+        route.definitions,
+        tokens,
+        name === "chatbot" ? "noidung" : null,
+      ),
       values = new Map();
     for (const option of route.definitions) {
       if (raw.has(option.name))

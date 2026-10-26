@@ -80,7 +80,7 @@ Các game cược tiếp tục dùng seed và HMAC-SHA256 nội bộ để tạo
 
 ### Xì dách
 
-- Chọn đối thủ bằng `chedochoi`: **nhà cái bot** (mặc định, chơi một mình với tách bài) hoặc **người chơi khác**: `/xidach ante:<số xu> chedochoi:nguoichoi` mở bàn, bạn làm nhà cái, tối đa 3 người vào bàn trong 30 giây.
+- Chọn đối thủ bằng `chedochoi`: **nhà cái bot** (mặc định, chơi một mình với tách bài) hoặc **người chơi khác**: `/xidach choi ante:<số xu> chedochoi:nguoichoi` mở bàn, bạn làm nhà cái, tối đa 3 người vào bàn trong 30 giây.
 - Ở bàn nhiều người, bài mỗi người được giữ kín: bấm **Xem bài của tôi** để xem bài và Rút bài/Dừng trong bảng riêng (chỉ bạn thấy); bot nhắc người đến lượt trong kênh và bài chỉ lộ khi ván kết thúc.
 - Với prefix: `!xidach <số xu> [bot|nguoichoi]` (mặc định bot).
 
@@ -88,7 +88,7 @@ Trong ván với nhà cái bot, thắng thường nhận 2× tổng cược, Xì
 
 ### Poker
 
-`/poker` chơi với hai bot và hỗ trợ Texas Hold’em, Poker 6+, Crazy Pineapple và Omaha 5 lá. Lệnh không cần nhập buy-in: mỗi người tự đóng ante 50 xu (đổi bằng `POKER_ANTE`), sau đó xu chỉ bị trừ thêm khi Call hoặc Raise. Ngay từ Flop, mỗi bot lật công khai một lá tẩy và giữ nguyên lá đó trong suốt ván. Ván có ba hành động Tố, Theo/Check và Bỏ bài; Turn và River có vòng cược riêng. Nhập toàn bộ stack trong cửa sổ Tố để All-in. Giao diện đánh giá bộ bài mạnh nhất hiện tại của người chơi sau mỗi lượt. Bot cân nhắc sức mạnh bài, draw sảnh/thùng, pot odds, áp lực stack, phong cách riêng và bluff; bot Crazy Pineapple tự chọn lá bỏ tốt nhất nhưng không được bỏ lá đã công khai. Hệ thống tự động hoàn phần cược không ai theo, tạo Main Pot và nhiều Side Pot theo mức đóng góp, rồi xét riêng những người đủ điều kiện cho từng pot khi Showdown. Omaha bắt buộc dùng đúng hai lá tẩy và ba lá chung.
+`/poker choi` chơi với hai bot và hỗ trợ Texas Hold’em, Poker 6+, Crazy Pineapple và Omaha 5 lá. Lệnh không cần nhập buy-in: mỗi người tự đóng ante 50 xu (đổi bằng `/poker cauhinh`), sau đó xu chỉ bị trừ thêm khi Call hoặc Raise. Ngay từ Flop, mỗi bot lật công khai một lá tẩy và giữ nguyên lá đó trong suốt ván. Ván có ba hành động Tố, Theo/Check và Bỏ bài; Turn và River có vòng cược riêng. Nhập toàn bộ stack trong cửa sổ Tố để All-in. Giao diện đánh giá bộ bài mạnh nhất hiện tại của người chơi sau mỗi lượt. Bot cân nhắc sức mạnh bài, draw sảnh/thùng, pot odds, áp lực stack, phong cách riêng và bluff; bot Crazy Pineapple tự chọn lá bỏ tốt nhất nhưng không được bỏ lá đã công khai. Hệ thống tự động hoàn phần cược không ai theo, tạo Main Pot và nhiều Side Pot theo mức đóng góp, rồi xét riêng những người đủ điều kiện cho từng pot khi Showdown. Omaha bắt buộc dùng đúng hai lá tẩy và ba lá chung.
 
 `/domin` có một ô đặc biệt không trùng vị trí mìn. Mở một ô cùng hàng hoặc cùng cột với ô đặc biệt sẽ phát cảnh báo trong mục tín hiệu riêng, còn ô trên bàn vẫn hiển thị 💎 như mọi ô an toàn khác. Tìm đúng ô 🌟 sẽ nhân thêm x1.50 vào multiplier hiện tại cho đến khi rút thưởng. Hệ số cơ sở đã tính xác suất nhận bonus và giảm dần theo số ô mở để tránh chiến thuật rút thưởng tạo xu vô hạn. Bỏ ván ngay không tính EXP hay tiến độ nhiệm vụ.
 
@@ -116,7 +116,18 @@ Các lệnh thông thường có trong `/trogiup` (chọn mục bằng dropdown)
 
 Quản trị viên có thể dùng `/quantri kinhte` để xem tổng cung và dòng xu trong 24 giờ, hoặc `/quantri trangthai` để kiểm tra tính toàn vẹn database, backup gần nhất, phiên đang hoạt động và lỗi runtime.
 
-Các biến cân bằng game không còn bắt buộc phải sửa file rồi khởi động lại bot. Dùng `/quantri xemcauhinh` để xem và chỉnh giá trị bằng menu, hoặc `/quantri khoiphuc` để trở về giá trị `.env`/mặc định theo từng server. Hiện hỗ trợ cấu hình economy, phần thưởng game, tỷ lệ câu khó, ante Poker và hệ số EXP/level; thay đổi áp dụng ngay, riêng xu khởi đầu chỉ áp dụng cho tài khoản được tạo mới.
+Cấu hình theo server chỉ dành cho admin (ADMIN_USER_ID hoặc Administrator). Menu chọn → hộp nhập giữ bố cục thống nhất, có phân trang; nhập MACDINH trong ô khôi phục để trả một mục về mặc định. Cả lệnh, menu, nút và lưu hộp nhập đều kiểm tra quyền admin và người mở bảng.
+
+- `/quantri cauhinh`: chỉ xu khởi đầu, EXP/cấp và drop xu dùng chung cho bot. `/quantri khoiphuc` cũng chỉ nhận biến chung.
+- `/xidach cauhinh`, `/poker cauhinh`, `/baucua cauhinh`, `/taixiu cauhinh`, `/chinchiro cauhinh`, `/duangua cauhinh`, `/domin cauhinh`, `/coquay cauhinh`: kênh, bảo trì, giới hạn cược; hệ số thắng cho game hỗ trợ; ante riêng của Poker.
+- `/vtv cauhinh`: kênh, bảo trì, xu thưởng, tỷ lệ/thời gian câu khó và lượt bỏ qua.
+- `/sinhton cauhinh`: kênh, bảo trì, giới hạn cược và engine/danh sách boss cho run mới.
+- `/2048 cauhinh`: kênh và bảo trì. `/gacha cauhinh`: trọng số các bậc thưởng.
+- `/chatbot cauhinh`: nhà cung cấp, model chính/dự phòng, lượt/ngày, token tối đa, chờ thử lại, Google Search và kênh. API key, token Discord, khóa Tháp, endpoint API và quyền admin không có trong bất kỳ bảng cấu hình Discord nào.
+
+Do Discord không cho trộn tham số trực tiếp và lệnh con, các game trước đây dùng tham số ở lệnh gốc chuyển thành `/<game> choi` (ví dụ `/xidach choi ante:1000`). Prefix dạng cũ `!xidach 1000` vẫn hoạt động.
+
+`.env.example` chỉ giữ biến khởi động, bảo mật và triển khai thiết yếu. Các biến .env cũ tiếp tục làm mặc định khi chưa có cấu hình server; cấu hình lưu trong SQLite được ưu tiên, không sửa/xóa .env đang dùng. Các bảng game sử dụng lại thiết lập đã lưu về cược, thưởng, kênh, bảo trì và hệ số. Thay đổi áp dụng cho yêu cầu/ván mới; xu khởi đầu chỉ ảnh hưởng tài khoản mới. Sau cập nhật chạy `npm run register` rồi restart bot.
 
 Admin dùng `/quantri xoadulieu` để xóa xu, kim cương, EXP/cấp của một người chơi. Bỏ trống người chơi để xem trước số tài khoản bị ảnh hưởng và xác nhận thao tác trên toàn server.
 

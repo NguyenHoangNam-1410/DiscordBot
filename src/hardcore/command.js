@@ -205,7 +205,7 @@ module.exports = {
       });
     if (subcommand === "rates")
       return interaction.reply({
-        ...ratesPayload(interaction.user.id),
+        ...ratesPayload(interaction.user.id, "encounters", 0, interaction.guildId),
         flags: MessageFlags.Ephemeral,
       });
     if (subcommand === "batdau")

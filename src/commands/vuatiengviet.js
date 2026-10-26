@@ -485,6 +485,7 @@ const command = {
 const playerCommand = {
   data: new SlashCommandBuilder()
     .setName("vtv")
+    .addSubcommand(sub => sub.setName("cauhinh").setDescription("Admin: cấu hình Vua tiếng Việt"))
     .setDescription("Bắt đầu và quản lý Vua tiếng Việt")
     .addSubcommand((option) =>
       option
@@ -502,6 +503,8 @@ const playerCommand = {
         .setDescription("Kết thúc phiên hiện tại (chỉ admin)"),
     ),
   async execute(interaction) {
+    if (interaction.options.getSubcommand() === "cauhinh")
+      return require("./game").openConfig(interaction, "vuatiengviet");
     if (interaction.options.getSubcommand() === "batdau")
       return command.execute(interaction);
     if (!interaction.guildId)

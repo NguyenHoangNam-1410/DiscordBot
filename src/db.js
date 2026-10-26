@@ -4,8 +4,12 @@ const Database = require("better-sqlite3");
 const dotenv = require("dotenv");
 dotenv.config();
 
-const dbPath = path.resolve(process.env.DB_PATH || "./data/game-bot.sqlite");
-fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+const dbPath =
+  process.env.DB_PATH === ":memory:"
+    ? ":memory:"
+    : path.resolve(process.env.DB_PATH || "./data/game-bot.sqlite");
+if (dbPath !== ":memory:")
+  fs.mkdirSync(path.dirname(dbPath), { recursive: true });
 const db = new Database(dbPath);
 db.pragma("journal_mode = WAL");
 // WAL defaults to NORMAL in better-sqlite3; commit must fsync before acknowledging rewards.
@@ -1438,13 +1442,17 @@ runMigration(49, "chatbot server knowledge and persona", () => {
     guild_id TEXT PRIMARY KEY,persona TEXT NOT NULL,updated_by TEXT NOT NULL,updated_at INTEGER NOT NULL);`);
 });
 
-runMigration(50, "hardcore bounty hunter and four seals achievement stats", () => {
-  db.exec(`
+runMigration(
+  50,
+  "hardcore bounty hunter and four seals achievement stats",
+  () => {
+    db.exec(`
     ALTER TABLE hardcore_event_stats ADD COLUMN bounty_give INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hardcore_event_stats ADD COLUMN bounty_resist INTEGER NOT NULL DEFAULT 0;
     ALTER TABLE hardcore_event_stats ADD COLUMN seal_altars INTEGER NOT NULL DEFAULT 0;
   `);
-});
+  },
+);
 
 runMigration(51, "game channels many-to-many", () => {
   const tableSql =
@@ -1453,7 +1461,11 @@ runMigration(51, "game channels many-to-many", () => {
         "SELECT sql FROM sqlite_master WHERE type='table' AND name='game_channels'",
       )
       .get()?.sql || "";
-  if (!/PRIMARY KEY\s*\(\s*guild_id\s*,\s*game\s*,\s*channel_id\s*\)/i.test(tableSql)) {
+  if (
+    !/PRIMARY KEY\s*\(\s*guild_id\s*,\s*game\s*,\s*channel_id\s*\)/i.test(
+      tableSql,
+    )
+  ) {
     db.exec(`DROP TABLE IF EXISTS game_channels_v51;
       CREATE TABLE game_channels_v51 (
         guild_id TEXT NOT NULL,

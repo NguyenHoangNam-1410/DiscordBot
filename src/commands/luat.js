@@ -61,8 +61,8 @@ const RULES = {
   ],
 };
 
-function survivalRules() {
-  if (require("../services/hardcoreVersion").useV2()) {
+function survivalRules(guildId) {
+  if (require("../services/hardcoreVersion").useV2(guildId)) {
     const view = require("../services/hardcoreV2View");
     const { E } = require("../services/hardcoreIcons");
     const sections = {
@@ -259,8 +259,8 @@ function survivalRules() {
   return pages;
 }
 
-function survivalRulesPayload(userId, requestedPage = 0) {
-  const pages = survivalRules();
+function survivalRulesPayload(userId, requestedPage = 0, guildId) {
+  const pages = survivalRules(guildId);
   const page = Math.max(0, Math.min(pages.length - 1, requestedPage));
   pages[page].setFooter({
     text: `Trang ${page + 1}/${pages.length} · Luật Sinh tồn`,
@@ -302,7 +302,7 @@ module.exports = {
         content: "Trang luật không hợp lệ. Hãy mở lại /luat.",
         flags: MessageFlags.Ephemeral,
       });
-    return interaction.update(survivalRulesPayload(ownerId, page));
+    return interaction.update(survivalRulesPayload(ownerId, page, interaction.guildId));
   },
   data: new SlashCommandBuilder()
     .setName("luat")
@@ -320,7 +320,7 @@ module.exports = {
     const key = interaction.options.getString("trochoi", true);
     if (key === "hardcore")
       return interaction.reply({
-        ...survivalRulesPayload(interaction.user.id),
+        ...survivalRulesPayload(interaction.user.id, 0, interaction.guildId),
         flags: MessageFlags.Ephemeral,
       });
     const [name, text] = RULES[key];

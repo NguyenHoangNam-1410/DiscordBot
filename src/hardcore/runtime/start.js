@@ -45,7 +45,7 @@ module.exports = function createModule(dependencies) {
       }
       const template =
         CLASSES[classKey] ||
-        ((useV2() || beta) && ["venance", "rha_kor"].includes(classKey)
+        ((useV2(guildId) || beta) && ["venance", "rha_kor"].includes(classKey)
           ? hardcoreStats.CLASSES[classKey]
           : null);
       if (!template) throw new Error("INVALID_CLASS");
@@ -116,7 +116,7 @@ module.exports = function createModule(dependencies) {
       for (const key of Object.keys(ITEM_LIMITS)) state[key] ??= 0;
       state.contract = null;
       state.classShrine = null;
-      if (useV2() || beta) {
+      if (useV2(guildId) || beta) {
         const fair = state.fair;
         state = hardcoreStats.createState(
           classKey,
@@ -145,13 +145,7 @@ module.exports = function createModule(dependencies) {
               owned.rarity || "SSR",
             );
         }
-        state.bossRosterVersion =
-          process.env.HARDCORE_BOSS_ROSTER_VERSION === "1"
-            ? 1
-            : state.gameplayVersion === 3 ||
-                process.env.HARDCORE_BOSS_ROSTER_VERSION === "2"
-              ? 2
-              : 1;
+        state.bossRosterVersion = require("../../services/gameConfigService").getGameConfig(guildId, "HARDCORE_BOSS_ROSTER_VERSION") || (state.gameplayVersion === 3 ? 2 : 1);
         if (state.bossRosterVersion === 2)
           state.bossDamageProfile = require("../bosses/balanceV2").snapshot(
             classKey,

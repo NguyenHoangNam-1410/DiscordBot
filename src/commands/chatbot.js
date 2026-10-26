@@ -98,6 +98,7 @@ async function ask(interaction) {
 const command = {
   data: new SlashCommandBuilder()
     .setName("chatbot")
+    .addSubcommand(sub => sub.setName("cauhinh").setDescription("Admin: cấu hình chatbot, không bao gồm khóa API"))
     .setDescription("Chatbot AI")
     .addSubcommand((sub) =>
       sub
@@ -180,6 +181,7 @@ const command = {
       return interaction.reply({ content: "Chatbot chỉ dùng được trong server.", flags: MessageFlags.Ephemeral });
     const sub = interaction.options.getSubcommand();
     const reply = (content) => interaction.reply({ content, flags: MessageFlags.Ephemeral });
+    if (sub === "cauhinh") return require("./game").openConfig(interaction, "chatbot");
     if (sub === "hoi") return ask(interaction);
     if (sub === "luot") {
       const u = chatbot.usage(interaction.guildId, interaction.user.id);

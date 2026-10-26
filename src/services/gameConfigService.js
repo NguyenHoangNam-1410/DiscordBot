@@ -1,5 +1,31 @@
 const { db } = require("../db");
 
+// Only these reviewed settings may be edited through Discord. Secrets and API URLs
+// deliberately have no spec. Legacy env values remain startup defaults during migration.
+const { BET_GAMES } = require("./gameBetLimitService");
+const { GAMES } = require("./gameChannelService");
+const { WIN_MULTIPLIER_GAMES } = require("./winMultiplierService");
+const numeric = (label, fallback, min, max, scope, extra = {}) =>
+  Object.freeze({
+    label,
+    fallback,
+    min,
+    max,
+    scope,
+    type: "integer",
+    note: "Áp dụng cho server này.",
+    ...extra,
+  });
+const text = (label, fallback, scope, extra = {}) =>
+  Object.freeze({
+    label,
+    fallback,
+    scope,
+    type: "string",
+    maxLength: 300,
+    note: "Áp dụng cho yêu cầu hoặc ván mới trong server này.",
+    ...extra,
+  });
 const GAME_CONFIG_SPECS = Object.freeze({
   ECONOMY_STARTING_COINS: Object.freeze({
     label: "Xu khởi đầu",
@@ -198,8 +224,103 @@ const GAME_CONFIG_SPECS = Object.freeze({
     note: "Đã ngừng: vật phẩm không áp dụng cho ván nhiều người.",
     retired: true,
   }),
+  ...Object.fromEntries(
+    BET_GAMES.map((game) => [
+      `MAX_BET_${game}`,
+      numeric("Giới hạn cược", 100000, 10, 100000, game, {
+        storage: "bet",
+        game,
+      }),
+    ]),
+  ),
+  ...Object.fromEntries(
+    WIN_MULTIPLIER_GAMES.map((item) => [
+      `WIN_MULT_${item.game.toUpperCase()}`,
+      numeric("Hệ số thắng", item.fallback, 1.1, 3, item.game, {
+        type: "number",
+        note: item.note,
+      }),
+    ]),
+  ),
+  ...Object.fromEntries(
+    GAMES.map((game) => [
+      `MAINTENANCE_${game}`,
+      numeric("Bảo trì", 0, 0, 1, game, {
+        storageKey: `maintenance:${game}`,
+        note: "0 = mở game; 1 = bảo trì.",
+      }),
+    ]),
+  ),
+  ...Object.fromEntries(
+    GAMES.map((game) => [
+      `CHANNELS_${game}`,
+      text("Kênh trò chơi", "", game, {
+        storage: "channels",
+        game,
+        maxLength: 2000,
+        note:
+          game === "vuatiengviet"
+            ? "Nhập một ID kênh văn bản; trống = gỡ kênh."
+            : "Các ID kênh văn bản cách nhau bằng dấu phẩy; trống = gỡ hết.",
+      }),
+    ]),
+  ),
+  CHATBOT_PROVIDER: text("Nhà cung cấp AI", "openai", "chatbot", {
+    choices: ["openai", "gemini", "openrouter"],
+  }),
+  OPENAI_MODEL: text("Model chính và dự phòng", "", "chatbot", {
+    pattern: /^[a-zA-Z0-9._:/, -]*$/,
+    note: "Tên model cách nhau bằng dấu phẩy; trống = mặc định nhà cung cấp. OpenRouter cần model cụ thể.",
+  }),
+  CHATBOT_DAILY_LIMIT: numeric("Lượt chat mỗi ngày", 20, 1, 500, "chatbot", {
+    storage: "chatbot_limit",
+  }),
+  CHATBOT_MAX_TOKENS: numeric(
+    "Token tối đa mỗi câu trả lời",
+    1500,
+    100,
+    8000,
+    "chatbot",
+  ),
+  CHATBOT_RETRY_DELAY_MS: numeric(
+    "Chờ thử lại (ms)",
+    2000,
+    0,
+    30000,
+    "chatbot",
+  ),
+  CHATBOT_GOOGLE_SEARCH: numeric("Google Search", 0, 0, 1, "chatbot", {
+    note: "0 = tắt; 1 = bật. Chỉ dùng Gemini, có thể phát sinh phí tìm kiếm.",
+  }),
+  CHATBOT_CHANNEL: text("Kênh chatbot", "", "chatbot", {
+    storage: "chatbot_channel",
+    note: "Một ID kênh văn bản; trống = cho phép mọi kênh.",
+  }),
+  HARDCORE_GAMEPLAY_VERSION: text("Engine Sinh tồn", "current", "hardcore", {
+    choices: ["current", "legacy"],
+    note: "Chỉ áp dụng cho run mới.",
+  }),
+  HARDCORE_BOSS_ROSTER_VERSION: numeric("Danh sách boss", 0, 0, 2, "hardcore", {
+    note: "0 = tự động theo engine; 1/2 = ép danh sách boss. Chỉ áp dụng run mới.",
+  }),
 });
-
+const CONFIG_SCOPES = Object.freeze({
+  VUATIENGVIET_REWARD: "vuatiengviet",
+  HARD_QUESTION_CHANCE: "vuatiengviet",
+  HARD_QUESTION_DURATION_SECONDS: "vuatiengviet",
+  VTV_DAILY_SKIP_LIMIT: "vuatiengviet",
+  POKER_ANTE: "poker",
+  ...Object.fromEntries(
+    ["XU", "R", "SR", "SSR", "UR"].map((tier) => [
+      `GACHA_RATE_${tier}`,
+      "gacha",
+    ]),
+  ),
+});
+const configScope = (key) =>
+  GAME_CONFIG_SPECS[key]?.scope || CONFIG_SCOPES[key] || "system";
+const configKeysForScope = (scope) =>
+  GAME_CONFIG_KEYS.filter((key) => configScope(key) === scope);
 const GAME_CONFIG_KEYS = Object.freeze(
   Object.keys(GAME_CONFIG_SPECS).filter(
     (key) => !GAME_CONFIG_SPECS[key].retired,
@@ -207,14 +328,34 @@ const GAME_CONFIG_KEYS = Object.freeze(
 );
 
 function getSpec(key) {
-  const spec = GAME_CONFIG_SPECS[String(key)];
+  const spec =
+    Object.hasOwn(GAME_CONFIG_SPECS, String(key)) &&
+    GAME_CONFIG_SPECS[String(key)];
   if (!spec) throw new Error("INVALID_GAME_CONFIG");
   return spec;
 }
 
 function normalizeValue(key, input) {
   const spec = getSpec(key);
-  const value = Number(input);
+  const raw = String(input ?? "").trim();
+  if (spec.type === "string") {
+    if (
+      raw.length > spec.maxLength ||
+      (spec.choices && !spec.choices.includes(raw)) ||
+      (spec.pattern && !spec.pattern.test(raw)) ||
+      (spec.storage === "chatbot_channel" && raw && !/^\d{17,20}$/.test(raw)) ||
+      (spec.storage === "channels" &&
+        raw &&
+        (!/^\d{17,20}(?:\s*,\s*\d{17,20})*$/.test(raw) ||
+          (spec.game === "vuatiengviet" && raw.includes(","))))
+    ) {
+      const error = new Error("INVALID_GAME_CONFIG_VALUE");
+      error.spec = spec;
+      throw error;
+    }
+    return raw;
+  }
+  const value = raw === "" ? NaN : Number(raw);
   if (
     !Number.isFinite(value) ||
     value < spec.min ||
@@ -231,7 +372,19 @@ function normalizeValue(key, input) {
 
 function defaultValue(key) {
   const spec = getSpec(key);
-  const configured = Number(process.env[key]);
+  let raw = process.env[key];
+  if (key === "CHATBOT_GOOGLE_SEARCH" && raw != null)
+    raw = /^(1|true|on|yes)$/i.test(raw.trim()) ? "1" : "0";
+  if (key === "CHATBOT_PROVIDER" && raw) raw = raw.toLowerCase();
+  if (raw == null || raw.trim() === "") return spec.fallback;
+  if (spec.type === "string") {
+    try {
+      return normalizeValue(key, raw);
+    } catch {
+      return spec.fallback;
+    }
+  }
+  const configured = Number(raw);
   if (!Number.isFinite(configured)) return spec.fallback;
   if (spec.clampEnv) {
     const value = spec.type === "integer" ? Math.floor(configured) : configured;
@@ -246,6 +399,40 @@ function defaultValue(key) {
 
 function storedRow(guildId, key) {
   const spec = getSpec(key);
+  if (spec.storage === "bet")
+    return (
+      db
+        .prepare(
+          "SELECT max_bet AS setting_value FROM game_bet_limits WHERE guild_id=? AND game=?",
+        )
+        .get(String(guildId), spec.game) || null
+    );
+  if (spec.storage === "channels") {
+    const rows = db
+      .prepare(
+        "SELECT channel_id FROM game_channels WHERE guild_id=? AND game=? ORDER BY channel_id",
+      )
+      .all(String(guildId), spec.game);
+    return rows.length
+      ? { setting_value: rows.map((row) => row.channel_id).join(",") }
+      : null;
+  }
+  if (spec.storage === "chatbot_limit")
+    return (
+      db
+        .prepare(
+          "SELECT daily_limit AS setting_value FROM chatbot_settings WHERE guild_id=?",
+        )
+        .get(String(guildId)) || null
+    );
+  if (spec.storage === "chatbot_channel")
+    return (
+      db
+        .prepare(
+          "SELECT channel_id AS setting_value FROM chatbot_channels WHERE guild_id=?",
+        )
+        .get(String(guildId)) || null
+    );
   if (spec.storage === "game_reward") {
     const row = db
       .prepare(
@@ -259,7 +446,7 @@ function storedRow(guildId, key) {
       .prepare(
         "SELECT setting_value,updated_by,updated_at FROM game_settings WHERE guild_id=? AND setting_key=?",
       )
-      .get(String(guildId), String(key)) || null
+      .get(String(guildId), spec.storageKey || String(key)) || null
   );
 }
 
@@ -281,8 +468,10 @@ function getGameConfigDetail(guildId, key) {
   };
 }
 
-function listGameConfigs(guildId) {
-  return GAME_CONFIG_KEYS.map((key) => getGameConfigDetail(guildId, key));
+function listGameConfigs(guildId, scope = null) {
+  return (scope == null ? GAME_CONFIG_KEYS : configKeysForScope(scope)).map(
+    (key) => getGameConfigDetail(guildId, key),
+  );
 }
 
 function setGameConfig(guildId, key, input, updatedBy = "unknown") {
@@ -305,7 +494,24 @@ function setGameConfig(guildId, key, input, updatedBy = "unknown") {
     }
   }
   const now = Date.now();
-  if (spec.storage === "game_reward") {
+  if (spec.storage === "bet") {
+    require("./gameBetLimitService").setGameBetLimit(guildId, spec.game, value);
+  } else if (spec.storage === "channels") {
+    db.transaction(() => {
+      db.prepare("DELETE FROM game_channels WHERE guild_id=? AND game=?").run(
+        String(guildId),
+        spec.game,
+      );
+      for (const id of new Set(value ? value.split(/\s*,\s*/) : []))
+        require("./gameChannelService").addGameChannel(guildId, spec.game, id);
+    })();
+  } else if (spec.storage === "chatbot_limit") {
+    require("./chatbotService").setDailyLimit(guildId, value, updatedBy);
+  } else if (spec.storage === "chatbot_channel") {
+    const chatbot = require("./chatbotService");
+    if (value) chatbot.setChannel(guildId, value, updatedBy);
+    else chatbot.clearChannel(guildId);
+  } else if (spec.storage === "game_reward") {
     db.prepare(
       `INSERT INTO game_rewards(guild_id,game,reward,updated_at) VALUES(?,?,?,?)
       ON CONFLICT(guild_id,game) DO UPDATE SET reward=excluded.reward,updated_at=excluded.updated_at`,
@@ -315,14 +521,43 @@ function setGameConfig(guildId, key, input, updatedBy = "unknown") {
       `INSERT INTO game_settings(guild_id,setting_key,setting_value,updated_by,updated_at) VALUES(?,?,?,?,?)
       ON CONFLICT(guild_id,setting_key) DO UPDATE SET setting_value=excluded.setting_value,
         updated_by=excluded.updated_by,updated_at=excluded.updated_at`,
-    ).run(String(guildId), String(key), String(value), String(updatedBy), now);
+    ).run(
+      String(guildId),
+      spec.storageKey || String(key),
+      String(value),
+      String(updatedBy),
+      now,
+    );
   }
   return getGameConfigDetail(guildId, key);
 }
 
 function resetGameConfig(guildId, key) {
   const spec = getSpec(key);
-  if (spec.storage === "game_reward")
+  if (/^GAME_(?:COIN|DIAMOND)_DROP_(?:MIN|MAX)$/.test(key)) {
+    db.transaction(() => {
+      setGameConfig(guildId, key, defaultValue(key));
+    })();
+  }
+  if (spec.storage === "bet")
+    db.prepare("DELETE FROM game_bet_limits WHERE guild_id=? AND game=?").run(
+      String(guildId),
+      spec.game,
+    );
+  else if (spec.storage === "channels")
+    db.prepare("DELETE FROM game_channels WHERE guild_id=? AND game=?").run(
+      String(guildId),
+      spec.game,
+    );
+  else if (spec.storage === "chatbot_limit")
+    db.prepare("DELETE FROM chatbot_settings WHERE guild_id=?").run(
+      String(guildId),
+    );
+  else if (spec.storage === "chatbot_channel")
+    db.prepare("DELETE FROM chatbot_channels WHERE guild_id=?").run(
+      String(guildId),
+    );
+  else if (spec.storage === "game_reward")
     db.prepare("DELETE FROM game_rewards WHERE guild_id=? AND game=?").run(
       String(guildId),
       spec.game,
@@ -330,11 +565,13 @@ function resetGameConfig(guildId, key) {
   else
     db.prepare(
       "DELETE FROM game_settings WHERE guild_id=? AND setting_key=?",
-    ).run(String(guildId), String(key));
+    ).run(String(guildId), spec.storageKey || String(key));
   return getGameConfigDetail(guildId, key);
 }
 
 module.exports = {
+  configScope,
+  configKeysForScope,
   GAME_CONFIG_KEYS,
   GAME_CONFIG_SPECS,
   getGameConfig,

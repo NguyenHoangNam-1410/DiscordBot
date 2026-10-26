@@ -157,6 +157,7 @@ const ROUTES = Object.freeze([
     prefix: "iteminfo-filter:",
     handle: (interaction) => itemCatalogViewCommand.handleFilter(interaction),
   },
+  { kind: "button", prefix: "game-config-page:", handle: i => gameCommand.handleConfigPage(i) },
   {
     kind: "select",
     prefix: "game-config-select",

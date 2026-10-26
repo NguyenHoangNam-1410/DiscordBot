@@ -86,8 +86,8 @@ const noDrops = (guild) => {
   assert.equal(wm.formatMultiplier(1.8), "x1,8");
   // không làm tăng số mục cấu hình dùng chung (menu chọn của Discord tối đa 25 mục)
   assert(
-    config.GAME_CONFIG_KEYS.length <= 25 &&
-      !config.GAME_CONFIG_KEYS.some((key) => key.startsWith("WIN_MULT_")),
+    config.configKeysForScope("system").length <= 25 &&
+      !config.configKeysForScope("system").some((key) => key.startsWith("WIN_MULT_")),
   );
 
   // ───── 2) Xì dách với bot ─────

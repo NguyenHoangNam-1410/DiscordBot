@@ -52,8 +52,8 @@ const RATE_CATEGORIES = Object.freeze([
     ],
   },
 ]);
-function buildRatesEmbed(category = null) {
-  if (require("../shared/version").useV2()) {
+function buildRatesEmbed(category = null, guildId) {
+  if (require("../shared/version").useV2(guildId)) {
     return new EmbedBuilder()
       .setColor(0xe67e22)
       .setTitle(
@@ -158,12 +158,12 @@ function buildRatesEmbed(category = null) {
   return embed;
 }
 
-function ratesPages(category = "encounters") {
+function ratesPages(category = "encounters", guildId) {
   const selected =
     RATE_CATEGORIES.find((item) => item.id === category) || RATE_CATEGORIES[0];
   const pages = paginateRuleEmbed(
-    buildRatesEmbed(selected.id).setTitle(
-      `🎰 SINH TỒN ${require("../shared/version").useV2() ? `v${require("../shared/version").RELEASE.version}` : "legacy"} · ${selected.name.toUpperCase()}`,
+    buildRatesEmbed(selected.id, guildId).setTitle(
+      `🎰 SINH TỒN ${require("../shared/version").useV2(guildId) ? `v${require("../shared/version").RELEASE.version}` : "legacy"} · ${selected.name.toUpperCase()}`,
     ),
   );
   return pages.map((page, index) =>
@@ -174,14 +174,14 @@ function ratesPages(category = "encounters") {
 }
 
 // Compatibility helper: an embed returned to a caller is always a bounded page.
-function ratesEmbed(category = "encounters") {
-  return ratesPages(category)[0];
+function ratesEmbed(category = "encounters", guildId) {
+  return ratesPages(category, guildId)[0];
 }
 
-function ratesPayload(userId, category = "encounters", requestedPage = 0) {
+function ratesPayload(userId, category = "encounters", requestedPage = 0, guildId) {
   const selected =
     RATE_CATEGORIES.find((item) => item.id === category) || RATE_CATEGORIES[0];
-  const pages = ratesPages(selected.id);
+  const pages = ratesPages(selected.id, guildId);
   const page = Number.isSafeInteger(requestedPage)
     ? Math.max(0, Math.min(pages.length - 1, requestedPage))
     : 0;
@@ -228,7 +228,7 @@ async function handleSelect(interaction) {
       flags: MessageFlags.Ephemeral,
     });
   // Choosing another group always starts at its first page.
-  return interaction.update(ratesPayload(ownerId, interaction.values[0]));
+  return interaction.update(ratesPayload(ownerId, interaction.values[0], 0, interaction.guildId));
 }
 
 async function handlePage(interaction) {
@@ -249,7 +249,7 @@ async function handlePage(interaction) {
       content: "Trang tỷ lệ không hợp lệ. Hãy mở lại /sinhton tyle.",
       flags: MessageFlags.Ephemeral,
     });
-  return interaction.update(ratesPayload(ownerId, category, page));
+  return interaction.update(ratesPayload(ownerId, category, page, interaction.guildId));
 }
 
 module.exports = {

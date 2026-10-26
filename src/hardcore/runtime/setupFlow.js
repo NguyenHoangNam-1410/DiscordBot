@@ -29,7 +29,7 @@ module.exports = function createModule(dependencies) {
 
   function setupContext(draft) {
     return {
-      gameplayVersion: useV2()
+      gameplayVersion: useV2(draft.guildId)
         ? require("../shared/version").RELEASE.gameplay
         : 1,
       balance: getAccount(draft.guildId, draft.userId).balance,
@@ -38,7 +38,7 @@ module.exports = function createModule(dependencies) {
   }
 
   function selectableClasses(draft) {
-    if (!useV2()) return CLASSES;
+    if (!useV2(draft.guildId)) return CLASSES;
     const characters = require("../characters"),
       stats = require("../engine/stats");
     return Object.fromEntries(

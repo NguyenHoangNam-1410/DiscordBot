@@ -11,7 +11,7 @@ function isV2(state) {
   // Compatibility name for saved V2 and new V3 runs using the same engine.
   return [2, 3].includes(state?.gameplayVersion);
 }
-function useV2() {
-  return process.env.HARDCORE_GAMEPLAY_VERSION !== "legacy";
+function useV2(guildId) {
+  return require("../../services/gameConfigService").getGameConfig(guildId, "HARDCORE_GAMEPLAY_VERSION") !== "legacy";
 }
 module.exports = { RELEASE, isV2, useV2 };
