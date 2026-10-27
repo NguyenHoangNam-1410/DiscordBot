@@ -1,5 +1,18 @@
 [
   {
+    "id": "222db848-8ecf-43fe-8c0f-71b12382a18c",
+    "updatedAt": "2026-10-27T04:58:19.743Z",
+    "auditedAt": "2026-10-27T04:58:19.743Z",
+    "title": "Chatbot: báo cáo usage, model và chi phí",
+    "type": "feature",
+    "scope": "chatbot",
+    "changes": [
+      "Admin dùng /chatbot thongke để xem lượt gọi API, model thực tế, token, lỗi và model dự phòng; lọc hôm nay, 7 hoặc 30 ngày, theo người chơi và phân trang.",
+      "Tách chi phí API báo với chi phí ước tính; /chatbot dongia đặt giá token và tìm kiếm cho các lần gọi mới, hiển thị rõ dữ liệu hoặc chi phí chưa xác định.",
+      "Ghi nhận từ khi cập nhật được chạy, không suy đoán token hoặc chi phí lịch sử; bản ghi thống kê không lưu nội dung trò chuyện hoặc khóa API."
+    ]
+  },
+  {
     "id": "fef19c97-ae49-47e2-8d88-1dfff249141d",
     "updatedAt": "2026-10-27T01:21:53.816Z",
     "auditedAt": "2026-10-27T01:21:53.816Z",

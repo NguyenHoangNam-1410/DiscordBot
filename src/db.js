@@ -1517,4 +1517,29 @@ runMigration(56, "survival replay compaction marker", () => {
   db.exec("ALTER TABLE hardcore_replays ADD COLUMN compacted_at INTEGER");
 });
 
+runMigration(57, "chatbot request accounting and model prices", () => {
+  db.exec(`CREATE TABLE chatbot_requests (
+    id TEXT PRIMARY KEY, guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
+    turn_id TEXT NOT NULL, provider TEXT NOT NULL, endpoint_key TEXT NOT NULL,
+    kind TEXT NOT NULL, requested_model TEXT NOT NULL, model TEXT NOT NULL,
+    model_source TEXT NOT NULL DEFAULT 'requested', is_fallback INTEGER NOT NULL DEFAULT 0,
+    status TEXT NOT NULL DEFAULT 'pending', http_status INTEGER,
+    started_at INTEGER NOT NULL, completed_at INTEGER,
+    input_tokens INTEGER, output_tokens INTEGER, total_tokens INTEGER,
+    cached_tokens INTEGER, reasoning_tokens INTEGER, tool_input_tokens INTEGER,
+    search_enabled INTEGER NOT NULL DEFAULT 0, search_queries INTEGER,
+    reported_cost_usd REAL, estimated_cost_usd REAL,
+    token_cost_usd REAL, search_cost_usd REAL, pricing_json TEXT
+  );
+  CREATE INDEX idx_chatbot_requests_guild_time ON chatbot_requests(guild_id,started_at);
+  CREATE INDEX idx_chatbot_requests_user_time ON chatbot_requests(guild_id,user_id,started_at);
+  CREATE TABLE chatbot_model_prices (
+    guild_id TEXT NOT NULL, endpoint_key TEXT NOT NULL, model TEXT NOT NULL,
+    input_per_million REAL NOT NULL, output_per_million REAL NOT NULL,
+    cached_per_million REAL NOT NULL, search_per_thousand REAL,
+    updated_by TEXT NOT NULL, updated_at INTEGER NOT NULL,
+    PRIMARY KEY(guild_id,endpoint_key,model)
+  );`);
+});
+
 module.exports = { db, dbPath, runMigration };

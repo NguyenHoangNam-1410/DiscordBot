@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, ChannelType, EmbedBuilder, MessageFlags } = require("discord.js");
 const chatbot = require("../services/chatbotService");
+const accounting = require("../services/chatbotUsageService");
 
 const busy = new Set(); // một yêu cầu một lúc cho mỗi người
 
@@ -175,7 +176,77 @@ const command = {
         ),
     )
     .addSubcommand((sub) => sub.setName("tat").setDescription("Admin: bỏ giới hạn kênh (chatbot dùng ở mọi kênh)"))
-    .addSubcommand((sub) => sub.setName("luot").setDescription("Xem số lượt chat còn lại hôm nay")),
+    .addSubcommand((sub) => sub.setName("luot").setDescription("Xem số lượt chat còn lại hôm nay"))
+    .addSubcommand((sub) =>
+      sub
+        .setName("thongke")
+        .setDescription("Admin: báo cáo usage, model và chi phí chatbot")
+        .addIntegerOption((option) =>
+          option
+            .setName("thoigian")
+            .setDescription("Khoảng thời gian theo giờ Việt Nam")
+            .addChoices(
+              { name: "Hôm nay", value: 1 },
+              { name: "7 ngày", value: 7 },
+              { name: "30 ngày", value: 30 },
+            ),
+        )
+        .addUserOption((option) =>
+          option
+            .setName("nguoi")
+            .setDescription("Lọc một người chơi; bỏ trống để xem toàn server"),
+        ),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("dongia")
+        .setDescription("Admin: đặt giá USD để ước tính chi phí của một model")
+        .addStringOption((option) =>
+          option
+            .setName("model")
+            .setDescription(
+              "Tên model chính xác; áp dụng cho endpoint hiện tại",
+            )
+            .setRequired(true)
+            .setMinLength(1)
+            .setMaxLength(200),
+        )
+        .addNumberOption((option) =>
+          option
+            .setName("input")
+            .setDescription("USD / 1 triệu input token")
+            .setRequired(true)
+            .setMinValue(0)
+            .setMaxValue(1000000),
+        )
+        .addNumberOption((option) =>
+          option
+            .setName("output")
+            .setDescription("USD / 1 triệu output token, gồm token suy nghĩ")
+            .setRequired(true)
+            .setMinValue(0)
+            .setMaxValue(1000000),
+        )
+        .addNumberOption((option) =>
+          option
+            .setName("cache")
+            .setDescription(
+              "USD / 1 triệu cached input token; mặc định bằng input",
+            )
+            .setMinValue(0)
+            .setMaxValue(1000000),
+        )
+        .addNumberOption((option) =>
+          option
+            .setName("timkiem")
+            .setDescription(
+              "Ước tính USD / 1.000 truy vấn nguồn Google Search; bỏ trống = chưa biết",
+            )
+            .setMinValue(0)
+            .setMaxValue(1000000),
+        ),
+    ),
+
   async execute(interaction) {
     if (!interaction.guildId)
       return interaction.reply({ content: "Chatbot chỉ dùng được trong server.", flags: MessageFlags.Ephemeral });
@@ -207,6 +278,42 @@ const command = {
       return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral, allowedMentions: { parse: [] } });
     }
     if (!require("./vuatiengviet").isAdmin(interaction)) return reply("Chỉ admin mới được cấu hình chatbot.");
+    if (sub === "thongke") {
+      return interaction.reply({
+        ...accounting.panel(interaction.guildId, interaction.user.id, {
+          days: interaction.options.getInteger("thoigian") || 1,
+          userId: interaction.options.getUser("nguoi")?.id || null,
+        }),
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+    if (sub === "dongia") {
+      try {
+        const rates = accounting.setPrice({
+          guildId: interaction.guildId,
+          endpoint: chatbot.baseUrl(interaction.guildId),
+          model: interaction.options.getString("model", true),
+          input: interaction.options.getNumber("input", true),
+          output: interaction.options.getNumber("output", true),
+          cached:
+            interaction.options.getNumber("cache") ??
+            interaction.options.getNumber("input", true),
+          search: interaction.options.getNumber("timkiem"),
+          adminId: interaction.user.id,
+        });
+        return interaction.reply({
+          content: `✅ Đã đặt đơn giá **${rates.model}** cho endpoint hiện tại trong server này.\nInput ${accounting.usd(rates.input_per_million)} / Output ${accounting.usd(rates.output_per_million)} / Cache ${accounting.usd(rates.cached_per_million)} trên 1 triệu token.\nGoogle Search: ${accounting.usd(rates.search_per_thousand)} / 1.000 truy vấn nguồn.\nÁp dụng cho lần gọi mới; không tính lại lịch sử. Giá do admin nhập là ước tính, cần đúng gói/bậc giá đang dùng.`,
+          flags: MessageFlags.Ephemeral,
+          allowedMentions: { parse: [] },
+        });
+      } catch (error) {
+        if (error.message === "INVALID_CHATBOT_PRICE")
+          return reply(
+            "Tên model hoặc đơn giá không hợp lệ. Giá USD phải từ 0 đến 1.000.000.",
+          );
+        throw error;
+      }
+    }
     if (sub === "nho") {
       try {
         const about = interaction.options.getUser?.("nguoi");

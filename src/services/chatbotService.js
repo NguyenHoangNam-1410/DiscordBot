@@ -1,5 +1,6 @@
 "use strict";
 const { db } = require("../db");
+const accounting = require("./chatbotUsageService");
 const { getGameConfig } = require("./gameConfigService");
 
 const DEFAULT_MODEL = "gpt-4o-mini";
@@ -204,29 +205,86 @@ function remember(key, user, assistant, now = Date.now()) {
   histories.set(key, { at: now, turns });
 }
 
-async function post(url, headers, body, signal = null) {
-  const timeout = AbortSignal.timeout(30_000);
-  const response = await fetch(url, {
-    method: "POST",
-    headers: { "content-type": "application/json", ...headers },
-    body: JSON.stringify(body),
-    signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
-  });
-  if (!response.ok) {
-    // Giữ lại thông điệp lỗi của nhà cung cấp (không chứa khóa) để ghi log chẩn đoán.
-    const text = await response.text?.().catch(() => "");
-    const error = new Error(`API_${response.status}`);
-    error.status = response.status;
-    error.body = String(text || "").slice(0, 500);
+function accountingInfo(guildId, name, kind, extra = {}) {
+  return {
+    provider: process.env.OPENAI_BASE_URL
+      ? "custom"
+      : getGameConfig(guildId, "CHATBOT_PROVIDER"),
+    endpoint: baseUrl(guildId),
+    model: name,
+    kind,
+    ...extra,
+  };
+}
+async function post(url, headers, body, signal = null, info = null) {
+  const record = info ? accounting.safely(accounting.beginRequest, info) : null;
+  let completed = false;
+  let status = null;
+  try {
+    const timeout = AbortSignal.timeout(30_000);
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "content-type": "application/json", ...headers },
+      body: JSON.stringify(body),
+      signal: signal ? AbortSignal.any([signal, timeout]) : timeout,
+    });
+    status = response.status || (response.ok ? 200 : null);
+    if (!response.ok) {
+      const raw = await response.text?.().catch(() => "");
+      let data = {};
+      try {
+        data = JSON.parse(raw || "{}");
+      } catch {}
+      accounting.safely(accounting.finishRequest, record, data, {
+        status: "failed",
+        httpStatus: status,
+      });
+      completed = true;
+      const error = new Error("API_" + response.status);
+      error.status = response.status;
+      error.body = String(raw || "").slice(0, 500);
+      throw error;
+    }
+    const data = await response.json();
+    accounting.safely(accounting.finishRequest, record, data, {
+      httpStatus: status,
+    });
+    completed = true;
+    return data;
+  } catch (error) {
+    if (!completed)
+      accounting.safely(
+        accounting.finishRequest,
+        record,
+        {},
+        { status: "failed", httpStatus: status },
+      );
     throw error;
   }
-  return response.json();
 }
-const openai = (path, body, signal = null, guildId = null) =>
-  post(`${baseUrl(guildId)}/${path}`, { authorization: `Bearer ${process.env.OPENAI_API_KEY}` }, body, signal);
+const openai = (path, body, signal = null, guildId = null, extra = {}) =>
+  post(
+    baseUrl(guildId) + "/" + path,
+    { authorization: "Bearer " + process.env.OPENAI_API_KEY },
+    {
+      ...body,
+      ...(provider(guildId) === PROVIDERS.openrouter &&
+      !process.env.OPENAI_BASE_URL &&
+      path === "chat/completions"
+        ? { usage: { include: true } }
+        : {}),
+    },
+    signal,
+    accountingInfo(
+      guildId,
+      body.model,
+      path === "moderations" ? "moderation" : "chat",
+      extra,
+    ),
+  );
 
 // Gemini gốc + Google Search; trả về cùng dạng { choices } với chat/completions, kèm danh sách nguồn web.
-async function geminiSearch(name, messages, signal, guildId) {
+async function geminiSearch(name, messages, signal, guildId, extra = {}) {
   const system = messages.filter((m) => m.role === "system").map((m) => m.content).join("\n\n");
   const contents = messages
     .filter((m) => m.role !== "system")
@@ -241,6 +299,7 @@ async function geminiSearch(name, messages, signal, guildId) {
       generationConfig: { maxOutputTokens: maxOutputTokens(guildId) },
     },
     signal,
+    accountingInfo(guildId, name, "chat", { ...extra, nativeGemini: true, searchEnabled: true }),
   );
   const candidate = data.candidates?.[0];
   const content = (candidate?.content?.parts || [])
@@ -330,8 +389,8 @@ async function completeWithFallback(messages, signal, guildId) {
     for (const name of list) {
       try {
         return useGoogleSearch(guildId)
-          ? await geminiSearch(name, messages, signal, guildId)
-          : await openai("chat/completions", { model: name, max_tokens: maxOutputTokens(guildId), messages }, signal, guildId);
+          ? await geminiSearch(name, messages, signal, guildId, { fallback: name !== list[0] })
+          : await openai("chat/completions", { model: name, max_tokens: maxOutputTokens(guildId), messages }, signal, guildId, { fallback: name !== list[0] });
       } catch (error) {
         if (signal?.aborted || !RETRYABLE(error)) throw error;
         lastError = error;
@@ -343,7 +402,7 @@ async function completeWithFallback(messages, signal, guildId) {
 }
 
 // Trả về { ok, text } hoặc { error } với: DISABLED | TOO_LONG | LIMIT | FLAGGED | API
-async function ask({ guildId, userId, channelId, text, now = Date.now(), signal = null, asker = null, people = [] }) {
+async function askInternal({ guildId, userId, channelId, text, now = Date.now(), signal = null, asker = null, people = [] }) {
   if (!isConfigured(guildId)) return { error: "DISABLED" };
   const input = String(text || "").trim();
   if (!input) return { error: "EMPTY" };
@@ -371,6 +430,10 @@ async function ask({ guildId, userId, channelId, text, now = Date.now(), signal 
     if (signal?.aborted) return { error: "CANCELLED" };
     return { error: "API", detail: error.message, status: error.status, body: error.body };
   }
+}
+
+function ask(args) {
+  return accounting.withContext(args, () => askInternal(args));
 }
 
 module.exports = {

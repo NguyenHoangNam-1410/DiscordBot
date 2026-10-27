@@ -74,6 +74,17 @@ Tin trả lời prefix hiển thị trong kênh, kể cả bảng vốn là ephe
 - `/quantri datbuff` bật hệ số nhân có thời hạn: **xu drop**, **gem drop** (nhân số lượng khi đã roll trúng), **tỷ lệ rơi vật phẩm game** (nhân tỷ lệ rơi vật phẩm, tối đa 100%) và **tăng tỷ lệ ra vật phẩm Gacha** (nhân tỷ lệ các bậc R–UR so với bậc XU). Dùng `/quantri datbuff` với hành động `Xem buff đang chạy` để xem thời gian còn lại.
 - Admin dùng `/quantri xemthuongvaitro` để mở bảng thưởng vai trò hàng tuần: xem danh sách và dùng các nút **Thêm / Sửa vai trò** (chọn vai trò rồi nhập số xu) hoặc **Xóa vai trò**; ba lệnh riêng lẻ cũ đã được gộp vào bảng này để nhường chỗ cho lệnh mới. Người chơi phải dùng `/nhiemvu nhan` (loại Thưởng vai trò) trong tuần để nhận; quên nhận sẽ mất phần tuần đó.
 
+## Báo cáo chatbot
+
+- Admin dùng `/chatbot thongke [thoigian:1|7|30] [nguoi:@user]` để xem số câu hỏi, số lần gọi API thành công/lỗi/chưa hoàn tất, fallback, token và chi phí. Khoảng thời gian tính theo ngày lịch Việt Nam, có phân trang theo model. `!chatbot thongke` dùng cùng chức năng khi prefix được bật; phản hồi prefix hiển thị trong kênh.
+- Báo cáo ghi model API thực sự trả về; nếu API không xác nhận model thì ghi rõ tên theo yêu cầu. Mỗi lần thử, retry, fallback và kiểm duyệt có bản ghi riêng; một câu hỏi có thể có nhiều bản ghi. Bộ đếm `/chatbot luot` vẫn là hạn mức chat hằng ngày.
+- OpenAI-compatible đọc `usage`; Gemini gốc đọc `usageMetadata` trước khi chuyển nội dung về định dạng chung. Token cache thuộc input; token suy nghĩ thuộc output. Gemini cộng candidates + thoughts vào output và prompt + tool-use prompt vào input. Chỉ tổng hợp số API cung cấp, đánh dấu metadata thiếu thay vì suy đoán từ độ dài câu trả lời.
+- Nếu API trả `usage.cost`, giữ số USD API báo thành nhóm riêng. Để ước tính những lần khác, admin dùng `/chatbot dongia model:<tên> input:<USD/triệu token> output:<USD/triệu token> [cache:<USD/triệu token>] [timkiem:<USD/1.000 truy vấn nguồn>]`. Cache mặc định bằng giá input. Giá bằng 0 được phép; bỏ trống giá tìm kiếm nghĩa là chưa biết.
+- Đơn giá thuộc server và endpoint hiện tại, khớp model thực tế trước rồi tên model đã yêu cầu. Giá được chốt lúc bắt đầu mỗi lần gọi; đổi giá không tính lại lịch sử. Cần nhập đúng mức giá/gói/bậc context của tài khoản đang dùng. Giá tìm kiếm là ước tính theo truy vấn nguồn trả về, có thể khác đơn vị tính phí của nhà cung cấp; thiếu giá hoặc metadata sẽ hiện chưa xác định.
+- Tổng API báo và tổng ước tính là hai nhóm không trùng nhau, không phải hóa đơn đầy đủ. Các phần token/tìm kiếm được ghi là subtotal khi chưa biết toàn bộ chi phí. Chỉ ghi nhận từ khi cập nhật được chạy; lịch sử trước đó không thể khôi phục token/cost chính xác. Ledger không lưu câu hỏi, câu trả lời, khóa API, header hoặc URL endpoint.
+
+Định dạng metadata được đối chiếu với [OpenAI Chat Completions](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create), [Gemini GenerateContent](https://ai.google.dev/api/generate-content) và [OpenRouter usage accounting](https://openrouter.ai/blog/announcements/smarter-charts-inline-svgs-and-live-usage-accounting/).
+
 ## Kiểm chứng công bằng
 
 Các game cược tiếp tục dùng seed và HMAC-SHA256 nội bộ để tạo kết quả xác định. Thông tin kỹ thuật về seed/commit không hiển thị trên embed game để giao diện ngắn gọn hơn.

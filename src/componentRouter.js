@@ -51,6 +51,12 @@ const checklistCommand = require("./commands/kiemtra");
 
 const { handleStore, handleBag } = require("./services/hardcoreInventoryView");
 const ROUTES = Object.freeze([
+  {
+    kind: "button",
+    prefix: "chatbot-stats:",
+    handle: (interaction) =>
+      require("./services/chatbotUsageService").handleButton(interaction),
+  },
   ...["button", "select"].map((kind) => ({
     kind,
     prefix: "hardcore-cg:",
@@ -157,7 +163,11 @@ const ROUTES = Object.freeze([
     prefix: "iteminfo-filter:",
     handle: (interaction) => itemCatalogViewCommand.handleFilter(interaction),
   },
-  { kind: "button", prefix: "game-config-page:", handle: i => gameCommand.handleConfigPage(i) },
+  {
+    kind: "button",
+    prefix: "game-config-page:",
+    handle: (i) => gameCommand.handleConfigPage(i),
+  },
   {
     kind: "select",
     prefix: "game-config-select",
