@@ -1,5 +1,17 @@
 [
   {
+    "id": "77dc6576-9268-4035-911a-1bc791e97e39",
+    "updatedAt": "2026-10-27T08:38:51.632Z",
+    "auditedAt": "2026-10-27T08:38:51.632Z",
+    "title": "Lệnh /oracle check cho chủ bot",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Chủ bot dùng /oracle check để xem tiến trình script tạo máy chủ mới: các dòng log mới nhất kèm thời gian, thống kê số lần thử, và báo khi tạo thành công",
+      "Thông tin định danh tài khoản trong log được che bớt"
+    ]
+  },
+  {
     "id": "55d79d32-ba6c-47cc-805d-f69c32b400f5",
     "updatedAt": "2026-10-27T08:16:29.837Z",
     "auditedAt": "2026-10-27T08:16:29.837Z",
