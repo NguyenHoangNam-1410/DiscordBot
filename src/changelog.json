@@ -1,5 +1,16 @@
 [
   {
+    "id": "55d79d32-ba6c-47cc-805d-f69c32b400f5",
+    "updatedAt": "2026-10-27T08:16:29.837Z",
+    "auditedAt": "2026-10-27T08:16:29.837Z",
+    "title": "Điều chỉnh cấu hình script hạ tầng",
+    "type": "maintenance",
+    "scope": "system",
+    "changes": [
+      "Giảm cấu hình mặc định của script vận hành máy chủ, không ảnh hưởng gameplay"
+    ]
+  },
+  {
     "id": "5b1d343b-8581-4b04-8658-c1bde6e8703a",
     "updatedAt": "2026-10-27T08:15:57.575Z",
     "auditedAt": "2026-10-27T08:15:57.575Z",
