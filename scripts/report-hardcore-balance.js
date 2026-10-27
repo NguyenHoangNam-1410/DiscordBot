@@ -151,7 +151,7 @@ const md = [
   "node scripts/report-hardcore-balance.js",
   "```",
   "",
-  "Các biến HARDCORE_SIM_POWER/HARDCORE_SIM_BUILDS/HARDCORE_GAMEPLAY_VERSION nên không được đặt khi chạy lại bản chính thức. Hash nguồn và danh sách tầng của từng run nằm trong hardcore-2.0.1-simulation.json.",
+  "Các biến HARDCORE_SIM_POWER/HARDCORE_SIM_BUILDS nên không được đặt khi chạy lại bản chính thức. Hash nguồn và danh sách tầng của từng run nằm trong hardcore-2.0.1-simulation.json.",
 ];
 fs.writeFileSync(
   path.join(out, "hardcore-2.0.1-simulation.md"),

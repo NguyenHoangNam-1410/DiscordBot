@@ -4,14 +4,10 @@ const RELEASE = Object.freeze({
   gameplay: 3,
   catalog: 2,
   date: "2026-10-19",
-  legacyCommit: "c0c6213",
-  legacyRunVersion: 4,
+  baselineCommit: "c0c6213",
 });
 function isV2(state) {
   // Compatibility name for saved V2 and new V3 runs using the same engine.
   return [2, 3].includes(state?.gameplayVersion);
 }
-function useV2(guildId) {
-  return require("../../services/gameConfigService").getGameConfig(guildId, "HARDCORE_GAMEPLAY_VERSION") !== "legacy";
-}
-module.exports = { RELEASE, isV2, useV2 };
+module.exports = { RELEASE, isV2 };

@@ -62,201 +62,55 @@ const RULES = {
 };
 
 function survivalRules(guildId) {
-  if (require("../services/hardcoreVersion").useV2(guildId)) {
-    const view = require("../services/hardcoreV2View");
-    const { E } = require("../services/hardcoreIcons");
-    const sections = {
-      combat: "CHIẾN ĐẤU",
-      loot: "TRANG BỊ & PHẦN THƯỞNG",
-      encounters: "SHRINE & SỰ KIỆN",
-      rngesus: "RNGESUS",
-      rewards: "DỊCH VỤ & RÚT THƯỞNG",
-    };
-    const pages = [
+  const view = require("../services/hardcoreV2View");
+  const { E } = require("../services/hardcoreIcons");
+  const sections = {
+    combat: "CHIẾN ĐẤU",
+    loot: "TRANG BỊ & PHẦN THƯỞNG",
+    encounters: "SHRINE & SỰ KIỆN",
+    rngesus: "RNGESUS",
+    rewards: "DỊCH VỤ & RÚT THƯỞNG",
+  };
+  const pages = [
+    new EmbedBuilder()
+      .setColor(0x9b59b6)
+      .setTitle(
+        `📖 SINH TỒN v${require("../hardcore/shared/version").RELEASE.version} · CÁCH CHƠI`,
+      )
+      .setDescription(
+        "Chọn nhân vật, đặt cược rồi xử lý từng tầng. Mục tiêu là sống sót và quyết định lúc **Rút thưởng**. Xu và kim cương trên bảng là **thưởng tạm giữ**; chỉ được cộng vào tài khoản khi rút. Chết, bỏ run hoặc hết hạn mất cược và toàn bộ thưởng tạm giữ.",
+      )
+      .addFields(
+        {
+          name: "Bắt đầu và tiếp tục",
+          value:
+            "- `/sinhton batdau` → chọn một trong 7 class → nhập **10–100.000 xu**, trong giới hạn server → **Tiếp** → chọn tối đa 5 món khác nhau và mỗi loại vé một chiếc → xem chỉ số → **Bắt đầu**. Cược và đồ/vé được trừ cùng lúc khi xác nhận; không hoàn khi chết hoặc rút. Mua tại `/sinhton cuahang`, xem túi qua `/sinhton tuido`; bảng chuẩn bị hết hạn sau 5 phút.\n- Mỗi người một run/server. `/sinhton tieptuc` mở lại bảng của run đã lưu; không đổi kết quả ngẫu nhiên đã khóa.\n- Không thao tác **7 ngày**: run hết hạn và mất cược/thưởng.\n- Vượt tầng 100 là mốc hoàn thành; vẫn có thể chơi tiếp đến 999. Phải hạ boss tầng 999 để công nhận mốc cuối.",
+        },
+        {
+          name: "Tháp Định Mệnh · mode riêng",
+          value:
+            "`/choi sinhton thap` hoặc `/sinhton thap` mở/tiếp tục challenge 15 tầng. Quy luật combat duy nhất là hạ quái trước khi bị quái kết liễu; Tấn công và Skill luôn gây đúng damage hiển thị. Skill dùng một lần mỗi tầng và bị quái hấp thụ toàn bộ damage nếu chưa kết liễu; Phòng thủ giảm đòn nhận theo số dự báo. Tháp không công bố số hành động và mỗi tuần chỉ có một lời giải duy nhất. Tử trận sẽ thử lại từ đầu tầng hiện tại; các tầng đã vượt được giữ lại. Mỗi tầng là puzzle độc lập: sang tầng mới sẽ đặt lại HP, MP, Skill, Ward và hiệu ứng theo trạng thái đầu tầng. Xoay đủ 7 class trước khi lặp. Không cược, không dùng loadout, item, bình hoặc vé từ Sinh tồn 999. Damage cố định, không Miss/Crit/RNG. Snapshot đã kiểm chứng được khóa cả tuần; xem seed commitment trên bảng. Có thể giữ đồng thời một run mỗi mode. Challenge đổi lúc 00:00 thứ Hai (UTC+7); hết hạn có 24 giờ chỉ xem kết quả. Hoàn thành lần đầu nhận 500.000 xu + 250 kim cương; chơi lại không nhận thêm. Nút bảng xếp hạng nằm trên UI Tháp.",
+        },
+        {
+          name: "Bốn thuộc tính",
+          value: `${E.str} **STR:** tăng vật lý và DEF.\n${E.dex} **DEX:** tăng ACC/EVA/CRIT; hướng sát thương chính của Amazon/Assassin.\n${E.vit} **VIT:** tăng Max HP và hiệu lực bình.\n${E.ene} **ENE:** tăng phép, RES và Max MP.\n${E.mana} **MP** dùng skill, không phải ENE. ${E.luck} **LUCK** đến từ trang bị/event.\nƯu tiên DEX cho Amazon/Assassin, ENE cho Sorceress/Necromancer, STR cho Barbarian/Druid/Paladin; thêm VIT để tăng chống chịu.`,
+        },
+        {
+          name: "Đọc kết quả trên bảng chơi",
+          value:
+            "- **Lượt vừa rồi:** thay đổi trực tiếp ghi cạnh tên event hoặc **Item [độ hiếm] · Lv.** theo dạng `trước → sau`; kết quả sau được in đậm.\n- **Do <event>:** các thay đổi kéo theo từ công thức, như DEX làm tăng ACC/EVA. Đây là phần giải thích cùng một lần nhận hiệu ứng, không phải được tăng thêm lần nữa.\n- Đồ trùng tên tăng level; hiệu ứng áp dụng ngay trong run. Nút **Chỉ số** xem đầy đủ, **Trang bị** xem công dụng đồ, **Rift** xem hiệu ứng đang có.",
+        },
+      ),
+    ...["combat", "loot", "encounters", "rngesus", "rewards"].map((category) =>
       new EmbedBuilder()
         .setColor(0x9b59b6)
         .setTitle(
-          `📖 SINH TỒN v${require("../hardcore/shared/version").RELEASE.version} · CÁCH CHƠI`,
+          `📖 SINH TỒN v${require("../hardcore/shared/version").RELEASE.version} · ${sections[category]}`,
         )
-        .setDescription(
-          "Chọn nhân vật, đặt cược rồi xử lý từng tầng. Mục tiêu là sống sót và quyết định lúc **Rút thưởng**. Xu và kim cương trên bảng là **thưởng tạm giữ**; chỉ được cộng vào tài khoản khi rút. Chết, bỏ run hoặc hết hạn mất cược và toàn bộ thưởng tạm giữ.",
-        )
-        .addFields(
-          {
-            name: "Bắt đầu và tiếp tục",
-            value:
-              "- `/sinhton batdau` → chọn một trong 7 class → nhập **10–100.000 xu**, trong giới hạn server → **Tiếp** → chọn tối đa 5 món khác nhau và mỗi loại vé một chiếc → xem chỉ số → **Bắt đầu**. Cược và đồ/vé được trừ cùng lúc khi xác nhận; không hoàn khi chết hoặc rút. Mua tại `/sinhton cuahang`, xem túi qua `/sinhton tuido`; bảng chuẩn bị hết hạn sau 5 phút.\n- Mỗi người một run/server. `/sinhton tieptuc` mở lại bảng của run đã lưu; không đổi kết quả ngẫu nhiên đã khóa.\n- Không thao tác **7 ngày**: run hết hạn và mất cược/thưởng.\n- Vượt tầng 100 là mốc hoàn thành; vẫn có thể chơi tiếp đến 999. Phải hạ boss tầng 999 để công nhận mốc cuối.",
-          },
-          {
-            name: "Tháp Định Mệnh · mode riêng",
-            value:
-              "`/choi sinhton thap` hoặc `/sinhton thap` mở/tiếp tục challenge 15 tầng. Quy luật combat duy nhất là hạ quái trước khi bị quái kết liễu; Tấn công và Skill luôn gây đúng damage hiển thị. Skill dùng một lần mỗi tầng và bị quái hấp thụ toàn bộ damage nếu chưa kết liễu; Phòng thủ giảm đòn nhận theo số dự báo. Tháp không công bố số hành động và mỗi tuần chỉ có một lời giải duy nhất. Tử trận sẽ thử lại từ đầu tầng hiện tại; các tầng đã vượt được giữ lại. Mỗi tầng là puzzle độc lập: sang tầng mới sẽ đặt lại HP, MP, Skill, Ward và hiệu ứng theo trạng thái đầu tầng. Xoay đủ 7 class trước khi lặp. Không cược, không dùng loadout, item, bình hoặc vé từ Sinh tồn 999. Damage cố định, không Miss/Crit/RNG. Snapshot đã kiểm chứng được khóa cả tuần; xem seed commitment trên bảng. Có thể giữ đồng thời một run mỗi mode. Challenge đổi lúc 00:00 thứ Hai (UTC+7); hết hạn có 24 giờ chỉ xem kết quả. Hoàn thành lần đầu nhận 500.000 xu + 250 kim cương; chơi lại không nhận thêm. Nút bảng xếp hạng nằm trên UI Tháp.",
-          },
-          {
-            name: "Bốn thuộc tính",
-            value: `${E.str} **STR:** tăng vật lý và DEF.\n${E.dex} **DEX:** tăng ACC/EVA/CRIT; hướng sát thương chính của Amazon/Assassin.\n${E.vit} **VIT:** tăng Max HP và hiệu lực bình.\n${E.ene} **ENE:** tăng phép, RES và Max MP.\n${E.mana} **MP** dùng skill, không phải ENE. ${E.luck} **LUCK** đến từ trang bị/event.\nƯu tiên DEX cho Amazon/Assassin, ENE cho Sorceress/Necromancer, STR cho Barbarian/Druid/Paladin; thêm VIT để tăng chống chịu.`,
-          },
-          {
-            name: "Đọc kết quả trên bảng chơi",
-            value:
-              "- **Lượt vừa rồi:** thay đổi trực tiếp ghi cạnh tên event hoặc **Item [độ hiếm] · Lv.** theo dạng `trước → sau`; kết quả sau được in đậm.\n- **Do <event>:** các thay đổi kéo theo từ công thức, như DEX làm tăng ACC/EVA. Đây là phần giải thích cùng một lần nhận hiệu ứng, không phải được tăng thêm lần nữa.\n- Đồ trùng tên tăng level; hiệu ứng áp dụng ngay trong run. Nút **Chỉ số** xem đầy đủ, **Trang bị** xem công dụng đồ, **Rift** xem hiệu ứng đang có.",
-          },
-        ),
-      ...["combat", "loot", "encounters", "rngesus", "rewards"].map(
-        (category) =>
-          new EmbedBuilder()
-            .setColor(0x9b59b6)
-            .setTitle(
-              `📖 SINH TỒN v${require("../hardcore/shared/version").RELEASE.version} · ${sections[category]}`,
-            )
-            .addFields(splitRuleFields(view.ratesFields(category))),
-      ),
-    ];
-    return pages.flatMap((page) => paginateRuleEmbed(page));
-  }
-  const overview = new EmbedBuilder()
-    .setColor(0x9b59b6)
-    .setTitle("📖 SINH TỒN · CÁCH CHƠI")
-    .setDescription(
-      "Đánh bại quái và vượt từng tầng để làm payout tạm thời tăng lên. Sau mỗi tình huống, đọc diễn biến rồi chọn một nút. **Rút thưởng** chốt payout hiện tại; nếu chết trước khi rút, payout tạm giữ mất hết.",
-    )
-    .addFields(
-      {
-        name: "🚪 Bắt đầu",
-        value:
-          "`/sinhton batdau`\nChọn nhân vật trên UI để xem chỉ số và kỹ năng, bấm **Nhập xu**, rồi **Bắt đầu**. Cược **10–100.000 xu**, theo giới hạn server và số dư; chỉ trừ xu khi xác nhận. Bảng chuẩn bị hết hạn sau 5 phút không thao tác. Mỗi người một run/server. `/sinhton tieptuc` đăng UI mới, khóa UI cũ. Run không hoạt động 7 ngày sẽ mất cược.",
-        inline: false,
-      },
-      {
-        name: "🧙 Bảy nhân vật",
-        value:
-          "**Amazon** — Barrage: 2 phát ×85%.\n**Assassin** — Shadow Step: 130% vật lý, né phản công.\n**Barbarian** — Iron Will: 165% vật lý.\n**Druid** — Wild Regeneration: 135% vật lý, hồi 12% HP tối đa.\n**Necromancer** — Totem Ward: 155% phép, chặn phản công.\n**Paladin** — Divine Shield: 140% vật lý, thủ trước phản công.\n**Sorceress** — Arcane Burst: 210% phép. Mỗi kỹ năng tốn 2 Energy.",
-        inline: false,
-      },
-      {
-        name: "🔁 Vòng chơi và rút thưởng",
-        value:
-          "Xử lý sự kiện tầng hiện tại để đi tiếp. Mỗi tầng đã vượt làm payout tăng; số xu trong ô **Payout nếu rút** là số nhận được nếu rút ngay. Sau khi vượt ít nhất một tầng, có thể rút ở hầu hết tình huống (RNGesus không có nút rút). Rút trước tầng đầu tiên là **Bỏ run** và làm mất tiền cược.",
-        inline: false,
-      },
-      {
-        name: "💎 Kim cương và khung hồ sơ",
-        value:
-          "**Tổng kim cương tạm giữ**, không cộng dồn từng mốc: vượt tầng 100 → 100; 200 → 200; 300 → 400; 400 → 800; 500 → 1.600; 600 → 3.200; 700 → 6.400; 800 → 12.800; 900 → 25.600; hạ boss 999 → **51.200**. Chỉ rút thưởng mới cộng vào tài khoản; chết, bỏ run hoặc hết hạn mất toàn bộ. Phí dịch vụ chỉ trừ xu. Vượt 333/666/999 mở khung **Bạc/Vàng/Kim cương** vĩnh viễn; /hoso hiển thị tầng cao nhất đã vượt và tự dùng khung cao nhất.",
-        inline: false,
-      },
-      {
-        name: "📈 Checkpoint và hoàn thành",
-        value:
-          "Mỗi **5 tầng** hồi đầy HP, nhận 2 bình (tối đa 5) và chọn +5 sát thương / +30 HP / +6 Defense / +2 Luck. Tự tăng HP/sát thương: dưới 100 **+6/+1**, 100–399 **+10/+2**, 400–699 **+14/+3**, 700–999 **+30/+6**. Mỗi tầng vượt hồi 1 Energy. Tầng 100 hoàn thành chính thức; tiếp tục Overrun đến 999. **Phải hạ Deimoss để công nhận tầng 999**. Hệ số gồm checkpoint mỗi 5 tầng; mốc 5/50/100 là ×1,45/×5,50/×12,00. Hệ số dừng sau 100, bonus vẫn cộng; payout tối đa 10.000.000 xu.",
-        inline: false,
-      },
-      {
-        name: "🗺️ Tám khu vực",
-        value:
-          "1–99 Sanctuary · 100–199 Duncraig · 200–299 Fauztinville · 300–399 Teganze · 400–499 Scosglen · 500–699 Dimensional Labyrinth · 700–899 Heroic Rift · 900–999 Dimensional Plane. Quái scale theo tầng: HP/damage tăng 6,5%/4% mỗi tầng đến 100, rồi 8%/3,8% mỗi tầng Overrun.",
-        inline: false,
-      },
-    );
-
-  const combat = new EmbedBuilder()
-    .setColor(0xe67e22)
-    .setTitle("⚔️ SINH TỒN · CÁC NÚT HÀNH ĐỘNG")
-    .setDescription(
-      "Các nút chỉ áp dụng cho tình huống đang hiển thị. Trong giao tranh, quái phản công sau hành động của bạn, trừ khi bạn hạ nó ngay hoặc né được đòn.",
-    )
-    .addFields(
-      {
-        name: "👹 Khi gặp quái",
-        value:
-          "**Tấn công** — đánh thường; hồi 1 năng lượng, nhưng quái phản công nếu còn sống.\n**Phòng thủ** — hồi 1 năng lượng, Defense ×2, miễn chí mạng và giảm thêm 40% sát thương vật lý/phép sau giảm trừ (tối thiểu 1).\n**Kỹ năng** — tốn 2 năng lượng, mạnh hơn đòn thường. Shadow Step của Assassin còn né đòn phản công.\n**Bình máu** — hồi 35% HP tối đa + Potion Power (giới hạn 10–75%, ít nhất 20 HP); quái vẫn phản công nếu còn sống.\n**Rút thưởng** — kết thúc run và nhận payout đang hiển thị.",
-        inline: false,
-      },
-      {
-        name: "📦 Khi gặp hòm",
-        value:
-          "**Kiểm tra** — thử phát hiện Mimic một lần.\n**Mở hòm** — catalog Sinh tồn riêng 100 món: R 32, SR 28, SSR 24, UR 16. Buff/curse UR tách riêng; chỉ Goblin’s Debt và Crown of Ruin giảm payout. Item chỉ tồn tại trong run, nhặt lại tăng level và cộng hiệu ứng. 5 hòm mở không có SR+ thì hòm sau bảo đảm SR+. Sau 10 hòm không SSR+, mỗi hòm thêm 2% cơ hội SSR.\n**Bán hòm** — cộng 15% tiền cược vào payout.\n**Tránh Mimic** — đi tiếp an toàn nếu đã phát hiện.",
-        inline: false,
-      },
-      {
-        name: "🌀 Rift Modifier",
-        value:
-          "Mỗi 10 tầng nhận một cộng dồn; đủ 8 loại trước khi lặp. **Stone Skin**: quái +10% Defense; **Elemental Dominion**: +4% damage và phép; **Bloodlust**: HP ≤50% +8% damage; **Unstable Rift**: thêm hòm tốt/Mimic; **Fortified**: +10% HP; **Swift Horror**: +3 Accuracy/+1 Evasion; **Soul Drain**: đòn trúng rút 1 Energy, từ stack 5 rút 2; **Cursed Ground**: −4 Resistance hiệu dụng/stack khi nhận phép, không giảm vĩnh viễn.",
-        inline: false,
-      },
-      {
-        name: "👑 Boss mỗi 50 tầng",
-        value:
-          "**The Butcher (vật lý)**: mỗi lần ra đòn +8% damage, tối đa 5 lần. **Ascendant Riftwalker (phép)**: miễn nhiễm đòn đầu mỗi 3 lần bạn tấn công. **Assur (vật lý)**: né/chí mạng cao. **Lucion (phép)**: hồi 35% sát thương gây ra. **Deimoss (vật lý)**: Abyssal Spires giảm 25% sát thương nhận. Loại sát thương boss cố định, kể cả khi có Rift. Chu kỳ lặp theo thứ tự; Deimoss tầng 999 là boss cuối mạnh hơn.",
-        inline: false,
-      },
-      {
-        name: "🗿 Shrine và phòng sự kiện",
-        value:
-          "**Chạm Shrine** — hiệu ứng ngẫu nhiên: hồi đầy máu, +3 phòng thủ, −15 HP đổi +4 sát thương, +25% tiền cược vào payout, +7 sát thương đổi −4 phòng thủ, hoặc Shrine giả gây sát thương.\n**Bỏ qua** — không nhận hiệu ứng Shrine, đi tiếp.\n**Chấp nhận số phận** — Thu thuế lấy 15% payout hiện tại; kẻ trộm lấy 1 bình máu. **Wrong Portal**: 50% tốt (hồi phục/kho xu/chúc phúc), 50% xấu (mất HP/Energy/bình, phạt payout hoặc giảm Defense/Resistance) và Elite đánh phủ đầu. Portal tốt qua tầng; portal xấu phải hạ Elite mới qua. Đích đến lưu sẵn, có thể rút trước khi chấp nhận.",
-        inline: false,
-      },
-      {
-        name: "🍀 Lucky Break",
-        value:
-          "Luck × 1,5% cơ hội tránh hậu quả, tối đa 30%: Tax Collector hoặc Potion Thief. Không tác động Wrong Portal. Khi kích hoạt: **🍀 Lucky Break! Bạn tránh được hậu quả.**",
-        inline: false,
-      },
-      {
-        name: "❓ Bất ngờ và dịch vụ",
-        value:
-          "15 surprise event, chọn đều trong pool hợp lệ: Healer, Goblin, Blacksmith, Purifier, Altar, Gambler, Adventurer, Fountain, Horadric Forge, Merchant, Mirror, Treasure Room, Contract, Class Shrine và Strange Doors.\n**Thợ rèn**: 12% payout tăng 1 level, gồm buff/curse. **Giải nguyền**: 20% payout gỡ 1 lớp curse, giữ buff. Merchant bán 3 offer bằng payout. Contract và Class Shrine hiệu lực tối đa 3 tầng. Xem **Tình huống** và **Rift & hiệu ứng** để đọc chi tiết; có thể bỏ qua.",
-        inline: false,
-      },
-      {
-        name: "📊 Chu kỳ gặp RNGesus",
-        value: RNGESUS_CYCLE_RULES,
-        inline: false,
-      },
-      {
-        name: "🎲 Cách tính Chaos",
-        value: rngesusChaosRules(true),
-        inline: false,
-      },
-      {
-        name: "☠️ Khi gặp RNGesus",
-        value:
-          "RNGesus không thể bị đánh bại; **Chiến đấu** làm run kết thúc. **Bỏ chạy** có 75% thành công, giữ vé; thất bại tự dùng 1 Vé Thoát Hiểm nếu còn, hết vé thì chết. **Dùng vé** tiêu 1 Vé Thoát Hiểm để vượt tầng an toàn (giữ tối đa 1 vé). **Hối lộ** nhân payout ×0,6. **Cầu nguyện**: 30% thành công, nhận 85% SSR/15% UR; thất bại là chết. Không có nút rút thưởng.",
-        inline: false,
-      },
-      {
-        name: "🧭 Tra cứu thêm",
-        value:
-          "`/sinhton tyle` xem xác suất sự kiện và hòm; `hoso` xem thành tích; `xephang` xem top tầng. Chỉ số và hiệu ứng của nút được ghi trong phần **Diễn biến** sau mỗi lựa chọn.",
-        inline: false,
-      },
-    );
-
-  // Discord counts the text of every embed in the same message together.
-  // Keep one bounded page per message, with room for emoji expansion.
-  const pages = [];
-  for (const section of [overview, combat]) {
-    const { fields = [], ...base } = section.toJSON();
-    const baseLength =
-      (base.title || "").length + (base.description || "").length;
-    let page = new EmbedBuilder(base);
-    let length = baseLength;
-    let count = 0;
-    for (const field of fields) {
-      const fieldLength = field.name.length + field.value.length;
-      if (count && (length + fieldLength > 3400 || count >= 20)) {
-        pages.push(page);
-        page = new EmbedBuilder(base);
-        length = baseLength;
-        count = 0;
-      }
-      page.addFields(field);
-      length += fieldLength;
-      count += 1;
-    }
-    pages.push(page);
-  }
-  return pages;
+        .addFields(splitRuleFields(view.ratesFields(category))),
+    ),
+  ];
+  return pages.flatMap((page) => paginateRuleEmbed(page));
 }
 
 function survivalRulesPayload(userId, requestedPage = 0, guildId) {
@@ -302,7 +156,9 @@ module.exports = {
         content: "Trang luật không hợp lệ. Hãy mở lại /luat.",
         flags: MessageFlags.Ephemeral,
       });
-    return interaction.update(survivalRulesPayload(ownerId, page, interaction.guildId));
+    return interaction.update(
+      survivalRulesPayload(ownerId, page, interaction.guildId),
+    );
   },
   data: new SlashCommandBuilder()
     .setName("luat")

@@ -1,0 +1,4326 @@
+{
+  "common": [
+    {
+      "id": "rusted_edge",
+      "name": "Rusted Edge",
+      "category": "weapon",
+      "rarity": "common",
+      "typeCode": "R",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "berserk",
+        "amount": 0.1
+      },
+      "effects": {
+        "str": 5
+      },
+      "text": "+5 STR",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "barbarian",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.01
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "iron_dagger",
+      "name": "Iron Dagger",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "weapon",
+      "tags": [
+        "attack",
+        "crit"
+      ],
+      "effects": {
+        "critChance": 0.01,
+        "physical": 1,
+        "spell": 1
+      },
+      "text": "+1 sát thương, +1% Crit",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "cracked_wand",
+      "name": "Cracked Wand",
+      "category": "weapon",
+      "rarity": "common",
+      "typeCode": "R",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "mpLeech",
+        "amount": 0.08
+      },
+      "effects": {
+        "ene": 5
+      },
+      "text": "+5 ENE",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "sorceress",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "sorceress": {
+            "kind": "sorceress",
+            "amount": 0.01
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.01
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "hunter_bow",
+      "name": "Hunter Bow",
+      "category": "weapon",
+      "rarity": "common",
+      "typeCode": "R",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "dodgeCounter",
+        "amount": 0.1
+      },
+      "effects": {
+        "dex": 5
+      },
+      "text": "+5 DEX",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "amazon",
+          "assassin"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.01
+          },
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "militia_spear",
+      "name": "Militia Spear",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "weapon",
+      "tags": [
+        "attack"
+      ],
+      "effects": {
+        "accuracy": 1,
+        "physical": 2,
+        "spell": 2
+      },
+      "text": "+2 sát thương, +1 Accuracy",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "amazon",
+          "paladin"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.01
+          },
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "bone_club",
+      "name": "Bone Club",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "weapon",
+      "tags": [
+        "attack"
+      ],
+      "effects": {
+        "accuracy": -1,
+        "physical": 3,
+        "spell": 3
+      },
+      "text": "+3 sát thương, −1 Accuracy",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "barbarian",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.01
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "dented_plate",
+      "name": "Dented Plate",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "armor",
+      "tags": [
+        "defense"
+      ],
+      "effects": {
+        "defense": 2
+      },
+      "text": "+2 Defense",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "barbarian",
+          "paladin",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.01
+          },
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.01
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "wooden_buckler",
+      "name": "Wooden Buckler",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "armor",
+      "tags": [
+        "defense"
+      ],
+      "effects": {
+        "defense": 2,
+        "resistance": 1
+      },
+      "text": "+2 Defense, +1 Resistance",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "paladin",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.01
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.01
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "worn_boots",
+      "name": "Worn Boots",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "armor",
+      "tags": [
+        "evasion"
+      ],
+      "effects": {
+        "evasion": 2
+      },
+      "text": "+2 Evasion",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "copper_ring",
+      "name": "Copper Ring",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "jewelry",
+      "tags": [
+        "resistance"
+      ],
+      "effects": {
+        "resistance": 3
+      },
+      "text": "+3 Resistance",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "sorceress",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "sorceress": {
+            "kind": "sorceress",
+            "amount": 0.01
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.01
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "minor_life_charm",
+      "name": "Minor Life Charm",
+      "category": "charm",
+      "rarity": "common",
+      "typeCode": "R",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "thorns",
+        "amount": 0.05
+      },
+      "effects": {
+        "vit": 5
+      },
+      "text": "+5 VIT",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "druid",
+          "paladin",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "druid": {
+            "kind": "druid",
+            "amount": 0.01
+          },
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.01
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.01
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "rabbit_foot",
+      "name": "Rabbit Foot",
+      "category": "charm",
+      "rarity": "common",
+      "typeCode": "R",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "eventLuck",
+        "amount": 0.02
+      },
+      "effects": {
+        "luck": 1
+      },
+      "text": "+1 Luck",
+      "curse": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "red_potion_belt",
+      "name": "Red Potion Belt",
+      "category": "utility",
+      "rarity": "common",
+      "typeCode": "R",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "potionCapacity",
+        "amount": 1
+      },
+      "effects": {
+        "potions": 1
+      },
+      "text": "+1 bình khi nhận mỗi cấp",
+      "curse": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": true
+      }
+    },
+    {
+      "id": "scout_lens",
+      "name": "Scout Lens",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "utility",
+      "tags": [
+        "accuracy",
+        "chest"
+      ],
+      "effects": {
+        "accuracy": 2,
+        "mimicDetection": 0.02
+      },
+      "text": "+2 Accuracy, +2% phát hiện Mimic",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "amazon"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "mana_fragment",
+      "name": "Mana Fragment",
+      "category": "charm",
+      "rarity": "common",
+      "typeCode": "R",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "startMana",
+        "amount": 0.2
+      },
+      "effects": {
+        "maxMana": 1
+      },
+      "text": "+1 Max MP",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "sorceress",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "sorceress": {
+            "kind": "sorceress",
+            "amount": 0.01
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.01
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "battle_token",
+      "name": "Battle Token",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "charm",
+      "tags": [
+        "attack",
+        "defense"
+      ],
+      "effects": {
+        "defense": 1,
+        "physical": 1,
+        "spell": 1
+      },
+      "text": "+1 sát thương, +1 Defense",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "barbarian",
+          "paladin",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.01
+          },
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.01
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "silver_thread",
+      "name": "Silver Thread",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "jewelry",
+      "tags": [
+        "resistance"
+      ],
+      "effects": {
+        "resistance": 2,
+        "evasion": 1
+      },
+      "text": "+2 Resistance, +1 Evasion",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.01
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.01
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "traveler_map",
+      "name": "Traveler Map",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "utility",
+      "tags": [
+        "luck"
+      ],
+      "effects": {
+        "luck": 1,
+        "accuracy": 1
+      },
+      "text": "+1 Luck, +1 Accuracy",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "small_ward",
+      "name": "Small Ward",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "armor",
+      "tags": [
+        "defense",
+        "hp"
+      ],
+      "effects": {
+        "defense": 1,
+        "maxHp": 5,
+        "heal": 5
+      },
+      "text": "+1 Defense, +5 HP",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "druid",
+          "paladin"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "druid": {
+            "kind": "druid",
+            "amount": 0.01
+          },
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": true
+      }
+    },
+    {
+      "id": "sharpening_stone",
+      "name": "Sharpening Stone",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "utility",
+      "tags": [
+        "attack"
+      ],
+      "effects": {
+        "physical": 2,
+        "spell": 2
+      },
+      "text": "+2 sát thương",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "barbarian",
+          "amazon",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.01
+          },
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.01
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "ember_bead",
+      "name": "Ember Bead",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "jewelry",
+      "tags": [
+        "magic"
+      ],
+      "effects": {
+        "resistance": 2,
+        "physical": 1,
+        "spell": 1
+      },
+      "text": "+1 sát thương, +2 Resistance",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "sorceress",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "sorceress": {
+            "kind": "sorceress",
+            "amount": 0.01
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.01
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "fox_mask",
+      "name": "Fox Mask",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "armor",
+      "tags": [
+        "evasion"
+      ],
+      "effects": {
+        "evasion": 2,
+        "accuracy": 1
+      },
+      "text": "+2 Evasion, +1 Accuracy",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin",
+          "amazon"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.01
+          },
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "oak_talisman",
+      "name": "Oak Talisman",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "charm",
+      "tags": [
+        "hp"
+      ],
+      "effects": {
+        "maxHp": 10
+      },
+      "text": "+10 HP tối đa",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "barbarian",
+          "druid",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.01
+          },
+          "druid": {
+            "kind": "druid",
+            "amount": 0.01
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "glass_bead",
+      "name": "Glass Bead",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "jewelry",
+      "tags": [
+        "crit"
+      ],
+      "effects": {
+        "critChance": 0.02
+      },
+      "text": "+2% Crit",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "field_bandage",
+      "name": "Field Bandage",
+      "category": "utility",
+      "rarity": "common",
+      "typeCode": "R",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "campHeal",
+        "amount": 0.01
+      },
+      "effects": {
+        "heal": 10
+      },
+      "text": "hồi 10 HP khi nhận mỗi cấp",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "druid"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "druid": {
+            "kind": "druid",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": true
+      }
+    },
+    {
+      "id": "iron_nail",
+      "name": "Iron Nail",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "charm",
+      "tags": [
+        "defense"
+      ],
+      "effects": {
+        "defense": 2
+      },
+      "text": "+2 Defense",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "paladin"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "hawk_feather",
+      "name": "Hawk Feather",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "charm",
+      "tags": [
+        "accuracy"
+      ],
+      "effects": {
+        "accuracy": 4
+      },
+      "text": "+4 Accuracy",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "amazon"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "smoke_vial",
+      "name": "Smoke Vial",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "utility",
+      "tags": [
+        "evasion"
+      ],
+      "effects": {
+        "evasion": 3
+      },
+      "text": "+3 Evasion",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "cold_ash",
+      "name": "Cold Ash",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "charm",
+      "tags": [
+        "resistance"
+      ],
+      "effects": {
+        "resistance": 3
+      },
+      "text": "+3 Resistance",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "sorceress",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "sorceress": {
+            "kind": "sorceress",
+            "amount": 0.01
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.01
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.01
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "goblin_hook",
+      "name": "Goblin Hook",
+      "category": "utility",
+      "rarity": "common",
+      "typeCode": "R",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "shopDiscount",
+        "amount": 0.03
+      },
+      "effects": {
+        "goblinChance": 0.02
+      },
+      "text": "+2% bắt Goblin",
+      "curse": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "chest_chalk",
+      "name": "Chest Chalk",
+      "category": "utility",
+      "rarity": "common",
+      "typeCode": "R",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "trapResistance",
+        "amount": 0.05
+      },
+      "effects": {
+        "mimicDetection": 0.03
+      },
+      "text": "+3% phát hiện Mimic",
+      "curse": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "faded_clover",
+      "name": "Faded Clover",
+      "rarity": "common",
+      "typeCode": "R",
+      "category": "charm",
+      "tags": [
+        "luck",
+        "hp"
+      ],
+      "effects": {
+        "luck": 1,
+        "maxHp": 3,
+        "heal": 3
+      },
+      "text": "+1 Luck, +3 HP",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": true
+      }
+    }
+  ],
+  "rare": [
+    {
+      "id": "hunters_fang",
+      "name": "Hunter’s Fang",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "category": "weapon",
+      "tags": [
+        "attack",
+        "crit"
+      ],
+      "effects": {
+        "critChance": 0.04,
+        "physical": 4,
+        "spell": 4
+      },
+      "text": "+4 sát thương, +4% Crit",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin",
+          "amazon"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.015
+          },
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "runed_carapace",
+      "name": "Runed Carapace",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "category": "armor",
+      "tags": [
+        "defense",
+        "resistance"
+      ],
+      "effects": {
+        "defense": 5,
+        "resistance": 5
+      },
+      "text": "+5 Defense, +5 Resistance",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "paladin",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.015
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.015
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "heart_of_the_wild",
+      "name": "Heart of the Wild",
+      "category": "charm",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "campHeal",
+        "amount": 0.02
+      },
+      "effects": {
+        "vit": 10
+      },
+      "text": "+10 VIT",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "druid",
+          "paladin"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "druid": {
+            "kind": "druid",
+            "amount": 0.015
+          },
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "lucky_coin",
+      "name": "Lucky Coin",
+      "category": "charm",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "eventLuck",
+        "amount": 0.03
+      },
+      "effects": {
+        "luck": 3
+      },
+      "text": "+3 Luck",
+      "curse": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "vanguard_spear",
+      "name": "Vanguard Spear",
+      "category": "weapon",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "guardReflect",
+        "amount": 0.15
+      },
+      "effects": {
+        "str": 10
+      },
+      "text": "+10 STR",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "barbarian",
+          "paladin",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.015
+          },
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.015
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "shadowstep_boots",
+      "name": "Shadowstep Boots",
+      "category": "armor",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "dodgeCounter",
+        "amount": 0.15
+      },
+      "effects": {
+        "dex": 10
+      },
+      "text": "+10 DEX",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin",
+          "amazon"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.015
+          },
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "bone_talisman",
+      "name": "Bone Talisman",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "category": "charm",
+      "tags": [
+        "hp",
+        "resistance"
+      ],
+      "effects": {
+        "maxHp": 15,
+        "heal": 15,
+        "resistance": 4
+      },
+      "text": "+15 HP, +4 Resistance",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "druid",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "druid": {
+            "kind": "druid",
+            "amount": 0.015
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.015
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": true
+      }
+    },
+    {
+      "id": "bloodstone",
+      "name": "Bloodstone",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "category": "jewelry",
+      "tags": [
+        "attack",
+        "hp"
+      ],
+      "effects": {
+        "maxHp": 10,
+        "heal": 10,
+        "physical": 4,
+        "spell": 4
+      },
+      "text": "+4 sát thương, +10 HP",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "barbarian",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.015
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": true
+      }
+    },
+    {
+      "id": "rift_compass",
+      "name": "Rift Compass",
+      "category": "utility",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "trapResistance",
+        "amount": 0.1
+      },
+      "effects": {
+        "mimicDetection": 0.08
+      },
+      "text": "+8% phát hiện Mimic",
+      "curse": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "alchemist_belt",
+      "name": "Alchemist Belt",
+      "category": "utility",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "potionCapacity",
+        "amount": 1
+      },
+      "effects": {
+        "potions": 2
+      },
+      "text": "+2 bình khi nhận mỗi cấp",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "druid"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "druid": {
+            "kind": "druid",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": true
+      }
+    },
+    {
+      "id": "guardian_seal",
+      "name": "Guardian Seal",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "category": "armor",
+      "tags": [
+        "defense",
+        "hp"
+      ],
+      "effects": {
+        "defense": 6,
+        "maxHp": 8,
+        "heal": 8
+      },
+      "text": "+6 Defense, +8 HP",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "druid",
+          "paladin"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "druid": {
+            "kind": "druid",
+            "amount": 0.015
+          },
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": true
+      }
+    },
+    {
+      "id": "mana_prism",
+      "name": "Mana Prism",
+      "category": "charm",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "mpLeech",
+        "amount": 0.12
+      },
+      "effects": {
+        "ene": 10
+      },
+      "text": "+10 ENE",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "sorceress",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "sorceress": {
+            "kind": "sorceress",
+            "amount": 0.015
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.015
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "goblin_snare",
+      "name": "Goblin Snare",
+      "category": "utility",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "shopDiscount",
+        "amount": 0.05
+      },
+      "effects": {
+        "goblinChance": 0.08
+      },
+      "text": "+8% bắt Goblin",
+      "curse": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "wardens_chain",
+      "name": "Warden’s Chain",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "category": "armor",
+      "tags": [
+        "defense"
+      ],
+      "effects": {
+        "defense": 7,
+        "evasion": -1
+      },
+      "text": "+7 Defense, −1 Evasion",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "paladin"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "moonlit_blade",
+      "name": "Moonlit Blade",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "category": "weapon",
+      "tags": [
+        "attack",
+        "magic"
+      ],
+      "effects": {
+        "resistance": 4,
+        "physical": 5,
+        "spell": 5
+      },
+      "text": "+5 sát thương, +4 Resistance",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "sorceress",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "sorceress": {
+            "kind": "sorceress",
+            "amount": 0.015
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.015
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "assassins_ribbon",
+      "name": "Assassin’s Ribbon",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "category": "charm",
+      "tags": [
+        "crit",
+        "evasion"
+      ],
+      "effects": {
+        "critChance": 0.05,
+        "evasion": 3
+      },
+      "text": "+5% Crit, +3 Evasion",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "lionheart_emblem",
+      "name": "Lionheart Emblem",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "category": "charm",
+      "tags": [
+        "hp",
+        "attack"
+      ],
+      "effects": {
+        "maxHp": 18,
+        "physical": 3,
+        "spell": 3
+      },
+      "text": "+18 HP, +3 sát thương",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "barbarian",
+          "druid",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.015
+          },
+          "druid": {
+            "kind": "druid",
+            "amount": 0.015
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "stormglass",
+      "name": "Stormglass",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "category": "jewelry",
+      "tags": [
+        "attack",
+        "accuracy"
+      ],
+      "effects": {
+        "accuracy": 6,
+        "physical": 4,
+        "spell": 4
+      },
+      "text": "+4 sát thương, +6 Accuracy",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "amazon"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "saints_ward",
+      "name": "Saint’s Ward",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "category": "armor",
+      "tags": [
+        "resistance",
+        "defense"
+      ],
+      "effects": {
+        "resistance": 9,
+        "defense": 3
+      },
+      "text": "+9 Resistance, +3 Defense",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "paladin",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.015
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.015
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "riftwalkers_boots",
+      "name": "Riftwalker’s Boots",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "category": "armor",
+      "tags": [
+        "evasion",
+        "luck"
+      ],
+      "effects": {
+        "evasion": 7,
+        "luck": 1
+      },
+      "text": "+7 Evasion, +1 Luck",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "executioners_mark",
+      "name": "Executioner’s Mark",
+      "category": "charm",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "critCap",
+        "amount": 0.03
+      },
+      "effects": {
+        "eliteDamage": 0.12
+      },
+      "text": "+12% damage Elite",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin",
+          "amazon",
+          "barbarian",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.015
+          },
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.015
+          },
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.015
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "boss_hunters_badge",
+      "name": "Boss Hunter’s Badge",
+      "category": "charm",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "berserk",
+        "amount": 0.15
+      },
+      "effects": {
+        "bossDamage": 0.12
+      },
+      "text": "+12% damage Boss",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "amazon",
+          "barbarian",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.015
+          },
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.015
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "golden_monocle",
+      "name": "Golden Monocle",
+      "category": "utility",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "evasionCap",
+        "amount": 0.03
+      },
+      "effects": {
+        "legendaryFind": 0.03
+      },
+      "text": "+3% tìm SSR",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin",
+          "amazon"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.015
+          },
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "deep_flask",
+      "name": "Deep Flask",
+      "category": "utility",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "potionSave",
+        "amount": 0.08
+      },
+      "effects": {
+        "potionPower": 0.1
+      },
+      "text": "+10% hiệu lực bình",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "druid"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "druid": {
+            "kind": "druid",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "war_drums",
+      "name": "War Drums",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "category": "charm",
+      "tags": [
+        "attack"
+      ],
+      "effects": {
+        "accuracy": 5,
+        "maxHp": 5,
+        "physical": 3,
+        "spell": 3
+      },
+      "text": "+3 sát thương, +5 Accuracy, +5 HP",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "barbarian",
+          "amazon",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.015
+          },
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.015
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "spirit_lantern",
+      "name": "Spirit Lantern",
+      "category": "utility",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "startMana",
+        "amount": 0.3
+      },
+      "effects": {
+        "maxMana": 2
+      },
+      "text": "+2 Max MP",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "sorceress",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "sorceress": {
+            "kind": "sorceress",
+            "amount": 0.015
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.015
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "steel_lotus",
+      "name": "Steel Lotus",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "category": "armor",
+      "tags": [
+        "defense",
+        "evasion"
+      ],
+      "effects": {
+        "defense": 5,
+        "evasion": 4
+      },
+      "text": "+5 Defense, +4 Evasion",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin",
+          "paladin"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.015
+          },
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.015
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "fortune_dice",
+      "name": "Fortune Dice",
+      "rarity": "rare",
+      "typeCode": "SR",
+      "category": "charm",
+      "tags": [
+        "luck"
+      ],
+      "effects": {
+        "luck": 4,
+        "accuracy": -2
+      },
+      "text": "+4 Luck, −2 Accuracy",
+      "curse": null,
+      "curseText": null,
+      "catalogVersion": 3,
+      "passive": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    }
+  ],
+  "legendary": [
+    {
+      "id": "one_more_hit",
+      "name": "One More Hit",
+      "category": "charm",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "potionSave",
+        "amount": 0.12
+      },
+      "effects": {
+        "vit": 12,
+        "escapeTokens": 1
+      },
+      "text": "+12 VIT · +1 Vé thoát khi nhận mỗi cấp",
+      "curse": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": true
+      }
+    },
+    {
+      "id": "the_last_bad_decision",
+      "name": "The Last Bad Decision",
+      "category": "weapon",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "berserk",
+        "amount": 0.22
+      },
+      "effects": {
+        "str": 12,
+        "dex": 12,
+        "vit": -5
+      },
+      "text": "+12 STR, +12 DEX, -5 VIT",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "barbarian",
+          "assassin",
+          "amazon",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.02
+          },
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.02
+          },
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.02
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.02
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "wardens_bulwark",
+      "name": "Warden’s Bulwark",
+      "category": "armor",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "guardReflect",
+        "amount": 0.25
+      },
+      "effects": {
+        "str": 10,
+        "vit": 16,
+        "defense": 2
+      },
+      "text": "+10 STR, +16 VIT · +2 Defense",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "paladin",
+          "barbarian",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.02
+          },
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.02
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.02
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "eye_of_rngesus",
+      "name": "Eye of RNGesus",
+      "category": "charm",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "foresight",
+        "scopes": [
+          "doors",
+          "portal"
+        ]
+      },
+      "effects": {
+        "str": 5,
+        "dex": 5,
+        "ene": 5,
+        "luck": 7
+      },
+      "text": "+5 STR, +5 DEX, +5 ENE · +7 Luck",
+      "curse": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "phoenix_blood",
+      "name": "Phoenix Blood",
+      "category": "charm",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "campHeal",
+        "amount": 0.03
+      },
+      "effects": {
+        "vit": 12,
+        "ene": 14
+      },
+      "text": "+12 VIT, +14 ENE",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "druid",
+          "necromancer",
+          "sorceress",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "druid": {
+            "kind": "druid",
+            "amount": 0.02
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.02
+          },
+          "sorceress": {
+            "kind": "sorceress",
+            "amount": 0.02
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.02
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "riftbreaker",
+      "name": "Riftbreaker",
+      "category": "weapon",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "thorns",
+        "amount": 0.12
+      },
+      "effects": {
+        "str": 12,
+        "dex": 8,
+        "bossDamage": 0.2,
+        "eliteDamage": 0.15
+      },
+      "text": "+12 STR, +8 DEX · +20% damage Boss, +15% damage Elite",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "barbarian",
+          "amazon",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.02
+          },
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.02
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.02
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "living_armor",
+      "name": "Living Armor",
+      "category": "armor",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "thorns",
+        "amount": 0.12
+      },
+      "effects": {
+        "vit": 18,
+        "defense": 6
+      },
+      "text": "+18 VIT · +6 Defense",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "druid",
+          "paladin",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "druid": {
+            "kind": "druid",
+            "amount": 0.02
+          },
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.02
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.02
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.02
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "mimic_crown",
+      "name": "Mimic Crown",
+      "category": "armor",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "foresight",
+        "scopes": [
+          "treasure_room",
+          "fountain"
+        ]
+      },
+      "effects": {
+        "dex": 6,
+        "ene": 6,
+        "luck": 3,
+        "mimicDetection": 0.2,
+        "legendaryFind": 0.05
+      },
+      "text": "+6 DEX, +6 ENE · +3 Luck, +20% phát hiện Mimic, +5% tìm SSR",
+      "curse": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "endless_flask",
+      "name": "Endless Flask",
+      "category": "utility",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "potionCapacity",
+        "amount": 2
+      },
+      "effects": {
+        "vit": 10,
+        "ene": 8,
+        "potionPower": 0.2,
+        "potions": 1
+      },
+      "text": "+10 VIT, +8 ENE · +20% hiệu lực bình, +1 bình khi nhận mỗi cấp",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "druid"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "druid": {
+            "kind": "druid",
+            "amount": 0.02
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": true
+      }
+    },
+    {
+      "id": "chrono_shard",
+      "name": "Chrono Shard",
+      "category": "charm",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "evasionCap",
+        "amount": 0.05
+      },
+      "effects": {
+        "dex": 20,
+        "luck": 2
+      },
+      "text": "+20 DEX · +2 Luck",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin",
+          "amazon"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.02
+          },
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.02
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "seraphic_aegis",
+      "name": "Seraphic Aegis",
+      "category": "armor",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "guardReflect",
+        "amount": 0.25
+      },
+      "effects": {
+        "vit": 10,
+        "ene": 18,
+        "resistance": 5
+      },
+      "text": "+10 VIT, +18 ENE · +5 Resistance",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "paladin",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.02
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.02
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.02
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "doomwhisper",
+      "name": "Doomwhisper",
+      "category": "weapon",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "critCap",
+        "amount": 0.05
+      },
+      "effects": {
+        "str": 14,
+        "dex": 12
+      },
+      "text": "+14 STR, +12 DEX",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin",
+          "amazon",
+          "barbarian",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.02
+          },
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.02
+          },
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.02
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.02
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "worldroot_seed",
+      "name": "Worldroot Seed",
+      "category": "charm",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "campHeal",
+        "amount": 0.03
+      },
+      "effects": {
+        "vit": 26
+      },
+      "text": "+26 VIT",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "druid"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "druid": {
+            "kind": "druid",
+            "amount": 0.02
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "void_lens",
+      "name": "Void Lens",
+      "category": "utility",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "foresight",
+        "scopes": [
+          "mirror",
+          "portal"
+        ]
+      },
+      "effects": {
+        "dex": 8,
+        "ene": 8,
+        "mimicDetection": 0.15,
+        "legendaryFind": 0.08
+      },
+      "text": "+8 DEX, +8 ENE · +15% phát hiện Mimic, +8% tìm SSR",
+      "curse": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "angelic_engine",
+      "name": "Angelic Engine",
+      "category": "charm",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "mpLeech",
+        "amount": 0.18
+      },
+      "effects": {
+        "vit": 6,
+        "ene": 18,
+        "maxMana": 2
+      },
+      "text": "+6 VIT, +18 ENE · +2 Max MP",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "sorceress",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "sorceress": {
+            "kind": "sorceress",
+            "amount": 0.02
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.02
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.02
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "predators_instinct",
+      "name": "Predator’s Instinct",
+      "category": "charm",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "dodgeCounter",
+        "amount": 0.25
+      },
+      "effects": {
+        "str": 6,
+        "dex": 14,
+        "eliteDamage": 0.25
+      },
+      "text": "+6 STR, +14 DEX · +25% damage Elite",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin",
+          "amazon"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.02
+          },
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.02
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "deimoss_scar",
+      "name": "Deimoss Scar",
+      "category": "charm",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "berserk",
+        "amount": 0.22
+      },
+      "effects": {
+        "str": 14,
+        "vit": 6,
+        "bossDamage": 0.3
+      },
+      "text": "+14 STR, +6 VIT · +30% damage Boss",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "barbarian",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.02
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.02
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "golden_goblet",
+      "name": "Golden Goblet",
+      "category": "utility",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "shopDiscount",
+        "amount": 0.08
+      },
+      "effects": {
+        "dex": 6,
+        "vit": 6,
+        "luck": 5,
+        "goblinChance": 0.18
+      },
+      "text": "+6 DEX, +6 VIT · +5 Luck, +18% bắt Goblin",
+      "curse": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "astral_mail",
+      "name": "Astral Mail",
+      "category": "armor",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "trapResistance",
+        "amount": 0.15
+      },
+      "effects": {
+        "str": 6,
+        "dex": 8,
+        "vit": 6,
+        "ene": 8
+      },
+      "text": "+6 STR, +8 DEX, +6 VIT, +8 ENE",
+      "curse": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "blood_moon_edge",
+      "name": "Blood Moon Edge",
+      "category": "weapon",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "berserk",
+        "amount": 0.22
+      },
+      "effects": {
+        "ene": 24,
+        "vit": 4
+      },
+      "text": "+24 ENE, +4 VIT",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "sorceress",
+          "barbarian",
+          "venance",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "sorceress": {
+            "kind": "sorceress",
+            "amount": 0.02
+          },
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.02
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.02
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.02
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "oracle_mask",
+      "name": "Oracle Mask",
+      "category": "armor",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "foresight",
+        "scopes": [
+          "doors",
+          "mirror"
+        ]
+      },
+      "effects": {
+        "dex": 12,
+        "ene": 10,
+        "luck": 5
+      },
+      "text": "+12 DEX, +10 ENE · +5 Luck",
+      "curse": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "eternal_clover",
+      "name": "Eternal Clover",
+      "category": "charm",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "eventLuck",
+        "amount": 0.04
+      },
+      "effects": {
+        "luck": 10,
+        "legendaryFind": 0.04
+      },
+      "text": "+10 Luck, +4% tìm SSR",
+      "curse": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "titan_heart",
+      "name": "Titan Heart",
+      "category": "charm",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "potionCapacity",
+        "amount": 2
+      },
+      "effects": {
+        "str": 8,
+        "vit": 18
+      },
+      "text": "+8 STR, +18 VIT",
+      "curse": null,
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "barbarian",
+          "druid",
+          "paladin",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.02
+          },
+          "druid": {
+            "kind": "druid",
+            "amount": 0.02
+          },
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.02
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.02
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "sevenfold_sigil",
+      "name": "Sevenfold Sigil",
+      "category": "jewelry",
+      "rarity": "legendary",
+      "typeCode": "SSR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "startMana",
+        "amount": 0.4
+      },
+      "effects": {
+        "str": 7,
+        "dex": 7,
+        "vit": 7,
+        "ene": 7,
+        "luck": 3
+      },
+      "text": "+7 STR, +7 DEX, +7 VIT, +7 ENE · +3 Luck",
+      "curse": null,
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    }
+  ],
+  "cursed": [
+    {
+      "id": "glass_cannon",
+      "name": "Glass Cannon",
+      "category": "weapon",
+      "rarity": "cursed",
+      "typeCode": "UR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "berserk",
+        "amount": 0.3
+      },
+      "effects": {
+        "str": 35,
+        "dex": 15
+      },
+      "text": "+35 STR, +15 DEX",
+      "curse": {
+        "id": "glass_cannon_curse",
+        "effects": {
+          "defenseReduction": 0.5
+        },
+        "text": "Giảm 50% DEF lúc nhận nguyền; lưu khoản trừ, không cộng dồn theo cấp. Giải hết nguyền hoàn trả khoản đã trừ."
+      },
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "barbarian",
+          "amazon",
+          "assassin",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.025
+          },
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.025
+          },
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.025
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.025
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "schrodingers_armor",
+      "name": "Schrödinger’s Armor",
+      "category": "armor",
+      "rarity": "cursed",
+      "typeCode": "UR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "guardReflect",
+        "amount": 0.35
+      },
+      "effects": {
+        "str": 20,
+        "vit": 30
+      },
+      "text": "+20 STR, +30 VIT",
+      "curse": {
+        "id": "schrodingers_armor_curse",
+        "effects": {
+          "physicalDamageTaken": 0.2
+        },
+        "text": "nhận thêm 20% damage vật lý (tối đa 100%)"
+      },
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "paladin",
+          "barbarian",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.025
+          },
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.025
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.025
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "goblins_debt",
+      "name": "Goblin’s Debt",
+      "category": "charm",
+      "rarity": "cursed",
+      "typeCode": "UR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "shopDiscount",
+        "amount": 0.12
+      },
+      "effects": {
+        "dex": 20,
+        "vit": 15,
+        "luck": 12,
+        "goblinChance": 0.2
+      },
+      "text": "+20 DEX, +15 VIT · +12 Luck, +20% bắt Goblin",
+      "curse": {
+        "id": "goblins_debt_curse",
+        "effects": {
+          "bonusPenalty": 0.15
+        },
+        "text": "mất 15% payout xu mỗi cấp chưa giải"
+      },
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "crown_of_ruin",
+      "name": "Crown of Ruin",
+      "category": "armor",
+      "rarity": "cursed",
+      "typeCode": "UR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "eventLuck",
+        "amount": 0.06
+      },
+      "effects": {
+        "str": 20,
+        "vit": 15,
+        "luck": 8
+      },
+      "text": "+20 STR, +15 VIT · +8 Luck",
+      "curse": {
+        "id": "crown_of_ruin_curse",
+        "effects": {
+          "potionCapacityLoss": 1
+        },
+        "text": "giảm 1 sức chứa bình mỗi cấp chưa giải, còn tối thiểu 1 bình"
+      },
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "barbarian",
+          "paladin",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.025
+          },
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.025
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.025
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "blood_pact",
+      "name": "Blood Pact",
+      "category": "weapon",
+      "rarity": "cursed",
+      "typeCode": "UR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "berserk",
+        "amount": 0.3
+      },
+      "effects": {
+        "ene": 40,
+        "vit": 10
+      },
+      "text": "+40 ENE, +10 VIT",
+      "curse": {
+        "id": "blood_pact_curse",
+        "effects": {
+          "skillHpCost": 0.03
+        },
+        "text": "Skill tốn 3% Max HP mỗi cấp chưa giải (tối đa 15%); làm tròn xuống, tối thiểu 1 HP, phải còn 1 HP sau chi phí"
+      },
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "sorceress",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "sorceress": {
+            "kind": "sorceress",
+            "amount": 0.025
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.025
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.025
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "void_heart",
+      "name": "Void Heart",
+      "category": "charm",
+      "rarity": "cursed",
+      "typeCode": "UR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "campHeal",
+        "amount": 0.04
+      },
+      "effects": {
+        "vit": 35,
+        "ene": 20
+      },
+      "text": "+35 VIT, +20 ENE",
+      "curse": {
+        "id": "void_heart_curse",
+        "effects": {
+          "potionPower": -0.15
+        },
+        "text": "-15% hiệu lực bình"
+      },
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "druid",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "druid": {
+            "kind": "druid",
+            "amount": 0.025
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.025
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.025
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "broken_hourglass",
+      "name": "Broken Hourglass",
+      "category": "charm",
+      "rarity": "cursed",
+      "typeCode": "UR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "dodgeCounter",
+        "amount": 0.35
+      },
+      "effects": {
+        "dex": 40,
+        "luck": 8
+      },
+      "text": "+40 DEX · +8 Luck",
+      "curse": {
+        "id": "broken_hourglass_curse",
+        "effects": {
+          "attackManaLoss": 1
+        },
+        "text": "Tấn công hồi ít hơn 1 MP mỗi cấp chưa giải (tối đa giảm 3 MP, tối thiểu hồi 0 MP); Phòng thủ không đổi"
+      },
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.025
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "mimics_promise",
+      "name": "Mimic’s Promise",
+      "category": "utility",
+      "rarity": "cursed",
+      "typeCode": "UR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "foresight",
+        "scopes": [
+          "treasure_room",
+          "fountain",
+          "doors"
+        ]
+      },
+      "effects": {
+        "dex": 20,
+        "ene": 15,
+        "mimicDetection": 0.1,
+        "legendaryFind": 0.12
+      },
+      "text": "+20 DEX, +15 ENE · +10% phát hiện Mimic, +12% tìm SSR",
+      "curse": {
+        "id": "mimics_promise_curse",
+        "effects": {
+          "mimicChance": 0.12
+        },
+        "text": "+12% Mimic"
+      },
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "berserker_chains",
+      "name": "Berserker Chains",
+      "category": "weapon",
+      "rarity": "cursed",
+      "typeCode": "UR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "thorns",
+        "amount": 0.18
+      },
+      "effects": {
+        "str": 40,
+        "dex": 10,
+        "eliteDamage": 0.2
+      },
+      "text": "+40 STR, +10 DEX · +20% damage Elite",
+      "curse": {
+        "id": "berserker_chains_curse",
+        "effects": {
+          "damageTaken": 0.18
+        },
+        "text": "nhận thêm 18% damage"
+      },
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "barbarian",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.025
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.025
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "hollow_crown",
+      "name": "Hollow Crown",
+      "category": "armor",
+      "rarity": "cursed",
+      "typeCode": "UR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "mpLeech",
+        "amount": 0.25
+      },
+      "effects": {
+        "vit": 10,
+        "ene": 40,
+        "maxMana": 2
+      },
+      "text": "+10 VIT, +40 ENE · +2 Max MP",
+      "curse": {
+        "id": "hollow_crown_curse",
+        "effects": {
+          "skillManaExtra": 1
+        },
+        "text": "Skill tốn thêm 1 MP mỗi cấp chưa giải (tối đa thêm 3 MP); Skill miễn phí từ Class Shrine vẫn tốn 0 MP"
+      },
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "sorceress",
+          "necromancer",
+          "druid",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "sorceress": {
+            "kind": "sorceress",
+            "amount": 0.025
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.025
+          },
+          "druid": {
+            "kind": "druid",
+            "amount": 0.025
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.025
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "ashen_wings",
+      "name": "Ashen Wings",
+      "category": "armor",
+      "rarity": "cursed",
+      "typeCode": "UR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "evasionCap",
+        "amount": 0.08
+      },
+      "effects": {
+        "dex": 40,
+        "ene": 10
+      },
+      "text": "+40 DEX, +10 ENE",
+      "curse": {
+        "id": "ashen_wings_curse",
+        "effects": {
+          "resistance": -20
+        },
+        "text": "-20 Resistance"
+      },
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin",
+          "amazon"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.025
+          },
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.025
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "soul_leash",
+      "name": "Soul Leash",
+      "category": "charm",
+      "rarity": "cursed",
+      "typeCode": "UR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "startMana",
+        "amount": 0.5
+      },
+      "effects": {
+        "str": 20,
+        "ene": 25,
+        "bossDamage": 0.35
+      },
+      "text": "+20 STR, +25 ENE · +35% damage Boss",
+      "curse": {
+        "id": "soul_leash_curse",
+        "effects": {
+          "combatManaLoss": 1
+        },
+        "text": "khi vào combat mất 1 MP mỗi cấp chưa giải (tối đa 3 MP, không xuống dưới 0), chỉ một lần/combat và trước nội tại hồi MP"
+      },
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "necromancer",
+          "sorceress",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.025
+          },
+          "sorceress": {
+            "kind": "sorceress",
+            "amount": 0.025
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.025
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "bleeding_star",
+      "name": "Bleeding Star",
+      "category": "jewelry",
+      "rarity": "cursed",
+      "typeCode": "UR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "critCap",
+        "amount": 0.08
+      },
+      "effects": {
+        "str": 20,
+        "dex": 30
+      },
+      "text": "+20 STR, +30 DEX",
+      "curse": {
+        "id": "bleeding_star_curse",
+        "effects": {
+          "floorHpLoss": 0.06
+        },
+        "text": "mất 6% Max HP sau mỗi tầng"
+      },
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "assassin",
+          "amazon"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "assassin": {
+            "kind": "assassin",
+            "amount": 0.025
+          },
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.025
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "null_idol",
+      "name": "Null Idol",
+      "category": "charm",
+      "rarity": "cursed",
+      "typeCode": "UR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "trapResistance",
+        "amount": 0.2
+      },
+      "effects": {
+        "str": 20,
+        "vit": 15,
+        "ene": 20
+      },
+      "text": "+20 STR, +15 VIT, +20 ENE",
+      "curse": {
+        "id": "null_idol_curse",
+        "effects": {
+          "healingReduction": 0.2
+        },
+        "text": "lượng HP hồi cho bạn giảm 20% mỗi cấp chưa giải (tối đa 60%); không giảm hồi đầy tại Checkpoint hoặc hồi sinh"
+      },
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "paladin",
+          "druid",
+          "necromancer",
+          "venance"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.025
+          },
+          "druid": {
+            "kind": "druid",
+            "amount": 0.025
+          },
+          "necromancer": {
+            "kind": "necromancer",
+            "amount": 0.025
+          },
+          "venance": {
+            "kind": "venance",
+            "amount": 0.025
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "black_sun",
+      "name": "Black Sun",
+      "category": "charm",
+      "rarity": "cursed",
+      "typeCode": "UR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "foresight",
+        "scopes": [
+          "doors",
+          "portal",
+          "treasure_room",
+          "fountain",
+          "mirror"
+        ]
+      },
+      "effects": {
+        "dex": 10,
+        "ene": 30,
+        "luck": 10,
+        "legendaryFind": 0.15
+      },
+      "text": "+10 DEX, +30 ENE · +10 Luck, +15% tìm SSR",
+      "curse": {
+        "id": "black_sun_curse",
+        "effects": {
+          "magicDamageTaken": 0.2
+        },
+        "text": "nhận thêm 20% damage phép (tối đa 100%)"
+      },
+      "affinity": {
+        "type": "universal",
+        "classes": []
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {}
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    },
+    {
+      "id": "oathbreaker",
+      "name": "Oathbreaker",
+      "category": "weapon",
+      "rarity": "cursed",
+      "typeCode": "UR",
+      "catalogVersion": 3,
+      "passive": {
+        "kind": "critCap",
+        "amount": 0.1
+      },
+      "effects": {
+        "str": 25,
+        "dex": 15,
+        "vit": 10,
+        "bossDamage": 0.25,
+        "eliteDamage": 0.25
+      },
+      "text": "+25 STR, +15 DEX, +10 VIT · +25% damage Boss, +25% damage Elite",
+      "curse": {
+        "id": "oathbreaker_curse",
+        "effects": {
+          "normalDamagePenalty": 0.2
+        },
+        "text": "DMG Tấn công/Skill lên quái thường giảm 20% mỗi cấp chưa giải (tối đa 60%); không giảm DMG lên Tinh anh/Boss hoặc phản sát thương"
+      },
+      "affinity": {
+        "type": "class",
+        "classes": [
+          "barbarian",
+          "paladin",
+          "amazon",
+          "rha_kor"
+        ]
+      },
+      "affinityEffect": {
+        "version": 1,
+        "effects": {
+          "barbarian": {
+            "kind": "barbarian",
+            "amount": 0.025
+          },
+          "paladin": {
+            "kind": "paladin",
+            "amount": 0.025
+          },
+          "amazon": {
+            "kind": "amazon",
+            "amount": 0.025
+          },
+          "rha_kor": {
+            "kind": "rha_kor",
+            "amount": 0.025
+          }
+        }
+      },
+      "receipt": {
+        "version": 1,
+        "onDuplicate": false
+      }
+    }
+  ]
+}

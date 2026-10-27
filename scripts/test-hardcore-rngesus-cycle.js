@@ -7,7 +7,6 @@ databaseModule.exports = function () {
 };
 const { db } = require("../src/db");
 databaseModule.exports = Database;
-delete process.env.HARDCORE_GAMEPLAY_VERSION;
 const service = require("../src/services/hardcoreService");
 const core = require("../src/services/hardcoreV2");
 const repo = require("../src/services/hardcoreRepository");
@@ -307,36 +306,12 @@ for (const action of ["fight", "pray", "flee"]) {
   );
 }
 
-// Saved v1 runs also reset through their actual resolution path.
-process.env.HARDCORE_GAMEPLAY_VERSION = "legacy";
-const { run, result } = startCase(
-  "flee",
-  {},
-  { fleeRoll: 0.1, fleeChance: 0.75 },
-  197,
-);
-assert.equal(result.settled, false);
-assert.notEqual(
-  result.state.gameplayVersion,
-  2,
-  "legacy run must use the v1 engine",
-);
-assert.equal(result.state.rngesusResetFloor, 197);
-assert.equal(result.state.floor, 198);
-assert.notEqual(result.state.encounter.type, "rngesus");
-assert.equal(result.state.lastChaosChance, 0);
-assert.equal(
-  repo.parseState(repo.getSession(run.session.id)).rngesusResetFloor,
-  197,
-);
-
 const cycleField = ratesFields("rngesus").find((field) =>
   field.name.includes("Chu kỳ"),
 );
 assert(cycleField.value.includes("0,05 điểm %"));
 assert(cycleField.value.includes("F+1 chắc chắn **0%**"));
-for (const version of ["legacy", "2"]) {
-  process.env.HARDCORE_GAMEPLAY_VERSION = version;
+{
   const embed = ratesEmbed("rngesus").toJSON();
   for (const field of embed.fields)
     assert(
@@ -352,5 +327,5 @@ for (const version of ["legacy", "2"]) {
 }
 db.close();
 console.log(
-  "RNGesus cycle passed: fixed rate, steady increments, reset, no adjacent encounters, all survival/revival paths, checkpoint resume, persistence and legacy runs.",
+  "RNGesus cycle passed: fixed rate, steady increments, reset, no adjacent encounters, all survival/revival paths, checkpoint resume, persistence and saved current runs.",
 );

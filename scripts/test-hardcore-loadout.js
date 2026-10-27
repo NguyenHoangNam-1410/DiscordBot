@@ -5,7 +5,6 @@ const fs = require("node:fs"),
   path = require("node:path");
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), "hardcore-loadout-"));
 process.env.DB_PATH = path.join(directory, "test.sqlite");
-delete process.env.HARDCORE_GAMEPLAY_VERSION;
 const { db } = require("../src/db");
 const bag = require("../src/services/hardcoreInventoryService");
 const ui = require("../src/services/hardcoreInventoryView");

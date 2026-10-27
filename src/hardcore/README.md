@@ -37,7 +37,7 @@
 | Luật chơi / hồ sơ / bảng thành tích               | `ui/rules.js`, `ui/ratesPanel.js`, `ui/rulePages.js`, `ui/profile.js`                                                     |
 | Emoji, định dạng chỉ số và trang bị               | `shared/icons.js`, `shared/ui.js`, `shared/equipment.js`                                                                  |
 | Lịch sử run, Echo và Nemesis                      | `storage/echoes.js`                                                                                                       |
-| Run cũ và công thức/UI cũ                         | `legacy/`                                                                                                                 |
+| RNG dùng chung và lưu trữ phiên                  | `runtime/fairness.js`, `runtime/state.js`, `storage/sessions.js` |
 
 ## Boss roster trên V3
 
@@ -69,7 +69,7 @@ Roster 2 **mặc định cho run V3 mới** sau kiểm chứng mục tiêu 3–5
 
 ## Cách nối module
 
-`engine/index.js`, `ui/index.js`, `runtime/index.js` và các entry trong `legacy/` tạo một bộ dependencies duy nhất khi module được require lần đầu. `dependencies.js` chứa import, hằng số và trạng thái dùng chung; các file nghiệp vụ nhận đúng dependencies cần dùng.
+`engine/index.js`, `ui/index.js`, `runtime/index.js` tạo một bộ dependencies duy nhất khi module được require lần đầu. `dependencies.js` chứa import, hằng số và trạng thái dùng chung; các file nghiệp vụ nhận đúng dependencies cần dùng.
 
 Các hàm gọi chéo module được nối qua callback ở đầu file, tra cứu sau khi composition hoàn tất. Cách này giữ những chu trình nghiệp vụ như hoàn thành tầng → sinh encounter → combat → hoàn thành tầng, nhưng không tạo vòng require giữa các file nghiệp vụ. Transaction SQLite, RNG fairness, setup draft và queue vẫn dùng cùng một instance. Module factory chỉ phục vụ composition; consumer gọi API ở các file `index.js`.
 

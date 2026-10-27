@@ -1,33 +1,13 @@
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
-  const {
-    performance,
-    formatCoins,
-    godReveal,
-    hardcoreView,
-    ITEMS,
-    hardcoreV2View,
-    isV2,
-    CLASSES,
-    setMessageId,
-  } = dependencies;
+  const { performance, formatCoins, godReveal, hardcoreV2View, setMessageId } =
+    dependencies;
 
   function hardcoreEmbed(state, userId, result = null, sessionId = null) {
-    if (isV2(state))
-      return hardcoreV2View.embed(state, userId, result, sessionId);
-    return hardcoreView.hardcoreEmbed(
-      state,
-      userId,
-      result,
-      CLASSES,
-      sessionId,
-      ITEMS,
-    );
+    return hardcoreV2View.embed(state, userId, result, sessionId);
   }
-
   function hardcoreRows(sessionId, state, disabled = false) {
-    if (isV2(state)) return hardcoreV2View.rows(sessionId, state, disabled);
-    return hardcoreView.hardcoreRows(sessionId, state, disabled, CLASSES);
+    return hardcoreV2View.rows(sessionId, state, disabled);
   }
 
   async function showHardcoreTurn(

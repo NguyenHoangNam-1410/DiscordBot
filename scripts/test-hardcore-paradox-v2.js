@@ -8,7 +8,6 @@ require.cache[require.resolve("better-sqlite3")].exports = function () {
 process.env.DB_PATH = path.join(__dirname, "../data/paradox-memory.sqlite");
 const { db } = require("../src/db");
 require.cache[require.resolve("better-sqlite3")].exports = Database;
-delete process.env.HARDCORE_GAMEPLAY_VERSION;
 const stats = require("../src/services/hardcoreStats"),
   core = require("../src/services/hardcoreV2"),
   paradox = require("../src/services/hardcoreParadoxService"),

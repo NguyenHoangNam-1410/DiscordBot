@@ -1,5 +1,18 @@
 [
   {
+    "id": "fef19c97-ae49-47e2-8d88-1dfff249141d",
+    "updatedAt": "2026-10-27T01:21:53.816Z",
+    "auditedAt": "2026-10-27T01:21:53.816Z",
+    "title": "Sinh tồn: ngừng hỗ trợ engine v1",
+    "type": "maintenance",
+    "scope": "survival",
+    "changes": [
+      "Gỡ engine, giao diện và cấu hình mở run Sinh tồn v1; run v2/v3 và Tháp tiếp tục dùng hệ thống hiện hành.",
+      "Các phiên v1 còn lưu sẽ được đóng và hoàn tiền cược đúng một lần khi bot khởi động hoặc xử lý lại phiên; giữ lịch sử và thành tích đã ghi.",
+      "Tách catalog 100 vật phẩm v3 khỏi dữ liệu v1, giữ nguyên hiệu ứng và danh sách vật phẩm hiện tại."
+    ]
+  },
+  {
     "id": "c7521799-fe31-4682-860e-7412ce1c65eb",
     "updatedAt": "2026-10-26T11:14:49.304Z",
     "auditedAt": "2026-10-26T11:14:49.304Z",

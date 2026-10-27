@@ -51,10 +51,7 @@ module.exports = function createModule(dependencies) {
     RELIC_RULES,
   } = require("../item");
 
-  const {
-    GOBLIN_REWARDS,
-    goblinRewardRarity,
-  } = require("../legacy/formulas/index");
+  const { GOBLIN_REWARDS, goblinRewardRarity } = require("../shared/rewards");
 
   const { spendDiamonds } = require("../../services/playerLevelService");
 

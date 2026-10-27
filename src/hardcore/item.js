@@ -1411,10 +1411,7 @@ const ITEM_POOLS = Object.freeze(
     ]),
   ),
 );
-const ITEMS_V3 = require("./equipment/catalogV3").build(
-  ITEMS,
-  require("./itemLegacy").ITEMS,
-);
+const ITEMS_V3 = require("./equipment/catalogV3").build();
 const V3_POOLS = Object.fromEntries(
   Object.entries(ITEMS_V3).map(([r, p]) => [
     r,

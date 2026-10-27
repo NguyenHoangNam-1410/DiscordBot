@@ -296,10 +296,6 @@ const GAME_CONFIG_SPECS = Object.freeze({
     storage: "chatbot_channel",
     note: "Một ID kênh văn bản; trống = cho phép mọi kênh.",
   }),
-  HARDCORE_GAMEPLAY_VERSION: text("Engine Sinh tồn", "current", "hardcore", {
-    choices: ["current", "legacy"],
-    note: "Chỉ áp dụng cho run mới.",
-  }),
   HARDCORE_BOSS_ROSTER_VERSION: numeric("Danh sách boss", 0, 0, 2, "hardcore", {
     note: "0 = tự động theo engine; 1/2 = ép danh sách boss. Chỉ áp dụng run mới.",
   }),

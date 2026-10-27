@@ -1,24 +1,15 @@
 // Composed once by ./index. Cross-module calls are deferred until the feature is ready.
 module.exports = function createModule(dependencies) {
   const {
-    crypto,
     MessageFlags,
     formatCoins,
-    getAccount,
-    getGameBetLimit,
     channelHasGame,
-    requireGameChannel,
     godReveal,
     hardcoreView,
     hardcoreInventory,
     hardcoreInventoryView,
-    useV2,
     MIN_BET,
-    MAX_BET,
-    CLASSES,
-    getHardcoreByUser,
     setMessageId,
-    SETUP_IDLE_MS,
     setupDrafts,
   } = dependencies;
   const startHardcore = (...args) => dependencies.startHardcore(...args);
@@ -126,7 +117,7 @@ module.exports = function createModule(dependencies) {
       closeSetup(draft);
       return interaction.update(closedSetup("Đã hủy chuẩn bị run."));
     }
-    if (useV2(draft.guildId)) {
+    {
       if (action === "class_back" && draft.stage === "loadout") {
         draft.stage = "class";
         return refreshSetup(interaction, draft);

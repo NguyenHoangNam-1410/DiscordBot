@@ -46,8 +46,7 @@ module.exports = function createModule(dependencies) {
     FROM hardcore_run_archive WHERE guild_id=? AND user_id=? AND reason IN ('cashout','summit','death','rngesus','forfeit') GROUP BY release_version,gameplay_version`,
       )
       .all(String(guildId), String(userId));
-    record.activeVersion =
-      run?.state.releaseVersion || (run ? "legacy-4" : null);
+    record.activeVersion = run?.state.releaseVersion || (run ? "2.0.1" : null);
     if (!run || require("../beta").is(run.state)) return record;
     return {
       ...record,

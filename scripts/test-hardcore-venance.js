@@ -508,9 +508,9 @@ try {
       repo = require("../src/hardcore/storage/sessions"),
       economy = require("../src/services/economyService");
     const flow = require("../src/hardcore/runtime/setupFlow")({
-      CLASSES: require("../src/hardcore/legacy/catalog").CLASSES,
+      CLASSES: require("../src/hardcore/engine/stats").CLASSES,
       useV2: () => true,
-      hardcoreView: require("../src/hardcore/legacy/ui"),
+      hardcoreView: require("../src/hardcore/ui"),
       getAccount: () => ({ balance: 1000 }),
       getGameBetLimit: () => 100000,
       MAX_BET: 100000,

@@ -164,7 +164,7 @@ async function main() {
     ].map((k, i) => [k, String(1557000000000000100n + BigInt(i))]),
   ]);
   // Exercise the /sinhton batdau payload with custom emoji markup, not only Unicode fallbacks.
-  const setupView = require("../src/hardcore/legacy/ui");
+  const setupView = require("../src/hardcore/ui");
   const setupDraft = {
     id: "setup-test",
     version: 0,

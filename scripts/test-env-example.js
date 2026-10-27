@@ -235,9 +235,6 @@ async function run() {
   assert.equal(chatbot.dailyLimit(G), 35);
   await save("chatbot", "CHATBOT_CHANNEL", C, "", { guild });
   assert.equal(chatbot.getChannelId(G), C);
-  config.setGameConfig(G, "HARDCORE_GAMEPLAY_VERSION", "legacy", U);
-  assert.equal(require("../src/hardcore/shared/version").useV2(G), false);
-  assert.equal(require("../src/hardcore/shared/version").useV2("other"), true);
   config.setGameConfig(G, "GAME_COIN_DROP_MIN", 50, U);
   config.setGameConfig(G, "GAME_COIN_DROP_MAX", 60, U);
   assert.throws(
@@ -248,29 +245,6 @@ async function run() {
   assert.throws(
     () => config.setGameConfig(G, "POKER_ANTE", "", U),
     /INVALID_GAME_CONFIG_VALUE/,
-  );
-  const legacyRun = require("../src/services/hardcoreService").startHardcore({
-    guildId: G,
-    userId: "config-legacy-player",
-    channelId: C,
-    stake: 10,
-    classKey: "barbarian",
-    forcedEncounter: { type: "empty", name: "Trống" },
-  });
-  assert(
-    ![2, 3].includes(legacyRun.state.gameplayVersion),
-    "guild engine setting reaches new runs",
-  );
-  const rates = require("../src/hardcore/ui/ratesPanel");
-  assert.match(
-    rates.ratesPayload(U, "encounters", 0, G).embeds[0].toJSON().title,
-    /legacy/,
-  );
-  assert(
-    !rates
-      .ratesPayload(U, "encounters", 0, "other")
-      .embeds[0].toJSON()
-      .title.includes("legacy"),
   );
   // No key or request endpoint is accepted from the UI. Per-server AI settings reach the request.
   process.env.OPENAI_API_KEY = "test-key";

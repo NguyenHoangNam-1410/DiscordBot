@@ -290,7 +290,7 @@ const md = [
   "$env:HARDCORE_SIM_POLICY='balanced'",
   "$env:HARDCORE_SIM_ISOLATED='1'",
   "$env:HARDCORE_SIM_SEED='" + manifest.seed + "'",
-  "Remove-Item Env:HARDCORE_SIM_POWER,Env:HARDCORE_SIM_BUILDS,Env:HARDCORE_GAMEPLAY_VERSION,Env:HARDCORE_SIM_BUILD,Env:HARDCORE_SIM_STAKE -ErrorAction SilentlyContinue",
+  "Remove-Item Env:HARDCORE_SIM_POWER,Env:HARDCORE_SIM_BUILDS,Env:HARDCORE_SIM_BUILD,Env:HARDCORE_SIM_STAKE -ErrorAction SilentlyContinue",
   "$env:HARDCORE_SIM_CHECKPOINTS='baseline'",
   "$env:HARDCORE_SIM_OUTPUT='docs/releases/hardcore-2026-10-07-checkpoints-baseline-physical.json'",
   "node scripts/simulate-hardcore.js 1000 999 40000 amazon,barbarian,assassin,paladin",

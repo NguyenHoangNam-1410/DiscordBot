@@ -10,14 +10,10 @@ module.exports = function createModule(dependencies) {
     icon,
     formatCoins,
     hardcoreRepository,
-    hardcoreView,
-    potentialPayout,
     runDiamondReward,
-    ITEMS,
     hardcoreV2,
     hardcoreV2View,
     isV2,
-    CLASSES,
     getSession,
     hardcoreQueues,
   } = dependencies;
@@ -124,6 +120,17 @@ module.exports = function createModule(dependencies) {
               "Lượt Sinh tồn đã kết thúc hoặc nút không còn hợp lệ.",
             );
           }
+          const savedState = hardcoreRepository.parseState(session);
+          if (!isV2(savedState)) {
+            if (session.user_id !== interaction.user.id)
+              return respond("Chỉ chủ run mới được xử lý phiên này.");
+            const retired = dependencies.retireLegacySession(session);
+            if (retired)
+              return respond(
+                "Sinh tồn v1 đã ngừng hỗ trợ. Tiền cược đã được hoàn; dùng /sinhton batdau để mở run mới.",
+              );
+            return respond("Phiên Sinh tồn không được hỗ trợ.");
+          }
           if (session.user_id !== interaction.user.id) {
             return await respond("Đây là lượt Sinh tồn của người chơi khác.");
           }
@@ -165,19 +172,15 @@ module.exports = function createModule(dependencies) {
               state.encounter.type === "rngesus" ||
               (state.encounter.type === "surprise" &&
                 state.encounter.kind === "gambler") ||
-              (isV2(state) &&
-                (state.phase === "boss_chest" || bosses.retreatLocked(state)))
+              state.phase === "boss_chest" ||
+              bosses.retreatLocked(state)
             )
               return respond(
                 "Bạn phải xử lý tình huống hiện tại trước khi rút thưởng.",
               );
             if (retreatPrompt) {
               const canCashout = state.phase === "summit" || state.cleared > 0;
-              const coins = canCashout
-                ? isV2(state)
-                  ? hardcoreV2.payout(state)
-                  : potentialPayout(state)
-                : 0;
+              const coins = canCashout ? hardcoreV2.payout(state) : 0;
               const diamonds = canCashout ? runDiamondReward(state) : 0;
               const prefix = `hardcore:${sessionId}:${state.turn}:`;
               hardcoreRepository.touchSession(sessionId);
@@ -214,23 +217,13 @@ module.exports = function createModule(dependencies) {
           if (detailAction) {
             const state = parseState(session);
             const renderStart = performance.now();
-            const payload = isV2(state)
-              ? hardcoreV2View.privatePayload(
-                  state,
-                  sessionId,
-                  sourceMessageId,
-                  detailAction[1],
-                  Number(detailAction[2]),
-                )
-              : hardcoreView.hardcorePrivatePayload(
-                  state,
-                  CLASSES,
-                  ITEMS,
-                  sessionId,
-                  sourceMessageId,
-                  detailAction[1],
-                  Number(detailAction[2]),
-                );
+            const payload = hardcoreV2View.privatePayload(
+              state,
+              sessionId,
+              sourceMessageId,
+              detailAction[1],
+              Number(detailAction[2]),
+            );
             timing.renderMs += performance.now() - renderStart;
             hardcoreRepository.touchSession(sessionId);
             return await interaction.editReply(payload);

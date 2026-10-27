@@ -10,7 +10,7 @@ const core = require("../src/services/hardcoreV2");
 const stats = require("../src/services/hardcoreStats");
 const view = require("../src/services/hardcoreV2View");
 const world = require("../src/services/hardcoreWorld");
-const { baseMultiplier } = require("../src/services/hardcoreEngine");
+const { baseMultiplier } = require("../src/hardcore/shared/rewards");
 const session = {
   id: "payout-test",
   guild_id: "payout",

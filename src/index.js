@@ -119,7 +119,8 @@ async function shutdown(signal, exitCode = 0) {
   await backupManager
     ?.stop({
       finalBackup: signal !== "uncaughtException",
-      skipIfRecentMs: require("./services/databaseBackupService").SHUTDOWN_SKIP_MS,
+      skipIfRecentMs: require("./services/databaseBackupService")
+        .SHUTDOWN_SKIP_MS,
     })
     .catch((error) =>
       logger.error({ err: error }, "could not finish database backup"),
@@ -158,6 +159,13 @@ process.on("uncaughtException", (error) => {
   });
 });
 client.once(Events.ClientReady, async () => {
+  const retiredSurvivalRuns =
+    require("./services/hardcoreService").retireLegacyHardcoreSessions();
+  if (retiredSurvivalRuns)
+    logger.info(
+      { count: retiredSurvivalRuns },
+      "retired survival V1 sessions and refunded stakes",
+    );
   if (shuttingDown) return;
   // DM delivery runs in the background; gameplay does not wait for backup uploads.
   backupManager

@@ -156,7 +156,6 @@ if (process.env.HARDCORE_SIM_POWER) {
     power: powers[classKey] ?? defaults(classKey).power,
   });
 }
-const engine = require("../src/services/hardcoreEngine");
 const { getAccount } = require("../src/services/economyService");
 const { createFairness } = require("../src/services/fairnessService");
 const runs = Math.max(10, Math.min(100_000, Number(process.argv[2]) || 100));
@@ -234,211 +233,7 @@ function actionFor(state, strategy = policy) {
         process.env.HARDCORE_SIM_BUILD ||
         "balanced",
     );
-  if ([2, 3].includes(state.gameplayVersion))
-    return actionForV2(state, strategy);
-  // Decisions use public stats and revealed encounters, never saved hidden results.
-  if (state.phase === "upgrade") {
-    const checkpoint = state.cleared / 5;
-    if (strategy === "adaptive")
-      return (state.damageMin + state.damageMax) / 2 < state.maxHp / 6
-        ? "upgrade_attack"
-        : "upgrade_hp";
-    if (strategy === "health2")
-      return checkpoint % 3 === 0 ? "upgrade_attack" : "upgrade_hp";
-    if (strategy === "attack2")
-      return checkpoint % 3 === 0 ? "upgrade_hp" : "upgrade_attack";
-    if (strategy === "luck" && state.luck < 35 && checkpoint % 3 === 0)
-      return "upgrade_luck";
-    const hpEvery = strategy === "health" ? 1 : strategy === "attack" ? 5 : 2;
-    return checkpoint % hpEvery === 0 ? "upgrade_hp" : "upgrade_attack";
-  }
-  if (state.phase === "summit") return "retreat";
-  const encounter = state.encounter;
-  if (encounter.type === "combat") {
-    const attack = (state.damageMin + state.damageMax) / 2;
-    const hit = engine.hitChance(state.accuracy, encounter.evasion);
-    const crit = engine.clamp(
-      state.critChance - (encounter.critResistance || 0),
-      0,
-      0.75,
-    );
-    const reduction = encounter.mechanic === "deimoss" ? 0.75 : 1;
-    const bonus = ["boss", "final_boss"].includes(encounter.rank)
-      ? state.bossDamage || 0
-      : ["elite", "ancient_mimic"].includes(encounter.rank)
-        ? state.eliteDamage || 0
-        : 0;
-    const normalDamage =
-      engine.physicalAfterDefense(attack, encounter.defense, state.floor) *
-      hit *
-      (1 + crit * ((state.critDamage || 1.75) - 1)) *
-      reduction *
-      (1 + bonus);
-    const immune =
-      encounter.mechanic === "riftwalker" &&
-      ((encounter.incomingAttacks || 0) + 1) % 3 === 1;
-    const skillReady =
-      state.energy >= 2 ||
-      (state.classKey === "sorceress" && engine.classShrineActive(state));
-    const rawCounter =
-      encounter.damageMax *
-      (encounter.mechanic === "butcher"
-        ? 1 + Math.min(5, (encounter.attacks || 0) + 1) * 0.08
-        : 1) *
-      (encounter.hp <= encounter.maxHp * 0.5
-        ? 1 + (state.modifiers?.bloodlust || 0) * 0.08
-        : 1);
-    const magic = encounter.nextDamageType === "magic";
-    const worstCounter =
-      (magic
-        ? engine.magicAfterResistance(
-            rawCounter,
-            state.resistance - (state.modifiers?.cursed_ground || 0) * 4,
-          )
-        : engine.physicalAfterDefense(
-            rawCounter * (encounter.critDamage || 1.5),
-            state.defense,
-            state.floor,
-          )) *
-      (1 + (state.damageTaken || 0));
-    const healing = Math.max(
-      20,
-      Math.floor(
-        state.maxHp * engine.clamp(0.35 + (state.potionPower || 0), 0.1, 0.75),
-      ),
-    );
-    const turns = Math.min(
-      8,
-      Math.ceil(encounter.hp / Math.max(1, normalDamage)),
-    );
-    const protectedSkill =
-      skillReady && ["assassin", "necromancer"].includes(state.classKey);
-    const needHeal =
-      state.hp < Math.max(worstCounter * 1.6, state.maxHp * 0.32) ||
-      (state.potions >= 4 && state.hp < state.maxHp * 0.6) ||
-      state.hp < worstCounter * Math.min(3, turns);
-    if (
-      state.potions > 0 &&
-      needHeal &&
-      state.maxHp - state.hp >= healing * 0.75 &&
-      !protectedSkill &&
-      !(state.classKey === "druid" && skillReady && state.hp > worstCounter)
-    )
-      return "potion";
-    // Defending does not advance Riftwalker's incoming-attack counter.
-    if (immune) return protectedSkill ? "skill" : "attack";
-    if (
-      skillReady &&
-      (protectedSkill ||
-        encounter.hp > normalDamage * 0.8 ||
-        state.hp < worstCounter * 2 ||
-        (state.classKey === "druid" && state.hp < state.maxHp * 0.9))
-    )
-      return "skill";
-    if (
-      state.energy === 1 &&
-      (state.modifiers?.soul_drain || 0) === 0 &&
-      turns > 2 &&
-      ["assassin", "necromancer", "paladin"].includes(state.classKey)
-    )
-      return "defend";
-    return "attack";
-  }
-  if (encounter.type === "chest")
-    return encounter.revealed
-      ? revealedChestAction
-      : encounter.inspected
-        ? "open"
-        : "inspect";
-  if (encounter.type === "shrine") return "ignore";
-  if (encounter.type === "rngesus")
-    return state.escapeTokens > 0 ? "flee" : "bribe";
-  if (encounter.type === "surprise") {
-    const paid = (action, rate) =>
-      hardcore.potentialPayout(state) > 0 &&
-      Math.ceil(hardcore.potentialPayout(state) * rate) <=
-        hardcore.potentialPayout(state)
-        ? action
-        : "ignore";
-    switch (encounter.kind) {
-      case "healer":
-        return "event_accept";
-      case "goblin":
-        return "event_catch";
-      case "blacksmith": {
-        const target = hardcore.forgeTarget(state);
-        return target &&
-          (target.rarity !== "cursed" ||
-            target.cleansedLevels >= target.level) &&
-          !engine.itemCurse(target.definition).floorHpLoss
-          ? paid("event_forge", 0.12)
-          : "ignore";
-      }
-      case "purifier":
-        return hardcore.curseTarget(state)
-          ? paid("event_cleanse", 0.2)
-          : "ignore";
-      case "sacrifice":
-        return paid("event_gold", 0.1);
-      case "gambler":
-        return "ignore";
-      case "adventurer":
-        return "event_rob";
-      case "fountain":
-        return state.hp < state.maxHp * 0.5 ? "event_drink" : "ignore";
-      case "horadric":
-        return "ignore";
-      case "merchant": {
-        const offers = encounter.offers;
-        const choice =
-          state.hp < state.maxHp * 0.5 && offers.includes("heal")
-            ? "heal"
-            : state.potions < 3 && offers.includes("potion")
-              ? "potion"
-              : offers.includes("item")
-                ? "item"
-                : offers.includes("luck") && state.luck < 60
-                  ? "luck"
-                  : !state.escapeTokens && offers.includes("ticket")
-                    ? "ticket"
-                    : null;
-        return choice
-          ? paid(`event_buy_${choice}`, engine.MERCHANT_OFFERS[choice].rate)
-          : "ignore";
-      }
-      case "mirror":
-        return state.hp > state.maxHp * 0.45 && state.floor < 950
-          ? "event_mirror_damage"
-          : "event_mirror_guard";
-      case "treasure_room":
-        return state.hp > state.maxHp * 0.65 ? "event_chest_red" : "ignore";
-      case "contract":
-        return state.potions >= 3 && state.hp > state.maxHp * 0.75
-          ? "event_contract_potion"
-          : "event_contract_defend";
-      case "class_shrine":
-        return "event_bless";
-      case "doors":
-        return state.hp < state.maxHp * 0.65 ? "event_door_light" : "ignore";
-      default:
-        return "ignore";
-    }
-  }
-  if (encounter.type === "blacksmith" || encounter.type === "cleanse") {
-    const target =
-      encounter.type === "blacksmith"
-        ? hardcore.forgeTarget(state)
-        : hardcore.curseTarget(state);
-    return target &&
-      (encounter.type !== "blacksmith" || target.rarity !== "cursed") &&
-      hardcore.potentialPayout(state) >=
-        hardcore.serviceCost(state, encounter.type)
-      ? encounter.type === "blacksmith"
-        ? "forge"
-        : "cleanse"
-      : "ignore";
-  }
-  return "continue";
+  return actionForV2(state, strategy);
 }
 
 function actionForV2(state, strategy) {
@@ -853,10 +648,7 @@ for (const classKey of classesToRun) {
     deathBosses,
     deathFloors,
     runOutcomes,
-    gameplayVersion:
-      process.env.HARDCORE_GAMEPLAY_VERSION === "legacy"
-        ? "legacy-4"
-        : hardcore.RELEASE.version,
+    gameplayVersion: hardcore.RELEASE.version,
     simulationSeed,
     checkpointRule: checkpointExperiment.settings,
     bossRoster: bossExperiment,
@@ -881,10 +673,7 @@ for (const classKey of classesToRun) {
     targetFloor,
     maxTurns,
     timeouts,
-    equipmentSource:
-      process.env.HARDCORE_GAMEPLAY_VERSION === "legacy"
-        ? "src/hardcore/itemLegacy.js"
-        : "src/hardcore/item.js",
+    equipmentSource: "src/hardcore/equipment/catalog.json",
     passedFloor10: floors.filter((floor) => floor >= 10).length,
     passedFloor50: floors.filter((floor) => floor >= 50).length,
     passedFloor100: floors.filter((floor) => floor >= 100).length,

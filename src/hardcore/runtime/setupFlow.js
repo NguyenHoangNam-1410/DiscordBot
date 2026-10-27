@@ -6,18 +6,13 @@ module.exports = function createModule(dependencies) {
     formatCoins,
     getAccount,
     getGameBetLimit,
-    getGameChannel,
     requireGameChannel,
-    godReveal,
     hardcoreView,
-    hardcoreInventory,
     hardcoreInventoryView,
-    useV2,
     MIN_BET,
     MAX_BET,
     CLASSES,
     getHardcoreByUser,
-    setMessageId,
     SETUP_IDLE_MS,
     setupDrafts,
   } = dependencies;
@@ -29,16 +24,13 @@ module.exports = function createModule(dependencies) {
 
   function setupContext(draft) {
     return {
-      gameplayVersion: useV2(draft.guildId)
-        ? require("../shared/version").RELEASE.gameplay
-        : 1,
+      gameplayVersion: require("../shared/version").RELEASE.gameplay,
       balance: getAccount(draft.guildId, draft.userId).balance,
       maxBet: Math.min(MAX_BET, getGameBetLimit(draft.guildId, "hardcore")),
     };
   }
 
   function selectableClasses(draft) {
-    if (!useV2(draft.guildId)) return CLASSES;
     const characters = require("../characters"),
       stats = require("../engine/stats");
     return Object.fromEntries(
@@ -53,8 +45,7 @@ module.exports = function createModule(dependencies) {
   }
   function setupPayload(draft) {
     const context = setupContext(draft);
-    return [2, 3].includes(context.gameplayVersion) &&
-      ["loadout", "review"].includes(draft.stage)
+    return ["loadout", "review"].includes(draft.stage)
       ? hardcoreInventoryView.setupPayload(draft, context)
       : hardcoreView.hardcoreSetupPayload(
           draft,

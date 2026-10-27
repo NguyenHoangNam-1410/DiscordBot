@@ -114,16 +114,6 @@ async function main() {
     } finally {
       db.exec("DROP TRIGGER replay_start_failure");
     }
-    const previous = process.env.HARDCORE_GAMEPLAY_VERSION;
-    try {
-      process.env.HARDCORE_GAMEPLAY_VERSION = "legacy";
-      const run = start("legacy");
-      assert(play(run, "retreat").settled);
-      assert.equal(store.get("replay", run.session.id).frames.length, 2);
-    } finally {
-      if (previous === undefined) delete process.env.HARDCORE_GAMEPLAY_VERSION;
-      else process.env.HARDCORE_GAMEPLAY_VERSION = previous;
-    }
     const beta = start("beta-admin", { beta: true });
     end(beta);
     assert.equal(store.get("replay", beta.session.id).result.payout, 0);

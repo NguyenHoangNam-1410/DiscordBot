@@ -8,11 +8,9 @@ module.exports = function createModule(dependencies) {
     godRngesus,
     addDiamonds,
     hardcoreInventory,
-    potentialPayout,
     runDiamondReward,
     hardcoreV2,
     hardcoreEchoes,
-    isV2,
     STALE_MS,
   } = dependencies;
   const recordRun = (...args) => dependencies.recordRun(...args);
@@ -36,9 +34,7 @@ module.exports = function createModule(dependencies) {
       reason === "cashout" || reason === "summit" ? runDiamondReward(state) : 0;
     let payout =
       reason === "cashout" || reason === "summit"
-        ? isV2(state)
-          ? hardcoreV2.payout(state)
-          : potentialPayout(state)
+        ? hardcoreV2.payout(state)
         : 0;
     const outcome =
       payout > state.stake ? "win" : payout === state.stake ? "draw" : "loss";
@@ -58,7 +54,7 @@ module.exports = function createModule(dependencies) {
         operationId: `settle:hardcore-diamonds:${session.id}`,
       });
     recordRun(session.guild_id, session.user_id, state, reason);
-    if (isV2(state) && ["death", "rngesus"].includes(reason))
+    if (["death", "rngesus"].includes(reason))
       hardcoreEchoes.onDeath(session, state);
     hardcoreEchoes.archive(session, state, reason, payout, diamonds);
     hardcoreEchoes.releaseAll(session);
@@ -90,6 +86,8 @@ module.exports = function createModule(dependencies) {
     return db.transaction(() => {
       const session = hardcoreRepository.getActiveSession(id, guildId);
       if (!session) return null;
+      const retired = dependencies.retireLegacySession(session);
+      if (retired) return retired;
       const state = parseState(session);
       if (!forfeit && !require("../beta").is(state))
         creditCoins({
@@ -143,19 +141,18 @@ module.exports = function createModule(dependencies) {
   }
 
   function cleanupStaleHardcoreSessions(now = Date.now()) {
+    const retired = dependencies.retireLegacyHardcoreSessions();
     const rows = hardcoreRepository.listStale(now - STALE_MS);
     const cleanup = db.transaction(() => {
       for (const session of rows) {
-        const forfeit =
-          isV2(parseState(session)) || Boolean(session.message_id);
         forceEndHardcoreSession(session.id, session.guild_id, "system", {
-          label: forfeit ? "timeout-forfeit" : "timeout-refund",
-          forfeit,
+          label: "timeout-forfeit",
+          forfeit: true,
         });
       }
     });
     cleanup();
-    return rows.length;
+    return retired + rows.length;
   }
   return { finishRun, forceEndHardcoreSession, cleanupStaleHardcoreSessions };
 };

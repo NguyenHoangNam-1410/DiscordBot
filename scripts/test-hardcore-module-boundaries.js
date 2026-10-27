@@ -3,14 +3,13 @@ const assert = require("node:assert/strict");
 const { execFileSync } = require("node:child_process");
 
 // Cold processes catch require cycles that a warmed module cache would conceal.
-async function scenario(order, version) {
+async function scenario(order) {
   const Database = require("better-sqlite3");
   require.cache[require.resolve("better-sqlite3")].exports = function () {
     return new Database(":memory:");
   };
   const { db } = require("../src/db");
   require.cache[require.resolve("better-sqlite3")].exports = Database;
-  process.env.HARDCORE_GAMEPLAY_VERSION = version;
   const roots = {
     tower: "../src/services/hardcoreTowerView",
     feature: "../src/hardcore",
@@ -102,7 +101,7 @@ async function scenario(order, version) {
     sessionId: run.session.id,
     userId,
     expectedTurn: 0,
-    action: version === "legacy" ? "continue" : "next",
+    action: "next",
   };
   const turn = service.playHardcore(args);
   assert.equal(turn.settled, false);
@@ -147,20 +146,19 @@ if (process.argv[2] === "scenario") {
     ["compatibility", "tower", "feature"],
   ];
   for (const order of orders)
-    for (const version of ["2", "legacy"])
-      execFileSync(
-        process.execPath,
-        [__filename, "scenario", JSON.stringify(order), version],
-        { stdio: "pipe" },
-      );
+    execFileSync(
+      process.execPath,
+      [__filename, "scenario", JSON.stringify(order)],
+      { stdio: "pipe" },
+    );
   console.log(
     JSON.stringify({
       ok: true,
-      coldStarts: 6,
+      coldStarts: 3,
       groups: [
         "Tower/feature/compatibility import orders",
         "shared API, DB, transaction, fairness and queue",
-        "V2 and saved legacy run lifecycle, stale click rollback and one reservation",
+        "Current run lifecycle, stale click rollback and one reservation",
       ],
     }),
   );

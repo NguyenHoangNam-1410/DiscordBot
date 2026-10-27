@@ -72,7 +72,6 @@ function preserved(fields, expected) {
 }
 
 async function scenario(version, emojis) {
-  process.env.HARDCORE_GAMEPLAY_VERSION = version;
   const Database = require("better-sqlite3");
   require.cache[require.resolve("better-sqlite3")].exports = function () {
     return new Database(":memory:");
@@ -298,7 +297,7 @@ if (process.argv[2] === "scenario") {
   });
 } else {
   stress();
-  for (const version of ["2", "legacy"])
+  for (const version of ["2"])
     for (const emojis of ["fallback", "loaded", "animated"]) {
       const output = execFileSync(
         process.execPath,
@@ -308,6 +307,6 @@ if (process.argv[2] === "scenario") {
       process.stdout.write(output);
     }
   console.log(
-    "Rates pagination passed: production emoji overflow, full rule content, field/message limits, slash/menu/page routing, ownership and legacy.",
+    "Rates pagination passed: production emoji overflow, full rule content, field/message limits, slash/menu/page routing, ownership.",
   );
 }

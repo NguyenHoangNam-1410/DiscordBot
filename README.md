@@ -258,3 +258,7 @@ Có thể giải nén một file `.sqlite.gz` rồi dùng `db:restore` như trư
 Chạy `npm run test:db:discord` để kiểm tra recipient, gzip/chia file, checksum/phục hồi, lỗi DM, deadline, retry và gửi khi shutdown. Test dùng transport giả lập, không gửi dữ liệu thật.
 
 Tham khảo: [Discord Create DM](https://docs.discord.com/developers/resources/user#create-dm), [upload file](https://docs.discord.com/developers/reference#uploading-files), [URL đính kèm có thời hạn](https://docs.discord.com/developers/reference#signed-attachment-cdn-urls).
+
+### Ngừng hỗ trợ Sinh tồn v1
+
+Engine, UI và công thức v1 đã được gỡ; không còn cấu hình chuyển run mới về v1. Run v2/v3 và Tháp tiếp tục theo engine hiện hành. Khi bot khởi động hoặc xử lý lại phiên cũ, run v1 còn lưu được đóng và hoàn tiền cược đúng một lần; lịch sử và thành tích đã ghi được giữ. Catalog v3 nằm trong `src/hardcore/equipment/catalog.json`, không còn nạp catalog v1 để dựng item hiện hành.

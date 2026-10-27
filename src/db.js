@@ -1119,7 +1119,7 @@ db.prepare(`INSERT OR IGNORE INTO hardcore_releases VALUES (?,?,?,?,?)`).run(
   hardcoreRelease.version,
   hardcoreRelease.gameplay,
   hardcoreRelease.catalog,
-  hardcoreRelease.legacyCommit,
+  hardcoreRelease.baselineCommit,
   Date.now(),
 );
 

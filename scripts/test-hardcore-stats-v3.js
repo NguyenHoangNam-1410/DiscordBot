@@ -6,7 +6,6 @@ require.cache[require.resolve("better-sqlite3")].exports = function () {
 };
 const { db } = require("../src/db");
 require.cache[require.resolve("better-sqlite3")].exports = Database;
-delete process.env.HARDCORE_GAMEPLAY_VERSION;
 const stats = require("../src/hardcore/engine/stats");
 const rules = require("../src/hardcore/shared/statsV3");
 const { RELEASE, isV2 } = require("../src/hardcore/shared/version");

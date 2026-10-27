@@ -15,4 +15,20 @@ function baseMultiplier(state) {
     Math.min(20, Math.floor(floor / 5)) * 0.15
   );
 }
-module.exports = { runDiamondReward, baseMultiplier };
+const GOBLIN_REWARDS = Object.freeze({
+  bonusRate: 0.25,
+  lossRate: 0.05,
+  rarities: Object.freeze({ rare: 0.6, legendary: 0.35, cursed: 0.05 }),
+});
+function goblinRewardRarity(roll) {
+  if (roll < GOBLIN_REWARDS.rarities.rare) return "rare";
+  return roll < GOBLIN_REWARDS.rarities.rare + GOBLIN_REWARDS.rarities.legendary
+    ? "legendary"
+    : "cursed";
+}
+module.exports = {
+  runDiamondReward,
+  baseMultiplier,
+  GOBLIN_REWARDS,
+  goblinRewardRarity,
+};

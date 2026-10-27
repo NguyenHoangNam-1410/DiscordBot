@@ -5,7 +5,6 @@ const fs = require("node:fs"),
   path = require("node:path");
 const temp = fs.mkdtempSync(path.join(os.tmpdir(), "hardcore-v2-"));
 process.env.DB_PATH = path.join(temp, "test.sqlite");
-delete process.env.HARDCORE_GAMEPLAY_VERSION;
 // V2 regression fixtures mutate legacy Deimoss HP; the rotating roster has its own suite.
 process.env.HARDCORE_BOSS_ROSTER_VERSION = "1";
 const { db } = require("../src/db");
@@ -783,15 +782,6 @@ async function main() {
   );
   groups.push("discord limits private readonly and version history");
 
-  process.env.HARDCORE_GAMEPLAY_VERSION = "legacy";
-  const legacy = start();
-  assert.equal(legacy.state.gameplayVersion, undefined);
-  assert.equal(legacy.state.runVersion, 4);
-  delete process.env.HARDCORE_GAMEPLAY_VERSION;
-  const resumed = service.getHardcoreRun("v2", legacy.session.user_id);
-  assert.equal(resumed.state.runVersion, 4);
-  const legacyAction = play(legacy, "continue");
-  assert.equal(legacyAction.state.cleared, 1);
   const newlyStarted = start();
   assert.equal(newlyStarted.state.releaseVersion, "3.0.0");
   db.prepare("UPDATE hardcore_sessions SET updated_at=? WHERE id=?").run(

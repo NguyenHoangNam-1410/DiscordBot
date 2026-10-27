@@ -35,8 +35,6 @@ function patch(relative, before, after) {
 }
 function install() {
   if (!proposed) return;
-  if (process.env.HARDCORE_GAMEPLAY_VERSION === "legacy")
-    throw Error("EXPERIMENT_REQUIRES_V2");
   const applies =
     "state.gameplayVersion === 2 && !state.mode?.startsWith('tower') && !state.towerChallengeId";
   patch(
