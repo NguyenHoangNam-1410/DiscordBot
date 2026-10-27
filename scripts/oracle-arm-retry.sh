@@ -52,7 +52,8 @@ while :; do
       exit 1
     fi
     log "Lần $attempt · AD $ad"
-    out="$(oci compute instance launch \
+    # --no-retry: OCI CLI mặc định tự thử lại vài phút khi hết capacity nên trông như treo; để script tự quyết định thử lại.
+    out="$(oci --no-retry --connection-timeout 15 --read-timeout 120 compute instance launch \
       --availability-domain "$ad" \
       --compartment-id "$COMPARTMENT_OCID" \
       --shape "$SHAPE" \

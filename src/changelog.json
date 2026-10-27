@@ -1,5 +1,16 @@
 [
   {
+    "id": "5b1d343b-8581-4b04-8658-c1bde6e8703a",
+    "updatedAt": "2026-10-27T08:15:57.575Z",
+    "auditedAt": "2026-10-27T08:15:57.575Z",
+    "title": "Cải thiện script hạ tầng bot",
+    "type": "maintenance",
+    "scope": "system",
+    "changes": [
+      "Điều chỉnh script vận hành máy chủ để báo kết quả nhanh hơn, không ảnh hưởng gameplay"
+    ]
+  },
+  {
     "id": "222db848-8ecf-43fe-8c0f-71b12382a18c",
     "updatedAt": "2026-10-27T04:58:19.743Z",
     "auditedAt": "2026-10-27T04:58:19.743Z",
