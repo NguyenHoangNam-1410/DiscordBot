@@ -9,7 +9,7 @@
 #
 # Biến bắt buộc: COMPARTMENT_OCID SUBNET_OCID IMAGE_OCID SSH_PUBLIC_KEY_FILE
 # Biến tùy chọn: AVAILABILITY_DOMAINS (cách nhau dấu phẩy, mặc định: tự lấy hết AD của tenancy)
-#                OCPUS (4) MEMORY_GB (24) BOOT_VOLUME_GB (50) DISPLAY_NAME (discord-bot-arm)
+#                OCPUS (2) MEMORY_GB (12) BOOT_VOLUME_GB (50) DISPLAY_NAME (discord-bot-arm)
 #                SLEEP_SECONDS (60) RATE_LIMIT_SLEEP_SECONDS (300) MAX_ATTEMPTS (0 = không giới hạn)
 set -u
 
@@ -18,8 +18,8 @@ set -u
 : "${IMAGE_OCID:?thiếu IMAGE_OCID (ảnh aarch64, ví dụ Ubuntu 22.04/24.04 ARM)}"
 : "${SSH_PUBLIC_KEY_FILE:?thiếu SSH_PUBLIC_KEY_FILE (đường dẫn file .pub)}"
 
-OCPUS="${OCPUS:-4}"
-MEMORY_GB="${MEMORY_GB:-24}"
+OCPUS="${OCPUS:-2}"
+MEMORY_GB="${MEMORY_GB:-12}"
 BOOT_VOLUME_GB="${BOOT_VOLUME_GB:-50}"
 DISPLAY_NAME="${DISPLAY_NAME:-discord-bot-arm}"
 SLEEP_SECONDS="${SLEEP_SECONDS:-60}"
