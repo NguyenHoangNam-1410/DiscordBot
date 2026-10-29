@@ -41,6 +41,12 @@ const mate1 = engine.validatePuzzle({
   solution: ["f7f8"],
   rating: 1000,
 });
+const screenshotMate3 = engine.validatePuzzle({
+  id: "image03",
+  fen: "r1b2rnk/1pq1b3/3p2np/p2Pp3/4P3/2N2PN1/PPBQ1K1R/7R w - - 0 1",
+  solution: ["h2h6", "g8h6", "d2h6", "h8g8", "h6g6"],
+  rating: 1317,
+});
 let serial = 0;
 const fixture = (puzzle = mate1) => ({ ...puzzle, id: `test${++serial}` });
 const begin = (channelId = C, options = {}) =>
@@ -61,6 +67,27 @@ const solve = (round, userId = U, text = "Qf8#") =>
   });
 
 async function run() {
+  for (const text of [
+    "Rh2xh6 Qxh6 Qxg6",
+    "Rh2xh6+ Qxh6+ Qxg6#",
+    "Rxh6 Qxh6 Qxg6",
+    "h2h6 d2h6 h6g6",
+    `<@${U}>\nRh2xh6 Qxh6 Qxg6`,
+    `<@!${U}> <@${C}>\n\`Rh2xh6 Qxh6 Qxg6\``,
+  ])
+    assert.deepEqual(
+      engine.checkAnswer(screenshotMate3, text)?.line,
+      screenshotMate3.solution,
+      text,
+    );
+  for (const text of [
+    "Rh2h6 Qxh6 Qxg6", // Captures still require x outside UCI.
+    "Bh2xh6 Qxh6 Qxg6", // Explicit piece must agree with the board.
+    "Rh1xh6 Qxh6 Qxg6", // The other rook is blocked.
+    "Rh2xh6# Qxh6 Qxg6", // A supplied check marker must be correct.
+    `Rh2xh6 <@${U}> Qxh6 Qxg6`, // Mentions inside a line are not moves.
+  ])
+    assert.equal(engine.checkAnswer(screenshotMate3, text), null, text);
   // PGN reconstruction includes the triggering opponent move, never the first solving move.
   const full = new Chess();
   full.loadPgn(liveFixture.game.pgn);
@@ -474,6 +501,32 @@ async function run() {
   assert.equal(service.currentRound(G, C3), null);
   assert.equal(service.latestRound(G, C3).status, "expired");
   assert.ok(updated > 0);
+  // The screenshot's complete message must reach settlement through the normal game router.
+  const screenshotRound = await begin(C, {
+    puzzleLoader: async () => fixture(screenshotMate3),
+  });
+  let reaction, announcement;
+  assert.equal(
+    await require("../src/services/gameMessageService").handleGameMessage({
+      guildId: G,
+      channelId: C,
+      author: { id: U, bot: false },
+      id: "screenshotAnswer",
+      content: `<@${C3}>\nRh2xh6 Qxh6 Qxg6`,
+      client: {},
+      react: async (emoji) => {
+        reaction = emoji;
+      },
+      reply: async (payload) => {
+        announcement = payload.content;
+      },
+    }),
+    true,
+  );
+  assert.equal(reaction, "✅");
+  assert.ok(announcement.includes("h2h6 d2h6 h6g6"));
+  assert.equal(service.latestRound(G, C).id, screenshotRound.round.id);
+  assert.equal(service.latestRound(G, C).status, "won");
   // Transport is mocked: no player account or Discord message is touched by this test.
   const loaded = await loadPuzzle({
     randomInt: () => 2,

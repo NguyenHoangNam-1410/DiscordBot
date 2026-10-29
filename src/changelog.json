@@ -1,5 +1,17 @@
 [
   {
+    "id": "e1a3a98d-391e-41a1-bda3-e9c7b615e6ed",
+    "updatedAt": "2026-10-29T04:49:59.803Z",
+    "auditedAt": "2026-10-29T04:49:59.803Z",
+    "title": "Cờ vua: nhận nước đi ghi đủ ô xuất phát",
+    "type": "fix",
+    "scope": "system",
+    "changes": [
+      "Sửa bộ chấm để nhận cách ghi đủ ô xuất phát như Rh2xh6, bên cạnh SAN và UCI; vẫn kiểm tra đúng quân, ô đi, ô đến, dấu ăn quân và chiếu hết.",
+      "Bỏ qua mention người dùng ở đầu tin nhắn để lời giải đúng vẫn được thả ✅ và trả thưởng; mention xen giữa các nước không được coi là lời giải."
+    ]
+  },
+  {
     "id": "04499204-4f8c-4c62-8506-c2feb2e07d40",
     "updatedAt": "2026-10-29T03:38:35.649Z",
     "auditedAt": "2026-10-29T03:38:35.649Z",

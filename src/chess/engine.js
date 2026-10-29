@@ -18,11 +18,24 @@ function playInput(board, token) {
   // Match legal SAN moves explicitly: an ambiguous SAN must never select a piece.
   const san = token.replace(/0/g, "O");
   const withoutCheck = (value) => value.replace(/[+#]$/, "");
-  const matches = board
-    .moves({ verbose: true })
-    .filter((move) =>
-      /[+#]$/.test(san) ? move.san === san : withoutCheck(move.san) === san,
-    );
+  // Also accept explicit source squares (LAN), e.g. Rh2xh6. Match only legal
+  // moves, including piece and capture marker, rather than dropping characters.
+  const explicit = san.match(/^([KQRBN])([a-h][1-8])(x?)([a-h][1-8])([+#]?)$/);
+  const matches = board.moves({ verbose: true }).filter((move) => {
+    if (explicit) {
+      const [, piece, from, capture, to, check] = explicit;
+      return (
+        move.piece === piece.toLowerCase() &&
+        move.from === from &&
+        move.to === to &&
+        Boolean(move.captured) === (capture === "x") &&
+        (!check || move.san.endsWith(check))
+      );
+    }
+    return /[+#]$/.test(san)
+      ? move.san === san
+      : withoutCheck(move.san) === san;
+  });
   if (matches.length !== 1) throw new Error("INVALID_SAN");
   return playUci(board, uci(matches[0]));
 }
@@ -31,6 +44,7 @@ function answerTokens(text) {
   if (typeof text !== "string" || text.length > 200) return null;
   const cleaned = text
     .trim()
+    .replace(/^(?:<@!?\d{17,20}>\s*)+/, "")
     .replace(/^`{1,3}|`{1,3}$/g, "")
     .replace(/\b\d+\.(?:\.\.)?\s*/g, "")
     .trim();

@@ -7,6 +7,7 @@ const number = (value) => Number(value).toLocaleString("vi-VN");
 const HELP =
   "Gửi **toàn bộ các nước của bên cần giải trong một tin nhắn**, cách nhau bằng dấu cách. " +
   "Chấp nhận UCI (`g1f3`, `e7e8q`) và SAN (`Nf3`, `exd8=Q+`, `O-O`). " +
+  "Có thể ghi đủ ô xuất phát như `Rh2xh6`; dấu `x` phải đúng khi ăn quân. Mention người dùng ở đầu tin được bỏ qua. " +
   "Chỉ nhập nước của bạn; bot tự kiểm tra nước đáp trả của đối phương. " +
   "Ví dụ về định dạng hai nước: `Qh7+ Rh8#`.\n" +
   "Đúng toàn bộ lời giải: ✅ và người gửi đầu tiên thắng. Tin sai không đổi bàn và không gia hạn. " +
