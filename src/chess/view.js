@@ -1,7 +1,7 @@
 const { createCanvas } = require("@napi-rs/canvas");
 const { Chess } = require("chess.js");
 const { AttachmentBuilder, EmbedBuilder } = require("discord.js");
-
+const { E } = require("../services/hardcoreIcons");
 const GLYPHS = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" };
 const number = (value) => Number(value).toLocaleString("vi-VN");
 const HELP =
@@ -70,11 +70,11 @@ function roundEmbed(round) {
       `♟️ CỜ VUA · CHIẾU HẾT TRONG ${round.mate} NƯỚC${open ? "" : ` · ${outcome[round.status] || "ĐÃ ĐÓNG"}`}`,
     )
     .setDescription(
-      `**${puzzle.side === "w" ? "Trắng" : "Đen"} đi trước** · Thưởng **${number(round.reward)} xu**\n` +
+      `**${puzzle.side === "w" ? "Trắng" : "Đen"} đi trước** · Thưởng **${number(round.reward)} ${E.coin}**\n` +
         (open
           ? `Gửi đủ **${round.mate} nước của bên ${puzzle.side === "w" ? "Trắng" : "Đen"}** trong một tin nhắn, dùng UCI hoặc SAN.\nĐóng bàn <t:${Math.floor(round.expires_at / 1000)}:R>. Xem cách nhập: \`/covua huongdan\`.`
           : round.status === "won"
-            ? `🏆 <@${round.winner_id}> đã giải và nhận **${number(round.reward)} xu**.`
+            ? `🏆 <@${round.winner_id}> đã giải và nhận **${number(round.reward)} ${E.coin}**.`
             : "Bàn cờ đã đóng. Dùng `/covua choi` để mở bàn mới."),
     )
     .setImage(`attachment://covua-${round.id}.png`)
