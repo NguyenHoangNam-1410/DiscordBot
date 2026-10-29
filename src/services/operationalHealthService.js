@@ -15,7 +15,8 @@ function getOperationalHealth() {
     (SELECT COUNT(*) FROM game2048_sessions) +
     (SELECT COUNT(*) FROM coquay_sessions) +
     (SELECT COUNT(*) FROM chinchiro_sessions) +
-    (SELECT COUNT(*) FROM hardcore_sessions) AS count`);
+    (SELECT COUNT(*) FROM hardcore_sessions) +
+    (SELECT COUNT(*) FROM chess_rounds WHERE status='open') AS count`);
   const multiplayer = scalar(
     "SELECT COUNT(*) count FROM multiplayer_rounds WHERE status IN ('open','racing')",
   );

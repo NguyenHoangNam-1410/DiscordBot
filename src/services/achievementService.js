@@ -1697,7 +1697,72 @@ const relicAchievements = [
     metric: "hardcoreAstralRelics",
   },
 ];
+const chessAchievements = [
+  [
+    "chess_solved_1",
+    "Nước cờ đầu tiên",
+    "Giải đúng 1 puzzle cờ vua",
+    1,
+    1_000,
+    5,
+    "chessSolved",
+  ],
+  [
+    "chess_solved_5",
+    "Tay giải thế cờ",
+    "Giải đúng 5 puzzle cờ vua",
+    5,
+    5_000,
+    15,
+    "chessSolved",
+  ],
+  [
+    "chess_solved_25",
+    "Kỳ thủ chiến thuật",
+    "Giải đúng 25 puzzle cờ vua",
+    25,
+    15_000,
+    40,
+    "chessSolved",
+  ],
+  [
+    "chess_solved_100",
+    "Bậc thầy chiếu hết",
+    "Giải đúng 100 puzzle cờ vua",
+    100,
+    50_000,
+    100,
+    "chessSolved",
+  ],
+  [
+    "chess_mate_3",
+    "Nhìn xa ba nước",
+    "Giải đúng puzzle mate từ 3 nước",
+    3,
+    3_000,
+    10,
+    "chessMate",
+  ],
+  [
+    "chess_mate_5",
+    "Tính sâu năm nước",
+    "Giải đúng puzzle mate 5 nước",
+    5,
+    10_000,
+    30,
+    "chessMate",
+  ],
+].map(([id, name, description, target, reward, diamonds, metric]) => ({
+  id,
+  name,
+  description,
+  target,
+  reward,
+  diamonds,
+  metric,
+}));
 const ACHIEVEMENTS = Object.freeze([
+  ...chessAchievements,
   ...BASE_ACHIEVEMENTS,
   ...classFloorAchievements,
   ...eventAchievements,
@@ -1707,6 +1772,8 @@ const ACHIEVEMENTS = Object.freeze([
 
 // Nhóm bộ lọc ở /kiemtra (Discord giới hạn 25 mục chọn): các chỉ số cùng chủ đề gộp thành một mục lọc.
 const CATEGORY_GROUPS = Object.freeze({
+  chessSolved: "covua",
+  chessMate: "covua",
   hardcoreEvents: "hardcoreEvents",
   hardcoreGodBlessings: "hardcoreEvents",
   hardcoreConquerorRelics: "hardcoreEvents",
@@ -1783,6 +1850,12 @@ function metrics(guildId, userId) {
   const user = String(userId);
   const account = getAccount(guild, user);
   const relicCounts = relicRecords.totals(guild, user);
+  const chess =
+    db
+      .prepare(
+        "SELECT solved,best_mate FROM chess_records WHERE guild_id=? AND user_id=?",
+      )
+      .get(guild, user) || {};
   const gameTypes = db
     .prepare(
       "SELECT COUNT(*) count FROM game_player_stats WHERE guild_id=? AND user_id=? AND played>0",
@@ -1950,6 +2023,8 @@ function metrics(guildId, userId) {
     g2048Tile: game2048.best_tile || 0,
     g2048Wins: game2048.reach_2048 || 0,
     gachaPulls: gacha.pulls,
+    chessSolved: chess.solved || 0,
+    chessMate: chess.best_mate || 0,
     gachaSpent: gacha.spent,
     gachaSR: gacha.sr,
     gachaSSR: gacha.ssr,

@@ -346,6 +346,7 @@ module.exports = {
         forceEndHardcoreSession,
         forceEndBlackjackDuel,
         forceEndSharedRound,
+        require("../services/chessService").forceEndChess,
       ];
       let result = null;
       for (const handler of handlers) {
@@ -357,6 +358,17 @@ module.exports = {
           content: `Không tìm thấy ván đang diễn ra với mã \`${id}\` trong server này.`,
           flags: MessageFlags.Ephemeral,
         });
+      if (result.chess) {
+        const reply = await interaction.reply({
+          content: `🛑 Đã đóng bàn cờ \`${id}\`. Không tạo bàn mới.`,
+          flags: MessageFlags.Ephemeral,
+        });
+        await require("../services/chessService").updateBoard(
+          interaction.client,
+          { ...result.session, status: "admin_closed" },
+        );
+        return reply;
+      }
       const participantText =
         result.participants.map((userId) => `<@${userId}>`).join(", ") ||
         "không có người chơi";

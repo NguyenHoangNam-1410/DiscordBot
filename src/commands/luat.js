@@ -15,6 +15,10 @@ const {
   ButtonStyle,
 } = require("discord.js");
 const RULES = {
+  covua: [
+    "Cờ vua",
+    "Mỗi kênh có tối đa một puzzle Lichess chưa giải. `/covua choi` mở bàn mate ngẫu nhiên 1–5 nước. Gửi toàn bộ các nước của bên cần giải trong một tin nhắn, dùng UCI hoặc SAN; bot tự kiểm tra nước đáp trả. Người gửi lời giải đầy đủ đúng đầu tiên nhận thưởng cơ sở × N² xu. Đúng sẽ được thả ✅ và thông báo thắng nếu bot có quyền. Bàn đóng sau 1 giờ, không tự mở bàn tiếp. `/covua xem` xem riêng bàn/kết quả. Quản trị dùng `/covua boqua` để thay bàn, `/covua cauhinh` đặt kênh và thưởng.",
+  ],
   baucua: [
     "Bầu cua",
     "**Cách chơi**\n- Đặt cược vào linh vật trước khi bàn khóa cược. Bot tung 3 mặt; đếm số lần linh vật bạn chọn xuất hiện.\n\n**Kết quả**\n- Không xuất hiện: mất khoản cược cửa đó.\n- Xuất hiện 1 / 2 / 3 lần: tổng tiền nhận lần lượt bằng **2 / 3 / 4 lần cược**, đã gồm tiền cược ban đầu.\n\n**Vật phẩm và thưởng phụ**\n- Vật phẩm không tác động ván nhiều người.\n- Cược dưới 1.000 xu không nhận EXP, tiến độ nhiệm vụ hoặc thưởng phụ; thưởng phụ của game này chỉ là xu.",

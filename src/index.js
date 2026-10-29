@@ -69,12 +69,12 @@ const messageCommandsEnabled = /^(1|true|yes)$/i.test(
     process.env.ENABLE_PREFIX_COMMANDS ||
     "false",
 );
-const intents = [GatewayIntentBits.Guilds];
-if (messageCommandsEnabled)
-  intents.push(
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  );
+// Plain-text game answers are needed even when prefix commands are disabled.
+const intents = [
+  GatewayIntentBits.Guilds,
+  GatewayIntentBits.GuildMessages,
+  GatewayIntentBits.MessageContent,
+];
 const client = new Client({ intents });
 client.rest.on(RESTEvents.RateLimited, (limit) => {
   // Never log the request URL: interaction webhook URLs contain private tokens.
@@ -195,6 +195,9 @@ client.once(Events.ClientReady, async () => {
   maintenanceTimers.push(startPokerMaintenance(client, logger));
   maintenanceTimers.push(startStaleSessionMaintenance(client, logger));
   maintenanceTimers.push(
+    require("./services/chessService").startChessMaintenance(client, logger),
+  );
+  maintenanceTimers.push(
     require("./hardcore/replay/store").startReplayMaintenance(logger),
   );
   maintenanceTimers.push(
@@ -209,30 +212,31 @@ client.once(Events.ClientReady, async () => {
     "game bot ready",
   );
 });
-if (messageCommandsEnabled)
-  client.on(Events.MessageCreate, (message) => {
-    if (shuttingDown) return;
-    const rate = rateLimiter.consume(
-      `message:${message.guildId}:${message.author.id}`,
-      8,
-      5_000,
-    );
-    if (!rate.allowed) return;
-    const task = (async () => {
+client.on(Events.MessageCreate, (message) => {
+  if (shuttingDown) return;
+  const rate = rateLimiter.consume(
+    `message:${message.guildId}:${message.author.id}`,
+    8,
+    5_000,
+  );
+  if (!rate.allowed) return;
+  const task = (async () => {
+    if (messageCommandsEnabled) {
       if (await handlePrefixMessage(message, logger)) return;
       if (await handleGamePrefix(message)) return;
       if (await handleEmbedMessage(message)) return;
-      await handleGameMessage(message);
-    })().catch((error) => {
-      logger.error({ err: error }, "message command failed");
-      monitoring.recordRuntimeError(error, { source: "message" });
-    });
-    activeMessageTasks.add(task);
-    task.then(
-      () => activeMessageTasks.delete(task),
-      () => activeMessageTasks.delete(task),
-    );
+    }
+    await handleGameMessage(message, logger);
+  })().catch((error) => {
+    logger.error({ err: error }, "message command failed");
+    monitoring.recordRuntimeError(error, { source: "message" });
   });
+  activeMessageTasks.add(task);
+  task.then(
+    () => activeMessageTasks.delete(task),
+    () => activeMessageTasks.delete(task),
+  );
+});
 client.on(Events.InteractionCreate, async (interaction) => {
   if (shuttingDown) return;
   activeInteractions++;

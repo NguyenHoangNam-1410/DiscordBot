@@ -11,6 +11,7 @@ const GAMES = Object.freeze([
   "coquay",
   "hardcore",
   "vuatiengviet",
+  "covua",
   "2048",
 ]);
 
@@ -25,6 +26,7 @@ const GAME_LABELS = Object.freeze({
   coquay: "Cò quay Nga",
   hardcore: "Sinh tồn",
   vuatiengviet: "Vua tiếng Việt",
+  covua: "Cờ vua",
   2048: "2048",
 });
 

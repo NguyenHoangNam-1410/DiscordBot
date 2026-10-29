@@ -124,6 +124,7 @@ const ACHIEVEMENT_CATEGORIES = Object.freeze([
   { label: "Gacha · số lượt quay", value: "gachaPulls" },
   { label: "Gacha · vật phẩm hiếm", value: "gachaRare" },
   { label: "Gacha · kim cương đã tiêu", value: "gachaSpent" },
+  { label: "Cờ vua", value: "covua" },
 ]);
 function selection(value, choices) {
   return choices.some((choice) => choice.value === value) ? value : "all";
@@ -224,12 +225,14 @@ function achievementPanel(
     .setFooter({
       text: `Trang ${page + 1}/${pages} · ${achievements.length} thành tựu`,
     });
-  const filterRow = (name, current, choices) =>
+  const filterRow = (name, current, choices, group = 0) =>
     new ActionRowBuilder().addComponents(
       new StringSelectMenuBuilder()
-        .setCustomId(`kiemtra-${name}:${userId}:${status}:${category}`)
+        .setCustomId(`kiemtra-${name}:${userId}:${status}:${category}:${group}`)
         .setPlaceholder(
-          name === "status" ? "Lọc theo trạng thái" : "Lọc theo loại thành tựu",
+          name === "status"
+            ? "Lọc theo trạng thái"
+            : `Loại thành tựu · nhóm ${group + 1}`,
         )
         .addOptions(
           choices.map((choice) =>
@@ -266,7 +269,19 @@ function achievementPanel(
     components: [
       menuRow(userId, status, category, page),
       filterRow("status", status, ACHIEVEMENT_STATUSES),
-      filterRow("category", category, ACHIEVEMENT_CATEGORIES),
+      ...Array.from(
+        { length: Math.ceil((ACHIEVEMENT_CATEGORIES.length - 1) / 24) },
+        (_, group) =>
+          filterRow(
+            "category",
+            category,
+            [
+              ACHIEVEMENT_CATEGORIES[0],
+              ...ACHIEVEMENT_CATEGORIES.slice(1 + group * 24, 25 + group * 24),
+            ],
+            group,
+          ),
+      ),
       pageRow,
     ],
     allowedMentions: { parse: [] },

@@ -1,5 +1,19 @@
 [
   {
+    "id": "04499204-4f8c-4c62-8506-c2feb2e07d40",
+    "updatedAt": "2026-10-29T03:38:35.649Z",
+    "auditedAt": "2026-10-29T03:38:35.649Z",
+    "title": "Cờ vua: puzzle Lichess theo kênh",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Thêm /covua choi: bàn chiếu hết ngẫu nhiên 1–5 nước, mỗi kênh chỉ có một bàn chưa giải và tự đóng sau 1 giờ.",
+      "Nhận toàn bộ lời giải UCI hoặc SAN qua một tin nhắn; đúng sẽ thả ✅, công bố người thắng và gửi lời giải UCI. Giải xong không tự mở bàn mới.",
+      "Quản trị dùng /covua boqua để thay bàn và /covua cauhinh để đặt kênh, thưởng. Mặc định thưởng 100 × N² xu, khóa theo lúc mở bàn.",
+      "Thêm 6 thành tựu cờ vua có thưởng xu/kim cương, bộ lọc thành tựu, bảng xếp hạng và hỗ trợ bảo trì/đóng ván bằng mã."
+    ]
+  },
+  {
     "id": "77dc6576-9268-4035-911a-1bc791e97e39",
     "updatedAt": "2026-10-27T08:38:51.632Z",
     "auditedAt": "2026-10-27T08:38:51.632Z",

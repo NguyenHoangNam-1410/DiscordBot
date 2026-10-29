@@ -57,8 +57,10 @@ async function handleVuaMessage(message, answer) {
   return true;
 }
 
-async function handleGameMessage(message) {
+async function handleGameMessage(message, logger = console) {
   if (!message.guildId || message.author?.bot) return false;
+  if (await require("./chessService").handleChessMessage(message, logger))
+    return true;
   const answer = String(message.content || "").trim();
   if (
     !answer ||

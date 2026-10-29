@@ -1542,4 +1542,27 @@ runMigration(57, "chatbot request accounting and model prices", () => {
   );`);
 });
 
+runMigration(58, "channel chess puzzles and achievement records", () => {
+  db.exec(`CREATE TABLE chess_rounds (
+    id TEXT PRIMARY KEY, guild_id TEXT NOT NULL, channel_id TEXT NOT NULL,
+    created_by TEXT NOT NULL, puzzle_id TEXT NOT NULL, puzzle_json TEXT NOT NULL,
+    mate INTEGER NOT NULL CHECK(mate BETWEEN 1 AND 5), reward INTEGER NOT NULL,
+    status TEXT NOT NULL, message_id TEXT, ui_closed INTEGER NOT NULL DEFAULT 0, created_at INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL, closed_at INTEGER, winner_id TEXT,
+    answer_message_id TEXT, answer_uci TEXT,
+    UNIQUE(guild_id,puzzle_id)
+  );
+  CREATE UNIQUE INDEX idx_chess_one_open_channel ON chess_rounds(guild_id,channel_id) WHERE status='open';
+  CREATE INDEX idx_chess_expiration ON chess_rounds(status,expires_at);
+  CREATE TABLE chess_channel_locks (
+    guild_id TEXT NOT NULL, channel_id TEXT NOT NULL, token TEXT NOT NULL,
+    expires_at INTEGER NOT NULL, PRIMARY KEY(guild_id,channel_id)
+  );
+  CREATE TABLE chess_records (
+    guild_id TEXT NOT NULL, user_id TEXT NOT NULL, solved INTEGER NOT NULL DEFAULT 0,
+    best_mate INTEGER NOT NULL DEFAULT 0, updated_at INTEGER NOT NULL,
+    PRIMARY KEY(guild_id,user_id)
+  );`);
+});
+
 module.exports = { db, dbPath, runMigration };

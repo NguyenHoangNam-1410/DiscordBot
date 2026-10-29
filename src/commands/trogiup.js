@@ -101,6 +101,10 @@ const PAGES = Object.freeze({
         "`/vtv batdau` — admin mở UI Vua Tiếng Việt; người chơi dùng nút bỏ qua (mặc định 5 lượt/ngày, hồi chiêu 5 phút) hoặc nút vật phẩm để mở bảng dùng nhanh riêng tư. Admin kết thúc bằng `/vtv ketthuc`.",
       ],
       [
+        "♟️ Cờ vua",
+        "`/covua choi` — puzzle chiếu hết ngẫu nhiên 1–5 nước. Gửi toàn bộ nước UCI/SAN của bên cần giải trong một tin nhắn. `/covua xem` xem riêng bàn/kết quả; `/covua huongdan` xem cách nhập. Admin dùng `boqua` để thay bàn và `cauhinh` để đặt kênh, thưởng.",
+      ],
+      [
         "📖 Xem luật",
         "`/luat trochoi:<game>` — xem tóm tắt luật của một game.",
       ],

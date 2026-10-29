@@ -67,6 +67,7 @@ const LABELS = {
   coquay: "Cò quay Nga",
   hardcore: "Sinh tồn",
   vuatiengviet: "Vua tiếng Việt",
+  covua: "Cờ vua (thưởng cơ sở × N²)",
   2048: "2048",
 };
 const choices = GAMES.map((game) => ({ name: LABELS[game], value: game }));

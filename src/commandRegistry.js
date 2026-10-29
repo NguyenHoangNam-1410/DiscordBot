@@ -27,6 +27,7 @@ const COMMAND_FILES = Object.freeze([
   "gacha",
   "vtv",
   "chatbot",
+  "covua",
 ]);
 
 function loadCommands(base = "./commands") {

@@ -15,7 +15,9 @@ async function requireGameChannel(interaction, game) {
   }
   const settings = getGameChannels(interaction.guildId, game);
   const content = !settings.length
-    ? `Game **${game}** chưa được thiết lập channel. Admin dùng \`/game setup\` trước.`
+    ? game === "covua"
+      ? "Cờ vua chưa có kênh chơi. Admin dùng `/covua cauhinh kenh:#kenh` hoặc `/quantri datkenh`."
+      : `Game **${game}** chưa được thiết lập channel. Admin dùng \`/game setup\` trước.`
     : !settings.some((row) => row.channel_id === interaction.channelId)
       ? `Game **/${game}** chỉ được chơi tại ${settings.map((row) => `<#${row.channel_id}>`).join(", ")}.`
       : null;
