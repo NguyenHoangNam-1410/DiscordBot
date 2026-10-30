@@ -1,5 +1,43 @@
-const { createCanvas, GlobalFonts } = require("@napi-rs/canvas");
+const { createCanvas, Path2D } = require("@napi-rs/canvas");
 const { AttachmentBuilder, EmbedBuilder } = require("discord.js");
+const characterOutlines = require("../../assets/xiangqi/characters.json");
+const PIECE_CHARACTERS = Object.freeze({
+  K: "帥",
+  k: "將",
+  A: "仕",
+  a: "士",
+  B: "相",
+  b: "象",
+  N: "馬",
+  n: "馬",
+  R: "車",
+  r: "車",
+  C: "炮",
+  c: "砲",
+  P: "兵",
+  p: "卒",
+});
+const characterPaths = new Map();
+
+function drawPieceCharacter(ctx, piece, x, y) {
+  const character = PIECE_CHARACTERS[piece];
+  const outline = characterOutlines.characters[character];
+  if (!outline) throw new Error("MISSING_XIANGQI_CHARACTER");
+  let shape = characterPaths.get(character);
+  if (!shape) {
+    shape = new Path2D(outline.path);
+    characterPaths.set(character, shape);
+  }
+  const [left, bottom, right, top] = outline.bounds;
+  const scale = Math.min(28 / (right - left), 29 / (top - bottom));
+  // Embedded glyph outlines keep Chinese pieces identical without any system font.
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(scale, -scale);
+  ctx.translate(-(left + right) / 2, -(bottom + top) / 2);
+  ctx.fill(shape);
+  ctx.restore();
+}
 const HELP =
   "Gửi **toàn bộ các nước của bên cần giải trong một tin nhắn**; bot tự đi nước đáp trả.\n" +
   "**ICCS:** ô đi + ô đến, ví dụ `h2e2`. Cột **a–i**, hàng **0–9** theo tọa độ trên ảnh, giữ nguyên khi lật bàn.\n" +
@@ -25,7 +63,7 @@ function pieces(fen) {
     });
   return result;
 }
-function boardImage(puzzle, { vietnameseLabels = false } = {}) {
+function boardImage(puzzle) {
   const cell = 56,
     edge = 48,
     width = cell * 8 + edge * 2,
@@ -80,32 +118,6 @@ function boardImage(puzzle, { vietnameseLabels = false } = {}) {
     ctx.fillText(String(rank), 12, edge + row * cell);
     ctx.fillText(String(rank), width - 12, edge + row * cell);
   }
-  const glyphs = {
-    K: "帥",
-    k: "將",
-    A: "仕",
-    a: "士",
-    B: "相",
-    b: "象",
-    N: "馬",
-    n: "馬",
-    R: "車",
-    r: "車",
-    C: "炮",
-    c: "砲",
-    P: "兵",
-    p: "卒",
-  };
-  const chineseFont =
-    !vietnameseLabels &&
-    [
-      "Microsoft YaHei",
-      "SimSun",
-      "Noto Sans CJK SC",
-      "Noto Sans CJK TC",
-      "WenQuanYi Zen Hei",
-    ].find((font) => GlobalFonts.has(font));
-  const vietnamese = { k: "K", a: "S", b: "T", n: "M", r: "X", c: "P", p: "B" };
   for (const { x, y, piece } of pieces(puzzle.fen)) {
     const px = edge + (black ? 8 - x : x) * cell,
       py = edge + (black ? y : 9 - y) * cell,
@@ -122,14 +134,7 @@ function boardImage(puzzle, { vietnameseLabels = false } = {}) {
     ctx.lineWidth = 0.7;
     ctx.stroke();
     ctx.fillStyle = red ? "#ba2928" : "#252c35";
-    ctx.font = chineseFont
-      ? `29px "${chineseFont}"`
-      : 'bold 25px \"Arial\", \"DejaVu Sans\", sans-serif';
-    ctx.fillText(
-      chineseFont ? glyphs[piece] || piece : vietnamese[piece.toLowerCase()],
-      px,
-      py + 1,
-    );
+    drawPieceCharacter(ctx, piece, px, py);
   }
   return canvas.toBuffer("image/png");
 }
@@ -180,4 +185,12 @@ function roundPayload(round, image = null) {
     allowedMentions: { parse: [] },
   };
 }
-module.exports = { HELP, pieces, boardImage, roundEmbed, roundPayload };
+module.exports = {
+  HELP,
+  PIECE_CHARACTERS,
+  drawPieceCharacter,
+  pieces,
+  boardImage,
+  roundEmbed,
+  roundPayload,
+};

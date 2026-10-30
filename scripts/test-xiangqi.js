@@ -9,7 +9,12 @@ const channels = require("../src/services/gameChannelService");
 const rewards = require("../src/services/gameRewardService");
 const { getAccount } = require("../src/services/economyService");
 const { getAchievements } = require("../src/services/achievementService");
-const { boardImage, roundPayload } = require("../src/xiangqi/view");
+const {
+  boardImage,
+  roundPayload,
+  PIECE_CHARACTERS,
+  drawPieceCharacter,
+} = require("../src/xiangqi/view");
 const { pagedOptions, navigationPage } = require("../src/utils/pagedSelect");
 const G = "123456789012345678",
   C = "223456789012345678",
@@ -280,6 +285,52 @@ async function run() {
   db.exec("DROP TRIGGER fail_xq_wallet");
   assert.ok(service.forceEndXiangqi(atomic.round.id, G));
   assert.equal(service.currentRound(G, C), null);
+  // Chinese pieces must render from packaged outlines with no font/text API.
+  assert.deepEqual(PIECE_CHARACTERS, {
+    K: "帥",
+    k: "將",
+    A: "仕",
+    a: "士",
+    B: "相",
+    b: "象",
+    N: "馬",
+    n: "馬",
+    R: "車",
+    r: "車",
+    C: "炮",
+    c: "砲",
+    P: "兵",
+    p: "卒",
+  });
+  const outlines = require("../assets/xiangqi/characters.json");
+  assert.equal(Object.keys(outlines.characters).length, 12);
+  const { Path2D } = require("@napi-rs/canvas");
+  for (const piece of Object.keys(PIECE_CHARACTERS)) {
+    let drawn = 0,
+      saved = 0;
+    const context = {
+      save() {
+        saved++;
+      },
+      restore() {
+        saved--;
+      },
+      translate(x, y) {
+        assert.ok(Number.isFinite(x) && Number.isFinite(y));
+      },
+      scale(x, y) {
+        assert.ok(x > 0 && y < 0);
+      },
+      fill(shape) {
+        assert.ok(shape instanceof Path2D);
+        drawn++;
+      },
+      // No font, fillText, or installed CJK family is available in this context.
+    };
+    drawPieceCharacter(context, piece, 100, 100);
+    assert.equal(drawn, 1);
+    assert.equal(saved, 0);
+  }
   const image = boardImage(first);
   assert.equal(image.toString("hex", 0, 8), "89504e470d0a1a0a");
   assert.equal(image.readUInt32BE(16), 544);

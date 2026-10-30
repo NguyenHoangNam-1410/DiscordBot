@@ -1,5 +1,17 @@
 [
   {
+    "id": "4b0cebdb-578c-4f84-831e-a85ebfd3582a",
+    "updatedAt": "2026-10-30T08:45:46.606Z",
+    "auditedAt": "2026-10-30T08:45:46.606Z",
+    "title": "Cờ tướng: quân cờ chữ Hán truyền thống",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Quân cờ luôn hiển thị ký tự Hán truyền thống: 帥/將, 仕/士, 相/象, 馬, 車, 炮/砲, 兵/卒, phân biệt rõ màu Đỏ và Đen.",
+      "Đóng gói nét chữ cùng bot để bàn cờ hiển thị đúng trên Windows/Linux, không phụ thuộc phông chữ Hán cài trên máy chủ."
+    ]
+  },
+  {
     "id": "14ea14d3-abaf-41a3-bdd4-18c927b6ffca",
     "updatedAt": "2026-10-30T08:33:12.115Z",
     "auditedAt": "2026-10-30T08:33:12.115Z",
