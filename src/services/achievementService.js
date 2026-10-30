@@ -1761,7 +1761,72 @@ const chessAchievements = [
   diamonds,
   metric,
 }));
+const xiangqiAchievements = [
+  [
+    "xiangqi_solved_1",
+    "Khai cuộc kỳ đài",
+    "Giải đúng 1 thế cờ tướng",
+    1,
+    1_000,
+    5,
+    "xiangqiSolved",
+  ],
+  [
+    "xiangqi_solved_5",
+    "Tay cờ triển vọng",
+    "Giải đúng 5 thế cờ tướng",
+    5,
+    5_000,
+    15,
+    "xiangqiSolved",
+  ],
+  [
+    "xiangqi_solved_25",
+    "Cao thủ cờ thế",
+    "Giải đúng 25 thế cờ tướng",
+    25,
+    15_000,
+    40,
+    "xiangqiSolved",
+  ],
+  [
+    "xiangqi_solved_50",
+    "Kỳ vương giải thế",
+    "Giải đúng 50 thế cờ tướng",
+    50,
+    30_000,
+    80,
+    "xiangqiSolved",
+  ],
+  [
+    "xiangqi_mate_2",
+    "Tính trước hai nước",
+    "Giải thế cờ tướng chiếu hết từ 2 nước",
+    2,
+    3_000,
+    10,
+    "xiangqiMate",
+  ],
+  [
+    "xiangqi_mate_4",
+    "Bốn nước định giang sơn",
+    "Giải thế cờ tướng chiếu hết 4 nước",
+    4,
+    10_000,
+    30,
+    "xiangqiMate",
+  ],
+].map(([id, name, description, target, reward, diamonds, metric]) => ({
+  id,
+  name,
+  description,
+  target,
+  reward,
+  diamonds,
+  metric,
+}));
 const ACHIEVEMENTS = Object.freeze([
+  ...xiangqiAchievements,
   ...chessAchievements,
   ...BASE_ACHIEVEMENTS,
   ...classFloorAchievements,
@@ -1774,6 +1839,8 @@ const ACHIEVEMENTS = Object.freeze([
 const CATEGORY_GROUPS = Object.freeze({
   chessSolved: "covua",
   chessMate: "covua",
+  xiangqiSolved: "cotuong",
+  xiangqiMate: "cotuong",
   hardcoreEvents: "hardcoreEvents",
   hardcoreGodBlessings: "hardcoreEvents",
   hardcoreConquerorRelics: "hardcoreEvents",
@@ -1854,6 +1921,12 @@ function metrics(guildId, userId) {
     db
       .prepare(
         "SELECT solved,best_mate FROM chess_records WHERE guild_id=? AND user_id=?",
+      )
+      .get(guild, user) || {};
+  const xiangqi =
+    db
+      .prepare(
+        "SELECT solved,best_mate FROM xiangqi_records WHERE guild_id=? AND user_id=?",
       )
       .get(guild, user) || {};
   const gameTypes = db
@@ -2025,6 +2098,8 @@ function metrics(guildId, userId) {
     gachaPulls: gacha.pulls,
     chessSolved: chess.solved || 0,
     chessMate: chess.best_mate || 0,
+    xiangqiSolved: xiangqi.solved || 0,
+    xiangqiMate: xiangqi.best_mate || 0,
     gachaSpent: gacha.spent,
     gachaSR: gacha.sr,
     gachaSSR: gacha.ssr,

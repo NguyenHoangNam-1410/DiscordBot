@@ -15,6 +15,10 @@ const {
   ButtonStyle,
 } = require("discord.js");
 const RULES = {
+  cotuong: [
+    "Cờ tướng",
+    "`/cotuong choi` mở thế cờ ngẫu nhiên, chiếu hết trong 1–4 nước. Mỗi kênh chỉ có một bàn cờ vua hoặc cờ tướng chưa giải. Nhập toàn bộ nước của bên cần giải trong một tin nhắn, không nhập nước đối phương. Nhận ICCS (`h2e2`, cột a–i, hàng 0–9) hoặc ký hiệu Việt (`P2.5`; `Pháo 2 bình 5`); dạng từ ngữ cách các nước bằng dấu chấm phẩy. `/cotuong huongdan` xem quy ước. Đúng đầu tiên nhận cơ sở × N² xu và thành tựu. Mỗi người nhận thưởng một lần cho mỗi thế; giải lại thế đã thưởng hiện ♻️ và giữ bàn cho người khác. Bàn đóng sau 1 giờ, không tự mở tiếp. Quản trị dùng `boqua`, `cauhinh`, hoặc `/quantri ketthucvan` theo mã ván.",
+  ],
   covua: [
     "Cờ vua",
     "Mỗi kênh có tối đa một puzzle Lichess chưa giải. `/covua choi` mở bàn mate ngẫu nhiên 1–5 nước. Gửi toàn bộ các nước của bên cần giải trong một tin nhắn, dùng UCI hoặc SAN; bot tự kiểm tra nước đáp trả. Người gửi lời giải đầy đủ đúng đầu tiên nhận thưởng cơ sở × N² xu. Đúng sẽ được thả ✅ và thông báo thắng nếu bot có quyền. Bàn đóng sau 1 giờ, không tự mở bàn tiếp. `/covua xem` xem riêng bàn/kết quả. Quản trị dùng `/covua boqua` để thay bàn, `/covua cauhinh` đặt kênh và thưởng.",

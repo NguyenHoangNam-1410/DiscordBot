@@ -1565,4 +1565,20 @@ runMigration(58, "channel chess puzzles and achievement records", () => {
   );`);
 });
 
+runMigration(59, "xiangqi puzzles and first-solve rewards", () => {
+  db.exec(`CREATE TABLE xiangqi_rounds (
+    id TEXT PRIMARY KEY,guild_id TEXT NOT NULL,channel_id TEXT NOT NULL,created_by TEXT NOT NULL,
+    puzzle_id TEXT NOT NULL,puzzle_json TEXT NOT NULL,mate INTEGER NOT NULL CHECK(mate BETWEEN 1 AND 5),
+    reward INTEGER NOT NULL CHECK(reward BETWEEN 1 AND 1000000),status TEXT NOT NULL,message_id TEXT,
+    ui_closed INTEGER NOT NULL DEFAULT 0,created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL,
+    closed_at INTEGER,winner_id TEXT,answer_message_id TEXT,answer_uci TEXT
+  );
+  CREATE UNIQUE INDEX idx_xiangqi_one_open_channel ON xiangqi_rounds(guild_id,channel_id) WHERE status='open';
+  CREATE INDEX idx_xiangqi_expiry ON xiangqi_rounds(status,expires_at);
+  CREATE INDEX idx_xiangqi_puzzles ON xiangqi_rounds(guild_id,puzzle_id);
+  CREATE TABLE xiangqi_channel_locks (guild_id TEXT NOT NULL,channel_id TEXT NOT NULL,token TEXT NOT NULL,expires_at INTEGER NOT NULL,PRIMARY KEY(guild_id,channel_id));
+  CREATE TABLE xiangqi_records (guild_id TEXT NOT NULL,user_id TEXT NOT NULL,solved INTEGER NOT NULL DEFAULT 0,best_mate INTEGER NOT NULL DEFAULT 0,updated_at INTEGER NOT NULL,PRIMARY KEY(guild_id,user_id));
+  CREATE TABLE xiangqi_awards (guild_id TEXT NOT NULL,user_id TEXT NOT NULL,puzzle_id TEXT NOT NULL,round_id TEXT NOT NULL,created_at INTEGER NOT NULL,PRIMARY KEY(guild_id,user_id,puzzle_id));`);
+});
+
 module.exports = { db, dbPath, runMigration };

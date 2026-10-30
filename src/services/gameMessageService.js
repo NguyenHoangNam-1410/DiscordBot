@@ -61,6 +61,8 @@ async function handleGameMessage(message, logger = console) {
   if (!message.guildId || message.author?.bot) return false;
   if (await require("./chessService").handleChessMessage(message, logger))
     return true;
+  if (await require("./xiangqiService").handleXiangqiMessage(message, logger))
+    return true;
   const answer = String(message.content || "").trim();
   if (
     !answer ||

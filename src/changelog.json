@@ -1,5 +1,30 @@
 [
   {
+    "id": "14ea14d3-abaf-41a3-bdd4-18c927b6ffca",
+    "updatedAt": "2026-10-30T08:33:12.115Z",
+    "auditedAt": "2026-10-30T08:33:12.115Z",
+    "title": "Thành tựu: phân trang bộ lọc ngay trong menu",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Gộp bộ lọc loại thành tựu về một selector; chọn Trang sau hoặc Trang trước ngay trong menu để xem thêm loại, tối đa 25 lựa chọn mỗi trang.",
+      "Chuyển trang bộ lọc giữ nguyên loại đang chọn, trạng thái và trang kết quả. Chọn loại mới trở về trang kết quả đầu tiên; menu chỉ dùng được bởi người mở."
+    ]
+  },
+  {
+    "id": "45661dd8-8c3f-41af-aa51-d36b03ed6198",
+    "updatedAt": "2026-10-30T08:33:08.884Z",
+    "auditedAt": "2026-10-30T08:33:08.884Z",
+    "title": "Cờ tướng: giải thế theo kênh",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Thêm /cotuong choi, xem, huongdan, boqua và cauhinh; 64 thế cờ đã kiểm chứng, chiếu hết ngẫu nhiên trong 1–4 nước.",
+      "Nhập toàn bộ nước đi bằng ICCS hoặc ký hiệu Việt. Đúng đầu tiên nhận cơ sở × N² xu; mỗi thế chỉ thưởng một lần cho mỗi người. Có 6 thành tựu thưởng xu/kim cương và bảng xếp hạng.",
+      "Mỗi kênh chỉ có một bàn cờ đang mở, hết 1 giờ tự đóng; không tự tạo bàn sau khi thắng. Hỗ trợ bảo trì và đóng ván bằng mã."
+    ]
+  },
+  {
     "id": "e1a3a98d-391e-41a1-bda3-e9c7b615e6ed",
     "updatedAt": "2026-10-29T04:49:59.803Z",
     "auditedAt": "2026-10-29T04:49:59.803Z",

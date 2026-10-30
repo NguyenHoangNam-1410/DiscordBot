@@ -28,6 +28,7 @@ const COMMAND_FILES = Object.freeze([
   "vtv",
   "chatbot",
   "covua",
+  "cotuong",
 ]);
 
 function loadCommands(base = "./commands") {

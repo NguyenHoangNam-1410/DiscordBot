@@ -1,0 +1,2801 @@
+{
+  "version": 1,
+  "source": "Original generated positions, exhaustively verified with Fairy-Stockfish/ffish-es6 0.7.10",
+  "maxMate": 4,
+  "puzzles": [
+    {
+      "id": "xqb8d4066c0012",
+      "fen": "9/9/4k4/9/4p4/9/5C3/9/8R/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 2,
+      "tree": {
+        "choices": {
+          "f3e3": {
+            "reply": "e7d7",
+            "next": {
+              "choices": {
+                "i1d1": true
+              }
+            }
+          }
+        }
+      },
+      "nodes": 1478,
+      "solution": ["f3e3", "e7d7", "i1d1"]
+    },
+    {
+      "id": "xq009cbc87765f",
+      "fen": "4k4/r8/9/3c5/9/4P4/9/4K4/9/9 b - - 0 1",
+      "side": "b",
+      "mate": 2,
+      "tree": {
+        "choices": {
+          "d6e6": {
+            "reply": "e2d2",
+            "next": {
+              "choices": {
+                "a8d8": true
+              }
+            }
+          }
+        }
+      },
+      "nodes": 1360,
+      "solution": ["d6e6", "e2d2", "a8d8"]
+    },
+    {
+      "id": "xqbbfecd2294d7",
+      "fen": "9/9/4k4/9/4p4/9/3C5/9/R8/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 2,
+      "tree": {
+        "choices": {
+          "d3e3": {
+            "reply": "e7d7",
+            "next": {
+              "choices": {
+                "a1d1": true
+              }
+            }
+          }
+        }
+      },
+      "nodes": 1468,
+      "solution": ["d3e3", "e7d7", "a1d1"]
+    },
+    {
+      "id": "xqd80372ba9b83",
+      "fen": "4k4/8r/9/5c3/9/4P4/9/4K4/9/9 b - - 0 1",
+      "side": "b",
+      "mate": 2,
+      "tree": {
+        "choices": {
+          "f6e6": {
+            "reply": "e2d2",
+            "next": {
+              "choices": {
+                "i8d8": true
+              }
+            }
+          }
+        }
+      },
+      "nodes": 1446,
+      "solution": ["f6e6", "e2d2", "i8d8"]
+    },
+    {
+      "id": "xqe2c4b1995b2a",
+      "fen": "9/3k5/9/5N3/4pR3/9/9/9/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 2,
+      "tree": {
+        "choices": {
+          "f5e5": {
+            "reply": "d8d9",
+            "next": {
+              "choices": {
+                "e5d5": true
+              }
+            }
+          }
+        }
+      },
+      "nodes": 441,
+      "solution": ["f5e5", "d8d9", "e5d5"]
+    },
+    {
+      "id": "xqb3cee3aaac5c",
+      "fen": "4k4/9/9/9/9/3rP4/3n5/9/5K3/9 b - - 0 1",
+      "side": "b",
+      "mate": 2,
+      "tree": {
+        "choices": {
+          "d4e4": {
+            "reply": "f1f0",
+            "next": {
+              "choices": {
+                "e4f4": true
+              }
+            }
+          }
+        }
+      },
+      "nodes": 552,
+      "solution": ["d4e4", "f1f0", "e4f4"]
+    },
+    {
+      "id": "xq98c207554eec",
+      "fen": "9/5k3/9/3N5/3Rp4/9/9/9/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 2,
+      "tree": {
+        "choices": {
+          "d5e5": {
+            "reply": "f8f9",
+            "next": {
+              "choices": {
+                "e5f5": true
+              }
+            }
+          }
+        }
+      },
+      "nodes": 540,
+      "solution": ["d5e5", "f8f9", "e5f5"]
+    },
+    {
+      "id": "xqad2d683c4337",
+      "fen": "4k4/9/9/9/9/4Pr3/5n3/9/3K5/9 b - - 0 1",
+      "side": "b",
+      "mate": 2,
+      "tree": {
+        "choices": {
+          "f4e4": {
+            "reply": "d1d0",
+            "next": {
+              "choices": {
+                "e4d4": true
+              }
+            }
+          }
+        }
+      },
+      "nodes": 441,
+      "solution": ["f4e4", "d1d0", "e4d4"]
+    },
+    {
+      "id": "xq6d108901e2ab",
+      "fen": "9/5k3/9/9/4p3R/9/9/9/2R6/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 2,
+      "tree": {
+        "choices": {
+          "c1c8": {
+            "reply": "f8f9",
+            "next": {
+              "choices": {
+                "i5i9": true
+              }
+            }
+          },
+          "i5e5": {
+            "reply": "f8f9",
+            "next": {
+              "choices": {
+                "c1f1": true,
+                "e5f5": true
+              }
+            }
+          },
+          "i5i8": {
+            "reply": "f8f9",
+            "next": {
+              "choices": {
+                "c1c9": true
+              }
+            }
+          }
+        }
+      },
+      "nodes": 1328,
+      "solution": ["c1c8", "f8f9", "i5i9"]
+    },
+    {
+      "id": "xqe412d26ff183",
+      "fen": "4k4/6r2/9/9/9/r3P4/9/9/3K5/9 b - - 0 1",
+      "side": "b",
+      "mate": 2,
+      "tree": {
+        "choices": {
+          "a4a1": {
+            "reply": "d1d0",
+            "next": {
+              "choices": {
+                "g8g0": true
+              }
+            }
+          },
+          "a4e4": {
+            "reply": "d1d0",
+            "next": {
+              "choices": {
+                "e4d4": true,
+                "g8d8": true
+              }
+            }
+          },
+          "g8g1": {
+            "reply": "d1d0",
+            "next": {
+              "choices": {
+                "a4a0": true
+              }
+            }
+          }
+        }
+      },
+      "nodes": 1235,
+      "solution": ["a4a1", "d1d0", "g8g0"]
+    },
+    {
+      "id": "xq37f53ed6eec5",
+      "fen": "9/3k5/9/9/R3p4/9/9/9/6R2/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 2,
+      "tree": {
+        "choices": {
+          "a5a8": {
+            "reply": "d8d9",
+            "next": {
+              "choices": {
+                "g1g9": true
+              }
+            }
+          },
+          "a5e5": {
+            "reply": "d8d9",
+            "next": {
+              "choices": {
+                "e5d5": true,
+                "g1d1": true
+              }
+            }
+          },
+          "g1g8": {
+            "reply": "d8d9",
+            "next": {
+              "choices": {
+                "a5a9": true
+              }
+            }
+          }
+        }
+      },
+      "nodes": 1245,
+      "solution": ["a5a8", "d8d9", "g1g9"]
+    },
+    {
+      "id": "xq565c73c4b65d",
+      "fen": "4k4/2r6/9/9/9/4P3r/9/9/5K3/9 b - - 0 1",
+      "side": "b",
+      "mate": 2,
+      "tree": {
+        "choices": {
+          "c8c1": {
+            "reply": "f1f0",
+            "next": {
+              "choices": {
+                "i4i0": true
+              }
+            }
+          },
+          "i4e4": {
+            "reply": "f1f0",
+            "next": {
+              "choices": {
+                "c8f8": true,
+                "e4f4": true
+              }
+            }
+          },
+          "i4i1": {
+            "reply": "f1f0",
+            "next": {
+              "choices": {
+                "c8c0": true
+              }
+            }
+          }
+        }
+      },
+      "nodes": 1318,
+      "solution": ["c8c1", "f1f0", "i4i0"]
+    },
+    {
+      "id": "xq499523d4c743",
+      "fen": "5a3/3k5/9/9/4p4/4C4/9/1R7/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 1,
+      "tree": {
+        "choices": {
+          "b2d2": true
+        }
+      },
+      "nodes": 43,
+      "solution": ["b2d2"]
+    },
+    {
+      "id": "xqdd05555b7f66",
+      "fen": "4k4/9/7r1/9/4c4/4P4/9/9/5K3/3A5 b - - 0 1",
+      "side": "b",
+      "mate": 1,
+      "tree": {
+        "choices": {
+          "h7f7": true
+        }
+      },
+      "nodes": 50,
+      "solution": ["h7f7"]
+    },
+    {
+      "id": "xq8ddfec815085",
+      "fen": "3a5/5k3/9/9/4p4/4C4/9/7R1/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 1,
+      "tree": {
+        "choices": {
+          "h2f2": true
+        }
+      },
+      "nodes": 50,
+      "solution": ["h2f2"]
+    },
+    {
+      "id": "xq138bb813492d",
+      "fen": "4k4/9/1r7/9/4c4/4P4/9/9/3K5/5A3 b - - 0 1",
+      "side": "b",
+      "mate": 1,
+      "tree": {
+        "choices": {
+          "b7d7": true
+        }
+      },
+      "nodes": 43,
+      "solution": ["b7d7"]
+    },
+    {
+      "id": "xq8726e4a3478c",
+      "fen": "9/3k5/9/1R7/4p4/9/5R3/9/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 2,
+      "tree": {
+        "choices": {
+          "b6b8": {
+            "reply": "d8d9",
+            "next": {
+              "choices": {
+                "f3f9": true
+              }
+            }
+          },
+          "f3f8": {
+            "reply": "d8d9",
+            "next": {
+              "choices": {
+                "b6b9": true
+              }
+            }
+          }
+        }
+      },
+      "nodes": 1498,
+      "solution": ["b6b8", "d8d9", "f3f9"]
+    },
+    {
+      "id": "xqf2adada52cd4",
+      "fen": "4k4/9/9/3r5/9/4P4/7r1/9/5K3/9 b - - 0 1",
+      "side": "b",
+      "mate": 2,
+      "tree": {
+        "choices": {
+          "d6d1": {
+            "reply": "f1f0",
+            "next": {
+              "choices": {
+                "h3h0": true
+              }
+            }
+          },
+          "h3h1": {
+            "reply": "f1f0",
+            "next": {
+              "choices": {
+                "d6d0": true
+              }
+            }
+          }
+        }
+      },
+      "nodes": 1457,
+      "solution": ["d6d1", "f1f0", "h3h0"]
+    },
+    {
+      "id": "xqa1024d74d23c",
+      "fen": "9/5k3/9/7R1/4p4/9/3R5/9/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 2,
+      "tree": {
+        "choices": {
+          "d3d8": {
+            "reply": "f8f9",
+            "next": {
+              "choices": {
+                "h6h9": true
+              }
+            }
+          },
+          "h6h8": {
+            "reply": "f8f9",
+            "next": {
+              "choices": {
+                "d3d9": true
+              }
+            }
+          }
+        }
+      },
+      "nodes": 1467,
+      "solution": ["d3d8", "f8f9", "h6h9"]
+    },
+    {
+      "id": "xq2b5540b0217f",
+      "fen": "4k4/9/9/5r3/9/4P4/1r7/9/3K5/9 b - - 0 1",
+      "side": "b",
+      "mate": 2,
+      "tree": {
+        "choices": {
+          "b3b1": {
+            "reply": "d1d0",
+            "next": {
+              "choices": {
+                "f6f0": true
+              }
+            }
+          },
+          "f6f1": {
+            "reply": "d1d0",
+            "next": {
+              "choices": {
+                "b3b0": true
+              }
+            }
+          }
+        }
+      },
+      "nodes": 1488,
+      "solution": ["b3b1", "d1d0", "f6f0"]
+    },
+    {
+      "id": "xq5e27aec51591",
+      "fen": "5k3/9/9/9/4p4/7R1/9/3C5/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 3,
+      "tree": {
+        "choices": {
+          "h4f4": {
+            "reply": "f9e9",
+            "next": {
+              "choices": {
+                "d2e2": {
+                  "reply": "e9d9",
+                  "next": {
+                    "choices": {
+                      "f4d4": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 54883,
+      "solution": ["h4f4", "f9e9", "d2e2", "e9d9", "f4d4"]
+    },
+    {
+      "id": "xq4f9961da8589",
+      "fen": "4k4/9/5c3/9/1r7/4P4/9/9/9/3K5 b - - 0 1",
+      "side": "b",
+      "mate": 3,
+      "tree": {
+        "choices": {
+          "b5d5": {
+            "reply": "d0e0",
+            "next": {
+              "choices": {
+                "f7e7": {
+                  "reply": "e0f0",
+                  "next": {
+                    "choices": {
+                      "d5f5": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 25681,
+      "solution": ["b5d5", "d0e0", "f7e7", "e0f0", "d5f5"]
+    },
+    {
+      "id": "xqa4f27c32fedc",
+      "fen": "3k5/9/9/9/4p4/1R7/9/5C3/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 3,
+      "tree": {
+        "choices": {
+          "b4d4": {
+            "reply": "d9e9",
+            "next": {
+              "choices": {
+                "f2e2": {
+                  "reply": "e9f9",
+                  "next": {
+                    "choices": {
+                      "d4f4": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 25703,
+      "solution": ["b4d4", "d9e9", "f2e2", "e9f9", "d4f4"]
+    },
+    {
+      "id": "xqbe06bf696a23",
+      "fen": "4k4/9/3c5/9/7r1/4P4/9/9/9/5K3 b - - 0 1",
+      "side": "b",
+      "mate": 3,
+      "tree": {
+        "choices": {
+          "h5f5": {
+            "reply": "f0e0",
+            "next": {
+              "choices": {
+                "d7e7": {
+                  "reply": "e0d0",
+                  "next": {
+                    "choices": {
+                      "f5d5": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 54797,
+      "solution": ["h5f5", "f0e0", "d7e7", "e0d0", "f5d5"]
+    },
+    {
+      "id": "xqe0441f13aedf",
+      "fen": "9/5k3/9/8N/4p4/9/9/1R7/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 3,
+      "tree": {
+        "choices": {
+          "b2b8": {
+            "reply": "f8f9",
+            "next": {
+              "choices": {
+                "b8e8": {
+                  "reply": "e5e4",
+                  "next": {
+                    "choices": {
+                      "i6g7": true,
+                      "i6h8": true
+                    }
+                  }
+                },
+                "i6g7": {
+                  "reply": "f9e9",
+                  "next": {
+                    "choices": {
+                      "b8b9": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "b2e2": {
+            "reply": "e5e4",
+            "next": {
+              "choices": {
+                "e2e4": {
+                  "reply": "f8f9",
+                  "next": {
+                    "choices": {
+                      "e4f4": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 12019,
+      "solution": ["b2b8", "f8f9", "b8e8", "e5e4", "i6g7"]
+    },
+    {
+      "id": "xqe8ca7f709619",
+      "fen": "4k4/9/7r1/9/9/4P4/n8/9/3K5/9 b - - 0 1",
+      "side": "b",
+      "mate": 3,
+      "tree": {
+        "choices": {
+          "h7e7": {
+            "reply": "d1d0",
+            "next": {
+              "choices": {
+                "e7e4": {
+                  "reply": "d0d1",
+                  "next": {
+                    "choices": {
+                      "e4d4": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "h7h1": {
+            "reply": "d1d0",
+            "next": {
+              "choices": {
+                "a3c2": {
+                  "reply": "d0e0",
+                  "next": {
+                    "choices": {
+                      "h1h0": true
+                    }
+                  }
+                },
+                "h1e1": {
+                  "reply": "e4e5",
+                  "next": {
+                    "choices": {
+                      "a3b1": true,
+                      "a3c2": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 9550,
+      "solution": ["h7e7", "d1d0", "e7e4", "d0d1", "e4d4"]
+    },
+    {
+      "id": "xq2310cc7b25f0",
+      "fen": "9/3k5/9/N8/4p4/9/9/7R1/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 3,
+      "tree": {
+        "choices": {
+          "h2e2": {
+            "reply": "d8d9",
+            "next": {
+              "choices": {
+                "e2e5": {
+                  "reply": "d9d8",
+                  "next": {
+                    "choices": {
+                      "e5d5": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "h2h8": {
+            "reply": "d8d9",
+            "next": {
+              "choices": {
+                "a6c7": {
+                  "reply": "d9e9",
+                  "next": {
+                    "choices": {
+                      "h8h9": true
+                    }
+                  }
+                },
+                "h8e8": {
+                  "reply": "e5e4",
+                  "next": {
+                    "choices": {
+                      "a6b8": true,
+                      "a6c7": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 10949,
+      "solution": ["h2e2", "d8d9", "e2e5", "d9d8", "e5d5"]
+    },
+    {
+      "id": "xq30398b0d6580",
+      "fen": "4k4/9/1r7/9/9/4P4/8n/9/5K3/9 b - - 0 1",
+      "side": "b",
+      "mate": 3,
+      "tree": {
+        "choices": {
+          "b7b1": {
+            "reply": "f1f0",
+            "next": {
+              "choices": {
+                "b1e1": {
+                  "reply": "e4e5",
+                  "next": {
+                    "choices": {
+                      "i3g2": true,
+                      "i3h1": true
+                    }
+                  }
+                },
+                "i3g2": {
+                  "reply": "f0e0",
+                  "next": {
+                    "choices": {
+                      "b1b0": true
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "b7e7": {
+            "reply": "e4e5",
+            "next": {
+              "choices": {
+                "e7e5": {
+                  "reply": "f1f0",
+                  "next": {
+                    "choices": {
+                      "e5f5": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 12365,
+      "solution": ["b7b1", "f1f0", "b1e1", "e4e5", "i3g2"]
+    },
+    {
+      "id": "xq013dae670daf",
+      "fen": "5k3/9/9/9/4p1N2/9/R8/9/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 3,
+      "tree": {
+        "choices": {
+          "a3e3": {
+            "reply": "e5e4",
+            "next": {
+              "choices": {
+                "e3e4": {
+                  "reply": "f9f8",
+                  "next": {
+                    "choices": {
+                      "e4f4": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 15052,
+      "solution": ["a3e3", "e5e4", "e3e4", "f9f8", "e4f4"]
+    },
+    {
+      "id": "xqbbaee7b188df",
+      "fen": "4k4/9/9/8r/9/2n1P4/9/9/9/3K5 b - - 0 1",
+      "side": "b",
+      "mate": 3,
+      "tree": {
+        "choices": {
+          "i6e6": {
+            "reply": "d0d1",
+            "next": {
+              "choices": {
+                "e6e4": {
+                  "reply": "d1d0",
+                  "next": {
+                    "choices": {
+                      "e4d4": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 11727,
+      "solution": ["i6e6", "d0d1", "e6e4", "d1d0", "e4d4"]
+    },
+    {
+      "id": "xqc1b3aa835b4c",
+      "fen": "3k5/9/9/9/2N1p4/9/8R/9/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 3,
+      "tree": {
+        "choices": {
+          "i3e3": {
+            "reply": "d9d8",
+            "next": {
+              "choices": {
+                "e3e5": {
+                  "reply": "d8d9",
+                  "next": {
+                    "choices": {
+                      "e5d5": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 11869,
+      "solution": ["i3e3", "d9d8", "e3e5", "d8d9", "e5d5"]
+    },
+    {
+      "id": "xqf5c269220a49",
+      "fen": "4k4/9/9/r8/9/4P1n2/9/9/9/5K3 b - - 0 1",
+      "side": "b",
+      "mate": 3,
+      "tree": {
+        "choices": {
+          "a6e6": {
+            "reply": "e4e5",
+            "next": {
+              "choices": {
+                "e6e5": {
+                  "reply": "f0f1",
+                  "next": {
+                    "choices": {
+                      "e5f5": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 14959,
+      "solution": ["a6e6", "e4e5", "e6e5", "f0f1", "e5f5"]
+    },
+    {
+      "id": "xq95c8062b1ef6",
+      "fen": "4k4/9/9/9/4p3N/9/9/7R1/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 3,
+      "tree": {
+        "choices": {
+          "h2e2": {
+            "reply": "e9d9",
+            "next": {
+              "choices": {
+                "e2e5": {
+                  "reply": "d9d8",
+                  "next": {
+                    "choices": {
+                      "e5d5": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 9495,
+      "solution": ["h2e2", "e9d9", "e2e5", "d9d8", "e5d5"]
+    },
+    {
+      "id": "xq02335657f699",
+      "fen": "4k4/9/1r7/9/9/n3P4/9/9/9/4K4 b - - 0 1",
+      "side": "b",
+      "mate": 3,
+      "tree": {
+        "choices": {
+          "b7e7": {
+            "reply": "e0d0",
+            "next": {
+              "choices": {
+                "e7e4": {
+                  "reply": "d0d1",
+                  "next": {
+                    "choices": {
+                      "e4d4": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 8461,
+      "solution": ["b7e7", "e0d0", "e7e4", "d0d1", "e4d4"]
+    },
+    {
+      "id": "xqe71d4485ecec",
+      "fen": "4k4/9/9/9/N3p4/9/9/1R7/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 3,
+      "tree": {
+        "choices": {
+          "b2e2": {
+            "reply": "e9d9",
+            "next": {
+              "choices": {
+                "e2e5": {
+                  "reply": "d9d8",
+                  "next": {
+                    "choices": {
+                      "e5d5": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 9914,
+      "solution": ["b2e2", "e9d9", "e2e5", "d9d8", "e5d5"]
+    },
+    {
+      "id": "xq9aab33bdcace",
+      "fen": "4k4/9/7r1/9/9/4P3n/9/9/9/4K4 b - - 0 1",
+      "side": "b",
+      "mate": 3,
+      "tree": {
+        "choices": {
+          "h7e7": {
+            "reply": "e0d0",
+            "next": {
+              "choices": {
+                "e7e4": {
+                  "reply": "d0d1",
+                  "next": {
+                    "choices": {
+                      "e4d4": true
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 8425,
+      "solution": ["h7e7", "e0d0", "e7e4", "d0d1", "e4d4"]
+    },
+    {
+      "id": "xqbd84d3925c09",
+      "fen": "9/5k3/4R2R1/9/4p4/9/9/9/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 1,
+      "tree": {
+        "choices": {
+          "h7f7": true
+        }
+      },
+      "nodes": 38,
+      "solution": ["h7f7"]
+    },
+    {
+      "id": "xqe9020e5e50e3",
+      "fen": "4k4/9/9/9/9/4P4/9/1r2r4/3K5/9 b - - 0 1",
+      "side": "b",
+      "mate": 1,
+      "tree": {
+        "choices": {
+          "b2d2": true
+        }
+      },
+      "nodes": 37,
+      "solution": ["b2d2"]
+    },
+    {
+      "id": "xqb1b8dfa73f37",
+      "fen": "9/3k5/1R2R4/9/4p4/9/9/9/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 1,
+      "tree": {
+        "choices": {
+          "b7d7": true
+        }
+      },
+      "nodes": 37,
+      "solution": ["b7d7"]
+    },
+    {
+      "id": "xq2d325cd54f00",
+      "fen": "4k4/9/9/9/9/4P4/9/4r2r1/5K3/9 b - - 0 1",
+      "side": "b",
+      "mate": 1,
+      "tree": {
+        "choices": {
+          "h2f2": true
+        }
+      },
+      "nodes": 38,
+      "solution": ["h2f2"]
+    },
+    {
+      "id": "xq5c300953c47d",
+      "fen": "4ka3/9/1R7/9/4pN3/9/9/9/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 4,
+      "tree": {
+        "choices": {
+          "e0d0": {
+            "reply": "e9e8",
+            "next": {
+              "choices": {
+                "b7b8": {
+                  "reply": "e8e9",
+                  "next": {
+                    "choices": {
+                      "f5g7": {
+                        "reply": "e5e4",
+                        "next": {
+                          "choices": {
+                            "b8b9": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 118592,
+      "solution": ["e0d0", "e9e8", "b7b8", "e8e9", "f5g7", "e5e4", "b8b9"]
+    },
+    {
+      "id": "xq5f599ed216ee",
+      "fen": "4k4/9/9/9/9/3nP4/9/7r1/9/3AK4 b - - 0 1",
+      "side": "b",
+      "mate": 4,
+      "tree": {
+        "choices": {
+          "e9f9": {
+            "reply": "d0e1",
+            "next": {
+              "choices": {
+                "d4c2": {
+                  "reply": "e1d2",
+                  "next": {
+                    "choices": {
+                      "h2e2": {
+                        "reply": "d2e1",
+                        "next": {
+                          "choices": {
+                            "e2e1": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "h2h0": {
+                  "reply": "e1f0",
+                  "next": {
+                    "choices": {
+                      "d4c2": {
+                        "reply": "e4e5",
+                        "next": {
+                          "choices": {
+                            "h0f0": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 99108,
+      "solution": ["e9f9", "d0e1", "d4c2", "e1d2", "h2e2", "d2e1", "e2e1"]
+    },
+    {
+      "id": "xq440fe8c73011",
+      "fen": "3ak4/9/7R1/9/3Np4/9/9/9/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 4,
+      "tree": {
+        "choices": {
+          "e0f0": {
+            "reply": "d9e8",
+            "next": {
+              "choices": {
+                "d5c7": {
+                  "reply": "e5e4",
+                  "next": {
+                    "choices": {
+                      "h7h9": {
+                        "reply": "e8f9",
+                        "next": {
+                          "choices": {
+                            "h9f9": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "h7h9": {
+                  "reply": "e8f9",
+                  "next": {
+                    "choices": {
+                      "d5c7": {
+                        "reply": "e5e4",
+                        "next": {
+                          "choices": {
+                            "h9f9": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 109981,
+      "solution": ["e0f0", "d9e8", "d5c7", "e5e4", "h7h9", "e8f9", "h9f9"]
+    },
+    {
+      "id": "xq20829b28b461",
+      "fen": "4k4/9/9/9/9/4Pn3/9/1r7/9/4KA3 b - - 0 1",
+      "side": "b",
+      "mate": 4,
+      "tree": {
+        "choices": {
+          "e9d9": {
+            "reply": "e0e1",
+            "next": {
+              "choices": {
+                "b2b1": {
+                  "reply": "e1e0",
+                  "next": {
+                    "choices": {
+                      "f4g2": {
+                        "reply": "e4e5",
+                        "next": {
+                          "choices": {
+                            "b1b0": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 100816,
+      "solution": ["e9d9", "e0e1", "b2b1", "e1e0", "f4g2", "e4e5", "b1b0"]
+    },
+    {
+      "id": "xq344a29060747",
+      "fen": "5k3/9/4R4/9/4p4/9/1R7/9/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 1,
+      "tree": {
+        "choices": {
+          "b3f3": true
+        }
+      },
+      "nodes": 46,
+      "solution": ["b3f3"]
+    },
+    {
+      "id": "xq821d1ba199a9",
+      "fen": "4k4/9/9/7r1/9/4P4/9/4r4/9/3K5 b - - 0 1",
+      "side": "b",
+      "mate": 1,
+      "tree": {
+        "choices": {
+          "h6d6": true
+        }
+      },
+      "nodes": 50,
+      "solution": ["h6d6"]
+    },
+    {
+      "id": "xq9c72e5f1af41",
+      "fen": "3k5/9/4R4/9/4p4/9/7R1/9/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 1,
+      "tree": {
+        "choices": {
+          "h3d3": true
+        }
+      },
+      "nodes": 50,
+      "solution": ["h3d3"]
+    },
+    {
+      "id": "xq3a7978d134af",
+      "fen": "4k4/9/9/1r7/9/4P4/9/4r4/9/5K3 b - - 0 1",
+      "side": "b",
+      "mate": 1,
+      "tree": {
+        "choices": {
+          "b6f6": true
+        }
+      },
+      "nodes": 46,
+      "solution": ["b6f6"]
+    },
+    {
+      "id": "xq89e3c7b4411e",
+      "fen": "5k3/9/9/2R6/4p4/4C4/9/9/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 1,
+      "tree": {
+        "choices": {
+          "c6f6": true
+        }
+      },
+      "nodes": 45,
+      "solution": ["c6f6"]
+    },
+    {
+      "id": "xq1d5af8ff672a",
+      "fen": "4k4/9/9/9/4c4/4P4/6r2/9/9/3K5 b - - 0 1",
+      "side": "b",
+      "mate": 1,
+      "tree": {
+        "choices": {
+          "g3d3": true
+        }
+      },
+      "nodes": 48,
+      "solution": ["g3d3"]
+    },
+    {
+      "id": "xqe28d877d45e2",
+      "fen": "3k5/9/9/6R2/4p4/4C4/9/9/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 1,
+      "tree": {
+        "choices": {
+          "g6d6": true
+        }
+      },
+      "nodes": 48,
+      "solution": ["g6d6"]
+    },
+    {
+      "id": "xqf5553106afb8",
+      "fen": "4k4/9/9/9/4c4/4P4/2r6/9/9/5K3 b - - 0 1",
+      "side": "b",
+      "mate": 1,
+      "tree": {
+        "choices": {
+          "c3f3": true
+        }
+      },
+      "nodes": 45,
+      "solution": ["c3f3"]
+    },
+    {
+      "id": "xq877a41afe638",
+      "fen": "3a5/9/3k5/9/4p4/9/9/N8/7R1/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 4,
+      "tree": {
+        "choices": {
+          "h1d1": {
+            "reply": "d7e7",
+            "next": {
+              "choices": {
+                "d1e1": {
+                  "reply": "d9e8",
+                  "next": {
+                    "choices": {
+                      "e1e5": {
+                        "reply": "e7d7",
+                        "next": {
+                          "choices": {
+                            "e5d5": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 55601,
+      "solution": ["h1d1", "d7e7", "d1e1", "d9e8", "e1e5", "e7d7", "e5d5"]
+    },
+    {
+      "id": "xqc218cdf9a4fd",
+      "fen": "4k4/1r7/8n/9/9/4P4/9/5K3/9/5A3 b - - 0 1",
+      "side": "b",
+      "mate": 4,
+      "tree": {
+        "choices": {
+          "b8f8": {
+            "reply": "f2e2",
+            "next": {
+              "choices": {
+                "f8e8": {
+                  "reply": "e2d2",
+                  "next": {
+                    "choices": {
+                      "e8e4": {
+                        "reply": "d2d1",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 135808,
+      "solution": ["b8f8", "f2e2", "f8e8", "e2d2", "e8e4", "d2d1", "e4d4"]
+    },
+    {
+      "id": "xqc75a41a29a70",
+      "fen": "5a3/9/5k3/9/4p4/9/9/8N/1R7/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 4,
+      "tree": {
+        "choices": {
+          "b1f1": {
+            "reply": "f7e7",
+            "next": {
+              "choices": {
+                "f1e1": {
+                  "reply": "e5e4",
+                  "next": {
+                    "choices": {
+                      "e1e4": {
+                        "reply": "e7d7",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 127699,
+      "solution": ["b1f1", "f7e7", "f1e1", "e5e4", "e1e4", "e7d7", "e4d4"]
+    },
+    {
+      "id": "xq95430731aa56",
+      "fen": "4k4/7r1/n8/9/9/4P4/9/3K5/9/3A5 b - - 0 1",
+      "side": "b",
+      "mate": 4,
+      "tree": {
+        "choices": {
+          "h8d8": {
+            "reply": "d2e2",
+            "next": {
+              "choices": {
+                "d8e8": {
+                  "reply": "d0e1",
+                  "next": {
+                    "choices": {
+                      "e8e4": {
+                        "reply": "e2d2",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 58307,
+      "solution": ["h8d8", "d2e2", "d8e8", "d0e1", "e8e4", "e2d2", "e4d4"]
+    },
+    {
+      "id": "xqa769def023c9",
+      "fen": "5a3/3k5/7N1/9/4p2R1/9/9/9/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 4,
+      "tree": {
+        "choices": {
+          "h5e5": {
+            "reply": "f9e8",
+            "next": {
+              "choices": {
+                "e5d5": {
+                  "reply": "e8d7",
+                  "next": {
+                    "choices": {
+                      "d5d0": {
+                        "reply": "d8d9",
+                        "next": {
+                          "choices": {
+                            "d0d7": true
+                          }
+                        }
+                      },
+                      "d5d1": {
+                        "reply": "d8d9",
+                        "next": {
+                          "choices": {
+                            "d1d7": true
+                          }
+                        }
+                      },
+                      "d5d2": {
+                        "reply": "d8d9",
+                        "next": {
+                          "choices": {
+                            "d2d7": true
+                          }
+                        }
+                      },
+                      "d5d3": {
+                        "reply": "d8d9",
+                        "next": {
+                          "choices": {
+                            "d3d7": true
+                          }
+                        }
+                      },
+                      "d5d4": {
+                        "reply": "d8d9",
+                        "next": {
+                          "choices": {
+                            "d4d7": true
+                          }
+                        }
+                      },
+                      "d5d6": {
+                        "reply": "d8d9",
+                        "next": {
+                          "choices": {
+                            "d6d7": true
+                          }
+                        }
+                      },
+                      "e0e1": {
+                        "reply": "d8d9",
+                        "next": {
+                          "choices": {
+                            "d5d7": true
+                          }
+                        }
+                      },
+                      "h7f6": {
+                        "reply": "d8d9",
+                        "next": {
+                          "choices": {
+                            "d5d7": true
+                          }
+                        }
+                      },
+                      "h7g9": {
+                        "reply": "d8d9",
+                        "next": {
+                          "choices": {
+                            "d5d7": true
+                          }
+                        }
+                      },
+                      "h7g5": {
+                        "reply": "d8d9",
+                        "next": {
+                          "choices": {
+                            "d5d7": true
+                          }
+                        }
+                      },
+                      "h7i9": {
+                        "reply": "d8d9",
+                        "next": {
+                          "choices": {
+                            "d5d7": true
+                          }
+                        }
+                      },
+                      "h7i5": {
+                        "reply": "d8d9",
+                        "next": {
+                          "choices": {
+                            "d5d7": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "e5e8": {
+                  "reply": "d8d9",
+                  "next": {
+                    "choices": {
+                      "e8e1": {
+                        "reply": "d9d8",
+                        "next": {
+                          "choices": {
+                            "e1d1": true
+                          }
+                        }
+                      },
+                      "e8e2": {
+                        "reply": "d9d8",
+                        "next": {
+                          "choices": {
+                            "e2d2": true
+                          }
+                        }
+                      },
+                      "e8e3": {
+                        "reply": "d9d8",
+                        "next": {
+                          "choices": {
+                            "e3d3": true
+                          }
+                        }
+                      },
+                      "e8e4": {
+                        "reply": "d9d8",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e8e5": {
+                        "reply": "d9d8",
+                        "next": {
+                          "choices": {
+                            "e5d5": true
+                          }
+                        }
+                      },
+                      "e8e6": {
+                        "reply": "d9d8",
+                        "next": {
+                          "choices": {
+                            "e6d6": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "h7g9": {
+                  "reply": "d8d9",
+                  "next": {
+                    "choices": {
+                      "g9f7": {
+                        "reply": "e8d7",
+                        "next": {
+                          "choices": {
+                            "e5e9": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "h7g5": {
+                  "reply": "d8d9",
+                  "next": {
+                    "choices": {
+                      "g5f7": {
+                        "reply": "e8d7",
+                        "next": {
+                          "choices": {
+                            "e5e9": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 69232,
+      "solution": ["h5e5", "f9e8", "e5d5", "e8d7", "d5d0", "d8d9", "d0d7"]
+    },
+    {
+      "id": "xq40b277f82960",
+      "fen": "4k4/9/9/9/9/1r2P4/9/1n7/5K3/3A5 b - - 0 1",
+      "side": "b",
+      "mate": 4,
+      "tree": {
+        "choices": {
+          "b4e4": {
+            "reply": "d0e1",
+            "next": {
+              "choices": {
+                "b2c0": {
+                  "reply": "e1f2",
+                  "next": {
+                    "choices": {
+                      "c0d2": {
+                        "reply": "f1f0",
+                        "next": {
+                          "choices": {
+                            "e4e0": true
+                          }
+                        }
+                      },
+                      "e4f4": {
+                        "reply": "f1f0",
+                        "next": {
+                          "choices": {
+                            "f4f2": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "b2c4": {
+                  "reply": "e1f2",
+                  "next": {
+                    "choices": {
+                      "c4d2": {
+                        "reply": "f1f0",
+                        "next": {
+                          "choices": {
+                            "e4e0": true
+                          }
+                        }
+                      },
+                      "e4f4": {
+                        "reply": "f1f0",
+                        "next": {
+                          "choices": {
+                            "f4f2": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "e4e1": {
+                  "reply": "f1f0",
+                  "next": {
+                    "choices": {
+                      "e1e3": {
+                        "reply": "f0f1",
+                        "next": {
+                          "choices": {
+                            "e3f3": true
+                          }
+                        }
+                      },
+                      "e1e4": {
+                        "reply": "f0f1",
+                        "next": {
+                          "choices": {
+                            "e4f4": true
+                          }
+                        }
+                      },
+                      "e1e5": {
+                        "reply": "f0f1",
+                        "next": {
+                          "choices": {
+                            "e5f5": true
+                          }
+                        }
+                      },
+                      "e1e6": {
+                        "reply": "f0f1",
+                        "next": {
+                          "choices": {
+                            "e6f6": true
+                          }
+                        }
+                      },
+                      "e1e7": {
+                        "reply": "f0f1",
+                        "next": {
+                          "choices": {
+                            "e7f7": true
+                          }
+                        }
+                      },
+                      "e1e8": {
+                        "reply": "f0f1",
+                        "next": {
+                          "choices": {
+                            "e8f8": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "e4f4": {
+                  "reply": "e1f2",
+                  "next": {
+                    "choices": {
+                      "b2a0": {
+                        "reply": "f1f0",
+                        "next": {
+                          "choices": {
+                            "f4f2": true
+                          }
+                        }
+                      },
+                      "b2a4": {
+                        "reply": "f1f0",
+                        "next": {
+                          "choices": {
+                            "f4f2": true
+                          }
+                        }
+                      },
+                      "b2c0": {
+                        "reply": "f1f0",
+                        "next": {
+                          "choices": {
+                            "f4f2": true
+                          }
+                        }
+                      },
+                      "b2c4": {
+                        "reply": "f1f0",
+                        "next": {
+                          "choices": {
+                            "f4f2": true
+                          }
+                        }
+                      },
+                      "b2d3": {
+                        "reply": "f1f0",
+                        "next": {
+                          "choices": {
+                            "f4f2": true
+                          }
+                        }
+                      },
+                      "e9e8": {
+                        "reply": "f1f0",
+                        "next": {
+                          "choices": {
+                            "f4f2": true
+                          }
+                        }
+                      },
+                      "f4f9": {
+                        "reply": "f1f0",
+                        "next": {
+                          "choices": {
+                            "f9f2": true
+                          }
+                        }
+                      },
+                      "f4f3": {
+                        "reply": "f1f0",
+                        "next": {
+                          "choices": {
+                            "f3f2": true
+                          }
+                        }
+                      },
+                      "f4f5": {
+                        "reply": "f1f0",
+                        "next": {
+                          "choices": {
+                            "f5f2": true
+                          }
+                        }
+                      },
+                      "f4f6": {
+                        "reply": "f1f0",
+                        "next": {
+                          "choices": {
+                            "f6f2": true
+                          }
+                        }
+                      },
+                      "f4f7": {
+                        "reply": "f1f0",
+                        "next": {
+                          "choices": {
+                            "f7f2": true
+                          }
+                        }
+                      },
+                      "f4f8": {
+                        "reply": "f1f0",
+                        "next": {
+                          "choices": {
+                            "f8f2": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 92206,
+      "solution": ["b4e4", "d0e1", "b2c0", "e1f2", "c0d2", "f1f0", "e4e0"]
+    },
+    {
+      "id": "xq8cc0bd15d1c5",
+      "fen": "3a5/5k3/1N7/9/1R2p4/9/9/9/9/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 4,
+      "tree": {
+        "choices": {
+          "b5e5": {
+            "reply": "d9e8",
+            "next": {
+              "choices": {
+                "b7c9": {
+                  "reply": "e8f7",
+                  "next": {
+                    "choices": {
+                      "c9d7": {
+                        "reply": "f8f9",
+                        "next": {
+                          "choices": {
+                            "e5e9": true
+                          }
+                        }
+                      },
+                      "e5f5": {
+                        "reply": "f8f9",
+                        "next": {
+                          "choices": {
+                            "f5f7": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "b7c5": {
+                  "reply": "e8f7",
+                  "next": {
+                    "choices": {
+                      "c5d7": {
+                        "reply": "f8f9",
+                        "next": {
+                          "choices": {
+                            "e5e9": true
+                          }
+                        }
+                      },
+                      "e5f5": {
+                        "reply": "f8f9",
+                        "next": {
+                          "choices": {
+                            "f5f7": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "e5e8": {
+                  "reply": "f8f9",
+                  "next": {
+                    "choices": {
+                      "e8e1": {
+                        "reply": "f9f8",
+                        "next": {
+                          "choices": {
+                            "e1f1": true
+                          }
+                        }
+                      },
+                      "e8e2": {
+                        "reply": "f9f8",
+                        "next": {
+                          "choices": {
+                            "e2f2": true
+                          }
+                        }
+                      },
+                      "e8e3": {
+                        "reply": "f9f8",
+                        "next": {
+                          "choices": {
+                            "e3f3": true
+                          }
+                        }
+                      },
+                      "e8e4": {
+                        "reply": "f9f8",
+                        "next": {
+                          "choices": {
+                            "e4f4": true
+                          }
+                        }
+                      },
+                      "e8e5": {
+                        "reply": "f9f8",
+                        "next": {
+                          "choices": {
+                            "e5f5": true
+                          }
+                        }
+                      },
+                      "e8e6": {
+                        "reply": "f9f8",
+                        "next": {
+                          "choices": {
+                            "e6f6": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "e5f5": {
+                  "reply": "e8f7",
+                  "next": {
+                    "choices": {
+                      "b7a9": {
+                        "reply": "f8f9",
+                        "next": {
+                          "choices": {
+                            "f5f7": true
+                          }
+                        }
+                      },
+                      "b7a5": {
+                        "reply": "f8f9",
+                        "next": {
+                          "choices": {
+                            "f5f7": true
+                          }
+                        }
+                      },
+                      "b7c9": {
+                        "reply": "f8f9",
+                        "next": {
+                          "choices": {
+                            "f5f7": true
+                          }
+                        }
+                      },
+                      "b7c5": {
+                        "reply": "f8f9",
+                        "next": {
+                          "choices": {
+                            "f5f7": true
+                          }
+                        }
+                      },
+                      "b7d6": {
+                        "reply": "f8f9",
+                        "next": {
+                          "choices": {
+                            "f5f7": true
+                          }
+                        }
+                      },
+                      "e0e1": {
+                        "reply": "f8f9",
+                        "next": {
+                          "choices": {
+                            "f5f7": true
+                          }
+                        }
+                      },
+                      "f5f0": {
+                        "reply": "f8f9",
+                        "next": {
+                          "choices": {
+                            "f0f7": true
+                          }
+                        }
+                      },
+                      "f5f1": {
+                        "reply": "f8f9",
+                        "next": {
+                          "choices": {
+                            "f1f7": true
+                          }
+                        }
+                      },
+                      "f5f2": {
+                        "reply": "f8f9",
+                        "next": {
+                          "choices": {
+                            "f2f7": true
+                          }
+                        }
+                      },
+                      "f5f3": {
+                        "reply": "f8f9",
+                        "next": {
+                          "choices": {
+                            "f3f7": true
+                          }
+                        }
+                      },
+                      "f5f4": {
+                        "reply": "f8f9",
+                        "next": {
+                          "choices": {
+                            "f4f7": true
+                          }
+                        }
+                      },
+                      "f5f6": {
+                        "reply": "f8f9",
+                        "next": {
+                          "choices": {
+                            "f6f7": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 80580,
+      "solution": ["b5e5", "d9e8", "b7c5", "e8f7", "c5d7", "f8f9", "e5e9"]
+    },
+    {
+      "id": "xq0ebede620aef",
+      "fen": "4k4/9/9/9/9/4P2r1/9/7n1/3K5/5A3 b - - 0 1",
+      "side": "b",
+      "mate": 4,
+      "tree": {
+        "choices": {
+          "h4e4": {
+            "reply": "f0e1",
+            "next": {
+              "choices": {
+                "e4d4": {
+                  "reply": "e1d2",
+                  "next": {
+                    "choices": {
+                      "d4d9": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "d9d2": true
+                          }
+                        }
+                      },
+                      "d4d3": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "d3d2": true
+                          }
+                        }
+                      },
+                      "d4d5": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "d5d2": true
+                          }
+                        }
+                      },
+                      "d4d6": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "d6d2": true
+                          }
+                        }
+                      },
+                      "d4d7": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "d7d2": true
+                          }
+                        }
+                      },
+                      "d4d8": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "d8d2": true
+                          }
+                        }
+                      },
+                      "e9e8": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "d4d2": true
+                          }
+                        }
+                      },
+                      "h2f3": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "d4d2": true
+                          }
+                        }
+                      },
+                      "h2g0": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "d4d2": true
+                          }
+                        }
+                      },
+                      "h2g4": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "d4d2": true
+                          }
+                        }
+                      },
+                      "h2i0": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "d4d2": true
+                          }
+                        }
+                      },
+                      "h2i4": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "d4d2": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "e4e1": {
+                  "reply": "d1d0",
+                  "next": {
+                    "choices": {
+                      "e1e3": {
+                        "reply": "d0d1",
+                        "next": {
+                          "choices": {
+                            "e3d3": true
+                          }
+                        }
+                      },
+                      "e1e4": {
+                        "reply": "d0d1",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e1e5": {
+                        "reply": "d0d1",
+                        "next": {
+                          "choices": {
+                            "e5d5": true
+                          }
+                        }
+                      },
+                      "e1e6": {
+                        "reply": "d0d1",
+                        "next": {
+                          "choices": {
+                            "e6d6": true
+                          }
+                        }
+                      },
+                      "e1e7": {
+                        "reply": "d0d1",
+                        "next": {
+                          "choices": {
+                            "e7d7": true
+                          }
+                        }
+                      },
+                      "e1e8": {
+                        "reply": "d0d1",
+                        "next": {
+                          "choices": {
+                            "e8d8": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "h2g0": {
+                  "reply": "d1d0",
+                  "next": {
+                    "choices": {
+                      "g0f2": {
+                        "reply": "e1d2",
+                        "next": {
+                          "choices": {
+                            "e4e0": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "h2g4": {
+                  "reply": "d1d0",
+                  "next": {
+                    "choices": {
+                      "g4f2": {
+                        "reply": "e1d2",
+                        "next": {
+                          "choices": {
+                            "e4e0": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 67522,
+      "solution": ["h4e4", "f0e1", "e4d4", "e1d2", "d4d3", "d1d0", "d3d2"]
+    },
+    {
+      "id": "xq490a4079c1bd",
+      "fen": "9/9/4k4/9/4p4/9/6R2/9/4N4/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 4,
+      "tree": {
+        "choices": {
+          "g3e3": {
+            "reply": "e5e4",
+            "next": {
+              "choices": {
+                "e3e4": {
+                  "reply": "e7d7",
+                  "next": {
+                    "choices": {
+                      "e1c0": {
+                        "reply": "d7d8",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e1c2": {
+                        "reply": "d7d8",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e1d3": {
+                        "reply": "d7d8",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e1f3": {
+                        "reply": "d7d8",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e1g0": {
+                        "reply": "d7d8",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e1g2": {
+                        "reply": "d7d8",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 104531,
+      "solution": ["g3e3", "e5e4", "e3e4", "e7d7", "e1c0", "d7d8", "e4d4"]
+    },
+    {
+      "id": "xqb1b0355ba590",
+      "fen": "4k4/4n4/9/2r6/9/4P4/9/4K4/9/9 b - - 0 1",
+      "side": "b",
+      "mate": 4,
+      "tree": {
+        "choices": {
+          "c6e6": {
+            "reply": "e2d2",
+            "next": {
+              "choices": {
+                "e6e4": {
+                  "reply": "d2d1",
+                  "next": {
+                    "choices": {
+                      "e8c9": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e8c7": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e8d6": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e8f6": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e8g9": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e8g7": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "e8c9": {
+                  "reply": "d2d1",
+                  "next": {
+                    "choices": {
+                      "e6e4": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "e8c7": {
+                  "reply": "d2d1",
+                  "next": {
+                    "choices": {
+                      "e6e4": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "e8d6": {
+                  "reply": "d2d1",
+                  "next": {
+                    "choices": {
+                      "e6e4": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "e8f6": {
+                  "reply": "d2d1",
+                  "next": {
+                    "choices": {
+                      "e6e4": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "e8g9": {
+                  "reply": "d2d1",
+                  "next": {
+                    "choices": {
+                      "e6e4": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "e8g7": {
+                  "reply": "d2d1",
+                  "next": {
+                    "choices": {
+                      "e6e4": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 153555,
+      "solution": ["c6e6", "e2d2", "e6e4", "d2d1", "e8c7", "d1d0", "e4d4"]
+    },
+    {
+      "id": "xq18bbe93583c3",
+      "fen": "9/9/4k4/9/4p4/9/2R6/9/4N4/4K4 w - - 0 1",
+      "side": "r",
+      "mate": 4,
+      "tree": {
+        "choices": {
+          "c3e3": {
+            "reply": "e5e4",
+            "next": {
+              "choices": {
+                "e3e4": {
+                  "reply": "e7d7",
+                  "next": {
+                    "choices": {
+                      "e1c0": {
+                        "reply": "d7d8",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e1c2": {
+                        "reply": "d7d8",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e1d3": {
+                        "reply": "d7d8",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e1f3": {
+                        "reply": "d7d8",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e1g0": {
+                        "reply": "d7d8",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e1g2": {
+                        "reply": "d7d8",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 103153,
+      "solution": ["c3e3", "e5e4", "e3e4", "e7d7", "e1c0", "d7d8", "e4d4"]
+    },
+    {
+      "id": "xqcebea625d438",
+      "fen": "4k4/4n4/9/6r2/9/4P4/9/4K4/9/9 b - - 0 1",
+      "side": "b",
+      "mate": 4,
+      "tree": {
+        "choices": {
+          "g6e6": {
+            "reply": "e2d2",
+            "next": {
+              "choices": {
+                "e6e4": {
+                  "reply": "d2d1",
+                  "next": {
+                    "choices": {
+                      "e8c9": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e8c7": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e8d6": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e8f6": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e8g9": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      },
+                      "e8g7": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "e8c9": {
+                  "reply": "d2d1",
+                  "next": {
+                    "choices": {
+                      "e6e4": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "e8c7": {
+                  "reply": "d2d1",
+                  "next": {
+                    "choices": {
+                      "e6e4": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "e8d6": {
+                  "reply": "d2d1",
+                  "next": {
+                    "choices": {
+                      "e6e4": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "e8f6": {
+                  "reply": "d2d1",
+                  "next": {
+                    "choices": {
+                      "e6e4": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "e8g9": {
+                  "reply": "d2d1",
+                  "next": {
+                    "choices": {
+                      "e6e4": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "e8g7": {
+                  "reply": "d2d1",
+                  "next": {
+                    "choices": {
+                      "e6e4": {
+                        "reply": "d1d0",
+                        "next": {
+                          "choices": {
+                            "e4d4": true
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "nodes": 152698,
+      "solution": ["g6e6", "e2d2", "e6e4", "d2d1", "e8c7", "d1d0", "e4d4"]
+    }
+  ]
+}

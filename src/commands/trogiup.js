@@ -105,6 +105,10 @@ const PAGES = Object.freeze({
         "`/covua choi` — puzzle chiếu hết ngẫu nhiên 1–5 nước. Gửi toàn bộ nước UCI/SAN của bên cần giải trong một tin nhắn. `/covua xem` xem riêng bàn/kết quả; `/covua huongdan` xem cách nhập. Admin dùng `boqua` để thay bàn và `cauhinh` để đặt kênh, thưởng.",
       ],
       [
+        "🀄 Cờ tướng",
+        "`/cotuong choi` — giải thế chiếu hết 1–4 nước bằng ICCS hoặc ký hiệu Việt. `xem` xem bàn/kết quả; `huongdan` xem cách nhập. Quản trị dùng `boqua` thay bàn, `cauhinh` đặt kênh và thưởng.",
+      ],
+      [
         "📖 Xem luật",
         "`/luat trochoi:<game>` — xem tóm tắt luật của một game.",
       ],

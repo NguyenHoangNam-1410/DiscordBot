@@ -22,6 +22,7 @@ const GAMES = Object.freeze([
   ["coquay", "Cò quay Nga", "🔫"],
   ["hardcore", "Sinh tồn", "⚔️"],
   ["covua", "Cờ vua", "♟️"],
+  ["cotuong", "Cờ tướng", "🀄"],
 ]);
 const GAME_INFO = Object.fromEntries(
   GAMES.map(([id, label, emoji]) => [id, { label, emoji }]),

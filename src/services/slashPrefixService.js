@@ -35,6 +35,7 @@ const DEFAULT_SUBCOMMANDS = {
   sinhton: "batdau",
   vtv: "batdau",
   covua: "choi",
+  cotuong: "choi",
 };
 const normalize = (value) => normalizeSearch(String(value)).replace(/\s/g, "");
 let registeredCommands;

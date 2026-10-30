@@ -1,6 +1,6 @@
 const { db } = require("../db");
 
-const REWARD_GAMES = Object.freeze(["vuatiengviet", "covua"]);
+const REWARD_GAMES = Object.freeze(["vuatiengviet", "covua", "cotuong"]);
 
 function envReward(name, fallback) {
   const value = Number(process.env[name]);
@@ -12,6 +12,7 @@ function envReward(name, fallback) {
 const DEFAULT_REWARDS = Object.freeze({
   vuatiengviet: envReward("VUATIENGVIET_REWARD", 25),
   covua: 100,
+  cotuong: 100,
 });
 
 function getGameReward(guildId, game) {
@@ -27,8 +28,8 @@ function setGameReward(guildId, game, reward) {
   const value = Number(reward);
   if (
     !Number.isSafeInteger(value) ||
-    value < (game === "covua" ? 1 : 0) ||
-    value > (game === "covua" ? 40_000 : 100_000)
+    value < (["covua", "cotuong"].includes(game) ? 1 : 0) ||
+    value > (["covua", "cotuong"].includes(game) ? 40_000 : 100_000)
   )
     throw new Error("INVALID_REWARD");
   db.prepare(

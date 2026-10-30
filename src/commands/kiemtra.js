@@ -92,6 +92,7 @@ const pending = (list) =>
   list.filter((item) => item.complete && !item.claimed).length;
 
 const ACHIEVEMENT_PAGE_SIZE = 5;
+const { pagedOptions, navigationPage } = require("../utils/pagedSelect");
 const ACHIEVEMENT_STATUSES = Object.freeze([
   { label: "Tất cả", value: "all" },
   { label: "Đang làm", value: "progress" },
@@ -125,6 +126,7 @@ const ACHIEVEMENT_CATEGORIES = Object.freeze([
   { label: "Gacha · vật phẩm hiếm", value: "gachaRare" },
   { label: "Gacha · kim cương đã tiêu", value: "gachaSpent" },
   { label: "Cờ vua", value: "covua" },
+  { label: "Cờ tướng", value: "cotuong" },
 ]);
 function selection(value, choices) {
   return choices.some((choice) => choice.value === value) ? value : "all";
@@ -196,6 +198,7 @@ function achievementPanel(
   status = "all",
   category = "all",
   requestedPage = 0,
+  requestedFilterPage = null,
 ) {
   status = selection(status, ACHIEVEMENT_STATUSES);
   category = selection(category, ACHIEVEMENT_CATEGORIES);
@@ -225,28 +228,37 @@ function achievementPanel(
     .setFooter({
       text: `Trang ${page + 1}/${pages} · ${achievements.length} thành tựu`,
     });
-  const filterRow = (name, current, choices, group = 0) =>
+  const filter = pagedOptions(
+    ACHIEVEMENT_CATEGORIES,
+    category,
+    requestedFilterPage,
+  );
+  const filterRow = (name, current, choices) =>
     new ActionRowBuilder().addComponents(
       new StringSelectMenuBuilder()
-        .setCustomId(`kiemtra-${name}:${userId}:${status}:${category}:${group}`)
+        .setCustomId(
+          `kiemtra-${name}:${userId}:${status}:${category}:${page}:${filter.page}`,
+        )
         .setPlaceholder(
           name === "status"
             ? "Lọc theo trạng thái"
-            : `Loại thành tựu · nhóm ${group + 1}`,
+            : `Loại thành tựu · ${filter.page + 1}/${filter.pages} · ${ACHIEVEMENT_CATEGORIES.find((choice) => choice.value === category)?.label || "Mọi loại"}`,
         )
         .addOptions(
-          choices.map((choice) =>
-            new StringSelectMenuOptionBuilder()
+          choices.map((choice) => {
+            const option = new StringSelectMenuOptionBuilder()
               .setLabel(choice.label)
               .setValue(choice.value)
-              .setDefault(choice.value === current),
-          ),
+              .setDefault(choice.value === current);
+            if (choice.emoji) option.setEmoji(choice.emoji);
+            return option;
+          }),
         ),
     );
   const pageRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId(
-        `kiemtra-page:${userId}:${status}:${category}:${Math.max(0, page - 1)}:prev`,
+        `kiemtra-page:${userId}:${status}:${category}:${Math.max(0, page - 1)}:prev:${filter.page}`,
       )
       .setLabel("Trước")
       .setStyle(ButtonStyle.Secondary)
@@ -258,7 +270,7 @@ function achievementPanel(
       .setDisabled(true),
     new ButtonBuilder()
       .setCustomId(
-        `kiemtra-page:${userId}:${status}:${category}:${Math.min(pages - 1, page + 1)}:next`,
+        `kiemtra-page:${userId}:${status}:${category}:${Math.min(pages - 1, page + 1)}:next:${filter.page}`,
       )
       .setLabel("Sau")
       .setStyle(ButtonStyle.Secondary)
@@ -269,19 +281,7 @@ function achievementPanel(
     components: [
       menuRow(userId, status, category, page),
       filterRow("status", status, ACHIEVEMENT_STATUSES),
-      ...Array.from(
-        { length: Math.ceil((ACHIEVEMENT_CATEGORIES.length - 1) / 24) },
-        (_, group) =>
-          filterRow(
-            "category",
-            category,
-            [
-              ACHIEVEMENT_CATEGORIES[0],
-              ...ACHIEVEMENT_CATEGORIES.slice(1 + group * 24, 25 + group * 24),
-            ],
-            group,
-          ),
-      ),
+      filterRow("category", category, filter.options),
       pageRow,
     ],
     allowedMentions: { parse: [] },
@@ -477,30 +477,57 @@ module.exports = {
     });
   },
   async handleAchievementFilter(interaction) {
-    const [kind, ownerId, rawStatus, rawCategory] =
+    const [kind, ownerId, rawStatus, rawCategory, rawPage, rawFilterPage] =
       interaction.customId.split(":");
     if (interaction.user.id !== ownerId)
       return interaction.reply({
         content: "Chỉ người mở lệnh này mới dùng được bộ lọc.",
         flags: MessageFlags.Ephemeral,
       });
+    const nextFilterPage = navigationPage(interaction.values[0]);
+    if (kind === "kiemtra-category" && nextFilterPage !== null)
+      return interaction.update(
+        achievementPanel(
+          interaction.guildId,
+          ownerId,
+          rawStatus,
+          rawCategory,
+          pageNumber(rawPage),
+          nextFilterPage,
+        ),
+      );
     const status =
       kind === "kiemtra-status" ? interaction.values[0] : rawStatus;
     const category =
       kind === "kiemtra-category" ? interaction.values[0] : rawCategory;
     return interaction.update(
-      achievementPanel(interaction.guildId, ownerId, status, category, 0),
+      achievementPanel(
+        interaction.guildId,
+        ownerId,
+        status,
+        category,
+        0,
+        rawFilterPage === undefined ? null : pageNumber(rawFilterPage),
+      ),
     );
   },
   async handleAchievementPage(interaction) {
-    const [, ownerId, status, category, page] = interaction.customId.split(":");
+    const [, ownerId, status, category, page, , filterPage] =
+      interaction.customId.split(":");
     if (interaction.user.id !== ownerId)
       return interaction.reply({
         content: "Chỉ người mở lệnh này mới chuyển trang.",
         flags: MessageFlags.Ephemeral,
       });
     return interaction.update(
-      achievementPanel(interaction.guildId, ownerId, status, category, page),
+      achievementPanel(
+        interaction.guildId,
+        ownerId,
+        status,
+        category,
+        page,
+        filterPage === undefined ? null : pageNumber(filterPage),
+      ),
     );
   },
 };
