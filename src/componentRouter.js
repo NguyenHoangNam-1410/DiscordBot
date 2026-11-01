@@ -53,6 +53,12 @@ const { handleStore, handleBag } = require("./services/hardcoreInventoryView");
 const ROUTES = Object.freeze([
   {
     kind: "button",
+    prefix: "caro:",
+    handle: (interaction) =>
+      require("./commands/caro").handleButton(interaction),
+  },
+  {
+    kind: "button",
     prefix: "chatbot-stats:",
     handle: (interaction) =>
       require("./services/chatbotUsageService").handleButton(interaction),

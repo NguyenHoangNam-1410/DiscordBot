@@ -24,6 +24,7 @@ const SUB_ALIASES = {
   vtv: { start: "batdau", skip: "boqua", end: "ketthuc" },
 };
 const DEFAULT_SUBCOMMANDS = {
+  caro: "choi",
   baucua: "choi",
   taixiu: "choi",
   chinchiro: "choi",

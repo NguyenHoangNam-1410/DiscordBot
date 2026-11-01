@@ -8,6 +8,7 @@ Phiên bản bot độc lập chỉ dành cho trò chơi và hệ thống xu. Kh
 - Xì dách, Đua ngựa nhiều người, Dò mìn, Cò quay Nga
 - Vua tiếng Việt
 - Sinh tồn
+- Caro hai người trên web (thử nghiệm): `/caro choi`, tham gia trong Discord rồi mở bàn cờ trực tiếp. Không cược/thưởng xu. Xem [hướng dẫn bật web trên VM GCP](docs/caro-web.md).
 
 ## Cài đặt
 

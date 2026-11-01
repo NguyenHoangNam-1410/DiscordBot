@@ -1581,4 +1581,18 @@ runMigration(59, "xiangqi puzzles and first-solve rewards", () => {
   CREATE TABLE xiangqi_awards (guild_id TEXT NOT NULL,user_id TEXT NOT NULL,puzzle_id TEXT NOT NULL,round_id TEXT NOT NULL,created_at INTEGER NOT NULL,PRIMARY KEY(guild_id,user_id,puzzle_id));`);
 });
 
+runMigration(60, "multiplayer caro web rooms", () => {
+  db.exec(`CREATE TABLE caro_rooms (
+    id TEXT PRIMARY KEY, guild_id TEXT NOT NULL, channel_id TEXT NOT NULL,
+    status TEXT NOT NULL, data_json TEXT NOT NULL, ui_dirty INTEGER NOT NULL DEFAULT 1
+  );
+  CREATE UNIQUE INDEX idx_caro_open_channel ON caro_rooms(guild_id,channel_id)
+    WHERE status IN ('waiting','playing');
+  CREATE TABLE caro_seats (
+    guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
+    room_id TEXT NOT NULL REFERENCES caro_rooms(id) ON DELETE CASCADE,
+    PRIMARY KEY(guild_id,user_id)
+  );`);
+});
+
 module.exports = { db, dbPath, runMigration };

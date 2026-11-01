@@ -1,5 +1,18 @@
 [
   {
+    "id": "8f6778db-fbd5-4408-b99d-510ab8ada740",
+    "updatedAt": "2026-11-01T13:37:11.763Z",
+    "auditedAt": "2026-11-01T13:37:11.763Z",
+    "title": "Caro: thử nghiệm đấu hai người trên web",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Thêm /caro choi: tạo phòng trong Discord, bấm tham gia và nhận link riêng để đấu caro trực tiếp trên web.",
+      "Bàn 15×15, từ 5 quân liên tiếp thắng; giới hạn 90 giây mỗi lượt, lưu từng nước và cho phép kết nối lại.",
+      "Kết quả được cập nhật về tin nhắn phòng; bản thử nghiệm không cược và không thưởng xu."
+    ]
+  },
+  {
     "id": "4b0cebdb-578c-4f84-831e-a85ebfd3582a",
     "updatedAt": "2026-10-30T08:45:46.606Z",
     "auditedAt": "2026-10-30T08:45:46.606Z",
