@@ -4,6 +4,7 @@ const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
 const { randomBytes } = require("node:crypto");
+const { createPublicPages } = require("./publicPages");
 
 const ROOM = /^\/room\/([a-f0-9-]{36})$/;
 const MAX_BODY = 2048;
@@ -55,21 +56,7 @@ function createWebServer({
       if (game.id === legacyGame && url !== "/") assets.set(url, asset);
     }
   }
-  const escape = (value) =>
-    String(value).replace(
-      /[&<>"']/g,
-      (c) =>
-        ({
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          '"': "&quot;",
-          "'": "&#39;",
-        })[c],
-    );
-  const portal = Buffer.from(
-    `<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Trò chơi Discord</title><script src="/portal.js" defer></script></head><body><main><h1>Trò chơi Discord</h1><p>Mở phòng từ lệnh của bot trong Discord, hoặc chọn trò chơi để xem hướng dẫn.</p><ul>${games.map((g) => `<li><a href="/${g.id}/">${escape(g.name)}</a></li>`).join("")}</ul></main></body></html>`,
-  );
+  const publicPages = createPublicPages(games);
   function prune(map) {
     for (const [key, value] of map) if (value.expires <= now()) map.delete(key);
   }
@@ -176,9 +163,19 @@ function createWebServer({
     const url = new URL(req.url, "http://localhost");
     if (req.method === "GET" && url.pathname === "/healthz")
       return json(res, 200, { ok: true });
-    if (req.method === "GET" && url.pathname === "/") {
-      res.writeHead(200, { "Content-Type": "text/html; charset=utf-8" });
-      return res.end(portal);
+    if (["GET", "HEAD"].includes(req.method)) {
+      if (["/terms/", "/privacy/"].includes(url.pathname)) {
+        res.writeHead(308, { Location: url.pathname.slice(0, -1) });
+        return res.end();
+      }
+      const page = publicPages.get(url.pathname);
+      if (page) {
+        res.writeHead(200, {
+          "Content-Type": page.type,
+          "Content-Length": page.data.length,
+        });
+        return res.end(req.method === "HEAD" ? undefined : page.data);
+      }
     }
     if (req.method === "GET" && url.pathname === "/portal.js") {
       res.writeHead(200, { "Content-Type": "text/javascript; charset=utf-8" });

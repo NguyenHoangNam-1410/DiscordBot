@@ -1,5 +1,18 @@
 [
   {
+    "id": "5f2f543d-7647-43a5-945e-a4d0bceec219",
+    "updatedAt": "2026-11-02T09:24:52.280Z",
+    "auditedAt": "2026-11-02T09:24:52.280Z",
+    "title": "Trang Điều khoản và Chính sách riêng tư công khai",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Thêm trang /terms và /privacy dùng chung địa chỉ web của bot, đọc công khai không cần đăng nhập và hỗ trợ giao diện điện thoại.",
+      "Công bố quy tắc sử dụng, tài nguyên ảo trong game, dữ liệu được xử lý, việc dùng dịch vụ AI, phiên web, lưu giữ và sao lưu.",
+      "Thêm link server hỗ trợ và email để người chơi gửi yêu cầu hỗ trợ hoặc xem, sửa, xóa dữ liệu; trang chủ có liên kết tới hai chính sách."
+    ]
+  },
+  {
     "id": "b2ef37a4-e089-4feb-afd5-fd297b57df0e",
     "updatedAt": "2026-11-02T07:55:09.800Z",
     "auditedAt": "2026-11-02T07:55:09.800Z",

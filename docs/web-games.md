@@ -11,7 +11,7 @@ Một tiến trình bot, một cổng HTTP, một địa chỉ HTTPS/Tailscale. 
 | `WEB_HOST`       | `127.0.0.1`             | `CARO_WEB_HOST`     |
 | `WEB_PORT`       | `3000`                  | `CARO_WEB_PORT`     |
 
-Biến mới được ưu tiên khi tồn tại, kể cả `WEB_ENABLED=false`. URL phải là HTTPS gốc (HTTP chỉ cho localhost). Giữ cổng cũ thì không cần đổi Tailscale. Sau khi cập nhật code, chạy `npm run register` để thêm tùy chọn mới của `/caro choi`, rồi khởi động lại bot.
+Biến mới được ưu tiên khi tồn tại, kể cả `WEB_ENABLED=false`. URL phải là HTTPS gốc (HTTP chỉ cho localhost). Giữ cổng cũ thì không cần đổi Tailscale. Sau khi cập nhật code, khởi động lại bot. Chạy thêm `npm run register` nếu cập nhật có thêm hoặc đổi lệnh Discord; chỉ cập nhật trang web thì không cần đăng ký lại lệnh.
 
 - `/`: danh sách game đã đăng ký.
 - `/<game>/`, `/<game>/room/<UUID>`: trang game và phòng.
@@ -20,6 +20,28 @@ Biến mới được ưu tiên khi tồn tại, kể cả `WEB_ENABLED=false`. 
 - POST `/api/games/<game>/pair`, `pair/status`, `login`: mã kết nối/vé và phiên Discord dùng chung.
 - POST `/api/games/<game>/<action>`: hành động do game khai báo, phải có phiên người chơi và ghế trong đúng phòng.
 - `/healthz`: kiểm tra HTTP. Chỉ phục vụ game đã đăng ký; tên game không được dùng để đọc tùy ý đường dẫn trên máy.
+- `/terms`, `/privacy`: Điều khoản sử dụng và Chính sách riêng tư công khai, không cần đăng nhập. Trang chủ có liên kết tới hai trang và thông tin hỗ trợ.
+
+## Điều khoản và chính sách công khai
+
+Hai trang dùng chung web và địa chỉ Funnel của các game. Sau khi cập nhật code và khởi động lại tiến trình bot hiện có, điền vào Discord Developer Portal:
+
+| Trường                        | URL                                        |
+| ----------------------------- | ------------------------------------------ |
+| Terms of Service URL          | Giá trị `WEB_PUBLIC_URL` + `/terms`        |
+| Privacy Policy URL            | Giá trị `WEB_PUBLIC_URL` + `/privacy`      |
+| Interactions Endpoint URL     | Giữ trống khi bot tiếp tục dùng Gateway    |
+| Linked Roles Verification URL | Giữ trống khi chưa triển khai Linked Roles |
+
+Ví dụ với `WEB_PUBLIC_URL=https://ten-may.ten-tailnet.ts.net`, hai URL là `https://ten-may.ten-tailnet.ts.net/terms` và `https://ten-may.ten-tailnet.ts.net/privacy`. Không cần thêm Funnel, cổng, cơ sở dữ liệu hay đăng ký lại slash command cho cập nhật này. Các trang cần được truy cập công khai bằng trình duyệt ngoài tailnet, không chỉ qua Tailscale Serve riêng tư. Máy chủ phải đang chạy để phục vụ trang.
+
+Thông tin công khai nằm trong `src/webGames/publicSite.json`: tên ứng dụng hiển thị, link server hỗ trợ, email và ngày cập nhật chính sách (`YYYY-MM-DD`). Các giá trị này xuất hiện trên website; không đặt token hay thông tin bí mật vào đây. Đổi tên hiển thị không đổi tên bot trên Discord. Nội dung hai trang nằm trong `src/webGames/publicPages.js`; kiểu trình bày dùng `src/webGames/public/site.css`.
+
+Chính sách mô tả các dữ liệu đang được xử lý, hồ sơ/kết quả công khai, việc chuyển nội dung cho nhà cung cấp AI khi dùng chatbot, phiên web, lưu giữ và sao lưu. Kênh liên hệ dùng thông tin được chủ bot cung cấp. Yêu cầu xem/sửa/xóa được gửi tới người vận hành để xác minh và xử lý thủ công; việc xuất bản trang không tạo thêm chức năng tự động xóa dữ liệu. Khi thay đổi nội dung hoặc cách xử lý dữ liệu, cập nhật nội dung và `updatedAt` tương ứng.
+
+Kiểm tra bằng `npm run test:web:public`. Bộ kiểm tra không dùng database hay Discord thật; kiểm tra truy cập ẩn danh, liên hệ, GET/HEAD, đường dẫn có dấu `/` cuối, header bảo vệ và tương thích trang chủ cũ. Discord yêu cầu chính sách mô tả đúng cách xử lý dữ liệu và cách yêu cầu xóa: [Discord Developer Terms](https://support-dev.discord.com/hc/en-us/articles/8562894815383-Discord-Developer-Terms-of-Service). Trang công khai không thay thế quy trình xác minh ứng dụng riêng của Discord.
+
+## Tương thích dữ liệu và phòng cũ
 
 Tương thích caro cũ: `/room/<UUID>` chuyển tới `/caro/room/<UUID>`; `/api/*`, `/app.js`, `/style.css` vẫn là alias của caro. Vé cũ dạng `/#ticket=...` được trang chủ chuyển vào caro. Không đổi ID phòng, không xóa dữ liệu SQLite; các phòng caro không có `rules` dùng luật mặc định cũ.
 

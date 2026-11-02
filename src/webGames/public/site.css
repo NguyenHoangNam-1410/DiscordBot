@@ -1,0 +1,277 @@
+:root {
+  color-scheme: dark;
+  --bg: #101a23;
+  --panel: #172834;
+  --text: #edf3f4;
+  --muted: #aec0ca;
+  --line: #304958;
+  --accent: #b0e1cf;
+}
+* {
+  box-sizing: border-box;
+}
+html {
+  scroll-padding-top: 24px;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    16px/1.75 "Segoe UI",
+    Arial,
+    sans-serif;
+}
+a {
+  color: var(--accent);
+  text-underline-offset: 4px;
+  overflow-wrap: anywhere;
+}
+a:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 5px;
+  border-radius: 3px;
+}
+.shell {
+  width: min(1120px, 100%);
+  padding: 0 40px;
+  margin: auto;
+}
+.site-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  min-height: 100px;
+  border-bottom: 1px solid var(--line);
+}
+.brand {
+  color: var(--text);
+  text-decoration: none;
+  font-size: 18px;
+  font-weight: 700;
+}
+nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 24px;
+}
+nav a {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+nav a:hover,
+nav a[aria-current="page"] {
+  color: var(--accent);
+}
+.page-heading {
+  padding: 56px 0 30px;
+  max-width: 780px;
+}
+.eyebrow {
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  margin: 0 0 14px;
+}
+h1 {
+  font-size: clamp(30px, 4.5vw, 46px);
+  line-height: 1.18;
+  letter-spacing: -1px;
+  margin: 0 0 20px;
+}
+.lede {
+  font-size: 18px;
+  color: var(--muted);
+  margin: 0;
+}
+.updated {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 18px;
+}
+h2 {
+  font-size: 22px;
+  line-height: 1.4;
+  margin: 0 0 14px;
+}
+p {
+  margin: 0 0 16px;
+}
+.policy {
+  max-width: 800px;
+}
+.policy section {
+  margin: 22px 0 0;
+  padding: 24px 0 0;
+  border-top: 1px solid var(--line);
+}
+.policy ul {
+  margin: 0 0 20px;
+  padding-left: 24px;
+}
+.policy li {
+  margin-bottom: 10px;
+}
+code {
+  font: 14px monospace;
+  background: #263c49;
+  border-radius: 4px;
+  padding: 2px 5px;
+}
+.contact-card {
+  margin-top: 48px;
+  padding: 28px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+.contact-card h2 {
+  font-size: 24px;
+}
+.contact-card p {
+  max-width: 780px;
+}
+.contact-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+  margin: 24px 0;
+}
+.button-link {
+  display: inline-block;
+  text-decoration: none;
+  background: var(--accent);
+  color: #172e29;
+  border-radius: 8px;
+  font-size: 14px;
+  padding: 10px 16px;
+  font-weight: 600;
+}
+.email-link {
+  font-size: 15px;
+}
+.small {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 0;
+}
+footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 28px 0 36px;
+  margin-top: 44px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--muted);
+}
+footer nav a {
+  font-size: 12px;
+}
+.section-title {
+  margin: 10px 0 20px;
+}
+.game-grid {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  padding: 0;
+  margin: 0;
+}
+.game-grid li {
+  min-width: 0;
+}
+.game-grid a {
+  display: block;
+  padding: 24px;
+  border-radius: 12px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  text-decoration: none;
+  height: 100%;
+}
+.game-grid a:hover {
+  border-color: var(--accent);
+}
+.game-grid h2 {
+  font-size: 22px;
+  color: var(--text);
+}
+.game-grid p {
+  font-size: 14px;
+  color: var(--muted);
+}
+.game-grid span {
+  font-size: 13px;
+}
+.intro-card {
+  padding-top: 32px;
+  max-width: 780px;
+}
+.intro-card p {
+  color: var(--muted);
+}
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 10px;
+  z-index: 5;
+  background: var(--panel);
+  padding: 10px;
+}
+.skip-link:focus {
+  top: 10px;
+}
+@media (max-width: 720px) {
+  .shell {
+    padding: 0 20px;
+  }
+  .site-header {
+    align-items: start;
+    flex-direction: column;
+    padding: 22px 0;
+    gap: 12px;
+  }
+  nav {
+    gap: 10px 18px;
+  }
+  .page-heading {
+    padding-top: 34px;
+  }
+  .lede {
+    font-size: 16px;
+  }
+  .game-grid {
+    grid-template-columns: 1fr;
+  }
+  .game-grid a {
+    padding: 20px;
+  }
+  .contact-card {
+    padding: 22px;
+    margin-top: 32px;
+  }
+  .contact-links {
+    align-items: start;
+    flex-direction: column;
+    gap: 14px;
+  }
+  h2 {
+    font-size: 20px;
+  }
+  .policy section {
+    margin-top: 16px;
+    padding-top: 22px;
+  }
+  footer {
+    align-items: start;
+    flex-direction: column;
+  }
+}
