@@ -20,6 +20,16 @@ let selectedShip = 0,
   suppressClickUntil = 0,
   dragScrollFrame = null;
 const other = (mark) => (mark === "X" ? "O" : "X");
+// h/v preserve saved rooms: the anchor is always the bow, cells extend away from it.
+const DIRECTIONS = ["h", "v", "right", "down"];
+const DIRECTION_LABELS = {
+  h: "← Trái",
+  v: "↑ Trên",
+  right: "→ Phải",
+  down: "↓ Dưới",
+};
+const horizontal = (direction) => ["h", "right"].includes(direction);
+const reverse = (direction) => ["right", "down"].includes(direction);
 const open = () =>
   state && ["waiting", "setup", "playing"].includes(state.status);
 const canSetup = () =>
@@ -28,6 +38,22 @@ const canSetup = () =>
   !state.ready[state.me] &&
   connected &&
   !pending;
+function closeFleetTooltips() {
+  for (const mark of ["X", "O"]) {
+    $("fleet-menu-" + mark).classList.toggle("open", false);
+    $("fleet-info-" + mark).setAttribute("aria-expanded", "false");
+  }
+}
+for (const mark of ["X", "O"])
+  $("fleet-info-" + mark).addEventListener("click", () => {
+    const opened = !$("fleet-menu-" + mark).classList.contains("open");
+    closeFleetTooltips();
+    $("fleet-menu-" + mark).classList.toggle("open", opened);
+    $("fleet-info-" + mark).setAttribute("aria-expanded", String(opened));
+  });
+document.addEventListener("click", (event) => {
+  if (!event.target?.closest?.(".fleet-tooltip")) closeFleetTooltips();
+});
 function notice(message) {
   $("notice").textContent = message || "";
   $("notice").hidden = !message;
@@ -62,6 +88,13 @@ function accept(next) {
   const phaseChanged = state?.status !== next.status;
   const turnChanged =
     phaseChanged || state?.turn !== next.turn || state?.me !== next.me;
+  if (
+    !drag &&
+    (state?.me !== next.me || state?.setupRevision !== next.setupRevision)
+  ) {
+    const selected = next.placements.find((ship) => ship.id === selectedShip);
+    if (selected) orientation = selected.orientation;
+  }
   state = next;
   if (phaseChanged) {
     drag = null;
@@ -94,21 +127,22 @@ function shipCells(ship, length) {
     !Number.isInteger(ship.cell) ||
     ship.cell < 0 ||
     ship.cell >= state.size ** 2 ||
-    !["h", "v"].includes(ship.orientation)
+    !DIRECTIONS.includes(ship.orientation)
   )
     return null;
+  const start = horizontal(ship.orientation)
+    ? ship.cell % state.size
+    : Math.floor(ship.cell / state.size);
   if (
-    (ship.orientation === "h"
-      ? ship.cell % state.size
-      : Math.floor(ship.cell / state.size)) +
-      length >
-    state.size
+    reverse(ship.orientation)
+      ? start - length + 1 < 0
+      : start + length > state.size
   )
     return null;
-  return Array.from(
-    { length },
-    (_, i) => ship.cell + i * (ship.orientation === "h" ? 1 : state.size),
-  );
+  const step =
+    (horizontal(ship.orientation) ? 1 : state.size) *
+    (reverse(ship.orientation) ? -1 : 1);
+  return Array.from({ length }, (_, i) => ship.cell + i * step);
 }
 function validPlacement(placements) {
   const occupied = new Map();
@@ -208,8 +242,7 @@ function render() {
     (ship) => ship.id === selectedShip,
   );
   $("ready").disabled ||= state.placements.length !== state.fleet.length;
-  $("rotate").textContent =
-    `Xoay · ${orientation === "h" ? "Ngang" : "Dọc"} · R`;
+  $("rotate").textContent = `Mũi ${DIRECTION_LABELS[orientation]} · R`;
   renderFleet();
   for (const mark of ["X", "O"]) {
     $("name-" + mark).textContent = state.players[mark] || "Chờ đối thủ";
@@ -232,7 +265,20 @@ function render() {
     $("view-" + mark).textContent = label;
     $("title-" + mark).textContent = label;
     $("fleet-info-" + mark).textContent =
-      `${state.fleet.length - state.sunk[mark]} thuyền còn lại`;
+      `${state.fleet.length - state.sunk[mark]} thuyền còn lại ⓘ`;
+    const types = $("fleet-types-" + mark);
+    types.replaceChildren();
+    for (const [length, count] of Object.entries(state.remainingFleet[mark])) {
+      if (!count) continue;
+      const item = document.createElement("li");
+      item.textContent = `Thuyền ${length} ô × ${count}`;
+      types.append(item);
+    }
+    if (!types.children.length) {
+      const item = document.createElement("li");
+      item.textContent = "Toàn bộ thuyền đã chìm.";
+      types.append(item);
+    }
   }
   $("last-action").hidden = !state.lastAction;
   if (state.lastAction) {
@@ -409,29 +455,34 @@ function moveDrag(x, y) {
   drag.x = x;
   drag.y = y;
   const under = document.elementFromPoint(x, y)?.closest("[data-cell]");
-  drag.cell =
-    under?.dataset.target === state.me
-      ? Number(under.dataset.cell) -
-        drag.index * (drag.orientation === "h" ? 1 : state.size)
-      : null;
-  // Retain the grabbed segment; wrapping a horizontal ship around a row is invalid.
-  if (
-    under &&
-    drag.orientation === "h" &&
-    Number(under.dataset.cell) % state.size < drag.index
-  )
-    drag.cell = null;
+  drag.cell = null;
+  const isHorizontal = horizontal(drag.orientation),
+    isReverse = reverse(drag.orientation);
+  if (under?.dataset.target === state.me) {
+    const cell = Number(under.dataset.cell),
+      delta = drag.index * (isReverse ? -1 : 1);
+    const row = Math.floor(cell / state.size) - (isHorizontal ? 0 : delta);
+    const col = (cell % state.size) - (isHorizontal ? delta : 0);
+    if (row >= 0 && row < state.size && col >= 0 && col < state.size)
+      drag.cell = row * state.size + col;
+  }
   const ghost = $("drag-ghost");
   ghost.hidden = !drag.active;
   ghost.className = drag.orientation;
-  ghost.style.gridTemplateColumns =
-    drag.orientation === "h" ? `repeat(${state.fleet[drag.id]},28px)` : "28px";
-  ghost.style.left = `${x - (drag.orientation === "h" ? drag.index * 30 : 0) - 14}px`;
-  ghost.style.top = `${y - (drag.orientation === "v" ? drag.index * 30 : 0) - 14}px`;
+  ghost.style.gridTemplateColumns = isHorizontal
+    ? `repeat(${state.fleet[drag.id]},28px)`
+    : "28px";
+  const grabbed = isReverse
+    ? state.fleet[drag.id] - 1 - drag.index
+    : drag.index;
+  ghost.style.left = `${x - (isHorizontal ? grabbed * 30 : 0) - 14}px`;
+  ghost.style.top = `${y - (isHorizontal ? 0 : grabbed * 30) - 14}px`;
   ghost.replaceChildren(
-    ...Array.from({ length: state.fleet[drag.id] }, () =>
-      document.createElement("i"),
-    ),
+    ...Array.from({ length: state.fleet[drag.id] }, (_, index) => {
+      const segment = document.createElement("i");
+      segment.style.order = isReverse ? state.fleet[drag.id] - index : index;
+      return segment;
+    }),
   );
   renderBoards();
   if (drag.active && dragScrollFrame === null)
@@ -483,7 +534,9 @@ document.addEventListener("pointercancel", () => {
 });
 function rotateShip() {
   if (!canSetup()) return;
-  orientation = orientation === "h" ? "v" : "h";
+  orientation =
+    DIRECTIONS[(DIRECTIONS.indexOf(orientation) + 1) % DIRECTIONS.length];
+  $("rotate").textContent = `Mũi ${DIRECTION_LABELS[orientation]} · R`;
   if (drag) {
     drag.orientation = orientation;
     drag.active = true;
@@ -508,6 +561,10 @@ document.addEventListener("keydown", (event) => {
     drag = null;
     $("drag-ghost").hidden = true;
     renderBoards();
+  }
+  if (event.key === "Escape") {
+    closeFleetTooltips();
+    for (const mark of ["X", "O"]) $("fleet-info-" + mark).blur?.();
   }
 });
 document.addEventListener("contextmenu", (event) => {

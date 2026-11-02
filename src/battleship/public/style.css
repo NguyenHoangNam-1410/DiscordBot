@@ -352,6 +352,12 @@ p {
 .cell.bow-v::before {
   border-radius: 50% 50% 0 0;
 }
+.cell.bow-right::before {
+  border-radius: 0 50% 50% 0;
+}
+.cell.bow-down::before {
+  border-radius: 0 0 50% 50%;
+}
 .cell.hit {
   color: #51120b;
 }
@@ -443,6 +449,63 @@ footer {
 }
 #drag-ghost.v i:first-child {
   border-radius: 50% 50% 0 0;
+}
+#drag-ghost.right i:first-child {
+  border-radius: 0 50% 50% 0;
+}
+#drag-ghost.down i:first-child {
+  border-radius: 0 0 50% 50%;
+}
+.fleet-tooltip {
+  position: relative;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.fleet-tooltip-toggle {
+  background: transparent;
+  color: var(--muted);
+  border: 0;
+  padding: 2px 0 4px 8px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.fleet-tooltip-content {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 5px);
+  z-index: 8;
+  width: 210px;
+  padding: 12px 14px;
+  border: 1px solid #507183;
+  border-radius: 10px;
+  background: #10212e;
+  color: var(--text);
+  box-shadow: 0 8px 22px #0008;
+  font-size: 13px;
+  visibility: hidden;
+  pointer-events: none;
+}
+.fleet-tooltip-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+.fleet-tooltip-content li + li {
+  margin-top: 4px;
+}
+.fleet-tooltip.open .fleet-tooltip-content,
+.fleet-tooltip-toggle:focus-visible + .fleet-tooltip-content {
+  visibility: visible;
+}
+@media (hover: hover) {
+  .fleet-tooltip:hover .fleet-tooltip-content {
+    visibility: visible;
+  }
+}
+@media (max-width: 420px) {
+  .fleet-tooltip-toggle {
+    font-size: 10px;
+  }
 }
 dialog {
   color: var(--text);

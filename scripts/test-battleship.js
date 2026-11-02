@@ -17,6 +17,7 @@ const {
   randomPlacement,
   shotView,
   sunkCount,
+  remainingFleet,
 } = require("../src/battleship/engine");
 const { createGame } = require("../src/battleship/webGame");
 const { createWebServer } = require("../src/webGames/http");
@@ -127,6 +128,63 @@ async function main() {
   });
   assert.equal(sunkCount([ship], [0], fleet, 8), 0);
   assert.equal(sunkCount([ship], [0, 1], fleet, 8), 1);
+  for (const [orientation, cells] of Object.entries({
+    h: [18, 19, 20],
+    v: [18, 26, 34],
+    right: [18, 17, 16],
+    down: [18, 10, 2],
+  })) {
+    const placed = { id: 1, cell: 18, orientation };
+    assert.deepEqual(cellsOf(placed, 3, 8), cells);
+    assert.equal(placementError([placed], fleet, 8), null);
+    assert.deepEqual(shotView(18, [placed], fleet, 8), {
+      cell: 18,
+      hit: true,
+      bow: orientation,
+    });
+    assert.deepEqual(shotView(cells[1], [placed], fleet, 8), {
+      cell: cells[1],
+      hit: true,
+    });
+  }
+  assert.equal(cellsOf({ cell: 1, orientation: "right" }, 3, 8), null);
+  assert.equal(cellsOf({ cell: 8, orientation: "down" }, 3, 8), null);
+  const counterShips = [ship, { id: 1, cell: 18, orientation: "right" }];
+  assert.deepEqual(remainingFleet(counterShips, [], fleet, 8), { 2: 1, 3: 1 });
+  assert.deepEqual(remainingFleet(counterShips, [0], fleet, 8), { 2: 1, 3: 1 });
+  assert.deepEqual(remainingFleet(counterShips, [0, 1], fleet, 8), {
+    2: 0,
+    3: 1,
+  });
+  assert.deepEqual(remainingFleet(counterShips, [0, 1, 18, 17, 16], fleet, 8), {
+    2: 0,
+    3: 0,
+  });
+  assert.deepEqual(
+    remainingFleet(
+      [ship, { id: 1, cell: 18, orientation: "right" }],
+      [0, 1],
+      [2, 2],
+      8,
+    ),
+    { 2: 1 },
+  );
+
+  let facingRoom = setup();
+  for (const orientation of ["h", "v", "right", "down"]) {
+    facingRoom = store.place(
+      facingRoom.id,
+      x.id,
+      [{ id: 0, cell: 36, orientation }],
+      facingRoom.setupRevision.X,
+    );
+    assert.equal(
+      createStore(db, now).get(facingRoom.id).placements.X[0].orientation,
+      orientation,
+    );
+    assert.deepEqual(store.snapshot(facingRoom, null).placements, []);
+  }
+  store.leave(facingRoom.id, x.id);
 
   let room = setup();
   code(() => store.join(room.id, { id: "third" }), "ROOM_FULL");
@@ -173,6 +231,7 @@ async function main() {
     water = Array.from({ length: 64 }, (_, i) => i).filter(
       (cell) => !allCells(room, "X").includes(cell),
     );
+  const initialCounts = store.snapshot(room, null).remainingFleet.O;
   clock += 1000;
   const version = room.version;
   room = store.shoot(room.id, x.id, targets[0], room.version);
@@ -180,6 +239,11 @@ async function main() {
   assert.equal(room.clocks.X, 1_799_000);
   assert.equal(room.lastAction.hit, true);
   assert.equal(room.lastAction.sunk, false);
+  assert.deepEqual(
+    store.snapshot(room, null).remainingFleet.O,
+    initialCounts,
+    "partial hits do not remove a ship from the tooltip",
+  );
   for (const user of [null, o.id, "viewer"]) {
     const view = store.snapshot(room, user);
     assert.equal(view.boards.O.length, 1);
@@ -194,6 +258,11 @@ async function main() {
       "ALREADY_SHOT",
     );
     room = store.shoot(room.id, x.id, targets[i], room.version);
+    if (i === room.fleet[po[0].id] - 1)
+      assert.equal(
+        store.snapshot(room, null).remainingFleet.O[room.fleet[po[0].id]],
+        initialCounts[room.fleet[po[0].id]] - 1,
+      );
     assert.equal(
       room.status,
       i === targets.length - 1 ? "finished" : "playing",
@@ -202,6 +271,11 @@ async function main() {
   assert.equal(room.winner, "X");
   assert.equal(room.reason, "win");
   assert.equal(store.snapshot(room, null).sunk.O, room.fleet.length);
+  assert(
+    Object.values(store.snapshot(room, null).remainingFleet.O).every(
+      (count) => count === 0,
+    ),
+  );
   assert.deepEqual(store.snapshot(room, null).placements, []);
   assert.equal(
     db
@@ -551,11 +625,35 @@ async function main() {
   assert.equal(prevented, true);
   assert.equal(vm.runInContext("drag.orientation", context), "v");
   events.contextmenu({ preventDefault() {} });
+  assert.equal(vm.runInContext("drag.orientation", context), "right");
+  assert.equal(
+    elements.get("drag-ghost").children[0].style.order,
+    uiRoom.fleet[0],
+  );
+  events.keydown({ key: "r", preventDefault() {} });
+  assert.equal(vm.runInContext("drag.orientation", context), "down");
+  events.contextmenu({ preventDefault() {} });
   assert.equal(vm.runInContext("drag.orientation", context), "h");
   events.pointerup({ pointerId: 1, clientX: 30, clientY: 30 });
   await new Promise((resolve) => setImmediate(resolve));
   assert.equal(calls.at(-1).data.placements[0].cell, 18);
   assert.equal(elements.get("drag-ghost").hidden, true);
+  const types = elements
+    .get("fleet-types-X")
+    .children.map((el) => el.textContent);
+  assert.deepEqual(
+    types,
+    Object.entries(store.snapshot(uiRoom, x.id).remainingFleet.X).map(
+      ([length, count]) => `Thuyền ${length} ô × ${count}`,
+    ),
+  );
+  elements.get("fleet-info-X").events.click();
+  assert.equal(elements.get("fleet-menu-X").classList.contains("open"), true);
+  elements.get("fleet-info-X").events.click();
+  assert.equal(elements.get("fleet-menu-X").classList.contains("open"), false);
+  elements.get("fleet-info-O").events.click();
+  events.keydown({ key: "Escape", preventDefault() {} });
+  assert.equal(elements.get("fleet-menu-O").classList.contains("open"), false);
   context.next = store.snapshot(store.get(uiRoom.id), null);
   vm.runInContext("accept(next)", context);
   assert.equal(elements.get("setup-tools").hidden, true);

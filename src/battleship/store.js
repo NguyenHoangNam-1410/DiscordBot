@@ -8,6 +8,7 @@ const {
   randomPlacement,
   shotView,
   sunkCount,
+  remainingFleet,
 } = require("./engine");
 const { PRESETS, normalizeRules, rulesText } = require("./rules");
 const {
@@ -380,6 +381,17 @@ function createStore(db, now = Date.now) {
         ["X", "O"].map((target) => [
           target,
           sunkCount(
+            room.placements[target],
+            room.shots[target === "X" ? "O" : "X"],
+            room.fleet,
+            size,
+          ),
+        ]),
+      ),
+      remainingFleet: Object.fromEntries(
+        ["X", "O"].map((target) => [
+          target,
+          remainingFleet(
             room.placements[target],
             room.shots[target === "X" ? "O" : "X"],
             room.fleet,

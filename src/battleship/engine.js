@@ -21,16 +21,17 @@ function cellsOf(ship, length, size) {
     !Number.isInteger(ship.cell) ||
     ship.cell < 0 ||
     ship.cell >= size * size ||
-    !["h", "v"].includes(ship.orientation)
+    !["h", "v", "right", "down"].includes(ship.orientation)
   )
     return null;
   const row = Math.floor(ship.cell / size),
     col = ship.cell % size;
-  if ((ship.orientation === "h" ? col : row) + length > size) return null;
-  return Array.from(
-    { length },
-    (_, i) => ship.cell + i * (ship.orientation === "h" ? 1 : size),
-  );
+  const horizontal = ["h", "right"].includes(ship.orientation);
+  const reverse = ["right", "down"].includes(ship.orientation);
+  const start = horizontal ? col : row;
+  if (reverse ? start - length + 1 < 0 : start + length > size) return null;
+  const step = (horizontal ? 1 : size) * (reverse ? -1 : 1);
+  return Array.from({ length }, (_, i) => ship.cell + i * step);
 }
 function placementError(placements, fleet, size, complete = false) {
   if (!Array.isArray(placements) || placements.length > fleet.length)
@@ -79,7 +80,7 @@ function randomPlacement(fleet, size, random = randomInt) {
   for (const { id, length } of order) {
     const list = [];
     for (let cell = 0; cell < size * size; cell++)
-      for (const orientation of ["h", "v"]) {
+      for (const orientation of ["h", "v", "right", "down"]) {
         const ship = { id, cell, orientation };
         if (cellsOf(ship, length, size)) list.push(ship);
       }
@@ -123,6 +124,16 @@ function sunkCount(ships, shots, fleet, size) {
     cellsOf(ship, fleet[ship.id], size).every((cell) => hit.has(cell)),
   ).length;
 }
+function remainingFleet(ships, shots, fleet, size) {
+  const counts = {};
+  for (const length of fleet) counts[length] = (counts[length] || 0) + 1;
+  const hit = new Set(shots);
+  for (const ship of ships)
+    if (cellsOf(ship, fleet[ship.id], size).every((cell) => hit.has(cell)))
+      counts[fleet[ship.id]]--;
+  // Only aggregate lengths are public; no hidden cells, IDs or directions.
+  return counts;
+}
 module.exports = {
   generateFleet,
   cellsOf,
@@ -130,4 +141,5 @@ module.exports = {
   randomPlacement,
   shotView,
   sunkCount,
+  remainingFleet,
 };

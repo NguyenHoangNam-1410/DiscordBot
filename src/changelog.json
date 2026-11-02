@@ -1,5 +1,18 @@
 [
   {
+    "id": "b2ef37a4-e089-4feb-afd5-fd297b57df0e",
+    "updatedAt": "2026-11-02T07:55:09.800Z",
+    "auditedAt": "2026-11-02T07:55:09.800Z",
+    "title": "Battleship: xem thuyền còn lại và xoay mũi bốn hướng",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Thêm tooltip góc phải mỗi vùng biển, hiển thị số thuyền chưa chìm theo độ dài; xem bằng rê chuột, bàn phím hoặc chạm trên điện thoại.",
+      "Số lượng từng loại thuyền chỉ giảm khi bị đánh chìm hoàn toàn; tooltip không tiết lộ vị trí hoặc hướng của thuyền chưa lộ.",
+      "Cho phép xoay mũi thuyền đủ bốn hướng trái, trên, phải, dưới bằng R, chuột phải hoặc nút Xoay. Giữ đúng đoạn đang kéo và đọc được bố trí cũ."
+    ]
+  },
+  {
     "id": "de1f92a0-9d63-43c7-a040-533909be4b79",
     "updatedAt": "2026-11-02T07:05:45.536Z",
     "auditedAt": "2026-11-02T07:05:45.536Z",

@@ -97,7 +97,23 @@
         <article id="panel-X" class="board-panel selected">
           <div class="board-heading">
             <h2 id="title-X">Vùng biển X</h2>
-            <span id="fleet-info-X"></span>
+            <div id="fleet-menu-X" class="fleet-tooltip">
+              <button
+                id="fleet-info-X"
+                class="fleet-tooltip-toggle"
+                aria-expanded="false"
+                aria-controls="fleet-tooltip-X"
+                aria-describedby="fleet-tooltip-X"
+              ></button>
+              <div
+                id="fleet-tooltip-X"
+                class="fleet-tooltip-content"
+                role="tooltip"
+              >
+                <strong>Hạm đội chưa chìm</strong>
+                <ul id="fleet-types-X"></ul>
+              </div>
+            </div>
           </div>
           <div class="board-scroll">
             <div
@@ -111,7 +127,23 @@
         <article id="panel-O" class="board-panel">
           <div class="board-heading">
             <h2 id="title-O">Vùng biển O</h2>
-            <span id="fleet-info-O"></span>
+            <div id="fleet-menu-O" class="fleet-tooltip">
+              <button
+                id="fleet-info-O"
+                class="fleet-tooltip-toggle"
+                aria-expanded="false"
+                aria-controls="fleet-tooltip-O"
+                aria-describedby="fleet-tooltip-O"
+              ></button>
+              <div
+                id="fleet-tooltip-O"
+                class="fleet-tooltip-content"
+                role="tooltip"
+              >
+                <strong>Hạm đội chưa chìm</strong>
+                <ul id="fleet-types-O"></ul>
+              </div>
+            </div>
           </div>
           <div class="board-scroll">
             <div

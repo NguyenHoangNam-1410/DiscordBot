@@ -17,7 +17,7 @@ Dùng chung máy chủ web, Tailscale, phiên xác nhận Discord, cập nhật 
 | Vừa    | 10×10 | 7            | 2–5 ô  | 140 giây |
 | Lớn    | 12×12 | 10           | 2–5 ô  | 200 giây |
 
-Máy chủ sinh một danh sách độ dài chung, có ít nhất một thuyền ở mỗi độ dài hợp lệ; các thuyền còn lại chọn ngẫu nhiên. Hai người tự xếp vị trí riêng. Mũi là ô đầu bên trái (ngang) hoặc phía trên (dọc), bo góc; các ô thân vuông không biểu lộ hướng.
+Máy chủ sinh một danh sách độ dài chung, có ít nhất một thuyền ở mỗi độ dài hợp lệ; các thuyền còn lại chọn ngẫu nhiên. Hai người tự xếp vị trí riêng. Mũi bo góc có thể hướng trái, trên, phải hoặc dưới; mỗi lần xoay đổi 90°. Các ô thân vuông không biểu lộ hướng. Bản lưu cũ vẫn giữ đúng mũi trái/trên.
 
 ## Bố trí và chiến đấu
 
@@ -27,7 +27,7 @@ Xác nhận chỉ khi đủ thuyền; sau xác nhận không đổi được b�
 
 Mỗi lượt bắn đúng một ô rồi đổi lượt, kể cả bắn trúng. Không bắn lặp. Chỉ ô thực sự bị bắn được hiển thị: trượt, thân vuông hoặc mũi bo góc có hướng. Không tự mở các ô xung quanh hay phần còn lại của thuyền. Thuyền chỉ chìm khi toàn bộ ô bị bắn; chìm hết hạm đội thì thua. Hết đồng hồ của mình cũng thua. Đồng hồ dừng khi ván kết thúc.
 
-Máy tính hiển thị hai bản đồ cạnh nhau. Điện thoại hiển thị một bản đồ, có nút chuyển biển của bạn/đối phương và tùy chọn tự chuyển theo lượt. Đang bố trí tự mở biển của mình; tới lượt bắn tự mở biển đối phương; chờ đối thủ tự mở biển của mình. Khán giả thấy cập nhật trực tiếp, chỉ gồm các ô đã bị bắn.
+Máy tính hiển thị hai bản đồ cạnh nhau. Điện thoại hiển thị một bản đồ, có nút chuyển biển của bạn/đối phương và tùy chọn tự chuyển theo lượt. Đang bố trí tự mở biển của mình; tới lượt bắn tự mở biển đối phương; chờ đối thủ tự mở biển của mình. Khán giả thấy cập nhật trực tiếp, chỉ gồm các ô đã bị bắn. Góc phải mỗi bản đồ có tooltip hạm đội chưa chìm theo độ dài; rê chuột, dùng bàn phím hoặc chạm để xem. Chỉ khi trúng đủ ô của một thuyền, số lượng loại đó mới giảm; không công bố vị trí hay hướng thuyền chưa lộ.
 
 ## Giữ kín và triển khai
 
