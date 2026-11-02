@@ -8,12 +8,8 @@ const Database = require("better-sqlite3");
 const directory = fs.mkdtempSync(path.join(os.tmpdir(), "caro-test-"));
 process.env.DB_PATH = path.join(directory, "caro.sqlite");
 const { db } = require("../src/db");
-const {
-  createStore,
-  WAIT_MS,
-  TURN_MS,
-  MATCH_MS,
-} = require("../src/caro/store");
+const { createStore, WAIT_MS } = require("../src/caro/store");
+const { DEFAULT_CLOCK_MS } = require("../src/webGames/clock");
 const { SIZE, winningLine } = require("../src/caro/engine");
 const { normalizeRules, DEFAULT_RULES } = require("../src/caro/rules");
 const { createWebServer } = require("../src/caro/http");
@@ -364,7 +360,7 @@ async function main() {
   assert.ok(JSON.stringify(roomPayload(updated)).length < 6000);
 
   room = match();
-  clock += TURN_MS;
+  clock += DEFAULT_CLOCK_MS;
   code(() => store.move(room.id, alice.id, 0, room.version), "ROOM_CLOSED");
   assert.equal(store.get(room.id).reason, "timeout");
   assert.equal(store.get(room.id).winner, "O");
@@ -373,7 +369,7 @@ async function main() {
   code(() => store.join(room.id, bob), "ROOM_CLOSED");
   assert.equal(store.get(room.id).reason, "expired");
   room = match();
-  // Duration only wins the race if its deadline is earlier than the current turn deadline.
+  // Obsolete match caps no longer end a game while the player still has time.
   const payload = JSON.parse(
     db.prepare("SELECT data_json FROM caro_rooms WHERE id=?").get(room.id)
       .data_json,
@@ -383,8 +379,9 @@ async function main() {
     JSON.stringify(payload),
     room.id,
   );
-  clock += MATCH_MS;
-  assert.equal(store.get(room.id).reason, "duration");
+  clock += 1001;
+  assert.equal(store.get(room.id).status, "playing");
+  assert.equal(store.get(room.id).matchDeadline, undefined);
   room = match();
   assert.equal(store.leave(room.id, bob.id).winner, "X");
   code(() => store.leave(room.id, bob.id), "ROOM_CLOSED");
@@ -402,7 +399,10 @@ async function main() {
     "a new database connection restores the board",
   );
   assert.equal(restartStore.get(persisted.id).turn, "O");
-  assert.equal(restartStore.get(persisted.id).turnDeadline, clock + TURN_MS);
+  assert.equal(
+    restartStore.get(persisted.id).turnDeadline,
+    clock + DEFAULT_CLOCK_MS,
+  );
   reopened.close();
   reopened = null;
 
@@ -962,7 +962,7 @@ async function main() {
       .toJSON()
       .options.find((o) => o.name === "choi")
       .options.map((o) => o.name),
-    ["kichthuoc", "sothang", "chan2dau", "bienchan", "dungsoquan"],
+    ["kichthuoc", "sothang", "chan2dau", "bienchan", "dungsoquan", "thoigian"],
   );
   const replies = [];
   await command.execute({
@@ -1104,7 +1104,8 @@ async function main() {
       channelId: "settings-channel",
       options: {
         getSubcommand: () => "choi",
-        getInteger: (key) => ({ kichthuoc: 25, sothang: 6 })[key] ?? null,
+        getInteger: (key) =>
+          ({ kichthuoc: 25, sothang: 6, thoigian: 15 })[key] ?? null,
         getBoolean: (key) =>
           ({ chan2dau: true, bienchan: true, dungsoquan: true })[key] ?? null,
       },
@@ -1123,6 +1124,7 @@ async function main() {
       blockBothEnds: true,
       exactLength: true,
       edgeBlocks: true,
+      timeMinutes: 15,
     });
     assert.match(
       messages.at(-1).embeds[0].toJSON().description,
@@ -1468,6 +1470,16 @@ async function main() {
     assert.match(
       prefixReplies.at(-1).embeds[0].toJSON().title,
       /DANH SÁCH PHÒNG/,
+    );
+    await handleSlashPrefix({
+      ...prefixMessage,
+      guildId: "prefix-clock",
+      content: "!caro choi thoigian=10",
+    });
+    assert.equal(
+      runtime.store.listOpen("prefix-clock", "directory-channel")[0].rules
+        .timeMinutes,
+      10,
     );
   } finally {
     runtime.isAvailable = originalAvailable;

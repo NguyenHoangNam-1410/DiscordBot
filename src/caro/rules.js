@@ -1,4 +1,5 @@
 "use strict";
+const { timeMinutes, DEFAULT_TIME_MINUTES } = require("../webGames/clock");
 
 const DEFAULT_RULES = Object.freeze({
   size: 15,
@@ -6,10 +7,12 @@ const DEFAULT_RULES = Object.freeze({
   blockBothEnds: false,
   exactLength: false,
   edgeBlocks: false,
+  timeMinutes: DEFAULT_TIME_MINUTES,
 });
 
 function normalizeRules(input = {}) {
   const rules = { ...DEFAULT_RULES, ...input };
+  timeMinutes(rules.timeMinutes);
   if (
     !Number.isInteger(rules.size) ||
     rules.size < 9 ||
@@ -37,7 +40,7 @@ function normalizeRules(input = {}) {
 
 function rulesText(input) {
   const r = normalizeRules(input);
-  return `Bàn ${r.size}×${r.size} · ${r.exactLength ? "Đúng" : "Từ"} ${r.winLength} quân liên tiếp thắng · ${r.blockBothEnds ? "Chặn 2 đầu không thắng" : "Chặn 2 đầu vẫn thắng"}${r.blockBothEnds ? ` · Mép bàn ${r.edgeBlocks ? "có" : "không"} tính chặn` : ""}`;
+  return `Bàn ${r.size}×${r.size} · ${r.exactLength ? "Đúng" : "Từ"} ${r.winLength} quân liên tiếp thắng · ${r.blockBothEnds ? "Chặn 2 đầu không thắng" : "Chặn 2 đầu vẫn thắng"}${r.blockBothEnds ? ` · Mép bàn ${r.edgeBlocks ? "có" : "không"} tính chặn` : ""} · ${r.timeMinutes} phút/người, không cộng giờ`;
 }
 
 module.exports = { DEFAULT_RULES, normalizeRules, rulesText };

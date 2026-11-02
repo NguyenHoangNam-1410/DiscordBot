@@ -84,7 +84,7 @@ function accept(next) {
 }
 const REASONS = {
   win: "Đã nối đủ quân theo luật phòng. Ván đấu đã được lưu.",
-  timeout: "Một người chơi đã hết 90 giây cho lượt đi.",
+  timeout: "Một người chơi đã hết thời gian trên đồng hồ riêng.",
   resign: "Một người chơi đã đầu hàng.",
   duration: "Hết thời gian tối đa 30 phút. Ván đấu hòa.",
   draw: "Bàn cờ đã kín. Hai người hòa nhau.",
@@ -157,7 +157,7 @@ function render() {
   $("timer-panel").hidden = !(playing || waiting);
   $("timer-label").textContent = waiting
     ? "Thời gian chờ còn lại"
-    : "Thời gian lượt này";
+    : "Đồng hồ " + state.turn;
   $("leave").hidden = spectator || !(playing || waiting);
   $("connect-player").hidden = !spectator || !(playing || waiting);
   $("pair-panel").hidden = !spectator || !pairVisible || !(playing || waiting);
@@ -176,21 +176,45 @@ function render() {
   });
   updateClock();
 }
-function updateClock() {
-  if (!state || !["waiting", "playing"].includes(state.status)) return;
-  const deadline =
-    state.status === "waiting"
-      ? state.waitingDeadline
-      : Math.min(state.turnDeadline, state.matchDeadline);
-  const seconds = Math.max(
-    0,
-    Math.ceil((deadline - Date.now() - offset) / 1000),
+function formatClock(ms) {
+  if (!Number.isFinite(ms)) return "—";
+  const seconds = Math.max(0, Math.ceil(ms / 1000));
+  return (
+    String(Math.floor(seconds / 60)).padStart(2, "0") +
+    ":" +
+    String(seconds % 60).padStart(2, "0")
   );
-  $("timer").textContent =
-    `${String(Math.floor(seconds / 60)).padStart(2, "0")}:${String(seconds % 60).padStart(2, "0")}`;
-  $("timer-progress").max = state.status === "waiting" ? 600 : 90;
-  $("timer-progress").value = seconds;
-  $("timer-panel").classList.toggle("urgent", seconds <= 15);
+}
+function updateClock() {
+  if (!state) return;
+  const at = Date.now() + offset;
+  const remaining = state.clocks ? { ...state.clocks } : null;
+  if (
+    remaining &&
+    state.status === "playing" &&
+    Number.isFinite(state.clockStartedAt)
+  )
+    remaining[state.turn] = Math.max(
+      0,
+      remaining[state.turn] - Math.max(0, at - state.clockStartedAt),
+    );
+  for (const mark of ["X", "O"]) {
+    const ms = remaining && state.players[mark] ? remaining[mark] : null;
+    const running = state.status === "playing" && state.turn === mark;
+    $("clock-" + mark).textContent = formatClock(ms);
+    $("clock-" + mark).classList.toggle("running", running);
+    $("clock-" + mark).classList.toggle("low", running && ms <= 60000);
+  }
+  if (!["waiting", "playing"].includes(state.status)) return;
+  const ms =
+    state.status === "waiting"
+      ? Math.max(0, state.waitingDeadline - at)
+      : remaining?.[state.turn];
+  $("timer").textContent = formatClock(ms);
+  $("timer-progress").max =
+    state.status === "waiting" ? 600 : state.clockInitialMs / 1000;
+  $("timer-progress").value = Number.isFinite(ms) ? Math.ceil(ms / 1000) : 0;
+  $("timer-panel").classList.toggle("urgent", ms <= 60000);
 }
 async function refresh() {
   accept(await api(`/api/state?room=${encodeURIComponent(roomId)}`));

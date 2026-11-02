@@ -8,12 +8,8 @@ process.env.DB_PATH = ":memory:";
 const { db } = require("../src/db");
 const { legalMoves, wallError, hasPath } = require("../src/walls/engine");
 const { normalizeRules } = require("../src/walls/rules");
-const {
-  createStore,
-  WAIT_MS,
-  TURN_MS,
-  MATCH_MS,
-} = require("../src/walls/store");
+const { createStore, WAIT_MS } = require("../src/walls/store");
+const { DEFAULT_CLOCK_MS } = require("../src/webGames/clock");
 const { createGame } = require("../src/walls/webGame");
 const { createWebServer } = require("../src/webGames/http");
 const { roomPayload } = require("../src/walls/discord");
@@ -50,7 +46,11 @@ const gap = (a, b) =>
       };
 
 async function main() {
-  assert.deepEqual(normalizeRules(), { wallLength: 2, wallLimit: 10 });
+  assert.deepEqual(normalizeRules(), {
+    wallLength: 2,
+    wallLimit: 10,
+    timeMinutes: 30,
+  });
   for (const input of [
     { wallLength: 0 },
     { wallLength: 3 },
@@ -229,15 +229,16 @@ async function main() {
   room = seed(match(), { positions: { X: 13, O: 67 }, turn: "O" });
   assert.equal(store.move(room.id, bob.id, 76, room.version).winner, "O");
   room = match();
-  clock += TURN_MS;
+  clock += DEFAULT_CLOCK_MS;
   assert.equal(store.get(room.id).winner, "O");
   assert.equal(store.get(room.id).reason, "timeout");
   room = create();
   clock += WAIT_MS;
   assert.equal(store.get(room.id).reason, "expired");
   room = seed(match(), { matchDeadline: clock + 1 });
-  clock += MATCH_MS;
-  assert.equal(store.get(room.id).reason, "duration");
+  clock += 2;
+  assert.equal(store.get(room.id).status, "playing");
+  assert.equal(store.get(room.id).matchDeadline, undefined);
   const concurrent = Array.from({ length: 5 }, (_, i) =>
     store.create({ guildId: "many", channelId: "many", user: { id: `p${i}` } }),
   );
@@ -551,7 +552,8 @@ async function main() {
       user: alice,
       options: {
         getSubcommand: () => "choi",
-        getInteger: (key) => (key === "daituong" ? 1 : 4),
+        getInteger: (key) =>
+          ({ daituong: 1, sotuong: 4, thoigian: 15 })[key] ?? null,
       },
       deferReply: async () => {},
       deferUpdate: async () => {},
@@ -566,6 +568,7 @@ async function main() {
     const lobby = runtime.store.listOpen("discord", "discord")[0];
     assert.equal(lobby.rules.wallLength, 1);
     assert.equal(lobby.rules.wallLimit, 4);
+    assert.equal(lobby.rules.timeMinutes, 15);
     assert.equal(
       replies[0].components[0]
         .toJSON()
@@ -615,7 +618,7 @@ async function main() {
       guildId: "prefix",
       channelId: "prefix",
       author: alice,
-      content: "!walls choi daituong=1 sotuong=2",
+      content: "!walls choi daituong=1 sotuong=2 thoigian=10",
       channel: {},
       reply: async (p) => {
         prefixReplies.push(p);
@@ -625,6 +628,10 @@ async function main() {
     assert.equal(
       runtime.store.listOpen("prefix", "prefix")[0].rules.wallLimit,
       2,
+    );
+    assert.equal(
+      runtime.store.listOpen("prefix", "prefix")[0].rules.timeMinutes,
+      10,
     );
   } finally {
     runtime.isAvailable = oldAvailable;

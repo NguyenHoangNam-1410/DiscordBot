@@ -10,7 +10,7 @@ const { normalizeRules, rulesText } = require("./rules");
 
 const REASONS = {
   win: "Đủ từ 5 quân liên tiếp",
-  timeout: "Đối thủ hết 90 giây cho lượt đi",
+  timeout: "Đối thủ đã hết thời gian trên đồng hồ riêng",
   resign: "Đối thủ đầu hàng",
   duration: "Hết thời gian trận 30 phút",
   draw: "Bàn cờ đã kín",
@@ -47,7 +47,7 @@ function roomPayload(room, url) {
             : `${result}\n${room.reason === "win" ? `Nối ${rules.exactLength ? "đúng" : "từ"} ${rules.winLength} quân theo luật phòng` : REASONS[room.reason] || ""}`,
         "",
         `${rulesText(rules)} · X đi trước`,
-        "90 giây/lượt · Tối đa 30 phút/trận · Thử nghiệm, không cược và không thưởng xu",
+        "Đồng hồ riêng, chỉ chạy khi tới lượt · Không cộng giờ · Không cược và không thưởng xu",
       ].join("\n"),
     )
     .setFooter({

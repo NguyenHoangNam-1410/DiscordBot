@@ -4,10 +4,16 @@ const { randomUUID } = require("node:crypto");
 const { EventEmitter } = require("node:events");
 const { legalMoves, wallError } = require("./engine");
 const { SIZE, normalizeRules, rulesText } = require("./rules");
+const {
+  initialClock,
+  ensureClock,
+  flagged,
+  stopClock,
+  startClock,
+  clockView,
+} = require("../webGames/clock");
 
 const WAIT_MS = 10 * 60_000;
-const TURN_MS = 90_000;
-const MATCH_MS = 30 * 60_000;
 const DEFAULT_ROOM_LIMIT = 5;
 const MAX_ROOM_LIMIT = 20;
 const MESSAGES = {
@@ -63,23 +69,29 @@ function createStore(db, now = Date.now) {
       db.prepare("DELETE FROM walls_seats WHERE room_id=?").run(room.id);
     return room;
   }
-  function finish(room, reason, winner = null) {
+  function finish(room, reason, winner = null, at = now()) {
+    if (flagged(room, at)) {
+      reason = "timeout";
+      winner = room.turn === "X" ? "O" : "X";
+    }
+    stopClock(room, at);
     room.status = "finished";
     room.reason = reason;
     room.winner = winner;
-    room.closedAt = now();
+    room.closedAt = at;
     return save(room);
   }
   function expire(room) {
     if (!room) return room;
-    if (room.status === "waiting" && now() >= room.createdAt + WAIT_MS)
-      finish(room, "expired");
-    else if (room.status === "playing") {
-      if (now() >= Math.min(room.turnDeadline, room.matchDeadline)) {
-        if (room.matchDeadline <= room.turnDeadline) finish(room, "duration");
-        else finish(room, "timeout", room.turn === "X" ? "O" : "X");
-      }
+    const at = now();
+    if (ensureClock(room, normalizeRules(room.rules).timeMinutes, at)) {
+      save(room);
+      db.prepare("UPDATE walls_rooms SET ui_dirty=1 WHERE id=?").run(room.id);
     }
+    if (room.status === "waiting" && at >= room.createdAt + WAIT_MS)
+      finish(room, "expired", null, at);
+    else if (flagged(room, at))
+      finish(room, "timeout", room.turn === "X" ? "O" : "X", at);
     return room;
   }
   function get(id) {
@@ -174,8 +186,7 @@ function createStore(db, now = Date.now) {
           moves: 0,
           version: 0,
           createdAt: now(),
-          turnDeadline: null,
-          matchDeadline: null,
+          ...initialClock(rules.timeMinutes),
           winner: null,
           lastAction: null,
         };
@@ -213,8 +224,7 @@ function createStore(db, now = Date.now) {
       claim(room, String(user.id));
       room.players.O = player(user);
       room.status = "playing";
-      room.turnDeadline = now() + TURN_MS;
-      room.matchDeadline = now() + MATCH_MS;
+      startClock(room, now());
       return save(room);
     });
   }
@@ -226,15 +236,18 @@ function createStore(db, now = Date.now) {
       if (room.status !== "playing") fail("ROOM_CLOSED");
       if (room.version !== version) fail("STALE_BOARD");
       if (room.turn !== mark) fail("NOT_TURN");
+      const at = now();
+      if (flagged(room, at)) fail("ROOM_CLOSED");
       apply(room, mark);
+      stopClock(room, at);
       room.moves++;
       if (
         Math.floor(room.positions[mark] / SIZE) ===
         (mark === "X" ? 0 : SIZE - 1)
       )
-        return finish(room, "win", mark);
+        return finish(room, "win", mark, at);
       room.turn = mark === "X" ? "O" : "X";
-      room.turnDeadline = now() + TURN_MS;
+      startClock(room, at);
       return save(room);
     });
   }
@@ -297,6 +310,7 @@ function createStore(db, now = Date.now) {
   function snapshot(room, userId) {
     const mark = seat(room, userId);
     const rules = normalizeRules(room.rules);
+    const at = now();
     return {
       id: room.id,
       size: SIZE,
@@ -318,10 +332,9 @@ function createStore(db, now = Date.now) {
       winner: room.winner,
       reason: room.reason || null,
       lastAction: room.lastAction,
-      turnDeadline: room.turnDeadline,
-      matchDeadline: room.matchDeadline,
+      ...clockView(room, rules.timeMinutes, at),
       waitingDeadline: room.createdAt + WAIT_MS,
-      serverNow: now(),
+      serverNow: at,
     };
   }
   return {
@@ -346,8 +359,6 @@ module.exports = {
   createStore,
   MESSAGES,
   WAIT_MS,
-  TURN_MS,
-  MATCH_MS,
   DEFAULT_ROOM_LIMIT,
   MAX_ROOM_LIMIT,
 };

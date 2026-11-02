@@ -18,7 +18,7 @@ Di chuyển một ô ngang/dọc nếu không có tường và ô đích trống
 
 Tường đặt giữa các ô; có thể chạm đầu nhau nhưng không chồng hoặc cắt xuyên nhau. Sau mỗi lần đặt, máy chủ tìm đường cho cả hai người tới hàng đích, bỏ qua vị trí quân tạm thời khi kiểm tra. Không được khóa hết đường của đối thủ hoặc chính mình. Đặt không hợp lệ không mất tường, không đổi lượt, không đặt lại thời gian. Hết tường chỉ được di chuyển.
 
-Mỗi lượt 90 giây; hết lượt xử thua. Hết 30 phút xử hòa. Phòng chờ 10 phút tự đóng. Đầu hàng trên web hoặc hủy phòng chờ trong Discord/web. Đồng hồ không dừng khi mất mạng hay bot khởi động lại.
+Mỗi người có đồng hồ riêng, mặc định 30 phút; `/walls choi thoigian:15` chọn 15 phút/người (1–180 phút). Chỉ giảm khi tới lượt, không cộng giờ sau nước đi hoặc đặt tường. Hết thời gian của mình thì thua; không còn giới hạn tổng thời gian trận. Phòng chờ 10 phút tự đóng. Đầu hàng trên web hoặc hủy phòng chờ trong Discord/web. Đồng hồ không dừng khi mất mạng hay bot khởi động lại.
 
 ## Web và tài khoản
 

@@ -71,13 +71,13 @@
               </p>
               <div id="timer-panel" class="timer-panel" hidden>
                 <div>
-                  <span id="timer-label">Thời gian lượt này</span
-                  ><strong id="timer">01:30</strong>
+                  <span id="timer-label">Đồng hồ người chơi</span
+                  ><strong id="timer">30:00</strong>
                 </div>
                 <progress
                   id="timer-progress"
-                  max="90"
-                  value="90"
+                  max="1800"
+                  value="1800"
                   aria-label="Thời gian còn lại"
                 ></progress>
               </div>
@@ -91,6 +91,12 @@
                   ><strong id="name-X">Người chơi X</strong>
                   <span id="walls-X">Còn 10 tường</span>
                 </div>
+                <time
+                  id="clock-X"
+                  class="player-clock"
+                  aria-label="Thời gian còn lại của X"
+                  >30:00</time
+                >
                 <span class="you" id="you-X" hidden>BẠN</span>
               </div>
               <div class="versus"><span></span>VS<span></span></div>
@@ -101,6 +107,12 @@
                   ><strong id="name-O">Đang chờ đối thủ</strong>
                   <span id="walls-O">Còn 10 tường</span>
                 </div>
+                <time
+                  id="clock-O"
+                  class="player-clock"
+                  aria-label="Thời gian còn lại của O"
+                  >30:00</time
+                >
                 <span class="you" id="you-O" hidden>BẠN</span>
               </div>
             </section>
@@ -152,8 +164,9 @@
                 đích của bất kỳ người nào.
               </p>
               <p>
-                90 giây mỗi lượt · Tối đa 30 phút/trận.<br />Mất mạng, đồng hồ
-                vẫn chạy. Web tự kết nối lại.
+                Mỗi người có đồng hồ riêng, mặc định 30 phút. Chỉ chạy khi tới
+                lượt, không cộng giờ.<br />Mất mạng, đồng hồ vẫn chạy. Web tự
+                kết nối lại.
               </p>
               <span class="no-stakes">CHƠI VUI · KHÔNG CƯỢC XU</span>
             </section>

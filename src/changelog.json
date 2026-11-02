@@ -1,5 +1,18 @@
 [
   {
+    "id": "73095ad4-e2a9-460b-ae98-f415746f22d9",
+    "updatedAt": "2026-11-02T06:24:25.475Z",
+    "auditedAt": "2026-11-02T06:24:25.475Z",
+    "title": "Caro và Walls: đồng hồ riêng cho từng người",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Mỗi người có mặc định 30 phút, chỉ giảm khi tới lượt; không cộng giờ sau khi đi hoặc đặt tường. Ai hết giờ trước sẽ thua.",
+      "Chọn thoigian từ 1 đến 180 phút/người khi tạo phòng Caro hoặc Walls; hỗ trợ cả lệnh slash và tiền tố !.",
+      "Hiển thị hai đồng hồ trên web, đánh dấu bên đang chạy giờ; bỏ giới hạn tổng 30 phút/trận. Thời gian còn lại được giữ khi tải lại trang hoặc bot khởi động lại."
+    ]
+  },
+  {
     "id": "52ee2917-8b02-4bc3-8090-4e75f39b0f3e",
     "updatedAt": "2026-11-02T04:29:15.137Z",
     "auditedAt": "2026-11-02T04:29:15.137Z",

@@ -14,6 +14,7 @@ const runtime = require("../caro/runtime");
 const { roomPayload, accessPayload, roomsPayload } = require("../caro/discord");
 const { MESSAGES, MAX_ROOM_LIMIT } = require("../caro/store");
 const { isAdminInteraction } = require("../utils/adminCheck");
+const { MAX_TIME_MINUTES } = require("../webGames/clock");
 
 const DISABLED =
   "Web trò chơi chưa được bật. Chủ bot cần cấu hình WEB_ENABLED và WEB_PUBLIC_URL (hoặc CARO_WEB_ENABLED/CARO_PUBLIC_URL cũ) rồi khởi động lại bot.";
@@ -191,6 +192,15 @@ module.exports = {
             .setDescription(
               "Bật: phải đúng số quân cần thắng; nối dài hơn không thắng",
             ),
+        )
+        .addIntegerOption((option) =>
+          option
+            .setName("thoigian")
+            .setDescription(
+              "Phút mỗi người, không cộng giờ (1–180), mặc định 30",
+            )
+            .setMinValue(1)
+            .setMaxValue(MAX_TIME_MINUTES),
         ),
     )
     .addSubcommand((sub) =>
@@ -273,7 +283,7 @@ module.exports = {
     if (subcommand === "luat")
       return interaction.reply({
         content:
-          "Caro thử nghiệm: /caro choi tạo phòng, tùy chọn kichthuoc (9–25), sothang (3–6), chan2dau, bienchan và dungsoquan. Mặc định bàn 15×15, từ 5 quân thắng, chặn hai đầu vẫn thắng. Nếu bật chan2dau, hai đầu đều bị quân đối thủ chặn thì không thắng; bienchan cho phép tính mép bàn là chặn. dungsoquan yêu cầu đúng số quân, dài hơn không thắng. Luật được chốt khi tạo phòng. Mặc định 5 phòng chờ/đang đấu mỗi kênh; mỗi người 1 phòng caro trong server. /caro phong xem danh sách phòng; quản trị dùng /caro cauhinh phongtoida để chỉnh giới hạn theo kênh. X đi trước; 90 giây/lượt, tối đa 30 phút/trận; phòng chờ 10 phút. Mở bàn cờ để chơi/xem; người chơi xác nhận bằng mã trên web tại Kết nối tài khoản. Không cược, không thưởng xu.",
+          "Caro thử nghiệm: /caro choi tạo phòng, tùy chọn kichthuoc (9–25), sothang (3–6), chan2dau, bienchan và dungsoquan. Mặc định bàn 15×15, từ 5 quân thắng, chặn hai đầu vẫn thắng. Nếu bật chan2dau, hai đầu đều bị quân đối thủ chặn thì không thắng; bienchan cho phép tính mép bàn là chặn. dungsoquan yêu cầu đúng số quân, dài hơn không thắng. Luật được chốt khi tạo phòng. Mặc định 5 phòng chờ/đang đấu mỗi kênh; mỗi người 1 phòng caro trong server. /caro phong xem danh sách phòng; quản trị dùng /caro cauhinh phongtoida để chỉnh giới hạn theo kênh. X đi trước. Đồng hồ riêng mặc định 30 phút/người; chọn thoigian (1–180 phút), chỉ giảm khi tới lượt, không cộng giờ. Hết thời gian của mình thì thua; phòng chờ 10 phút. Mở bàn cờ để chơi/xem; người chơi xác nhận bằng mã trên web tại Kết nối tài khoản. Không cược, không thưởng xu.",
         flags: MessageFlags.Ephemeral,
       });
     if (!runtime.isAvailable())
@@ -308,6 +318,7 @@ module.exports = {
           blockBothEnds: interaction.options.getBoolean?.("chan2dau") ?? false,
           edgeBlocks: interaction.options.getBoolean?.("bienchan") ?? false,
           exactLength: interaction.options.getBoolean?.("dungsoquan") ?? false,
+          timeMinutes: interaction.options.getInteger?.("thoigian") ?? 30,
         },
       });
     } catch (error) {

@@ -18,6 +18,7 @@ const {
 } = require("../walls/discord");
 const { MESSAGES, MAX_ROOM_LIMIT } = require("../walls/store");
 const { isAdminInteraction } = require("../utils/adminCheck");
+const { MAX_TIME_MINUTES } = require("../webGames/clock");
 
 const DISABLED =
   "Web trò chơi chưa được bật. Chủ bot cần cấu hình WEB_ENABLED và WEB_PUBLIC_URL rồi khởi động lại bot.";
@@ -173,6 +174,15 @@ module.exports = {
             .setDescription("Số tường mỗi người (0–20), mặc định 10")
             .setMinValue(0)
             .setMaxValue(20),
+        )
+        .addIntegerOption((option) =>
+          option
+            .setName("thoigian")
+            .setDescription(
+              "Phút mỗi người, không cộng giờ (1–180), mặc định 30",
+            )
+            .setMinValue(1)
+            .setMaxValue(MAX_TIME_MINUTES),
         ),
     )
     .addSubcommand((sub) =>
@@ -255,7 +265,7 @@ module.exports = {
     if (subcommand === "luat")
       return interaction.reply({
         content:
-          "Walls: /walls choi mở bàn cố định 9×9. Hai người xuất phát ở giữa hai cạnh đối diện; X đi trước. Đến hàng đối diện trước để thắng. Mỗi lượt đi 1 ô ngang/dọc hoặc đặt 1 tường; không đi xuyên tường hay đứng chung ô. Được nhảy qua đối thủ theo Quoridor: ưu tiên nhảy thẳng, chỉ đi chéo vòng sang bên khi sau đối thủ bị tường/mép bàn chặn. Tường dài 1 hoặc 2 ô, không chồng/cắt và phải giữ đường tới đích cho cả hai. Tường có thể chạm đầu nhau. /walls choi daituong:2 sotuong:10 cấu hình cho ván mới; mặc định mỗi người 10 tường. Xem hoặc tham gia qua /walls phong; khán giả mở bàn xem trực tiếp. Mặc định 5 phòng/kênh; quản trị dùng /walls cauhinh phongtoida. 90 giây/lượt, tối đa 30 phút/trận; phòng chờ 10 phút. Không cược, không thưởng xu.",
+          "Walls: /walls choi mở bàn cố định 9×9. Hai người xuất phát ở giữa hai cạnh đối diện; X đi trước. Đến hàng đối diện trước để thắng. Mỗi lượt đi 1 ô ngang/dọc hoặc đặt 1 tường; không đi xuyên tường hay đứng chung ô. Được nhảy qua đối thủ theo Quoridor: ưu tiên nhảy thẳng, chỉ đi chéo vòng sang bên khi sau đối thủ bị tường/mép bàn chặn. Tường dài 1 hoặc 2 ô, không chồng/cắt và phải giữ đường tới đích cho cả hai. Tường có thể chạm đầu nhau. /walls choi daituong:2 sotuong:10 cấu hình cho ván mới; mặc định mỗi người 10 tường. Xem hoặc tham gia qua /walls phong; khán giả mở bàn xem trực tiếp. Mặc định 5 phòng/kênh; quản trị dùng /walls cauhinh phongtoida. Đồng hồ riêng mặc định 30 phút/người; chọn thoigian (1–180 phút), chỉ giảm khi tới lượt, không cộng giờ. Hết thời gian của mình thì thua; phòng chờ 10 phút. Không cược, không thưởng xu.",
         flags: MessageFlags.Ephemeral,
       });
     if (!runtime.isAvailable())
@@ -287,6 +297,7 @@ module.exports = {
         rules: {
           wallLength: interaction.options.getInteger?.("daituong") ?? 2,
           wallLimit: interaction.options.getInteger?.("sotuong") ?? 10,
+          timeMinutes: interaction.options.getInteger?.("thoigian") ?? 30,
         },
       });
     } catch (error) {

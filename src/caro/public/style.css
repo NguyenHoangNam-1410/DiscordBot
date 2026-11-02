@@ -658,3 +658,67 @@ dialog p {
     transition: background-color 0.12s;
   }
 }
+
+/* Separate player clocks remain visible after the game ends. */
+.player {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  gap: 3px 8px;
+}
+.player > .piece {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  width: 30px;
+}
+.player > div {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+}
+.player > .you {
+  grid-column: 2;
+  grid-row: 2;
+  margin-left: 0;
+}
+.player-clock {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  font: 600 18px/1.5 monospace;
+  font-variant-numeric: tabular-nums;
+  padding: 3px 5px;
+  border-radius: 5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.player-clock.running {
+  background: var(--accent);
+  color: #1e3023;
+}
+.player-clock.low {
+  background: #a12e22;
+  color: #fff;
+}
+@media (max-width: 600px) {
+  .players-card {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .players-card .versus {
+    display: none;
+  }
+  .player {
+    grid-template-columns: 24px minmax(0, 1fr);
+  }
+  .player > .piece {
+    width: 24px;
+  }
+  .player > .player-clock {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
+    font-size: 17px;
+  }
+  .player > .you {
+    grid-row: 3;
+  }
+}

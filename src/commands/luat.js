@@ -17,7 +17,7 @@ const {
 const RULES = {
   walls: [
     "Walls / Wall Go",
-    "`/walls choi` mở bàn 9×9. X và O xuất phát ở giữa hai cạnh đối diện; ai chạm hàng bên kia trước thắng. Mỗi lượt di chuyển 1 ô ngang/dọc hoặc đặt 1 tường. Nhảy qua đối thủ theo Quoridor: ưu tiên nhảy thẳng; chỉ đi chéo vòng sang bên khi sau đối thủ bị tường hoặc mép bàn chặn. Tường dài 1 hoặc 2 ô, không chồng/cắt và phải giữ đường tới đích cho cả hai. Mặc định 10 tường/người; tùy chọn `daituong`, `sotuong` khi tạo phòng. `/walls phong` xem danh sách và mở bàn để chơi hoặc spectate. 90 giây/lượt, tối đa 30 phút/trận; không cược, không thưởng xu.",
+    "`/walls choi` mở bàn 9×9. X và O xuất phát ở giữa hai cạnh đối diện; ai chạm hàng bên kia trước thắng. Mỗi lượt di chuyển 1 ô ngang/dọc hoặc đặt 1 tường. Nhảy qua đối thủ theo Quoridor: ưu tiên nhảy thẳng; chỉ đi chéo vòng sang bên khi sau đối thủ bị tường hoặc mép bàn chặn. Tường dài 1 hoặc 2 ô, không chồng/cắt và phải giữ đường tới đích cho cả hai. Mặc định 10 tường/người; tùy chọn `daituong`, `sotuong` khi tạo phòng. `/walls phong` xem danh sách và mở bàn để chơi hoặc spectate. Đồng hồ riêng mặc định 30 phút/người, chọn `thoigian` (1–180 phút); chỉ giảm khi tới lượt, không cộng giờ, hết giờ thì thua; không cược, không thưởng xu.",
   ],
   cotuong: [
     "Cờ tướng",
