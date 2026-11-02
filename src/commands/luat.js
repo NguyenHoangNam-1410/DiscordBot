@@ -15,6 +15,10 @@ const {
   ButtonStyle,
 } = require("discord.js");
 const RULES = {
+  walls: [
+    "Walls / Wall Go",
+    "`/walls choi` mở bàn 9×9. X và O xuất phát ở giữa hai cạnh đối diện; ai chạm hàng bên kia trước thắng. Mỗi lượt di chuyển 1 ô ngang/dọc hoặc đặt 1 tường. Nhảy qua đối thủ theo Quoridor: ưu tiên nhảy thẳng; chỉ đi chéo vòng sang bên khi sau đối thủ bị tường hoặc mép bàn chặn. Tường dài 1 hoặc 2 ô, không chồng/cắt và phải giữ đường tới đích cho cả hai. Mặc định 10 tường/người; tùy chọn `daituong`, `sotuong` khi tạo phòng. `/walls phong` xem danh sách và mở bàn để chơi hoặc spectate. 90 giây/lượt, tối đa 30 phút/trận; không cược, không thưởng xu.",
+  ],
   cotuong: [
     "Cờ tướng",
     "`/cotuong choi` mở thế cờ ngẫu nhiên, chiếu hết trong 1–4 nước. Mỗi kênh chỉ có một bàn cờ vua hoặc cờ tướng chưa giải. Nhập toàn bộ nước của bên cần giải trong một tin nhắn, không nhập nước đối phương. Nhận ICCS (`h2e2`, cột a–i, hàng 0–9) hoặc ký hiệu Việt (`P2.5`; `Pháo 2 bình 5`); dạng từ ngữ cách các nước bằng dấu chấm phẩy. `/cotuong huongdan` xem quy ước. Đúng đầu tiên nhận cơ sở × N² xu và thành tựu. Mỗi người nhận thưởng một lần cho mỗi thế; giải lại thế đã thưởng hiện ♻️ và giữ bàn cho người khác. Bàn đóng sau 1 giờ, không tự mở tiếp. Quản trị dùng `boqua`, `cauhinh`, hoặc `/quantri ketthucvan` theo mã ván.",

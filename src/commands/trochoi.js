@@ -15,7 +15,7 @@ function helpEmbed(prefix = process.env.COMMAND_PREFIX || "!") {
       {
         name: "🎲 Lệnh trò chơi",
         value:
-          "`/baucua` · `/taixiu` · `/chinchiro` · `/xidach` · `/poker` · `/duangua` · `/domin` · `/coquay`\n`/sinhton batdau` mở run; `/vtv batdau` dành cho admin.\n`/covua choi` mở puzzle; gửi toàn bộ nước UCI/SAN trong kênh.\n`/cotuong choi` mở thế cờ tướng; gửi nước ICCS hoặc ký hiệu Việt. Lệnh `huongdan` của mỗi game giải thích cách nhập.",
+          "`/baucua` · `/taixiu` · `/chinchiro` · `/xidach` · `/poker` · `/duangua` · `/domin` · `/coquay`\n`/caro choi` và `/walls choi` mở bàn web đối kháng, có khán giả; `phong` xem phòng.\n`/sinhton batdau` mở run; `/vtv batdau` dành cho admin.\n`/covua choi` mở puzzle; gửi toàn bộ nước UCI/SAN trong kênh.\n`/cotuong choi` mở thế cờ tướng; gửi nước ICCS hoặc ký hiệu Việt. Lệnh `huongdan` của mỗi game giải thích cách nhập.",
       },
       {
         name: "🎒 /vatpham",

@@ -1,5 +1,30 @@
 [
   {
+    "id": "a645d103-a812-4284-ae67-c4a631070a34",
+    "updatedAt": "2026-11-02T03:46:23.442Z",
+    "auditedAt": "2026-11-02T03:46:23.442Z",
+    "title": "Walls: phím tắt di chuyển và xoay tường",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "WASD hoặc mũi tên để di chuyển; R xoay tường, F đổi chế độ, Enter xác nhận đặt và Esc hủy lựa chọn.",
+      "Q/E/Z/C chọn hướng nhảy vòng chéo khi hợp lệ; phím tắt không hoạt động ngoài lượt, khi đang nhập liệu hoặc mở hộp thoại."
+    ]
+  },
+  {
+    "id": "34f1432a-d01f-48fd-9fb4-c02c8db0f646",
+    "updatedAt": "2026-11-02T03:46:18.637Z",
+    "auditedAt": "2026-11-02T03:46:18.637Z",
+    "title": "Walls / Wall Go: đua đích và đặt tường",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Thêm /walls choi trên bàn cố định 9×9, đi tới hàng đối diện hoặc đặt tường; hỗ trợ người xem trực tiếp.",
+      "Chọn tường dài 1–2 ô và số tường mỗi người 0–20, mặc định 10; nhảy qua đối thủ theo Quoridor.",
+      "Không cho đặt tường chồng, cắt nhau hoặc khóa hết đường tới đích của bất kỳ người nào; thêm danh sách phòng và cấu hình giới hạn phòng theo kênh."
+    ]
+  },
+  {
     "id": "0a3cdd3b-d2f5-4239-bbe9-63176b621b8f",
     "updatedAt": "2026-11-02T03:05:30.555Z",
     "auditedAt": "2026-11-02T03:05:30.555Z",

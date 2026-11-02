@@ -1,6 +1,6 @@
 # Máy chủ web dùng chung cho game Discord
 
-Một tiến trình bot, một cổng HTTP, một địa chỉ HTTPS/Tailscale. Caro hiện là game đầu tiên; Battleship, Walls chưa được triển khai. Không cần mở thêm Funnel hay server khi đăng ký game mới.
+Một tiến trình bot, một cổng HTTP, một địa chỉ HTTPS/Tailscale. Hiện có Caro và [Walls / Wall Go](walls-web.md); Battleship chưa được triển khai. Không cần mở thêm Funnel hay server khi đăng ký game mới.
 
 ## Cấu hình và đường dẫn
 
@@ -32,6 +32,7 @@ Caro hỗ trợ nhiều phòng mỗi kênh (mặc định 5, quản trị chỉn
 - `src/webGames/runtime.js`: vòng đời server, timeout qua store, hàng đợi cập nhật tin Discord, sửa bằng tương tác rồi dự phòng bằng bot. Token chỉ ở bộ nhớ.
 - `src/webGames/index.js`: nơi đăng ký các module game thực tế.
 - `src/caro/webGame.js`: adapter luật/hành động/store/Discord của caro.
+- `src/walls/webGame.js`: adapter Walls; đường `/walls/room/<UUID>`, API `move`, `wall`, `leave`; dùng chung phiên tài khoản, SSE và cập nhật Discord.
 - `src/caro/config.js`, `http.js`, `runtime.js`: các lớp tương thích API nội bộ cũ, không mở thêm máy chủ.
 
 ## Thêm một game

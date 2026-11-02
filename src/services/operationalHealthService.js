@@ -17,7 +17,8 @@ function getOperationalHealth() {
     (SELECT COUNT(*) FROM chinchiro_sessions) +
     (SELECT COUNT(*) FROM hardcore_sessions) +
     (SELECT COUNT(*) FROM chess_rounds WHERE status='open') +
-    (SELECT COUNT(*) FROM xiangqi_rounds WHERE status='open') AS count`);
+    (SELECT COUNT(*) FROM xiangqi_rounds WHERE status='open') +
+    (SELECT COUNT(*) FROM walls_rooms WHERE status IN ('waiting','playing')) AS count`);
   const multiplayer = scalar(
     "SELECT COUNT(*) count FROM multiplayer_rounds WHERE status IN ('open','racing')",
   );

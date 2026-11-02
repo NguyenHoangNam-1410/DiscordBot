@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#111715" />
+    <title>Walls · Bàn đấu trực tiếp</title>
+    <link rel="stylesheet" href="/walls/style.css" />
+    <script src="/walls/app.js" defer></script>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="/" aria-label="Trang chủ Walls"
+          ><span class="brand-icon">✕<span>○</span></span
+          ><span>walls<span class="brand-dot">.</span></span></a
+        >
+        <span class="tag">PHÒNG CHƠI THỬ NGHIỆM</span>
+        <span id="connection" class="connection" role="status"
+          >Chưa kết nối</span
+        >
+      </header>
+
+      <main>
+        <div class="heading">
+          <div>
+            <p class="eyebrow">MỘT BÀN CỜ. HAI NGƯỜI CHƠI.</p>
+            <h1>Chặn đường. Tìm lối.</h1>
+            <p class="subtitle" id="subtitle">
+              Đi tới hàng bên kia trước đối thủ. Mỗi lượt, đi quân hoặc đặt một
+              tường.
+            </p>
+          </div>
+          <div class="room-label">
+            <span>PHÒNG ĐẤU</span><strong id="room-code">—</strong>
+          </div>
+        </div>
+
+        <div class="game-layout">
+          <section class="board-panel" aria-label="Bàn walls">
+            <div class="board-toolbar">
+              <span id="board-state">Sẵn sàng cho một ván mới</span
+              ><span id="move-count">0 nước đi</span>
+              <button
+                id="zoom-board"
+                class="zoom-button"
+                type="button"
+                aria-pressed="false"
+              >
+                Phóng to
+              </button>
+            </div>
+            <div class="board-scroll">
+              <div class="goal-label x">ĐÍCH CỦA X · HÀNG 1</div>
+              <div id="board" class="board" aria-label="Bàn walls"></div>
+              <div class="goal-label o">ĐÍCH CỦA O · HÀNG 9</div>
+            </div>
+            <div class="board-footer">
+              <span>Ô sáng: nước đi hợp lệ</span
+              ><span id="board-caption">Luật hiển thị khi vào phòng</span>
+            </div>
+          </section>
+
+          <aside class="sidebar">
+            <section class="status-card">
+              <p class="eyebrow" id="status-label">VÀO BÀN</p>
+              <h2 id="status-title" aria-live="polite">Hẹn gặp trên bàn cờ.</h2>
+              <p id="status-detail">
+                Trong Discord, gõ /walls choi hoặc bấm Mở bàn cờ ở phòng bạn đã
+                tham gia.
+              </p>
+              <div id="timer-panel" class="timer-panel" hidden>
+                <div>
+                  <span id="timer-label">Thời gian lượt này</span
+                  ><strong id="timer">01:30</strong>
+                </div>
+                <progress
+                  id="timer-progress"
+                  max="90"
+                  value="90"
+                  aria-label="Thời gian còn lại"
+                ></progress>
+              </div>
+            </section>
+
+            <section class="players-card" aria-label="Người chơi">
+              <div class="player" id="player-X">
+                <span class="piece x">✕</span>
+                <div>
+                  <span class="player-label">ĐI TRƯỚC</span
+                  ><strong id="name-X">Người chơi X</strong>
+                  <span id="walls-X">Còn 10 tường</span>
+                </div>
+                <span class="you" id="you-X" hidden>BẠN</span>
+              </div>
+              <div class="versus"><span></span>VS<span></span></div>
+              <div class="player" id="player-O">
+                <span class="piece o">○</span>
+                <div>
+                  <span class="player-label">ĐI SAU</span
+                  ><strong id="name-O">Đang chờ đối thủ</strong>
+                  <span id="walls-O">Còn 10 tường</span>
+                </div>
+                <span class="you" id="you-O" hidden>BẠN</span>
+              </div>
+            </section>
+
+            <section id="controls" class="controls" hidden>
+              <div class="mode-buttons">
+                <button id="mode-move" aria-pressed="true">Di chuyển</button
+                ><button id="mode-wall" aria-pressed="false">Đặt tường</button>
+              </div>
+              <label for="orientation">Hướng tường</label>
+              <select id="orientation">
+                <option value="h">Ngang</option>
+                <option value="v">Dọc</option>
+              </select>
+              <p id="selected-wall">
+                Chọn một khe trên bàn để xem trước tường.
+              </p>
+              <button id="confirm-wall" disabled>Xác nhận đặt tường</button>
+              <p class="keyboard-help">
+                WASD / ↑↓←→: di chuyển · R: xoay tường · F: đổi chế độ · Enter:
+                đặt tường · Esc: hủy chọn.<br />Q / E / Z / C: nhảy vòng chéo
+                khi hợp lệ.
+              </p>
+            </section>
+
+            <div id="notice" class="notice" role="alert" hidden></div>
+            <button id="connect-player" class="connect-button" hidden>
+              Xác nhận người chơi
+            </button>
+            <section id="pair-panel" class="status-card" hidden>
+              <p class="eyebrow">KẾT NỐI TÀI KHOẢN</p>
+              <h2 id="pair-code"></h2>
+              <p>
+                Trong tin phòng Discord, bấm
+                <strong>Kết nối tài khoản</strong> và nhập mã này. Mã có hiệu
+                lực 5 phút. Chỉ nhập mã từ tab bàn cờ của chính bạn.
+              </p>
+              <p id="pair-status" role="status">
+                Đang chờ bạn xác nhận trong Discord…
+              </p>
+            </section>
+            <button id="leave" class="leave-button" hidden>Đầu hàng</button>
+            <section class="rules">
+              <h3>Đơn giản để bắt đầu.</h3>
+              <p id="rules-detail">
+                Bàn 9×9. Mỗi lượt đi 1 ô ngang/dọc hoặc đặt tường. Được nhảy qua
+                đối thủ theo Quoridor; chỉ đi chéo vòng sang bên nếu phía sau
+                đối thủ bị chặn. Không chồng/cắt tường hoặc khóa hết đường tới
+                đích của bất kỳ người nào.
+              </p>
+              <p>
+                90 giây mỗi lượt · Tối đa 30 phút/trận.<br />Mất mạng, đồng hồ
+                vẫn chạy. Web tự kết nối lại.
+              </p>
+              <span class="no-stakes">CHƠI VUI · KHÔNG CƯỢC XU</span>
+            </section>
+          </aside>
+        </div>
+      </main>
+      <footer class="page-footer">
+        <span>Chơi cùng nhau, dù ở bất cứ đâu.</span
+        ><span>DISCORD GAME CLUB / WALLS</span>
+      </footer>
+    </div>
+
+    <dialog id="leave-dialog">
+      <h2 id="leave-dialog-title">Đầu hàng ván đấu?</h2>
+      <p id="leave-dialog-detail">Đối thủ sẽ được tính thắng ván này.</p>
+      <div class="dialog-actions">
+        <button id="keep-playing">Tiếp tục chơi</button
+        ><button id="confirm-leave" class="danger">Đầu hàng</button>
+      </div>
+    </dialog>
+  </body>
+</html>

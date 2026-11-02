@@ -85,6 +85,8 @@ const clearPlayerDataTx = db.transaction(
 );
 
 const RESET_PLAYER_TABLES = Object.freeze([
+  "walls_seats",
+  "walls_rooms",
   "chess_rounds",
   "chess_channel_locks",
   "chess_records",
