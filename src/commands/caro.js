@@ -7,13 +7,14 @@ const {
   ActionRowBuilder,
   TextInputBuilder,
   TextInputStyle,
+  PermissionFlagsBits,
 } = require("discord.js");
 const runtime = require("../caro/runtime");
 const { roomPayload, accessPayload } = require("../caro/discord");
 const { MESSAGES } = require("../caro/store");
 
 const DISABLED =
-  "Web caro chưa được bật. Chủ bot cần cấu hình CARO_WEB_ENABLED và CARO_PUBLIC_URL trên VM rồi khởi động lại bot.";
+  "Web trò chơi chưa được bật. Chủ bot cần cấu hình WEB_ENABLED và WEB_PUBLIC_URL (hoặc CARO_WEB_ENABLED/CARO_PUBLIC_URL cũ) rồi khởi động lại bot.";
 async function handleButton(interaction) {
   const match =
     /^caro:(join|open|cancel|connect|confirm):([a-f0-9-]{36})$/.exec(
@@ -21,12 +22,16 @@ async function handleButton(interaction) {
     );
   if (!match) return;
   const action = match[1];
-  if (action !== "connect")
+  const updatesRoom = ["join", "cancel"].includes(action);
+  if (updatesRoom) await interaction.deferUpdate();
+  else if (action !== "connect")
     await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const reply = (payload) =>
     action === "connect"
       ? interaction.reply({ ...payload, flags: MessageFlags.Ephemeral })
-      : interaction.editReply(payload);
+      : updatesRoom
+        ? interaction.followUp({ ...payload, flags: MessageFlags.Ephemeral })
+        : interaction.editReply(payload);
   try {
     if (!runtime.isAvailable()) return reply({ content: DISABLED });
     const [, action, id] = match;
@@ -40,6 +45,7 @@ async function handleButton(interaction) {
       return reply({
         content: "Nút không thuộc phòng caro tại kênh này.",
       });
+    if (updatesRoom) runtime.bindInteraction(id, interaction);
     if (action === "connect") {
       if (!runtime.store.seat(room, interaction.user.id))
         return reply({
@@ -75,11 +81,11 @@ async function handleButton(interaction) {
     }
     if (action === "cancel") {
       if (room.status !== "waiting")
-        return interaction.editReply({
+        return reply({
           content: "Phòng không còn chờ đối thủ. Có thể đầu hàng trên bàn web.",
         });
       runtime.store.leave(id, interaction.user.id);
-      return interaction.editReply({ content: "Đã hủy phòng chờ." });
+      return reply({ content: "Đã hủy phòng chờ." });
     }
     if (action === "join") {
       runtime.store.join(id, interaction.user);
@@ -112,6 +118,41 @@ module.exports = {
         .setName("choi")
         .setDescription(
           "Tạo phòng caro, mời người khác tham gia và đấu trên web",
+        )
+        .addIntegerOption((option) =>
+          option
+            .setName("kichthuoc")
+            .setDescription("Số ô mỗi cạnh (9–25), mặc định 15")
+            .setMinValue(9)
+            .setMaxValue(25),
+        )
+        .addIntegerOption((option) =>
+          option
+            .setName("sothang")
+            .setDescription("Số quân liên tiếp để thắng (3–6), mặc định 5")
+            .setMinValue(3)
+            .setMaxValue(6),
+        )
+        .addBooleanOption((option) =>
+          option
+            .setName("chan2dau")
+            .setDescription(
+              "Bật: nối đủ quân nhưng bị chặn cả hai đầu sẽ không thắng",
+            ),
+        )
+        .addBooleanOption((option) =>
+          option
+            .setName("bienchan")
+            .setDescription(
+              "Bật: mép bàn tính là một đầu bị chặn (khi bật chan2dau)",
+            ),
+        )
+        .addBooleanOption((option) =>
+          option
+            .setName("dungsoquan")
+            .setDescription(
+              "Bật: phải đúng số quân cần thắng; nối dài hơn không thắng",
+            ),
         ),
     )
     .addSubcommand((sub) =>
@@ -127,12 +168,21 @@ module.exports = {
     if (interaction.options.getSubcommand() === "luat")
       return interaction.reply({
         content:
-          "Caro thử nghiệm: /caro choi tạo phòng, người khác bấm Tham gia. Mở bàn cờ đi thẳng tới web; ai có link đều xem trực tiếp được. Người chơi bấm Xác nhận người chơi trên web, nhập mã tại Kết nối tài khoản trong tin phòng Discord để nhận quyền đánh. Bàn 15×15, X đi trước; từ 5 quân liên tiếp thắng, kể cả bị chặn hai đầu. Mỗi lượt 90 giây, hết giờ xử thua; hết 30 phút xử hòa. Phòng chờ hết hạn sau 10 phút. Đồng hồ vẫn chạy khi mất mạng. Không cược, không thưởng xu.",
+          "Caro thử nghiệm: /caro choi tạo phòng, tùy chọn kichthuoc (9–25), sothang (3–6), chan2dau, bienchan và dungsoquan. Mặc định bàn 15×15, từ 5 quân thắng, chặn hai đầu vẫn thắng. Nếu bật chan2dau, hai đầu đều bị quân đối thủ chặn thì không thắng; bienchan cho phép tính mép bàn là chặn. dungsoquan yêu cầu đúng số quân, dài hơn không thắng. Luật được chốt khi tạo phòng và hiển thị để người khác xem trước khi tham gia. X đi trước. Mở bàn cờ để chơi/xem trực tiếp; người chơi xác nhận bằng mã trên web tại Kết nối tài khoản. 90 giây/lượt, tối đa 30 phút/trận; phòng chờ 10 phút. Không cược, không thưởng xu.",
         flags: MessageFlags.Ephemeral,
       });
     if (!runtime.isAvailable())
       return interaction.reply({
         content: DISABLED,
+        flags: MessageFlags.Ephemeral,
+      });
+    if (
+      interaction.appPermissions &&
+      !interaction.appPermissions.has(PermissionFlagsBits.ViewChannel)
+    )
+      return interaction.reply({
+        content:
+          "Bot chưa có quyền Xem kênh (View Channel) tại đây nên không thể tự cập nhật tin phòng khi ván trên web kết thúc. Quản trị viên cần bật quyền này cho bot tại kênh caro rồi tạo phòng lại. Với luồng riêng tư, cần thêm bot vào luồng.",
         flags: MessageFlags.Ephemeral,
       });
     await interaction.deferReply();
@@ -142,6 +192,13 @@ module.exports = {
         guildId: interaction.guildId,
         channelId: interaction.channelId,
         user: interaction.user,
+        rules: {
+          size: interaction.options.getInteger?.("kichthuoc") ?? 15,
+          winLength: interaction.options.getInteger?.("sothang") ?? 5,
+          blockBothEnds: interaction.options.getBoolean?.("chan2dau") ?? false,
+          edgeBlocks: interaction.options.getBoolean?.("bienchan") ?? false,
+          exactLength: interaction.options.getBoolean?.("dungsoquan") ?? false,
+        },
       });
     } catch (error) {
       if (!MESSAGES[error.code]) throw error;
@@ -153,6 +210,7 @@ module.exports = {
       );
       if (!message?.id) throw new Error("Caro lobby message was not created");
       runtime.store.attachMessage(room.id, message.id);
+      runtime.bindInteraction(room.id, interaction);
     } catch (error) {
       runtime.store.leave(room.id, interaction.user.id);
       throw error;

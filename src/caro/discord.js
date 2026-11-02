@@ -6,6 +6,7 @@ const {
   ButtonStyle,
   EmbedBuilder,
 } = require("discord.js");
+const { normalizeRules, rulesText } = require("./rules");
 
 const REASONS = {
   win: "Đủ từ 5 quân liên tiếp",
@@ -17,6 +18,7 @@ const REASONS = {
   cancelled: "Chủ phòng đã hủy",
 };
 function roomPayload(room, url) {
+  const rules = normalizeRules(room.rules);
   const waiting = room.status === "waiting",
     playing = room.status === "playing";
   const result = room.winner
@@ -42,9 +44,9 @@ function roomPayload(room, url) {
           ? "Bấm **Tham gia** để đấu với chủ phòng. **Mở bàn cờ** để chơi hoặc xem trực tiếp."
           : playing
             ? "Bấm **Mở bàn cờ** để chơi hoặc xem trực tiếp. Người chơi dùng **Kết nối tài khoản** để nhập mã trên web."
-            : `${result}\n${REASONS[room.reason] || ""}`,
+            : `${result}\n${room.reason === "win" ? `Nối ${rules.exactLength ? "đúng" : "từ"} ${rules.winLength} quân theo luật phòng` : REASONS[room.reason] || ""}`,
         "",
-        "Bàn 15×15 · Từ 5 quân liên tiếp thắng, kể cả chặn hai đầu · X đi trước",
+        `${rulesText(rules)} · X đi trước`,
         "90 giây/lượt · Tối đa 30 phút/trận · Thử nghiệm, không cược và không thưởng xu",
       ].join("\n"),
     )

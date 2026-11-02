@@ -176,8 +176,8 @@ h1 {
 }
 .board {
   display: grid;
-  grid-template-columns: repeat(15, minmax(28px, 1fr));
-  min-width: 420px;
+  grid-template-columns: repeat(var(--board-size, 15), minmax(28px, 1fr));
+  min-width: calc(var(--board-size, 15) * 30px + 16px);
   padding: 8px;
   background: #efe9d9;
   gap: 1px;
@@ -546,8 +546,8 @@ dialog p {
     order: 1;
   }
   .board {
-    grid-template-columns: repeat(15, minmax(18px, 1fr));
-    min-width: 300px;
+    grid-template-columns: repeat(var(--board-size, 15), minmax(18px, 1fr));
+    min-width: calc(var(--board-size, 15) * 20px + 16px);
   }
   .board.enlarged {
     min-width: 600px;

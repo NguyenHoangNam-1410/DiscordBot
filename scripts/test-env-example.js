@@ -62,7 +62,18 @@ async function run() {
   const listed = [...env.matchAll(/^#?\s*([A-Z][A-Z0-9_]+)=/gm)].map(
     (m) => m[1],
   );
-  assert(listed.length <= 12, "env example must stay minimal");
+  const webDeploymentKeys = [
+    "WEB_ENABLED",
+    "WEB_PUBLIC_URL",
+    "WEB_HOST",
+    "WEB_PORT",
+  ];
+  assert(
+    listed.filter((key) => !webDeploymentKeys.includes(key)).length <= 12,
+    "env example must stay minimal apart from shared web deployment",
+  );
+  for (const key of webDeploymentKeys)
+    assert(listed.includes(key), `${key} configures the shared web server`);
   for (const key of [
     "DISCORD_TOKEN",
     "CLIENT_ID",

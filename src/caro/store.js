@@ -2,7 +2,8 @@
 
 const { randomUUID } = require("node:crypto");
 const { EventEmitter } = require("node:events");
-const { SIZE, winningLine } = require("./engine");
+const { winningLine } = require("./engine");
+const { normalizeRules, rulesText } = require("./rules");
 
 const WAIT_MS = 10 * 60_000;
 const TURN_MS = 90_000;
@@ -23,6 +24,7 @@ const MESSAGES = {
   STALE_BOARD: "Bàn cờ vừa thay đổi. Hãy kiểm tra bàn mới rồi đánh lại.",
   INVALID_CELL: "Ô cờ không hợp lệ.",
   OCCUPIED: "Ô này đã có quân.",
+  INVALID_RULES: "Cấu hình bàn cờ không hợp lệ.",
 };
 function fail(code) {
   throw Object.assign(new Error(MESSAGES[code]), { code });
@@ -102,6 +104,7 @@ function createStore(db, now = Date.now) {
     ).run(room.guildId, userId, room.id);
   }
   const create = (options) => {
+    const rules = normalizeRules(options.rules);
     sweep();
     return db.transaction(() => {
       if (
@@ -119,7 +122,8 @@ function createStore(db, now = Date.now) {
         messageId: null,
         players: { X: player(options.user), O: null },
         status: "waiting",
-        board: Array(SIZE * SIZE).fill(null),
+        rules,
+        board: Array(rules.size * rules.size).fill(null),
         turn: "X",
         moves: 0,
         version: 0,
@@ -176,15 +180,20 @@ function createStore(db, now = Date.now) {
       if (room.status !== "playing") fail("ROOM_CLOSED");
       if (room.version !== version) fail("STALE_BOARD");
       if (room.turn !== mark) fail("NOT_TURN");
-      if (!Number.isInteger(cell) || cell < 0 || cell >= SIZE * SIZE)
+      const rules = normalizeRules(room.rules);
+      if (
+        !Number.isInteger(cell) ||
+        cell < 0 ||
+        cell >= rules.size * rules.size
+      )
         fail("INVALID_CELL");
       if (room.board[cell]) fail("OCCUPIED");
       room.board[cell] = mark;
       room.lastCell = cell;
       room.moves++;
-      room.winningCells = winningLine(room.board, cell, mark);
+      room.winningCells = winningLine(room.board, cell, mark, rules);
       if (room.winningCells.length) return finish(room, "win", mark);
-      if (room.moves === SIZE * SIZE) return finish(room, "draw");
+      if (room.moves === rules.size * rules.size) return finish(room, "draw");
       room.turn = mark === "X" ? "O" : "X";
       room.turnDeadline = now() + TURN_MS;
       return save(room);
@@ -210,9 +219,12 @@ function createStore(db, now = Date.now) {
   }
   function snapshot(room, userId) {
     const mark = seat(room, userId);
+    const rules = normalizeRules(room.rules);
     return {
       id: room.id,
-      size: SIZE,
+      size: rules.size,
+      rules,
+      rulesLabel: rulesText(rules),
       board: room.board,
       status: room.status,
       players: { X: room.players.X.name, O: room.players.O?.name || null },

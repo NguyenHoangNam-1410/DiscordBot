@@ -1,18 +1,23 @@
 # Caro hai người trên web (thử nghiệm)
 
-Bot và web chạy trong **cùng một tiến trình Node.js trên VM GCP hiện có**. Không cần dịch vụ database hay hosting web riêng, không thêm thư viện chạy game. Server đẩy trạng thái qua SSE, trình duyệt gửi nước đi bằng HTTP POST. SQLite hiện có lưu từng nước đi và thời hạn của trận.
+Bot và web chạy trong **cùng một tiến trình Node.js trên VM GCP hiện có**. Caro là module của [máy chủ web dùng chung](web-games.md): cùng địa chỉ Tailscale, phiên đăng nhập, SSE và đồng bộ Discord với các game đăng ký sau này. SQLite hiện có lưu từng nước đi và thời hạn của trận.
 
 ## Luật và cách chơi
 
 - `/caro choi`: tạo một phòng tại kênh hiện tại. Mỗi kênh có tối đa một phòng chờ/đang chơi; mỗi người có tối đa một phòng đang mở trong mỗi server Discord.
+- Tùy chọn khi tạo: `kichthuoc` 9–25 ô mỗi cạnh (mặc định 15), `sothang` 3–6 quân liên tiếp (mặc định 5), `chan2dau`, `bienchan`, `dungsoquan` (mặc định đều tắt). Luật cố định trong suốt ván và hiển thị trước khi tham gia.
+- `chan2dau:true`: nối đủ quân nhưng cả hai đầu đều có quân đối thủ thì không thắng. `bienchan:true` tính mép bàn là chặn khi bật `chan2dau`. `dungsoquan:true` yêu cầu đúng số quân, nối dài hơn không thắng. Kiểm tra độc lập cả bốn hướng; chỉ cần một hướng thỏa luật.
+- Ví dụ: `/caro choi kichthuoc:19 sothang:5 chan2dau:true bienchan:false dungsoquan:true`.
 - Người khác bấm **Tham gia**. Chủ phòng cầm X, đối thủ cầm O, X đi trước.
-- **Mở bàn cờ** là nút liên kết trực tiếp đến `/room/<mã phòng>`, không gửi thêm tin nhắn riêng. Ai có link cũng có thể xem trực tiếp người tham gia, nước đi và kết quả, hoặc mở lại bàn đã kết thúc.
+- **Mở bàn cờ** là nút liên kết trực tiếp đến `/caro/room/<mã phòng>`, không gửi thêm tin nhắn riêng. Link `/room/<mã phòng>` cũ tự chuyển đến đường mới. Ai có link cũng có thể xem trực tiếp người tham gia, nước đi và kết quả, hoặc mở lại bàn đã kết thúc.
 - Để đánh cờ, người chơi bấm **Xác nhận người chơi** trên web, rồi bấm **Kết nối tài khoản** trong tin phòng Discord và nhập mã 8 ký tự đang hiển thị trên tab của chính mình. Web tự nhận quyền đánh sau khi xác nhận, không cần tải lại. Khán giả không cần xác nhận và không thể đánh/hủy/đầu hàng.
 - Mã kết nối chỉ dùng một lần trong đúng phòng, hết hạn sau 5 phút và chỉ hai người chơi được xác nhận. Trình duyệt giữ bí mật kết nối bằng cookie HttpOnly; sau khi Discord xác nhận, cookie phiên chơi có hiệu lực 12 giờ. Không cần thêm Discord OAuth/client secret. Các link vé riêng cũ vẫn dùng được đến khi hết hạn.
-- Bàn 15×15. Từ 5 quân liên tiếp theo ngang/dọc/chéo thắng, kể cả chặn hai đầu hoặc có hơn 5 quân. Bản này chưa áp dụng luật cấm của Renju.
+- Mặc định bàn 15×15, từ 5 quân liên tiếp thắng kể cả chặn hai đầu hoặc dài hơn 5. Ván cũ không có cấu hình vẫn giữ luật này. Các tùy chọn trên không phải bộ luật cấm của Renju.
 - Mỗi lượt 90 giây, tối đa 30 phút/trận. Hết giờ lượt xử thua, hết thời gian trận xử hòa. Phòng chờ tự hết hạn sau 10 phút. Đồng hồ vẫn chạy lúc mất kết nối hoặc bot dừng.
 - Tải lại trang để xem lại bàn đã lưu. Nếu mất mạng, web tự kết nối lại. Nếu bot khởi động lại hoặc cookie hết hạn sau 12 giờ, kết nối tài khoản lại để đánh tiếp; vẫn xem bàn được khi chưa xác nhận.
 - Hủy phòng chờ từ Discord hoặc web; đầu hàng trong web. Tin phòng Discord cập nhật ngay khi có người tham gia hoặc ván kết thúc, hiển thị người thắng/hòa và nguyên nhân. Tác vụ mỗi 5 giây kiểm tra hết giờ và thử lại khi cập nhật gặp lỗi. Bot sửa trực tiếp tin của mình, không cần đọc lịch sử tin nhắn trước.
+- Bot cần quyền **Xem kênh (View Channel)** tại kênh caro để tự cập nhật kết quả từ web trong suốt ván và sau khi khởi động lại. Với luồng riêng tư, cần thêm bot vào luồng. Lệnh tạo phòng sẽ báo rõ nếu quyền tương tác cung cấp cho biết bot thiếu quyền này.
+- Khi tạo phòng hoặc bấm Tham gia/Hủy phòng, bot giữ đường sửa tin qua tương tác Discord trong bộ nhớ để cập nhật chính tin phòng, kể cả khi đường truy cập kênh gặp lỗi. Đường này chỉ dùng trong thời hạn token tương tác; sau đó bot chuyển sang đường truy cập kênh. Không lưu token vào SQLite hoặc log. Đây không thay thế quyền Xem kênh cho ván dài.
 - Không cược, không cộng xu, EXP hay thành tích trong bản thử.
 
 ## Chạy trên VM GCP bằng Tailscale Funnel
@@ -41,11 +46,11 @@ Thực hiện trong thư mục bot trên VM. Giữ nguyên cách vận hành bot
 3. Thêm vào `.env` trên VM, thay địa chỉ ví dụ bằng địa chỉ Funnel thật:
 
    ```dotenv
-   CARO_WEB_ENABLED=true
-   CARO_PUBLIC_URL=https://ten-may.ten-tailnet.ts.net
+   WEB_ENABLED=true
+   WEB_PUBLIC_URL=https://ten-may.ten-tailnet.ts.net
    ```
 
-   Mặc định web nghe tại `127.0.0.1:3000`. Không cần mở cổng 3000 hoặc 443 vào VM GCP khi dùng Funnel. Nếu cổng 3000 đã có dịch vụ, thêm `CARO_WEB_PORT=3001` và đổi lệnh Funnel sang cổng 3001. Không đổi các cấu hình Tailscale/Funnel đang phục vụ ứng dụng khác khi chưa kiểm tra.
+   Cấu hình `CARO_WEB_ENABLED`/`CARO_PUBLIC_URL` cũ vẫn dùng được; biến `WEB_*` được ưu tiên nếu có. Mặc định web nghe tại `127.0.0.1:3000`. Nếu đổi cổng, dùng `WEB_PORT` và cập nhật cổng đích của Funnel/proxy tương ứng. Không cần đổi cấu hình Tailscale đang chạy chỉ vì thêm module game.
 
 4. Đăng ký lệnh rồi restart bot bằng trình quản lý đang dùng:
 
@@ -94,11 +99,12 @@ location / {
 | `CARO_WEB_HOST`    | `127.0.0.1`             | Chỉ đổi khi có yêu cầu triển khai riêng                  |
 | `CARO_WEB_PORT`    | `3000`                  | Cổng nội bộ của web                                      |
 
-- **Web chưa được bật:** kiểm tra `.env`, restart bot và tìm dòng log `caro web ready`. Web chỉ khởi động sau khi bot kết nối Discord.
+- **Web chưa được bật:** kiểm tra `.env`, restart bot và tìm dòng log `web games ready`. Web chỉ khởi động sau khi bot kết nối Discord. Cấu hình dùng chung và hướng dẫn thêm game ở [web-games.md](web-games.md).
 - **Không thấy `/caro`:** chạy lại `npm run register` với đúng `CLIENT_ID` và `GUILD_ID` trên VM.
 - **Mã hết hạn:** bấm lại **Xác nhận người chơi** trên web để lấy mã mới. Không xác nhận mã do người khác gửi; chỉ nhập mã trên tab bàn cờ của chính mình. Không gửi cookie hoặc token bot vào log hay ảnh hỗ trợ.
 - **Nguồn truy cập không hợp lệ:** địa chỉ thực tế trên trình duyệt phải khớp `CARO_PUBLIC_URL`, gồm cả cổng nếu có.
 - **Trang mở được nhưng không cập nhật:** kiểm tra kết nối `/api/events`, tắt buffering ở proxy; thử tắt VPN hoặc tiện ích chặn kết nối.
+- **Web đã đổi nhưng tin Discord vẫn cũ; log có `50001`:** Discord báo Missing Access. Vào Chỉnh sửa kênh → Quyền, cấp **Xem kênh** cho bot/role bot, kiểm tra ghi đè quyền tại kênh và quyền vào luồng riêng tư. Nếu là ứng dụng cài cho người dùng, bảo đảm bot cũng có mặt trong server. Không cần cấp quyền Quản trị viên. Bot giữ trạng thái chờ gửi và thử lại mỗi 5 giây sau khi khôi phục quyền. Log có mã phòng, kênh, tin nhắn và bước bị lỗi để xác định đúng nơi cần sửa quyền; không chứa token.
 - **Bot khởi động lại:** dữ liệu vẫn nằm trong SQLite và được backup cùng database bot. Mã và cookie cũ mất hiệu lực; kết nối tài khoản lại. Link phòng vẫn xem được. Trận quá giờ sẽ kết thúc, không được bắt đầu lại đồng hồ.
 - **Port đang dùng:** đổi cả `CARO_WEB_PORT` và cổng đích của Funnel/proxy rồi restart bot.
 - **Dừng thử nghiệm:** đặt `CARO_WEB_ENABLED=false` rồi restart bot. Nếu Funnel chỉ phục vụ caro, có thể tắt bằng `sudo tailscale funnel --https=443 off`. Không chạy lệnh tắt nếu Funnel đang dùng cho ứng dụng khác.

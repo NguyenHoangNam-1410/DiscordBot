@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#111715" />
     <title>Caro · Bàn đấu trực tiếp</title>
-    <link rel="stylesheet" href="/style.css" />
-    <script src="/app.js" defer></script>
+    <link rel="stylesheet" href="/caro/style.css" />
+    <script src="/caro/app.js" defer></script>
   </head>
   <body>
     <div class="shell">
@@ -26,7 +26,7 @@
           <div>
             <p class="eyebrow">MỘT BÀN CỜ. HAI NGƯỜI CHƠI.</p>
             <h1>Nước đi của bạn.</h1>
-            <p class="subtitle">
+            <p class="subtitle" id="subtitle">
               Một đường thẳng, năm quân cờ. Cùng đối thủ tạo nên ván đấu.
             </p>
           </div>
@@ -50,15 +50,11 @@
               </button>
             </div>
             <div class="board-scroll">
-              <div
-                id="board"
-                class="board"
-                aria-label="Bàn caro 15 hàng 15 cột"
-              ></div>
+              <div id="board" class="board" aria-label="Bàn caro"></div>
             </div>
             <div class="board-footer">
               <span><i class="last-marker"></i> Nước đi gần nhất</span
-              ><span>15 × 15 · Từ 5 quân liên tiếp</span>
+              ><span id="board-caption">Luật hiển thị khi vào phòng</span>
             </div>
           </section>
 
@@ -123,9 +119,9 @@
             <button id="leave" class="leave-button" hidden>Đầu hàng</button>
             <section class="rules">
               <h3>Đơn giản để bắt đầu.</h3>
-              <p>
-                Nối từ 5 quân theo hàng ngang, dọc hoặc chéo để thắng. Chặn hai
-                đầu vẫn tính thắng.
+              <p id="rules-detail">
+                Nối quân theo hàng ngang, dọc hoặc chéo. Kích thước và luật
+                thắng do chủ phòng chọn khi mở bàn.
               </p>
               <p>
                 90 giây mỗi lượt · Tối đa 30 phút/trận.<br />Mất mạng, đồng hồ

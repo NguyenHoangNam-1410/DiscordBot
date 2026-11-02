@@ -15,6 +15,7 @@ const {
   MATCH_MS,
 } = require("../src/caro/store");
 const { SIZE, winningLine } = require("../src/caro/engine");
+const { normalizeRules, DEFAULT_RULES } = require("../src/caro/rules");
 const { createWebServer } = require("../src/caro/http");
 const { readConfig } = require("../src/caro/config");
 const { roomPayload } = require("../src/caro/discord");
@@ -22,6 +23,7 @@ const vm = require("node:vm");
 let clock = Date.now(),
   serial = 0,
   web,
+  sharedWeb,
   reopened;
 const now = () => clock;
 const store = createStore(db, now);
@@ -41,6 +43,27 @@ const code = (fn, expected) =>
 async function main() {
   assert.deepEqual(readConfig({}), { enabled: false });
   assert.equal(readConfig({ CARO_WEB_ENABLED: "true" }).host, "127.0.0.1");
+  assert.deepEqual(
+    readConfig({ WEB_ENABLED: "false", CARO_WEB_ENABLED: "true" }),
+    { enabled: false },
+  );
+  assert.equal(
+    readConfig({
+      WEB_ENABLED: "true",
+      WEB_PORT: "3123",
+      CARO_WEB_PORT: "3001",
+      WEB_PUBLIC_URL: "https://games.example",
+    }).port,
+    3123,
+  );
+  assert.equal(
+    readConfig({
+      WEB_ENABLED: "true",
+      WEB_PUBLIC_URL: "https://games.example",
+      CARO_PUBLIC_URL: "https://old.example",
+    }).origin,
+    "https://games.example",
+  );
   for (const url of [
     "http://example.com",
     "https://user:password@example.com",
@@ -69,6 +92,122 @@ async function main() {
     0,
     "no wrapping between rows",
   );
+
+  for (const bad of [
+    { size: 8 },
+    { size: 26 },
+    { size: 10.5 },
+    { winLength: 7 },
+    { winLength: 2 },
+    { blockBothEnds: "false" },
+  ])
+    code(() => normalizeRules(bad), "INVALID_RULES");
+  for (const size of [9, 15, 25]) {
+    for (const [dr, dc] of [
+      [0, 1],
+      [1, 0],
+      [1, 1],
+      [1, -1],
+    ]) {
+      const r = 2,
+        c = dc < 0 ? 7 : 2,
+        board = Array(size * size).fill(null);
+      const at = (n) => (r + dr * n) * size + c + dc * n;
+      for (let i = 0; i < 4; i++) board[at(i)] = "X";
+      board[at(-1)] = "O";
+      board[at(4)] = "O";
+      assert.equal(
+        winningLine(board, at(2), "X", { size, winLength: 4 }).length,
+        4,
+      );
+      assert.equal(
+        winningLine(board, at(2), "X", {
+          size,
+          winLength: 4,
+          blockBothEnds: true,
+        }).length,
+        0,
+      );
+      board[at(-1)] = null;
+      assert.equal(
+        winningLine(board, at(2), "X", {
+          size,
+          winLength: 4,
+          blockBothEnds: true,
+        }).length,
+        4,
+      );
+      board[at(4)] = "X";
+      assert.equal(
+        winningLine(board, at(2), "X", {
+          size,
+          winLength: 4,
+          exactLength: true,
+        }).length,
+        0,
+      );
+      assert.equal(
+        winningLine(board, at(2), "X", { size, winLength: 4 }).length,
+        5,
+      );
+    }
+  }
+  const edgeBoard = Array(81).fill(null);
+  for (const i of [0, 1, 2]) edgeBoard[i] = "X";
+  edgeBoard[3] = "O";
+  assert.equal(
+    winningLine(edgeBoard, 1, "X", {
+      size: 9,
+      winLength: 3,
+      blockBothEnds: true,
+    }).length,
+    3,
+  );
+  assert.equal(
+    winningLine(edgeBoard, 1, "X", {
+      size: 9,
+      winLength: 3,
+      blockBothEnds: true,
+      edgeBlocks: true,
+    }).length,
+    0,
+  );
+  // A custom room keeps its rules across moves, reconnects and storage reads.
+  let custom = store.create({
+    guildId: "custom",
+    channelId: "custom",
+    user: alice,
+    rules: { size: 9, winLength: 3, blockBothEnds: true, exactLength: true },
+  });
+  custom = store.join(custom.id, bob);
+  assert.equal(custom.board.length, 81);
+  code(
+    () => store.move(custom.id, alice.id, 81, custom.version),
+    "INVALID_CELL",
+  );
+  for (const [user, cell] of [
+    [alice, 0],
+    [bob, 9],
+    [alice, 1],
+    [bob, 10],
+    [alice, 2],
+  ])
+    custom = store.move(custom.id, user.id, cell, custom.version);
+  assert.equal(custom.winner, "X");
+  assert.equal(createStore(db, now).get(custom.id).rules.winLength, 3);
+  assert.match(
+    roomPayload(custom, "https://games.example/caro/").embeds[0].toJSON()
+      .description,
+    /Đúng 3 quân/,
+  );
+  assert.match(
+    store.snapshot(custom, alice.id).rulesLabel,
+    /Chặn 2 đầu không thắng/,
+  );
+  // Pre-refactor rooms have no rules field and must retain the original rules.
+  const legacy = { ...custom };
+  delete legacy.rules;
+  assert.deepEqual(store.snapshot(legacy, alice.id).rules, DEFAULT_RULES);
 
   let room = create();
   code(() => store.join(room.id, alice), "SELF_JOIN");
@@ -427,6 +566,7 @@ async function main() {
   // Exercise the actual browser renderer without a network or a browser dependency.
   const elements = new Map();
   const element = () => ({
+    style: { setProperty() {} },
     hidden: false,
     disabled: false,
     textContent: "",
@@ -478,9 +618,245 @@ async function main() {
   vm.runInContext("accept(next)", sandbox);
   assert.equal(elements.get("leave-dialog").open, false);
   assert.match(elements.get("status-title").textContent, /Alice.*thắng/);
+  sandbox.next = store.snapshot(custom, alice.id);
+  vm.runInContext("state = null; accept(next)", sandbox);
+  assert.equal(vm.runInContext("cells.length", sandbox), 81);
+  assert.match(elements.get("board-caption").textContent, /9 × 9 · Đúng 3/);
+  assert.match(
+    elements.get("rules-detail").textContent,
+    /Chặn 2 đầu không thắng/,
+  );
+
+  // A second test-only game proves shared sessions and strict routing/projection boundaries.
+  const {
+    createWebServer: createSharedServer,
+  } = require("../src/webGames/http");
+  const { createGame } = require("../src/caro/webGame");
+  const privateEvents = new (require("node:events").EventEmitter)();
+  const privateRoom = { id: room.id, status: "playing", version: 0 };
+  let privateMoves = 0;
+  const privateGame = {
+    id: "private-test",
+    name: "Private test",
+    publicDir: path.join(__dirname, "../src/caro/public"),
+    errors: {},
+    isOpen: () => true,
+    store: {
+      events: privateEvents,
+      sweep() {},
+      get: (id) => (id === privateRoom.id ? privateRoom : null),
+      seat: (r, user) => (user === alice.id ? "X" : null),
+      snapshot: (r, user) => ({
+        id: r.id,
+        version: r.version,
+        secret: user === alice.id ? "own-ships" : null,
+      }),
+    },
+    actions: {
+      move: () => {
+        privateMoves++;
+        privateRoom.version++;
+        return privateRoom;
+      },
+    },
+  };
+  const sharedConfig = { origin: "", secure: false };
+  sharedWeb = createSharedServer({
+    games: [createGame({ store }), privateGame],
+    legacyGame: "caro",
+    config: sharedConfig,
+    now,
+  });
+  await new Promise((resolve) =>
+    sharedWeb.server.listen(0, "127.0.0.1", resolve),
+  );
+  sharedConfig.origin = `http://127.0.0.1:${sharedWeb.server.address().port}`;
+  async function sharedRequest(route, { cookie, data } = {}) {
+    const response = await fetch(sharedConfig.origin + route, {
+      method: data ? "POST" : "GET",
+      headers: {
+        ...(cookie ? { Cookie: cookie } : {}),
+        ...(data
+          ? { Origin: sharedConfig.origin, "Content-Type": "application/json" }
+          : {}),
+      },
+      body: data ? JSON.stringify(data) : undefined,
+      signal: AbortSignal.timeout(5000),
+    });
+    return {
+      status: response.status,
+      data: await response.json(),
+      cookie: response.headers.get("set-cookie")?.split(";")[0],
+    };
+  }
+  const portal = await fetch(sharedConfig.origin + "/");
+  assert.match(await portal.text(), /href="\/caro\/"/);
+  assert.match(
+    await (await fetch(sharedConfig.origin + "/portal.js")).text(),
+    /ticket/,
+  );
+  assert.equal((await fetch(sharedConfig.origin + "/caro/app.js")).status, 200);
+  assert.equal(
+    (await fetch(sharedConfig.origin + "/battleship/app.js")).status,
+    404,
+  );
+  const oldLink = await fetch(sharedConfig.origin + `/room/${room.id}`, {
+    redirect: "manual",
+  });
+  assert.equal(oldLink.headers.get("location"), `/caro/room/${room.id}`);
+  assert.equal(
+    (await sharedRequest(`/api/games/caro/state?room=${room.id}`)).data.rules
+      .size,
+    15,
+  );
+  assert.equal(
+    (await sharedRequest(`/api/games/private-test/state?room=${room.id}`)).data
+      .secret,
+    null,
+  );
+  assert.equal(
+    (await sharedRequest(`/api/games/missing/state?room=${room.id}`)).status,
+    404,
+  );
+  const sharedTicket = new URL(
+    sharedWeb.issueTicket("caro", room.id, alice.id),
+  ).hash.slice(8);
+  assert.equal(
+    (
+      await sharedRequest("/api/games/private-test/login", {
+        data: { ticket: sharedTicket },
+      })
+    ).status,
+    401,
+  );
+  const sharedLogin = await sharedRequest("/api/games/caro/login", {
+    data: { ticket: sharedTicket },
+  });
+  assert.equal(sharedLogin.status, 200);
+  assert.equal(
+    (
+      await sharedRequest(`/api/games/private-test/state?room=${room.id}`, {
+        cookie: sharedLogin.cookie,
+      })
+    ).data.secret,
+    "own-ships",
+    "one confirmed browser session works across registered games",
+  );
+  assert.equal(
+    (
+      await sharedRequest("/api/games/private-test/move", {
+        data: { roomId: room.id },
+      })
+    ).status,
+    401,
+  );
+  assert.equal(
+    (
+      await sharedRequest("/api/games/private-test/move", {
+        cookie: sharedLogin.cookie,
+        data: { roomId: room.id },
+      })
+    ).status,
+    200,
+  );
+  assert.equal(privateMoves, 1);
+  assert.notEqual(store.get(room.id).version, privateRoom.version);
+  const crossPair = await sharedRequest("/api/games/private-test/pair", {
+    data: { roomId: room.id },
+  });
+  code(
+    () =>
+      sharedWeb.confirmPairing("caro", room.id, alice.id, crossPair.data.code),
+    "PAIR_INVALID",
+  );
+  sharedWeb.confirmPairing(
+    "private-test",
+    room.id,
+    alice.id,
+    crossPair.data.code,
+  );
+  assert.equal(
+    (
+      await sharedRequest("/api/games/caro/pair/status", {
+        cookie: crossPair.cookie,
+        data: {},
+      })
+    ).status,
+    410,
+  );
+  assert.equal(
+    (
+      await sharedRequest("/api/games/private-test/pair/status", {
+        cookie: crossPair.cookie,
+        data: {},
+      })
+    ).data.connected,
+    true,
+  );
+  const spectatorController = new AbortController();
+  const spectatorResponse = await fetch(
+    sharedConfig.origin + `/api/games/private-test/events?room=${room.id}`,
+    { signal: spectatorController.signal },
+  );
+  const spectatorReader = spectatorResponse.body.getReader();
+  assert.match(
+    new TextDecoder().decode((await spectatorReader.read()).value),
+    /"secret":null/,
+  );
+  const privateUpdate = spectatorReader.read();
+  privateEvents.emit(room.id, { ...privateRoom, version: 2 });
+  const privateText = new TextDecoder().decode((await privateUpdate).value);
+  assert.match(privateText, /"version":2/);
+  assert.doesNotMatch(privateText, /own-ships/);
+  spectatorController.abort();
+  await spectatorReader.cancel().catch(() => {});
+  await sharedWeb.stop();
+  sharedWeb = null;
+
+  // Discord editors with identical room IDs in different games must stay separate too.
+  const { createRuntime } = require("../src/webGames/runtime");
+  privateRoom.messageId = "fixture-message";
+  const sentGames = [],
+    acknowledgedGames = [];
+  const runtimeFixtures = ["first", "second"].map((id) => ({
+    ...privateGame,
+    id,
+    discord: {
+      pending: () => [{ id: privateRoom.id }],
+      payload: () => ({ content: id }),
+      acknowledge: () => {
+        acknowledgedGames.push(id);
+        return 1;
+      },
+      restore() {},
+      discard() {},
+    },
+  }));
+  const fixtureRuntime = createRuntime({ games: runtimeFixtures });
+  for (const game of runtimeFixtures)
+    fixtureRuntime.bindInteraction(game.id, privateRoom.id, {
+      editReply: async (payload) => sentGames.push(payload.content),
+    });
+  await fixtureRuntime.syncMessages({
+    channels: {
+      fetch: () => {
+        throw Error("unexpected bot route");
+      },
+    },
+  });
+  assert.deepEqual(sentGames, ["first", "second"]);
+  assert.deepEqual(acknowledgedGames, ["first", "second"]);
+  await fixtureRuntime.stop();
 
   const command = require("../src/commands/caro");
   assert.equal(command.data.toJSON().name, "caro");
+  assert.deepEqual(
+    command.data
+      .toJSON()
+      .options.find((o) => o.name === "choi")
+      .options.map((o) => o.name),
+    ["kichthuoc", "sothang", "chan2dau", "bienchan", "dungsoquan"],
+  );
   const replies = [];
   await command.execute({
     guildId: "g",
@@ -505,6 +881,8 @@ async function main() {
       user: alice,
       options: { getSubcommand: () => "choi" },
       deferReply: async () => {},
+      deferUpdate: async () => {},
+      followUp: async (payload) => messages.push(payload),
       editReply: async (payload) => {
         messages.push(payload);
         return { id: "lobby-message" };
@@ -521,6 +899,14 @@ async function main() {
         .get().data_json,
     );
     assert.equal(lobby.messageId, "lobby-message");
+    // A slash response must still update when the permanent bot route cannot access the channel.
+    const deniedClient = {
+      channels: {
+        fetch: async () => {
+          throw Object.assign(new Error("Missing Access"), { code: 50001 });
+        },
+      },
+    };
     const router = require("../src/componentRouter");
     const button = {
       ...interaction,
@@ -593,36 +979,118 @@ async function main() {
       customId: `caro:open:${lobby.id}`,
     });
     assert.ok(messages.at(-1).components);
-    await runtime.syncMessages({
-      channels: {
-        fetch: async () => ({
-          messages: {
-            edit: async (id, payload) => messages.push(payload),
-          },
-        }),
-      },
-    });
+    await runtime.syncMessages(deniedClient);
     assert.match(messages.at(-1).embeds[0].toJSON().title, /ĐANG ĐẤU/);
     assert.match(messages.at(-1).embeds[0].toJSON().description, /<@bob>/);
     runtime.store.leave(lobby.id, alice.id);
-    await runtime.syncMessages({
-      channels: {
-        fetch: async () => ({
-          messages: {
-            edit: async (id, payload) => {
-              assert.equal(id, "lobby-message");
-              messages.push(payload);
-            },
-          },
-        }),
-      },
-    });
+    await runtime.syncMessages(deniedClient);
     assert.match(messages.at(-1).embeds[0].toJSON().title, /KẾT QUẢ/);
     assert.equal(
       db.prepare("SELECT ui_dirty FROM caro_rooms WHERE id=?").get(lobby.id)
         .ui_dirty,
       0,
     );
+    // Slash options must reach the persisted rules and both displayed views.
+    await command.execute({
+      ...interaction,
+      guildId: "settings-guild",
+      channelId: "settings-channel",
+      options: {
+        getSubcommand: () => "choi",
+        getInteger: (key) => ({ kichthuoc: 25, sothang: 6 })[key] ?? null,
+        getBoolean: (key) =>
+          ({ chan2dau: true, bienchan: true, dungsoquan: true })[key] ?? null,
+      },
+    });
+    const configuredRoom = JSON.parse(
+      db
+        .prepare(
+          "SELECT data_json FROM caro_rooms WHERE guild_id='settings-guild'",
+        )
+        .get().data_json,
+    );
+    assert.equal(configuredRoom.board.length, 625);
+    assert.deepEqual(configuredRoom.rules, {
+      size: 25,
+      winLength: 6,
+      blockBothEnds: true,
+      exactLength: true,
+      edgeBlocks: true,
+    });
+    assert.match(
+      messages.at(-1).embeds[0].toJSON().description,
+      /Bàn 25×25 · Đúng 6 quân/,
+    );
+    sandbox.next = runtime.store.snapshot(configuredRoom, alice.id);
+    vm.runInContext("state = null; accept(next)", sandbox);
+    assert.equal(vm.runInContext("cells.length", sandbox), 625);
+    assert.match(
+      elements.get("rules-detail").textContent,
+      /Mép bàn có tính chặn/,
+    );
+    runtime.store.leave(configuredRoom.id, alice.id);
+    await runtime.syncMessages(deniedClient);
+    // Missing access at command time must not leave a playable room with an unsyncable UI.
+    const deniedReplies = [];
+    await command.execute({
+      ...interaction,
+      channelId: "denied-channel",
+      appPermissions: new (require("discord.js").PermissionsBitField)(0n),
+      reply: async (payload) => deniedReplies.push(payload),
+    });
+    assert.match(deniedReplies[0].content, /View Channel/);
+    assert.equal(
+      db
+        .prepare(
+          "SELECT count(*) n FROM caro_rooms WHERE channel_id='denied-channel'",
+        )
+        .get().n,
+      0,
+    );
+    // After the interaction expires, use the bot route and retain the failed update for retry.
+    const accessRoom = runtime.store.create({
+      guildId: "access",
+      channelId: "access-channel",
+      user: alice,
+    });
+    runtime.store.attachMessage(accessRoom.id, "access-message");
+    runtime.bindInteraction(accessRoom.id, {
+      createdTimestamp: Date.now() - 16 * 60_000,
+      editReply: async () => {
+        throw Error("expired editor used");
+      },
+    });
+    runtime.store.join(accessRoom.id, bob);
+    const warnings = [];
+    await runtime.syncMessages(deniedClient, {
+      warn: (data, message) => warnings.push({ data, message }),
+    });
+    assert.equal(
+      db
+        .prepare("SELECT ui_dirty FROM caro_rooms WHERE id=?")
+        .get(accessRoom.id).ui_dirty,
+      1,
+    );
+    assert.equal(warnings[0].data.code, 50001);
+    assert.equal(warnings[0].data.channelId, "access-channel");
+    assert.equal(warnings[0].data.stage, "channel_fetch");
+    // Restoring access must deliver the newest result rather than discard the dirty flag.
+    runtime.bindInteraction(accessRoom.id, {
+      editReply: async () => {
+        throw Object.assign(new Error("Invalid Webhook Token"), {
+          code: 50027,
+        });
+      },
+    });
+    runtime.store.leave(accessRoom.id, alice.id);
+    await runtime.syncMessages({
+      channels: {
+        fetch: async () => ({
+          messages: { edit: async (id, payload) => messages.push(payload) },
+        }),
+      },
+    });
+    assert.match(messages.at(-1).embeds[0].toJSON().description, /Bình thắng/);
     // An in-flight lobby update must not acknowledge a newer final result.
     const raceRoom = runtime.store.create({
       guildId: "race",
@@ -769,7 +1237,7 @@ async function main() {
   console.log(
     JSON.stringify({
       ok: true,
-      caro: "engine, rooms, persistence, two-client sync, authentication, HTTP, Discord registration",
+      caro: "configurable rules, legacy rooms, shared web routing/sessions, private projections, live sync, Discord registration",
     }),
   );
 }
@@ -781,6 +1249,7 @@ main()
   })
   .finally(async () => {
     if (web) await web.stop();
+    if (sharedWeb) await sharedWeb.stop();
     if (reopened?.open) reopened.close();
     if (db.open) db.close();
     fs.rmSync(directory, { recursive: true, force: true });

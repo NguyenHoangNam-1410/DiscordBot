@@ -61,7 +61,7 @@ const logger = pino(
 const maintenanceTimers = [startEconomyMaintenance(logger)];
 const rateLimiter = createRateLimiter();
 let backupManager = null;
-const caroRuntime = require("./caro/runtime");
+const webGameRuntime = require("./webGames");
 let shuttingDown = false;
 let activeInteractions = 0;
 const activeMessageTasks = new Set();
@@ -105,7 +105,7 @@ async function shutdown(signal, exitCode = 0) {
   logger.info({ signal }, "game bot shutting down");
   for (const timer of maintenanceTimers) clearInterval(timer);
   rateLimiter.stop();
-  await caroRuntime.stop();
+  await webGameRuntime.stop();
   // Reject new work and give ongoing handlers a bounded chance to persist their action.
   const drainDeadline = Date.now() + 10_000;
   while (
@@ -181,12 +181,12 @@ client.once(Events.ClientReady, async () => {
   await loadApplicationEmojis(client, logger);
   if (shuttingDown) return;
   const resumedRounds = resumeOpenRounds(client, logger);
-  await caroRuntime
+  await webGameRuntime
     .start(client, logger)
     .catch((error) =>
       logger.error(
         { code: error.code || error.name, message: error.message },
-        "could not start caro web",
+        "could not start web games",
       ),
     );
   if (shuttingDown) return;

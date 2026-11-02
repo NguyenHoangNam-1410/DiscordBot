@@ -1,6 +1,7 @@
 "use strict";
 
 const $ = (id) => document.getElementById(id);
+const API = "/api/games/caro";
 let state = null,
   roomId = null,
   connected = false,
@@ -15,14 +16,21 @@ $("zoom-board").addEventListener("click", () => {
   $("zoom-board").setAttribute("aria-pressed", String(enlarged));
   $("zoom-board").textContent = enlarged ? "Thu nhỏ" : "Phóng to";
 });
-for (let cell = 0; cell < 225; cell++) {
-  const button = document.createElement("button");
-  button.className = "cell";
-  button.type = "button";
-  button.disabled = true;
-  button.addEventListener("click", () => play(cell));
-  $("board").append(button);
-  cells.push(button);
+function buildBoard(size) {
+  if (cells.length === size * size) return;
+  cells.length = 0;
+  $("board").textContent = "";
+  $("board").style.setProperty("--board-size", size);
+  $("board").setAttribute("aria-label", `Bàn caro ${size} hàng ${size} cột`);
+  for (let cell = 0; cell < size * size; cell++) {
+    const button = document.createElement("button");
+    button.className = "cell";
+    button.type = "button";
+    button.disabled = true;
+    button.addEventListener("click", () => play(cell));
+    $("board").append(button);
+    cells.push(button);
+  }
 }
 function notice(message) {
   $("notice").textContent = message || "";
@@ -37,6 +45,7 @@ function connection(ok) {
   if (state) render();
 }
 async function api(url, data) {
+  url = url.replace(/^\/api(?=\/)/, API);
   const response = await fetch(url, {
     method: data ? "POST" : "GET",
     credentials: "same-origin",
@@ -66,7 +75,7 @@ function accept(next) {
   render();
 }
 const REASONS = {
-  win: "Một đường từ 5 quân liên tiếp. Ván đấu đã được lưu.",
+  win: "Đã nối đủ quân theo luật phòng. Ván đấu đã được lưu.",
   timeout: "Một người chơi đã hết 90 giây cho lượt đi.",
   resign: "Một người chơi đã đầu hàng.",
   duration: "Hết thời gian tối đa 30 phút. Ván đấu hòa.",
@@ -75,6 +84,12 @@ const REASONS = {
   cancelled: "Chủ phòng đã hủy lời mời. Tạo phòng mới trong Discord.",
 };
 function render() {
+  buildBoard(state.size);
+  $("rules-detail").textContent = state.rulesLabel;
+  $("board-caption").textContent =
+    `${state.size} × ${state.size} · ${state.rules.exactLength ? "Đúng" : "Từ"} ${state.rules.winLength} quân liên tiếp`;
+  $("subtitle").textContent =
+    `Một đường thẳng, ${state.rules.winLength} quân cờ. Cùng đối thủ tạo nên ván đấu.`;
   const playing = state.status === "playing",
     waiting = state.status === "waiting";
   const spectator = !state.me;
@@ -148,7 +163,7 @@ function render() {
     button.disabled = !connected || pending || !myTurn || Boolean(mark);
     button.setAttribute(
       "aria-label",
-      `Hàng ${Math.floor(index / 15) + 1}, cột ${(index % 15) + 1}: ${mark || "trống"}`,
+      `Hàng ${Math.floor(index / state.size) + 1}, cột ${(index % state.size) + 1}: ${mark || "trống"}`,
     );
   });
   updateClock();
@@ -233,12 +248,14 @@ $("confirm-leave").addEventListener("click", async () => {
 async function init() {
   const ticket = new URLSearchParams(location.hash.slice(1)).get("ticket");
   history.replaceState(null, "", location.pathname);
-  const pathId = /^\/room\/([a-f0-9-]{36})$/.exec(location.pathname)?.[1];
+  const pathId = /^\/(?:caro\/)?room\/([a-f0-9-]{36})$/.exec(
+    location.pathname,
+  )?.[1];
   if (!ticket && !pathId) return;
   connection(false);
   try {
     roomId = ticket ? (await api("/api/login", { ticket })).roomId : pathId;
-    history.replaceState(null, "", `/room/${roomId}`);
+    history.replaceState(null, "", `/caro/room/${roomId}`);
     await refresh();
     subscribe();
   } catch (error) {
@@ -248,7 +265,7 @@ async function init() {
 }
 function subscribe() {
   source?.close();
-  source = new EventSource(`/api/events?room=${encodeURIComponent(roomId)}`);
+  source = new EventSource(`${API}/events?room=${encodeURIComponent(roomId)}`);
   source.onopen = () => {
     connection(true);
     notice("");

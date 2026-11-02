@@ -1,5 +1,41 @@
 [
   {
+    "id": "a7195e2e-9856-4239-851c-9d6bd83072e8",
+    "updatedAt": "2026-11-02T02:51:14.645Z",
+    "auditedAt": "2026-11-02T02:51:14.645Z",
+    "title": "Caro: tùy chỉnh bàn và luật thắng",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Lệnh /caro choi cho chọn kích thước bàn 9–25, số quân cần nối 3–6, luật chặn hai đầu, mép bàn và bắt buộc đúng số quân.",
+      "Luật được chốt khi mở phòng và hiển thị trên Discord lẫn bàn web; các ván cũ giữ nguyên luật mặc định."
+    ]
+  },
+  {
+    "id": "0fc1214b-f2b1-4fbd-921e-64a05ae30715",
+    "updatedAt": "2026-11-02T02:51:10.469Z",
+    "auditedAt": "2026-11-02T02:51:10.469Z",
+    "title": "Web trò chơi: nền tảng dùng chung",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Caro dùng đường dẫn /caro trên địa chỉ web hiện tại; link phòng cũ và cấu hình CARO_* vẫn được hỗ trợ.",
+      "Bổ sung trang chủ các game web đã mở, với phiên tài khoản và kết nối trực tiếp dùng chung cho các game được bổ sung sau này."
+    ]
+  },
+  {
+    "id": "c74387a6-83ec-401b-ac80-95389e263b4f",
+    "updatedAt": "2026-11-02T02:32:09.655Z",
+    "auditedAt": "2026-11-02T02:32:09.655Z",
+    "title": "Caro: sửa cập nhật tin phòng khi thiếu quyền truy cập",
+    "type": "fix",
+    "scope": "system",
+    "changes": [
+      "Nút tham gia và hủy phòng cập nhật chính tin phòng qua tương tác Discord; dùng đường cập nhật kênh khi tương tác hết hạn.",
+      "Báo rõ khi bot thiếu quyền Xem kênh lúc tạo phòng để tránh mở ván mà tin kết quả không thể tự cập nhật."
+    ]
+  },
+  {
     "id": "0adb993d-dffc-447d-925e-83f8c33ecad8",
     "updatedAt": "2026-11-02T02:17:11.354Z",
     "auditedAt": "2026-11-02T02:17:11.354Z",
