@@ -1,5 +1,18 @@
 [
   {
+    "id": "50ecb976-ce75-4e4f-a634-4a32ddd91116",
+    "updatedAt": "2026-11-02T15:45:31.707Z",
+    "auditedAt": "2026-11-02T15:45:31.707Z",
+    "title": "Dots & Boxes: đấu nối ô trực tiếp trên web",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Thêm /dots choi: đấu Nối ô hai người trên bàn 3×3, 5×5 hoặc 7×7 ô; nối cạnh khép ô để ghi điểm và đi tiếp.",
+      "Hỗ trợ khán giả, kết nối tài khoản Discord, đồng hồ riêng, lưu và tiếp tục trận; điểm và kết quả cập nhật về tin phòng.",
+      "Dùng chung địa chỉ web hiện có với Caro, Walls và Battleship; có danh sách và cấu hình số phòng, không cược hay thưởng xu."
+    ]
+  },
+  {
     "id": "5f2f543d-7647-43a5-945e-a4d0bceec219",
     "updatedAt": "2026-11-02T09:24:52.280Z",
     "auditedAt": "2026-11-02T09:24:52.280Z",

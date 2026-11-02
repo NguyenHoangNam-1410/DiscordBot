@@ -15,6 +15,7 @@ const {
   ButtonStyle,
 } = require("discord.js");
 const RULES = {
+  dots: ["Dots & Boxes / Nối ô", require("../dots/rules").RULES_TEXT],
   battleship: [
     "Battleship / Bắn tàu",
     require("../battleship/rules").RULES_TEXT,

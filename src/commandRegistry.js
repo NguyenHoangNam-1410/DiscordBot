@@ -9,6 +9,7 @@ const COMMAND_FILES = Object.freeze([
   "caro",
   "walls",
   "battleship",
+  "dots",
   "baucua",
   "taixiu",
   "chinchiro",

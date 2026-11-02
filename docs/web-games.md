@@ -56,6 +56,7 @@ Caro hỗ trợ nhiều phòng mỗi kênh (mặc định 5, quản trị chỉn
 - `src/caro/webGame.js`: adapter luật/hành động/store/Discord của caro.
 - `src/walls/webGame.js`: adapter Walls; đường `/walls/room/<UUID>`, API `move`, `wall`, `leave`; dùng chung phiên tài khoản, SSE và cập nhật Discord.
 - `src/battleship/webGame.js`: adapter Battleship; bố trí riêng tư, xác nhận, bắn, khán giả. Mọi HTTP/SSE dùng snapshot theo người xem để giữ kín thuyền chưa bị bắn. Hạn bố trí tách riêng đồng hồ chiến đấu.
+- `src/dots/webGame.js`: adapter Dots & Boxes / Nối ô; nối cạnh, chiếm một/hai ô và giữ lượt khi ghi điểm. Dùng bảng riêng, chung phiên xác nhận, đồng hồ, SSE và cập nhật điểm/kết quả Discord. Xem [dots-web.md](dots-web.md).
 - `src/caro/config.js`, `http.js`, `runtime.js`: các lớp tương thích API nội bộ cũ, không mở thêm máy chủ.
 
 ## Thêm một game

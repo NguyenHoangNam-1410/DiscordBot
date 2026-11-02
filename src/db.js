@@ -1645,4 +1645,23 @@ runMigration(63, "battleship private fleets and web duels", () => {
   );`);
 });
 
+runMigration(64, "dots and boxes web duels", () => {
+  db.exec(`CREATE TABLE dots_rooms (
+    id TEXT PRIMARY KEY, guild_id TEXT NOT NULL, channel_id TEXT NOT NULL,
+    status TEXT NOT NULL, data_json TEXT NOT NULL, ui_dirty INTEGER NOT NULL DEFAULT 1
+  );
+  CREATE INDEX idx_dots_open_channel ON dots_rooms(guild_id,channel_id) WHERE status IN ('waiting','playing');
+  CREATE TABLE dots_seats (
+    guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
+    room_id TEXT NOT NULL REFERENCES dots_rooms(id) ON DELETE CASCADE,
+    PRIMARY KEY(guild_id,user_id)
+  );
+  CREATE TABLE dots_channel_settings (
+    guild_id TEXT NOT NULL, channel_id TEXT NOT NULL,
+    max_rooms INTEGER NOT NULL CHECK(max_rooms BETWEEN 1 AND 20),
+    updated_by TEXT NOT NULL, updated_at INTEGER NOT NULL,
+    PRIMARY KEY(guild_id,channel_id)
+  );`);
+});
+
 module.exports = { db, dbPath, runMigration };

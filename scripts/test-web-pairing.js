@@ -8,7 +8,7 @@ process.env.DB_PATH = ":memory:";
 const { db } = require("../src/db");
 const hub = require("../src/webGames");
 const { createWebServer } = require("../src/webGames/http");
-const modules = ["caro", "walls"].map((game) => hub.game(game));
+const modules = ["caro", "walls", "dots"].map((game) => hub.game(game));
 const alice = { id: "alice", username: "Alice" },
   bob = { id: "bob", username: "Bob" };
 let serial = 0,
@@ -31,6 +31,7 @@ function element() {
     value: "h",
     open: false,
     style: { setProperty() {} },
+    dataset: {},
     classList: { toggle() {} },
     events: {},
     children: [],
@@ -227,7 +228,7 @@ async function main() {
     }
   }
 
-  for (const game of ["caro", "walls"]) {
+  for (const game of ["caro", "walls", "dots"]) {
     // Reproduce "Discord success, web waiting": private state request fails after claim succeeds.
     const room = fixture(game),
       client = browser(game, room, new Map([["caro_session", "x".repeat(43)]]));

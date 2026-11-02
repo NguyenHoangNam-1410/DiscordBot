@@ -4,6 +4,8 @@ Phiên bản bot độc lập chỉ dành cho trò chơi và hệ thống xu. Kh
 
 ## Trò chơi
 
+- Dots & Boxes / Nối ô: `/dots choi`, nối cạnh để chiếm ô và đi tiếp khi ghi điểm. Đấu hai người trên web, có khán giả; [hướng dẫn](docs/dots-web.md).
+
 - Bầu cua, Tài xỉu, Chinchiro
 - Xì dách, Đua ngựa nhiều người, Dò mìn, Cò quay Nga
 - Vua tiếng Việt

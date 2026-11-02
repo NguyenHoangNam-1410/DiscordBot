@@ -85,6 +85,8 @@ const clearPlayerDataTx = db.transaction(
 );
 
 const RESET_PLAYER_TABLES = Object.freeze([
+  "dots_seats",
+  "dots_rooms",
   "battleship_seats",
   "battleship_rooms",
   "walls_seats",
