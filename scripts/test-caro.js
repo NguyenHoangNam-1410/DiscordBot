@@ -532,7 +532,7 @@ async function main() {
   assert.equal(
     (await request("/api/pair/status", { cookie: pairCookie, data: {} }))
       .status,
-    410,
+    200,
   );
   assert.equal((await request("/api/pair/status", { data: {} })).status, 410);
   const expiredPair = await request("/api/pair", {

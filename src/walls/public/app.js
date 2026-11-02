@@ -9,7 +9,11 @@ let state = null,
   source = null,
   offset = 0;
 let pairTimer = null,
-  pairing = false;
+  pairing = false,
+  pairingToken = null,
+  pairExpiresAt = 0,
+  pairAttempt = 0,
+  pairVisible = false;
 const cells = [];
 let mode = "move",
   selectedWall = null;
@@ -162,6 +166,10 @@ function accept(next) {
     $("leave-dialog").close();
     clearTimeout(pairTimer);
     pairing = false;
+    pairVisible = false;
+    pairingToken = null;
+    pairAttempt++;
+    clearStoredPairing();
   }
   offset = next.serverNow - Date.now();
   render();
@@ -242,7 +250,7 @@ function render() {
   $("leave").textContent = waiting ? "Hủy phòng chờ" : "Đầu hàng";
   $("leave").disabled = pending || !connected;
   $("connect-player").hidden = !spectator || !(playing || waiting);
-  $("pair-panel").hidden = !spectator || !pairing || !(playing || waiting);
+  $("pair-panel").hidden = !spectator || !pairVisible || !(playing || waiting);
   $("controls").hidden = spectator || !playing;
   $("mode-move").disabled = !canAct();
   $("mode-wall").disabled = !canAct() || state.wallsLeft[state.me] <= 0;
@@ -481,6 +489,8 @@ async function init() {
     history.replaceState(null, "", `/walls/room/${roomId}`);
     await refresh();
     subscribe();
+    if (state.me) clearStoredPairing();
+    else restorePairing();
   } catch (error) {
     $("connection").textContent = "Chưa vào bàn";
     notice(error.message);
@@ -488,61 +498,177 @@ async function init() {
 }
 function subscribe() {
   source?.close();
-  source = new EventSource(`${API}/events?room=${encodeURIComponent(roomId)}`);
-  source.onopen = () => {
+  const stream = new EventSource(
+    API + "/events?room=" + encodeURIComponent(roomId),
+  );
+  source = stream;
+  stream.onopen = () => {
+    if (source !== stream) return;
     connection(true);
     notice("");
   };
-  source.onmessage = (event) => {
+  stream.onmessage = (event) => {
+    if (source !== stream) return;
     accept(JSON.parse(event.data));
     connection(true);
   };
-  source.onerror = () => {
+  stream.onerror = () => {
+    if (source !== stream) return;
     connection(false);
-    notice(
-      "Mất kết nối. Đang tự kết nối lại; đồng hồ vẫn chạy. Nếu phiên hết hạn, hãy mở lại từ Discord.",
-    );
+    notice("Mất kết nối. Đang tự kết nối lại; đồng hồ vẫn chạy.");
   };
 }
+function clearStoredPairing() {
+  try {
+    sessionStorage.removeItem(API + ":pair:" + roomId);
+  } catch {}
+}
+function savePairing() {
+  if (!pairingToken) return;
+  try {
+    sessionStorage.setItem(
+      API + ":pair:" + roomId,
+      JSON.stringify({
+        pairingToken,
+        expiresAt: pairExpiresAt,
+        code: $("pair-code").textContent,
+      }),
+    );
+  } catch {}
+}
+function restorePairing() {
+  try {
+    const saved = JSON.parse(
+      sessionStorage.getItem(API + ":pair:" + roomId) || "null",
+    );
+    if (
+      !saved ||
+      !/^[A-Za-z0-9_-]{43}$/.test(saved.pairingToken) ||
+      !/^[A-F0-9]{8}$/.test(saved.code) ||
+      !Number.isFinite(saved.expiresAt) ||
+      saved.expiresAt <= Date.now() ||
+      saved.expiresAt > Date.now() + 300000
+    ) {
+      clearStoredPairing();
+      return;
+    }
+    pairingToken = saved.pairingToken;
+    pairExpiresAt = saved.expiresAt;
+    pairing = true;
+    pairVisible = true;
+    $("pair-code").textContent = saved.code;
+    $("pair-status").textContent = "Đang khôi phục xác nhận tài khoản…";
+    render();
+    const attempt = ++pairAttempt;
+    pairTimer = setTimeout(() => pollPairing(attempt), 0);
+  } catch {
+    clearStoredPairing();
+  }
+}
 $("connect-player").addEventListener("click", async () => {
-  $("connect-player").disabled = true;
+  if (!roomId || !state || state.me) return;
+  const attempt = ++pairAttempt;
+  clearStoredPairing();
+  pairing = false;
+  pairingToken = null;
   clearTimeout(pairTimer);
+  $("connect-player").disabled = true;
+  pairVisible = true;
+  $("pair-code").textContent = "…";
+  $("pair-status").textContent = "Đang tạo mã kết nối…";
+  render();
   try {
     const result = await api("/api/pair", { roomId });
+    if (attempt !== pairAttempt) return;
+    pairingToken = result.pairingToken || null;
+    pairExpiresAt =
+      Date.now() +
+      (result.expiresInMs ?? Math.max(0, result.expires - Date.now() - offset));
     $("pair-code").textContent = result.code;
+    savePairing();
     $("pair-status").textContent = "Đang chờ bạn xác nhận trong Discord…";
     pairing = true;
+    pairVisible = true;
     notice("");
     render();
-    pairTimer = setTimeout(pollPairing, 2000);
+    pairTimer = setTimeout(() => pollPairing(attempt), 1000);
   } catch (error) {
+    if (attempt !== pairAttempt) return;
+    $("pair-status").textContent =
+      error.message + " Bấm Xác nhận người chơi để lấy mã mới.";
     notice(error.message);
   } finally {
-    $("connect-player").disabled = false;
+    if (attempt === pairAttempt) $("connect-player").disabled = false;
   }
 });
-async function pollPairing() {
-  if (!pairing) return;
+async function pollPairing(attempt = pairAttempt) {
+  if (!pairing || attempt !== pairAttempt) return;
+  if (Date.now() >= pairExpiresAt) {
+    pairing = false;
+    pairingToken = null;
+    clearStoredPairing();
+    $("pair-status").textContent =
+      "Mã đã hết hạn. Bấm Xác nhận người chơi để lấy mã mới.";
+    return;
+  }
   try {
-    const result = await api("/api/pair/status", {});
+    const data = { roomId };
+    if (pairingToken) data.pairingToken = pairingToken;
+    const result = await api("/api/pair/status", data);
+    if (!pairing || attempt !== pairAttempt) return;
     if (result.connected) {
+      if (result.roomId !== roomId)
+        throw Object.assign(
+          new Error("Mã không thuộc phòng này. Hãy lấy mã mới."),
+          { status: 410 },
+        );
+      $("pair-status").textContent = "Mã đã xác nhận. Đang nhận quyền chơi…";
+      // Discard the anonymous stream before accepting the authenticated state.
+      source?.close();
+      source = null;
+      connection(false);
+      const next = await api("/api/state?room=" + encodeURIComponent(roomId));
+      if (!pairing || attempt !== pairAttempt) return;
+      if (!next.me)
+        throw Object.assign(
+          new Error(
+            "Trình duyệt chưa nhận được phiên đăng nhập. Hãy cho phép cookie của trang rồi lấy mã mới.",
+          ),
+          { status: 401 },
+        );
+      accept(next);
       pairing = false;
-      await refresh();
+      pairVisible = false;
+      pairingToken = null;
+      clearStoredPairing();
       subscribe();
       notice("Đã kết nối tài khoản Discord.");
       return;
     }
   } catch (error) {
-    $("pair-status").textContent = error.message;
-    if ([410, 403].includes(error.status)) {
+    if (!pairing || attempt !== pairAttempt) return;
+    const terminal = [400, 401, 403, 404, 409, 410].includes(error.status);
+    $("pair-status").textContent =
+      error.message +
+      (terminal
+        ? " Bấm Xác nhận người chơi để lấy mã mới."
+        : " Đang tự thử lại…");
+    if (!source) subscribe();
+    if (terminal) {
       pairing = false;
+      pairingToken = null;
+      clearStoredPairing();
       return;
     }
   }
-  pairTimer = setTimeout(pollPairing, 2000);
+  pairTimer = setTimeout(() => pollPairing(attempt), 2000);
 }
 window.addEventListener("pagehide", () => {
   source?.close();
+  source = null;
+  pairing = false;
+  pairingToken = null;
+  pairAttempt++;
   clearTimeout(pairTimer);
 });
 window.addEventListener("pageshow", (event) => {

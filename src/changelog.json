@@ -1,5 +1,18 @@
 [
   {
+    "id": "d1d51619-b2ac-4702-85ee-5dcba60b42fe",
+    "updatedAt": "2026-11-02T04:16:40.788Z",
+    "auditedAt": "2026-11-02T04:16:40.788Z",
+    "title": "Sửa xác nhận tài khoản trên web Caro và Walls",
+    "type": "fix",
+    "scope": "system",
+    "changes": [
+      "Sửa lỗi Discord báo xác nhận thành công nhưng web vẫn là khán giả do cookie caro cũ che khuất phiên đăng nhập mới.",
+      "Tách mã kết nối theo tab/phòng; tự khôi phục sau tải lại và thử lại an toàn nếu mất phản hồi.",
+      "Báo rõ khi mã hết hạn hoặc trình duyệt không nhận phiên đăng nhập, tránh chờ vô hạn."
+    ]
+  },
+  {
     "id": "a645d103-a812-4284-ae67-c4a631070a34",
     "updatedAt": "2026-11-02T03:46:23.442Z",
     "auditedAt": "2026-11-02T03:46:23.442Z",

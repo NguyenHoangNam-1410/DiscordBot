@@ -117,7 +117,8 @@ async function handleButton(interaction) {
         interaction.fields.getTextInputValue("code"),
       );
       return reply({
-        content: "Đã kết nối tài khoản. Quay lại tab bàn cờ để chơi.",
+        content:
+          "Đã xác nhận mã. Quay lại tab bàn cờ để hoàn tất kết nối và nhận quyền chơi.",
       });
     }
     if (action === "cancel") {

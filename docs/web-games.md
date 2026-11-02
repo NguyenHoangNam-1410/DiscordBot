@@ -58,8 +58,14 @@ Tạo module riêng cho luật, store, giao diện và command. Adapter cung c�
 
 Phiên HttpOnly 12 giờ xác nhận tài khoản Discord, không tự cấp ghế trong game mới. Mã kết nối và vé ràng buộc đúng game/phòng; không đổi được bằng endpoint của game khác. SSE gọi lại `snapshot` ở mỗi sự kiện. Cookie dùng chung nên mỗi trình duyệt đại diện một tài khoản đang đăng nhập; không mở nhiều tài khoản trong cùng hồ sơ trình duyệt.
 
+Ưu tiên cookie `web_game_session` còn hiệu lực, không phụ thuộc thứ tự cookie do trình duyệt gửi. Cookie `caro_session` cũ chỉ dùng dự phòng nếu còn hợp lệ; cookie cũ hết hạn không được che khuất phiên mới sau xác nhận. Nhờ vậy người từng đăng nhập trước khi chuyển sang nền tảng chung không bị giữ ở chế độ khán giả.
+
+Mỗi lần lấy mã trả `pairingToken` riêng cho tab/phòng, dùng trong body của `pair/status` cùng `roomId`. Không dùng mã 8 ký tự để đổi trực tiếp phiên web. Bằng chứng kết nối được giữ trong `sessionStorage` của đúng tab/phòng trong tối đa 5 phút để khôi phục sau tải lại; không đặt trong URL hoặc log, xóa khi hoàn tất/hết hạn. Cookie cũ chỉ là đường tương thích, không quyết định mã của tab mới. Xác nhận lại cùng tài khoản và thử lại HTTP an toàn: không đổi chủ mã, không tạo thêm phiên cho mỗi lần poll, không gia hạn thời hạn mã/phiên. Giới hạn poll tách theo bằng chứng thay vì IP chung của Funnel/proxy.
+
+Web chỉ hoàn tất khi đã nhận được trạng thái người chơi; lỗi mạng khi tải trạng thái vẫn tự thử lại tới khi mã hết hạn. Đóng luồng khán giả cũ trước khi chuyển sang luồng đã đăng nhập, bỏ qua sự kiện từ luồng cũ. Nếu trình duyệt không nhận cookie phiên, hiển thị lỗi rõ để người chơi cho phép cookie và lấy mã mới thay vì chờ vô hạn. Mã hết hạn hoặc sai phòng không được dùng để xác nhận.
+
 Các hàm `discord.pending()` trả các mã phòng chưa gửi; `acknowledge(room)` chỉ xác nhận khi phiên bản đã gửi vẫn khớp bản lưu. `restore()` đánh dấu các tin phòng đang mở để cập nhật lại sau restart. `runtime.bindInteraction(gameId, roomId, interaction)` chỉ nhận tương tác đã được defer đúng vào tin phòng (hoặc phản hồi tạo phòng). Quyền Xem kênh của bot vẫn cần cho cập nhật dài hạn/sau restart; vòng lặp ghi log mã lỗi và thông tin phòng, không ghi token.
 
 ## Kiểm tra
 
-`npm run test:caro` kiểm tra luật tùy chọn, dữ liệu cũ, HTTP/SSE, khán giả, phiên xuyên game và cô lập mã kết nối/cập nhật Discord giữa game. `node scripts/test-env-example.js` kiểm tra cấu hình triển khai. Không đăng ký command thật hoặc chạm dữ liệu người chơi khi chạy các kiểm tra này.
+`npm run test:web:pairing` kiểm tra luồng Discord → web với HTTP thật và giao diện của cả Caro/Walls: mất phản hồi, tải lại tab, nhiều tab dùng chung cookie, thử lại, hết hạn, giới hạn poll qua cùng IP proxy và sự kiện SSE cũ. `npm run test:caro` kiểm tra luật tùy chọn, dữ liệu cũ, HTTP/SSE, khán giả, phiên xuyên game và cô lập mã kết nối/cập nhật Discord giữa game. `node scripts/test-env-example.js` kiểm tra cấu hình triển khai. Không đăng ký command thật hoặc chạm dữ liệu người chơi khi chạy các kiểm tra này.

@@ -24,6 +24,8 @@ Mỗi lượt 90 giây; hết lượt xử thua. Hết 30 phút xử hòa. Phòn
 
 Nút Mở bàn dẫn trực tiếp tới `/walls/room/<UUID>`. Khán giả thấy quân, tường và kết quả cập nhật trực tiếp qua SSE; không có quyền di chuyển, đặt tường hoặc đầu hàng. Người chơi xác nhận bằng mã trên web nhập vào nút Kết nối tài khoản của đúng phòng Discord. Phiên tài khoản dùng chung với caro, nhưng phải có ghế trong phòng Walls mới được thao tác.
 
+Mã xác nhận riêng cho từng tab/phòng, không bị tab Caro hoặc Walls khác ghi đè. Nếu Discord đã xác nhận nhưng web gặp lỗi mạng, web tiếp tục thử lại trong thời hạn 5 phút của mã; tải lại đúng tab vẫn khôi phục được. Khi mã hết hạn hoặc trình duyệt chặn cookie phiên, web báo rõ cách xử lý thay vì chờ mãi.
+
 Chọn Di chuyển và bấm ô sáng để đi. Chọn Đặt tường → hướng ngang/dọc → khe trên bàn → Xác nhận đặt tường. Máy chủ luôn kiểm tra lại lượt, phiên bản bàn, tường còn lại, va chạm và đường đi trước khi lưu.
 
 Phím tắt: `WASD` hoặc mũi tên để đi (tự nhảy thẳng qua đối thủ khi hợp lệ); `R` xoay tường, giữ vị trí xem trước gần nhất; `F` đổi chế độ đi/đặt; `Enter` xác nhận tường; `Esc` hủy chọn. `Q/E/Z/C` chọn các hướng nhảy vòng chéo khi luật cho phép. Không xử lý khi gõ trong ô nhập/chọn, mở hộp thoại, giữ phím lặp, chưa tới lượt hoặc là khán giả. Mỗi lần bấm chỉ gửi một hành động, máy chủ kiểm tra lại như khi bấm chuột.

@@ -139,20 +139,18 @@ function createWebServer({
     }
   }
   function authenticate(req, optional = false) {
-    const sid =
-      /(?:^|;\s*)(?:web_game_session|caro_session)=([A-Za-z0-9_-]{43})(?:;|$)/.exec(
-        req.headers.cookie || "",
-      )?.[1];
-    const session = sessions.get(sid);
-    if (!session || session.expires <= now()) {
+    // Browser cookie order is not an authentication preference. Old caro cookies may precede ours.
+    for (const name of ["web_game_session", "caro_session"]) {
+      const sid = cookieValue(req, name);
+      const session = sessions.get(sid);
+      if (session && session.expires > now()) return { sid, ...session };
       sessions.delete(sid);
-      if (optional) return { sid: null, userId: null };
-      throw Object.assign(
-        new Error("Phiên vào bàn đã hết hạn. Hãy mở lại từ nút trong Discord."),
-        { httpStatus: 401 },
-      );
     }
-    return { sid, ...session };
+    if (optional) return { sid: null, userId: null };
+    throw Object.assign(
+      new Error("Phiên vào bàn đã hết hạn. Hãy mở lại từ nút trong Discord."),
+      { httpStatus: 401 },
+    );
   }
   function roomFor(game, id, userId) {
     const { store } = game;
@@ -235,8 +233,6 @@ function createWebServer({
       prune(pairings);
       if (pairings.size >= 5000)
         return json(res, 503, { error: "Máy chủ đang bận." });
-      const previous = pairCookie(req);
-      pairings.delete(previous);
       const secret = token();
       let code;
       do {
@@ -252,27 +248,53 @@ function createWebServer({
         "Set-Cookie",
         `web_game_pair=${secret}; HttpOnly; SameSite=Strict; Path=/api; Max-Age=${TICKET_MS / 1000}${config.secure ? "; Secure" : ""}`,
       );
-      return json(res, 200, { code, expires: now() + TICKET_MS });
+      // Each tab keeps its own challenge proof. The cookie only supports older clients.
+      return json(res, 200, {
+        code,
+        pairingToken: secret,
+        expires: now() + TICKET_MS,
+        expiresInMs: TICKET_MS,
+      });
     }
     if (req.method === "POST" && route === "/api/pair/status") {
-      if (!allowed(`poll:${req.socket.remoteAddress}`, 300, 60_000))
+      const data = await body(req);
+      const secret = Object.hasOwn(data, "pairingToken")
+        ? data.pairingToken
+        : pairCookie(req);
+      const pairing =
+        typeof secret === "string" && /^[A-Za-z0-9_-]{43}$/.test(secret)
+          ? pairings.get(secret)
+          : null;
+      // Funnel/reverse-proxy clients can share an IP; valid challenges have independent budgets.
+      if (
+        !allowed(
+          pairing
+            ? `poll:${secret}`
+            : `poll-invalid:${req.socket.remoteAddress}`,
+          120,
+          60_000,
+        )
+      )
         return json(res, 429, { error: "Hãy đợi một phút rồi thử lại." });
-      const secret = pairCookie(req),
-        pairing = pairings.get(secret);
-      if (!pairing || pairing.expires <= now() || pairing.gameId !== game.id) {
-        if (pairing?.gameId !== game.id)
-          return json(res, 410, {
-            error: "Mã kết nối không thuộc trò chơi này.",
-          });
+      if (!pairing || pairing.expires <= now()) {
         pairings.delete(secret);
         return json(res, 410, {
           error: "Mã kết nối đã hết hạn. Hãy lấy mã mới.",
         });
       }
+      if (
+        pairing.gameId !== game.id ||
+        (data.roomId !== undefined && data.roomId !== pairing.roomId)
+      )
+        return json(res, 410, {
+          error: "Mã kết nối không thuộc phòng hoặc trò chơi này.",
+        });
       if (!pairing.userId) return json(res, 200, { connected: false });
       roomFor(game, pairing.roomId, pairing.userId);
-      if (!openSession(res, pairing.userId)) return;
-      pairings.delete(secret);
+      const sid = openSession(res, pairing.userId, pairing.sid);
+      if (!sid) return;
+      pairing.sid = sid;
+      // Retain until challenge expiry so a dropped HTTP response can safely be retried.
       return json(res, 200, { connected: true, roomId: pairing.roomId });
     }
     if (req.method === "POST" && route === "/api/login") {
@@ -357,23 +379,35 @@ function createWebServer({
     return json(res, 404, { error: "Không tìm thấy chức năng." });
   }
   function pairCookie(req) {
-    return /(?:^|;\s*)(?:web_game_pair|caro_pair)=([A-Za-z0-9_-]{43})(?:;|$)/.exec(
-      req.headers.cookie || "",
-    )?.[1];
+    return cookieValue(req, "web_game_pair") || cookieValue(req, "caro_pair");
   }
-  function openSession(res, userId) {
+  function cookieValue(req, name) {
+    const part = (req.headers.cookie || "")
+      .split(";")
+      .map((value) => value.trim())
+      .find((value) => value.startsWith(`${name}=`));
+    const value = part?.slice(name.length + 1);
+    return value && /^[A-Za-z0-9_-]{43}$/.test(value) ? value : null;
+  }
+  function openSession(res, userId, previousSid) {
     prune(sessions);
-    if (sessions.size >= 5000) {
+    const previous = sessions.get(previousSid);
+    const reusable = previous && previous.userId === userId;
+    if (!reusable && sessions.size >= 5000) {
       json(res, 503, { error: "Máy chủ đang bận. Hãy thử lại sau." });
       return false;
     }
-    const sid = token();
-    sessions.set(sid, { userId, expires: now() + SESSION_MS });
+    const sid = reusable ? previousSid : token();
+    if (!reusable) sessions.set(sid, { userId, expires: now() + SESSION_MS });
+    const maxAge = Math.max(
+      1,
+      Math.floor((sessions.get(sid).expires - now()) / 1000),
+    );
     res.setHeader(
       "Set-Cookie",
-      `web_game_session=${sid}; HttpOnly; SameSite=Strict; Path=/api; Max-Age=${SESSION_MS / 1000}${config.secure ? "; Secure" : ""}`,
+      `web_game_session=${sid}; HttpOnly; SameSite=Strict; Path=/api; Max-Age=${maxAge}${config.secure ? "; Secure" : ""}`,
     );
-    return true;
+    return sid;
   }
   function confirmPairing(gameId, roomId, userId, input) {
     roomFor(getGame(gameId), roomId, userId);
@@ -391,7 +425,7 @@ function createWebServer({
         p.roomId === roomId &&
         p.code === code &&
         p.expires > now() &&
-        !p.userId,
+        (!p.userId || p.userId === userId),
     );
     if (!pairing)
       throw Object.assign(
