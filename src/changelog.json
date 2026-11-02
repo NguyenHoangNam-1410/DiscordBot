@@ -1,5 +1,17 @@
 [
   {
+    "id": "52ee2917-8b02-4bc3-8090-4e75f39b0f3e",
+    "updatedAt": "2026-11-02T04:29:15.137Z",
+    "auditedAt": "2026-11-02T04:29:15.137Z",
+    "title": "Walls: làm nổi tường đã đặt",
+    "type": "fix",
+    "scope": "system",
+    "changes": [
+      "Tường đã đặt luôn nằm trên lớp khe chọn và bản xem trước khi chọn vị trí tường mới.",
+      "Thêm viền và bóng để tường xanh, cam nổi rõ trên nền bàn."
+    ]
+  },
+  {
     "id": "d1d51619-b2ac-4702-85ee-5dcba60b42fe",
     "updatedAt": "2026-11-02T04:16:40.788Z",
     "auditedAt": "2026-11-02T04:16:40.788Z",
