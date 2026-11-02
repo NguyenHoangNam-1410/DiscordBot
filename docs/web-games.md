@@ -23,6 +23,8 @@ Biến mới được ưu tiên khi tồn tại, kể cả `WEB_ENABLED=false`. 
 
 Tương thích caro cũ: `/room/<UUID>` chuyển tới `/caro/room/<UUID>`; `/api/*`, `/app.js`, `/style.css` vẫn là alias của caro. Vé cũ dạng `/#ticket=...` được trang chủ chuyển vào caro. Không đổi ID phòng, không xóa dữ liệu SQLite; các phòng caro không có `rules` dùng luật mặc định cũ.
 
+Caro hỗ trợ nhiều phòng mỗi kênh (mặc định 5, quản trị chỉnh 1–20 bằng `/caro cauhinh phongtoida`). `/caro phong` liệt kê phòng với phân trang. Migration 61 đổi chỉ mục một phòng/kênh thành chỉ mục tìm kiếm và thêm cấu hình kênh; giữ nguyên phòng, nước đi và ghế của ván hiện có. Giới hạn mỗi người một phòng caro/server vẫn được bảo vệ bởi bảng ghế. Quy tắc này thuộc module caro, không phải giới hạn của máy chủ web chung.
+
 ## Các phần chính
 
 - `src/webGames/config.js`: đọc cấu hình triển khai.

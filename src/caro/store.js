@@ -8,13 +8,15 @@ const { normalizeRules, rulesText } = require("./rules");
 const WAIT_MS = 10 * 60_000;
 const TURN_MS = 90_000;
 const MATCH_MS = 30 * 60_000;
+const DEFAULT_ROOM_LIMIT = 5;
+const MAX_ROOM_LIMIT = 20;
 const MESSAGES = {
   ROOM_MISSING: "Không tìm thấy phòng.",
   ROOM_CLOSED: "Phòng đã kết thúc hoặc hết hạn.",
   ALREADY_PLAYING:
     "Bạn đang ở một phòng caro khác. Hãy kết thúc phòng đó trước.",
-  CHANNEL_BUSY:
-    "Kênh này đã có một phòng caro. Hãy kết thúc phòng hiện tại trước.",
+  CHANNEL_FULL: "Kênh này đã đủ số phòng caro đang mở.",
+  INVALID_ROOM_LIMIT: "Số phòng tối đa phải là số nguyên từ 1 đến 20.",
   SELF_JOIN: "Bạn là chủ phòng. Hãy chờ người khác tham gia.",
   ROOM_FULL: "Phòng đã đủ hai người chơi.",
   NOT_PLAYER: "Bạn không phải người chơi của phòng này.",
@@ -103,49 +105,82 @@ function createStore(db, now = Date.now) {
       "INSERT INTO caro_seats(guild_id,user_id,room_id) VALUES(?,?,?)",
     ).run(room.guildId, userId, room.id);
   }
+  function getChannelLimit(guildId, channelId) {
+    return (
+      db
+        .prepare(
+          "SELECT max_rooms FROM caro_channel_settings WHERE guild_id=? AND channel_id=?",
+        )
+        .get(guildId, channelId)?.max_rooms ?? DEFAULT_ROOM_LIMIT
+    );
+  }
+  function setChannelLimit(guildId, channelId, limit, actorId) {
+    if (!Number.isInteger(limit) || limit < 1 || limit > MAX_ROOM_LIMIT)
+      fail("INVALID_ROOM_LIMIT");
+    db.prepare(
+      "INSERT INTO caro_channel_settings(guild_id,channel_id,max_rooms,updated_by,updated_at) VALUES(?,?,?,?,?) ON CONFLICT(guild_id,channel_id) DO UPDATE SET max_rooms=excluded.max_rooms,updated_by=excluded.updated_by,updated_at=excluded.updated_at",
+    ).run(guildId, channelId, limit, actorId, now());
+    return limit;
+  }
+  function listOpen(guildId, channelId) {
+    sweep();
+    return db
+      .prepare(
+        "SELECT data_json FROM caro_rooms WHERE guild_id=? AND channel_id=? AND status IN ('waiting','playing') ORDER BY json_extract(data_json,'$.createdAt'),id",
+      )
+      .all(guildId, channelId)
+      .map((row) => JSON.parse(row.data_json));
+  }
   const create = (options) => {
     const rules = normalizeRules(options.rules);
     sweep();
-    return db.transaction(() => {
-      if (
-        db
+    return db
+      .transaction(() => {
+        const limit = getChannelLimit(options.guildId, options.channelId);
+        const { count } = db
           .prepare(
-            "SELECT 1 FROM caro_rooms WHERE guild_id=? AND channel_id=? AND status IN ('waiting','playing')",
+            "SELECT count(*) AS count FROM caro_rooms WHERE guild_id=? AND channel_id=? AND status IN ('waiting','playing')",
           )
-          .get(options.guildId, options.channelId)
-      )
-        fail("CHANNEL_BUSY");
-      const room = {
-        id: randomUUID(),
-        guildId: options.guildId,
-        channelId: options.channelId,
-        messageId: null,
-        players: { X: player(options.user), O: null },
-        status: "waiting",
-        rules,
-        board: Array(rules.size * rules.size).fill(null),
-        turn: "X",
-        moves: 0,
-        version: 0,
-        createdAt: now(),
-        turnDeadline: null,
-        matchDeadline: null,
-        winner: null,
-        winningCells: [],
-        lastCell: null,
-      };
-      db.prepare(
-        "INSERT INTO caro_rooms(id,guild_id,channel_id,status,data_json) VALUES(?,?,?,?,?)",
-      ).run(
-        room.id,
-        room.guildId,
-        room.channelId,
-        room.status,
-        JSON.stringify(room),
-      );
-      claim(room, room.players.X.id);
-      return room;
-    })();
+          .get(options.guildId, options.channelId);
+        if (count >= limit)
+          throw Object.assign(
+            new Error(
+              `Kênh đã đủ ${limit} phòng caro đang mở. Dùng /caro phong để xem và tham gia phòng hiện có.`,
+            ),
+            { code: "CHANNEL_FULL" },
+          );
+        const room = {
+          id: randomUUID(),
+          guildId: options.guildId,
+          channelId: options.channelId,
+          messageId: null,
+          players: { X: player(options.user), O: null },
+          status: "waiting",
+          rules,
+          board: Array(rules.size * rules.size).fill(null),
+          turn: "X",
+          moves: 0,
+          version: 0,
+          createdAt: now(),
+          turnDeadline: null,
+          matchDeadline: null,
+          winner: null,
+          winningCells: [],
+          lastCell: null,
+        };
+        db.prepare(
+          "INSERT INTO caro_rooms(id,guild_id,channel_id,status,data_json) VALUES(?,?,?,?,?)",
+        ).run(
+          room.id,
+          room.guildId,
+          room.channelId,
+          room.status,
+          JSON.stringify(room),
+        );
+        claim(room, room.players.X.id);
+        return room;
+      })
+      .immediate();
   };
   function change(id, fn) {
     const current = get(id); // Commit any expiry even when the requested action is rejected.
@@ -253,7 +288,18 @@ function createStore(db, now = Date.now) {
     snapshot,
     attachMessage,
     events,
+    getChannelLimit,
+    setChannelLimit,
+    listOpen,
   };
 }
 
-module.exports = { createStore, MESSAGES, WAIT_MS, TURN_MS, MATCH_MS };
+module.exports = {
+  createStore,
+  MESSAGES,
+  WAIT_MS,
+  TURN_MS,
+  MATCH_MS,
+  DEFAULT_ROOM_LIMIT,
+  MAX_ROOM_LIMIT,
+};

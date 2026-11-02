@@ -209,9 +209,116 @@ async function main() {
   delete legacy.rules;
   assert.deepEqual(store.snapshot(legacy, alice.id).rules, DEFAULT_RULES);
 
+  // Multiple rooms share a channel, but capacity and one seat per guild stay authoritative.
+  assert.equal(
+    db
+      .prepare("PRAGMA index_list(caro_rooms)")
+      .all()
+      .find((i) => i.name === "idx_caro_open_channel").unique,
+    0,
+  );
+  assert.equal(store.getChannelLimit("caps", "channel"), 5);
+  for (const invalid of [0, -1, 21, 2.5, "5", null])
+    code(
+      () => store.setChannelLimit("caps", "channel", invalid, alice.id),
+      "INVALID_ROOM_LIMIT",
+    );
+  const capacityRooms = Array.from({ length: 5 }, (_, i) =>
+    store.create({
+      guildId: "caps",
+      channelId: "channel",
+      user: { id: `cap-${i}` },
+    }),
+  );
+  code(
+    () =>
+      store.create({
+        guildId: "caps",
+        channelId: "channel",
+        user: { id: "cap-extra" },
+      }),
+    "CHANNEL_FULL",
+  );
+  assert.equal(store.listOpen("caps", "channel").length, 5);
+  const elsewhere = store.create({
+    guildId: "caps",
+    channelId: "elsewhere",
+    user: { id: "cap-elsewhere" },
+  });
+  assert.equal(store.listOpen("caps", "elsewhere").length, 1);
+  code(
+    () =>
+      store.create({
+        guildId: "caps",
+        channelId: "third",
+        user: { id: "cap-0" },
+      }),
+    "ALREADY_PLAYING",
+  );
+  code(
+    () => store.join(capacityRooms[1].id, { id: "cap-0" }),
+    "ALREADY_PLAYING",
+  );
+  store.join(capacityRooms[0].id, { id: "cap-opponent" });
+  assert.equal(store.get(capacityRooms[1].id).status, "waiting");
+  store.setChannelLimit("caps", "channel", 2, alice.id);
+  assert.equal(
+    store.listOpen("caps", "channel").length,
+    5,
+    "reducing capacity must not close existing rooms",
+  );
+  const otherConnection = new Database(process.env.DB_PATH);
+  const otherStore = createStore(otherConnection, now);
+  assert.equal(
+    otherStore.getChannelLimit("caps", "channel"),
+    2,
+    "channel configuration survives a separate connection",
+  );
+  code(
+    () =>
+      otherStore.create({
+        guildId: "caps",
+        channelId: "channel",
+        user: { id: "cap-extra" },
+      }),
+    "CHANNEL_FULL",
+  );
+  otherConnection.close();
+  assert.equal(store.getChannelLimit("other-guild", "channel"), 5);
+  for (const r of capacityRooms) store.leave(r.id, r.players.X.id);
+  const replacement = store.create({
+    guildId: "caps",
+    channelId: "channel",
+    user: { id: "cap-extra" },
+  });
+  assert.equal(
+    store.listOpen("caps", "channel").length,
+    1,
+    "finished rooms release capacity",
+  );
+  store.leave(replacement.id, "cap-extra");
+  store.leave(elsewhere.id, "cap-elsewhere");
+  const expiring = store.create({
+    guildId: "expiry-cap",
+    channelId: "channel",
+    user: alice,
+  });
+  store.setChannelLimit("expiry-cap", "channel", 1, alice.id);
+  clock += WAIT_MS;
+  assert.equal(store.listOpen("expiry-cap", "channel").length, 0);
+  assert.equal(store.get(expiring.id).reason, "expired");
+  const afterExpiry = store.create({
+    guildId: "expiry-cap",
+    channelId: "channel",
+    user: bob,
+  });
+  store.leave(afterExpiry.id, bob.id);
+
   let room = create();
   code(() => store.join(room.id, alice), "SELF_JOIN");
-  code(() => create(bob, room.guildId), "CHANNEL_BUSY");
+  const secondRoom = create(bob, room.guildId);
+  assert.equal(store.listOpen(room.guildId, room.channelId).length, 2);
+  store.leave(secondRoom.id, bob.id);
   code(() => create(alice, room.guildId, "other"), "ALREADY_PLAYING");
   code(() => store.leave(room.id, "stranger"), "NOT_PLAYER");
   code(() => store.move(room.id, alice.id, 0, room.version), "NOT_STARTED");
@@ -1223,6 +1330,144 @@ async function main() {
       continuedAfterStop,
       false,
       "shutdown does not continue Discord delivery",
+    );
+    // Configuration, list pagination, ownership and prefix equivalents work through the real command/router.
+    const directoryReplies = [];
+    const directoryInteraction = {
+      ...interaction,
+      guildId: "directory",
+      channelId: "directory-channel",
+      reply: async (payload) => directoryReplies.push(payload),
+      editReply: async (payload) => directoryReplies.push(payload),
+      options: { getSubcommand: () => "cauhinh", getInteger: () => 7 },
+    };
+    await command.execute(directoryInteraction);
+    assert.match(directoryReplies.at(-1).content, /Chỉ quản trị/);
+    assert.equal(
+      runtime.store.getChannelLimit("directory", "directory-channel"),
+      5,
+    );
+    const administrator = {
+      has: (permission) =>
+        permission === require("discord.js").PermissionFlagsBits.Administrator,
+    };
+    await command.execute({
+      ...directoryInteraction,
+      memberPermissions: administrator,
+    });
+    assert.equal(
+      runtime.store.getChannelLimit("directory", "directory-channel"),
+      7,
+    );
+    await command.execute({
+      ...directoryInteraction,
+      memberPermissions: administrator,
+      options: {
+        getSubcommand: () => "cauhinh",
+        getInteger: () => 3,
+        getChannel: () => ({
+          id: "configured-other-channel",
+          guildId: "directory",
+        }),
+      },
+    });
+    assert.equal(
+      runtime.store.getChannelLimit("directory", "configured-other-channel"),
+      3,
+    );
+    assert.equal(
+      runtime.store.getChannelLimit("directory", "directory-channel"),
+      7,
+    );
+    const directoryRooms = Array.from({ length: 7 }, (_, i) =>
+      runtime.store.create({
+        guildId: "directory",
+        channelId: "directory-channel",
+        user: { id: `directory-${i}` },
+      }),
+    );
+    const showDirectory = {
+      ...directoryInteraction,
+      options: { getSubcommand: () => "phong" },
+    };
+    await command.execute(showDirectory);
+    assert.equal(directoryReplies.at(-1).embeds[0].toJSON().fields.length, 5);
+    assert.match(
+      directoryReplies.at(-1).embeds[0].toJSON().footer.text,
+      /7 phòng.*Trang 1\/2/,
+    );
+    assert.equal(
+      directoryReplies.at(-1).flags,
+      require("discord.js").MessageFlags.Ephemeral,
+    );
+    const firstPageIds = new Set(
+      directoryReplies
+        .at(-1)
+        .embeds[0].toJSON()
+        .fields.map((f) => f.name.slice(-8)),
+    );
+    const nextButton = directoryReplies
+      .at(-1)
+      .components.at(-1)
+      .toJSON()
+      .components.at(-1);
+    await router.routeComponentInteraction({
+      ...button,
+      ...directoryInteraction,
+      customId: nextButton.custom_id,
+    });
+    assert.equal(directoryReplies.at(-1).embeds[0].toJSON().fields.length, 2);
+    assert.match(
+      directoryReplies.at(-1).embeds[0].toJSON().footer.text,
+      /Trang 2\/2/,
+    );
+    for (const field of directoryReplies.at(-1).embeds[0].toJSON().fields)
+      assert.equal(firstPageIds.has(field.name.slice(-8)), false);
+    const stranger = {
+      ...button,
+      ...directoryInteraction,
+      user: { id: "stranger" },
+      customId: nextButton.custom_id,
+    };
+    await command.handleButton(stranger);
+    assert.match(directoryReplies.at(-1).content, /Chỉ người mở danh sách/);
+    for (const r of directoryRooms) runtime.store.leave(r.id, r.players.X.id);
+    await command.handleButton({
+      ...button,
+      ...directoryInteraction,
+      customId: nextButton.custom_id,
+    });
+    assert.match(
+      directoryReplies.at(-1).embeds[0].toJSON().description,
+      /Chưa có phòng/,
+    );
+    assert.match(
+      directoryReplies.at(-1).embeds[0].toJSON().footer.text,
+      /Trang 1\/1/,
+    );
+    const prefixReplies = [];
+    const prefixMessage = {
+      guildId: "directory",
+      channelId: "directory-channel",
+      author: alice,
+      content: "!caro cauhinh phongtoida=6",
+      member: { permissions: administrator },
+      channel: {},
+      reply: async (payload) => {
+        prefixReplies.push(payload);
+        return { id: "prefix-reply" };
+      },
+    };
+    const { handleSlashPrefix } = require("../src/services/slashPrefixService");
+    assert.equal(await handleSlashPrefix(prefixMessage), true);
+    assert.equal(
+      runtime.store.getChannelLimit("directory", "directory-channel"),
+      6,
+    );
+    await handleSlashPrefix({ ...prefixMessage, content: "!caro phong" });
+    assert.match(
+      prefixReplies.at(-1).embeds[0].toJSON().title,
+      /DANH SÁCH PHÒNG/,
     );
   } finally {
     runtime.isAvailable = originalAvailable;

@@ -8,14 +8,51 @@ const {
   TextInputBuilder,
   TextInputStyle,
   PermissionFlagsBits,
+  ChannelType,
 } = require("discord.js");
 const runtime = require("../caro/runtime");
-const { roomPayload, accessPayload } = require("../caro/discord");
-const { MESSAGES } = require("../caro/store");
+const { roomPayload, accessPayload, roomsPayload } = require("../caro/discord");
+const { MESSAGES, MAX_ROOM_LIMIT } = require("../caro/store");
+const { isAdminInteraction } = require("../utils/adminCheck");
 
 const DISABLED =
   "Web trò chơi chưa được bật. Chủ bot cần cấu hình WEB_ENABLED và WEB_PUBLIC_URL (hoặc CARO_WEB_ENABLED/CARO_PUBLIC_URL cũ) rồi khởi động lại bot.";
+function roomList(interaction, page = 0) {
+  return roomsPayload(
+    runtime.store.listOpen(interaction.guildId, interaction.channelId),
+    {
+      ownerId: interaction.user.id,
+      page,
+      limit: runtime.store.getChannelLimit(
+        interaction.guildId,
+        interaction.channelId,
+      ),
+      guildId: interaction.guildId,
+      channelId: interaction.channelId,
+      roomUrl: runtime.roomUrl,
+    },
+  );
+}
 async function handleButton(interaction) {
+  const list = /^caro:rooms:([^:]{1,30}):(-?\d{1,5})$/.exec(
+    interaction.customId || "",
+  );
+  if (list) {
+    if (!interaction.guildId || list[1] !== interaction.user.id)
+      return interaction.reply({
+        content:
+          "Chỉ người mở danh sách mới dùng được nút này. Dùng /caro phong để mở danh sách của bạn.",
+        flags: MessageFlags.Ephemeral,
+      });
+    await interaction.deferUpdate();
+    if (!runtime.isAvailable())
+      return interaction.editReply({
+        content: DISABLED,
+        embeds: [],
+        components: [],
+      });
+    return interaction.editReply(roomList(interaction, Number(list[2])));
+  }
   const match =
     /^caro:(join|open|cancel|connect|confirm):([a-f0-9-]{36})$/.exec(
       interaction.customId || "",
@@ -157,6 +194,34 @@ module.exports = {
     )
     .addSubcommand((sub) =>
       sub.setName("luat").setDescription("Xem luật caro thử nghiệm"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("phong")
+        .setDescription("Xem các phòng caro đang mở trong kênh này"),
+    )
+    .addSubcommand((sub) =>
+      sub
+        .setName("cauhinh")
+        .setDescription("Quản trị: giới hạn số phòng caro mỗi kênh")
+        .addIntegerOption((option) =>
+          option
+            .setName("phongtoida")
+            .setDescription("Tối đa 1–20 phòng đang mở, mặc định 5")
+            .setMinValue(1)
+            .setMaxValue(MAX_ROOM_LIMIT),
+        )
+        .addChannelOption((option) =>
+          option
+            .setName("kenh")
+            .setDescription("Kênh cần cấu hình, mặc định kênh hiện tại")
+            .addChannelTypes(
+              ChannelType.GuildText,
+              ChannelType.GuildAnnouncement,
+              ChannelType.PublicThread,
+              ChannelType.PrivateThread,
+            ),
+        ),
     ),
   handleButton,
   async execute(interaction) {
@@ -165,15 +230,59 @@ module.exports = {
         content: "Dùng lệnh caro trong server Discord.",
         flags: MessageFlags.Ephemeral,
       });
-    if (interaction.options.getSubcommand() === "luat")
+    const subcommand = interaction.options.getSubcommand();
+    if (subcommand === "cauhinh") {
+      if (!isAdminInteraction(interaction))
+        return interaction.reply({
+          content: "Chỉ quản trị mới được cấu hình giới hạn phòng caro.",
+          flags: MessageFlags.Ephemeral,
+        });
+      const channel = interaction.options.getChannel?.("kenh");
+      if (channel?.guildId && channel.guildId !== interaction.guildId)
+        return interaction.reply({
+          content: "Chọn kênh thuộc server hiện tại.",
+          flags: MessageFlags.Ephemeral,
+        });
+      const channelId = channel?.id || interaction.channelId;
+      const requested = interaction.options.getInteger?.("phongtoida");
+      try {
+        if (requested != null)
+          runtime.store.setChannelLimit(
+            interaction.guildId,
+            channelId,
+            requested,
+            interaction.user.id,
+          );
+      } catch (error) {
+        if (!MESSAGES[error.code]) throw error;
+        return interaction.reply({
+          content: error.message,
+          flags: MessageFlags.Ephemeral,
+        });
+      }
+      const limit = runtime.store.getChannelLimit(
+        interaction.guildId,
+        channelId,
+      );
+      return interaction.reply({
+        content: `Caro tại <#${channelId}>: tối đa **${limit} phòng chờ/đang đấu**. Mỗi người chỉ tham gia 1 phòng caro trong server. Giảm giới hạn không đóng các phòng hiện có.`,
+        flags: MessageFlags.Ephemeral,
+      });
+    }
+    if (subcommand === "luat")
       return interaction.reply({
         content:
-          "Caro thử nghiệm: /caro choi tạo phòng, tùy chọn kichthuoc (9–25), sothang (3–6), chan2dau, bienchan và dungsoquan. Mặc định bàn 15×15, từ 5 quân thắng, chặn hai đầu vẫn thắng. Nếu bật chan2dau, hai đầu đều bị quân đối thủ chặn thì không thắng; bienchan cho phép tính mép bàn là chặn. dungsoquan yêu cầu đúng số quân, dài hơn không thắng. Luật được chốt khi tạo phòng và hiển thị để người khác xem trước khi tham gia. X đi trước. Mở bàn cờ để chơi/xem trực tiếp; người chơi xác nhận bằng mã trên web tại Kết nối tài khoản. 90 giây/lượt, tối đa 30 phút/trận; phòng chờ 10 phút. Không cược, không thưởng xu.",
+          "Caro thử nghiệm: /caro choi tạo phòng, tùy chọn kichthuoc (9–25), sothang (3–6), chan2dau, bienchan và dungsoquan. Mặc định bàn 15×15, từ 5 quân thắng, chặn hai đầu vẫn thắng. Nếu bật chan2dau, hai đầu đều bị quân đối thủ chặn thì không thắng; bienchan cho phép tính mép bàn là chặn. dungsoquan yêu cầu đúng số quân, dài hơn không thắng. Luật được chốt khi tạo phòng. Mặc định 5 phòng chờ/đang đấu mỗi kênh; mỗi người 1 phòng caro trong server. /caro phong xem danh sách phòng; quản trị dùng /caro cauhinh phongtoida để chỉnh giới hạn theo kênh. X đi trước; 90 giây/lượt, tối đa 30 phút/trận; phòng chờ 10 phút. Mở bàn cờ để chơi/xem; người chơi xác nhận bằng mã trên web tại Kết nối tài khoản. Không cược, không thưởng xu.",
         flags: MessageFlags.Ephemeral,
       });
     if (!runtime.isAvailable())
       return interaction.reply({
         content: DISABLED,
+        flags: MessageFlags.Ephemeral,
+      });
+    if (subcommand === "phong")
+      return interaction.reply({
+        ...roomList(interaction),
         flags: MessageFlags.Ephemeral,
       });
     if (

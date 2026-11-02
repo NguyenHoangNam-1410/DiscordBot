@@ -4,7 +4,9 @@ Bot và web chạy trong **cùng một tiến trình Node.js trên VM GCP hiện
 
 ## Luật và cách chơi
 
-- `/caro choi`: tạo một phòng tại kênh hiện tại. Mỗi kênh có tối đa một phòng chờ/đang chơi; mỗi người có tối đa một phòng đang mở trong mỗi server Discord.
+- `/caro choi`: tạo một phòng tại kênh hiện tại. Mặc định tối đa **5 phòng chờ/đang đấu mỗi kênh**; mỗi người chỉ tham gia **1 phòng caro trong mỗi server**. Phòng đã kết thúc/hết hạn không chiếm chỗ.
+- `/caro phong` (hoặc `!caro phong`): danh sách phòng tại kênh hiện tại, phân trang 5 phòng/trang; có trạng thái, hai người chơi, luật, nút mở bàn và liên kết tới tin mời để tham gia. Nút Làm mới lấy trạng thái mới nhất; danh sách riêng trong Discord chỉ người mở điều khiển được.
+- Quản trị dùng `/caro cauhinh phongtoida:10` để đặt giới hạn 1–20 phòng tại kênh hiện tại; thêm `kenh:#kenh` nếu muốn chỉnh kênh khác. Bỏ `phongtoida` để xem cấu hình. Cấu hình lưu riêng theo server/kênh và giữ sau restart. Giảm giới hạn không đóng ván cũ, chỉ chặn mở thêm tới khi số phòng xuống dưới giới hạn. Prefix tương đương: `!caro cauhinh phongtoida=10`.
 - Tùy chọn khi tạo: `kichthuoc` 9–25 ô mỗi cạnh (mặc định 15), `sothang` 3–6 quân liên tiếp (mặc định 5), `chan2dau`, `bienchan`, `dungsoquan` (mặc định đều tắt). Luật cố định trong suốt ván và hiển thị trước khi tham gia.
 - `chan2dau:true`: nối đủ quân nhưng cả hai đầu đều có quân đối thủ thì không thắng. `bienchan:true` tính mép bàn là chặn khi bật `chan2dau`. `dungsoquan:true` yêu cầu đúng số quân, nối dài hơn không thắng. Kiểm tra độc lập cả bốn hướng; chỉ cần một hướng thỏa luật.
 - Ví dụ: `/caro choi kichthuoc:19 sothang:5 chan2dau:true bienchan:false dungsoquan:true`.

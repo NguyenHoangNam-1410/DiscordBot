@@ -1595,4 +1595,16 @@ runMigration(60, "multiplayer caro web rooms", () => {
   );`);
 });
 
+runMigration(61, "multiple caro rooms per channel", () => {
+  db.exec(`DROP INDEX idx_caro_open_channel;
+  CREATE INDEX idx_caro_open_channel ON caro_rooms(guild_id,channel_id)
+    WHERE status IN ('waiting','playing');
+  CREATE TABLE caro_channel_settings (
+    guild_id TEXT NOT NULL, channel_id TEXT NOT NULL,
+    max_rooms INTEGER NOT NULL CHECK(max_rooms BETWEEN 1 AND 20),
+    updated_by TEXT NOT NULL, updated_at INTEGER NOT NULL,
+    PRIMARY KEY(guild_id,channel_id)
+  );`);
+});
+
 module.exports = { db, dbPath, runMigration };

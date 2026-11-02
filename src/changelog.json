@@ -1,5 +1,18 @@
 [
   {
+    "id": "0a3cdd3b-d2f5-4239-bbe9-63176b621b8f",
+    "updatedAt": "2026-11-02T03:05:30.555Z",
+    "auditedAt": "2026-11-02T03:05:30.555Z",
+    "title": "Caro: nhiều phòng trong cùng kênh",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Mặc định mỗi kênh có tối đa 5 phòng caro chờ hoặc đang đấu; mỗi người vẫn chỉ tham gia 1 phòng caro trong server.",
+      "Thêm /caro phong với phân trang, trạng thái và liên kết tới đúng bàn web, tin mời Discord.",
+      "Quản trị dùng /caro cauhinh phongtoida để đặt giới hạn 1–20 phòng theo kênh; giảm giới hạn không đóng các ván hiện có."
+    ]
+  },
+  {
     "id": "a7195e2e-9856-4239-851c-9d6bd83072e8",
     "updatedAt": "2026-11-02T02:51:14.645Z",
     "auditedAt": "2026-11-02T02:51:14.645Z",

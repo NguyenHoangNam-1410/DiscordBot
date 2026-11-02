@@ -100,4 +100,65 @@ function accessPayload(url) {
   };
 }
 
-module.exports = { roomPayload, accessPayload };
+function roomsPayload(
+  rooms,
+  { ownerId, page = 0, limit, guildId, channelId, roomUrl },
+) {
+  const pageSize = 5;
+  const pages = Math.max(1, Math.ceil(rooms.length / pageSize));
+  page = Math.max(0, Math.min(Number.isInteger(page) ? page : 0, pages - 1));
+  const shown = rooms.slice(page * pageSize, (page + 1) * pageSize);
+  const embed = new EmbedBuilder()
+    .setColor(0x4e8cff)
+    .setTitle("✕ ◯ CARO · DANH SÁCH PHÒNG")
+    .setDescription(
+      rooms.length
+        ? "Chọn **Mở bàn** để chơi/xem trực tiếp. Muốn tham gia, mở **Tin phòng** và bấm Tham gia."
+        : "Chưa có phòng caro đang mở trong kênh này. Dùng **/caro choi** để tạo phòng.",
+    )
+    .setFooter({
+      text: `${rooms.length} phòng đang mở · Giới hạn mở mới: ${limit} · Trang ${page + 1}/${pages}`,
+    });
+  for (const room of shown) {
+    const messageLink = room.messageId
+      ? ` · [Tin phòng](https://discord.com/channels/${guildId}/${channelId}/${room.messageId})`
+      : " · Đang đăng tin phòng";
+    embed.addFields({
+      name: `${room.status === "waiting" ? "🟢 Chờ đối thủ" : "🔵 Đang đấu"} · ${room.id.slice(0, 8)}`,
+      value: `X: <@${room.players.X.id}> · O: ${room.players.O ? `<@${room.players.O.id}>` : "Chưa có"}\n${rulesText(room.rules)}\n[Mở bàn](${roomUrl(room.id)})${messageLink}`,
+    });
+  }
+  const components = [];
+  if (shown.length)
+    components.push(
+      new ActionRowBuilder().addComponents(
+        shown.map((room) =>
+          new ButtonBuilder()
+            .setStyle(ButtonStyle.Link)
+            .setURL(roomUrl(room.id))
+            .setLabel(`Mở bàn ${room.id.slice(0, 8)}`),
+        ),
+      ),
+    );
+  components.push(
+    new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId(`caro:rooms:${ownerId}:${page - 1}`)
+        .setLabel("Trước")
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(page === 0),
+      new ButtonBuilder()
+        .setCustomId(`caro:rooms:${ownerId}:${page}`)
+        .setLabel("Làm mới")
+        .setStyle(ButtonStyle.Primary),
+      new ButtonBuilder()
+        .setCustomId(`caro:rooms:${ownerId}:${page + 1}`)
+        .setLabel("Sau")
+        .setStyle(ButtonStyle.Secondary)
+        .setDisabled(page === pages - 1),
+    ),
+  );
+  return { embeds: [embed], components, allowedMentions: { parse: [] } };
+}
+
+module.exports = { roomPayload, accessPayload, roomsPayload };
