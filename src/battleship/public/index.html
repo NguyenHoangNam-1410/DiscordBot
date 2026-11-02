@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b1823" />
+    <title>Battleship · Hạm đội bí mật</title>
+    <link rel="stylesheet" href="/battleship/style.css" />
+    <script defer src="/battleship/app.js"></script>
+  </head>
+  <body>
+    <main id="battle-app" class="shell">
+      <header>
+        <a href="/">⚓ <strong>BATTLESHIP</strong></a
+        ><span id="connection">Mở phòng từ Discord</span>
+      </header>
+      <section class="heading">
+        <div>
+          <p class="eyebrow">HẠM ĐỘI BÍ MẬT</p>
+          <h1 id="status-title">Sẵn sàng ra khơi?</h1>
+          <p id="status-detail">
+            Dùng /battleship choi trong Discord để mở phòng.
+          </p>
+        </div>
+        <span id="room-label"></span>
+      </section>
+      <p id="rules-label" class="muted"></p>
+      <section class="match-bar" aria-label="Trạng thái người chơi">
+        <div id="player-X">
+          <span>X · <strong id="name-X">Người chơi X</strong></span
+          ><span id="info-X"></span
+          ><time id="clock-X" class="player-clock">30:00</time>
+        </div>
+        <div id="player-O">
+          <span>O · <strong id="name-O">Chờ đối thủ</strong></span
+          ><span id="info-O"></span
+          ><time id="clock-O" class="player-clock">30:00</time>
+        </div>
+        <div id="timer-panel">
+          <span id="timer-label">Thời gian chuẩn bị</span
+          ><strong id="timer">—</strong
+          ><progress
+            id="timer-progress"
+            max="200"
+            value="200"
+            aria-label="Thời gian còn lại"
+          ></progress>
+        </div>
+      </section>
+      <div class="account">
+        <button id="connect-player" hidden>Kết nối người chơi</button
+        ><button id="leave" hidden>Đầu hàng</button
+        ><span id="role-label" class="muted"
+          >Khán giả · Chỉ thấy các ô đã bắn</span
+        >
+      </div>
+      <section id="pair-panel" class="card" hidden>
+        <h2>Xác nhận tài khoản</h2>
+        <p>
+          Nhập mã <strong id="pair-code">…</strong> tại nút
+          <b>Kết nối tài khoản</b> trong tin phòng Discord.
+        </p>
+        <p id="pair-status" role="status"></p>
+      </section>
+      <p id="notice" class="notice" role="status" hidden></p>
+      <section id="setup-tools" class="card" hidden>
+        <div class="tool-heading">
+          <div>
+            <h2>Bố trí hạm đội</h2>
+            <p id="setup-hint">
+              Kéo thuyền xuống biển hoặc chọn thuyền rồi chạm ô đặt.
+            </p>
+          </div>
+          <strong id="placement-count"></strong>
+        </div>
+        <div id="fleet" class="fleet" aria-label="Các thuyền cần bố trí"></div>
+        <div class="tool-actions">
+          <button id="rotate">Xoay · R</button
+          ><button id="remove-ship">Gỡ thuyền đã chọn</button
+          ><button id="randomize">Xếp ngẫu nhiên</button
+          ><button id="ready" class="primary">Xác nhận hạm đội</button>
+        </div>
+        <p class="muted">
+          R hoặc chuột phải khi đang kéo để xoay. Thuyền không được sát cạnh
+          nhau; có thể chạm chéo. Xác nhận xong sẽ khóa vị trí.
+        </p>
+      </section>
+      <nav class="view-tabs" aria-label="Chuyển bản đồ">
+        <button id="view-X" aria-pressed="true">Biển X</button
+        ><button id="view-O" aria-pressed="false">Biển O</button
+        ><label
+          ><input id="auto-view" type="checkbox" checked /> Tự đổi theo
+          lượt</label
+        >
+      </nav>
+      <section class="boards">
+        <article id="panel-X" class="board-panel selected">
+          <div class="board-heading">
+            <h2 id="title-X">Vùng biển X</h2>
+            <span id="fleet-info-X"></span>
+          </div>
+          <div class="board-scroll">
+            <div
+              id="board-X"
+              class="board"
+              role="group"
+              aria-label="Vùng biển X"
+            ></div>
+          </div>
+        </article>
+        <article id="panel-O" class="board-panel">
+          <div class="board-heading">
+            <h2 id="title-O">Vùng biển O</h2>
+            <span id="fleet-info-O"></span>
+          </div>
+          <div class="board-scroll">
+            <div
+              id="board-O"
+              class="board"
+              role="group"
+              aria-label="Vùng biển O"
+            ></div>
+          </div>
+        </article>
+      </section>
+      <section class="legend">
+        <span><i class="sample ship"></i> Thuyền của bạn</span
+        ><span><i class="sample hit"></i> Bắn trúng</span
+        ><span><i class="sample miss"></i> Trượt</span
+        ><span>Mũi bo góc · Thân vuông</span>
+      </section>
+      <p id="last-action" class="last-action" aria-live="polite"></p>
+      <footer>
+        Không cược · Không thưởng xu · Mất kết nối, đồng hồ vẫn chạy.
+      </footer>
+    </main>
+    <div id="drag-ghost" aria-hidden="true" hidden></div>
+    <dialog id="leave-dialog">
+      <h2 id="leave-dialog-title">Đầu hàng?</h2>
+      <p id="leave-dialog-detail"></p>
+      <div class="tool-actions">
+        <button id="keep-playing">Tiếp tục chơi</button
+        ><button id="confirm-leave" class="danger">Đầu hàng</button>
+      </div>
+    </dialog>
+  </body>
+</html>

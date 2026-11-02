@@ -26,6 +26,7 @@ const SUB_ALIASES = {
 const DEFAULT_SUBCOMMANDS = {
   caro: "choi",
   walls: "choi",
+  battleship: "choi",
   baucua: "choi",
   taixiu: "choi",
   chinchiro: "choi",

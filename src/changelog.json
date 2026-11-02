@@ -1,5 +1,19 @@
 [
   {
+    "id": "de1f92a0-9d63-43c7-a040-533909be4b79",
+    "updatedAt": "2026-11-02T07:05:45.536Z",
+    "auditedAt": "2026-11-02T07:05:45.536Z",
+    "title": "Battleship: đối kháng hạm đội trên web",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Thêm /battleship choi với ba cỡ Nhỏ 8×8/5 thuyền, Vừa 10×10/7 thuyền và Lớn 12×12/10 thuyền. Hai bên có cùng danh sách độ dài ngẫu nhiên, đủ mỗi loại thuyền.",
+      "Kéo thả hoặc chạm để đặt thuyền, xoay bằng R, chuột phải hoặc nút Xoay; cấm ra ngoài bàn, chồng và sát cạnh, cho phép chạm chéo. Chuẩn bị 100/140/200 giây, cả hai xác nhận mới bắt đầu.",
+      "Luân phiên bắn từng ô; chỉ lộ ô đã bắn, chìm khi trúng hết thuyền và thắng khi đánh chìm toàn bộ hạm đội đối thủ. Đồng hồ riêng mặc định 30 phút/người, không cộng giờ.",
+      "Hỗ trợ khán giả, bản đồ riêng tư, chuyển biển theo lượt trên điện thoại, tự cuộn khi kéo sát mép màn hình, danh sách phòng phân trang, cấu hình giới hạn phòng và lệnh tiền tố !."
+    ]
+  },
+  {
     "id": "73095ad4-e2a9-460b-ae98-f415746f22d9",
     "updatedAt": "2026-11-02T06:24:25.475Z",
     "auditedAt": "2026-11-02T06:24:25.475Z",
