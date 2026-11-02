@@ -11,9 +11,15 @@ let web = null,
   busy = false,
   startPending = null,
   stopping = false;
+let syncAgain = false,
+  onChange = null;
 
 async function syncMessages(client, logger) {
-  if (busy || stopping) return;
+  if (stopping) return;
+  if (busy) {
+    syncAgain = true;
+    return;
+  }
   busy = true;
   try {
     store.sweep();
@@ -28,17 +34,19 @@ async function syncMessages(client, logger) {
       try {
         const channel = await client.channels.fetch(room.channelId);
         if (stopping) return;
-        const message = await channel.messages.fetch(room.messageId);
-        if (stopping) return;
-        await message.edit(roomPayload(room));
+        // Editing our own message does not require Read Message History.
+        await channel.messages.edit(
+          room.messageId,
+          roomPayload(room, roomUrl(room.id)),
+        );
         if (stopping) return;
         db.prepare(
-          "UPDATE caro_rooms SET ui_dirty=0 WHERE id=? AND status=?",
-        ).run(id, room.status);
+          "UPDATE caro_rooms SET ui_dirty=0 WHERE id=? AND data_json=?",
+        ).run(id, JSON.stringify(room));
       } catch (error) {
         if (stopping) return;
         // Deleted messages cannot be recovered; transient failures are retried after restart too.
-        if ([10003, 10008, 50001, 50013].includes(error.code))
+        if ([10003, 10008].includes(error.code))
           db.prepare("UPDATE caro_rooms SET ui_dirty=0 WHERE id=?").run(id);
         logger?.warn(
           { code: error.code || error.name },
@@ -48,6 +56,17 @@ async function syncMessages(client, logger) {
     }
   } finally {
     busy = false;
+    if (syncAgain && !stopping) {
+      syncAgain = false;
+      queueMicrotask(() =>
+        syncMessages(client, logger).catch((error) =>
+          logger?.warn(
+            { code: error.code || error.name },
+            "caro message sync failed",
+          ),
+        ),
+      );
+    }
   }
 }
 function start(client, logger) {
@@ -70,6 +89,18 @@ function start(client, logger) {
       return;
     }
     web = candidate;
+    // Upgrade active lobbies created before direct room links were introduced.
+    db.prepare(
+      "UPDATE caro_rooms SET ui_dirty=1 WHERE status IN ('waiting','playing') AND json_extract(data_json,'$.messageId') IS NOT NULL",
+    ).run();
+    onChange = () =>
+      syncMessages(client, logger).catch((error) =>
+        logger?.warn(
+          { code: error.code || error.name },
+          "caro message sync failed",
+        ),
+      );
+    store.events.on("changed", onChange);
     candidate.server.on("error", (error) =>
       logger?.error({ code: error.code }, "caro web server error"),
     );
@@ -99,6 +130,7 @@ function start(client, logger) {
 }
 async function stop() {
   stopping = true;
+  if (onChange) store.events.off("changed", onChange);
   if (timer) clearInterval(timer);
   if (startPending) await startPending.catch(() => {});
   // start may have completed while shutdown was awaiting it.
@@ -117,12 +149,26 @@ function issueTicket(roomId, userId) {
     );
   return web.issueTicket(roomId, userId);
 }
+function roomUrl(id) {
+  return web
+    ? web.roomUrl(id)
+    : `${readConfig().origin || "http://127.0.0.1:3000"}/room/${id}`;
+}
+function confirmPairing(id, userId, code) {
+  if (!web)
+    throw Object.assign(new Error("Web caro chưa được bật."), {
+      code: "WEB_DISABLED",
+    });
+  return web.confirmPairing(id, userId, code);
+}
 
 module.exports = {
   store,
   start,
   stop,
   issueTicket,
+  roomUrl,
+  confirmPairing,
   isAvailable: () => Boolean(web),
   syncMessages,
 };

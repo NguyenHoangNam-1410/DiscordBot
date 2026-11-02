@@ -1,5 +1,18 @@
 [
   {
+    "id": "0adb993d-dffc-447d-925e-83f8c33ecad8",
+    "updatedAt": "2026-11-02T02:17:11.354Z",
+    "auditedAt": "2026-11-02T02:17:11.354Z",
+    "title": "Caro: phòng trực tiếp và khán giả",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Tin phòng tự cập nhật người tham gia, người thắng hoặc hòa và lý do kết thúc ván.",
+      "Nút Mở bàn cờ dẫn thẳng tới web; khán giả có thể xem nước đi và kết quả trực tiếp qua cùng link phòng.",
+      "Người chơi kết nối tài khoản bằng mã trên web nhập tại tin phòng Discord để nhận quyền đánh; khán giả chỉ có quyền xem."
+    ]
+  },
+  {
     "id": "8f6778db-fbd5-4408-b99d-510ab8ada740",
     "updatedAt": "2026-11-01T13:37:11.763Z",
     "auditedAt": "2026-11-01T13:37:11.763Z",

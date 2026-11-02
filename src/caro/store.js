@@ -74,7 +74,10 @@ function createStore(db, now = Date.now) {
   function get(id) {
     const before = raw(id);
     const room = db.transaction(() => expire(raw(id)))();
-    if (room && before.version !== room.version) events.emit(id, room);
+    if (room && before.version !== room.version) {
+      events.emit(id, room);
+      events.emit("changed", room);
+    }
     return room;
   }
   function sweep() {
@@ -145,6 +148,7 @@ function createStore(db, now = Date.now) {
     if (!current) fail("ROOM_MISSING");
     const room = db.transaction(() => fn(raw(id)))();
     events.emit(id, room);
+    events.emit("changed", room);
     return room;
   }
   function seat(room, userId) {
@@ -206,7 +210,6 @@ function createStore(db, now = Date.now) {
   }
   function snapshot(room, userId) {
     const mark = seat(room, userId);
-    if (!mark) fail("NOT_PLAYER");
     return {
       id: room.id,
       size: SIZE,

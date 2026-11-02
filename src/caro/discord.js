@@ -16,12 +16,14 @@ const REASONS = {
   expired: "Không có đối thủ sau 10 phút",
   cancelled: "Chủ phòng đã hủy",
 };
-function roomPayload(room) {
+function roomPayload(room, url) {
   const waiting = room.status === "waiting",
     playing = room.status === "playing";
   const result = room.winner
     ? `**${room.winner} · ${room.players[room.winner].name} thắng!**`
-    : "**Trận đã kết thúc**";
+    : ["duration", "draw"].includes(room.reason)
+      ? "**Hai người hòa nhau.**"
+      : "**Phòng đã đóng.**";
   const embed = new EmbedBuilder()
     .setColor(waiting ? 0xe5a94c : playing ? 0x4e8cff : 0x55c994)
     .setTitle(
@@ -37,9 +39,9 @@ function roomPayload(room) {
         `**O:** ${room.players.O ? `<@${room.players.O.id}>` : "Đang chờ người tham gia"}`,
         "",
         waiting
-          ? "Bấm **Tham gia** để đấu với chủ phòng. Hai người bấm **Mở bàn cờ** để lấy link riêng."
+          ? "Bấm **Tham gia** để đấu với chủ phòng. **Mở bàn cờ** để chơi hoặc xem trực tiếp."
           : playing
-            ? "Hai người bấm **Mở bàn cờ** để chơi hoặc quay lại trận đang đấu."
+            ? "Bấm **Mở bàn cờ** để chơi hoặc xem trực tiếp. Người chơi dùng **Kết nối tài khoản** để nhập mã trên web."
             : `${result}\n${REASONS[room.reason] || ""}`,
         "",
         "Bàn 15×15 · Từ 5 quân liên tiếp thắng, kể cả chặn hai đầu · X đi trước",
@@ -47,7 +49,7 @@ function roomPayload(room) {
       ].join("\n"),
     )
     .setFooter({
-      text: `Phòng ${room.id.slice(0, 8)} · Link vào bàn riêng có hiệu lực 5 phút`,
+      text: `Phòng ${room.id.slice(0, 8)} · ${waiting ? "Chờ đối thủ" : playing ? "Đang đấu" : `${room.moves} nước đi`} · Khán giả có thể xem trực tiếp`,
     });
   const row = new ActionRowBuilder();
   if (waiting)
@@ -57,12 +59,20 @@ function roomPayload(room) {
         .setLabel("Tham gia")
         .setStyle(ButtonStyle.Success),
     );
-  row.addComponents(
-    new ButtonBuilder()
-      .setCustomId(`caro:open:${room.id}`)
-      .setLabel("Mở bàn cờ")
-      .setStyle(ButtonStyle.Primary),
-  );
+  if (url)
+    row.addComponents(
+      new ButtonBuilder()
+        .setURL(url)
+        .setLabel(playing || waiting ? "Mở bàn cờ" : "Xem lại bàn cờ")
+        .setStyle(ButtonStyle.Link),
+    );
+  if (waiting || playing)
+    row.addComponents(
+      new ButtonBuilder()
+        .setCustomId(`caro:connect:${room.id}`)
+        .setLabel("Kết nối tài khoản")
+        .setStyle(ButtonStyle.Secondary),
+    );
   if (waiting)
     row.addComponents(
       new ButtonBuilder()

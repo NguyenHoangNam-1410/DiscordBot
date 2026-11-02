@@ -52,6 +52,12 @@ const checklistCommand = require("./commands/kiemtra");
 const { handleStore, handleBag } = require("./services/hardcoreInventoryView");
 const ROUTES = Object.freeze([
   {
+    kind: "modal",
+    prefix: "caro:",
+    handle: (interaction) =>
+      require("./commands/caro").handleButton(interaction),
+  },
+  {
     kind: "button",
     prefix: "caro:",
     handle: (interaction) =>

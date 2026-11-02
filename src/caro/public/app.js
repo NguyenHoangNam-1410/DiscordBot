@@ -7,6 +7,8 @@ let state = null,
   pending = false,
   source = null,
   offset = 0;
+let pairTimer = null,
+  pairing = false;
 const cells = [];
 $("zoom-board").addEventListener("click", () => {
   const enlarged = $("board").classList.toggle("enlarged");
@@ -53,7 +55,13 @@ async function api(url, data) {
 }
 function accept(next) {
   if (state && next.version < state.version) return;
+  if (state && state.status !== next.status) $("leave-dialog").close();
   state = next;
+  if (state.status !== "playing" && state.status !== "waiting") {
+    $("leave-dialog").close();
+    clearTimeout(pairTimer);
+    pairing = false;
+  }
   offset = next.serverNow - Date.now();
   render();
 }
@@ -69,6 +77,7 @@ const REASONS = {
 function render() {
   const playing = state.status === "playing",
     waiting = state.status === "waiting";
+  const spectator = !state.me;
   const myTurn = playing && state.turn === state.me;
   $("room-code").textContent = state.id.slice(0, 8).toUpperCase();
   $("move-count").textContent = `${state.moves} nước đi`;
@@ -82,41 +91,56 @@ function render() {
   }
   $("status-label").textContent = waiting
     ? "CHỜ ĐỐI THỦ"
-    : playing
-      ? `BẠN CẦM QUÂN ${state.me}`
-      : "KẾT QUẢ VÁN ĐẤU";
+    : spectator && playing
+      ? "ĐANG XEM TRỰC TIẾP"
+      : playing
+        ? `BẠN CẦM QUÂN ${state.me}`
+        : "KẾT QUẢ VÁN ĐẤU";
   $("status-title").textContent = waiting
-    ? "Đối thủ sắp đến."
+    ? spectator
+      ? "Đang chờ người tham gia."
+      : "Đối thủ sắp đến."
     : playing
-      ? myTurn
-        ? "Đến lượt bạn."
-        : "Chờ đối thủ ra quân."
-      : state.winner
-        ? state.winner === state.me
-          ? "Bạn đã thắng!"
-          : "Hẹn ván sau nhé."
-        : ["draw", "duration"].includes(state.reason)
-          ? "Một ván hòa."
-          : "Phòng đã đóng.";
+      ? spectator
+        ? `Đến lượt ${state.turn}.`
+        : myTurn
+          ? "Đến lượt bạn."
+          : "Chờ đối thủ ra quân."
+      : state.winner && spectator
+        ? `${state.players[state.winner]} thắng!`
+        : state.winner
+          ? state.winner === state.me
+            ? "Bạn đã thắng!"
+            : "Hẹn ván sau nhé."
+          : ["draw", "duration"].includes(state.reason)
+            ? "Một ván hòa."
+            : "Phòng đã đóng.";
   $("status-detail").textContent = waiting
-    ? "Chia sẻ tin nhắn phòng trong Discord để mời người khác bấm Tham gia. Bạn cầm X và đi trước."
+    ? spectator
+      ? "Bạn đang xem bàn cờ. Tham gia bằng nút trong tin phòng Discord; nếu đã là người chơi, bấm Xác nhận người chơi bên dưới."
+      : "Chia sẻ tin nhắn phòng trong Discord để mời người khác bấm Tham gia. Bạn cầm X và đi trước."
     : playing
-      ? myTurn
-        ? "Chọn một ô trống để đặt quân cờ của bạn."
-        : `${state.players[state.turn]} đang suy nghĩ. Bạn cầm ${state.me}.`
+      ? spectator
+        ? `${state.players[state.turn]} đang suy nghĩ. Bạn đang xem trực tiếp; nếu là người chơi, bấm Xác nhận người chơi.`
+        : myTurn
+          ? "Chọn một ô trống để đặt quân cờ của bạn."
+          : `${state.players[state.turn]} đang suy nghĩ. Bạn cầm ${state.me}.`
       : REASONS[state.reason] || "Ván đấu đã kết thúc.";
   $("board-state").textContent = waiting
     ? "Đang chờ đủ hai người"
     : playing
-      ? `Lượt của ${state.turn} · ${myTurn ? "Bạn" : "Đối thủ"}`
+      ? `Lượt của ${state.turn} · ${state.players[state.turn]}`
       : "Đã kết thúc";
   $("timer-panel").hidden = !(playing || waiting);
   $("timer-label").textContent = waiting
     ? "Thời gian chờ còn lại"
     : "Thời gian lượt này";
-  $("leave").hidden = !(playing || waiting);
+  $("leave").hidden = spectator || !(playing || waiting);
+  $("connect-player").hidden = !spectator || !(playing || waiting);
+  $("pair-panel").hidden = !spectator || !pairing || !(playing || waiting);
   $("leave").textContent = waiting ? "Hủy phòng chờ" : "Đầu hàng";
   $("leave").disabled = pending || !connected;
+  if ((!playing && !waiting) || spectator) $("leave-dialog").close();
   cells.forEach((button, index) => {
     const mark = state.board[index];
     button.textContent = mark === "X" ? "✕" : mark === "O" ? "○" : "";
@@ -172,6 +196,7 @@ async function play(cell) {
   }
 }
 $("leave").addEventListener("click", () => {
+  if (!state?.me || !["waiting", "playing"].includes(state.status)) return;
   const waiting = state.status === "waiting";
   $("leave-dialog-title").textContent = waiting
     ? "Hủy phòng chờ?"
@@ -185,7 +210,13 @@ $("leave").addEventListener("click", () => {
 $("keep-playing").addEventListener("click", () => $("leave-dialog").close());
 $("confirm-leave").addEventListener("click", async () => {
   $("leave-dialog").close();
-  if (pending || !connected) return;
+  if (
+    pending ||
+    !connected ||
+    !state?.me ||
+    !["waiting", "playing"].includes(state.status)
+  )
+    return;
   pending = true;
   render();
   try {
@@ -209,27 +240,71 @@ async function init() {
     roomId = ticket ? (await api("/api/login", { ticket })).roomId : pathId;
     history.replaceState(null, "", `/room/${roomId}`);
     await refresh();
-    source = new EventSource(`/api/events?room=${encodeURIComponent(roomId)}`);
-    source.onopen = () => {
-      connection(true);
-      notice("");
-    };
-    source.onmessage = (event) => {
-      accept(JSON.parse(event.data));
-      connection(true);
-    };
-    source.onerror = () => {
-      connection(false);
-      notice(
-        "Mất kết nối. Đang tự kết nối lại; đồng hồ vẫn chạy. Nếu phiên hết hạn, hãy mở lại từ Discord.",
-      );
-    };
+    subscribe();
   } catch (error) {
     $("connection").textContent = "Chưa vào bàn";
     notice(error.message);
   }
 }
-window.addEventListener("pagehide", () => source?.close());
+function subscribe() {
+  source?.close();
+  source = new EventSource(`/api/events?room=${encodeURIComponent(roomId)}`);
+  source.onopen = () => {
+    connection(true);
+    notice("");
+  };
+  source.onmessage = (event) => {
+    accept(JSON.parse(event.data));
+    connection(true);
+  };
+  source.onerror = () => {
+    connection(false);
+    notice(
+      "Mất kết nối. Đang tự kết nối lại; đồng hồ vẫn chạy. Nếu phiên hết hạn, hãy mở lại từ Discord.",
+    );
+  };
+}
+$("connect-player").addEventListener("click", async () => {
+  $("connect-player").disabled = true;
+  clearTimeout(pairTimer);
+  try {
+    const result = await api("/api/pair", { roomId });
+    $("pair-code").textContent = result.code;
+    $("pair-status").textContent = "Đang chờ bạn xác nhận trong Discord…";
+    pairing = true;
+    notice("");
+    render();
+    pairTimer = setTimeout(pollPairing, 2000);
+  } catch (error) {
+    notice(error.message);
+  } finally {
+    $("connect-player").disabled = false;
+  }
+});
+async function pollPairing() {
+  if (!pairing) return;
+  try {
+    const result = await api("/api/pair/status", {});
+    if (result.connected) {
+      pairing = false;
+      await refresh();
+      subscribe();
+      notice("Đã kết nối tài khoản Discord.");
+      return;
+    }
+  } catch (error) {
+    $("pair-status").textContent = error.message;
+    if ([410, 403].includes(error.status)) {
+      pairing = false;
+      return;
+    }
+  }
+  pairTimer = setTimeout(pollPairing, 2000);
+}
+window.addEventListener("pagehide", () => {
+  source?.close();
+  clearTimeout(pairTimer);
+});
 window.addEventListener("pageshow", (event) => {
   if (event.persisted) location.reload();
 });

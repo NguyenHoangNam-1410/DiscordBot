@@ -6,13 +6,13 @@ Bot và web chạy trong **cùng một tiến trình Node.js trên VM GCP hiện
 
 - `/caro choi`: tạo một phòng tại kênh hiện tại. Mỗi kênh có tối đa một phòng chờ/đang chơi; mỗi người có tối đa một phòng đang mở trong mỗi server Discord.
 - Người khác bấm **Tham gia**. Chủ phòng cầm X, đối thủ cầm O, X đi trước.
-- Cả hai bấm **Mở bàn cờ** trong tin nhắn phòng. Bot trả lời riêng với nút **Vào bàn caro**.
-- Link là vé riêng dùng một lần, có hiệu lực 5 phút. Nút mở lại trong Discord cấp vé mới, vô hiệu vé chưa dùng trước đó của người này trong phòng. Ai giữ vé chưa dùng có thể vào dưới danh tính của người được cấp; không chuyển tiếp vé.
-- Trình duyệt đổi vé lấy cookie HttpOnly. Vé nằm trong phần `#` của link, được xóa khỏi thanh địa chỉ ngay khi trang chạy và không nằm trong URL gửi đến server. Không cần Discord OAuth/client secret cho bản thử này; tài khoản được xác nhận qua tương tác Discord trước khi cấp vé.
+- **Mở bàn cờ** là nút liên kết trực tiếp đến `/room/<mã phòng>`, không gửi thêm tin nhắn riêng. Ai có link cũng có thể xem trực tiếp người tham gia, nước đi và kết quả, hoặc mở lại bàn đã kết thúc.
+- Để đánh cờ, người chơi bấm **Xác nhận người chơi** trên web, rồi bấm **Kết nối tài khoản** trong tin phòng Discord và nhập mã 8 ký tự đang hiển thị trên tab của chính mình. Web tự nhận quyền đánh sau khi xác nhận, không cần tải lại. Khán giả không cần xác nhận và không thể đánh/hủy/đầu hàng.
+- Mã kết nối chỉ dùng một lần trong đúng phòng, hết hạn sau 5 phút và chỉ hai người chơi được xác nhận. Trình duyệt giữ bí mật kết nối bằng cookie HttpOnly; sau khi Discord xác nhận, cookie phiên chơi có hiệu lực 12 giờ. Không cần thêm Discord OAuth/client secret. Các link vé riêng cũ vẫn dùng được đến khi hết hạn.
 - Bàn 15×15. Từ 5 quân liên tiếp theo ngang/dọc/chéo thắng, kể cả chặn hai đầu hoặc có hơn 5 quân. Bản này chưa áp dụng luật cấm của Renju.
 - Mỗi lượt 90 giây, tối đa 30 phút/trận. Hết giờ lượt xử thua, hết thời gian trận xử hòa. Phòng chờ tự hết hạn sau 10 phút. Đồng hồ vẫn chạy lúc mất kết nối hoặc bot dừng.
-- Tải lại trang để xem lại bàn đã lưu. Nếu mất mạng, web tự kết nối lại. Nếu bot khởi động lại hoặc cookie hết hạn sau 12 giờ, bấm **Mở bàn cờ** trong Discord để vào lại; bàn đã lưu vẫn còn.
-- Hủy phòng chờ từ Discord hoặc web; đầu hàng trong web. Kết quả được cập nhật vào tin nhắn phòng trong Discord, thường trong vòng 5 giây khi bot kết nối bình thường.
+- Tải lại trang để xem lại bàn đã lưu. Nếu mất mạng, web tự kết nối lại. Nếu bot khởi động lại hoặc cookie hết hạn sau 12 giờ, kết nối tài khoản lại để đánh tiếp; vẫn xem bàn được khi chưa xác nhận.
+- Hủy phòng chờ từ Discord hoặc web; đầu hàng trong web. Tin phòng Discord cập nhật ngay khi có người tham gia hoặc ván kết thúc, hiển thị người thắng/hòa và nguyên nhân. Tác vụ mỗi 5 giây kiểm tra hết giờ và thử lại khi cập nhật gặp lỗi. Bot sửa trực tiếp tin của mình, không cần đọc lịch sử tin nhắn trước.
 - Không cược, không cộng xu, EXP hay thành tích trong bản thử.
 
 ## Chạy trên VM GCP bằng Tailscale Funnel
@@ -61,7 +61,7 @@ Thực hiện trong thư mục bot trên VM. Giữ nguyên cách vận hành bot
    curl -fsS http://127.0.0.1:3000/healthz
    ```
 
-   Kết quả mong đợi: `{"ok":true}`. Mở địa chỉ Funnel và kiểm tra trang hướng dẫn vào bàn. Trên Discord dùng `/caro choi`, nhờ một tài khoản khác tham gia, rồi mỗi người mở link riêng. Thử đánh qua lại và tải lại một trình duyệt.
+   Kết quả mong đợi: `{"ok":true}`. Trên Discord dùng `/caro choi`, nhờ một tài khoản khác tham gia. Hai người mở bàn và kết nối tài khoản bằng mã; thử đánh qua lại, tải lại trang và mở cùng link trong trình duyệt thứ ba để xem trực tiếp.
 
 Funnel cung cấp HTTPS và địa chỉ `ts.net`, người chơi không phải cài Tailscale. Tính năng này có giới hạn băng thông; gói miễn phí và điều kiện tài khoản tuân theo [bảng giá Tailscale](https://tailscale.com/pricing) và [giới hạn Funnel](https://tailscale.com/docs/features/tailscale-funnel). GCP vẫn tính tài nguyên và mạng theo cấu hình hiện tại; không bảo đảm hóa đơn GCP bằng 0. Xem [lệnh Funnel và chế độ nền](https://tailscale.com/docs/reference/tailscale-cli/funnel).
 
@@ -96,13 +96,13 @@ location / {
 
 - **Web chưa được bật:** kiểm tra `.env`, restart bot và tìm dòng log `caro web ready`. Web chỉ khởi động sau khi bot kết nối Discord.
 - **Không thấy `/caro`:** chạy lại `npm run register` với đúng `CLIENT_ID` và `GUILD_ID` trên VM.
-- **Link đã dùng/hết hạn:** lấy link mới bằng nút **Mở bàn cờ**. Không gửi vé, cookie hoặc token bot vào log hay ảnh hỗ trợ.
+- **Mã hết hạn:** bấm lại **Xác nhận người chơi** trên web để lấy mã mới. Không xác nhận mã do người khác gửi; chỉ nhập mã trên tab bàn cờ của chính mình. Không gửi cookie hoặc token bot vào log hay ảnh hỗ trợ.
 - **Nguồn truy cập không hợp lệ:** địa chỉ thực tế trên trình duyệt phải khớp `CARO_PUBLIC_URL`, gồm cả cổng nếu có.
 - **Trang mở được nhưng không cập nhật:** kiểm tra kết nối `/api/events`, tắt buffering ở proxy; thử tắt VPN hoặc tiện ích chặn kết nối.
-- **Bot khởi động lại:** dữ liệu vẫn nằm trong SQLite và được backup cùng database bot. Vé và cookie cũ mất hiệu lực; mở link mới. Trận quá giờ sẽ kết thúc, không được bắt đầu lại đồng hồ.
+- **Bot khởi động lại:** dữ liệu vẫn nằm trong SQLite và được backup cùng database bot. Mã và cookie cũ mất hiệu lực; kết nối tài khoản lại. Link phòng vẫn xem được. Trận quá giờ sẽ kết thúc, không được bắt đầu lại đồng hồ.
 - **Port đang dùng:** đổi cả `CARO_WEB_PORT` và cổng đích của Funnel/proxy rồi restart bot.
 - **Dừng thử nghiệm:** đặt `CARO_WEB_ENABLED=false` rồi restart bot. Nếu Funnel chỉ phục vụ caro, có thể tắt bằng `sudo tailscale funnel --https=443 off`. Không chạy lệnh tắt nếu Funnel đang dùng cho ứng dụng khác.
 
 ## Kiểm tra tự động
 
-`npm run test:caro` dùng database tạm riêng, không truy cập Discord và không thay dữ liệu người chơi. Bộ kiểm tra gồm luật thắng bốn hướng, chống nối qua mép bàn, phòng và ghế độc quyền, lượt đi và bản bàn cờ cũ, hết giờ, lưu/đọc lại SQLite, vé một lần, cookie, quyền truy cập, nguồn yêu cầu và đồng bộ sự kiện giữa hai kết nối thật trên localhost.
+`npm run test:caro` dùng database tạm riêng, không truy cập Discord và không thay dữ liệu người chơi. Bộ kiểm tra gồm luật thắng bốn hướng, phòng và ghế độc quyền, lượt đi, hết giờ, lưu/đọc lại SQLite, vé cũ, mã kết nối/cookie/quyền đánh, nguồn yêu cầu, luồng trực tiếp cho hai người chơi và khán giả, hiển thị kết quả và cập nhật tin Discord khi trạng thái đổi trong lúc đang gửi.

@@ -18,6 +18,7 @@ const { SIZE, winningLine } = require("../src/caro/engine");
 const { createWebServer } = require("../src/caro/http");
 const { readConfig } = require("../src/caro/config");
 const { roomPayload } = require("../src/caro/discord");
+const vm = require("node:vm");
 let clock = Date.now(),
   serial = 0,
   web,
@@ -113,7 +114,7 @@ async function main() {
   assert.ok(
     !JSON.stringify(store.snapshot(updated, alice.id)).includes("guildId"),
   );
-  code(() => store.snapshot(updated, "stranger"), "NOT_PLAYER");
+  assert.equal(store.snapshot(updated, "stranger").me, null);
   assert.ok(JSON.stringify(roomPayload(updated)).length < 6000);
 
   room = match();
@@ -200,7 +201,22 @@ async function main() {
     return result.response.headers.get("set-cookie").split(";")[0];
   }
   assert.equal((await request("/healthz")).data.ok, true);
-  assert.equal((await request(`/api/state?room=${room.id}`)).status, 401);
+  const viewer = await request(`/api/state?room=${room.id}`);
+  assert.equal(viewer.status, 200);
+  assert.equal(viewer.data.me, null);
+  assert.ok(!JSON.stringify(viewer.data).includes('"id":"alice"'));
+  assert.equal(
+    (
+      await request("/api/move", {
+        data: { roomId: room.id, cell: 0, version: room.version },
+      })
+    ).status,
+    401,
+  );
+  assert.equal(
+    (await request("/api/leave", { data: { roomId: room.id } })).status,
+    401,
+  );
   const aCookie = await login(alice.id),
     bCookie = await login(bob.id);
   assert.equal(
@@ -217,8 +233,72 @@ async function main() {
   assert.equal(
     (await request(`/api/state?room=${unrelated.id}`, { cookie: aCookie }))
       .status,
+    200,
+  );
+  assert.equal(
+    (await request(`/api/state?room=${unrelated.id}`, { cookie: aCookie })).data
+      .me,
+    null,
+  );
+  assert.equal(
+    (
+      await request("/api/leave", {
+        cookie: aCookie,
+        data: { roomId: unrelated.id },
+      })
+    ).status,
     403,
   );
+  // Public room links never grant a seat. Only the Discord-confirmed browser gets a session.
+  const pairing = await request("/api/pair", { data: { roomId: room.id } });
+  const pairCookie = pairing.response.headers.get("set-cookie").split(";")[0];
+  assert.match(pairing.data.code, /^[A-F0-9]{8}$/);
+  assert.equal(
+    (await request("/api/pair/status", { cookie: pairCookie, data: {} })).data
+      .connected,
+    false,
+  );
+  assert.throws(
+    () => web.confirmPairing(room.id, "stranger", pairing.data.code),
+    (e) => e.httpStatus === 403,
+  );
+  code(
+    () => web.confirmPairing(unrelated.id, "unrelated", pairing.data.code),
+    "PAIR_INVALID",
+  );
+  code(() => web.confirmPairing(room.id, alice.id, "BADCODE!"), "PAIR_INVALID");
+  web.confirmPairing(room.id, alice.id, pairing.data.code.toLowerCase());
+  code(
+    () => web.confirmPairing(room.id, bob.id, pairing.data.code),
+    "PAIR_INVALID",
+  );
+  const paired = await request("/api/pair/status", {
+    cookie: pairCookie,
+    data: {},
+  });
+  assert.equal(paired.data.connected, true);
+  const pairedCookie = paired.response.headers.get("set-cookie").split(";")[0];
+  assert.equal(
+    (await request(`/api/state?room=${room.id}`, { cookie: pairedCookie })).data
+      .me,
+    "X",
+  );
+  assert.equal(
+    (await request("/api/pair/status", { cookie: pairCookie, data: {} }))
+      .status,
+    410,
+  );
+  assert.equal((await request("/api/pair/status", { data: {} })).status, 410);
+  const expiredPair = await request("/api/pair", {
+    data: { roomId: unrelated.id },
+  });
+  clock += 5 * 60_000;
+  code(
+    () => web.confirmPairing(unrelated.id, "unrelated", expiredPair.data.code),
+    "PAIR_INVALID",
+  );
+  // Restore test clock before the active match's turn deadline.
+  clock -= 5 * 60_000;
   assert.equal(
     (
       await request("/api/move", {
@@ -253,12 +333,19 @@ async function main() {
     415,
   );
 
-  const controllers = [new AbortController(), new AbortController()];
+  const controllers = [
+    new AbortController(),
+    new AbortController(),
+    new AbortController(),
+  ];
   const readers = await Promise.all(
-    [aCookie, bCookie].map(async (cookie, index) => {
+    [aCookie, bCookie, null].map(async (cookie, index) => {
       const response = await fetch(
         `${config.origin}/api/events?room=${room.id}`,
-        { headers: { Cookie: cookie }, signal: controllers[index].signal },
+        {
+          headers: cookie ? { Cookie: cookie } : {},
+          signal: controllers[index].signal,
+        },
       );
       assert.equal(response.status, 200);
       const reader = response.body.getReader();
@@ -296,11 +383,18 @@ async function main() {
     "reload/reconnect returns the committed board",
   );
   assert.equal(refreshed.data.turn, "O");
+  const ended = readers.map((reader) => reader.read());
   const leave = await request("/api/leave", {
     cookie: bCookie,
     data: { roomId: room.id },
   });
   assert.equal(leave.data.winner, "X");
+  for (const next of await Promise.all(ended)) {
+    assert.match(new TextDecoder().decode(next.value), /"reason":"resign"/);
+  }
+  const resultPayload = roomPayload(store.get(room.id), web.roomUrl(room.id));
+  assert.match(resultPayload.embeds[0].toJSON().description, /Alice.*thắng!/);
+  assert.equal(resultPayload.components[0].toJSON().components[0].style, 5);
   for (const controller of controllers) controller.abort();
   for (const reader of readers) await reader.cancel().catch(() => {});
 
@@ -315,8 +409,12 @@ async function main() {
   clock += 12 * 60 * 60_000;
   assert.equal(
     (await request(`/api/state?room=${room.id}`, { cookie: aCookie })).status,
-    401,
-    "expired sessions are rejected",
+    200,
+    "expired player sessions fall back to watching",
+  );
+  assert.equal(
+    (await request(`/api/state?room=${room.id}`, { cookie: aCookie })).data.me,
+    null,
   );
   const page = await fetch(config.origin + `/room/${room.id}`);
   assert.equal(page.status, 200);
@@ -325,6 +423,61 @@ async function main() {
     /frame-ancestors 'none'/,
   );
   assert.match(await page.text(), /Caro · Bàn đấu trực tiếp/);
+
+  // Exercise the actual browser renderer without a network or a browser dependency.
+  const elements = new Map();
+  const element = () => ({
+    hidden: false,
+    disabled: false,
+    textContent: "",
+    open: false,
+    classList: { toggle() {} },
+    addEventListener() {},
+    setAttribute() {},
+    append() {},
+    close() {
+      this.open = false;
+    },
+    showModal() {
+      this.open = true;
+    },
+  });
+  const sandbox = {
+    document: {
+      getElementById(id) {
+        if (!elements.has(id)) elements.set(id, element());
+        return elements.get(id);
+      },
+      createElement: element,
+    },
+    window: { addEventListener() {} },
+    location: { hash: "", pathname: "/" },
+    history: { replaceState() {} },
+    URLSearchParams,
+    Date,
+    setInterval() {},
+    clearTimeout() {},
+  };
+  vm.createContext(sandbox);
+  vm.runInContext(
+    fs.readFileSync(path.join(__dirname, "../src/caro/public/app.js"), "utf8"),
+    sandbox,
+  );
+  const browserRoom = match();
+  sandbox.next = store.snapshot(browserRoom, null);
+  vm.runInContext("accept(next); connection(true)", sandbox);
+  assert.match(elements.get("status-label").textContent, /XEM TRỰC TIẾP/);
+  assert.equal(elements.get("leave").hidden, true);
+  assert.equal(vm.runInContext("cells.every(c => c.disabled)", sandbox), true);
+  sandbox.next = store.snapshot(browserRoom, alice.id);
+  vm.runInContext("accept(next)", sandbox);
+  assert.equal(elements.get("leave").hidden, false);
+  assert.equal(vm.runInContext("cells[0].disabled", sandbox), false);
+  elements.get("leave-dialog").open = true;
+  sandbox.next = store.snapshot(store.leave(browserRoom.id, bob.id), null);
+  vm.runInContext("accept(next)", sandbox);
+  assert.equal(elements.get("leave-dialog").open, false);
+  assert.match(elements.get("status-title").textContent, /Alice.*thắng/);
 
   const command = require("../src/commands/caro");
   assert.equal(command.data.toJSON().name, "caro");
@@ -339,7 +492,8 @@ async function main() {
   // Exercise Discord lobby creation and component routing without sending any Discord request.
   const runtime = require("../src/caro/runtime");
   const originalAvailable = runtime.isAvailable,
-    originalIssue = runtime.issueTicket;
+    originalIssue = runtime.issueTicket,
+    originalConfirm = runtime.confirmPairing;
   runtime.isAvailable = () => true;
   runtime.issueTicket = (id, userId) =>
     `https://caro.example/#ticket=${id}-${userId}`;
@@ -379,10 +533,41 @@ async function main() {
     };
     assert.equal(await router.routeComponentInteraction(button), true);
     assert.equal(runtime.store.get(lobby.id).players.O.id, bob.id);
-    assert.match(
-      messages.at(-1).components[0].toJSON().components[0].url,
-      /bob$/,
-    );
+    assert.match(messages.at(-1).content, /Đã tham gia/);
+    const link = messages[0].components[0]
+      .toJSON()
+      .components.find((c) => c.style === 5);
+    assert.ok(link.url.endsWith(`/room/${lobby.id}`));
+    assert.equal(link.custom_id, undefined);
+    let modal;
+    await command.handleButton({
+      ...button,
+      customId: `caro:connect:${lobby.id}`,
+      showModal: async (p) => {
+        modal = p.toJSON();
+      },
+    });
+    assert.equal(modal.custom_id, `caro:confirm:${lobby.id}`);
+    let confirmation;
+    runtime.confirmPairing = (...args) => {
+      confirmation = args;
+    };
+    await router.routeComponentInteraction({
+      ...button,
+      message: undefined,
+      customId: modal.custom_id,
+      isButton: () => false,
+      isModalSubmit: () => true,
+      fields: { getTextInputValue: () => "AB12CD34" },
+    });
+    assert.deepEqual(confirmation, [lobby.id, bob.id, "AB12CD34"]);
+    await command.handleButton({
+      ...button,
+      user: { id: "viewer" },
+      customId: `caro:connect:${lobby.id}`,
+      reply: async (p) => messages.push(p),
+    });
+    assert.match(messages.at(-1).content, /khán giả/);
     // The real runtime checks membership before issuing links; do the same in our ticket stub.
     runtime.issueTicket = (id, userId) => {
       if (!runtime.store.seat(runtime.store.get(id), userId))
@@ -408,14 +593,26 @@ async function main() {
       customId: `caro:open:${lobby.id}`,
     });
     assert.ok(messages.at(-1).components);
+    await runtime.syncMessages({
+      channels: {
+        fetch: async () => ({
+          messages: {
+            edit: async (id, payload) => messages.push(payload),
+          },
+        }),
+      },
+    });
+    assert.match(messages.at(-1).embeds[0].toJSON().title, /ĐANG ĐẤU/);
+    assert.match(messages.at(-1).embeds[0].toJSON().description, /<@bob>/);
     runtime.store.leave(lobby.id, alice.id);
     await runtime.syncMessages({
       channels: {
         fetch: async () => ({
           messages: {
-            fetch: async () => ({
-              edit: async (payload) => messages.push(payload),
-            }),
+            edit: async (id, payload) => {
+              assert.equal(id, "lobby-message");
+              messages.push(payload);
+            },
           },
         }),
       },
@@ -425,6 +622,96 @@ async function main() {
       db.prepare("SELECT ui_dirty FROM caro_rooms WHERE id=?").get(lobby.id)
         .ui_dirty,
       0,
+    );
+    // An in-flight lobby update must not acknowledge a newer final result.
+    const raceRoom = runtime.store.create({
+      guildId: "race",
+      channelId: "race",
+      user: alice,
+    });
+    runtime.store.attachMessage(raceRoom.id, "race-message");
+    runtime.store.join(raceRoom.id, bob);
+    let releaseEdit;
+    const editGate = new Promise((resolve) => {
+      releaseEdit = resolve;
+    });
+    const racing = runtime.syncMessages({
+      channels: { fetch: async () => ({ messages: { edit: () => editGate } }) },
+    });
+    await Promise.resolve();
+    runtime.store.leave(raceRoom.id, bob.id);
+    releaseEdit();
+    await racing;
+    assert.equal(
+      db.prepare("SELECT ui_dirty FROM caro_rooms WHERE id=?").get(raceRoom.id)
+        .ui_dirty,
+      1,
+    );
+    await runtime.syncMessages({
+      channels: {
+        fetch: async () => ({
+          messages: { edit: async (id, payload) => messages.push(payload) },
+        }),
+      },
+    });
+    assert.match(
+      messages.at(-1).embeds[0].toJSON().description,
+      /Alice.*thắng/,
+    );
+    // The live runtime must publish join/end events without waiting for its five-second sweep.
+    const probe = require("node:net").createServer();
+    await new Promise((resolve) => probe.listen(0, "127.0.0.1", resolve));
+    const port = probe.address().port;
+    await new Promise((resolve) => probe.close(resolve));
+    const savedEnv = {
+      CARO_WEB_ENABLED: process.env.CARO_WEB_ENABLED,
+      CARO_WEB_PORT: process.env.CARO_WEB_PORT,
+      CARO_PUBLIC_URL: process.env.CARO_PUBLIC_URL,
+    };
+    Object.assign(process.env, {
+      CARO_WEB_ENABLED: "true",
+      CARO_WEB_PORT: String(port),
+      CARO_PUBLIC_URL: `http://127.0.0.1:${port}`,
+    });
+    const deliveries = [];
+    await runtime.start({
+      channels: {
+        fetch: async () => ({
+          messages: {
+            edit: async (id, payload) => deliveries.push({ id, payload }),
+          },
+        }),
+      },
+    });
+    for (const [key, value] of Object.entries(savedEnv)) {
+      if (value === undefined) delete process.env[key];
+      else process.env[key] = value;
+    }
+    async function waitDelivery(title) {
+      const deadline = Date.now() + 1500;
+      while (
+        !deliveries.some((d) =>
+          d.payload.embeds[0].toJSON().title.includes(title),
+        )
+      ) {
+        if (Date.now() > deadline)
+          throw Error(`Missing immediate Discord update: ${title}`);
+        await new Promise((resolve) => setTimeout(resolve, 5));
+      }
+    }
+    const liveRoom = runtime.store.create({
+      guildId: "live",
+      channelId: "live",
+      user: alice,
+    });
+    runtime.store.attachMessage(liveRoom.id, "live-message");
+    runtime.store.join(liveRoom.id, bob);
+    await waitDelivery("ĐANG ĐẤU");
+    runtime.store.leave(liveRoom.id, alice.id);
+    await waitDelivery("KẾT QUẢ");
+    assert.match(
+      deliveries.at(-1).payload.embeds[0].toJSON().description,
+      /Bình thắng/,
     );
     const failInteraction = {
       ...interaction,
@@ -457,7 +744,7 @@ async function main() {
     await runtime.stop();
     releaseFetch({
       messages: {
-        fetch: () => {
+        edit: () => {
           continuedAfterStop = true;
           throw new Error("notification continued during shutdown");
         },
@@ -472,6 +759,7 @@ async function main() {
   } finally {
     runtime.isAvailable = originalAvailable;
     runtime.issueTicket = originalIssue;
+    runtime.confirmPairing = originalConfirm;
   }
   assert.ok(
     require("../src/commandRegistry")

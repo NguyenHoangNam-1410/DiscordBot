@@ -14,6 +14,7 @@ const token = () => randomBytes(32).toString("base64url");
 
 function createWebServer({ store, config, logger, now = Date.now }) {
   const tickets = new Map(),
+    pairings = new Map(),
     sessions = new Map(),
     limits = new Map(),
     streams = new Map();
@@ -85,13 +86,14 @@ function createWebServer({ store, config, logger, now = Date.now }) {
       });
     }
   }
-  function authenticate(req) {
+  function authenticate(req, optional = false) {
     const sid = /(?:^|;\s*)caro_session=([A-Za-z0-9_-]{43})(?:;|$)/.exec(
       req.headers.cookie || "",
     )?.[1];
     const session = sessions.get(sid);
     if (!session || session.expires <= now()) {
       sessions.delete(sid);
+      if (optional) return { sid: null, userId: null };
       throw Object.assign(
         new Error("Phiên vào bàn đã hết hạn. Hãy mở lại từ nút trong Discord."),
         { httpStatus: 401 },
@@ -136,6 +138,47 @@ function createWebServer({ store, config, logger, now = Date.now }) {
       return json(res, 403, { error: "Nguồn truy cập không hợp lệ." });
     if (req.headers["sec-fetch-site"] === "cross-site")
       return json(res, 403, { error: "Nguồn truy cập không hợp lệ." });
+    if (req.method === "POST" && url.pathname === "/api/pair") {
+      if (!allowed(`pair:${req.socket.remoteAddress}`, 20, 60_000))
+        return json(res, 429, { error: "Hãy đợi một phút rồi thử lại." });
+      const { roomId } = await body(req);
+      const room = store.get(typeof roomId === "string" ? roomId : "");
+      if (!room || !["waiting", "playing"].includes(room.status))
+        return json(res, 409, { error: "Phòng đã đóng hoặc không tồn tại." });
+      prune(pairings);
+      if (pairings.size >= 5000)
+        return json(res, 503, { error: "Máy chủ đang bận." });
+      const previous = pairCookie(req);
+      pairings.delete(previous);
+      const secret = token();
+      let code;
+      do {
+        code = randomBytes(4).toString("hex").toUpperCase();
+      } while ([...pairings.values()].some((p) => p.code === code));
+      pairings.set(secret, { roomId, code, expires: now() + TICKET_MS });
+      res.setHeader(
+        "Set-Cookie",
+        `caro_pair=${secret}; HttpOnly; SameSite=Strict; Path=/api; Max-Age=${TICKET_MS / 1000}${config.secure ? "; Secure" : ""}`,
+      );
+      return json(res, 200, { code, expires: now() + TICKET_MS });
+    }
+    if (req.method === "POST" && url.pathname === "/api/pair/status") {
+      if (!allowed(`poll:${req.socket.remoteAddress}`, 300, 60_000))
+        return json(res, 429, { error: "Hãy đợi một phút rồi thử lại." });
+      const secret = pairCookie(req),
+        pairing = pairings.get(secret);
+      if (!pairing || pairing.expires <= now()) {
+        pairings.delete(secret);
+        return json(res, 410, {
+          error: "Mã kết nối đã hết hạn. Hãy lấy mã mới.",
+        });
+      }
+      if (!pairing.userId) return json(res, 200, { connected: false });
+      roomFor(pairing.roomId, pairing.userId);
+      if (!openSession(res, pairing.userId)) return;
+      pairings.delete(secret);
+      return json(res, 200, { connected: true, roomId: pairing.roomId });
+    }
     if (req.method === "POST" && url.pathname === "/api/login") {
       if (!allowed(`login:${req.socket.remoteAddress}`, 120, 60_000))
         return json(res, 429, { error: "Hãy đợi một phút rồi thử lại." });
@@ -148,19 +191,15 @@ function createWebServer({ store, config, logger, now = Date.now }) {
         });
       tickets.delete(ticket);
       roomFor(access.roomId, access.userId);
-      prune(sessions);
-      if (sessions.size >= 5000)
-        return json(res, 503, { error: "Máy chủ đang bận. Hãy thử lại sau." });
-      const sid = token();
-      sessions.set(sid, { userId: access.userId, expires: now() + SESSION_MS });
-      res.setHeader(
-        "Set-Cookie",
-        `caro_session=${sid}; HttpOnly; SameSite=Strict; Path=/api; Max-Age=${SESSION_MS / 1000}${config.secure ? "; Secure" : ""}`,
-      );
+      if (!openSession(res, access.userId)) return;
       return json(res, 200, { roomId: access.roomId });
     }
-    const session = authenticate(req);
-    if (!allowed(`session:${session.sid}`, 120, 60_000))
+    const readOnly =
+      req.method === "GET" &&
+      ["/api/state", "/api/events"].includes(url.pathname);
+    const session = authenticate(req, readOnly);
+    const streamKey = session.sid || `viewer:${req.socket.remoteAddress}`;
+    if (!allowed(`session:${streamKey}`, 120, 60_000))
       return json(res, 429, {
         error: "Bạn thao tác quá nhanh. Hãy đợi một chút.",
       });
@@ -168,13 +207,15 @@ function createWebServer({ store, config, logger, now = Date.now }) {
       req.method === "GET" &&
       ["/api/state", "/api/events"].includes(url.pathname)
     ) {
-      const room = roomFor(url.searchParams.get("room"), session.userId);
+      const id = url.searchParams.get("room");
+      const room = id && /^[a-f0-9-]{36}$/.test(id) ? store.get(id) : null;
+      if (!room) return json(res, 404, { error: "Không tìm thấy phòng." });
       if (url.pathname === "/api/state")
         return json(res, 200, store.snapshot(room, session.userId));
-      let peers = streams.get(session.sid);
-      if (!peers) streams.set(session.sid, (peers = new Set()));
-      if (peers.size >= 3)
-        return json(res, 429, { error: "Chỉ mở tối đa ba tab bàn cờ." });
+      let peers = streams.get(streamKey);
+      if (!peers) streams.set(streamKey, (peers = new Set()));
+      if (peers.size >= (session.sid ? 3 : 20))
+        return json(res, 429, { error: "Đã mở quá nhiều tab bàn cờ." });
       if (
         [...streams.values()].reduce((sum, group) => sum + group.size, 0) >=
         1000
@@ -196,7 +237,7 @@ function createWebServer({ store, config, logger, now = Date.now }) {
       store.events.on(room.id, send);
       send(room);
       const heartbeat = setInterval(() => {
-        if (session.expires <= now()) return res.end();
+        if (session.expires && session.expires <= now()) return res.end();
         if (res.writableLength > 64 * 1024) return res.destroy();
         res.write(": keepalive\n\n");
       }, 15_000);
@@ -204,7 +245,7 @@ function createWebServer({ store, config, logger, now = Date.now }) {
         clearInterval(heartbeat);
         store.events.off(room.id, send);
         peers.delete(res);
-        if (!peers.size) streams.delete(session.sid);
+        if (!peers.size) streams.delete(streamKey);
       });
       return;
     }
@@ -221,6 +262,51 @@ function createWebServer({ store, config, logger, now = Date.now }) {
       return json(res, 200, store.snapshot(updated, session.userId));
     }
     return json(res, 404, { error: "Không tìm thấy chức năng." });
+  }
+  function pairCookie(req) {
+    return /(?:^|;\s*)caro_pair=([A-Za-z0-9_-]{43})(?:;|$)/.exec(
+      req.headers.cookie || "",
+    )?.[1];
+  }
+  function openSession(res, userId) {
+    prune(sessions);
+    if (sessions.size >= 5000) {
+      json(res, 503, { error: "Máy chủ đang bận. Hãy thử lại sau." });
+      return false;
+    }
+    const sid = token();
+    sessions.set(sid, { userId, expires: now() + SESSION_MS });
+    res.setHeader(
+      "Set-Cookie",
+      `caro_session=${sid}; HttpOnly; SameSite=Strict; Path=/api; Max-Age=${SESSION_MS / 1000}${config.secure ? "; Secure" : ""}`,
+    );
+    return true;
+  }
+  function confirmPairing(roomId, userId, input) {
+    roomFor(roomId, userId);
+    if (!allowed(`confirm:${userId}`, 5, 60_000))
+      throw Object.assign(
+        new Error("Bạn nhập quá nhiều lần. Hãy đợi một phút."),
+        { code: "PAIR_LIMIT" },
+      );
+    const code = String(input || "")
+      .trim()
+      .toUpperCase();
+    const pairing = [...pairings.values()].find(
+      (p) =>
+        p.roomId === roomId &&
+        p.code === code &&
+        p.expires > now() &&
+        !p.userId,
+    );
+    if (!pairing)
+      throw Object.assign(
+        new Error(
+          "Mã không đúng, đã dùng hoặc hết hạn. Hãy lấy mã trên bàn cờ của bạn.",
+        ),
+        { code: "PAIR_INVALID" },
+      );
+    pairing.userId = userId;
   }
   const server = http.createServer((req, res) => {
     handle(req, res).catch((error) => {
@@ -242,6 +328,7 @@ function createWebServer({ store, config, logger, now = Date.now }) {
   server.headersTimeout = 10_000;
   const cleanup = setInterval(() => {
     prune(tickets);
+    prune(pairings);
     prune(sessions);
     prune(limits);
   }, 60_000);
@@ -256,7 +343,13 @@ function createWebServer({ store, config, logger, now = Date.now }) {
       server.closeAllConnections();
     });
   }
-  return { server, issueTicket, stop };
+  return {
+    server,
+    issueTicket,
+    confirmPairing,
+    roomUrl: (id) => `${config.origin}/room/${id}`,
+    stop,
+  };
 }
 
 module.exports = { createWebServer };
