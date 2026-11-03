@@ -17,6 +17,10 @@ let selected = null,
   rotation = 0,
   flipped = false,
   anchor = null;
+let drag = null,
+  dragFrame = null,
+  suppressClickUntil = 0,
+  actionsHome = null;
 const cells = [];
 const labelFor = (mark) =>
   state.playerLabels?.[mark] || (mark === "X" ? "Quân xanh" : "Quân cam");
@@ -44,6 +48,8 @@ function miniature(target, form) {
     ...form.map(([r, c]) => {
       const cell = document.createElement("span");
       cell.className = "mini-cell";
+      cell.dataset.row = String(r);
+      cell.dataset.col = String(c);
       cell.style.gridRow = String(r + 1);
       cell.style.gridColumn = String(c + 1);
       return cell;
@@ -114,6 +120,7 @@ function buildBoard() {
     const cell = document.createElement("button");
     cell.type = "button";
     cell.addEventListener("click", () => {
+      if (Date.now() < suppressClickUntil) return;
       if (!canAct()) return;
       if (!selected) {
         notice("Chọn một quân trong bộ quân trước.");
@@ -123,6 +130,21 @@ function buildBoard() {
       notice("");
       renderBoard();
       renderSelection();
+    });
+    cell.addEventListener("pointerdown", (event) => {
+      if (
+        !canAct() ||
+        !selected ||
+        !anchor ||
+        !cell.classList.contains("preview")
+      )
+        return;
+      const form = shape(state.pieces.find((p) => p.id === selected));
+      const index = form.findIndex(
+        ([r, c]) =>
+          r + anchor.row === Math.floor(i / 14) && c + anchor.col === i % 14,
+      );
+      beginPieceDrag(event, selected, Math.max(0, index), false);
     });
     $("board").append(cell);
     cells.push(cell);
@@ -185,8 +207,10 @@ function renderSelection() {
     $(id).disabled = !canAct() || !piece;
   $("confirm").disabled =
     !canAct() || !piece || !anchor || Boolean(check.error);
+  updatePieceActions();
 }
 function renderTray() {
+  if (drag) return;
   const side = $("inventory-side").value,
     used = state.used[side];
   const key = JSON.stringify([side, used, selected, canAct(), state.me]);
@@ -222,17 +246,244 @@ function renderTray() {
       label.textContent = p.id + " · " + p.cells.length;
       tile.append(visual, label);
       tile.addEventListener("click", () => {
+        if (Date.now() < suppressClickUntil) return;
         if (!canAct() || side !== state.me) return;
         selected = p.id;
         rotation = 0;
         flipped = false;
         notice("");
         render();
+        globalThis.WebGameMobile?.close(false);
+      });
+      tile.addEventListener("pointerdown", (event) => {
+        const grabbed = event.target.closest?.(".mini-cell");
+        const index = grabbed
+          ? p.cells.findIndex(
+              ([r, c]) =>
+                r === Number(grabbed.dataset.row) &&
+                c === Number(grabbed.dataset.col),
+            )
+          : 0;
+        beginPieceDrag(event, p.id, Math.max(0, index), true);
       });
       return tile;
     }),
   );
 }
+function updatePieceActions() {
+  const actions = $("piece-actions"),
+    popover = $("piece-popover");
+  if (!actions?.parentNode || !popover?.getBoundingClientRect) return;
+  if (!actionsHome) {
+    actionsHome = document.createComment("piece action home");
+    actions.before(actionsHome);
+  }
+  const visible = canAct() && selected && anchor && !drag?.active;
+  popover.hidden = !visible;
+  if (visible) {
+    if (actions.parentNode !== popover) popover.append(actions);
+    $("anchor-hint").textContent =
+      preview().error || coord(anchor.row, anchor.col) + " · Xem trước";
+    popover.classList.toggle("invalid", Boolean(preview().error));
+    positionPieceActions();
+  } else if (actions.parentNode !== actionsHome.parentNode)
+    actionsHome.after(actions);
+}
+function positionPieceActions() {
+  const popover = $("piece-popover");
+  if (!popover?.getBoundingClientRect || popover.hidden || !anchor) return;
+  const form = preview().cells.filter(
+    ([r, c]) => r >= 0 && c >= 0 && r < 14 && c < 14,
+  );
+  if (!form.length) return;
+  const rects = form.map(([r, c]) => cells[r * 14 + c].getBoundingClientRect());
+  const left = Math.min(...rects.map((r) => r.left)),
+    right = Math.max(...rects.map((r) => r.right));
+  const top = Math.min(...rects.map((r) => r.top)),
+    bottom = Math.max(...rects.map((r) => r.bottom));
+  const rect = popover.getBoundingClientRect(),
+    viewport = window.visualViewport;
+  const minTop =
+    (viewport?.offsetTop || 0) +
+    (globalThis.WebGameMobile?.isMobile() ? 84 : 8);
+  const maxBottom =
+    (viewport?.offsetTop || 0) +
+    (viewport?.height || innerHeight) -
+    (globalThis.WebGameMobile?.isMobile() ? 64 : 8);
+  let y = bottom + 8;
+  if (y + rect.height > maxBottom) y = top - rect.height - 8;
+  popover.style.left =
+    Math.max(
+      8,
+      Math.min(innerWidth - rect.width - 8, (left + right - rect.width) / 2),
+    ) + "px";
+  popover.style.top =
+    Math.max(minTop, Math.min(maxBottom - rect.height, y)) + "px";
+}
+function beginPieceDrag(event, pieceId, index, fromTray) {
+  if (!canAct() || drag || event.button !== 0 || event.isPrimary === false)
+    return;
+  const previous = {
+    selected,
+    rotation,
+    flipped,
+    anchor: anchor ? { ...anchor } : null,
+  };
+  drag = {
+    pointerId: event.pointerId,
+    pieceId,
+    index,
+    fromTray,
+    previous,
+    active: false,
+    startX: event.clientX,
+    startY: event.clientY,
+    x: event.clientX,
+    y: event.clientY,
+  };
+}
+function movePieceDrag(x, y) {
+  if (!drag?.active) return;
+  drag.x = x;
+  drag.y = y;
+  const piece = state.pieces.find((p) => p.id === selected),
+    form = shape(piece),
+    grab = form[drag.index];
+  const board = $("board").getBoundingClientRect(),
+    scroll = $("board").closest(".board-scroll").getBoundingClientRect();
+  const cellWidth = (board.width - 6) / 14,
+    cellHeight = (board.height - 6) / 14;
+  const inside =
+    x >= Math.max(board.left + 3, scroll.left) &&
+    x < Math.min(board.right - 3, scroll.right) &&
+    y >= Math.max(board.top + 3, scroll.top) &&
+    y < Math.min(board.bottom - 3, scroll.bottom);
+  anchor = inside
+    ? {
+        row: Math.floor((y - board.top - 3) / cellHeight) - grab[0],
+        col: Math.floor((x - board.left - 3) / cellWidth) - grab[1],
+      }
+    : null;
+  const ghost = $("piece-drag-ghost");
+  ghost.hidden = false;
+  ghost.className = "piece-drag-ghost " + state.me.toLowerCase();
+  ghost.style.gridTemplateColumns = "repeat(5," + cellWidth + "px)";
+  ghost.style.gridTemplateRows = "repeat(5," + cellHeight + "px)";
+  ghost.style.left = x - (grab[1] + 0.5) * cellWidth + "px";
+  ghost.style.top = y - (grab[0] + 0.5) * cellHeight + "px";
+  miniature(ghost, form);
+  renderBoard();
+  renderSelection();
+}
+function scrollPieceDrag() {
+  if (!drag?.active) return;
+  const scroll = $("board").closest(".board-scroll"),
+    rect = scroll.getBoundingClientRect();
+  if (
+    drag.x >= rect.left &&
+    drag.x <= rect.right &&
+    drag.y >= rect.top - 20 &&
+    drag.y <= rect.bottom + 20
+  ) {
+    if (drag.x < rect.left + 22) scroll.scrollLeft -= 10;
+    else if (drag.x > rect.right - 22) scroll.scrollLeft += 10;
+    if (drag.y < rect.top + 22) scroll.scrollTop -= 10;
+    else if (drag.y > rect.bottom - 22) scroll.scrollTop += 10;
+  }
+  if (!globalThis.WebGameMobile?.isMobile()) {
+    if (drag.y < 45) window.scrollBy(0, -14);
+    else if (drag.y > innerHeight - 45) window.scrollBy(0, 14);
+  }
+  movePieceDrag(drag.x, drag.y);
+  dragFrame = requestAnimationFrame(scrollPieceDrag);
+}
+function endPieceDrag(commit, restore = true) {
+  if (!drag) return;
+  const current = drag;
+  drag = null;
+  cancelAnimationFrame(dragFrame);
+  $("piece-drag-ghost").hidden = true;
+  document.body.classList.remove("dragging-piece");
+  if (
+    !commit &&
+    document.documentElement.hasPointerCapture?.(current.pointerId)
+  )
+    document.documentElement.releasePointerCapture(current.pointerId);
+  if (!current.active) {
+    if (commit && restore && current.fromTray) {
+      selected = current.pieceId;
+      rotation = 0;
+      flipped = false;
+      suppressClickUntil = Date.now() + 200;
+      render();
+      globalThis.WebGameMobile?.close(false);
+    }
+    return;
+  }
+  suppressClickUntil = Date.now() + 350;
+  const dropped = commit && anchor;
+  if (!dropped && restore)
+    ({ selected, rotation, flipped, anchor } = current.previous);
+  if (!restore) {
+    anchor = null;
+    return;
+  }
+  if (dropped && current.fromTray) globalThis.WebGameMobile?.close(false);
+  render();
+  requestAnimationFrame(positionPieceActions);
+}
+document.addEventListener(
+  "pointermove",
+  (event) => {
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (!drag.active) {
+      if (
+        Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 6
+      )
+        return;
+      drag.active = true;
+      document.documentElement.setPointerCapture?.(event.pointerId);
+      selected = drag.pieceId;
+      if (drag.fromTray) {
+        rotation = 0;
+        flipped = false;
+      }
+      document.body.classList.add("dragging-piece");
+      notice("");
+      for (const tile of document.querySelectorAll(".tile"))
+        tile.classList.toggle("selected", tile.dataset.piece === selected);
+      dragFrame = requestAnimationFrame(scrollPieceDrag);
+    }
+    event.preventDefault();
+    movePieceDrag(event.clientX, event.clientY);
+  },
+  { passive: false },
+);
+document.addEventListener("pointerup", (event) => {
+  if (drag?.pointerId === event.pointerId) endPieceDrag(true);
+});
+document.addEventListener("pointercancel", (event) => {
+  if (drag?.pointerId === event.pointerId) endPieceDrag(false);
+});
+document.addEventListener("lostpointercapture", (event) => {
+  // A delayed release from the previous gesture must not cancel a new pointerdown.
+  if (
+    drag?.active &&
+    drag.pointerId === event.pointerId &&
+    !document.documentElement.hasPointerCapture?.(event.pointerId)
+  )
+    endPieceDrag(false);
+});
+document.addEventListener("contextmenu", (event) => {
+  if (drag?.active) {
+    event.preventDefault();
+    rotatePiece();
+  }
+});
+document.addEventListener("webgame:layout", positionPieceActions);
+window.addEventListener("resize", positionPieceActions);
+window.addEventListener("scroll", positionPieceActions, true);
+window.addEventListener("blur", () => endPieceDrag(false));
 const REASONS = {
   win: "Cả hai hết nước hợp lệ. Bên có điểm cao hơn thắng.",
   draw: "Cả hai hết nước hợp lệ và bằng điểm.",
@@ -242,6 +493,8 @@ const REASONS = {
   cancelled: "Chủ phòng đã hủy.",
 };
 function render() {
+  if (drag && !canAct()) endPieceDrag(false, false);
+  if (state) globalThis.WebGameMobile?.update("blokus", state);
   if (!state) return;
   globalThis.WebGamePlayers?.render(state);
   globalThis.WebGameBoardUI?.renderRules("blokus", state);
@@ -344,6 +597,7 @@ function render() {
 function rotatePiece() {
   if (canAct() && selected) {
     rotation = (rotation + 1) % 4;
+    if (drag?.active) movePieceDrag(drag.x, drag.y);
     renderBoard();
     renderSelection();
   }
@@ -351,13 +605,51 @@ function rotatePiece() {
 function flipPiece() {
   if (canAct() && selected) {
     flipped = !flipped;
+    if (drag?.active) movePieceDrag(drag.x, drag.y);
     renderBoard();
     renderSelection();
   }
 }
-$("rotate").addEventListener("click", rotatePiece);
-$("flip").addEventListener("click", flipPiece);
-$("clear").addEventListener("click", () => {
+let lastTouchAction = 0;
+function bindPieceAction(id, activate) {
+  const button = $(id);
+  let press = null;
+  button.addEventListener("pointerdown", (event) => {
+    if (event.pointerType === "touch" && !button.disabled)
+      press = { id: event.pointerId, x: event.clientX, y: event.clientY };
+  });
+  button.addEventListener("pointercancel", () => {
+    press = null;
+  });
+  button.addEventListener("pointerup", (event) => {
+    const current = press;
+    press = null;
+    if (
+      !current ||
+      current.id !== event.pointerId ||
+      button.disabled ||
+      Math.hypot(event.clientX - current.x, event.clientY - current.y) > 12
+    )
+      return;
+    // Respond on release even when the browser suppresses a click just after dragging.
+    lastTouchAction = Date.now();
+    suppressClickUntil = Date.now() + 350;
+    event.preventDefault();
+    activate();
+  });
+  button.addEventListener("click", (event) => {
+    const touch =
+      event.pointerType === "touch" ||
+      event.sourceCapabilities?.firesTouchEvents ||
+      !event.pointerType;
+    if (event.detail !== 0 && touch && Date.now() - lastTouchAction < 700)
+      return;
+    activate();
+  });
+}
+bindPieceAction("rotate", rotatePiece);
+bindPieceAction("flip", flipPiece);
+bindPieceAction("clear", () => {
   anchor = null;
   selected = null;
   render();
@@ -368,7 +660,7 @@ $("zoom-board").addEventListener("click", () => {
   $("zoom-board").setAttribute("aria-pressed", String(enlarged));
   $("zoom-board").textContent = enlarged ? "Thu nhỏ" : "Phóng to";
 });
-$("confirm").addEventListener("click", async () => {
+bindPieceAction("confirm", async () => {
   if (!canAct() || !selected || !anchor || preview().error) return;
   const data = {
     roomId,
@@ -435,6 +727,10 @@ document.addEventListener("keydown", (event) => {
     flipPiece();
   } else if (key === "escape") {
     event.preventDefault();
+    if (drag) {
+      endPieceDrag(false);
+      return;
+    }
     anchor = null;
     renderBoard();
     renderSelection();
@@ -483,6 +779,7 @@ function accept(next) {
   if (state && next.version < state.version) return;
   if (state && state.status !== next.status) $("leave-dialog").close();
   if (state && state.version !== next.version) {
+    if (drag) endPieceDrag(false, false);
     anchor = null;
   }
   if (next.me && next.me !== state?.me) $("inventory-side").value = next.me;

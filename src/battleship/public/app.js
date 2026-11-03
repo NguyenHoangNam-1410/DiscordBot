@@ -186,6 +186,7 @@ function choose(id) {
   render();
 }
 function render() {
+  if (state) globalThis.WebGameMobile?.update("battleship", state);
   if (state) globalThis.WebGamePlayers?.render(state);
   globalThis.WebGameBoardUI?.renderRules("battleship", state);
   if (!state) return;

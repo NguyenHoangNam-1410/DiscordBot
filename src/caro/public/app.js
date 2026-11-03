@@ -92,6 +92,7 @@ const REASONS = {
   cancelled: "Chủ phòng đã hủy lời mời. Tạo phòng mới trong Discord.",
 };
 function render() {
+  if (state) globalThis.WebGameMobile?.update("caro", state);
   if (state) globalThis.WebGamePlayers?.render(state);
   globalThis.WebGameBoardUI?.renderRules("caro", state);
   buildBoard(state.size);

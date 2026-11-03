@@ -157,6 +157,8 @@ const REASONS = {
   cancelled: "Chủ phòng đã hủy lời mời.",
 };
 function render() {
+  if (state) globalThis.WebGamePlayers?.render(state);
+  if (state) globalThis.WebGameMobile?.update("dots", state);
   const playing = state.status === "playing",
     waiting = state.status === "waiting",
     spectator = !state.me,

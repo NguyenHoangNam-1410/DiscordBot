@@ -6,10 +6,12 @@
     <meta name="theme-color" content="#141d25" />
     <title>Blokus Duo · Bàn đấu trực tiếp</title>
     <link rel="stylesheet" href="/blokus/style.css" />
+    <link rel="stylesheet" href="/mobile-ui.css" />
     <link rel="stylesheet" href="/players.css" />
     <link rel="stylesheet" href="/board-ui.css" />
     <script src="/board-ui.js" defer></script>
     <script src="/players.js" defer></script>
+    <script src="/mobile-ui.js" defer></script>
     <script src="/blokus/app.js" defer></script>
   </head>
   <body>
@@ -85,12 +87,24 @@
                   </p>
                 </div>
               </div>
-              <div class="actions">
+              <div
+                class="actions"
+                id="piece-actions"
+                role="toolbar"
+                aria-label="Thao tác với quân đang chọn"
+              >
                 <button id="rotate" type="button">↻ Xoay <kbd>R</kbd></button
                 ><button id="flip" type="button">⇄ Lật <kbd>F</kbd></button
-                ><button id="clear" type="button">Hủy chọn</button
-                ><button id="confirm" class="primary" type="button" disabled>
-                  Xác nhận đặt quân
+                ><button id="clear" type="button" title="Bỏ quân đang chọn">
+                  Bỏ</button
+                ><button
+                  id="confirm"
+                  class="primary"
+                  type="button"
+                  title="Xác nhận đặt quân"
+                  disabled
+                >
+                  ✓ Đặt
                 </button>
               </div>
               <p class="keyboard-help">
@@ -110,7 +124,8 @@
               </div>
               <div id="tray" class="tray" aria-label="Bộ 21 quân"></div>
               <p class="muted">
-                Quân mờ đã được sử dụng. Mã quân cho biết hình và số ô.
+                Kéo quân lên bàn hoặc chạm để chọn. Thả chỉ xem trước; nhấn Đặt
+                để xác nhận. Quân mờ đã được dùng.
               </p>
             </section>
           </section>
@@ -223,6 +238,15 @@
         ><span>DISCORD GAME CLUB / BLOKUS</span>
       </footer>
     </div>
+    <div id="piece-popover" class="piece-popover" hidden>
+      <p id="anchor-hint" role="status"></p>
+    </div>
+    <div
+      id="piece-drag-ghost"
+      class="piece-drag-ghost"
+      aria-hidden="true"
+      hidden
+    ></div>
     <dialog id="leave-dialog">
       <h2 id="leave-dialog-title">Đầu hàng ván đấu?</h2>
       <p id="leave-dialog-detail">Đối thủ sẽ được tính thắng ván này.</p>

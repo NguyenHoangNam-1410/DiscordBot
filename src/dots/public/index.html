@@ -6,7 +6,11 @@
     <meta name="theme-color" content="#111715" />
     <title>Dots & Boxes · Bàn đấu trực tiếp</title>
     <link rel="stylesheet" href="/dots/style.css" />
+    <link rel="stylesheet" href="/players.css" />
+    <script src="/players.js" defer></script>
+    <script src="/mobile-ui.js" defer></script>
     <script src="/dots/app.js" defer></script>
+    <link rel="stylesheet" href="/mobile-ui.css" />
   </head>
   <body>
     <div class="shell">
@@ -83,7 +87,17 @@
 
             <section class="players-card" aria-label="Người chơi">
               <div class="player" id="player-X">
-                <span class="piece x">✕</span>
+                <span class="player-avatar x"
+                  ><img
+                    id="avatar-X"
+                    alt=""
+                    referrerpolicy="no-referrer"
+                    draggable="false"
+                    hidden
+                  /><span id="avatar-fallback-X" aria-hidden="true"
+                    >?</span
+                  ></span
+                >
                 <div>
                   <span class="player-label">ĐI TRƯỚC</span
                   ><strong id="name-X">Người chơi X</strong>
@@ -99,7 +113,17 @@
               </div>
               <div class="versus"><span></span>VS<span></span></div>
               <div class="player" id="player-O">
-                <span class="piece o">○</span>
+                <span class="player-avatar o"
+                  ><img
+                    id="avatar-O"
+                    alt=""
+                    referrerpolicy="no-referrer"
+                    draggable="false"
+                    hidden
+                  /><span id="avatar-fallback-O" aria-hidden="true"
+                    >?</span
+                  ></span
+                >
                 <div>
                   <span class="player-label">ĐI SAU</span
                   ><strong id="name-O">Đang chờ đối thủ</strong>

@@ -337,12 +337,71 @@ kbd {
   gap: 7px;
 }
 .tile {
+  touch-action: none;
   padding: 6px;
   display: grid;
   justify-items: center;
   gap: 2px;
   border-radius: 9px;
   background: #21323f;
+}
+.cell.preview {
+  touch-action: none;
+}
+.piece-popover {
+  position: fixed;
+  z-index: 45;
+  width: max-content;
+  max-width: calc(100vw - 16px);
+  padding: 7px;
+  background: #21333f;
+  border: 1px solid #a9c7a0;
+  border-radius: 10px;
+  box-shadow: 0 5px 24px #0008;
+}
+.piece-popover .actions {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+.piece-popover .actions button {
+  padding: 8px;
+  font-size: 12px;
+  min-height: 38px;
+  white-space: nowrap;
+}
+.piece-popover .actions .primary {
+  flex: 1;
+  flex-basis: auto !important;
+}
+.piece-popover kbd {
+  display: none;
+}
+.piece-popover p {
+  margin: 0 2px 6px;
+  max-width: 260px;
+  font-size: 11px;
+  color: #d7ecaa;
+}
+.piece-popover.invalid p {
+  color: #ffc0bc;
+}
+.piece-drag-ghost {
+  position: fixed;
+  z-index: 60;
+  display: grid;
+  pointer-events: none;
+  opacity: 0.8;
+  filter: drop-shadow(0 3px 7px #0008);
+  gap: 0;
+}
+.piece-drag-ghost .mini-cell {
+  border: 1px solid #edf5ff;
+  box-shadow: inset 0 0 0 1px #ffffff30;
+}
+.dragging-piece {
+  user-select: none;
+  -webkit-user-select: none;
 }
 .tile .shape {
   width: 48px;
@@ -683,4 +742,8 @@ dialog::backdrop {
   .page-footer {
     font-size: 9px;
   }
+}
+
+.piece-popover button {
+  touch-action: manipulation;
 }

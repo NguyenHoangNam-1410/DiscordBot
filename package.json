@@ -86,7 +86,8 @@
     "test:blokus": "node scripts/test-blokus.js",
     "test:blokus:ui": "node scripts/test-blokus-ui.js",
     "test:mecung": "node scripts/test-mecung.js",
-    "test:mecung:ui": "node scripts/test-mecung-ui.js"
+    "test:mecung:ui": "node scripts/test-mecung-ui.js",
+    "test:web:mobile": "node scripts/test-web-mobile-ui.js"
   },
   "engines": {
     "node": ">=18.17.0"

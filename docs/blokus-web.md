@@ -26,6 +26,10 @@ Máy chủ tự kiểm tra toàn bộ quân còn lại: hết nước thì tự 
 
 Chọn quân trong bộ → chạm ô làm góc trên trái của khung quân → xem trước → Xác nhận. Ô xanh nhạt là vị trí hợp lệ, đỏ là không hợp lệ kèm lý do. Hình có khoảng trống ở góc trên trái vẫn dùng góc khung làm mốc; không phải mọi ô mốc đều thuộc quân.
 
+Có thể kéo quân từ bộ lên bàn bằng chuột hoặc cảm ứng, hoặc kéo lại khối đang xem trước. Điểm đang cầm trên khối được giữ dưới con trỏ khi xoay/lật. Thả quân chỉ tạo bản xem trước, không gửi nước đi. Cụm Xoay/Lật/Bỏ/Đặt bám cạnh khối và được giữ trong màn hình; nhấn Đặt mới xác nhận. Thả ngoài bàn, hủy thao tác cảm ứng hoặc mất tiêu điểm sẽ trả về lựa chọn trước khi kéo.
+
+Trên điện thoại, menu Bộ quân/Đã chọn/Thông tin/Tài khoản mở trong khung riêng; bàn vẫn nhìn thấy. Chạm chọn quân hoặc thả quân lên bàn sẽ đóng menu bộ quân để xem bàn rộng hơn. Thanh người chơi chỉ hiện avatar và đồng hồ; chạm avatar để xem tên, điểm và thông tin đầy đủ. Giao diện cũng hỗ trợ xoay ngang và trở lại bố cục máy tính khi mở rộng cửa sổ.
+
 - R / nút Xoay: xoay 90°; F / nút Lật: đối xứng.
 - WASD hoặc phím mũi tên: dịch vị trí xem trước; Enter: xác nhận; Esc: hủy vị trí.
 - Phóng to: mở rộng bàn và cuộn trong khung trên điện thoại.
@@ -41,3 +45,5 @@ Sau khi cập nhật, chạy `npm run register`, khởi động lại tiến tr�
 `npm run test:blokus` kiểm tra bộ quân bằng cách sinh độc lập toàn bộ polyomino đến 5 ô, hình xoay/lật, luật đặt quân, 12 ván hoàn chỉnh, soát nước hợp lệ bằng quét vét cạn độc lập, bỏ lượt, điểm, đồng hồ, khôi phục dữ liệu, quyền, HTTP/SSE, xác nhận tài khoản, prefix và cập nhật Discord. Chạy thêm `npm run test:web:pairing`, `npm run test:web:players` và các test game web hiện có.
 
 `npm run test:blokus:ui` là kiểm tra trình duyệt thật tùy chọn, cần Chrome cài trên máy (`CHROME_PATH` để chỉ định executable). Kiểm tra chuột, cảm ứng, phím R/F, xoay/lật trên điện thoại, xem trước, gửi nước đi, SSE, highlight, phóng to và kết quả. Đặt `BLOKUS_SCREENSHOT_DIR` tới thư mục có sẵn thuộc tài khoản của bạn nếu muốn lưu ảnh kiểm tra.
+
+Test trình duyệt còn kiểm tra kéo từ bộ quân, kéo lại bản xem trước, hủy kéo bằng cảm ứng, cụm nút nằm trong màn hình, mở/đóng menu và việc thả không tự gửi nước đi. `npm run test:web:mobile` kiểm tra thêm sáu game web trên điện thoại nhỏ, xoay ngang, menu không che hết bàn và khôi phục các nút về vị trí ban đầu khi chuyển sang máy tính.

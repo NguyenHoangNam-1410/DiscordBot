@@ -344,6 +344,7 @@ const REASONS = {
   cancelled: "Chủ phòng đã hủy.",
 };
 function render() {
+  if (state) globalThis.WebGameMobile?.update("mecung", state);
   if (!state) return;
   globalThis.WebGamePlayers?.render(state);
   globalThis.WebGameBoardUI?.renderRules("mecung", state);

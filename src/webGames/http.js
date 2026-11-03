@@ -41,6 +41,15 @@ function createWebServer({
     limits = new Map(),
     streams = new Map();
   const assets = new Map();
+  for (const [file, type] of [
+    ["mobile-ui.js", "text/javascript; charset=utf-8"],
+    ["mobile-ui.css", "text/css; charset=utf-8"],
+  ]) {
+    assets.set("/" + file, {
+      type,
+      data: fs.readFileSync(path.join(__dirname, "public", file)),
+    });
+  }
   assets.set("/players.js", {
     type: "text/javascript; charset=utf-8",
     data: fs.readFileSync(path.join(__dirname, "public/players.js")),

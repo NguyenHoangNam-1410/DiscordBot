@@ -129,6 +129,13 @@ async function main() {
   }
   async function click(selector, touch = false) {
     await evaluate(
+      "new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))",
+    );
+    await evaluate(
+      `(()=>{const el=document.querySelector(${JSON.stringify(selector)});const panel=el?.closest(".wg-panel");if(panel?.hidden && globalThis.WebGameMobile?.isMobile()) WebGameMobile.open(panel.id.replace("wg-panel-",""));})()`,
+    );
+    await delay(80);
+    await evaluate(
       `document.querySelector(${JSON.stringify(selector)}).scrollIntoView({block:'center',behavior:'instant'})`,
     );
     // Scroll can be asynchronous after a layout change; measure on the following frame.
@@ -141,6 +148,7 @@ async function main() {
         type: "touchStart",
         touchPoints: [point],
       });
+      await delay(50);
       await send("Input.dispatchTouchEvent", {
         type: "touchEnd",
         touchPoints: [],
@@ -161,7 +169,7 @@ async function main() {
         ...point,
       });
     }
-    await delay(50);
+    await delay(touch ? 140 : 50);
   }
   async function key(key, code, value) {
     await send("Input.dispatchKeyEvent", {
@@ -176,6 +184,82 @@ async function main() {
       code,
       windowsVirtualKeyCode: value,
     });
+  }
+  async function dragPiece(
+    selector,
+    targetSelector,
+    touch = false,
+    cancel = false,
+  ) {
+    await evaluate(
+      `(()=>{const el=document.querySelector(${JSON.stringify(selector)});const panel=el.closest('.wg-panel');if(panel?.hidden)WebGameMobile.open(panel.id.replace('wg-panel-',''));})()`,
+    );
+    await delay(140);
+    const points = await evaluate(
+      `(()=>{const a=document.querySelector(${JSON.stringify(selector)}).getBoundingClientRect(),b=document.querySelector(${JSON.stringify(targetSelector)}).getBoundingClientRect();return [{x:a.x+a.width/2,y:a.y+a.height/2},{x:b.x+b.width/2,y:b.y+b.height/2}];})()`,
+    );
+    const [from, to] = points;
+    const origin = await evaluate(
+      `(()=>{const el=document.elementFromPoint(${from.x},${from.y});return el?.outerHTML?.slice(0,300);})()`,
+    );
+    if (touch)
+      await send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [from],
+      });
+    else
+      await send("Input.dispatchMouseEvent", {
+        type: "mousePressed",
+        button: "left",
+        buttons: 1,
+        clickCount: 1,
+        ...from,
+      });
+    for (let i = 1; i <= 7; i++) {
+      const point = {
+        x: from.x + ((to.x - from.x) * i) / 7,
+        y: from.y + ((to.y - from.y) * i) / 7,
+      };
+      if (touch)
+        await send("Input.dispatchTouchEvent", {
+          type: "touchMove",
+          touchPoints: [point],
+        });
+      else
+        await send("Input.dispatchMouseEvent", {
+          type: "mouseMoved",
+          button: "left",
+          buttons: 1,
+          ...point,
+        });
+      await delay(25);
+    }
+    assert.equal(
+      await evaluate("Boolean(drag?.active)"),
+      true,
+      "Actual pointer drag must activate: " +
+        selector +
+        " / " +
+        origin +
+        " / " +
+        JSON.stringify(await evaluate("[selected,anchor,canAct(),drag]")),
+    );
+    if (touch)
+      await send("Input.dispatchTouchEvent", {
+        type: cancel ? "touchCancel" : "touchEnd",
+        touchPoints: [],
+      });
+    else if (cancel) await evaluate("endPieceDrag(false)");
+    else
+      await send("Input.dispatchMouseEvent", {
+        type: "mouseReleased",
+        button: "left",
+        buttons: 0,
+        clickCount: 1,
+        ...to,
+      });
+    await delay(160);
+    assert.equal(await evaluate("drag"), null);
   }
   async function screenshot(name) {
     if (!process.env.BLOKUS_SCREENSHOT_DIR) return;
@@ -198,13 +282,42 @@ async function main() {
   await send("Page.enable");
   await send("Emulation.setDeviceMetricsOverride", {
     width: 1280,
-    height: 1100,
+    height: 1700,
     deviceScaleFactor: 1,
     mobile: false,
   });
   await send("Page.navigate", { url: config.origin + "/fixture" });
   await until('typeof state!=="undefined" && state?.me==="X" && connected');
   await screenshot("blokus-initial.png");
+  await dragPiece('[data-piece="L4"] .mini-cell', "#board .cell:nth-child(61)");
+  assert.deepEqual(
+    await evaluate("[selected,anchor.row,anchor.col,state.moves]"),
+    ["L4", 4, 4, 0],
+  );
+  assert.equal(await evaluate('$("piece-popover").hidden'), false);
+  await dragPiece("#board .cell:nth-child(61)", "#board .cell:nth-child(136)");
+  assert.deepEqual(
+    await evaluate("[anchor.row,anchor.col,state.moves]"),
+    [9, 9, 0],
+    "A preview can be dragged again",
+  );
+  await dragPiece("#board .cell:nth-child(136)", "#board .cell:nth-child(196)");
+  assert.equal(
+    await evaluate('$("confirm").disabled'),
+    true,
+    "Outside placement stays a preview",
+  );
+  const actionBounds = await evaluate(
+    '(()=>{const r=$("piece-popover").getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,bottom:r.bottom,w:innerWidth,h:innerHeight};})()',
+  );
+  assert(
+    actionBounds.left >= 0 &&
+      actionBounds.right <= actionBounds.w &&
+      actionBounds.top >= 0 &&
+      actionBounds.bottom <= actionBounds.h,
+    "Anchored actions stay within the viewport",
+  );
+  await click("#clear");
   await click('[data-piece="F5"]');
   assert.equal(
     await evaluate("selected"),
@@ -252,14 +365,40 @@ async function main() {
     false,
     "No mobile horizontal overflow",
   );
-  await click('[data-piece="I2"]', true);
-  await click("#board .cell:nth-child(46)", true);
+  await dragPiece(
+    '[data-piece="I2"] .mini-cell',
+    "#board .cell:nth-child(76)",
+    true,
+    true,
+  );
+  assert.equal(
+    await evaluate("selected"),
+    "P5",
+    "Pointer cancel restores the previous selection",
+  );
+  await delay(360);
+  await dragPiece(
+    '[data-piece="I2"] .mini-cell',
+    "#board .cell:nth-child(76)",
+    true,
+  );
+  assert.deepEqual(
+    await evaluate("[selected,anchor.row,anchor.col,state.moves]"),
+    ["I2", 5, 5, 2],
+  );
+  assert.equal(
+    await evaluate("WebGameMobile.active()"),
+    null,
+    "Dropping closes the piece menu",
+  );
+  await screenshot("blokus-mobile-drag.png");
   await click("#rotate", true);
   await click("#flip", true);
   assert.equal(
     await evaluate("rotation===1 && flipped===true"),
     true,
-    "Touch rotate/flip",
+    "Touch rotate/flip: " +
+      JSON.stringify(await evaluate("[selected,rotation,flipped,anchor]")),
   );
   await click("#zoom-board", true);
   assert.equal(
@@ -267,11 +406,11 @@ async function main() {
     true,
   );
   await click("#zoom-board", true);
-  await click("#board .cell:nth-child(76)", true);
   await key("ArrowRight", "ArrowRight", 39);
   await key("ArrowLeft", "ArrowLeft", 37);
   assert.deepEqual(await evaluate("[anchor.row,anchor.col]"), [5, 5]);
   assert.equal(await evaluate('$("confirm").disabled'), false);
+  await evaluate("cells[75].focus({preventScroll:true})");
   await key("Enter", "Enter", 13);
   await until('state.moves===3 && state.turn==="O" && !pending');
   room = store.get(room.id);
@@ -288,7 +427,7 @@ async function main() {
     JSON.stringify({
       ok: true,
       blokusUI:
-        "actual mouse/touch placement preview, R/F hotkeys, mobile rotation/flip, clock, account login, opponent SSE, recent piece, zoom, result",
+        "mouse/touch drag and cancellation, anchored actions, explicit confirmation, R/F hotkeys, mobile menus, clock, account login, opponent SSE, recent piece, zoom, result",
     }),
   );
   await send("Browser.close").catch(() => {});

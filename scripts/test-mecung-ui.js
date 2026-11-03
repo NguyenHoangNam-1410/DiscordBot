@@ -129,6 +129,13 @@ async function main() {
   }
   async function click(selector, touch = false) {
     await evaluate(
+      "new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))",
+    );
+    await evaluate(
+      `(()=>{const el=document.querySelector(${JSON.stringify(selector)});const panel=el?.closest(".wg-panel");if(panel?.hidden && globalThis.WebGameMobile?.isMobile()) WebGameMobile.open(panel.id.replace("wg-panel-",""));})()`,
+    );
+    await delay(80);
+    await evaluate(
       `document.querySelector(${JSON.stringify(selector)}).scrollIntoView({block:'center',behavior:'instant'})`,
     );
     // Scroll can be asynchronous after a layout change; measure on the following frame.
@@ -141,6 +148,7 @@ async function main() {
         type: "touchStart",
         touchPoints: [point],
       });
+      await delay(50);
       await send("Input.dispatchTouchEvent", {
         type: "touchEnd",
         touchPoints: [],
@@ -161,7 +169,7 @@ async function main() {
         ...point,
       });
     }
-    await delay(50);
+    await delay(touch ? 140 : 50);
   }
   async function key(key, code, value) {
     await send("Input.dispatchKeyEvent", {

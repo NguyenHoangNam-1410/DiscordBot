@@ -2,6 +2,14 @@
 
 Một tiến trình bot, một cổng HTTP, một địa chỉ HTTPS/Tailscale. Hiện có Caro, [Walls / Wall Go](walls-web.md), [Battleship / Bắn tàu](battleship-web.md), [Dots & Boxes](dots-web.md), [Blokus Duo](blokus-web.md) và [Mê cung](mecung-web.md). Không cần mở thêm Funnel hay server khi đăng ký game mới.
 
+## Giao diện điện thoại
+
+Sáu game dùng chung `/mobile-ui.js` và `/mobile-ui.css`: giữ bàn cờ trong khung màn hình, thanh avatar/đồng hồ một dòng, các menu công cụ/bản đồ/thông tin/tài khoản ở dưới. Mở menu sẽ thu bàn vừa phần còn lại; trên màn hình ngang, menu nằm cạnh bàn. Chi tiết dài chỉ cuộn trong menu. Chạm avatar mở thông tin người chơi; phím Escape hoặc nút Đóng thu menu lại. Blokus có kéo thả và cụm thao tác bám cạnh khối xem trước.
+
+Các menu di chuyển chính những nút đang có, giữ nguyên ID và sự kiện. Khi chuyển về máy tính, các phần được đưa về vị trí ban đầu. Không tạo bản sao nút hay thêm dữ liệu riêng tư vào DOM. Dots cũng dùng avatar Discord giống các game web khác; dữ liệu phòng cũ được cập nhật khi người chơi xác nhận lại tài khoản.
+
+`npm run test:web:mobile` là kiểm tra Chrome thật tùy chọn (`CHROME_PATH` để chỉ định Chrome), gồm sáu game, màn hình 360px, xoay ngang, bàn và menu cùng hiển thị, đồng hồ/avatar gọn, hộp tài khoản và khôi phục giao diện máy tính. Dùng thư mục có sẵn trong `WEB_MOBILE_SCREENSHOT_DIR` nếu muốn lưu ảnh. Khởi động lại bot để nạp tài nguyên chung, rồi tải lại trang bàn chơi.
+
 ## Cấu hình và đường dẫn
 
 | Biến mới         | Mặc định                | Biến cũ được hỗ trợ |

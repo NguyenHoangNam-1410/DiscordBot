@@ -1,5 +1,19 @@
 [
   {
+    "id": "5c42a040-da3e-402f-bf2d-553b5965cfdf",
+    "updatedAt": "2026-11-03T10:17:32.335Z",
+    "auditedAt": "2026-11-03T10:17:32.335Z",
+    "title": "Blokus kéo thả và giao diện điện thoại gọn hơn",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Blokus hỗ trợ kéo quân từ bộ lên bàn và kéo lại khối đang xem trước bằng chuột hoặc cảm ứng. Thả quân chỉ xem trước; nhấn Đặt mới xác nhận nước đi.",
+      "Cụm Xoay, Lật, Bỏ và Đặt bám cạnh khối Blokus, tự giữ trong màn hình. Có thể xoay/lật khi kéo bằng phím; hủy kéo trả về lựa chọn trước đó, thao tác cảm ứng phản hồi ngay và tránh bấm đúp.",
+      "Caro, Walls, Battleship, Dots, Blokus và Mê cung có menu điện thoại ẩn/hiện để mở công cụ, bản đồ, thông tin và tài khoản mà vẫn nhìn thấy bàn. Hỗ trợ màn hình nhỏ, xoay ngang và trở lại giao diện máy tính.",
+      "Thanh người chơi trên điện thoại thu gọn còn avatar và đồng hồ một dòng; chạm avatar để xem thông tin đầy đủ. Bổ sung avatar Discord cho Dots."
+    ]
+  },
+  {
     "id": "683d052c-fe8d-4306-8ddd-d59b21f68853",
     "updatedAt": "2026-11-03T05:39:17.291Z",
     "auditedAt": "2026-11-03T05:39:17.291Z",
