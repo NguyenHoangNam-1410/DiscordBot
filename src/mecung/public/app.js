@@ -62,9 +62,11 @@ function notice(message) {
 }
 function connection(ok) {
   connected = ok;
-  $("connection").textContent = ok
-    ? "Đã kết nối trực tiếp"
-    : "Đang kết nối lại…";
+  if (globalThis.WebGameFeedback) WebGameFeedback.connection(ok);
+  else
+    $("connection").textContent = ok
+      ? "Đã kết nối trực tiếp"
+      : "Đang kết nối lại…";
   $("connection").classList.toggle("connected", ok);
   if (state) render();
 }
@@ -87,6 +89,7 @@ async function api(url, data) {
 }
 function accept(next) {
   if (state && next.version < state.version) return;
+  globalThis.WebGameFeedback?.update("mecung", next);
   const phaseChanged = state?.status !== next.status,
     identityChanged = state?.me !== next.me;
   state = next;
@@ -632,7 +635,9 @@ async function init() {
     if (state.me) clearStoredPairing();
     else restorePairing();
   } catch (error) {
-    $("connection").textContent = "Chưa vào bàn";
+    if (globalThis.WebGameFeedback)
+      WebGameFeedback.connection(false, "Không thể vào bàn");
+    else $("connection").textContent = "Chưa vào bàn";
     notice(error.message);
   }
 }

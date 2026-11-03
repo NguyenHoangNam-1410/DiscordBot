@@ -54,6 +54,7 @@ async function main() {
     executable,
     [
       "--headless=new",
+      "--mute-audio",
       "--no-first-run",
       "--remote-debugging-port=0",
       "--user-data-dir=" + profile,

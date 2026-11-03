@@ -1,5 +1,19 @@
 [
   {
+    "id": "23cbac28-1f29-4f1b-9110-8dec4744e512",
+    "updatedAt": "2026-11-03T10:42:03.813Z",
+    "auditedAt": "2026-11-03T10:42:03.813Z",
+    "title": "Âm báo và nút tắt tiếng cho game web",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Thêm âm báo cho sáu game web khi đối thủ vào bàn, xác nhận nước đi, tới lượt, bắt đầu ván và kết quả thắng, thua, hòa.",
+      "Có âm riêng cho trúng hoặc chìm tàu, chiếm ô Dots và chạm hoặc đặt tường. Khối đang xem trước, mở menu và tải lại lịch sử không phát âm xác nhận nước đi.",
+      "Thêm nút loa bật/tắt ở góc trên phải, nhớ lựa chọn giữa các game và sau khi tải lại trang. Tắt âm dừng các nốt đang phát; cùng một nước đi không bị phát lặp qua HTTP và cập nhật trực tiếp.",
+      "Thay chữ trạng thái kết nối bằng biểu tượng, vẫn có chú thích trạng thái. Âm thanh bắt đầu sau lần chạm, bấm hoặc nhấn phím đầu tiên trên trang."
+    ]
+  },
+  {
     "id": "5c42a040-da3e-402f-bf2d-553b5965cfdf",
     "updatedAt": "2026-11-03T10:17:32.335Z",
     "auditedAt": "2026-11-03T10:17:32.335Z",

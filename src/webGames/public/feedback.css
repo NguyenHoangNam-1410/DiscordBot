@@ -1,0 +1,68 @@
+.wg-header-tools {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.wg-header-tools #connection {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  font-size: 0;
+  flex-shrink: 0;
+  color: var(--muted, #a7bdb7);
+}
+.wg-header-tools #connection svg {
+  display: block;
+  width: 21px;
+  height: 21px;
+}
+.wg-header-tools #connection::before {
+  display: none;
+  content: none;
+}
+.wg-header-tools #connection[data-connection="connected"] {
+  color: #75d7a0;
+}
+.wg-header-tools #connection[data-connection="retry"] {
+  color: #f4c575;
+}
+.wg-sound-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 33px;
+  height: 31px;
+  padding: 5px;
+  border: 1px solid var(--line, #354756);
+  border-radius: 8px;
+  background: var(--panel, #1c2934);
+  color: var(--accent, #d7ecaa);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.wg-sound-toggle svg {
+  width: 21px;
+  height: 21px;
+  pointer-events: none;
+}
+.wg-sound-toggle.muted {
+  color: var(--muted, #a7bdb7);
+}
+.wg-sound-toggle:focus-visible {
+  outline: 2px solid var(--accent, #d7ecaa);
+  outline-offset: 3px;
+}
+.wg-sound-toggle:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.wg-mobile .wg-header-tools #connection {
+  margin: 0;
+  font-size: 0;
+}

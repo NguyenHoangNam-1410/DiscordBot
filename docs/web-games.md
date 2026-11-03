@@ -10,6 +10,16 @@ Các menu di chuyển chính những nút đang có, giữ nguyên ID và sự k
 
 `npm run test:web:mobile` là kiểm tra Chrome thật tùy chọn (`CHROME_PATH` để chỉ định Chrome), gồm sáu game, màn hình 360px, xoay ngang, bàn và menu cùng hiển thị, đồng hồ/avatar gọn, hộp tài khoản và khôi phục giao diện máy tính. Dùng thư mục có sẵn trong `WEB_MOBILE_SCREENSHOT_DIR` nếu muốn lưu ảnh. Khởi động lại bot để nạp tài nguyên chung, rồi tải lại trang bàn chơi.
 
+## Âm báo và kết nối
+
+Sáu game dùng chung `/feedback.js` và `/feedback.css`. Góc trên phải có biểu tượng kết nối (xanh khi đã nối, vàng khi đang nối lại) và nút loa bật/tắt âm thanh. Tooltip và nhãn hỗ trợ đọc màn hình giải thích trạng thái. Lựa chọn âm thanh lưu tại trình duyệt bằng khóa `discord-games:sound-enabled`, dùng chung giữa các game và đồng bộ khi tab khác thay đổi lựa chọn.
+
+Mặc định bật âm thanh, bắt đầu phát sau lần chạm/bấm/phím đầu tiên trên trang theo cơ chế của trình duyệt. Có âm riêng cho đối thủ vào bàn, hai người sẵn sàng/bắt đầu, xác nhận nước đi của bản thân/đối phương, tới lượt mình, chạm/đặt tường, trúng/chìm tàu, chiếm ô Dots và kết quả thắng/thua/hòa. Khán giả nghe âm kết thúc trung lập. Quân/tường đang xem trước và thao tác mở menu không phát âm xác nhận nước đi.
+
+Âm được tổng hợp tại máy bằng Web Audio, không tải file âm thanh từ dịch vụ khác. Cùng một phiên bản bàn chỉ xử lý một lần dù nhận qua phản hồi HTTP và SSE. Bản chụp đầu tiên, xác nhận lại tài khoản và tải lại bàn không phát lại lịch sử. Khi đang tắt âm hoặc chưa có thao tác kích hoạt, sự kiện vẫn được cập nhật nhưng không xếp hàng để phát bù. Tắt âm dừng cả các nốt đang phát; lỗi hoặc thiết bị không hỗ trợ âm thanh không chặn thao tác game.
+
+`npm run test:web:feedback` kiểm tra sự kiện từ trạng thái thật của sáu game, chống phát lặp, cơ chế kích hoạt, lưu/tắt âm, đồng bộ bộ nhớ, kết quả và các trường hợp âm thanh không khả dụng. `npm run test:web:feedback:ui` kiểm tra Web Audio thật trên Chrome sau thao tác người dùng, đối thủ vào bàn, xác nhận nước đi qua HTTP/SSE, thắng, nút góc trên phải, đổi game và tải lại. Test trình duyệt dùng chế độ tắt đầu ra âm thanh của Chrome; có thể lưu ảnh vào thư mục sẵn có qua `WEB_FEEDBACK_SCREENSHOT_DIR`.
+
 ## Cấu hình và đường dẫn
 
 | Biến mới         | Mặc định                | Biến cũ được hỗ trợ |
