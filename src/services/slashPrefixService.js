@@ -25,6 +25,7 @@ const SUB_ALIASES = {
 };
 const DEFAULT_SUBCOMMANDS = {
   dots: "choi",
+  blokus: "choi",
   caro: "choi",
   walls: "choi",
   battleship: "choi",

@@ -11,6 +11,9 @@ const { createGame: createBattleshipGame } = require("../battleship/webGame");
 const { createStore: createDotsStore } = require("../dots/store");
 const { createGame: createDotsGame } = require("../dots/webGame");
 
+const { createStore: createBlokusStore } = require("../blokus/store");
+const { createGame: createBlokusGame } = require("../blokus/webGame");
+
 // Register each new game here. Transport, browser sessions and Discord sync are shared.
 module.exports = createRuntime({
   games: [
@@ -18,6 +21,7 @@ module.exports = createRuntime({
     createWallsGame({ store: createWallsStore(db), db }),
     createBattleshipGame({ store: createBattleshipStore(db), db }),
     createDotsGame({ store: createDotsStore(db), db }),
+    createBlokusGame({ store: createBlokusStore(db), db }),
   ],
   legacyGame: "caro",
 });

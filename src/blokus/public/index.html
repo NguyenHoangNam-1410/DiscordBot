@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#141d25" />
+    <title>Blokus Duo · Bàn đấu trực tiếp</title>
+    <link rel="stylesheet" href="/blokus/style.css" />
+    <link rel="stylesheet" href="/players.css" />
+    <link rel="stylesheet" href="/board-ui.css" />
+    <script src="/board-ui.js" defer></script>
+    <script src="/players.js" defer></script>
+    <script src="/blokus/app.js" defer></script>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="/">▦ blokus<span>.</span></a
+        ><span class="tag">DUO / HAI NGƯỜI</span
+        ><span id="connection" class="connection" role="status"
+          >Chưa kết nối</span
+        >
+      </header>
+      <main>
+        <div class="heading">
+          <div>
+            <p class="eyebrow">21 QUÂN. VÔ VÀN NƯỚC ĐI.</p>
+            <h1>Chạm góc. Mở lối.</h1>
+            <p class="subtitle">
+              Xếp được nhiều ô hơn, giữ được nhiều cơ hội hơn.
+            </p>
+          </div>
+          <div class="room-label">
+            <span>PHÒNG ĐẤU</span><strong id="room-code">—</strong>
+          </div>
+        </div>
+        <div id="notice" class="notice" role="alert" hidden></div>
+        <div class="game-layout">
+          <section class="board-panel" aria-label="Bàn Blokus Duo">
+            <div class="board-toolbar">
+              <strong id="board-state">Mở phòng từ Discord để bắt đầu</strong
+              ><span id="move-count">0 lượt</span
+              ><button id="zoom-board" type="button" aria-pressed="false">
+                Phóng to
+              </button>
+            </div>
+            <div
+              id="rule-badges"
+              class="rule-badges"
+              role="group"
+              aria-label="Cấu hình bàn chơi"
+            ></div>
+            <div class="board-scroll">
+              <div class="board-frame">
+                <div id="columns" class="columns" aria-hidden="true"></div>
+                <div id="rows" class="rows" aria-hidden="true"></div>
+                <div
+                  id="board"
+                  class="board"
+                  role="group"
+                  aria-label="Bàn Blokus 14 hàng, 14 cột"
+                ></div>
+              </div>
+            </div>
+            <div class="board-footer">
+              <span>★ Xuất phát E5 / J10</span
+              ><span
+                ><i class="recent-swatch" aria-hidden="true"></i>
+                <span id="recent-action-label"
+                  >Viền vàng: quân vừa đặt</span
+                ></span
+              >
+            </div>
+            <section id="controls" class="controls" hidden>
+              <div class="selection">
+                <div
+                  id="selected-shape"
+                  class="selected-shape"
+                  aria-hidden="true"
+                ></div>
+                <div>
+                  <strong id="selected-name">Chọn một quân bên dưới</strong>
+                  <p id="placement-help" aria-live="polite">
+                    Chạm bàn để xem trước, rồi xác nhận.
+                  </p>
+                </div>
+              </div>
+              <div class="actions">
+                <button id="rotate" type="button">↻ Xoay <kbd>R</kbd></button
+                ><button id="flip" type="button">⇄ Lật <kbd>F</kbd></button
+                ><button id="clear" type="button">Hủy chọn</button
+                ><button id="confirm" class="primary" type="button" disabled>
+                  Xác nhận đặt quân
+                </button>
+              </div>
+              <p class="keyboard-help">
+                Chọn quân → chạm ô làm góc trên trái của khung quân → Xác nhận.
+                R: xoay · F: lật · WASD / ↑↓←→: dịch vị trí · Enter: đặt · Esc:
+                hủy. Nút Phóng to giúp chọn chính xác trên điện thoại.
+              </p>
+            </section>
+            <section class="inventory">
+              <div class="inventory-heading">
+                <h2 id="inventory-title">Bộ quân</h2>
+                <label for="inventory-side">Xem bộ quân</label
+                ><select id="inventory-side">
+                  <option value="X">Quân xanh</option>
+                  <option value="O">Quân cam</option>
+                </select>
+              </div>
+              <div id="tray" class="tray" aria-label="Bộ 21 quân"></div>
+              <p class="muted">
+                Quân mờ đã được sử dụng. Mã quân cho biết hình và số ô.
+              </p>
+            </section>
+          </section>
+          <aside class="sidebar">
+            <section class="status-card">
+              <p class="eyebrow" id="status-label">VÀO BÀN</p>
+              <h2 id="status-title" aria-live="polite">Sẵn sàng xếp quân?</h2>
+              <p id="status-detail">
+                Trong Discord, dùng /blokus choi hoặc mở một phòng hiện có.
+              </p>
+              <div id="timer-panel" class="timer-panel" hidden>
+                <div>
+                  <span id="timer-label">Đồng hồ</span
+                  ><strong id="timer">30:00</strong>
+                </div>
+                <progress
+                  id="timer-progress"
+                  max="1800"
+                  value="1800"
+                  aria-label="Thời gian còn lại"
+                ></progress>
+              </div>
+            </section>
+            <section class="players-card" aria-label="Người chơi">
+              <div class="player" id="player-X">
+                <span class="player-avatar x"
+                  ><img
+                    id="avatar-X"
+                    alt=""
+                    referrerpolicy="no-referrer"
+                    decoding="async"
+                    draggable="false"
+                    hidden
+                  /><span id="avatar-fallback-X" aria-hidden="true"
+                    >?</span
+                  ></span
+                >
+                <div>
+                  <span class="player-label" id="role-X">QUÂN XANH</span
+                  ><strong id="name-X">Chủ phòng</strong
+                  ><span class="player-summary" id="score-X"
+                    >21 quân · 89 ô còn lại</span
+                  ><span class="you" id="you-X" hidden>BẠN</span>
+                </div>
+                <time id="clock-X" class="player-clock">30:00</time>
+              </div>
+              <div class="player" id="player-O">
+                <span class="player-avatar o"
+                  ><img
+                    id="avatar-O"
+                    alt=""
+                    referrerpolicy="no-referrer"
+                    decoding="async"
+                    draggable="false"
+                    hidden
+                  /><span id="avatar-fallback-O" aria-hidden="true"
+                    >?</span
+                  ></span
+                >
+                <div>
+                  <span class="player-label" id="role-O">QUÂN CAM</span
+                  ><strong id="name-O">Đang chờ đối thủ</strong
+                  ><span class="player-summary" id="score-O"
+                    >21 quân · 89 ô còn lại</span
+                  ><span class="you" id="you-O" hidden>BẠN</span>
+                </div>
+                <time id="clock-O" class="player-clock">30:00</time>
+              </div>
+            </section>
+            <button id="connect-player" class="primary" hidden>
+              Xác nhận người chơi
+            </button>
+            <section id="pair-panel" class="status-card" hidden>
+              <p class="eyebrow">KẾT NỐI TÀI KHOẢN</p>
+              <h2 id="pair-code"></h2>
+              <p>
+                Trong tin phòng Discord, bấm
+                <strong>Kết nối tài khoản</strong> và nhập mã này. Mã có hiệu
+                lực 5 phút. Chỉ nhập mã từ tab bàn cờ của chính bạn.
+              </p>
+              <p id="pair-status" role="status">
+                Đang chờ bạn xác nhận trong Discord…
+              </p>
+            </section>
+            <button id="leave" class="leave-button" hidden>Đầu hàng</button>
+            <details class="rules">
+              <summary>Luật & cách tính điểm</summary>
+              <p>
+                Quân đầu phủ một dấu ★; đối thủ dùng dấu còn lại. Các quân cùng
+                màu chỉ được <strong>chạm góc, không chạm cạnh</strong>. Có thể
+                chạm cạnh đối phương. Không chồng quân hay ra ngoài bàn.
+              </p>
+              <p>
+                Hết nước hợp lệ tự bỏ lượt. Cả hai hết nước thì chấm điểm:
+                <strong>−1 điểm/ô chưa đặt</strong>. Đặt hết 21 quân:
+                <strong>+15 điểm</strong>; nếu quân cuối là I1:
+                <strong>+20 điểm</strong>. Điểm cao hơn thắng.
+              </p>
+              <p id="rules-detail">
+                Đồng hồ riêng 30 phút/người, không cộng giờ.
+              </p>
+              <p>Mất mạng, đồng hồ vẫn chạy. Hết giờ hoặc đầu hàng thì thua.</p>
+              <span class="no-stakes">CHƠI VUI · KHÔNG CƯỢC XU</span>
+            </details>
+          </aside>
+        </div>
+      </main>
+      <footer class="page-footer">
+        <span>Chơi cùng nhau, dù ở bất cứ đâu.</span
+        ><span>DISCORD GAME CLUB / BLOKUS</span>
+      </footer>
+    </div>
+    <dialog id="leave-dialog">
+      <h2 id="leave-dialog-title">Đầu hàng ván đấu?</h2>
+      <p id="leave-dialog-detail">Đối thủ sẽ được tính thắng ván này.</p>
+      <div class="actions">
+        <button id="keep-playing">Tiếp tục chơi</button
+        ><button id="confirm-leave" class="danger">Đầu hàng</button>
+      </div>
+    </dialog>
+  </body>
+</html>

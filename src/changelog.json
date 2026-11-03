@@ -1,5 +1,19 @@
 [
   {
+    "id": "f0fc15ef-f7b1-4c8f-a0f7-ed3d19275f89",
+    "updatedAt": "2026-11-03T01:42:51.576Z",
+    "auditedAt": "2026-11-03T01:42:51.576Z",
+    "title": "Blokus Duo: xếp quân đối kháng hai người",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Thêm /blokus choi và !blokus choi: bàn 14×14, 21 quân mỗi người; xoay/lật, chạm góc cùng màu, không chạm cạnh.",
+      "Chơi trên web dùng chung, có avatar, xác nhận tài khoản, khán giả trực tiếp, xem trước rồi xác nhận, nút cảm ứng và phím tắt R/F; viền vàng đánh dấu quân vừa đặt.",
+      "Tự bỏ lượt khi hết nước hợp lệ; cả hai bị chặn thì tính điểm ô còn lại và thưởng đặt hết bộ quân. Đồng hồ riêng mặc định 30 phút/người, cấu hình 1–180 phút, không cộng giờ.",
+      "Thêm /blokus phong có phân trang, /blokus luat và cấu hình giới hạn phòng cho quản trị; tin Discord cập nhật điểm/kết quả. Không cược và không thưởng xu."
+    ]
+  },
+  {
     "id": "46fcfb14-90d7-4851-b213-12371e050348",
     "updatedAt": "2026-11-03T01:22:29.083Z",
     "auditedAt": "2026-11-03T01:22:29.083Z",

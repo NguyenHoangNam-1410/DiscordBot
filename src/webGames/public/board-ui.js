@@ -27,6 +27,13 @@ globalThis.WebGameBoardUI = (() => {
         });
       return [...badges, clock];
     }
+    if (game === "blokus")
+      return [
+        { text: "Duo · 14×14", key: true },
+        { text: "21 quân/người" },
+        { text: "Chạm góc · Không chạm cạnh" },
+        clock,
+      ];
     if (game === "walls")
       return [
         { text: "Bàn 9×9" },

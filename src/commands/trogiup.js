@@ -97,6 +97,10 @@ const PAGES = Object.freeze({
         "`/battleship choi` — chọn `kichthuoc`: Nhỏ (8×8/5 thuyền), Vừa (10×10/7) hoặc Lớn (12×12/10). Hai bên bố trí và xác nhận hạm đội kín rồi luân phiên bắn. `/battleship phong` xem hoặc mở phòng; `/battleship luat` xem luật. Hỗ trợ điện thoại, khán giả và tiền tố `!`; không cược xu.",
       ],
       [
+        "▦ Blokus Duo",
+        "`/blokus choi` — xếp 21 quân trên bàn 14×14, chạm góc cùng màu, không chạm cạnh. Xoay/lật và xác nhận trên web. `/blokus phong` — chơi/xem trực tiếp; `/blokus luat` — luật và tính điểm. Đồng hồ riêng, không cược xu.",
+      ],
+      [
         "▥ Walls / Wall Go",
         "`/walls choi` — đối kháng trên bàn 9×9, đi tới hàng đối diện hoặc đặt tường chặn đối thủ. Tùy chọn `daituong:1|2`, `sotuong:0–20` (mặc định 10/người). `/walls phong` mở/xem phòng trực tiếp; `/walls luat` xem luật nhảy Quoridor. Không cược xu.",
       ],
