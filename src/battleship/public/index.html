@@ -6,6 +6,10 @@
     <meta name="theme-color" content="#0b1823" />
     <title>Battleship · Hạm đội bí mật</title>
     <link rel="stylesheet" href="/battleship/style.css" />
+    <link rel="stylesheet" href="/players.css" />
+    <link rel="stylesheet" href="/board-ui.css" />
+    <script src="/board-ui.js" defer></script>
+    <script src="/players.js" defer></script>
     <script defer src="/battleship/app.js"></script>
   </head>
   <body>
@@ -24,16 +28,48 @@
         </div>
         <span id="room-label"></span>
       </section>
-      <p id="rules-label" class="muted"></p>
+      <div
+        id="rule-badges"
+        class="rule-badges"
+        role="group"
+        aria-label="Cấu hình bàn chơi"
+      ></div>
+      <p id="rules-label" class="muted" hidden></p>
       <section class="match-bar" aria-label="Trạng thái người chơi">
-        <div id="player-X">
-          <span>X · <strong id="name-X">Người chơi X</strong></span
-          ><span id="info-X"></span
+        <div id="player-X" class="fleet-player">
+          <span class="player-avatar x"
+            ><img
+              id="avatar-X"
+              alt=""
+              referrerpolicy="no-referrer"
+              decoding="async"
+              draggable="false"
+              hidden
+            /><span id="avatar-fallback-X" aria-hidden="true">?</span></span
+          >
+          <div class="player-meta">
+            <span class="fleet-label" id="role-X">Hạm đội xanh</span
+            ><strong id="name-X">Chủ phòng</strong>
+          </div>
+          <span id="info-X"></span
           ><time id="clock-X" class="player-clock">30:00</time>
         </div>
-        <div id="player-O">
-          <span>O · <strong id="name-O">Chờ đối thủ</strong></span
-          ><span id="info-O"></span
+        <div id="player-O" class="fleet-player">
+          <span class="player-avatar o"
+            ><img
+              id="avatar-O"
+              alt=""
+              referrerpolicy="no-referrer"
+              decoding="async"
+              draggable="false"
+              hidden
+            /><span id="avatar-fallback-O" aria-hidden="true">?</span></span
+          >
+          <div class="player-meta">
+            <span class="fleet-label" id="role-O">Hạm đội cam</span
+            ><strong id="name-O">Chờ đối thủ</strong>
+          </div>
+          <span id="info-O"></span
           ><time id="clock-O" class="player-clock">30:00</time>
         </div>
         <div id="timer-panel">
@@ -86,8 +122,8 @@
         </p>
       </section>
       <nav class="view-tabs" aria-label="Chuyển bản đồ">
-        <button id="view-X" aria-pressed="true">Biển X</button
-        ><button id="view-O" aria-pressed="false">Biển O</button
+        <button id="view-X" aria-pressed="true">Hạm đội xanh</button
+        ><button id="view-O" aria-pressed="false">Hạm đội cam</button
         ><label
           ><input id="auto-view" type="checkbox" checked /> Tự đổi theo
           lượt</label
@@ -96,7 +132,7 @@
       <section class="boards">
         <article id="panel-X" class="board-panel selected">
           <div class="board-heading">
-            <h2 id="title-X">Vùng biển X</h2>
+            <h2 id="title-X">Vùng biển hạm đội xanh</h2>
             <div id="fleet-menu-X" class="fleet-tooltip">
               <button
                 id="fleet-info-X"
@@ -120,13 +156,13 @@
               id="board-X"
               class="board"
               role="group"
-              aria-label="Vùng biển X"
+              aria-label="Vùng biển hạm đội xanh"
             ></div>
           </div>
         </article>
         <article id="panel-O" class="board-panel">
           <div class="board-heading">
-            <h2 id="title-O">Vùng biển O</h2>
+            <h2 id="title-O">Vùng biển hạm đội cam</h2>
             <div id="fleet-menu-O" class="fleet-tooltip">
               <button
                 id="fleet-info-O"
@@ -150,12 +186,16 @@
               id="board-O"
               class="board"
               role="group"
-              aria-label="Vùng biển O"
+              aria-label="Vùng biển hạm đội cam"
             ></div>
           </div>
         </article>
       </section>
       <section class="legend">
+        <span
+          ><i class="recent-swatch" aria-hidden="true"></i> Phát bắn gần
+          nhất</span
+        >
         <span><i class="sample ship"></i> Thuyền của bạn</span
         ><span><i class="sample hit"></i> Bắn trúng</span
         ><span><i class="sample miss"></i> Trượt</span

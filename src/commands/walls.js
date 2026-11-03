@@ -117,6 +117,7 @@ async function handleButton(interaction) {
         interaction.user.id,
         interaction.fields.getTextInputValue("code"),
       );
+      runtime.store.updatePlayer(id, interaction.user);
       return reply({
         content:
           "Đã xác nhận mã. Quay lại tab bàn cờ để hoàn tất kết nối và nhận quyền chơi.",
@@ -265,7 +266,7 @@ module.exports = {
     if (subcommand === "luat")
       return interaction.reply({
         content:
-          "Walls: /walls choi mở bàn cố định 9×9. Hai người xuất phát ở giữa hai cạnh đối diện; X đi trước. Đến hàng đối diện trước để thắng. Mỗi lượt đi 1 ô ngang/dọc hoặc đặt 1 tường; không đi xuyên tường hay đứng chung ô. Được nhảy qua đối thủ theo Quoridor: ưu tiên nhảy thẳng, chỉ đi chéo vòng sang bên khi sau đối thủ bị tường/mép bàn chặn. Tường dài 1 hoặc 2 ô, không chồng/cắt và phải giữ đường tới đích cho cả hai. Tường có thể chạm đầu nhau. /walls choi daituong:2 sotuong:10 cấu hình cho ván mới; mặc định mỗi người 10 tường. Xem hoặc tham gia qua /walls phong; khán giả mở bàn xem trực tiếp. Mặc định 5 phòng/kênh; quản trị dùng /walls cauhinh phongtoida. Đồng hồ riêng mặc định 30 phút/người; chọn thoigian (1–180 phút), chỉ giảm khi tới lượt, không cộng giờ. Hết thời gian của mình thì thua; phòng chờ 10 phút. Không cược, không thưởng xu.",
+          "Walls: /walls choi mở bàn cố định 9×9. Hai người xuất phát ở giữa hai cạnh đối diện; Quân xanh đi trước. Đến hàng đối diện trước để thắng. Mỗi lượt đi 1 ô ngang/dọc hoặc đặt 1 tường; không đi xuyên tường hay đứng chung ô. Được nhảy qua đối thủ theo Quoridor: ưu tiên nhảy thẳng, chỉ đi chéo vòng sang bên khi sau đối thủ bị tường/mép bàn chặn. Tường dài 1 hoặc 2 ô, không chồng/cắt và phải giữ đường tới đích cho cả hai. Tường có thể chạm đầu nhau. /walls choi daituong:2 sotuong:10 cấu hình cho ván mới; mặc định mỗi người 10 tường. Xem hoặc tham gia qua /walls phong; khán giả mở bàn xem trực tiếp. Mặc định 5 phòng/kênh; quản trị dùng /walls cauhinh phongtoida. Đồng hồ riêng mặc định 30 phút/người; chọn thoigian (1–180 phút), chỉ giảm khi tới lượt, không cộng giờ. Hết thời gian của mình thì thua; phòng chờ 10 phút. Không cược, không thưởng xu.",
         flags: MessageFlags.Ephemeral,
       });
     if (!runtime.isAvailable())

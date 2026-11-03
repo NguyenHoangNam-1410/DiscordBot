@@ -80,6 +80,7 @@
     "test:walls": "node scripts/test-walls.js",
     "test:web:clocks": "node scripts/test-web-clocks.js",
     "test:web:pairing": "node scripts/test-web-pairing.js",
+    "test:web:players": "node scripts/test-web-players.js",
     "test:web:public": "node scripts/test-web-public-pages.js",
     "test:dots": "node scripts/test-dots.js"
   },

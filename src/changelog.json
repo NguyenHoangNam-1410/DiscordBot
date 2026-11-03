@@ -1,5 +1,31 @@
 [
   {
+    "id": "46fcfb14-90d7-4851-b213-12371e050348",
+    "updatedAt": "2026-11-03T01:22:29.083Z",
+    "auditedAt": "2026-11-03T01:22:29.083Z",
+    "title": "Làm nổi lượt gần nhất và badge cấu hình bàn",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Caro thay dấu chấm nhỏ bằng viền vàng và nền nổi cho cả ô vừa đánh. Walls làm nổi quân vừa di chuyển hoặc tường vừa đặt; Battleship làm nổi ô vừa bắn.",
+      "Highlight chuyển theo lượt mới, giúp nhận ra thao tác gần nhất của bản thân hoặc đối phương; giữ hiển thị đường thắng và thông tin bí mật của game.",
+      "Cấu hình bàn được hiển thị thành badge dễ đọc: kích thước, điều kiện thắng/chặn của Caro, độ dài và số tường của Walls, cỡ hạm đội/thời gian chuẩn bị của Battleship, cùng đồng hồ mỗi người."
+    ]
+  },
+  {
+    "id": "dadffe93-1782-4de3-a2fd-0b32c1c4bb2c",
+    "updatedAt": "2026-11-03T01:12:56.149Z",
+    "auditedAt": "2026-11-03T01:12:56.149Z",
+    "title": "Ảnh đại diện người chơi và tên vai trò theo từng game",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Thẻ người chơi Caro, Walls và Battleship hiển thị ảnh đại diện Discord; ảnh tải lỗi có chữ cái đầu của tên. Quân trên bàn Walls cũng có ảnh đại diện với viền màu.",
+      "Caro giữ ký hiệu X/O. Walls dùng Quân xanh và Quân cam; Battleship dùng Hạm đội xanh và Hạm đội cam. Lượt, đồng hồ, hướng dẫn, danh sách và tin phòng hiển thị tên phù hợp với game.",
+      "Phòng cũ tiếp tục chơi bình thường; tên và ảnh được cập nhật khi xác nhận lại tài khoản. Chính sách riêng tư bổ sung thông tin tải ảnh từ Discord."
+    ]
+  },
+  {
     "id": "50ecb976-ce75-4e4f-a634-4a32ddd91116",
     "updatedAt": "2026-11-02T15:45:31.707Z",
     "auditedAt": "2026-11-02T15:45:31.707Z",

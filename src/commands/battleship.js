@@ -118,6 +118,7 @@ async function handleButton(interaction) {
         interaction.user.id,
         interaction.fields.getTextInputValue("code"),
       );
+      runtime.store.updatePlayer(id, interaction.user);
       return reply({
         content:
           "Đã xác nhận mã. Quay lại tab bàn cờ để hoàn tất kết nối và nhận quyền chơi.",

@@ -12,7 +12,7 @@ Game đối kháng hai người trên web dùng chung với caro. Không thêm c
 
 ## Luật
 
-X xuất phát ở giữa hàng 9, O ở giữa hàng 1; X đi trước. X thắng ngay khi tới bất kỳ ô nào ở hàng 1, O tới hàng 9. Mỗi lượt chỉ di chuyển hoặc đặt một tường.
+Quân xanh xuất phát ở giữa hàng 9, quân cam ở giữa hàng 1; quân xanh đi trước. Quân xanh thắng ngay khi tới bất kỳ ô nào ở hàng 1, quân cam tới hàng 9. Mỗi lượt chỉ di chuyển hoặc đặt một tường.
 
 Di chuyển một ô ngang/dọc nếu không có tường và ô đích trống. Khi sát đối thủ mà không có tường ở giữa, được nhảy thẳng qua. Nếu ô phía sau đối thủ bị tường hoặc mép bàn chặn, được nhảy vòng sang trái/phải của đối thủ, miễn không xuyên tường. Không đi chéo ở tình huống khác. Luật nhảy đối chiếu [hướng dẫn chính thức của Gigamic](https://export.gigamic.com/wp-content/uploads/2021/01/INS-RULES-QUORIDOR_10-2016.pdf); độ dài tường tùy chọn là biến thể của bot.
 
@@ -30,7 +30,7 @@ Chọn Di chuyển và bấm ô sáng để đi. Chọn Đặt tường → hư�
 
 Phím tắt: `WASD` hoặc mũi tên để đi (tự nhảy thẳng qua đối thủ khi hợp lệ); `R` xoay tường, giữ vị trí xem trước gần nhất; `F` đổi chế độ đi/đặt; `Enter` xác nhận tường; `Esc` hủy chọn. `Q/E/Z/C` chọn các hướng nhảy vòng chéo khi luật cho phép. Không xử lý khi gõ trong ô nhập/chọn, mở hộp thoại, giữ phím lặp, chưa tới lượt hoặc là khán giả. Mỗi lần bấm chỉ gửi một hành động, máy chủ kiểm tra lại như khi bấm chuột.
 
-Tường xanh thuộc X, tường cam thuộc O; hàng đích có nhãn rõ trên/dưới bàn. Bản lưu SQLite gồm vị trí, tường, số tường còn lại, lượt, luật và thời hạn. Tin Discord cập nhật người tham gia/kết quả bằng hạ tầng chung; bot vẫn cần quyền Xem kênh để sửa lâu dài và sau restart.
+Tường xanh thuộc người cầm quân xanh, tường cam thuộc người cầm quân cam; hàng đích có nhãn rõ trên/dưới bàn. Thẻ người chơi và quân trên bàn hiển thị ảnh đại diện Discord, với viền màu tương ứng; ảnh lỗi dùng chữ cái đầu trên thẻ và quân tròn trên bàn. Lượt chơi, đồng hồ và tin phòng dùng tên người hoặc Quân xanh/Quân cam. Bản lưu SQLite gồm vị trí, tường, số tường còn lại, lượt, luật và thời hạn. Tin Discord cập nhật người tham gia/kết quả bằng hạ tầng chung; bot vẫn cần quyền Xem kênh để sửa lâu dài và sau restart.
 
 ## Triển khai và kiểm tra
 

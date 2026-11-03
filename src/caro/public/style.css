@@ -219,20 +219,17 @@ h1 {
   outline-offset: -2px;
   z-index: 1;
 }
-.cell.last::after {
-  content: "";
-  position: absolute;
-  bottom: 2px;
-  right: 2px;
-  height: 4px;
-  width: 4px;
-  background: #252f29;
-  border-radius: 50%;
+.cell.recent-action {
+  background-color: #f4df9c;
+  outline: 2px solid #855518;
+  outline-offset: -2px;
+  box-shadow: inset 0 0 0 4px #e2ac3e;
 }
 .cell.winning {
   background-color: #bed186;
 }
 .board-footer {
+  flex-wrap: wrap;
   padding-top: 17px;
   font-size: 10px;
 }
@@ -240,13 +237,6 @@ h1 {
   display: flex;
   gap: 7px;
   align-items: center;
-}
-.last-marker {
-  display: inline-block;
-  background: var(--muted);
-  width: 4px;
-  height: 4px;
-  border-radius: 50%;
 }
 .sidebar {
   display: flex;

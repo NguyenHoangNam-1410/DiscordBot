@@ -3,6 +3,10 @@
 const { randomUUID } = require("node:crypto");
 const { EventEmitter } = require("node:events");
 const {
+  makePlayer: player,
+  playerIdentityView,
+} = require("../webGames/playerIdentity");
+const {
   generateFleet,
   placementError,
   randomPlacement,
@@ -51,12 +55,6 @@ const MESSAGES = {
 function fail(code) {
   throw Object.assign(new Error(MESSAGES[code]), { code });
 }
-const player = (user) => ({
-  id: String(user.id),
-  name: String(
-    user.globalName || user.displayName || user.username || "Người chơi",
-  ).slice(0, 80),
-});
 
 function createStore(db, now = Date.now) {
   const events = new EventEmitter();
@@ -342,6 +340,19 @@ function createStore(db, now = Date.now) {
       return finish(room, "resign", mark === "X" ? "O" : "X");
     });
   }
+  function updatePlayer(id, user) {
+    const current = get(id);
+    if (!current) fail("ROOM_MISSING");
+    const mark = seat(current, String(user.id));
+    if (!mark) fail("NOT_PLAYER");
+    const next = player(user);
+    if (JSON.stringify(current.players[mark]) === JSON.stringify(next))
+      return current;
+    return change(id, (room) => {
+      room.players[mark] = next;
+      return save(room);
+    });
+  }
   function attachMessage(id, messageId) {
     return change(id, (room) => {
       room.messageId = messageId;
@@ -401,6 +412,7 @@ function createStore(db, now = Date.now) {
       ),
       status: room.status,
       players: { X: room.players.X.name, O: room.players.O?.name || null },
+      ...playerIdentityView(room, "battleship"),
       me: mark,
       turn: room.turn,
       version: room.version,
@@ -426,6 +438,7 @@ function createStore(db, now = Date.now) {
     seat,
     snapshot,
     attachMessage,
+    updatePlayer,
     events,
     getChannelLimit,
     setChannelLimit,

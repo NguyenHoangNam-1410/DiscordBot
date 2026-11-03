@@ -1,0 +1,44 @@
+.rule-badges {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 14px;
+}
+.rule-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 10px;
+  border: 1px solid #49616d;
+  border-radius: 7px;
+  background: #223944;
+  color: #e6eef1;
+  font-size: 12px;
+  font-weight: 550;
+  line-height: 1.4;
+}
+.rule-badge-key {
+  background: #d3eaa0;
+  border-color: #d3eaa0;
+  color: #24351f;
+  font-weight: 650;
+}
+.recent-swatch {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 12px;
+  height: 12px;
+  border: 2px solid #f3cf65;
+  border-radius: 2px;
+  background: #6a531e;
+}
+@media (max-width: 600px) {
+  .rule-badges {
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .rule-badge {
+    padding: 5px 8px;
+    font-size: 11px;
+  }
+}

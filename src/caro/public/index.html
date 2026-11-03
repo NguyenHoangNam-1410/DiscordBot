@@ -6,6 +6,10 @@
     <meta name="theme-color" content="#111715" />
     <title>Caro · Bàn đấu trực tiếp</title>
     <link rel="stylesheet" href="/caro/style.css" />
+    <link rel="stylesheet" href="/players.css" />
+    <link rel="stylesheet" href="/board-ui.css" />
+    <script src="/board-ui.js" defer></script>
+    <script src="/players.js" defer></script>
     <script src="/caro/app.js" defer></script>
   </head>
   <body>
@@ -49,11 +53,21 @@
                 Phóng to
               </button>
             </div>
+            <div
+              id="rule-badges"
+              class="rule-badges"
+              role="group"
+              aria-label="Cấu hình bàn chơi"
+            ></div>
             <div class="board-scroll">
               <div id="board" class="board" aria-label="Bàn caro"></div>
             </div>
             <div class="board-footer">
-              <span><i class="last-marker"></i> Nước đi gần nhất</span
+              <span
+                ><i class="recent-swatch" aria-hidden="true"></i
+                ><span id="recent-action-label"
+                  >Viền vàng: nước đi gần nhất</span
+                ></span
               ><span id="board-caption">Luật hiển thị khi vào phòng</span>
             </div>
           </section>
@@ -82,7 +96,17 @@
 
             <section class="players-card" aria-label="Người chơi">
               <div class="player" id="player-X">
-                <span class="piece x">✕</span>
+                <span class="piece player-avatar x"
+                  ><img
+                    id="avatar-X"
+                    alt=""
+                    referrerpolicy="no-referrer"
+                    decoding="async"
+                    draggable="false"
+                    hidden
+                  /><span id="avatar-fallback-X" aria-hidden="true">?</span
+                  ><b class="seat-badge" aria-label="Quân X">X</b></span
+                >
                 <div>
                   <span class="player-label">ĐI TRƯỚC</span
                   ><strong id="name-X">Người chơi X</strong>
@@ -97,7 +121,17 @@
               </div>
               <div class="versus"><span></span>VS<span></span></div>
               <div class="player" id="player-O">
-                <span class="piece o">○</span>
+                <span class="piece player-avatar o"
+                  ><img
+                    id="avatar-O"
+                    alt=""
+                    referrerpolicy="no-referrer"
+                    decoding="async"
+                    draggable="false"
+                    hidden
+                  /><span id="avatar-fallback-O" aria-hidden="true">?</span
+                  ><b class="seat-badge" aria-label="Quân O">O</b></span
+                >
                 <div>
                   <span class="player-label">ĐI SAU</span
                   ><strong id="name-O">Đang chờ đối thủ</strong>

@@ -6,13 +6,17 @@
     <meta name="theme-color" content="#111715" />
     <title>Walls · Bàn đấu trực tiếp</title>
     <link rel="stylesheet" href="/walls/style.css" />
+    <link rel="stylesheet" href="/players.css" />
+    <link rel="stylesheet" href="/board-ui.css" />
+    <script src="/board-ui.js" defer></script>
+    <script src="/players.js" defer></script>
     <script src="/walls/app.js" defer></script>
   </head>
   <body>
     <div class="shell">
       <header class="topbar">
         <a class="brand" href="/" aria-label="Trang chủ Walls"
-          ><span class="brand-icon">✕<span>○</span></span
+          ><span class="brand-icon">▥</span
           ><span>walls<span class="brand-dot">.</span></span></a
         >
         <span class="tag">PHÒNG CHƠI THỬ NGHIỆM</span>
@@ -50,13 +54,26 @@
                 Phóng to
               </button>
             </div>
+            <div
+              id="rule-badges"
+              class="rule-badges"
+              role="group"
+              aria-label="Cấu hình bàn chơi"
+            ></div>
             <div class="board-scroll">
-              <div class="goal-label x">ĐÍCH CỦA X · HÀNG 1</div>
+              <div class="goal-label x" id="goal-X">
+                ĐÍCH QUÂN XANH · HÀNG 1
+              </div>
               <div id="board" class="board" aria-label="Bàn walls"></div>
-              <div class="goal-label o">ĐÍCH CỦA O · HÀNG 9</div>
+              <div class="goal-label o" id="goal-O">ĐÍCH QUÂN CAM · HÀNG 9</div>
             </div>
             <div class="board-footer">
               <span>Ô sáng: nước đi hợp lệ</span
+              ><span
+                ><i class="recent-swatch" aria-hidden="true"></i>
+                <span id="recent-action-label"
+                  >Viền vàng: lượt gần nhất</span
+                ></span
               ><span id="board-caption">Luật hiển thị khi vào phòng</span>
             </div>
           </section>
@@ -85,32 +102,54 @@
 
             <section class="players-card" aria-label="Người chơi">
               <div class="player" id="player-X">
-                <span class="piece x">✕</span>
+                <span class="piece player-avatar x"
+                  ><img
+                    id="avatar-X"
+                    alt=""
+                    referrerpolicy="no-referrer"
+                    decoding="async"
+                    draggable="false"
+                    hidden
+                  /><span id="avatar-fallback-X" aria-hidden="true"
+                    >?</span
+                  ></span
+                >
                 <div>
-                  <span class="player-label">ĐI TRƯỚC</span
-                  ><strong id="name-X">Người chơi X</strong>
+                  <span class="player-label" id="role-X">QUÂN XANH</span
+                  ><strong id="name-X">Người cầm quân xanh</strong>
                   <span id="walls-X">Còn 10 tường</span>
                 </div>
                 <time
                   id="clock-X"
                   class="player-clock"
-                  aria-label="Thời gian còn lại của X"
+                  aria-label="Thời gian còn lại của quân xanh"
                   >30:00</time
                 >
                 <span class="you" id="you-X" hidden>BẠN</span>
               </div>
               <div class="versus"><span></span>VS<span></span></div>
               <div class="player" id="player-O">
-                <span class="piece o">○</span>
+                <span class="piece player-avatar o"
+                  ><img
+                    id="avatar-O"
+                    alt=""
+                    referrerpolicy="no-referrer"
+                    decoding="async"
+                    draggable="false"
+                    hidden
+                  /><span id="avatar-fallback-O" aria-hidden="true"
+                    >?</span
+                  ></span
+                >
                 <div>
-                  <span class="player-label">ĐI SAU</span
+                  <span class="player-label" id="role-O">QUÂN CAM</span
                   ><strong id="name-O">Đang chờ đối thủ</strong>
                   <span id="walls-O">Còn 10 tường</span>
                 </div>
                 <time
                   id="clock-O"
                   class="player-clock"
-                  aria-label="Thời gian còn lại của O"
+                  aria-label="Thời gian còn lại của quân cam"
                   >30:00</time
                 >
                 <span class="you" id="you-O" hidden>BẠN</span>

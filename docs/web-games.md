@@ -53,6 +53,9 @@ Caro hỗ trợ nhiều phòng mỗi kênh (mặc định 5, quản trị chỉn
 - `src/webGames/http.js`: định tuyến, phiên trình duyệt, mã kết nối/vé, CSRF/Origin, giới hạn yêu cầu, SSE và trang chủ.
 - `src/webGames/runtime.js`: vòng đời server, timeout qua store, hàng đợi cập nhật tin Discord, sửa bằng tương tác rồi dự phòng bằng bot. Token chỉ ở bộ nhớ.
 - `src/webGames/index.js`: nơi đăng ký các module game thực tế.
+- `src/webGames/playerIdentity.js`: lưu tên và ảnh đại diện Discord, tạo dữ liệu hiển thị theo người chơi và tên vai trò riêng cho game. Caro giữ X/O; Walls dùng Quân xanh/Quân cam; Battleship dùng Hạm đội xanh/Hạm đội cam. Khóa ghế trong bản lưu vẫn giữ nguyên để tiếp tục phòng cũ.
+- `/players.js`, `/players.css`: giao diện ảnh đại diện dùng chung. Chỉ chấp nhận ảnh từ CDN Discord, không gửi mã vào bàn trong Referer; ảnh lỗi dùng chữ cái đầu của tên. Ảnh được lưu khi mở/tham gia phòng và cập nhật lại khi xác nhận tài khoản; phòng cũ chưa có ảnh dùng ảnh mặc định cho tới lần xác nhận tiếp theo. Thêm game mới cần khai báo tên vai trò phù hợp thay vì đưa khóa ghế ra UI.
+- `/board-ui.js`, `/board-ui.css`: badge cấu hình bàn dùng chung, hiển thị giá trị của phòng hiện tại và không phải nút sửa luật giữa ván. Caro làm nổi ô vừa đánh, Walls làm nổi quân hoặc tường vừa đặt, Battleship làm nổi đúng ô đã bắn ở lượt gần nhất; viền vàng chuyển sang đối tượng mới khi có hành động tiếp theo. Highlight không mở thêm ô hoặc thuyền bí mật. Trên điện thoại, nút đổi biển chỉ dẫn tới bản đồ có phát bắn mới khi bản đồ đó đang ẩn.
 - `src/caro/webGame.js`: adapter luật/hành động/store/Discord của caro.
 - `src/walls/webGame.js`: adapter Walls; đường `/walls/room/<UUID>`, API `move`, `wall`, `leave`; dùng chung phiên tài khoản, SSE và cập nhật Discord.
 - `src/battleship/webGame.js`: adapter Battleship; bố trí riêng tư, xác nhận, bắn, khán giả. Mọi HTTP/SSE dùng snapshot theo người xem để giữ kín thuyền chưa bị bắn. Hạn bố trí tách riêng đồng hồ chiến đấu.
@@ -81,6 +84,8 @@ Tạo module riêng cho luật, store, giao diện và command. Adapter cung c�
 `snapshot(room, userId)` là ranh giới quyền xem: máy chủ luôn gọi nó cho đúng người trước khi gửi HTTP/SSE. Khán giả có `userId=null` hoặc không có ghế. Với Battleship, không gửi vị trí tàu đối phương/chưa lộ hoặc đáp án bí mật rồi trông chờ giao diện che lại. Bộ kiểm tra có module giả dùng cùng mã phòng để kiểm tra định tuyến, quyền xem và phiên dùng chung; module đó không xuất hiện ở bản chạy thật.
 
 Phiên HttpOnly 12 giờ xác nhận tài khoản Discord, không tự cấp ghế trong game mới. Mã kết nối và vé ràng buộc đúng game/phòng; không đổi được bằng endpoint của game khác. SSE gọi lại `snapshot` ở mỗi sự kiện. Cookie dùng chung nên mỗi trình duyệt đại diện một tài khoản đang đăng nhập; không mở nhiều tài khoản trong cùng hồ sơ trình duyệt.
+
+`npm run test:web:players` kiểm tra ảnh Discord, chặn nguồn ảnh không hợp lệ, ảnh dự phòng, cập nhật hồ sơ phòng cũ và tên vai trò hiển thị. Các trường ảnh/vai trò không thay thế ranh giới riêng tư của `snapshot`, đặc biệt với hạm đội bí mật trong Battleship.
 
 Ưu tiên cookie `web_game_session` còn hiệu lực, không phụ thuộc thứ tự cookie do trình duyệt gửi. Cookie `caro_session` cũ chỉ dùng dự phòng nếu còn hợp lệ; cookie cũ hết hạn không được che khuất phiên mới sau xác nhận. Nhờ vậy người từng đăng nhập trước khi chuyển sang nền tảng chung không bị giữ ở chế độ khán giả.
 

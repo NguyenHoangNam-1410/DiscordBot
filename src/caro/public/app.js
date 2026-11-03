@@ -92,6 +92,8 @@ const REASONS = {
   cancelled: "Chủ phòng đã hủy lời mời. Tạo phòng mới trong Discord.",
 };
 function render() {
+  if (state) globalThis.WebGamePlayers?.render(state);
+  globalThis.WebGameBoardUI?.renderRules("caro", state);
   buildBoard(state.size);
   $("rules-detail").textContent = state.rulesLabel;
   $("board-caption").textContent =
@@ -164,14 +166,25 @@ function render() {
   $("leave").textContent = waiting ? "Hủy phòng chờ" : "Đầu hàng";
   $("leave").disabled = pending || !connected;
   if ((!playing && !waiting) || spectator) $("leave-dialog").close();
+  const recentMark =
+    state.lastCell == null ? null : state.board[state.lastCell];
+  const recentActor =
+    recentMark === state.me
+      ? "Bạn"
+      : state.me
+        ? "Đối phương"
+        : state.players[recentMark];
+  $("recent-action-label").textContent = recentMark
+    ? `${recentActor} vừa đặt quân`
+    : "Viền vàng: nước đi gần nhất";
   cells.forEach((button, index) => {
     const mark = state.board[index];
     button.textContent = mark === "X" ? "✕" : mark === "O" ? "○" : "";
-    button.className = `cell${mark ? " " + mark.toLowerCase() : ""}${index === state.lastCell ? " last" : ""}${state.winningCells.includes(index) ? " winning" : ""}`;
+    button.className = `cell${mark ? " " + mark.toLowerCase() : ""}${index === state.lastCell && mark ? " recent-action" : ""}${state.winningCells.includes(index) ? " winning" : ""}`;
     button.disabled = !connected || pending || !myTurn || Boolean(mark);
     button.setAttribute(
       "aria-label",
-      `Hàng ${Math.floor(index / state.size) + 1}, cột ${(index % state.size) + 1}: ${mark || "trống"}`,
+      `Hàng ${Math.floor(index / state.size) + 1}, cột ${(index % state.size) + 1}: ${mark || "trống"}${index === state.lastCell && mark ? ", nước đi gần nhất" : ""}`,
     );
   });
   updateClock();

@@ -7,6 +7,7 @@ const {
   EmbedBuilder,
 } = require("discord.js");
 const { rulesText } = require("./rules");
+const LABELS = require("../webGames/playerIdentity").PLAYER_LABELS.walls;
 
 const REASONS = {
   win: "Đã chạm hàng đích đối diện",
@@ -20,7 +21,7 @@ function roomPayload(room, url) {
   const waiting = room.status === "waiting",
     playing = room.status === "playing";
   const result = room.winner
-    ? `**${room.winner} · ${room.players[room.winner].name} thắng!**`
+    ? `**${LABELS[room.winner]} · ${room.players[room.winner].name} thắng!**`
     : ["duration", "draw"].includes(room.reason)
       ? "**Hai người hòa nhau.**"
       : "**Phòng đã đóng.**";
@@ -28,15 +29,15 @@ function roomPayload(room, url) {
     .setColor(waiting ? 0xe5a94c : playing ? 0x4e8cff : 0x55c994)
     .setTitle(
       waiting
-        ? "✕ ◯ WALLS · CHỜ ĐỐI THỦ"
+        ? "▥ WALLS · CHỜ ĐỐI THỦ"
         : playing
-          ? "✕ ◯ WALLS · ĐANG ĐẤU TRÊN WEB"
-          : "✕ ◯ WALLS · KẾT QUẢ",
+          ? "▥ WALLS · ĐANG ĐẤU TRÊN WEB"
+          : "▥ WALLS · KẾT QUẢ",
     )
     .setDescription(
       [
-        `**X:** <@${room.players.X.id}> · đích hàng 1`,
-        `**O:** ${room.players.O ? `<@${room.players.O.id}>` : "Đang chờ người tham gia"} · đích hàng 9`,
+        `**${LABELS.X}:** <@${room.players.X.id}> · đích hàng 1`,
+        `**${LABELS.O}:** ${room.players.O ? `<@${room.players.O.id}>` : "Đang chờ người tham gia"} · đích hàng 9`,
         "",
         waiting
           ? "Bấm **Tham gia** để đấu với chủ phòng. **Mở bàn cờ** để chơi hoặc xem trực tiếp."
@@ -44,7 +45,7 @@ function roomPayload(room, url) {
             ? "Bấm **Mở bàn cờ** để chơi hoặc xem trực tiếp. Người chơi dùng **Kết nối tài khoản** để nhập mã trên web."
             : `${result}\n${REASONS[room.reason] || ""}`,
         "",
-        `${rulesText(room.rules)} · X đi trước`,
+        `${rulesText(room.rules)} · Quân xanh đi trước`,
         "Đồng hồ riêng, chỉ chạy khi tới lượt · Không cộng giờ · Không cược và không thưởng xu",
       ].join("\n"),
     )
@@ -108,7 +109,7 @@ function roomsPayload(
   const shown = rooms.slice(page * pageSize, (page + 1) * pageSize);
   const embed = new EmbedBuilder()
     .setColor(0x4e8cff)
-    .setTitle("✕ ◯ WALLS · DANH SÁCH PHÒNG")
+    .setTitle("▥ WALLS · DANH SÁCH PHÒNG")
     .setDescription(
       rooms.length
         ? "Chọn **Mở bàn** để chơi/xem trực tiếp. Muốn tham gia, mở **Tin phòng** và bấm Tham gia."
@@ -123,7 +124,7 @@ function roomsPayload(
       : " · Đang đăng tin phòng";
     embed.addFields({
       name: `${room.status === "waiting" ? "🟢 Chờ đối thủ" : "🔵 Đang đấu"} · ${room.id.slice(0, 8)}`,
-      value: `X: <@${room.players.X.id}> · O: ${room.players.O ? `<@${room.players.O.id}>` : "Chưa có"}\n${rulesText(room.rules)}\n[Mở bàn](${roomUrl(room.id)})${messageLink}`,
+      value: `${LABELS.X}: <@${room.players.X.id}> · ${LABELS.O}: ${room.players.O ? `<@${room.players.O.id}>` : "Chưa có"}\n${rulesText(room.rules)}\n[Mở bàn](${roomUrl(room.id)})${messageLink}`,
     });
   }
   const components = [];

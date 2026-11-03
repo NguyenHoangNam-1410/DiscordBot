@@ -41,6 +41,22 @@ function createWebServer({
     limits = new Map(),
     streams = new Map();
   const assets = new Map();
+  assets.set("/players.js", {
+    type: "text/javascript; charset=utf-8",
+    data: fs.readFileSync(path.join(__dirname, "public/players.js")),
+  });
+  assets.set("/players.css", {
+    type: "text/css; charset=utf-8",
+    data: fs.readFileSync(path.join(__dirname, "public/players.css")),
+  });
+  assets.set("/board-ui.js", {
+    type: "text/javascript; charset=utf-8",
+    data: fs.readFileSync(path.join(__dirname, "public/board-ui.js")),
+  });
+  assets.set("/board-ui.css", {
+    type: "text/css; charset=utf-8",
+    data: fs.readFileSync(path.join(__dirname, "public/board-ui.css")),
+  });
   for (const game of games) {
     for (const [url, [file, type]] of [
       ["/", ["index.html", "text/html; charset=utf-8"]],
@@ -158,7 +174,7 @@ function createWebServer({
     res.setHeader("X-Frame-Options", "DENY");
     res.setHeader(
       "Content-Security-Policy",
-      "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
+      "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' https://cdn.discordapp.com; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
     );
     const url = new URL(req.url, "http://localhost");
     if (req.method === "GET" && url.pathname === "/healthz")

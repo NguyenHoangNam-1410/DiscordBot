@@ -7,6 +7,7 @@ const {
   EmbedBuilder,
 } = require("discord.js");
 const { rulesText } = require("./rules");
+const LABELS = require("../webGames/playerIdentity").PLAYER_LABELS.battleship;
 
 const REASONS = {
   win: "Đã đánh chìm toàn bộ hạm đội đối thủ",
@@ -21,7 +22,7 @@ function roomPayload(room, url) {
   const waiting = room.status === "waiting",
     playing = ["setup", "playing"].includes(room.status);
   const result = room.winner
-    ? `**${room.winner} · ${room.players[room.winner].name} thắng!**`
+    ? `**${LABELS[room.winner]} · ${room.players[room.winner].name} thắng!**`
     : "**Phòng đã đóng.**";
   const embed = new EmbedBuilder()
     .setColor(waiting ? 0xe5a94c : playing ? 0x4e8cff : 0x55c994)
@@ -36,8 +37,8 @@ function roomPayload(room, url) {
     )
     .setDescription(
       [
-        `**X:** <@${room.players.X.id}>`,
-        `**O:** ${room.players.O ? `<@${room.players.O.id}>` : "Đang chờ người tham gia"}`,
+        `**${LABELS.X}:** <@${room.players.X.id}>`,
+        `**${LABELS.O}:** ${room.players.O ? `<@${room.players.O.id}>` : "Đang chờ người tham gia"}`,
         "",
         waiting
           ? "Bấm **Tham gia** để đấu với chủ phòng. **Mở bàn cờ** để chơi hoặc xem trực tiếp."
@@ -45,9 +46,9 @@ function roomPayload(room, url) {
             ? "Bấm **Mở bàn cờ** để chơi hoặc xem trực tiếp. Người chơi dùng **Kết nối tài khoản** để nhập mã trên web."
             : `${result}\n${REASONS[room.reason] || ""}`,
         "",
-        `${rulesText(room.rules)} · X bắn trước`,
+        `${rulesText(room.rules)} · Hạm đội xanh bắn trước`,
         room.status === "setup"
-          ? `Bố trí hạm đội: X ${room.ready.X ? "đã xác nhận" : "chưa xong"} · O ${room.ready.O ? "đã xác nhận" : "chưa xong"} · Hạn <t:${Math.ceil(room.setupDeadline / 1000)}:R>`
+          ? `Bố trí hạm đội: ${LABELS.X} ${room.ready.X ? "đã xác nhận" : "chưa xong"} · ${LABELS.O} ${room.ready.O ? "đã xác nhận" : "chưa xong"} · Hạn <t:${Math.ceil(room.setupDeadline / 1000)}:R>`
           : "Đồng hồ riêng, chỉ chạy khi tới lượt · Không cộng giờ · Không cược và không thưởng xu",
       ].join("\n"),
     )
@@ -126,7 +127,7 @@ function roomsPayload(
       : " · Đang đăng tin phòng";
     embed.addFields({
       name: `${room.status === "waiting" ? "🟢 Chờ đối thủ" : room.status === "setup" ? "🟡 Đang bố trí" : "🔵 Đang đấu"} · ${room.id.slice(0, 8)}`,
-      value: `X: <@${room.players.X.id}> · O: ${room.players.O ? `<@${room.players.O.id}>` : "Chưa có"}\n${rulesText(room.rules)}\n[Mở bàn](${roomUrl(room.id)})${messageLink}`,
+      value: `${LABELS.X}: <@${room.players.X.id}> · ${LABELS.O}: ${room.players.O ? `<@${room.players.O.id}>` : "Chưa có"}\n${rulesText(room.rules)}\n[Mở bàn](${roomUrl(room.id)})${messageLink}`,
     });
   }
   const components = [];

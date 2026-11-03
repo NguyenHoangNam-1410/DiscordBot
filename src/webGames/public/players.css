@@ -1,0 +1,66 @@
+.player-avatar {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #243e50;
+  color: #edf4ff;
+  font:
+    700 14px/1 "Segoe UI",
+    Arial,
+    sans-serif;
+  box-shadow: 0 0 0 2px var(--player-color, #75adff);
+}
+.player-avatar.x {
+  --player-color: #75adff;
+}
+.player-avatar.o {
+  --player-color: #ffb18b;
+}
+.player-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+}
+.player-avatar > span {
+  font:
+    700 14px/1 "Segoe UI",
+    Arial,
+    sans-serif;
+}
+.player-avatar .seat-badge {
+  position: absolute;
+  right: -5px;
+  bottom: -4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--player-color);
+  color: #152c3c;
+  font:
+    700 10px/1 Arial,
+    sans-serif;
+  box-shadow: 0 0 0 2px var(--panel, #19211e);
+}
+.player > .player-avatar {
+  width: 30px;
+  height: 30px;
+}
+@media (max-width: 600px) {
+  .player > .player-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+  .player > .player-avatar > span {
+    font-size: 12px;
+  }
+}

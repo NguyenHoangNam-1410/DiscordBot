@@ -15,6 +15,8 @@ let pairTimer = null,
   pairAttempt = 0,
   pairVisible = false;
 const cells = [];
+const labelFor = (mark) =>
+  state.playerLabels?.[mark] || (mark === "X" ? "Quân xanh" : "Quân cam");
 let mode = "move",
   selectedWall = null;
 $("zoom-board").addEventListener("click", () => {
@@ -50,14 +52,34 @@ function buildBoard() {
           ? "O"
           : null;
     const legal = state.legalMoves.includes(cell);
+    const recent =
+      state.lastAction?.type === "move" &&
+      state.lastAction.cell === cell &&
+      state.lastAction.mark === pawn;
     const button = document.createElement("button");
     button.type = "button";
     button.className =
       "cell" +
       (pawn ? " pawn " + pawn.toLowerCase() : "") +
       (legal && mode === "move" ? " legal" : "") +
-      (row === 0 ? " goal-x" : row === 8 ? " goal-o" : "");
-    button.textContent = pawn || "";
+      (row === 0 ? " goal-x" : row === 8 ? " goal-o" : "") +
+      (recent ? " recent-action" : "");
+    button.textContent = pawn ? "●" : "";
+    const avatar =
+      pawn && globalThis.WebGamePlayers?.avatarURL(state.avatars?.[pawn]);
+    if (avatar) {
+      const img = document.createElement("img");
+      img.className = "pawn-avatar";
+      img.alt = "";
+      img.draggable = false;
+      img.referrerPolicy = "no-referrer";
+      img.onerror = () => {
+        button.textContent = "●";
+      };
+      img.src = avatar;
+      button.textContent = "";
+      button.append(img);
+    }
     button.disabled = !canAct() || mode !== "move" || !legal;
     button.setAttribute(
       "aria-label",
@@ -65,7 +87,8 @@ function buildBoard() {
         (row + 1) +
         ", cột " +
         (col + 1) +
-        (pawn ? ": quân " + pawn : legal ? ": có thể di chuyển" : ""),
+        (pawn ? ": " + labelFor(pawn) : legal ? ": có thể di chuyển" : "") +
+        (recent ? ", nước đi gần nhất" : ""),
     );
     button.addEventListener("click", () => play(cell));
     placeOnGrid(button, row * 2 + 1, col * 2 + 1);
@@ -75,6 +98,20 @@ function buildBoard() {
   for (const wall of state.walls) {
     const fence = document.createElement("div");
     fence.className = "fence " + wall.owner.toLowerCase();
+    const recent =
+      state.lastAction?.type === "wall" &&
+      state.lastAction.row === wall.row &&
+      state.lastAction.col === wall.col &&
+      state.lastAction.orientation === wall.orientation &&
+      state.lastAction.mark === wall.owner;
+    if (recent) {
+      fence.className += " recent-action";
+      fence.setAttribute("role", "img");
+      fence.setAttribute(
+        "aria-label",
+        "Tường vừa đặt của " + state.players[wall.owner],
+      );
+    }
     const horizontal = wall.orientation === "h";
     placeOnGrid(
       fence,
@@ -184,6 +221,8 @@ const REASONS = {
   cancelled: "Chủ phòng đã hủy lời mời. Tạo phòng mới trong Discord.",
 };
 function render() {
+  if (state) globalThis.WebGamePlayers?.render(state);
+  globalThis.WebGameBoardUI?.renderRules("walls", state);
   const playing = state.status === "playing",
     waiting = state.status === "waiting",
     spectator = !state.me;
@@ -197,8 +236,25 @@ function render() {
     " ô · " +
     state.rules.wallLimit +
     " tường/người";
+  const last = state.lastAction;
+  const recentActor =
+    last?.mark === state.me
+      ? "Bạn"
+      : state.me
+        ? "Đối phương"
+        : state.players[last?.mark];
+  $("recent-action-label").textContent = last
+    ? `${recentActor} vừa ${last.type === "wall" ? "đặt tường" : "di chuyển"}`
+    : "Viền vàng: lượt gần nhất";
   for (const mark of ["X", "O"]) {
     $("name-" + mark).textContent = state.players[mark] || "Đang chờ đối thủ";
+    $("role-" + mark).textContent = labelFor(mark).toLocaleUpperCase("vi");
+    $("goal-" + mark).textContent =
+      `ĐÍCH ${labelFor(mark).toLocaleUpperCase("vi")} · HÀNG ${mark === "X" ? 1 : 9}`;
+    $("clock-" + mark).setAttribute(
+      "aria-label",
+      "Thời gian còn lại của " + labelFor(mark).toLocaleLowerCase("vi"),
+    );
     $("you-" + mark).hidden = state.me !== mark;
     $("walls-" + mark).textContent = "Còn " + state.wallsLeft[mark] + " tường";
     $("player-" + mark).classList.toggle(
@@ -212,13 +268,13 @@ function render() {
       ? "KẾT QUẢ"
       : spectator
         ? "ĐANG XEM TRỰC TIẾP"
-        : "BẠN CẦM QUÂN " + state.me;
+        : "BẠN CẦM " + labelFor(state.me).toLocaleUpperCase("vi");
   $("status-title").textContent = waiting
     ? "Đang chờ người tham gia."
     : playing
       ? myTurn
         ? "Đến lượt bạn."
-        : "Lượt của " + state.turn + "."
+        : "Lượt của " + state.players[state.turn] + "."
       : state.winner
         ? state.winner === state.me
           ? "Bạn đã thắng!"
@@ -227,7 +283,7 @@ function render() {
           ? "Một ván hòa."
           : "Phòng đã đóng.";
   $("status-detail").textContent = waiting
-    ? "Mời đối thủ bấm Tham gia trong tin phòng Discord. X xuất phát ở hàng 9 và đi tới hàng 1; O đi chiều ngược lại."
+    ? "Mời đối thủ bấm Tham gia trong tin phòng Discord. Quân xanh đi trước, xuất phát ở hàng 9 và đi tới hàng 1; quân cam đi chiều ngược lại."
     : !playing
       ? REASONS[state.reason] || "Ván đấu đã kết thúc."
       : spectator
@@ -240,12 +296,12 @@ function render() {
   $("board-state").textContent = waiting
     ? "Chờ đủ hai người"
     : playing
-      ? "Lượt " + state.turn + " · " + state.players[state.turn]
+      ? "Lượt " + state.players[state.turn] + " · " + labelFor(state.turn)
       : "Đã kết thúc";
   $("timer-panel").hidden = !(playing || waiting);
   $("timer-label").textContent = waiting
     ? "Thời gian chờ còn lại"
-    : "Đồng hồ " + state.turn;
+    : "Đồng hồ " + labelFor(state.turn).toLocaleLowerCase("vi");
   $("leave").hidden = spectator || !(playing || waiting);
   $("leave").textContent = waiting ? "Hủy phòng chờ" : "Đầu hàng";
   $("leave").disabled = pending || !connected;

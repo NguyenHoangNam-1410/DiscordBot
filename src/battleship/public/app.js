@@ -20,6 +20,8 @@ let selectedShip = 0,
   suppressClickUntil = 0,
   dragScrollFrame = null;
 const other = (mark) => (mark === "X" ? "O" : "X");
+const labelFor = (mark) =>
+  state.playerLabels?.[mark] || (mark === "X" ? "Hạm đội xanh" : "Hạm đội cam");
 // h/v preserve saved rooms: the anchor is always the bow, cells extend away from it.
 const DIRECTIONS = ["h", "v", "right", "down"];
 const DIRECTION_LABELS = {
@@ -184,6 +186,8 @@ function choose(id) {
   render();
 }
 function render() {
+  if (state) globalThis.WebGamePlayers?.render(state);
+  globalThis.WebGameBoardUI?.renderRules("battleship", state);
   if (!state) return;
   const setup = state.status === "setup",
     playing = state.status === "playing",
@@ -191,7 +195,7 @@ function render() {
   $("room-label").textContent = "Phòng " + state.id.slice(0, 8);
   $("rules-label").textContent = state.rulesLabel;
   $("role-label").textContent = state.me
-    ? `Bạn là ${state.me} · Chỉ bạn thấy hạm đội của mình`
+    ? `Bạn chỉ huy ${labelFor(state.me).toLocaleLowerCase("vi")} · Chỉ bạn thấy hạm đội của mình`
     : "Khán giả · Chỉ thấy các ô đã bắn";
   $("status-title").textContent = waiting
     ? "Đang chờ đối thủ"
@@ -246,6 +250,11 @@ function render() {
   renderFleet();
   for (const mark of ["X", "O"]) {
     $("name-" + mark).textContent = state.players[mark] || "Chờ đối thủ";
+    $("role-" + mark).textContent = labelFor(mark);
+    $("clock-" + mark).setAttribute(
+      "aria-label",
+      "Thời gian còn lại của " + labelFor(mark).toLocaleLowerCase("vi"),
+    );
     $("info-" + mark).textContent = setup
       ? state.ready[mark]
         ? "Đã xác nhận"
@@ -257,11 +266,17 @@ function render() {
     );
     $("panel-" + mark).classList.toggle("selected", view === mark);
     $("view-" + mark).setAttribute("aria-pressed", String(view === mark));
+    $("view-" + mark).classList.toggle(
+      "has-recent-action",
+      view !== mark &&
+        state.lastAction?.mark === other(mark) &&
+        state.boards[mark].some((shot) => shot.cell === state.lastAction.cell),
+    );
     const label = state.me
       ? state.me === mark
         ? "Biển của bạn"
         : "Biển đối phương"
-      : `Biển ${mark}`;
+      : `Biển ${labelFor(mark).toLocaleLowerCase("vi")}`;
     $("view-" + mark).textContent = label;
     $("title-" + mark).textContent = label;
     $("fleet-info-" + mark).textContent =
@@ -357,7 +372,12 @@ function renderBoards() {
         const cell = row * state.size + col,
           shot = shotMap.get(cell),
           ship = shipMap.get(cell);
+        const recent =
+          shot &&
+          state.lastAction?.cell === cell &&
+          state.lastAction.mark === other(target);
         el.className = "cell";
+        if (recent) el.classList.add("recent-action");
         el.dataset.cell = String(cell);
         el.dataset.target = target;
         const shootable =
@@ -390,7 +410,7 @@ function renderBoards() {
           el.classList.add("preview", ...(valid ? [] : ["preview-invalid"]));
         el.setAttribute(
           "aria-label",
-          `${String.fromCharCode(65 + col)}${row + 1}: ${shot ? (shot.hit ? "trúng thuyền" : "đã bắn trượt") : ship ? "thuyền của bạn" : "chưa bị bắn"}`,
+          `${String.fromCharCode(65 + col)}${row + 1}: ${shot ? (shot.hit ? "trúng thuyền" : "đã bắn trượt") : ship ? "thuyền của bạn" : "chưa bị bắn"}${recent ? ", phát bắn gần nhất" : ""}`,
         );
         el.addEventListener("click", () => {
           if (Date.now() < suppressClickUntil) return;
@@ -621,7 +641,7 @@ function updateClock() {
     ? "Chờ đối thủ"
     : setup
       ? "Chuẩn bị còn lại"
-      : "Đồng hồ " + state.turn;
+      : "Đồng hồ " + labelFor(state.turn).toLocaleLowerCase("vi");
   const ms = waiting
     ? state.waitingDeadline - at
     : setup

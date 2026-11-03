@@ -139,6 +139,35 @@ p {
   font-size: 11px;
   color: var(--muted);
 }
+.match-bar > .fleet-player {
+  grid-template-columns: 36px minmax(0, 1fr) auto;
+}
+.fleet-player > .player-avatar {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+}
+.fleet-player > .player-meta {
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.player-meta strong {
+  font-size: 13px;
+}
+.fleet-label {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+}
+.fleet-player .player-clock {
+  grid-column: 3;
+}
+.fleet-player #info-X,
+.fleet-player #info-O {
+  grid-column: 2;
+  grid-row: 2;
+}
 .player-clock {
   grid-column: 2;
   grid-row: 1 / span 2;
@@ -376,6 +405,15 @@ p {
   color: #8bafc3;
   font-size: 20px;
   pointer-events: none;
+}
+.cell.recent-action {
+  outline: 3px solid #f3cf65;
+  outline-offset: -3px;
+  background: #375969;
+  box-shadow: inset 0 0 0 5px #f3cf6538;
+}
+.view-tabs button.has-recent-action {
+  box-shadow: inset 0 0 0 2px #f3cf65;
 }
 .cell.preview {
   outline: 2px solid var(--accent);
@@ -654,5 +692,25 @@ dialog::backdrop {
   .mini-ship i {
     width: 9px;
     height: 9px;
+  }
+}
+
+@media (max-width: 600px) {
+  .match-bar > .fleet-player {
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 4px 8px;
+  }
+  .fleet-player > .player-avatar {
+    width: 28px;
+    height: 28px;
+  }
+  .fleet-player .player-clock {
+    grid-column: 2;
+    grid-row: 3;
+    justify-self: start;
+    font-size: 18px;
+  }
+  .fleet-player .player-meta strong {
+    font-size: 12px;
   }
 }
