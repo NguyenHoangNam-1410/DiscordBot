@@ -21,6 +21,7 @@ function getOperationalHealth() {
     (SELECT COUNT(*) FROM walls_rooms WHERE status IN ('waiting','playing')) +
     (SELECT COUNT(*) FROM dots_rooms WHERE status IN ('waiting','playing')) +
     (SELECT COUNT(*) FROM blokus_rooms WHERE status IN ('waiting','playing')) +
+    (SELECT COUNT(*) FROM mecung_rooms WHERE status IN ('waiting','setup','playing')) +
     (SELECT COUNT(*) FROM battleship_rooms WHERE status IN ('waiting','setup','playing')) AS count`);
   const multiplayer = scalar(
     "SELECT COUNT(*) count FROM multiplayer_rounds WHERE status IN ('open','racing')",

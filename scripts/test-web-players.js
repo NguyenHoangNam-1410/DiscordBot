@@ -67,7 +67,7 @@ async function main() {
     "https://cdn.discordapp.com/embed/avatars/0.png",
   );
   const games = [];
-  for (const game of ["caro", "walls", "battleship", "blokus"]) {
+  for (const game of ["caro", "walls", "battleship", "blokus", "mecung"]) {
     const store = require(`../src/${game}/store`).createStore(db);
     const r = store.create({ guildId: game, channelId: "c", user: host });
     let view = store.snapshot(r, null);

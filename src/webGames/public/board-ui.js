@@ -27,6 +27,20 @@ globalThis.WebGameBoardUI = (() => {
         });
       return [...badges, clock];
     }
+    if (game === "mecung")
+      return [
+        { text: `Bàn ${state.size}×${state.size}` },
+        {
+          text:
+            rules.winCondition === "turns"
+              ? "Ít lượt hơn · Cân bằng lượt cuối"
+              : "Đến đích trước",
+          key: true,
+        },
+        { text: `Tối đa ${rules.wallLimit} tường/người` },
+        { text: "Dựng 5 phút" },
+        clock,
+      ];
     if (game === "blokus")
       return [
         { text: "Duo · 14×14", key: true },

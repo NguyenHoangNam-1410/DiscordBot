@@ -2,6 +2,7 @@
 
 const PLAYER_LABELS = Object.freeze({
   caro: Object.freeze({ X: "X", O: "O" }),
+  mecung: Object.freeze({ X: "Người dò xanh", O: "Người dò cam" }),
   blokus: Object.freeze({ X: "Quân xanh", O: "Quân cam" }),
   walls: Object.freeze({ X: "Quân xanh", O: "Quân cam" }),
   battleship: Object.freeze({ X: "Hạm đội xanh", O: "Hạm đội cam" }),

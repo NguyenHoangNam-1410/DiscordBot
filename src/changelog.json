@@ -1,5 +1,19 @@
 [
   {
+    "id": "683d052c-fe8d-4306-8ddd-d59b21f68853",
+    "updatedAt": "2026-11-03T05:39:17.291Z",
+    "auditedAt": "2026-11-03T05:39:17.291Z",
+    "title": "Mê cung: dựng lối bí mật cho đối thủ",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Thêm /mecung choi và !mecung choi: hai người tự chọn điểm đầu, đích và dựng mê cung kín cho đối thủ; luôn phải còn đường nối hai điểm.",
+      "Chọn luật Đến đích trước hoặc Ít lượt hơn khi mở ván; luật ít lượt hơn có lượt cuối cân bằng để gỡ hòa. Có bàn 7×7, 9×9, 11×11, cấu hình tối đa 0–60 tường và đồng hồ 1–180 phút/người.",
+      "Đi qua ô trống được đi tiếp; đụng tường đứng nguyên, lộ đoạn vừa chạm rồi đổi lượt. Đánh dấu ô đã khám phá và lối đã đi; giữ kín những tường chưa chạm với đối thủ và khán giả.",
+      "Có giao diện dựng/khóa mê cung trong 5 phút, gợi ý tường ngẫu nhiên, điều khiển WASD hoặc cảm ứng, avatar, xem trực tiếp, danh sách phòng và cập nhật kết quả Discord. Mặc định bàn 9×9, tối đa 30 tường, 30 phút/người; không cược và không thưởng xu."
+    ]
+  },
+  {
     "id": "f0fc15ef-f7b1-4c8f-a0f7-ed3d19275f89",
     "updatedAt": "2026-11-03T01:42:51.576Z",
     "auditedAt": "2026-11-03T01:42:51.576Z",

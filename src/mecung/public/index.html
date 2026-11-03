@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#132020" />
+    <title>Mê cung · Dựng lối, tìm đường</title>
+    <link rel="stylesheet" href="/mecung/style.css" />
+    <link rel="stylesheet" href="/players.css" />
+    <link rel="stylesheet" href="/board-ui.css" />
+    <script src="/board-ui.js" defer></script>
+    <script src="/players.js" defer></script>
+    <script src="/mecung/app.js" defer></script>
+  </head>
+  <body>
+    <main class="shell">
+      <header>
+        <a href="/" class="brand">▥ mê cung<span>.</span></a
+        ><span id="connection" class="connection" role="status"
+          >Mở phòng từ Discord</span
+        >
+      </header>
+      <section class="heading">
+        <div>
+          <p class="eyebrow" id="status-label">DỰNG LỐI. TÌM ĐƯỜNG.</p>
+          <h1 id="status-title" aria-live="polite">Một lối đi chưa biết.</h1>
+          <p id="status-detail">Dùng /mecung choi trong Discord để mở phòng.</p>
+        </div>
+        <div class="room-label">
+          <small>PHÒNG ĐẤU</small><strong id="room-code">—</strong>
+        </div>
+      </section>
+      <div
+        id="rule-badges"
+        class="rule-badges"
+        role="group"
+        aria-label="Cấu hình ván"
+      ></div>
+      <section class="players" aria-label="Người chơi">
+        <div class="player" id="player-X">
+          <span class="player-avatar x"
+            ><img
+              id="avatar-X"
+              alt=""
+              referrerpolicy="no-referrer"
+              draggable="false"
+              hidden
+            /><span id="avatar-fallback-X">?</span></span
+          >
+          <div>
+            <span class="role" id="role-X">Người dò xanh</span
+            ><strong id="name-X">Chủ phòng</strong
+            ><span id="info-X" class="player-info">Chưa vào ván</span>
+          </div>
+          <span class="you" id="you-X" hidden>BẠN</span
+          ><time id="clock-X" class="player-clock">30:00</time>
+        </div>
+        <div class="player" id="player-O">
+          <span class="player-avatar o"
+            ><img
+              id="avatar-O"
+              alt=""
+              referrerpolicy="no-referrer"
+              draggable="false"
+              hidden
+            /><span id="avatar-fallback-O">?</span></span
+          >
+          <div>
+            <span class="role" id="role-O">Người dò cam</span
+            ><strong id="name-O">Đang chờ đối thủ</strong
+            ><span id="info-O" class="player-info">Chưa vào ván</span>
+          </div>
+          <span class="you" id="you-O" hidden>BẠN</span
+          ><time id="clock-O" class="player-clock">30:00</time>
+        </div>
+      </section>
+      <div id="notice" class="notice" role="alert" hidden></div>
+      <div class="layout">
+        <section class="board-panel">
+          <div class="board-toolbar">
+            <div>
+              <p class="eyebrow" id="view-label">BẢN ĐỒ</p>
+              <h2 id="view-title">Mê cung bí mật</h2>
+            </div>
+            <label for="view-select" class="sr-only">Chọn bản đồ</label
+            ><select id="view-select">
+              <option value="X">Đường đi người dò xanh</option>
+              <option value="O">Đường đi người dò cam</option></select
+            ><button id="zoom-board" type="button" aria-pressed="false">
+              Phóng to
+            </button>
+          </div>
+          <p id="board-help" class="muted">
+            Chỉ các tường bị chạm mới được tiết lộ.
+          </p>
+          <div class="board-scroll">
+            <div id="board-frame" class="board-frame">
+              <div id="columns" class="columns" aria-hidden="true"></div>
+              <div id="rows" class="rows" aria-hidden="true"></div>
+              <div
+                id="board"
+                class="board"
+                role="group"
+                aria-label="Bàn mê cung"
+              ></div>
+            </div>
+          </div>
+          <div class="legend">
+            <span><b>S</b> Điểm đầu</span><span><b>G</b> Đích</span
+            ><span><i class="explored-swatch"></i> Đã khám phá</span
+            ><span><i class="wall-swatch"></i> Tường</span
+            ><span><i class="recent-swatch"></i> Thao tác gần nhất</span>
+          </div>
+          <p id="board-summary" class="board-summary"></p>
+          <p id="last-action" class="last-action" role="status">
+            Chưa có nước đi.
+          </p>
+        </section>
+        <aside>
+          <section id="timer-panel" class="card" hidden>
+            <div class="timer-heading">
+              <span id="timer-label">Thời gian</span
+              ><strong id="timer">30:00</strong>
+            </div>
+            <progress
+              id="timer-progress"
+              max="1800"
+              value="1800"
+              aria-label="Thời gian còn lại"
+            ></progress>
+            <p class="muted">Đồng hồ chỉ giảm khi tới lượt, không cộng giờ.</p>
+          </section>
+          <section id="setup-controls" class="card" hidden>
+            <p class="eyebrow">DỰNG CHO ĐỐI THỦ</p>
+            <h2>Giữ một lối tới đích.</h2>
+            <div
+              class="edit-modes"
+              role="group"
+              aria-label="Công cụ dựng mê cung"
+            >
+              <button id="edit-start" type="button" aria-pressed="true">
+                1 · Đầu</button
+              ><button id="edit-goal" type="button" aria-pressed="false">
+                2 · Đích</button
+              ><button id="edit-walls" type="button" aria-pressed="false">
+                3 · Tường
+              </button>
+            </div>
+            <p id="edit-help" class="muted">Chạm ô để chọn điểm đầu.</p>
+            <p id="wall-count"></p>
+            <div class="actions">
+              <button id="randomize" type="button">
+                Gợi ý tường ngẫu nhiên</button
+              ><button id="clear-walls" type="button">Xóa tường</button>
+            </div>
+            <button id="ready" class="primary" type="button">
+              Khóa & xác nhận mê cung
+            </button>
+          </section>
+          <section id="move-controls" class="card" hidden>
+            <p class="eyebrow">ĐIỀU KHIỂN</p>
+            <h2 id="move-title">Đến lượt bạn.</h2>
+            <div class="dpad" role="group" aria-label="Di chuyển">
+              <button id="move-up" aria-label="Đi lên" type="button">↑</button
+              ><button id="move-left" aria-label="Đi trái" type="button">
+                ←</button
+              ><button id="move-down" aria-label="Đi xuống" type="button">
+                ↓</button
+              ><button id="move-right" aria-label="Đi phải" type="button">
+                →
+              </button>
+            </div>
+            <p class="muted">
+              WASD / ↑↓←→ hoặc chạm ô liền kề. Đi được thì tiếp tục; đụng tường
+              thì mất lượt. Ô chưa đi tới vẫn chưa được khám phá.
+            </p>
+            <p id="catchup" class="catchup" hidden></p>
+          </section>
+          <button id="connect-player" class="primary" hidden>
+            Xác nhận người chơi
+          </button>
+          <section id="pair-panel" class="card" hidden>
+            <p class="eyebrow">KẾT NỐI TÀI KHOẢN</p>
+            <h2 id="pair-code"></h2>
+            <p>
+              Trong tin phòng Discord, bấm <strong>Kết nối tài khoản</strong> và
+              nhập mã này. Mã có hiệu lực 5 phút; chỉ nhập mã từ tab của chính
+              bạn.
+            </p>
+            <p id="pair-status" role="status">
+              Đang chờ xác nhận trong Discord…
+            </p>
+          </section>
+          <button id="leave" class="danger" hidden>Đầu hàng</button>
+          <details class="card rules">
+            <summary>Luật & thông tin</summary>
+            <p>
+              Mỗi người dựng một mê cung kín cho đối thủ. Chọn đầu, đích, đặt
+              tường giữa các ô; phải luôn có ít nhất một đường đi giữa hai điểm.
+              Có 5 phút dựng và xác nhận. Có thể dùng ít hơn số tường tối đa.
+            </p>
+            <p>
+              <strong>Đến đích trước:</strong> kết thúc ngay khi một người tới
+              đích. <strong>Ít lượt hơn:</strong> đối thủ được cân bằng lượt
+              cuối để có thể hòa; chạm tường trong lượt gỡ hòa thì thua. Số bước
+              không dùng phân thắng bại.
+            </p>
+            <p>
+              Đi ngang/dọc một ô. Đi thành công giữ lượt; chạm tường đứng
+              nguyên, lộ đoạn tường đó rồi đổi lượt. Lối đã qua và ô đã khám phá
+              được đánh dấu. Mép ngoài đã biết, không đi ra ngoài bàn.
+            </p>
+            <p>
+              Hết giờ hoặc đầu hàng thì thua. Mất mạng đồng hồ vẫn chạy. Khán
+              giả chỉ thấy thông tin đã khám phá; tường chưa chạm không tự lộ
+              sau trận.
+            </p>
+            <p id="rules-detail"></p>
+            <span class="no-stakes">CHƠI VUI · KHÔNG CƯỢC XU</span>
+          </details>
+        </aside>
+      </div>
+      <footer>
+        <span>Dựng lối cho nhau. Tự tìm đường ra.</span
+        ><span>DISCORD GAME CLUB / MÊ CUNG</span>
+      </footer>
+      <dialog id="ready-dialog">
+        <h2>Khóa mê cung của bạn?</h2>
+        <p>
+          Đối thủ sẽ giải mê cung này. Sau khi xác nhận, bạn không thể đổi điểm
+          hoặc tường. Trận bắt đầu khi cả hai đã xác nhận.
+        </p>
+        <div class="actions">
+          <button id="keep-editing">Xem lại</button
+          ><button id="confirm-ready" class="primary">Khóa mê cung</button>
+        </div>
+      </dialog>
+      <dialog id="leave-dialog">
+        <h2 id="leave-dialog-title">Đầu hàng ván đấu?</h2>
+        <p id="leave-dialog-detail">Đối thủ sẽ được tính thắng.</p>
+        <div class="actions">
+          <button id="keep-playing">Tiếp tục</button
+          ><button id="confirm-leave" class="danger">Đầu hàng</button>
+        </div>
+      </dialog>
+    </main>
+  </body>
+</html>

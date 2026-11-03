@@ -329,7 +329,11 @@ function createWebServer({
       req.method === "GET" && ["/api/state", "/api/events"].includes(route);
     const session = authenticate(req, readOnly);
     const streamKey = session.sid || `viewer:${req.socket.remoteAddress}`;
-    if (!allowed(`session:${streamKey}`, 120, 60_000))
+    // Continuous-movement games can opt into a bounded higher action budget.
+    const requestLimit = Number.isInteger(game.requestsPerMinute)
+      ? Math.max(120, Math.min(600, game.requestsPerMinute))
+      : 120;
+    if (!allowed(`session:${streamKey}`, requestLimit, 60_000))
       return json(res, 429, {
         error: "Bạn thao tác quá nhanh. Hãy đợi một chút.",
       });

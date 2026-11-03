@@ -1683,4 +1683,23 @@ runMigration(65, "blokus duo web duels", () => {
   );`);
 });
 
+runMigration(66, "hidden maze web duels", () => {
+  db.exec(`CREATE TABLE mecung_rooms (
+    id TEXT PRIMARY KEY, guild_id TEXT NOT NULL, channel_id TEXT NOT NULL,
+    status TEXT NOT NULL, data_json TEXT NOT NULL, ui_dirty INTEGER NOT NULL DEFAULT 1
+  );
+  CREATE INDEX idx_mecung_open_channel ON mecung_rooms(guild_id,channel_id) WHERE status IN ('waiting','setup','playing');
+  CREATE TABLE mecung_seats (
+    guild_id TEXT NOT NULL, user_id TEXT NOT NULL,
+    room_id TEXT NOT NULL REFERENCES mecung_rooms(id) ON DELETE CASCADE,
+    PRIMARY KEY(guild_id,user_id)
+  );
+  CREATE TABLE mecung_channel_settings (
+    guild_id TEXT NOT NULL, channel_id TEXT NOT NULL,
+    max_rooms INTEGER NOT NULL CHECK(max_rooms BETWEEN 1 AND 20),
+    updated_by TEXT NOT NULL, updated_at INTEGER NOT NULL,
+    PRIMARY KEY(guild_id,channel_id)
+  );`);
+});
+
 module.exports = { db, dbPath, runMigration };
