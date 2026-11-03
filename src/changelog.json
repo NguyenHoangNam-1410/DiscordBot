@@ -1,5 +1,17 @@
 [
   {
+    "id": "449f724d-b734-4bcc-928b-212197dd56c2",
+    "updatedAt": "2026-11-03T13:25:40.141Z",
+    "auditedAt": "2026-11-03T13:25:40.141Z",
+    "title": "Blokus: kéo quân rõ hơn, bàn chơi ba cột",
+    "type": "fix",
+    "scope": "system",
+    "changes": [
+      "Quân Blokus đang xem trước hiện sọc đỏ khi chồng lấn và vẫn kéo sang vị trí khác được.",
+      "Máy tính hiển thị bộ quân của bạn, bàn cờ và bộ quân đối phương thành ba cột; quân đã dùng được làm mờ."
+    ]
+  },
+  {
     "id": "eb860482-ded4-4e3c-b5c0-62a47bfd6c54",
     "updatedAt": "2026-11-03T13:09:58.484Z",
     "auditedAt": "2026-11-03T13:09:58.484Z",

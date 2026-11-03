@@ -134,6 +134,7 @@ async function main() {
         addEventListener() {},
       },
       window: { addEventListener() {} },
+      matchMedia: () => ({ matches: true, addEventListener() {} }),
       location: { hash: "", pathname: "/" },
       history: { replaceState() {} },
       Date: ClientDate,

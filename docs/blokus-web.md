@@ -28,12 +28,14 @@ Chọn quân trong bộ → chạm ô làm góc trên trái của khung quân �
 
 Có thể kéo quân từ bộ lên bàn bằng chuột hoặc cảm ứng, hoặc kéo lại khối đang xem trước. Điểm đang cầm trên khối được giữ dưới con trỏ khi xoay/lật. Thả quân chỉ tạo bản xem trước, không gửi nước đi. Cụm Xoay/Lật/Bỏ/Đặt bám cạnh khối và được giữ trong màn hình; nhấn Đặt mới xác nhận. Thả ngoài bàn, hủy thao tác cảm ứng hoặc mất tiêu điểm sẽ trả về lựa chọn trước khi kéo.
 
+Bản xem trước không hợp lệ hiện sọc đỏ kể cả khi chồng lên quân đã đặt của hai bên; vẫn có thể cầm chính ô chồng lấn để kéo sang vị trí khác. Trên máy tính, bộ quân của bạn nằm bên trái, bàn cờ ở giữa và bộ quân đối phương nằm bên phải để xem; quân đã dùng được làm mờ. Khán giả thấy bộ xanh bên trái và bộ cam bên phải.
+
 Trên điện thoại, menu Bộ quân/Đã chọn/Thông tin/Tài khoản mở trong khung riêng; bàn vẫn nhìn thấy. Chạm chọn quân hoặc thả quân lên bàn sẽ đóng menu bộ quân để xem bàn rộng hơn. Thanh người chơi chỉ hiện avatar và đồng hồ; chạm avatar để xem tên, điểm và thông tin đầy đủ. Giao diện cũng hỗ trợ xoay ngang và trở lại bố cục máy tính khi mở rộng cửa sổ.
 
 - R / nút Xoay: xoay 90°; F / nút Lật: đối xứng.
 - WASD hoặc phím mũi tên: dịch vị trí xem trước; Enter: xác nhận; Esc: hủy vị trí.
 - Phóng to: mở rộng bàn và cuộn trong khung trên điện thoại.
-- Selector bộ quân: xem quân chưa dùng/đã dùng của cả hai. Không có thông tin cần giữ kín trong Blokus.
+- Selector bộ quân trên điện thoại: xem quân chưa dùng/đã dùng của cả hai. Không có thông tin cần giữ kín trong Blokus.
 - Viền vàng bao quanh các ô của quân vừa đặt; nhãn cho biết bản thân/đối phương vừa đi quân nào.
 
 ## Vận hành và kiểm tra

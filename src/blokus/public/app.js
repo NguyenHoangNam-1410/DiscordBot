@@ -22,6 +22,7 @@ let drag = null,
   suppressClickUntil = 0,
   actionsHome = null;
 const cells = [];
+const desktopTrays = matchMedia("(min-width: 961px)");
 const labelFor = (mark) =>
   state.playerLabels?.[mark] || (mark === "X" ? "Quân xanh" : "Quân cam");
 const coord = (r, c) => String.fromCharCode(65 + c) + (r + 1);
@@ -194,7 +195,7 @@ function renderSelection() {
     "selected-shape " + (state.me || "X").toLowerCase();
   $("selected-name").textContent = piece
     ? piece.id + " · " + piece.cells.length + " ô"
-    : "Chọn một quân bên dưới";
+    : "Chọn quân trong bộ của bạn";
   const check = preview();
   $("placement-help").textContent =
     anchor && piece
@@ -209,32 +210,37 @@ function renderSelection() {
     !canAct() || !piece || !anchor || Boolean(check.error);
   updatePieceActions();
 }
-function renderTray() {
-  if (drag) return;
-  const side = $("inventory-side").value,
-    used = state.used[side];
-  const key = JSON.stringify([side, used, selected, canAct(), state.me]);
-  if ($("tray").dataset.key === key) return;
-  $("tray").dataset.key = key;
-  $("inventory-title").textContent =
-    "Bộ quân · Còn " + (21 - used.length) + "/21";
-  $("tray").replaceChildren(
+function renderTraySide(side, trayId, interactive) {
+  const used = state.used[side];
+  const key = JSON.stringify([
+    side,
+    used,
+    interactive ? selected : null,
+    interactive && canAct(),
+    state.me,
+  ]);
+  if ($(trayId).dataset.key === key) return;
+  $(trayId).dataset.key = key;
+  $(trayId).replaceChildren(
     ...state.pieces.map((p) => {
       const tile = document.createElement("button"),
         visual = document.createElement("span"),
         label = document.createElement("span");
       const taken = used.includes(p.id);
       tile.type = "button";
-      tile.dataset.piece = p.id;
+      if (interactive) tile.dataset.piece = p.id;
+      else tile.dataset.opponentPiece = p.id;
       tile.className =
         "tile " +
         side.toLowerCase() +
         (taken ? " used" : "") +
-        (p.id === selected && side === state.me ? " selected" : "");
-      tile.disabled = taken || !canAct() || side !== state.me;
+        (interactive && p.id === selected && side === state.me
+          ? " selected"
+          : "");
+      tile.disabled = !interactive || taken || !canAct() || side !== state.me;
       tile.setAttribute(
         "aria-pressed",
-        String(p.id === selected && side === state.me),
+        String(interactive && p.id === selected && side === state.me),
       );
       tile.setAttribute(
         "aria-label",
@@ -245,31 +251,59 @@ function renderTray() {
       label.className = "tile-label";
       label.textContent = p.id + " · " + p.cells.length;
       tile.append(visual, label);
-      tile.addEventListener("click", () => {
-        if (Date.now() < suppressClickUntil) return;
-        if (!canAct() || side !== state.me) return;
-        selected = p.id;
-        rotation = 0;
-        flipped = false;
-        notice("");
-        render();
-        globalThis.WebGameMobile?.close(false);
-      });
-      tile.addEventListener("pointerdown", (event) => {
-        const grabbed = event.target.closest?.(".mini-cell");
-        const index = grabbed
-          ? p.cells.findIndex(
-              ([r, c]) =>
-                r === Number(grabbed.dataset.row) &&
-                c === Number(grabbed.dataset.col),
-            )
-          : 0;
-        beginPieceDrag(event, p.id, Math.max(0, index), true);
-      });
+      if (interactive)
+        tile.addEventListener("click", () => {
+          if (Date.now() < suppressClickUntil) return;
+          if (!canAct() || side !== state.me) return;
+          selected = p.id;
+          rotation = 0;
+          flipped = false;
+          notice("");
+          render();
+          globalThis.WebGameMobile?.close(false);
+        });
+      if (interactive)
+        tile.addEventListener("pointerdown", (event) => {
+          const grabbed = event.target.closest?.(".mini-cell");
+          const index = grabbed
+            ? p.cells.findIndex(
+                ([r, c]) =>
+                  r === Number(grabbed.dataset.row) &&
+                  c === Number(grabbed.dataset.col),
+              )
+            : 0;
+          beginPieceDrag(event, p.id, Math.max(0, index), true);
+        });
       return tile;
     }),
   );
 }
+function renderTray() {
+  if (drag) return;
+  const desktop = desktopTrays.matches && !globalThis.WebGameMobile?.isMobile();
+  const side = desktop ? state.me || "X" : $("inventory-side").value;
+  if (desktop) $("inventory-side").value = side;
+  const opponent = side === "X" ? "O" : "X";
+  renderTraySide(side, "tray", true);
+  renderTraySide(opponent, "opponent-tray", false);
+  $("inventory-title").textContent =
+    (desktop ? (state.me ? "Quân của bạn" : labelFor(side)) : "Bộ quân") +
+    " · " +
+    (21 - state.used[side].length) +
+    "/21";
+  $("opponent-title").textContent =
+    (state.me ? "Quân đối phương" : labelFor(opponent)) +
+    " · " +
+    (21 - state.used[opponent].length) +
+    "/21";
+  $("inventory-owner").textContent =
+    state.players[side] || "Đang chờ người chơi";
+  $("opponent-owner").textContent =
+    state.players[opponent] || "Đang chờ người chơi";
+}
+desktopTrays.addEventListener("change", () => {
+  if (state) renderTray();
+});
 function updatePieceActions() {
   const actions = $("piece-actions"),
     popover = $("piece-popover");
@@ -366,7 +400,10 @@ function movePieceDrag(x, y) {
     : null;
   const ghost = $("piece-drag-ghost");
   ghost.hidden = false;
-  ghost.className = "piece-drag-ghost " + state.me.toLowerCase();
+  ghost.className =
+    "piece-drag-ghost " +
+    state.me.toLowerCase() +
+    (anchor && preview().error ? " invalid" : "");
   ghost.style.gridTemplateColumns = "repeat(5," + cellWidth + "px)";
   ghost.style.gridTemplateRows = "repeat(5," + cellHeight + "px)";
   ghost.style.left = x - (grab[1] + 0.5) * cellWidth + "px";
@@ -480,7 +517,10 @@ document.addEventListener("contextmenu", (event) => {
     rotatePiece();
   }
 });
-document.addEventListener("webgame:layout", positionPieceActions);
+document.addEventListener("webgame:layout", () => {
+  if (state) renderTray();
+  positionPieceActions();
+});
 window.addEventListener("resize", positionPieceActions);
 window.addEventListener("scroll", positionPieceActions, true);
 window.addEventListener("blur", () => endPieceDrag(false));

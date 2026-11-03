@@ -289,6 +289,19 @@ async function main() {
   });
   await send("Page.navigate", { url: config.origin + "/fixture" });
   await until('typeof state!=="undefined" && state?.me==="X" && connected');
+  assert.equal(
+    await evaluate(
+      `(()=>{const a=document.querySelector('.own-inventory').getBoundingClientRect(),b=document.querySelector('.board-panel').getBoundingClientRect(),c=document.querySelector('.opponent-inventory').getBoundingClientRect();return a.right<=b.left && b.right<=c.left && a.top===b.top && b.top===c.top;})()`,
+    ),
+    true,
+    "Desktop shows own pieces, board, opponent pieces side by side",
+  );
+  assert.equal(
+    await evaluate(
+      'document.querySelectorAll("#opponent-tray .tile:disabled").length',
+    ),
+    21,
+  );
   await screenshot("blokus-initial.png");
   await dragPiece('[data-piece="L4"] .mini-cell', "#board .cell:nth-child(61)");
   assert.deepEqual(
@@ -346,6 +359,38 @@ async function main() {
   room = store.get(room.id);
   store.move(room.id, users.O.id, findMove(room, "O", "I5"), room.version);
   await until('state.moves===2 && state.turn==="X"');
+  await click('[data-piece="L4"]');
+  await click("#board .cell:nth-child(61)");
+  assert.equal(
+    await evaluate(
+      `(()=>{const c=document.querySelector('.cell.x.preview.invalid');return Boolean(c) && getComputedStyle(c).backgroundImage.includes('repeating-linear-gradient') && $("confirm").disabled;})()`,
+    ),
+    true,
+    "An overlapping preview remains visible above an owned piece",
+  );
+  await dragPiece("#board .cell:nth-child(61)", "#board .cell:nth-child(76)");
+  assert.deepEqual(
+    await evaluate('[anchor.row,anchor.col,$("confirm").disabled,state.moves]'),
+    [5, 5, false, 2],
+    "An invalid overlapping preview can be dragged back to a legal position without sending a move",
+  );
+  const occupiedOpponent = await evaluate(
+    'state.board.findIndex(side=>side==="O")',
+  );
+  const occupiedSelector =
+    "#board .cell:nth-child(" + (occupiedOpponent + 1) + ")";
+  await click(occupiedSelector);
+  assert.equal(
+    await evaluate(
+      'Boolean(document.querySelector(".cell.o.preview.invalid")) && $("confirm").disabled',
+    ),
+    true,
+  );
+  await dragPiece(occupiedSelector, "#board .cell:nth-child(76)");
+  assert.deepEqual(
+    await evaluate('[anchor.row,anchor.col,$("confirm").disabled,state.moves]'),
+    [5, 5, false, 2],
+  );
   await click('[data-piece="P5"]');
   await click("#board .cell:nth-child(46)");
   assert.equal(
@@ -428,7 +473,7 @@ async function main() {
     JSON.stringify({
       ok: true,
       blokusUI:
-        "mouse/touch drag and cancellation, anchored actions, explicit confirmation, R/F hotkeys, mobile menus, clock, account login, opponent SSE, recent piece, zoom, result",
+        "desktop side trays, overlapping preview recovery, mouse/touch drag and cancellation, anchored actions, explicit confirmation, R/F hotkeys, mobile menus, clock, account login, opponent SSE, recent piece, zoom, result",
     }),
   );
   await send("Browser.close").catch(() => {});

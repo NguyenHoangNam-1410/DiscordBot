@@ -40,6 +40,25 @@
         </div>
         <div id="notice" class="notice" role="alert" hidden></div>
         <div class="game-layout">
+          <section
+            class="inventory own-inventory inventory-panel"
+            aria-label="Bộ quân của bạn"
+          >
+            <div class="inventory-heading">
+              <h2 id="inventory-title">Bộ quân</h2>
+              <label for="inventory-side">Xem bộ quân</label
+              ><select id="inventory-side">
+                <option value="X">Quân xanh</option>
+                <option value="O">Quân cam</option>
+              </select>
+            </div>
+            <p id="inventory-owner" class="inventory-owner"></p>
+            <div id="tray" class="tray" aria-label="Bộ 21 quân"></div>
+            <p class="muted">
+              Kéo quân lên bàn hoặc chạm để chọn. Thả chỉ xem trước; nhấn Đặt để
+              xác nhận. Quân mờ đã được dùng.
+            </p>
+          </section>
           <section class="board-panel" aria-label="Bàn Blokus Duo">
             <div class="board-toolbar">
               <strong id="board-state">Mở phòng từ Discord để bắt đầu</strong
@@ -83,7 +102,7 @@
                   aria-hidden="true"
                 ></div>
                 <div>
-                  <strong id="selected-name">Chọn một quân bên dưới</strong>
+                  <strong id="selected-name">Chọn quân trong bộ của bạn</strong>
                   <p id="placement-help" aria-live="polite">
                     Chạm bàn để xem trước, rồi xác nhận.
                   </p>
@@ -115,21 +134,21 @@
                 hủy. Nút Phóng to giúp chọn chính xác trên điện thoại.
               </p>
             </section>
-            <section class="inventory">
-              <div class="inventory-heading">
-                <h2 id="inventory-title">Bộ quân</h2>
-                <label for="inventory-side">Xem bộ quân</label
-                ><select id="inventory-side">
-                  <option value="X">Quân xanh</option>
-                  <option value="O">Quân cam</option>
-                </select>
-              </div>
-              <div id="tray" class="tray" aria-label="Bộ 21 quân"></div>
-              <p class="muted">
-                Kéo quân lên bàn hoặc chạm để chọn. Thả chỉ xem trước; nhấn Đặt
-                để xác nhận. Quân mờ đã được dùng.
-              </p>
-            </section>
+          </section>
+          <section
+            class="opponent-inventory inventory-panel"
+            aria-label="Bộ quân đối phương"
+          >
+            <div class="inventory-heading">
+              <h2 id="opponent-title">Bộ quân đối phương</h2>
+            </div>
+            <p id="opponent-owner" class="inventory-owner"></p>
+            <div
+              id="opponent-tray"
+              class="tray"
+              aria-label="Bộ 21 quân đối phương"
+            ></div>
+            <p class="muted">Chỉ xem · Quân mờ đã được dùng.</p>
           </section>
           <aside class="sidebar">
             <section class="status-card">
