@@ -233,6 +233,56 @@ h1 {
 .board-frame.enlarged {
   min-width: 650px;
 }
+.duel-boards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  margin-top: 16px;
+}
+.map-pane {
+  min-width: 0;
+}
+.map-heading h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.comparison-pane {
+  display: none;
+}
+@media (min-width: 901px) {
+  .duel-boards.dual {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px;
+  }
+  .duel-boards.dual .comparison-pane {
+    display: block;
+  }
+  .duel-boards.dual .map-pane {
+    display: flex;
+    flex-direction: column;
+  }
+  .duel-boards.dual .board-help {
+    min-height: 3em;
+  }
+  .duel-boards.dual .board-scroll {
+    margin-top: auto;
+  }
+}
+.wg-mobile .duel-boards,
+.wg-mobile .duel-boards > .map-pane:not(.comparison-pane) {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+.wg-mobile .map-heading {
+  padding: 3px 0;
+}
+.wg-mobile .map-heading h2 {
+  font-size: 12px;
+}
+.wg-mobile .map-heading .eyebrow {
+  display: none;
+}
 .columns {
   grid-column: 2;
   display: grid;

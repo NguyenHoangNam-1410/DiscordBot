@@ -29,18 +29,18 @@ Khóa & xác nhận có hộp xem lại. Khóa xong không sửa được; trậ
 
 Người dò xanh đi trước. Mỗi thao tác chỉ đi một ô ngang/dọc. Không có tường thì vị trí thay đổi và người đó tiếp tục đi trong cùng lượt. Chạm tường thì đứng nguyên, lộ đúng đoạn vừa chạm và đổi lượt. Chạm lại tường đã biết vẫn mất lượt. Mép ngoài đã biết: không thể đi ra ngoài và lựa chọn ngoài bàn không tính mất lượt.
 
-Ô bắt đầu được khám phá khi trận bắt đầu; chỉ ô đã đi tới mới được đánh dấu. Lối đi qua thành công cũng được ghi lại. Đi ngược đường cũ không làm tăng số ô đã khám phá. Không tự lộ tường quanh ô, đích hoặc toàn bộ tường sau khi ván kết thúc.
+Ô bắt đầu được khám phá khi trận bắt đầu; chỉ ô đã đi tới mới được đánh dấu. Lối đi qua thành công cũng được ghi lại. Đi ngược đường cũ không làm tăng số ô đã khám phá. Trong lúc thi đấu, không tự lộ tường quanh ô hoặc đích. Khi ván kết thúc và có người thắng (đến đích, hết giờ, đầu hàng hoặc hết giờ dựng có bên thắng), toàn bộ tường và đầu–đích của cả hai bản đồ được mở cho người chơi và khán giả. Ván hòa/hủy không tự mở tường.
 
 - **Đến đích trước:** người đầu tiên tới đích thắng ngay.
 - **Ít lượt hơn:** số lượt bắt đầu từ 1 khi được đi lần đầu. Tới đích ghi lại số lượt đã dùng. Nếu người đi trước tới đích, đối thủ được hoàn thành lượt tương ứng để có cơ hội hòa. Tới đích cùng số lượt thì hòa; chạm tường trong lượt gỡ hòa thì thua. Nếu người đi sau tới đích khi người đi trước đã dùng hết cùng số lượt mà chưa tới đích, người đi sau thắng ngay. Không so số bước.
 
 Đồng hồ riêng chỉ chạy khi tới lượt; đi liên tục vẫn dùng cùng ngân hàng thời gian. Không cộng giờ khi di chuyển hoặc đổi lượt. Hết giờ hoặc đầu hàng thì đối thủ thắng. Mất mạng/khởi động lại bot không hoàn thời gian. Người đã tới đích trong luật ít lượt hơn dừng đồng hồ trong lúc đối thủ gỡ hòa.
 
-WASD, phím mũi tên, nút hướng hoặc chạm ô chung cạnh với vị trí hiện tại để đi. Nút Phóng to mở rộng bàn trong vùng cuộn trên điện thoại. Viền vàng đánh dấu ô vừa tới hoặc tường vừa chạm. Selector cho phép xem đường đi cả hai hoặc bản dựng kín của chính mình.
+WASD, phím mũi tên, nút hướng hoặc chạm ô chung cạnh với vị trí hiện tại để đi. Nút Phóng to mở rộng bàn trong vùng cuộn trên điện thoại. Viền vàng đánh dấu ô vừa tới hoặc tường vừa chạm. Trên PC (từ 901 px), hai bản đồ thi đấu hiển thị cạnh nhau, có tiêu đề và lịch sử khám phá riêng; người chơi chỉ điều khiển được bản đồ của mình. Điện thoại vẫn chọn từng bản đồ để dễ nhìn. Selector cũng cho phép mở bản dựng kín của chính mình; lúc dựng chỉ hiển thị bản dựng cá nhân.
 
 ## Giữ kín và lưu ván
 
-`store.snapshot` là ranh giới giữ kín: chỉ người dựng nhận `design` đầy đủ của chính họ. Đối thủ/khán giả chỉ nhận điểm đầu–đích sau khi trận bắt đầu, vị trí, ô đã khám phá, lối đã đi và tường đã chạm. Không có danh sách nước đi hợp lệ dựa trên tường ẩn. Tường chưa chạm không được gửi cho đối thủ kể cả sau trận. SSE và phản hồi thao tác dùng cùng phép chiếu này; không gửi dữ liệu thô từ SQLite ra web.
+`store.snapshot` là ranh giới giữ kín: chỉ người dựng nhận `design` đầy đủ của chính họ. Đối thủ/khán giả chỉ nhận điểm đầu–đích sau khi trận bắt đầu, vị trí, ô đã khám phá, lối đã đi và tường đã chạm. Không có danh sách nước đi hợp lệ dựa trên tường ẩn. Tường chưa chạm chỉ được gửi đầy đủ sau khi trạng thái ván là kết thúc và có người thắng; trước đó vẫn giữ kín cả HTTP và SSE, kể cả khi một bên đang chờ lượt gỡ hòa. Việc mở tường không thay đổi lịch sử đã khám phá trong bản lưu. SSE và phản hồi thao tác dùng cùng phép chiếu này; không gửi dữ liệu thô từ SQLite ra web.
 
 Migration 66 thêm `mecung_rooms`, `mecung_seats`, `mecung_channel_settings`. Lưu bản dựng, revision riêng mỗi người, bước thử, lượt, thời gian, ô khám phá và kết quả trong SQLite. Revision riêng giúp hai người dựng đồng thời mà không ghi đè nhau. Khi giải, mỗi thao tác cần đúng người, đúng lượt và phiên bản bàn hiện tại. Dùng chung sao lưu database, đặt lại dữ liệu người chơi và đếm phiên đang mở trong healthcheck.
 

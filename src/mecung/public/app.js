@@ -13,6 +13,9 @@ let pairTimer = null,
   pairExpiresAt = 0,
   pairAttempt = 0,
   pairVisible = false;
+const desktopBoards = matchMedia("(min-width: 901px)");
+const dualBoards = () =>
+  state && ["playing", "finished"].includes(state.status) && view !== "design";
 let view = "X",
   editMode = "start";
 const other = (mark) => (mark === "X" ? "O" : "X");
@@ -31,7 +34,7 @@ const canMove = () =>
   state?.me &&
   state.status === "playing" &&
   state.turn === state.me &&
-  view === state.me &&
+  (view === state.me || (dualBoards() && desktopBoards.matches)) &&
   connected &&
   !pending;
 const coord = (cell) =>
@@ -133,7 +136,13 @@ function viewOptions() {
     ["X", "Đường đi · " + labelFor("X")],
     ["O", "Đường đi · " + labelFor("O")],
   ];
-  if (state.me) entries.unshift(["design", "Mê cung bạn dựng (kín)"]);
+  if (state.me)
+    entries.unshift([
+      "design",
+      state.mapsRevealed
+        ? "Mê cung bạn dựng (đã mở)"
+        : "Mê cung bạn dựng (kín)",
+    ]);
   const key = JSON.stringify(entries);
   if ($("view-select").dataset.key !== key) {
     $("view-select").dataset.key = key;
@@ -149,21 +158,26 @@ function viewOptions() {
   if (!entries.some((e) => e[0] === view)) view = state.me || "X";
   $("view-select").value = view;
 }
-function renderBoard() {
+function renderBoard(boardView = view, prefix = "") {
+  const panel = (id) => $(prefix + id);
   const n = state.size,
-    privateView = view === "design" && state.design,
-    journey = privateView ? null : state.boards[view];
+    privateView = boardView === "design" && state.design,
+    journey = privateView ? null : state.boards[boardView];
   const layout = privateView ? state.design : journey;
   const walls = new Set(privateView ? layout.walls : journey.revealedWalls),
     visited = new Set(journey?.visited || []),
     known = new Set(journey?.knownOpen || []);
-  $("view-label").textContent = privateView
-    ? "BẢN DỰNG CHỈ BẠN THẤY"
-    : "ĐƯỜNG ĐÃ KHÁM PHÁ";
-  $("view-title").textContent = privateView
+  panel("view-label").textContent = privateView
+    ? state.mapsRevealed
+      ? "BẢN DỰNG ĐÃ MỞ SAU TRẬN"
+      : "BẢN DỰNG CHỈ BẠN THẤY"
+    : state.mapsRevealed
+      ? "TOÀN BỘ MÊ CUNG"
+      : "ĐƯỜNG ĐÃ KHÁM PHÁ";
+  panel("view-title").textContent = privateView
     ? "Mê cung cho đối thủ"
-    : labelFor(view) + (view === state.me ? " · Bạn" : "");
-  $("board-help").textContent = privateView
+    : labelFor(boardView) + (boardView === state.me ? " · Bạn" : "");
+  panel("board-help").textContent = privateView
     ? state.status === "setup"
       ? state.ready[state.me]
         ? "Đã khóa. Đang chờ đối thủ xác nhận."
@@ -171,11 +185,15 @@ function renderBoard() {
           ? "Chạm khe giữa hai ô để thêm/xóa tường. Luôn phải còn đường nối S với G."
           : "Chạm một ô để chọn " +
             (editMode === "start" ? "điểm đầu S." : "đích G.")
-      : "Bạn đang xem bản dựng của mình. Chuyển sang đường đi của bạn để di chuyển."
+      : state.mapsRevealed
+        ? "Ván đã kết thúc. Bản dựng đã được mở cho cả hai bên và khán giả."
+        : "Bạn đang xem bản dựng của mình. Chuyển sang đường đi của bạn để di chuyển."
     : state.status === "setup"
       ? "Đường đi sẽ xuất hiện khi cả hai đã khóa mê cung."
-      : "Tường chưa chạm vẫn được giấu. Ô tô xanh là nơi đã khám phá.";
-  $("board-summary").textContent = privateView
+      : state.mapsRevealed
+        ? "Ván đã có người thắng. Toàn bộ tường đã được mở; ô tô xanh giữ lịch sử khám phá."
+        : "Tường chưa chạm vẫn được giấu. Ô tô xanh là nơi đã khám phá.";
+  panel("board-summary").textContent = privateView
     ? "S " +
       coord(layout.start) +
       " → G " +
@@ -195,22 +213,22 @@ function renderBoard() {
         journey.steps +
         " bước · " +
         walls.size +
-        " tường đã chạm" +
+        (state.mapsRevealed ? " tường toàn bản đồ" : " tường đã chạm") +
         (journey.finishedTurn !== null ? " · Đã tới đích" : "");
   const tracks = Array.from({ length: n }, (_, i) =>
     i === n - 1 ? "minmax(0,1fr)" : "minmax(0,1fr) 7px",
   ).join(" ");
-  $("board").style.gridTemplateColumns = tracks;
-  $("board").style.gridTemplateRows = tracks;
+  panel("board").style.gridTemplateColumns = tracks;
+  panel("board").style.gridTemplateRows = tracks;
   const labels = Array.from({ length: n }, (_, i) => {
     const el = document.createElement("span");
     el.textContent = String.fromCharCode(65 + i);
     return el;
   });
-  $("columns").style.gridTemplateColumns = "repeat(" + n + ",1fr)";
-  $("columns").replaceChildren(...labels);
-  $("rows").style.gridTemplateRows = "repeat(" + n + ",1fr)";
-  $("rows").replaceChildren(
+  panel("columns").style.gridTemplateColumns = "repeat(" + n + ",1fr)";
+  panel("columns").replaceChildren(...labels);
+  panel("rows").style.gridTemplateRows = "repeat(" + n + ",1fr)";
+  panel("rows").replaceChildren(
     ...Array.from({ length: n }, (_, i) => {
       const el = document.createElement("span");
       el.textContent = String(i + 1);
@@ -223,14 +241,15 @@ function renderBoard() {
       c = cell % n,
       button = document.createElement("button"),
       pawn = journey?.position === cell;
-    const dir = canMove()
-      ? Object.keys(DIRS).find(
-          (d) => nextCell(state.boards[state.me].position, d) === cell,
-        )
-      : null;
+    const dir =
+      !privateView && boardView === state.me && canMove()
+        ? Object.keys(DIRS).find(
+            (d) => nextCell(state.boards[state.me].position, d) === cell,
+          )
+        : null;
     const recent =
       !privateView &&
-      state.lastAction?.mark === view &&
+      state.lastAction?.mark === boardView &&
       !state.lastAction.hit &&
       state.lastAction.to === cell;
     button.type = "button";
@@ -240,7 +259,7 @@ function renderBoard() {
       (visited.has(cell) ? " visited" : "") +
       (layout.start === cell ? " start" : "") +
       (layout.goal === cell ? " goal" : "") +
-      (pawn ? " pawn " + view.toLowerCase() : "") +
+      (pawn ? " pawn " + boardView.toLowerCase() : "") +
       (recent ? " recent" : "") +
       (dir ? " selectable" : "");
     button.style.gridRow = String(2 * r + 1);
@@ -249,7 +268,9 @@ function renderBoard() {
       layout.start === cell ? "S" : layout.goal === cell ? "G" : "";
     if (pawn) {
       button.textContent = "●";
-      const url = globalThis.WebGamePlayers?.avatarURL(state.avatars?.[view]);
+      const url = globalThis.WebGamePlayers?.avatarURL(
+        state.avatars?.[boardView],
+      );
       if (url) {
         const img = document.createElement("img");
         img.src = url;
@@ -289,7 +310,7 @@ function renderBoard() {
       isWall = walls.has(id),
       recent =
         !privateView &&
-        state.lastAction?.mark === view &&
+        state.lastAction?.mark === boardView &&
         state.lastAction.hit &&
         state.lastAction.wall === id;
     edge.type = "button";
@@ -316,7 +337,9 @@ function renderBoard() {
           ? "Xóa tường"
           : "Thêm tường"
         : isWall
-          ? "Tường đã chạm"
+          ? state.mapsRevealed
+            ? "Tường đã mở sau trận"
+            : "Tường đã chạm"
           : known.has(id)
             ? "Lối đã đi qua"
             : "Khe chưa biết") +
@@ -326,7 +349,7 @@ function renderBoard() {
         coord(b),
     );
     edge.addEventListener("click", () => {
-      if (!canSetup() || view !== "design" || editMode !== "walls") return;
+      if (!canSetup() || boardView !== "design" || editMode !== "walls") return;
       const next = state.design.walls.includes(id)
         ? state.design.walls.filter((w) => w !== id)
         : [...state.design.walls, id];
@@ -334,7 +357,7 @@ function renderBoard() {
     });
     nodes.push(edge);
   }
-  $("board").replaceChildren(...nodes);
+  panel("board").replaceChildren(...nodes);
 }
 const REASONS = {
   win: "Đã tới đích theo luật của ván.",
@@ -433,7 +456,11 @@ function render() {
     : "";
   for (const id of ["randomize", "clear-walls", "ready"])
     $(id).disabled = !canSetup();
-  $("move-controls").hidden = !(playing && state.me && view === state.me);
+  $("move-controls").hidden = !(
+    playing &&
+    state.me &&
+    (view === state.me || (dualBoards() && desktopBoards.matches))
+  );
   $("move-title").textContent =
     state.turn === state.me
       ? "Đi tiếp cho tới khi chạm tường."
@@ -470,9 +497,16 @@ function render() {
     $("ready-dialog").close();
     $("leave-dialog").close();
   }
+  const dual = dualBoards();
+  $("duel-boards").classList.toggle("dual", dual);
+  $("rival-pane").hidden = !dual;
   renderBoard();
+  if (dual) renderBoard(other(view), "rival-");
   updateClock();
 }
+desktopBoards.addEventListener("change", () => {
+  if (state) render();
+});
 for (const mode of ["start", "goal", "walls"])
   $("edit-" + mode).addEventListener("click", () => {
     editMode = mode;

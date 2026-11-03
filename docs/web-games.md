@@ -79,7 +79,7 @@ Caro hỗ trợ nhiều phòng mỗi kênh (mặc định 5, quản trị chỉn
 - `src/battleship/webGame.js`: adapter Battleship; bố trí riêng tư, xác nhận, bắn, khán giả. Mọi HTTP/SSE dùng snapshot theo người xem để giữ kín thuyền chưa bị bắn. Hạn bố trí tách riêng đồng hồ chiến đấu.
 - `src/dots/webGame.js`: adapter Dots & Boxes / Nối ô; nối cạnh, chiếm một/hai ô và giữ lượt khi ghi điểm. Dùng bảng riêng, chung phiên xác nhận, đồng hồ, SSE và cập nhật điểm/kết quả Discord. Xem [dots-web.md](dots-web.md).
 - `src/blokus/webGame.js`: adapter Blokus Duo; xếp quân polyomino, tự bỏ lượt khi bị chặn và tính điểm còn lại. Dùng chung xác nhận tài khoản, đồng hồ, SSE và cập nhật Discord. Xem [blokus-web.md](blokus-web.md).
-- `src/mecung/webGame.js`: adapter Mê cung; dựng kín cho đối thủ, dò đường liên tục tới khi chạm tường, luật tới đích trước hoặc ít lượt hơn có cân bằng lượt cuối. Chỉ công khai tường đã chạm và ô đã khám phá. Xem [mecung-web.md](mecung-web.md).
+- `src/mecung/webGame.js`: adapter Mê cung; dựng kín cho đối thủ, dò đường liên tục tới khi chạm tường, luật tới đích trước hoặc ít lượt hơn có cân bằng lượt cuối. Trong lúc đấu chỉ công khai tường đã chạm và ô đã khám phá; khi ván kết thúc có người thắng thì mở toàn bộ tường hai bản đồ. Xem [mecung-web.md](mecung-web.md).
 - `src/caro/config.js`, `http.js`, `runtime.js`: các lớp tương thích API nội bộ cũ, không mở thêm máy chủ.
 
 ## Thêm một game

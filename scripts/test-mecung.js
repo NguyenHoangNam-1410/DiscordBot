@@ -239,6 +239,7 @@ async function main() {
   assert.equal(seen.design, null);
   assert.deepEqual(seen.boards.X.revealedWalls, [vertical]);
   assert(!seen.boards.X.revealedWalls.includes(40));
+  assert.equal(seen.mapsRevealed, false);
   const markBefore = room.turns.O;
   clock += 2000;
   room = move(room, "right");
@@ -262,10 +263,19 @@ async function main() {
   assert.equal(room.reason, "win");
   assert.equal(room.moves, 9);
   assert(room.version > initial);
+  for (const userId of [users.X.id, users.O.id, null]) {
+    const result = store.snapshot(room, userId);
+    assert.equal(result.mapsRevealed, true);
+    assert.deepEqual(
+      new Set(result.boards.X.revealedWalls),
+      new Set([vertical, 40]),
+    );
+    assert.deepEqual(result.boards.O.revealedWalls, [horizontal]);
+  }
   assert.deepEqual(
-    store.snapshot(room).boards.X.revealedWalls,
+    room.revealed.X,
     [vertical],
-    "Unknown walls remain hidden after completion",
+    "revealing the result preserves exploration history",
   );
   assert.equal(
     db
@@ -285,9 +295,19 @@ async function main() {
   assert.equal(room.status, "playing");
   assert.equal(room.turn, "O");
   assert.equal(room.finishedTurns.X, 1);
+  assert.equal(
+    store.snapshot(room).mapsRevealed,
+    false,
+    "catch-up is still a live match",
+  );
   room = move(room, "right");
   assert.equal(room.reason, "draw");
   assert.equal(room.winner, null);
+  assert.equal(
+    store.snapshot(room).mapsRevealed,
+    false,
+    "a draw has no winner",
+  );
   room = playing(
     { winCondition: "turns" },
     { ...simple, walls: [vertical] },
@@ -325,6 +345,7 @@ async function main() {
   clock += 60000;
   code(() => move(room, "right"), "ROOM_CLOSED");
   assert.equal(store.get(room.id).winner, "X");
+  assert.equal(store.snapshot(store.get(room.id)).mapsRevealed, true);
   room = setup();
   room = lock(room, "X");
   clock += SETUP_MS;
@@ -335,6 +356,7 @@ async function main() {
   clock += SETUP_MS;
   store.sweep();
   assert.equal(store.get(room.id).reason, "setup_expired");
+  assert.equal(store.snapshot(store.get(room.id)).mapsRevealed, false);
   room = create();
   clock += WAIT_MS;
   store.sweep();
@@ -536,7 +558,12 @@ async function main() {
     room = store.get(room.id);
     assert.equal(room.turn, "O");
   }
-  store.leave(room.id, users.O.id);
+  const ended = store.leave(room.id, users.O.id);
+  assert.equal(ended.winner, "X");
+  const completedView = (await request("state?room=" + room.id)).data;
+  assert.equal(completedView.mapsRevealed, true);
+  assert.deepEqual(completedView.boards.X.revealedWalls, ended.designs.O.walls);
+  assert.deepEqual(completedView.boards.O.revealedWalls, ended.designs.X.walls);
 
   const command = require("../src/commands/mecung"),
     runtime = require("../src/mecung/runtime"),

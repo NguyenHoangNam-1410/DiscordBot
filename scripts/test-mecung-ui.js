@@ -257,6 +257,14 @@ async function main() {
   room = store.ready(room.id, users.O.id, 1);
   await until('state.status==="playing" && view==="X"');
   assert.equal(
+    await evaluate(`(()=>{
+    const a=$('board').getBoundingClientRect(),b=$('rival-board').getBoundingClientRect();
+    return a.width>0 && b.width>0 && b.left>a.right && Math.abs(a.top-b.top)<10;
+  })()`),
+    true,
+    "desktop shows both competing mazes side by side",
+  );
+  assert.equal(
     await evaluate('document.querySelectorAll(".edge.wall").length'),
     0,
     "No hidden walls in the DOM",
@@ -317,6 +325,17 @@ async function main() {
   }
   await until('state.status==="finished"');
   assert.equal(await evaluate("state.winner"), "X");
+  assert.equal(await evaluate("state.mapsRevealed"), true);
+  assert.equal(
+    await evaluate('document.querySelectorAll("#board .edge.wall").length'),
+    2,
+  );
+  assert.equal(
+    await evaluate(
+      'document.querySelectorAll("#rival-board .edge.wall").length',
+    ),
+    1,
+  );
   assert.equal(
     await evaluate('$("move-controls").hidden && $("leave").hidden'),
     true,
@@ -338,7 +357,7 @@ async function main() {
     await evaluate(
       `document.querySelector('[data-wall="40"]').classList.contains("wall")`,
     ),
-    false,
+    true,
   );
   assert.deepEqual(errors, []);
   console.log(

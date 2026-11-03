@@ -410,13 +410,15 @@ function createStore(db, now = Date.now) {
     const rules = normalizeRules(room.rules);
     const at = now();
     const size = PRESETS[rules.mode];
+    const mapsRevealed = room.status === "finished" && Boolean(room.winner);
     return {
       id: room.id,
       size,
       rules,
       rulesLabel: rulesText(rules),
-      // Private designs never enter an opponent/spectator projection, even after the match.
+      // Keep setup drafts private. Only a completed match with a winner reveals both mazes.
       design: mark ? structuredClone(room.designs[mark]) : null,
+      mapsRevealed,
       setupRevision: mark ? room.setupRevision[mark] : null,
       ready: { ...room.ready },
       setupDeadline: room.setupDeadline,
@@ -426,11 +428,15 @@ function createStore(db, now = Date.now) {
           return [
             runner,
             {
-              start: room.startedAt === null ? null : target.start,
-              goal: room.startedAt === null ? null : target.goal,
+              start:
+                room.startedAt === null && !mapsRevealed ? null : target.start,
+              goal:
+                room.startedAt === null && !mapsRevealed ? null : target.goal,
               position: room.positions[runner],
               visited: [...room.visited[runner]],
-              revealedWalls: [...room.revealed[runner]],
+              revealedWalls: [
+                ...(mapsRevealed ? target.walls : room.revealed[runner]),
+              ],
               knownOpen: [...room.knownOpen[runner]],
               turns: room.turns[runner],
               steps: room.steps[runner],

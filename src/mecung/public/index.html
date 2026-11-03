@@ -83,8 +83,8 @@
         <section class="board-panel">
           <div class="board-toolbar">
             <div>
-              <p class="eyebrow" id="view-label">BẢN ĐỒ</p>
-              <h2 id="view-title">Mê cung bí mật</h2>
+              <p class="eyebrow">BẢN ĐỒ THI ĐẤU</p>
+              <h2>Cuộc đua trong mê cung</h2>
             </div>
             <label for="view-select" class="sr-only">Chọn bản đồ</label
             ><select id="view-select">
@@ -94,20 +94,55 @@
               Phóng to
             </button>
           </div>
-          <p id="board-help" class="muted">
-            Chỉ các tường bị chạm mới được tiết lộ.
-          </p>
-          <div class="board-scroll">
-            <div id="board-frame" class="board-frame">
-              <div id="columns" class="columns" aria-hidden="true"></div>
-              <div id="rows" class="rows" aria-hidden="true"></div>
-              <div
-                id="board"
-                class="board"
-                role="group"
-                aria-label="Bàn mê cung"
-              ></div>
-            </div>
+          <div id="duel-boards" class="duel-boards">
+            <section class="map-pane">
+              <div class="map-heading">
+                <p class="eyebrow" id="view-label">BẢN ĐỒ</p>
+                <h2 id="view-title">Mê cung bí mật</h2>
+              </div>
+              <p id="board-help" class="muted board-help">
+                Chỉ các tường bị chạm mới được tiết lộ.
+              </p>
+              <div class="board-scroll">
+                <div id="board-frame" class="board-frame">
+                  <div id="columns" class="columns" aria-hidden="true"></div>
+                  <div id="rows" class="rows" aria-hidden="true"></div>
+                  <div
+                    id="board"
+                    class="board"
+                    role="group"
+                    aria-label="Bàn mê cung"
+                  ></div>
+                </div>
+              </div>
+              <p id="board-summary" class="board-summary"></p>
+            </section>
+            <section id="rival-pane" class="map-pane comparison-pane" hidden>
+              <div class="map-heading">
+                <p class="eyebrow" id="rival-view-label">BẢN ĐỒ</p>
+                <h2 id="rival-view-title">Mê cung bí mật</h2>
+              </div>
+              <p id="rival-board-help" class="muted board-help">
+                Chỉ các tường bị chạm mới được tiết lộ.
+              </p>
+              <div class="board-scroll">
+                <div id="rival-board-frame" class="board-frame">
+                  <div
+                    id="rival-columns"
+                    class="columns"
+                    aria-hidden="true"
+                  ></div>
+                  <div id="rival-rows" class="rows" aria-hidden="true"></div>
+                  <div
+                    id="rival-board"
+                    class="board"
+                    role="group"
+                    aria-label="Bàn mê cung còn lại"
+                  ></div>
+                </div>
+              </div>
+              <p id="rival-board-summary" class="board-summary"></p>
+            </section>
           </div>
           <div class="legend">
             <span><b>S</b> Điểm đầu</span><span><b>G</b> Đích</span
@@ -115,7 +150,6 @@
             ><span><i class="wall-swatch"></i> Tường</span
             ><span><i class="recent-swatch"></i> Thao tác gần nhất</span>
           </div>
-          <p id="board-summary" class="board-summary"></p>
           <p id="last-action" class="last-action" role="status">
             Chưa có nước đi.
           </p>
@@ -216,8 +250,8 @@
             </p>
             <p>
               Hết giờ hoặc đầu hàng thì thua. Mất mạng đồng hồ vẫn chạy. Khán
-              giả chỉ thấy thông tin đã khám phá; tường chưa chạm không tự lộ
-              sau trận.
+              giả chỉ thấy thông tin đã khám phá; toàn bộ tường của cả hai bản
+              đồ được mở khi ván đã có người thắng.
             </p>
             <p id="rules-detail"></p>
             <span class="no-stakes">CHƠI VUI · KHÔNG CƯỢC XU</span>
