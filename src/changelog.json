@@ -1,5 +1,17 @@
 [
   {
+    "id": "777600b4-52d5-4dc2-a256-c1d79fe6f680",
+    "updatedAt": "2026-11-04T03:06:29.158Z",
+    "auditedAt": "2026-11-04T03:06:29.158Z",
+    "title": "Gỡ ràng buộc kênh Discord cũ của Cò quay Nga web",
+    "type": "fix",
+    "scope": "coquay",
+    "changes": [
+      "Mở /coquay choi tại kênh hiện tại mà không cần /quantri datkenh; cấu hình kênh hoặc bảo trì của bản Discord cũ không còn chặn tạo phòng web.",
+      "Gỡ Cò quay Nga khỏi danh mục kênh/cấu hình game Discord cũ và tự dọn thiết lập cũ khi cập nhật. Giữ nguyên phòng web và giới hạn phòng theo kênh trong /coquay cauhinh."
+    ]
+  },
+  {
     "id": "92a3b54c-78ac-4a63-b22c-7090d0071ca0",
     "updatedAt": "2026-11-04T02:55:59.891Z",
     "auditedAt": "2026-11-04T02:55:59.891Z",

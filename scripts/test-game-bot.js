@@ -195,7 +195,6 @@ assert.deepEqual(
     "poker",
     "duangua",
     "mines",
-    "coquay",
     "hardcore",
     "vuatiengviet",
   ],

@@ -64,7 +64,6 @@ const LABELS = {
   poker: "Poker",
   duangua: "Đua ngựa",
   mines: "Dò mìn",
-  coquay: "Cò quay Nga",
   hardcore: "Sinh tồn",
   vuatiengviet: "Vua tiếng Việt",
   covua: "Cờ vua (thưởng cơ sở × N²)",
@@ -507,6 +506,12 @@ module.exports = {
           flags: MessageFlags.Ephemeral,
         });
       const game = interaction.options.getString("trochoi", true);
+      if (game === "coquay")
+        return interaction.reply({
+          content:
+            "Cò quay Nga đã chuyển sang web, không cần đặt kênh ở đây. Dùng /coquay choi để mở phòng; /coquay cauhinh để chỉnh giới hạn phòng theo kênh.",
+          flags: MessageFlags.Ephemeral,
+        });
       const channel = interaction.options.getChannel("channel", true);
       if (interaction.options.getString("hanhdong") === "remove") {
         const removed = removeGameChannel(

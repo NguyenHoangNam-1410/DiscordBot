@@ -82,6 +82,41 @@ async function main() {
     db.prepare("SELECT count(*) n FROM economy_transactions").get().n,
     balanceBefore,
   );
+  // Retire the old channel catalog without changing live web rooms or their limits.
+  const webRoom = create({}, "channel-upgrade");
+  store.setChannelLimit("channel-upgrade", "channel", 7, "admin");
+  db.exec(`DELETE FROM schema_migrations WHERE version=68;
+    INSERT INTO game_channels VALUES('channel-upgrade','coquay','old-channel',1);
+    INSERT INTO game_channels VALUES('channel-upgrade','poker','poker-channel',1);
+    INSERT INTO game_settings VALUES('channel-upgrade','maintenance:coquay','1','admin',1);
+    INSERT INTO game_settings VALUES('channel-upgrade','maintenance:poker','1','admin',1);`);
+  const channelMigration = source.slice(
+    source.search(/runMigration\(\s*68,/),
+    source.indexOf("module.exports = { db, dbPath, runMigration };"),
+  );
+  for (let i = 0; i < 2; i++)
+    require("node:vm").runInNewContext(channelMigration, {
+      db,
+      runMigration: require("../src/db").runMigration,
+    });
+  assert.deepEqual(
+    db
+      .prepare(
+        "SELECT game,channel_id FROM game_channels WHERE guild_id='channel-upgrade'",
+      )
+      .all(),
+    [{ game: "poker", channel_id: "poker-channel" }],
+  );
+  assert.deepEqual(
+    db
+      .prepare(
+        "SELECT setting_key FROM game_settings WHERE guild_id='channel-upgrade'",
+      )
+      .all(),
+    [{ setting_key: "maintenance:poker" }],
+  );
+  assert.equal(store.get(webRoom.id).status, "waiting");
+  assert.equal(store.getChannelLimit("channel-upgrade", "channel"), 7);
   assert.deepEqual(normalizeRules(), {
     maxHp: 5,
     itemLimit: 4,
@@ -420,11 +455,26 @@ async function main() {
   const previous = runtime.isAvailable;
   runtime.isAvailable = () => true;
   try {
-    require("../src/services/gameChannelService").addGameChannel(
-      "discord",
-      "coquay",
-      "chan",
+    const channels = require("../src/services/gameChannelService");
+    assert(!channels.GAMES.includes("coquay"));
+    const adminSchema = require("../src/commands/quantri").data.toJSON();
+    assert(
+      !adminSchema.options
+        .find((o) => o.name === "datkenh")
+        .options.find((o) => o.name === "trochoi")
+        .choices.some((o) => o.value === "coquay"),
     );
+    assert(
+      !require("../src/services/gameConfigService").configKeysForScope("coquay")
+        .length,
+    );
+    // Stale channel/maintenance rows must not block the web game.
+    db.prepare(
+      "INSERT INTO game_channels(guild_id,game,channel_id,updated_at) VALUES('discord','coquay','old-channel',1)",
+    ).run();
+    db.prepare(
+      "INSERT INTO game_settings(guild_id,setting_key,setting_value,updated_by,updated_at) VALUES('discord','maintenance:coquay','1','admin',1)",
+    ).run();
     const replies = [],
       i = {
         guildId: "discord",
@@ -442,6 +492,12 @@ async function main() {
           return { id: "lobby" };
         },
       };
+    await require("../src/commands/game").execute({
+      ...i,
+      memberPermissions: { has: () => true },
+      options: { getSubcommand: () => "setup", getString: () => "coquay" },
+    });
+    assert.match(replies.at(-1).content, /không cần đặt kênh/);
     await command.execute(i);
     const room = runtime.store.listOpen("discord", "chan")[0];
     assert.equal(room.rules.maxHp, 8);
@@ -476,11 +532,7 @@ async function main() {
     runtime.store.leave(room.id, users.O.id);
     await runtime.syncMessages(client);
     assert.match(replies.at(-1).embeds[0].toJSON().description, /thắng/);
-    require("../src/services/gameChannelService").addGameChannel(
-      "prefix",
-      "coquay",
-      "chan",
-    );
+    // Prefix opens a room without any old game-channel setup.
     const old = process.env.COMMAND_PREFIX;
     process.env.COMMAND_PREFIX = "!";
     try {

@@ -293,13 +293,6 @@ module.exports = {
           "Bot chưa có quyền Xem kênh (View Channel) tại đây nên không thể tự cập nhật tin phòng khi ván trên web kết thúc. Quản trị viên cần bật quyền này cho bot tại kênh coquay rồi tạo phòng lại. Với luồng riêng tư, cần thêm bot vào luồng.",
         flags: MessageFlags.Ephemeral,
       });
-    if (
-      !(await require("../utils/gameChannel").requireGameChannel(
-        interaction,
-        "coquay",
-      ))
-    )
-      return;
     await interaction.deferReply();
     let room;
     try {

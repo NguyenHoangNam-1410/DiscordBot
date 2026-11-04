@@ -1714,4 +1714,11 @@ runMigration(67, "coquay web duel and retirement of Discord items", () => {
  DELETE FROM user_item_effects WHERE effect_id IN ('coquay_magnifier','coquay_decoy','coquay_saw','coquay_cuffs');`);
 });
 
+runMigration(68, "remove legacy coquay channel configuration", () => {
+  db.prepare("DELETE FROM game_channels WHERE game=?").run("coquay");
+  db.prepare("DELETE FROM game_settings WHERE setting_key=?").run(
+    "maintenance:coquay",
+  );
+});
+
 module.exports = { db, dbPath, runMigration };

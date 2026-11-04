@@ -6,7 +6,7 @@ Mở bằng `/coquay choi mau:5 vatpham:4 thoigian:30`, hoặc `!coquay choi mau
 - Đồng hồ riêng 1–180 phút/người, mặc định 30, chỉ giảm khi tới lượt và không cộng giờ. Dùng đạo cụ không đặt lại thời gian đã tiêu. Phòng chờ đóng sau 10 phút.
 - `/coquay phong`: danh sách có phân trang, mở web để chơi/xem; vào ghế qua tin phòng Discord. Người chơi kết nối bằng mã của tab web. Khán giả không được thao tác.
 - `/coquay cauhinh phongtoida`: quản trị giới hạn 1–20 phòng/kênh, mặc định 5; mỗi người chỉ ở một phòng Cò quay Nga/server.
-- Giữ cấu hình kênh/bảo trì Cò quay Nga hiện có. Không cược xu hoặc ghi thành tựu, không cấp xu/kim cương từ ván web.
+- Mở phòng tại kênh Discord hiện tại như các game web khác; không cần `/quantri datkenh` và không dùng danh mục kênh/bảo trì của game Discord cũ. Không cược xu hoặc ghi thành tựu, không cấp xu/kim cương từ ván web.
 
 ## Engine và hiệp đấu
 
@@ -40,7 +40,7 @@ Súng và bảy đạo cụ là SVG gốc trong index.html, không cần tải �
 
 ## Dữ liệu và triển khai
 
-Migration 67 tạo coquay_rooms, coquay_seats, coquay_channel_settings. Phòng lưu SQLite, dùng chung máy chủ web/Tailscale, phiên kết nối, kiểm tra phiên bản, SSE và cập nhật tin Discord.
+Migration 67 tạo coquay_rooms, coquay_seats, coquay_channel_settings. Migration 68 xóa cấu hình kênh và cờ bảo trì Cò quay Nga cũ; giữ nguyên phòng web và giới hạn phòng theo kênh. Phòng lưu SQLite, dùng chung máy chủ web/Tailscale, phiên kết nối, kiểm tra phiên bản, SSE và cập nhật tin Discord.
 
 Khi khởi động phiên bản này, migration xóa phiên Discord cũ và bốn vật phẩm coquay_magnifier/coquay_decoy/coquay_saw/coquay_cuffs khỏi túi, shop, pool cấu hình và hiệu ứng cũ, **không hoàn trả**. Gỡ khỏi catalog và pool mặc định; các override cũ không thể phát lại vật phẩm không còn trong catalog. Lịch sử quay, giao dịch và phần thưởng thành tựu đã nhận được giữ làm lịch sử; web không phát thành tựu. Cò quay Nga không còn thuộc bộ đếm thành tựu game cược hoặc số loại game. Các nút Discord cũ chỉ hướng dẫn mở phòng mới, không thể bắt đầu lại game cược.
 
