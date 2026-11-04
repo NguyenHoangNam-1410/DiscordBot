@@ -140,7 +140,17 @@ async function main() {
       if (await evaluate(expression)) return;
       await delay(100);
     }
-    throw Error("UI not ready: " + expression + " / " + errors.join("\n"));
+    await screenshot("coquay-debug.png");
+    throw Error(
+      "UI not ready: " +
+        expression +
+        " / " +
+        errors.join("\n") +
+        " / " +
+        (await evaluate(
+          `JSON.stringify({active:document.activeElement?.id,dialogs:[...document.querySelectorAll("dialog[open]")].map(d=>d.id),motions:__motions.map(m=>m.kind),layout:__layout,scroll:scrollY,btn:$("inventory-open").getBoundingClientRect().toJSON()})`,
+        )),
+    );
   }
   async function click(selector, touch = false) {
     await evaluate(
@@ -207,13 +217,9 @@ async function main() {
       fs.statSync(dir).isDirectory(),
       "Pre-create the screenshot directory under your user account",
     );
-    await evaluate("scrollTo(0,0)");
-    await delay(100);
-    const { cssContentSize: s } = await send("Page.getLayoutMetrics");
     const { data } = await send("Page.captureScreenshot", {
       format: "png",
-      captureBeyondViewport: true,
-      clip: { x: 0, y: 0, width: s.width, height: s.height, scale: 1 },
+      captureBeyondViewport: false,
     });
     fs.writeFileSync(path.join(dir, name), Buffer.from(data, "base64"));
   }
@@ -221,7 +227,7 @@ async function main() {
   await send("Page.enable");
   await send("Page.addScriptToEvaluateOnNewDocument", {
     source:
-      "window.__audioContexts=[];window.__sounds=0;const gain=AudioContext.prototype.createGain,osc=AudioContext.prototype.createOscillator;AudioContext.prototype.createGain=function(...args){if(!__audioContexts.includes(this))__audioContexts.push(this);return gain.apply(this,args)};AudioContext.prototype.createOscillator=function(...args){__sounds++;return osc.apply(this,args)};",
+      "window.__audioContexts=[];window.__sounds=0;window.__motions=[];window.__layout=[];window.addEventListener('resize',()=>__layout.push({event:'resize',w:innerWidth,h:innerHeight}));const animate=Element.prototype.animate;Element.prototype.animate=function(...args){__motions.push({kind:this.dataset.fx,html:this.innerHTML});return animate.apply(this,args)};const gain=AudioContext.prototype.createGain,osc=AudioContext.prototype.createOscillator;AudioContext.prototype.createGain=function(...args){if(!__audioContexts.includes(this))__audioContexts.push(this);return gain.apply(this,args)};AudioContext.prototype.createOscillator=function(...args){__sounds++;return osc.apply(this,args)};",
   });
   await send("Emulation.setDeviceMetricsOverride", {
     width: 360,
@@ -249,9 +255,16 @@ async function main() {
   await until("state.moves===1 && !pending");
   assert.equal(await evaluate("state.knownShell"), true);
   assert.equal(await evaluate('$("private-intel").hidden'), false);
+  assert.equal(await evaluate('__motions.filter(m=>m.kind==="use").length'), 1);
   let count = await evaluate("__sounds");
+  let motionCount = await evaluate("__motions.length");
   await evaluate("accept({...state})");
   assert.equal(await evaluate("__sounds"), count);
+  assert.equal(
+    await evaluate("__motions.length"),
+    motionCount,
+    "ACK/SSE duplicates never replay item animation",
+  );
   await click('#tray-O [data-item="shield"]', true);
   assert.equal(await evaluate('$("use-item").hidden'), true);
   await click('[data-close="item-dialog"]', true);
@@ -283,7 +296,20 @@ async function main() {
     await send("Emulation.setTouchEmulationEnabled", {
       enabled: metrics.mobile,
     });
-    await delay(200);
+    await delay(500);
+    const gunBounds = await evaluate(
+      '(()=>{const r=$("weapon").getBoundingClientRect(),lane=$("weapon-lane-"+state.turn).getBoundingClientRect(),c=$("table-center").getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2,lx:lane.x+lane.width/2,ly:lane.y+lane.height/2,cx:c.x+c.width/2}})()',
+    );
+    assert(
+      Math.abs(gunBounds.x - gunBounds.lx) < 2 &&
+        Math.abs(gunBounds.y - gunBounds.ly) < 2,
+      "Gun sits in active seat lane after rotation/resize: " +
+        JSON.stringify(gunBounds),
+    );
+    assert(
+      Math.abs(gunBounds.x - gunBounds.cx) < 2,
+      "Gun and ammunition stay centered",
+    );
     const bounds = await evaluate(
       '(()=>{const a=document.querySelector(".arena").getBoundingClientRect(),c=$("controls").getBoundingClientRect();return {scroll:document.documentElement.scrollWidth,w:innerWidth,bottom:Math.max(a.bottom,c.bottom),h:innerHeight,page:document.documentElement.scrollHeight,seats:[...document.querySelectorAll(".seat")].map(s=>{const r=s.getBoundingClientRect();return {top:r.top,bottom:r.bottom}}),arena:{top:a.top,bottom:a.bottom}}})()',
     );
@@ -328,6 +354,12 @@ async function main() {
   );
   await until("state.moves===3");
   assert.equal(room.turn, "O");
+  await delay(700);
+  assert.equal(
+    await evaluate('$("weapon").dataset.holder'),
+    "O",
+    "Blank self-shot keeps the gun",
+  );
   await click("#sound-toggle", true);
   await until("!WebGameFeedback.enabled()");
   count = await evaluate("__sounds");
@@ -339,12 +371,64 @@ async function main() {
   );
   await until("state.moves===4");
   assert.equal(await evaluate("__sounds"), count);
+  await delay(700);
+  assert.equal(
+    await evaluate('$("weapon").dataset.holder'),
+    "X",
+    "Gun transfers to the new turn",
+  );
   await send("Page.reload");
   await until('typeof state!=="undefined" && state?.moves===4 && connected');
   assert.equal(await evaluate("WebGameFeedback.enabled()"), false);
   assert.equal(await evaluate("__sounds"), 0);
+  assert.equal(
+    await evaluate("__motions.length"),
+    0,
+    "Reloading the page does not replay past visual effects",
+  );
   await click("#sound-toggle", true);
   await until("WebGameFeedback.enabled()");
+  // Last blank shell reloads: neutral casings, then precisely the granted items.
+  await click("#shoot-self", true);
+  await until("state.moves===5 && state.round===2 && !pending");
+  await until('__motions.some(m=>m.kind==="shell")');
+  assert.equal(
+    await evaluate('__motions.filter(m=>m.kind==="shell").length'),
+    await evaluate("state.lastLoad.live+state.lastLoad.blank"),
+  );
+  assert(
+    await evaluate(
+      '__motions.filter(m=>m.kind==="shell").every(m=>m.html.includes("#art-shell")&&!m.html.includes("live")&&!m.html.includes("blank"))',
+    ),
+    "Reload shells reveal no hidden sequence",
+  );
+  await screenshot("coquay-reload.png");
+  await until('__motions.some(m=>m.kind==="deal")');
+  assert.equal(
+    await evaluate('__motions.filter(m=>m.kind==="deal").length'),
+    await evaluate(
+      "state.boxes.X.received.length+state.boxes.O.received.length",
+    ),
+  );
+  await screenshot("coquay-deal.png");
+  await until(
+    '!document.querySelector(".arena").dataset.phase && !document.querySelector("#table-fx").children.length',
+  );
+  assert.equal(
+    await evaluate('document.querySelectorAll(".slot.receiving").length'),
+    0,
+  );
+  assert.equal(
+    await evaluate('$("ammo-live").textContent'),
+    String(await evaluate("state.ammunition.live")),
+  );
+  assert.equal(
+    await evaluate('$("ammo-blank").textContent'),
+    String(await evaluate("state.ammunition.blank")),
+  );
+  motionCount = await evaluate("__motions.length");
+  await evaluate("accept({...state})");
+  assert.equal(await evaluate("__motions.length"), motionCount);
   room = fixture.store.get(room.id);
   room.duel.hp.bot = 1;
   room.duel.chamber = [true, false];
@@ -380,6 +464,8 @@ async function main() {
   });
   large = fixture.store.join(large.id, users.O);
   large.duel.inventory.player = Array(12).fill("magnifier");
+  large.duel.inventory.player[0] = "medicine";
+  large.duel.hp.player = 19;
   db.prepare("UPDATE coquay_rooms SET data_json=? WHERE id=?").run(
     JSON.stringify(large),
     large.id,
@@ -401,6 +487,26 @@ async function main() {
   await click("#tray-X .slot:last-child", true);
   assert.equal(await evaluate('$("item-dialog").open'), true);
   await click('[data-close="item-dialog"]', true);
+  await click('#tray-X [data-item="medicine"]', true);
+  assert.match(await evaluate('$("item-title").textContent'), /\+1 HP/);
+  await click("#use-item", true);
+  await until("state.hp.X===20 && !pending");
+  await until('__motions.some(m=>m.kind==="heal")');
+  await screenshot("coquay-heal.png");
+  await until('!document.querySelector("#table-fx").children.length');
+  // Reduced motion still applies server results, without flying sprites or timers.
+  await send("Emulation.setEmulatedMedia", {
+    features: [{ name: "prefers-reduced-motion", value: "reduce" }],
+  });
+  motionCount = await evaluate("__motions.length");
+  await click('#tray-X [data-item="magnifier"]', true);
+  await click("#use-item", true);
+  await until("state.knownShell!==null && !pending");
+  assert.equal(await evaluate("__motions.length"), motionCount);
+  assert.equal(
+    await evaluate('document.querySelector("#table-fx").children.length'),
+    0,
+  );
   await send("Network.clearBrowserCookies");
   await send("Page.navigate", {
     url: config.origin + "/coquay/room/" + large.id,
@@ -413,7 +519,7 @@ async function main() {
     "none",
   );
   assert.equal(await evaluate('$("private-intel").hidden'), true);
-  await click("#tray-X .slot:last-child", true);
+  await click('#tray-X [data-item="magnifier"]', true);
   assert.equal(await evaluate('$("use-item").hidden'), true);
   assert.deepEqual(errors, []);
   console.log(

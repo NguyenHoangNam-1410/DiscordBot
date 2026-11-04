@@ -14,8 +14,7 @@ let pairTimer = null,
   pairAttempt = 0,
   pairVisible = false;
 let selectedItem = null,
-  rotated = false,
-  fxTimers = [];
+  rotated = false;
 const canAct = () =>
   !!(
     state?.me &&
@@ -34,14 +33,350 @@ function art(id) {
   svg.append(use);
   return svg;
 }
+// Visual effects follow accepted public snapshots; they never predict the chamber.
+const tableMotion = (() => {
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+  const origins = new WeakMap();
+  const timers = new Set(),
+    animations = new Set(),
+    sprites = new Set(),
+    receiving = new Set();
+  let generation = 0,
+    holder = null;
+  const point = (el) => {
+    const r = el.getBoundingClientRect();
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+  };
+  function slotPoint(side, index) {
+    const tray = $("tray-" + side),
+      slot = tray.children[index];
+    if (!slot) return point(tray);
+    const r = slot.getBoundingClientRect(),
+      clip = tray.getBoundingClientRect();
+    return r.left >= clip.left && r.right <= clip.right
+      ? point(slot)
+      : point(tray);
+  }
+  function position(side, snap = false) {
+    if (!state) return;
+    const gun = $("weapon"),
+      lane = $("weapon-lane-" + side);
+    const height = Math.max(22, Math.min(82, lane.offsetHeight - 4));
+    if (snap || !gun.dataset.holder) gun.classList.add("positioning");
+    gun.style.top = lane.offsetTop + lane.offsetHeight / 2 + "px";
+    gun.style.height = height + "px";
+    gun.style.width =
+      Math.min(340, height * 3.2, lane.offsetWidth * 0.8) + "px";
+    gun.dataset.holder = side;
+    gun.setAttribute("aria-label", "Súng · " + label(side) + " đang giữ lượt");
+    gun.hidden = state.status === "waiting";
+    if (gun.classList.contains("positioning")) {
+      void gun.offsetWidth;
+      gun.classList.remove("positioning");
+    }
+  }
+  function later(fn, ms) {
+    const token = generation;
+    const timer = setTimeout(() => {
+      timers.delete(timer);
+      if (token === generation) fn();
+    }, ms);
+    timers.add(timer);
+  }
+  function sprite(key, kind, center, size = 38) {
+    const el = document.createElement("div");
+    el.className = "table-flight";
+    el.dataset.fx = kind;
+    el.style.width = el.style.height = size + "px";
+    el.style.left = center.x - size / 2 + "px";
+    el.style.top = center.y - size / 2 + "px";
+    el.append(art(key));
+    $("table-fx").append(el);
+    sprites.add(el);
+    origins.set(el, { x: scrollX, y: scrollY });
+    return el;
+  }
+  function animate(el, frames, options, finish = () => {}) {
+    const token = generation;
+    const animation = el.animate(frames, options);
+    animations.add(animation);
+    animation.finished
+      .then(() => {
+        animations.delete(animation);
+        sprites.delete(el);
+        el.remove();
+        if (token === generation) finish();
+      })
+      .catch(() => {});
+  }
+  function fly(key, kind, from, to, delay = 0, finish = () => {}) {
+    const el = sprite(key, kind, from, kind === "shell" ? 28 : 38);
+    const dx = to.x - from.x,
+      dy = to.y - from.y;
+    animate(
+      el,
+      [
+        { transform: "translate(0,0) scale(.7)", opacity: 0 },
+        {
+          transform: `translate(${dx * 0.45}px,${dy * 0.45 - 22}px) scale(1.13)`,
+          opacity: 1,
+          offset: 0.5,
+        },
+        { transform: `translate(${dx}px,${dy}px) scale(.55)`, opacity: 0 },
+      ],
+      {
+        duration: kind === "shell" ? 270 : 420,
+        delay,
+        easing: "cubic-bezier(.2,.65,.3,1)",
+        fill: "both",
+      },
+      finish,
+    );
+  }
+  function reveal(side, index) {
+    receiving.delete(side + ":" + index);
+    $("tray-" + side).children[index]?.classList.remove("receiving");
+  }
+  function reset() {
+    generation++;
+    for (const timer of timers) clearTimeout(timer);
+    timers.clear();
+    for (const a of animations) a.cancel();
+    animations.clear();
+    for (const el of sprites) el.remove();
+    sprites.clear();
+    receiving.clear();
+    holder = null;
+    document
+      .querySelectorAll(".slot.receiving,.seat.hit,.player-avatar.heal")
+      .forEach((el) => el.classList.remove("receiving", "hit", "heal"));
+    $("weapon").classList.remove("fire", "reloading");
+    document.querySelector(".arena").classList.remove("impact");
+    delete document.querySelector(".arena").dataset.phase;
+    $("round-status").textContent = "";
+    if (state) position(state.turn, true);
+  }
+  function prepare(before, next) {
+    if (!before || before.id !== next.id || before.me !== next.me) {
+      reset();
+      return null;
+    }
+    if (next.version <= before.version) return null;
+    const moved = next.moves > before.moves,
+      reload = next.round > before.round && next.status === "playing";
+    if (!moved && !reload) {
+      if (next.status !== before.status) reset();
+      return null;
+    }
+    // Capture the consumed slot before render compacts the inventory.
+    const action = moved ? next.lastAction : null;
+    let from = null;
+    if (action?.type === "item") {
+      const index = before.inventories[action.mark].indexOf(action.itemId);
+      from = slotPoint(action.mark, Math.max(0, index));
+    }
+    reset();
+    if (
+      reduced.matches ||
+      document.hidden ||
+      typeof Element.prototype.animate !== "function"
+    )
+      return null;
+    const grants = [];
+    if (reload)
+      for (const side of ["X", "O"]) {
+        const items = next.boxes[side].received,
+          start = next.inventories[side].length - items.length;
+        // A reconnect may jump over uses after a reload. Only animate items still at their known slots.
+        if (
+          start >= 0 &&
+          items.every((key, i) => next.inventories[side][start + i] === key)
+        )
+          items.forEach((key, i) => {
+            grants.push({ side, key, index: start + i });
+            receiving.add(side + ":" + (start + i));
+          });
+      }
+    holder = action?.type === "shoot" ? action.mark : next.turn;
+    return {
+      action,
+      from,
+      reload,
+      grants,
+      healed:
+        action?.itemId === "medicine"
+          ? next.hp[action.mark] - before.hp[action.mark]
+          : 0,
+    };
+  }
+  function heal(side, amount) {
+    const avatar = $("avatar-" + side).parentElement;
+    avatar.classList.add("heal");
+    const p = point(avatar),
+      el = document.createElement("span");
+    el.className = "hp-gain";
+    el.dataset.fx = "heal";
+    el.textContent = "+" + amount + " HP";
+    el.style.left = p.x + "px";
+    el.style.top = p.y - 18 + "px";
+    $("table-fx").append(el);
+    sprites.add(el);
+    origins.set(el, { x: scrollX, y: scrollY });
+    animate(
+      el,
+      [
+        { opacity: 0, transform: "translate(-50%,0)" },
+        { opacity: 1, offset: 0.25 },
+        { opacity: 0, transform: "translate(-50%,-30px)" },
+      ],
+      { duration: 700, fill: "both" },
+      () => avatar.classList.remove("heal"),
+    );
+  }
+  function run(plan) {
+    if (!plan) return;
+    const { action, from, reload, grants, healed } = plan;
+    if (action?.type === "item") {
+      document.querySelector(".arena").dataset.phase = "use";
+      fly(
+        action.itemId,
+        "use",
+        from,
+        point($("avatar-" + action.mark).parentElement),
+        0,
+        () => {
+          if (healed > 0) heal(action.mark, healed);
+          if (!reload) delete document.querySelector(".arena").dataset.phase;
+        },
+      );
+    }
+    if (action?.type === "shoot") {
+      void $("weapon").offsetWidth;
+      if (action.live) $("weapon").classList.add("fire");
+      if (action.damage) {
+        $("seat-" + action.target).classList.add("hit");
+        document.querySelector(".arena").classList.add("impact");
+      }
+      later(() => {
+        holder = null;
+        position(state.turn);
+      }, 180);
+      later(() => {
+        $("weapon").classList.remove("fire");
+        $("seat-" + action.target).classList.remove("hit");
+        document.querySelector(".arena").classList.remove("impact");
+      }, 650);
+    }
+    if (!reload) return;
+    const start = action ? 650 : 0;
+    later(() => {
+      document.querySelector(".arena").dataset.phase = "reload";
+      $("round-status").textContent = "Đang nạp đạn…";
+      $("weapon").classList.add("reloading");
+      const center = point($("table-center")),
+        gun = point($("weapon"));
+      // Neutral casings show only a public count, never the secret live/blank sequence.
+      const count = state.lastLoad.live + state.lastLoad.blank;
+      for (let i = 0; i < count; i++)
+        fly(
+          "shell",
+          "shell",
+          { x: center.x + (i - count / 2) * 8, y: center.y },
+          gun,
+          i * 75,
+        );
+      later(
+        () => {
+          $("weapon").classList.remove("reloading");
+          deal(grants);
+        },
+        count * 75 + 310,
+      );
+    }, start);
+  }
+  function deal(grants) {
+    if (!grants.length) {
+      $("round-status").textContent = "Túi đầy · Không nhận thêm đạo cụ";
+      later(() => {
+        $("round-status").textContent = "";
+        delete document.querySelector(".arena").dataset.phase;
+      }, 800);
+      return;
+    }
+    document.querySelector(".arena").dataset.phase = "deal";
+    $("round-status").textContent = "Mở hộp đạo cụ…";
+    const rect = $("table-center").getBoundingClientRect();
+    for (const side of ["X", "O"]) {
+      const items = grants.filter((g) => g.side === side);
+      if (!items.length) continue;
+      const from = {
+        x: side === "X" ? rect.left - 12 : rect.right + 12,
+        y: rect.top + rect.height / 2,
+      };
+      const box = sprite("box", "box", from, 34);
+      animate(
+        box,
+        [
+          { transform: "scale(.6)", opacity: 0 },
+          { transform: "scale(1)", opacity: 1, offset: 0.2 },
+          { transform: "scale(1)", opacity: 1, offset: 0.8 },
+          { transform: "scale(.8)", opacity: 0 },
+        ],
+        { duration: items.length * 110 + 520, fill: "both" },
+      );
+      items.forEach((grant, i) =>
+        fly(
+          grant.key,
+          "deal",
+          from,
+          slotPoint(side, grant.index),
+          160 + i * 110,
+          () => reveal(side, grant.index),
+        ),
+      );
+    }
+    later(() => {
+      for (const g of grants) reveal(g.side, g.index);
+      $("round-status").textContent = "";
+      delete document.querySelector(".arena").dataset.phase;
+    }, 1000);
+  }
+  reduced.addEventListener("change", reset);
+  window.addEventListener("resize", reset);
+  window.addEventListener(
+    "scroll",
+    () => {
+      // Page anchoring can scroll when a private hint disappears. Keep the sequence
+      // running, and align viewport sprites with their document positions.
+      for (const el of sprites) {
+        const origin = origins.get(el);
+        if (origin)
+          el.style.translate = `${origin.x - scrollX}px ${origin.y - scrollY}px`;
+      }
+    },
+    { capture: true, passive: true },
+  );
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) reset();
+  });
+  return {
+    prepare,
+    run,
+    reset,
+    position: () => {
+      if (state) position(holder || state.turn);
+    },
+    isReceiving: (side, index) => receiving.has(side + ":" + index),
+  };
+})();
 function render() {
   if (!state) return;
   WebGamePlayers.render(state);
   $("room-code").textContent = state.id.slice(0, 8).toUpperCase();
   $("round").textContent = state.round || "—";
-  $("ammo").textContent = state.round
-    ? `${state.ammunition.live} thật · ${state.ammunition.blank} lép · Thứ tự kín`
-    : "Đang chờ nạp đạn";
+  $("ammo-live").textContent = state.round ? state.ammunition.live : "—";
+  $("ammo-blank").textContent = state.round ? state.ammunition.blank : "—";
+  $("ammo-note").textContent = state.round ? "Thứ tự kín" : "Đang chờ nạp đạn";
   $("move-count").textContent = state.moves + " thao tác";
   $("rules-detail").textContent = state.rulesLabel;
   const badges = [
@@ -67,9 +402,9 @@ function render() {
     );
     $("hp-" + side).textContent = `${state.hp[side]} / ${state.rules.maxHp} HP`;
     const bar = $("bar-" + side),
-      fill = document.createElement("span");
+      fill = bar.firstElementChild || document.createElement("span");
     fill.style.width = (state.hp[side] / state.rules.maxHp) * 100 + "%";
-    bar.replaceChildren(fill);
+    if (!bar.firstElementChild) bar.append(fill);
     bar.setAttribute("aria-valuemin", "0");
     bar.setAttribute("aria-valuemax", String(state.rules.maxHp));
     bar.setAttribute("aria-valuenow", String(state.hp[side]));
@@ -79,6 +414,8 @@ function render() {
         const key = inv[i],
           b = document.createElement("button");
         b.className = "slot" + (key ? "" : " empty");
+        b.dataset.slot = String(i);
+        b.classList.toggle("receiving", tableMotion.isReceiving(side, i));
         b.type = "button";
         if (!key) {
           b.disabled = true;
@@ -86,6 +423,12 @@ function render() {
           return b;
         }
         b.append(art(key));
+        if (key === "medicine") {
+          const badge = document.createElement("span");
+          badge.className = "heal-badge";
+          badge.textContent = "+1";
+          b.append(badge);
+        }
         b.title = item(key).name;
         b.setAttribute("aria-label", item(key).name);
         b.dataset.item = key;
@@ -133,10 +476,10 @@ function render() {
     state.status === "waiting" ? "Hủy phòng" : "Đầu hàng";
   $("pair-panel").hidden = !pairVisible || !!state.me;
   $("last-action").textContent = actionText(state.lastAction);
-  $("landscape-log").textContent = actionText(state.lastAction);
   if ($("item-dialog").open && selectedItem) updateItemButton();
   if ($("inventory-dialog").open) renderInventory();
   updateClock();
+  tableMotion.position();
 }
 function actionText(a) {
   if (!a) return "Đạn thật. Đạn lép. Bạn sẽ chọn ai?";
@@ -168,6 +511,7 @@ function openItem(key, side) {
 }
 function renderInventory() {
   const root = $("inventory-detail");
+  const catalogOpen = root.querySelector(".item-catalog")?.open || false;
   root.replaceChildren();
   for (const side of ["X", "O"]) {
     const h = document.createElement("h3");
@@ -201,6 +545,25 @@ function renderInventory() {
       root.append(row);
     }
   }
+  const catalog = document.createElement("details"),
+    summary = document.createElement("summary");
+  catalog.className = "item-catalog";
+  catalog.open = catalogOpen;
+  summary.textContent = state.items.length + " loại đạo cụ có thể nhận";
+  catalog.append(summary);
+  for (const entry of state.items) {
+    const row = document.createElement("div"),
+      body = document.createElement("div"),
+      name = document.createElement("strong"),
+      description = document.createElement("p");
+    row.className = "catalog-row";
+    name.textContent = entry.name;
+    description.textContent = entry.description;
+    body.append(name, description);
+    row.append(art(entry.id), body);
+    catalog.append(row);
+  }
+  root.append(catalog);
 }
 async function commit(data) {
   if (!canAct()) return;
@@ -217,41 +580,10 @@ async function commit(data) {
     render();
   }
 }
-function animateAction(before, next) {
-  const a = next.lastAction;
-  if (
-    !before ||
-    before.me !== next.me ||
-    before.id !== next.id ||
-    next.moves <= before.moves ||
-    !a
-  )
-    return;
-  for (const t of fxTimers) clearTimeout(t);
-  fxTimers = [];
-  for (const side of ["X", "O"]) $("seat-" + side).classList.remove("hit");
-  $("weapon").classList.remove("fire");
-  document.querySelector(".arena").classList.remove("impact");
-  if (a.type !== "shoot") return;
-  $("weapon").classList.toggle("aim-self", a.target === a.mark);
-  void $("weapon").offsetWidth;
-  if (a.live) $("weapon").classList.add("fire");
-  if (a.damage) {
-    $("seat-" + a.target).classList.add("hit");
-    document.querySelector(".arena").classList.add("impact");
-  }
-  fxTimers.push(
-    setTimeout(() => {
-      $("weapon").classList.remove("fire");
-      $("seat-" + a.target).classList.remove("hit");
-      document.querySelector(".arena").classList.remove("impact");
-    }, 650),
-  );
-}
 function accept(next) {
   if (state && next.version < state.version) return;
   WebGameFeedback.update("coquay", next);
-  animateAction(state, next);
+  const motion = tableMotion.prepare(state, next);
   if (state && state.status !== next.status) $("leave-dialog").close();
   state = next;
   offset = next.serverNow - Date.now();
@@ -266,6 +598,7 @@ function accept(next) {
     clearStoredPairing();
   }
   render();
+  tableMotion.run(motion);
 }
 $("shoot-opponent").addEventListener("click", () =>
   commit({ type: "shoot", target: "opponent" }),
@@ -285,6 +618,7 @@ $("use-item").addEventListener("click", () => {
   commit({ type: "item", itemId: key });
 });
 $("rotate-table").addEventListener("click", () => {
+  tableMotion.reset();
   rotated = !rotated;
   $("felt").classList.toggle("rotated", rotated);
   $("rotate-table").setAttribute("aria-pressed", String(rotated));
@@ -588,6 +922,7 @@ async function pollPairing(attempt = pairAttempt) {
   pairTimer = setTimeout(() => pollPairing(attempt), 2000);
 }
 window.addEventListener("pagehide", () => {
+  tableMotion.reset();
   source?.close();
   source = null;
   pairing = false;

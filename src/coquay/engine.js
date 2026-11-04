@@ -28,8 +28,9 @@ const ITEMS = Object.freeze([
   },
   {
     id: "medicine",
-    name: "Thuốc hồi phục",
-    description: "Hồi 1 HP, không vượt HP tối đa.",
+    name: "Thuốc lá · +1 HP",
+    description:
+      "Hồi ngay 1 HP, không vượt HP tối đa. Chỉ dùng khi đang mất máu; không mất lượt.",
   },
   {
     id: "beer",

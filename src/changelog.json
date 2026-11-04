@@ -1,5 +1,18 @@
 [
   {
+    "id": "e5e695bc-05c3-4dd1-84e3-0a74a8d83be4",
+    "updatedAt": "2026-11-04T03:38:25.932Z",
+    "auditedAt": "2026-11-04T03:38:25.932Z",
+    "title": "Cò quay Nga: chuyển súng và hiệu ứng đạo cụ",
+    "type": "improvement",
+    "scope": "coquay",
+    "changes": [
+      "Súng trượt về phía người giữ lượt; số đạn thật/lép hiển thị cố định giữa bàn. Nút xoay 180 độ nằm trên thanh đầu, dùng được cả trên điện thoại.",
+      "Sang hiệp mới có hiệu ứng nạp đạn và mở hộp, đạo cụ bay vào ô của từng người. Dùng đạo cụ có hiệu ứng bay về avatar; không phát lại hiệu ứng cũ khi tải lại trang.",
+      "Làm rõ món hồi 1 HP thành Thuốc lá · +1 HP, thêm nhãn và hiệu ứng hồi máu; mục tra cứu hiển thị đủ 7 loại đạo cụ. Hỗ trợ chế độ giảm chuyển động."
+    ]
+  },
+  {
     "id": "777600b4-52d5-4dc2-a256-c1d79fe6f680",
     "updatedAt": "2026-11-04T03:06:29.158Z",
     "auditedAt": "2026-11-04T03:06:29.158Z",
