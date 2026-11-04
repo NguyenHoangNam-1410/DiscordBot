@@ -8,6 +8,7 @@ globalThis.WebGameMobile = (() => {
   const configurations = {
     caro: [],
     dots: [],
+    santorini: [],
     walls: [["actions", "Thao tác", ["#controls"]]],
     blokus: [
       ["pieces", "Bộ quân", [".inventory"]],

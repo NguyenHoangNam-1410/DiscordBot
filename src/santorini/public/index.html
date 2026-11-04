@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#102a38" />
+    <title>Santorini · Xây tới đỉnh cao</title>
+    <link rel="stylesheet" href="/santorini/style.css" />
+    <link rel="stylesheet" href="/mobile-ui.css" />
+    <link rel="stylesheet" href="/players.css" />
+    <link rel="stylesheet" href="/board-ui.css" />
+    <link rel="stylesheet" href="/feedback.css" />
+    <script src="/players.js" defer></script>
+    <script src="/board-ui.js" defer></script>
+    <script src="/feedback.js" defer></script>
+    <script src="/mobile-ui.js" defer></script>
+    <script src="/santorini/app.js" defer></script>
+  </head>
+  <body>
+    <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <symbol id="worker-art" viewBox="0 0 50 64">
+          <ellipse cx="25" cy="59" rx="19" ry="4" fill="#142c3b" opacity=".3" />
+          <path
+            d="M11 56v-9l6-22h16l6 22v9z"
+            fill="currentColor"
+            stroke="#f7f2dc"
+            stroke-width="2"
+          />
+          <circle
+            cx="25"
+            cy="14"
+            r="11"
+            fill="currentColor"
+            stroke="#fff5df"
+            stroke-width="2"
+          />
+          <path
+            d="M16 29h18m-19 4 20 0"
+            stroke="#f6edd7"
+            stroke-width="2"
+            opacity=".8"
+          />
+        </symbol>
+      </defs>
+    </svg>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="/">◒ santorini<span>.</span></a
+        ><span class="tag">HAI NGƯỜI / LUẬT CƠ BẢN</span
+        ><span id="connection" role="status">Chưa kết nối</span>
+      </header>
+      <main>
+        <div class="heading">
+          <div>
+            <p class="eyebrow">MỘT HÒN ĐẢO. MỘT ĐỈNH CAO.</p>
+            <h1>Đi khéo. Xây cao.</h1>
+            <p>Đưa một thợ từ tầng 2 lên tầng 3 để chiến thắng.</p>
+          </div>
+          <div class="room-label">PHÒNG <strong id="room-code">—</strong></div>
+        </div>
+        <div id="notice" class="notice" role="alert" hidden></div>
+        <div class="game-layout">
+          <section class="board-panel" aria-label="Đảo Santorini">
+            <div class="board-toolbar">
+              <strong id="board-state" aria-live="polite"
+                >Mở /santorini choi trong Discord</strong
+              ><span id="move-count">0 lượt</span>
+            </div>
+            <div
+              id="rule-badges"
+              class="rule-badges"
+              role="group"
+              aria-label="Cấu hình phòng"
+            ></div>
+            <div class="board-scroll">
+              <div
+                id="board"
+                class="board"
+                role="group"
+                aria-label="Đảo Santorini 5 hàng 5 cột"
+              ></div>
+            </div>
+            <section id="controls" class="controls" hidden>
+              <div
+                class="step-strip"
+                id="steps"
+                aria-label="Các bước trong lượt"
+              ></div>
+              <p id="instruction" aria-live="polite">Chọn vị trí đặt thợ</p>
+              <div class="actions">
+                <button id="clear" type="button">Hủy xem trước</button
+                ><button id="confirm" class="primary" type="button" disabled>
+                  Xác nhận
+                </button>
+              </div>
+            </section>
+            <p id="last-action" class="last-action" aria-live="polite">
+              Thợ và công trình đều được xem công khai.
+            </p>
+            <div class="legend">
+              <span><i class="legal-key"></i> Ô hợp lệ</span
+              ><span><i class="recent-key"></i> Vừa đi / xây</span
+              ><span>Mái vòm: khóa ô</span>
+            </div>
+          </section>
+          <aside class="sidebar">
+            <section class="status-card">
+              <p class="eyebrow" id="status-label">SANTORINI</p>
+              <h2 id="status-title">Sẵn sàng lên đảo?</h2>
+              <p id="status-detail">Mở phòng từ Discord để bắt đầu.</p>
+            </section>
+            <section class="players-card" aria-label="Người chơi">
+              <div class="player" id="player-X">
+                <span class="player-avatar x"
+                  ><img
+                    id="avatar-X"
+                    alt=""
+                    referrerpolicy="no-referrer"
+                    decoding="async"
+                    draggable="false"
+                    hidden
+                  /><span id="avatar-fallback-X" aria-hidden="true"
+                    >?</span
+                  ></span
+                >
+                <div>
+                  <span class="player-label" id="role-X">THỢ XANH</span
+                  ><strong id="name-X">Chủ phòng</strong
+                  ><span class="player-summary" id="score-X">Chưa đặt thợ</span
+                  ><span class="you" id="you-X" hidden>BẠN</span>
+                </div>
+                <time id="clock-X" class="player-clock">30:00</time>
+              </div>
+              <div class="player" id="player-O">
+                <span class="player-avatar o"
+                  ><img
+                    id="avatar-O"
+                    alt=""
+                    referrerpolicy="no-referrer"
+                    decoding="async"
+                    draggable="false"
+                    hidden
+                  /><span id="avatar-fallback-O" aria-hidden="true"
+                    >?</span
+                  ></span
+                >
+                <div>
+                  <span class="player-label" id="role-O">THỢ CAM</span
+                  ><strong id="name-O">Đang chờ đối thủ</strong
+                  ><span class="player-summary" id="score-O">Chưa đặt thợ</span
+                  ><span class="you" id="you-O" hidden>BẠN</span>
+                </div>
+                <time id="clock-O" class="player-clock">30:00</time>
+              </div>
+            </section>
+            <button id="connect-player" class="primary" hidden>
+              Xác nhận người chơi
+            </button>
+            <section id="pair-panel" class="status-card" hidden>
+              <p class="eyebrow">KẾT NỐI TÀI KHOẢN</p>
+              <h2 id="pair-code"></h2>
+              <p>
+                Trong tin phòng Discord, bấm
+                <strong>Kết nối tài khoản</strong> và nhập mã này. Mã có hiệu
+                lực 5 phút. Chỉ nhập mã từ tab bàn cờ của chính bạn.
+              </p>
+              <p id="pair-status" role="status">
+                Đang chờ bạn xác nhận trong Discord…
+              </p>
+            </section>
+            <button id="leave" class="leave-button" hidden>Đầu hàng</button>
+
+            <details class="rules">
+              <summary>Luật & cách thao tác</summary>
+              <p>
+                Mỗi người đặt 2 thợ vào ô trống. Mỗi lượt chọn một thợ để đi 1 ô
+                cạnh (kể cả chéo), rồi xây tại một ô trống cạnh chính thợ đó.
+                Chỉ lên tối đa 1 tầng; đi xuống không giới hạn.
+              </p>
+              <p>
+                Xây tầng 1 → 2 → 3 → mái vòm. Không đi/xây vào thợ hay mái vòm.
+                Có thể xây ô vừa rời, không giới hạn số khối.
+                <strong
+                  >Đi từ tầng 2 lên tầng 3 thắng ngay, không cần xây.</strong
+                >
+                Không có lượt đi và xây hợp lệ thì thua.
+              </p>
+              <p>
+                Chọn thợ → ô đi → ô xây → Xác nhận. Hủy/Esc chỉ bỏ xem trước. Số
+                trên ô là tầng; số trên thợ là thợ 1/2. Phím mũi tên đổi ô đang
+                focus, Enter/Space chọn ô.
+              </p>
+              <p id="rules-detail"></p>
+              <p>
+                Mất mạng đồng hồ vẫn chạy. Khán giả chỉ xem. Không cược xu,
+                không Thần lực.
+              </p>
+              <a
+                href="https://cdn.shopify.com/s/files/1/0246/2190/8043/files/Santorini_-_Rulebook_-_Print_-_2017.02.05_WEB.pdf?v=1702056099"
+                target="_blank"
+                rel="noopener noreferrer"
+                >Luật Classic của nhà phát hành ↗</a
+              >
+            </details>
+          </aside>
+        </div>
+      </main>
+      <footer class="page-footer">
+        <span>CHƠI VUI · KHÔNG CƯỢC XU</span><span>SANTORINI / CLASSIC</span>
+      </footer>
+    </div>
+    <dialog id="leave-dialog">
+      <h2 id="leave-dialog-title">Đầu hàng ván đấu?</h2>
+      <p id="leave-dialog-detail">Đối thủ sẽ được tính thắng ván này.</p>
+      <div class="actions">
+        <button id="keep-playing">Tiếp tục chơi</button
+        ><button id="confirm-leave" class="danger">Đầu hàng</button>
+      </div>
+    </dialog>
+  </body>
+</html>

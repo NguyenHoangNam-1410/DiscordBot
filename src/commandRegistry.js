@@ -11,6 +11,7 @@ const COMMAND_FILES = Object.freeze([
   "battleship",
   "dots",
   "blokus",
+  "santorini",
   "mecung",
   "baucua",
   "taixiu",

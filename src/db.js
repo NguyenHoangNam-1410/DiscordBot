@@ -1721,4 +1721,11 @@ runMigration(68, "remove legacy coquay channel configuration", () => {
   );
 });
 
+runMigration(69, "santorini web duels", () => {
+  db.exec(`CREATE TABLE santorini_rooms(id TEXT PRIMARY KEY,guild_id TEXT NOT NULL,channel_id TEXT NOT NULL,status TEXT NOT NULL,data_json TEXT NOT NULL,ui_dirty INTEGER NOT NULL DEFAULT 1);
+ CREATE INDEX idx_santorini_open_channel ON santorini_rooms(guild_id,channel_id) WHERE status IN ('waiting','playing');
+ CREATE TABLE santorini_seats(guild_id TEXT NOT NULL,user_id TEXT NOT NULL,room_id TEXT NOT NULL REFERENCES santorini_rooms(id) ON DELETE CASCADE,PRIMARY KEY(guild_id,user_id));
+ CREATE TABLE santorini_channel_settings(guild_id TEXT NOT NULL,channel_id TEXT NOT NULL,max_rooms INTEGER NOT NULL CHECK(max_rooms BETWEEN 1 AND 20),updated_by TEXT NOT NULL,updated_at INTEGER NOT NULL,PRIMARY KEY(guild_id,channel_id));`);
+});
+
 module.exports = { db, dbPath, runMigration };

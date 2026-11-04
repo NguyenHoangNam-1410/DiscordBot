@@ -293,13 +293,44 @@ async function main() {
   assert(privateMode.count() > 0);
   f.windowEvents.pagehide();
   assert.equal(f.audio[0].state, "closed");
-  for (const game of ["walls", "dots", "blokus", "battleship", "mecung"]) {
+  for (const game of [
+    "walls",
+    "dots",
+    "blokus",
+    "battleship",
+    "mecung",
+    "santorini",
+  ]) {
     const s = require(`../src/${game}/store`).createStore(db);
     let r = s.create({ guildId: game, channelId: "c", user: user.X });
     let a = s.snapshot(r, user.X.id);
     r = s.join(r.id, user.O);
     let b = s.snapshot(r, user.X.id);
     assert.deepEqual(cues(f, game, a, b), ["join"]);
+    if (game === "santorini") {
+      a = b;
+      r = s.move(r.id, user.X.id, { type: "place", cells: [0, 1] }, r.version);
+      b = s.snapshot(r, user.X.id);
+      assert.deepEqual(cues(f, game, a, b), ["ready"]);
+      a = b;
+      r = s.move(
+        r.id,
+        user.O.id,
+        { type: "place", cells: [23, 24] },
+        r.version,
+      );
+      b = s.snapshot(r, user.X.id);
+      assert.deepEqual(cues(f, game, a, b), ["start"]);
+      a = b;
+      r = s.move(
+        r.id,
+        user.X.id,
+        { type: "turn", worker: 0, to: 5, build: 0 },
+        r.version,
+      );
+      b = s.snapshot(r, user.X.id);
+      assert.deepEqual(cues(f, game, a, b), ["move"]);
+    }
     if (game === "walls") {
       a = b;
       r = s.wall(
@@ -372,7 +403,7 @@ async function main() {
     JSON.stringify({
       ok: true,
       feedback:
-        "six real game stores, join/start/move/turn/hit/capture/results, deduplication, no autoplay/history replay, mute persistence/storage sync, unsupported/blocked audio, connection icon",
+        "seven real game stores, Santorini placement/start/turn, join/move/hit/capture/results, deduplication, no autoplay/history replay, mute persistence/storage sync, unsupported/blocked audio, connection icon",
     }),
   );
 }

@@ -7,6 +7,17 @@ globalThis.WebGameBoardUI = (() => {
       text: `${rules.timeMinutes ?? 30} phút/người`,
       title: "Đồng hồ riêng, chỉ chạy khi tới lượt và không cộng giờ.",
     };
+    if (game === "santorini")
+      return [
+        { text: "5×5 · 2 thợ/người", key: true },
+        { text: "Không Thần lực" },
+        { text: "Đi lên tầng 3 để thắng" },
+        {
+          text:
+            (state.playerLabels?.[state.first] || "Chủ phòng") + " đi trước",
+        },
+        clock,
+      ];
     if (game === "caro") {
       const badges = [
         { text: `Bàn ${state.size}×${state.size}` },

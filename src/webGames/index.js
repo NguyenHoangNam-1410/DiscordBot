@@ -20,6 +20,9 @@ const { createGame: createMazeGame } = require("../mecung/webGame");
 const { createStore: createCoquayStore } = require("../coquay/store");
 const { createGame: createCoquayGame } = require("../coquay/webGame");
 
+const { createStore: createSantoriniStore } = require("../santorini/store");
+const { createGame: createSantoriniGame } = require("../santorini/webGame");
+
 // Register each new game here. Transport, browser sessions and Discord sync are shared.
 module.exports = createRuntime({
   games: [
@@ -30,6 +33,7 @@ module.exports = createRuntime({
     createBlokusGame({ store: createBlokusStore(db), db }),
     createMazeGame({ store: createMazeStore(db), db }),
     createCoquayGame({ store: createCoquayStore(db), db }),
+    createSantoriniGame({ store: createSantoriniStore(db), db }),
   ],
   legacyGame: "caro",
 });

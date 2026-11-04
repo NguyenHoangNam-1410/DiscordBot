@@ -89,6 +89,8 @@ const RESET_PLAYER_TABLES = Object.freeze([
   "coquay_rooms",
   "mecung_seats",
   "mecung_rooms",
+  "santorini_seats",
+  "santorini_rooms",
   "blokus_seats",
   "blokus_rooms",
   "dots_seats",

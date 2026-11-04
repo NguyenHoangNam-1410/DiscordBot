@@ -277,6 +277,18 @@ globalThis.WebGameFeedback = (() => {
     if (!before.players?.O && next.players?.O) return ["join"];
     if (before.status === "setup" && next.status === "playing")
       return ["start"];
+    if (
+      game === "santorini" &&
+      next.phase !== before.phase &&
+      next.phase === "turn"
+    )
+      return ["start"];
+    if (
+      game === "santorini" &&
+      next.lastAction?.type === "place" &&
+      next.lastAction.mark !== before.lastAction?.mark
+    )
+      return ["ready"];
     if (next.moves > before.moves) {
       const last = next.lastAction,
         actor =

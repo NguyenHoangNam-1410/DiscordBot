@@ -20,6 +20,7 @@ function getOperationalHealth() {
     (SELECT COUNT(*) FROM xiangqi_rounds WHERE status='open') +
     (SELECT COUNT(*) FROM walls_rooms WHERE status IN ('waiting','playing')) +
     (SELECT COUNT(*) FROM dots_rooms WHERE status IN ('waiting','playing')) +
+    (SELECT COUNT(*) FROM santorini_rooms WHERE status IN ('waiting','playing')) +
     (SELECT COUNT(*) FROM blokus_rooms WHERE status IN ('waiting','playing')) +
     (SELECT COUNT(*) FROM coquay_rooms WHERE status IN ('waiting','playing')) +
     (SELECT COUNT(*) FROM mecung_rooms WHERE status IN ('waiting','setup','playing')) +

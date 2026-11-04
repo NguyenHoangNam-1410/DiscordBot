@@ -122,3 +122,7 @@ Các hàm `discord.pending()` trả các mã phòng chưa gửi; `acknowledge(ro
 ## Cò quay Nga
 
 `/coquay choi` mở bàn đấu súng hai người tại `/coquay/room/<UUID>`, dùng chung Tailscale, xác nhận tài khoản, khán giả và SSE. HP và giới hạn đạo cụ cấu hình theo phòng. Giữ engine gốc, chuyển đạo cụ sang từng ván web và gỡ cơ chế cược/thành tựu Discord cũ; xem [coquay-web.md](coquay-web.md) cho luật hộp, bảy đạo cụ, thay đổi dữ liệu không hoàn trả và triển khai.
+
+## Santorini
+
+`/santorini choi` mở bàn 5×5, hai người, luật cơ bản không Thần lực. Đặt hai thợ, rồi đi và xây bằng cùng một thợ; đi từ tầng 2 lên tầng 3 thắng ngay. Dùng chung phòng, Tailscale, mã kết nối, SSE, khán giả, âm thanh và UI mobile. Không yêu cầu catalog kênh Discord cũ. Xem [santorini-web.md](santorini-web.md) cho cấu hình, nguồn luật và kiểm thử.

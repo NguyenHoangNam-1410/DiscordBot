@@ -26,6 +26,7 @@ const SUB_ALIASES = {
 const DEFAULT_SUBCOMMANDS = {
   dots: "choi",
   blokus: "choi",
+  santorini: "choi",
   mecung: "choi",
   caro: "choi",
   walls: "choi",

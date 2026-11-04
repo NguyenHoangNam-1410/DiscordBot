@@ -97,6 +97,10 @@ const PAGES = Object.freeze({
         "`/coquay choi [mau] [vatpham] [thoigian]` — đấu hai người trên web, mặc định 5 HP và 4 đạo cụ. Mở hộp mỗi hiệp nạp đạn, có khán giả, xoay bàn 180°, âm thanh và hiệu ứng. `/coquay phong` xem phòng; `/coquay luat` xem luật. Không cược xu, không thành tựu.",
       ],
       [
+        "◒ Santorini",
+        "`/santorini choi` — hai người, bàn 5×5, 2 thợ/người, không Thần lực. Mỗi lượt đi rồi xây; đi từ tầng 2 lên tầng 3 thắng ngay. Chọn `nguoitruoc` và `thoigian`; `/santorini phong` xem phòng, `/santorini luat` xem luật. Có khán giả và giao diện mobile, không cần đặt kênh cũ.",
+      ],
+      [
         "⚓ Battleship / Bắn tàu",
         "`/battleship choi` — chọn `kichthuoc`: Nhỏ (8×8/5 thuyền), Vừa (10×10/7) hoặc Lớn (12×12/10). Hai bên bố trí và xác nhận hạm đội kín rồi luân phiên bắn. `/battleship phong` xem hoặc mở phòng; `/battleship luat` xem luật. Hỗ trợ điện thoại, khán giả và tiền tố `!`; không cược xu.",
       ],

@@ -1,5 +1,18 @@
 [
   {
+    "id": "e79cb108-03c5-4c98-8b8d-8aee1f1fd0d8",
+    "updatedAt": "2026-11-04T05:09:10.936Z",
+    "auditedAt": "2026-11-04T05:09:10.936Z",
+    "title": "Santorini: đấu xây tháp hai người trên web",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Thêm /santorini choi: hai người, bàn 5×5, mỗi người hai thợ, luật cơ bản không Thần lực. Mỗi lượt đi rồi xây; đi từ tầng 2 lên tầng 3 thắng ngay, hết nước hợp lệ thì thua.",
+      "Có đặt thợ, xem trước và xác nhận lượt, ô hợp lệ và highlight vị trí vừa đi/xây. Giao diện PC ngang và mobile dọc/ngang giữ bàn cùng thao tác trong màn hình, có avatar, đồng hồ, âm thanh và khán giả trực tiếp.",
+      "Chọn người đi trước và đồng hồ 1–180 phút/người (mặc định 30, không cộng giờ). /santorini phong xem phòng, /santorini cauhinh chỉnh số phòng mỗi kênh. Không cần /quantri datkenh; hỗ trợ lệnh prefix !santorini."
+    ]
+  },
+  {
     "id": "e5e695bc-05c3-4dd1-84e3-0a74a8d83be4",
     "updatedAt": "2026-11-04T03:38:25.932Z",
     "auditedAt": "2026-11-04T03:38:25.932Z",

@@ -52,6 +52,12 @@ const { handleStore, handleBag } = require("./services/hardcoreInventoryView");
 const ROUTES = Object.freeze([
   ...["button", "modal"].map((kind) => ({
     kind,
+    prefix: "santorini:",
+    handle: (interaction) =>
+      require("./commands/santorini").handleButton(interaction),
+  })),
+  ...["button", "modal"].map((kind) => ({
+    kind,
     prefix: "mecung:",
     handle: (interaction) =>
       require("./commands/mecung").handleButton(interaction),
