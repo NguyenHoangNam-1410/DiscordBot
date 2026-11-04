@@ -2,6 +2,7 @@ const COMMAND_FILES = Object.freeze([
   "batdau",
   "trogiup",
   "huongdan",
+  "webgame",
   "changelog",
   "embed",
   "healthcheck",

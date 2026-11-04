@@ -1,5 +1,30 @@
 [
   {
+    "id": "0087e3be-b01a-45bd-87fd-c9f93bd6c578",
+    "updatedAt": "2026-11-04T08:29:25.567Z",
+    "auditedAt": "2026-11-04T08:29:25.567Z",
+    "title": "Battleship: bố trí gọn và mở hạm đội cuối ván",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Giai đoạn bố trí chỉ hiện biển của bạn; khay tàu nằm bên cạnh trên PC, điện thoại giữ menu Hạm đội. Khán giả thấy thông báo chờ.",
+      "Khi ván kết thúc, công khai mọi tàu đã đặt cho hai người chơi và khán giả, giữ nguyên các ô trúng/trượt và số tàu đã chìm."
+    ]
+  },
+  {
+    "id": "c8598c91-2c9f-4555-b95b-dfd24e5b3f34",
+    "updatedAt": "2026-11-04T08:19:22.834Z",
+    "auditedAt": "2026-11-04T08:19:22.834Z",
+    "title": "Danh sách game web và luật chơi từng bước",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Thêm /webgame và !webgame để xem 8 game web, lệnh mở phòng và menu hướng dẫn từng trò.",
+      "Luật trên mọi bàn web mở trong hộp thoại: chuẩn bị, mỗi lượt, thắng, thua và hòa; giữ thông tin cấu hình bàn hiện tại.",
+      "Thêm nút Luật chơi và nút ? ở thanh trên; phím chơi không tác động bàn khi đọc luật, đồng hồ vẫn chạy."
+    ]
+  },
+  {
     "id": "f40879bd-e104-4084-82d5-3a024fff29fe",
     "updatedAt": "2026-11-04T06:41:14.365Z",
     "auditedAt": "2026-11-04T06:41:14.365Z",

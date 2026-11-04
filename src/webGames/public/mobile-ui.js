@@ -177,6 +177,11 @@ globalThis.WebGameMobile = (() => {
       document.body.classList.remove("wg-mobile");
       root.hidden = true;
     }
+    if (game === "battleship" && buttons.has("view")) {
+      const setup = state?.status === "setup";
+      buttons.get("view").hidden = setup;
+      if (setup && active === "view") hide(false);
+    }
     schedule();
   }
   function hide(focus = true) {

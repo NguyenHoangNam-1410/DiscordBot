@@ -628,7 +628,6 @@ $("inventory-open").addEventListener("click", () => {
   renderInventory();
   $("inventory-dialog").showModal();
 });
-$("rules-open").addEventListener("click", () => $("rules-dialog").showModal());
 for (const b of document.querySelectorAll("[data-close]"))
   b.addEventListener("click", () => $(b.dataset.close).close());
 function notice(message) {

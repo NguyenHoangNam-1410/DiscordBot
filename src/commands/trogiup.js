@@ -58,7 +58,7 @@ const PAGES = Object.freeze({
       ],
       [
         "🎮 Chơi game",
-        "`/huongdan` — xem danh sách game; `/luat trochoi:<game>` — xem luật ngắn.",
+        "`/huongdan` — xem danh sách game; `/webgame` — 8 game web và hướng dẫn từng bước; `/luat trochoi:<game>` — xem luật ngắn.",
       ],
       [
         "🎒 Nhận và dùng vật phẩm",

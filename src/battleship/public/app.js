@@ -114,7 +114,8 @@ function accept(next) {
     pairAttempt++;
     clearStoredPairing();
   }
-  if (turnChanged && $("auto-view").checked)
+  if (state.status === "setup" && state.me) view = state.me;
+  else if (turnChanged && $("auto-view").checked)
     view =
       state.status === "setup"
         ? state.me || "X"
@@ -196,11 +197,14 @@ function render() {
   const setup = state.status === "setup",
     playing = state.status === "playing",
     waiting = state.status === "waiting";
+  if (setup && state.me) view = state.me;
   $("room-label").textContent = "Phòng " + state.id.slice(0, 8);
   $("rules-label").textContent = state.rulesLabel;
-  $("role-label").textContent = state.me
-    ? `Bạn chỉ huy ${labelFor(state.me).toLocaleLowerCase("vi")} · Chỉ bạn thấy hạm đội của mình`
-    : "Khán giả · Chỉ thấy các ô đã bắn";
+  $("role-label").textContent = state.revealedPlacements
+    ? "Ván đã kết thúc · Vị trí cả hai hạm đội đã công khai"
+    : state.me
+      ? `Bạn chỉ huy ${labelFor(state.me).toLocaleLowerCase("vi")} · Chỉ bạn thấy hạm đội của mình`
+      : "Khán giả · Chỉ thấy các ô đã bắn";
   $("status-title").textContent = waiting
     ? "Đang chờ đối thủ"
     : setup
@@ -238,6 +242,12 @@ function render() {
   $("leave").textContent = waiting ? "Hủy phòng" : "Đầu hàng";
   $("leave").disabled = pending || !connected;
   $("setup-tools").hidden = !setup || !state.me;
+  $("battle-layout").classList.toggle("setup-own", setup && !!state.me);
+  $("view-tabs").hidden = setup;
+  $("setup-spectator").hidden = !setup || !!state.me;
+  $("ship-legend").textContent = state.revealedPlacements
+    ? "Tàu đã công khai"
+    : "Thuyền của bạn";
   $("placement-count").textContent =
     `${state.placements.length}/${state.fleet.length} thuyền`;
   $("setup-hint").textContent =
@@ -253,6 +263,7 @@ function render() {
   $("rotate").textContent = `Mũi ${DIRECTION_LABELS[orientation]} · R`;
   renderFleet();
   for (const mark of ["X", "O"]) {
+    $("panel-" + mark).hidden = setup && mark !== state.me;
     $("name-" + mark).textContent = state.players[mark] || "Chờ đối thủ";
     $("role-" + mark).textContent = labelFor(mark);
     $("clock-" + mark).setAttribute(
@@ -344,11 +355,12 @@ function renderBoards() {
     const own = target === state.me,
       shotMap = new Map(state.boards[target].map((shot) => [shot.cell, shot])),
       shipMap = new Map();
-    if (own)
-      for (const ship of state.placements)
-        shipCells(ship, state.fleet[ship.id]).forEach((cell, index) =>
-          shipMap.set(cell, { ...ship, index }),
-        );
+    const visibleShips =
+      state.revealedPlacements?.[target] || (own ? state.placements : []);
+    for (const ship of visibleShips)
+      shipCells(ship, state.fleet[ship.id]).forEach((cell, index) =>
+        shipMap.set(cell, { ...ship, index }),
+      );
     const preview =
       drag?.active && own && drag.cell != null
         ? candidate(drag.cell, drag.id, drag.orientation)
@@ -414,7 +426,7 @@ function renderBoards() {
           el.classList.add("preview", ...(valid ? [] : ["preview-invalid"]));
         el.setAttribute(
           "aria-label",
-          `${String.fromCharCode(65 + col)}${row + 1}: ${shot ? (shot.hit ? "trúng thuyền" : "đã bắn trượt") : ship ? "thuyền của bạn" : "chưa bị bắn"}${recent ? ", phát bắn gần nhất" : ""}`,
+          `${String.fromCharCode(65 + col)}${row + 1}: ${shot ? (shot.hit ? "trúng thuyền" : "đã bắn trượt") : ship ? "thuyền chưa bị bắn" : "chưa bị bắn"}${recent ? ", phát bắn gần nhất" : ""}`,
         );
         el.addEventListener("click", () => {
           if (Date.now() < suppressClickUntil) return;

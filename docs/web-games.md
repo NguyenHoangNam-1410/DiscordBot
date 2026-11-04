@@ -4,6 +4,10 @@ Một tiến trình bot, một cổng HTTP, một địa chỉ HTTPS/Tailscale. 
 
 ## Giao diện điện thoại
 
+`/webgame` (hoặc `!webgame` khi bật prefix) liệt kê 8 game web, lệnh mở/xem phòng và menu hướng dẫn từng trò. Danh sách dùng được cả khi web đang tắt; nút mở trang chủ chỉ xuất hiện khi đã bật cấu hình web. Sau khi thêm lệnh cần chạy `npm run register`.
+
+Trên mọi bàn web, nút **Luật chơi** hoặc **?** ở thanh trên mở hộp thoại: chuẩn bị theo thứ tự, mỗi lượt làm gì, thắng nếu, thua nếu và hòa/đóng phòng khi có. Cấu hình bàn vẫn cập nhật trực tiếp trong hộp thoại; hướng dẫn mở phòng/kết nối được thu gọn ở cuối. Có nút Đóng/Escape; khi đang đọc, các phím chơi game không tác động tới bàn, đồng hồ vẫn chạy. Nội dung dùng chung với Discord trong `src/webGames/public/game-catalog.js`; tài nguyên giao diện là `/rules-ui.js` và `/rules-ui.css`.
+
 Sáu game dùng chung `/mobile-ui.js` và `/mobile-ui.css`: giữ bàn cờ trong khung màn hình, thanh avatar/đồng hồ một dòng, các menu công cụ/bản đồ/thông tin/tài khoản ở dưới. Mở menu sẽ thu bàn vừa phần còn lại; trên màn hình ngang, menu nằm cạnh bàn. Chi tiết dài chỉ cuộn trong menu. Chạm avatar mở thông tin người chơi; phím Escape hoặc nút Đóng thu menu lại. Blokus có kéo thả và cụm thao tác bám cạnh khối xem trước.
 
 Các menu di chuyển chính những nút đang có, giữ nguyên ID và sự kiện. Khi chuyển về máy tính, các phần được đưa về vị trí ban đầu. Không tạo bản sao nút hay thêm dữ liệu riêng tư vào DOM. Dots cũng dùng avatar Discord giống các game web khác; dữ liệu phòng cũ được cập nhật khi người chơi xác nhận lại tài khoản.

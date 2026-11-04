@@ -370,10 +370,19 @@ function createStore(db, now = Date.now) {
       rules,
       rulesLabel: rulesText(rules),
       fleet: [...room.fleet],
-      // Only the owner receives their placements. Every public cell was actually fired at.
+      // Private drafts stay owner-only. Final fleets are public once the room closes.
       placements: mark
         ? room.placements[mark].map((ship) => ({ ...ship }))
         : [],
+      revealedPlacements:
+        room.status === "finished"
+          ? Object.fromEntries(
+              ["X", "O"].map((side) => [
+                side,
+                room.placements[side].map((ship) => ({ ...ship })),
+              ]),
+            )
+          : null,
       setupRevision: mark ? room.setupRevision[mark] : null,
       ready: { ...room.ready },
       setupDeadline: room.setupDeadline,

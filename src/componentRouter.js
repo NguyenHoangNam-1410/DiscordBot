@@ -50,6 +50,12 @@ const checklistCommand = require("./commands/kiemtra");
 
 const { handleStore, handleBag } = require("./services/hardcoreInventoryView");
 const ROUTES = Object.freeze([
+  {
+    kind: "select",
+    prefix: "webgame:",
+    handle: (interaction) =>
+      require("./commands/webgame").handleSelect(interaction),
+  },
   ...["button", "modal"].map((kind) => ({
     kind,
     prefix: "santorini:",

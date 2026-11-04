@@ -302,6 +302,56 @@ p {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
 }
+.battle-layout.setup-own .boards {
+  grid-template-columns: minmax(0, 1fr);
+}
+#setup-spectator {
+  grid-column: 1 / -1;
+}
+@media (min-width: 901px) {
+  body:not(.wg-mobile) .battle-layout.setup-own {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+    align-items: start;
+    gap: 20px;
+  }
+  body:not(.wg-mobile) .setup-own .boards {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    max-width: 680px;
+    justify-self: center;
+  }
+  body:not(.wg-mobile) .setup-own #setup-tools {
+    grid-column: 2;
+    grid-row: 1;
+    margin: 0;
+  }
+  body:not(.wg-mobile) .setup-own .fleet {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  body:not(.wg-mobile) .setup-own .fleet button {
+    align-items: center;
+  }
+  body:not(.wg-mobile) .setup-own .tool-heading {
+    align-items: start;
+    flex-direction: column;
+  }
+  body:not(.wg-mobile) .setup-own .tool-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  body:not(.wg-mobile) .setup-own .tool-actions button {
+    min-width: 0;
+    font-size: 12px;
+    padding: 10px 6px;
+  }
+  body:not(.wg-mobile) .setup-own #ready {
+    grid-column: 1 / -1;
+    margin-left: 0;
+  }
+}
 .board-panel {
   background: var(--panel);
   border: 1px solid var(--line);

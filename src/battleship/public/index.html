@@ -15,6 +15,9 @@
     <script src="/feedback.js" defer></script>
     <link rel="stylesheet" href="/pairing-ui.css" />
     <script src="/pairing-ui.js" defer></script>
+    <link rel="stylesheet" href="/rules-ui.css" />
+    <script src="/game-catalog.js" defer></script>
+    <script src="/rules-ui.js" defer></script>
     <script src="/mobile-ui.js" defer></script>
     <script defer src="/battleship/app.js"></script>
   </head>
@@ -105,105 +108,125 @@
         <p id="pair-status" role="status"></p>
       </section>
       <p id="notice" class="notice" role="status" hidden></p>
-      <section id="setup-tools" class="card" hidden>
-        <div class="tool-heading">
-          <div>
-            <h2>Bố trí hạm đội</h2>
-            <p id="setup-hint">
-              Kéo thuyền xuống biển hoặc chọn thuyền rồi chạm ô đặt.
+      <div id="battle-layout" class="battle-layout">
+        <section id="setup-tools" class="card" hidden>
+          <div class="tool-heading">
+            <div>
+              <h2>Bố trí hạm đội</h2>
+              <p id="setup-hint">
+                Kéo thuyền xuống biển hoặc chọn thuyền rồi chạm ô đặt.
+              </p>
+            </div>
+            <strong id="placement-count"></strong>
+          </div>
+          <div
+            id="fleet"
+            class="fleet"
+            aria-label="Các thuyền cần bố trí"
+          ></div>
+          <div class="tool-actions">
+            <button id="rotate">Xoay · R</button
+            ><button id="remove-ship">Gỡ thuyền đã chọn</button
+            ><button id="randomize">Xếp ngẫu nhiên</button
+            ><button id="ready" class="primary">Xác nhận hạm đội</button>
+          </div>
+          <p class="muted">
+            R hoặc chuột phải khi đang kéo để xoay. Thuyền không được sát cạnh
+            nhau; có thể chạm chéo. Xác nhận xong sẽ khóa vị trí.
+          </p>
+        </section>
+        <nav id="view-tabs" class="view-tabs" aria-label="Chuyển bản đồ">
+          <button id="view-X" aria-pressed="true">Hạm đội xanh</button
+          ><button id="view-O" aria-pressed="false">Hạm đội cam</button
+          ><label
+            ><input id="auto-view" type="checkbox" checked /> Tự đổi theo
+            lượt</label
+          >
+        </nav>
+        <section class="boards">
+          <article id="setup-spectator" class="board-panel selected" hidden>
+            <h2>Hai hạm đội đang được bố trí</h2>
+            <p>
+              Vị trí tàu được giữ kín. Bàn chiến đấu sẽ xuất hiện khi cả hai
+              người xác nhận.
             </p>
-          </div>
-          <strong id="placement-count"></strong>
-        </div>
-        <div id="fleet" class="fleet" aria-label="Các thuyền cần bố trí"></div>
-        <div class="tool-actions">
-          <button id="rotate">Xoay · R</button
-          ><button id="remove-ship">Gỡ thuyền đã chọn</button
-          ><button id="randomize">Xếp ngẫu nhiên</button
-          ><button id="ready" class="primary">Xác nhận hạm đội</button>
-        </div>
-        <p class="muted">
-          R hoặc chuột phải khi đang kéo để xoay. Thuyền không được sát cạnh
-          nhau; có thể chạm chéo. Xác nhận xong sẽ khóa vị trí.
-        </p>
-      </section>
-      <nav class="view-tabs" aria-label="Chuyển bản đồ">
-        <button id="view-X" aria-pressed="true">Hạm đội xanh</button
-        ><button id="view-O" aria-pressed="false">Hạm đội cam</button
-        ><label
-          ><input id="auto-view" type="checkbox" checked /> Tự đổi theo
-          lượt</label
-        >
-      </nav>
-      <section class="boards">
-        <article id="panel-X" class="board-panel selected">
-          <div class="board-heading">
-            <h2 id="title-X">Vùng biển hạm đội xanh</h2>
-            <div id="fleet-menu-X" class="fleet-tooltip">
-              <button
-                id="fleet-info-X"
-                class="fleet-tooltip-toggle"
-                aria-expanded="false"
-                aria-controls="fleet-tooltip-X"
-                aria-describedby="fleet-tooltip-X"
-              ></button>
-              <div
-                id="fleet-tooltip-X"
-                class="fleet-tooltip-content"
-                role="tooltip"
-              >
-                <strong>Hạm đội chưa chìm</strong>
-                <ul id="fleet-types-X"></ul>
+            <p class="muted">
+              Nếu bạn đã tham gia phòng, hãy kết nối tài khoản để bố trí hạm đội
+              của mình.
+            </p>
+          </article>
+          <article id="panel-X" class="board-panel selected">
+            <div class="board-heading">
+              <h2 id="title-X">Vùng biển hạm đội xanh</h2>
+              <div id="fleet-menu-X" class="fleet-tooltip">
+                <button
+                  id="fleet-info-X"
+                  class="fleet-tooltip-toggle"
+                  aria-expanded="false"
+                  aria-controls="fleet-tooltip-X"
+                  aria-describedby="fleet-tooltip-X"
+                ></button>
+                <div
+                  id="fleet-tooltip-X"
+                  class="fleet-tooltip-content"
+                  role="tooltip"
+                >
+                  <strong>Hạm đội chưa chìm</strong>
+                  <ul id="fleet-types-X"></ul>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="board-scroll">
-            <div
-              id="board-X"
-              class="board"
-              role="group"
-              aria-label="Vùng biển hạm đội xanh"
-            ></div>
-          </div>
-        </article>
-        <article id="panel-O" class="board-panel">
-          <div class="board-heading">
-            <h2 id="title-O">Vùng biển hạm đội cam</h2>
-            <div id="fleet-menu-O" class="fleet-tooltip">
-              <button
-                id="fleet-info-O"
-                class="fleet-tooltip-toggle"
-                aria-expanded="false"
-                aria-controls="fleet-tooltip-O"
-                aria-describedby="fleet-tooltip-O"
-              ></button>
+            <div class="board-scroll">
               <div
-                id="fleet-tooltip-O"
-                class="fleet-tooltip-content"
-                role="tooltip"
-              >
-                <strong>Hạm đội chưa chìm</strong>
-                <ul id="fleet-types-O"></ul>
+                id="board-X"
+                class="board"
+                role="group"
+                aria-label="Vùng biển hạm đội xanh"
+              ></div>
+            </div>
+          </article>
+          <article id="panel-O" class="board-panel">
+            <div class="board-heading">
+              <h2 id="title-O">Vùng biển hạm đội cam</h2>
+              <div id="fleet-menu-O" class="fleet-tooltip">
+                <button
+                  id="fleet-info-O"
+                  class="fleet-tooltip-toggle"
+                  aria-expanded="false"
+                  aria-controls="fleet-tooltip-O"
+                  aria-describedby="fleet-tooltip-O"
+                ></button>
+                <div
+                  id="fleet-tooltip-O"
+                  class="fleet-tooltip-content"
+                  role="tooltip"
+                >
+                  <strong>Hạm đội chưa chìm</strong>
+                  <ul id="fleet-types-O"></ul>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="board-scroll">
-            <div
-              id="board-O"
-              class="board"
-              role="group"
-              aria-label="Vùng biển hạm đội cam"
-            ></div>
-          </div>
-        </article>
-      </section>
+            <div class="board-scroll">
+              <div
+                id="board-O"
+                class="board"
+                role="group"
+                aria-label="Vùng biển hạm đội cam"
+              ></div>
+            </div>
+          </article>
+        </section>
+      </div>
       <section class="legend">
         <span
           ><i class="recent-swatch" aria-hidden="true"></i> Phát bắn gần
           nhất</span
         >
-        <span><i class="sample ship"></i> Thuyền của bạn</span
-        ><span><i class="sample hit"></i> Bắn trúng</span
+        <span
+          ><i class="sample ship"></i>
+          <span id="ship-legend">Thuyền của bạn</span></span
+        >
+        <span><i class="sample hit"></i> Bắn trúng</span
         ><span><i class="sample miss"></i> Trượt</span
         ><span>Mũi bo góc · Thân vuông</span>
       </section>

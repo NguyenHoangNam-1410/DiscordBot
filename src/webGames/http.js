@@ -48,6 +48,9 @@ function createWebServer({
     ["feedback.css", "text/css; charset=utf-8"],
     ["pairing-ui.js", "text/javascript; charset=utf-8"],
     ["pairing-ui.css", "text/css; charset=utf-8"],
+    ["game-catalog.js", "text/javascript; charset=utf-8"],
+    ["rules-ui.js", "text/javascript; charset=utf-8"],
+    ["rules-ui.css", "text/css; charset=utf-8"],
   ]) {
     assets.set("/" + file, {
       type,

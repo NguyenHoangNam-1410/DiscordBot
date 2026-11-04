@@ -284,8 +284,20 @@ async function main() {
         assert.equal(await evaluate("editMode"), "walls");
       }
       if (id === "battleship") {
+        assert.equal(await evaluate('$("panel-O").hidden'), true);
+        assert.equal(await evaluate('$("view-tabs").hidden'), true);
         await click("#randomize", true);
         await until("!pending && state.placements.length===state.fleet.length");
+        const fixture = fixtures.get(id);
+        let room = fixture.store.get(fixture.room.id);
+        room = fixture.store.randomize(
+          room.id,
+          users.O.id,
+          room.setupRevision.O,
+        );
+        fixture.store.ready(room.id, users.O.id, room.setupRevision.O);
+        await click("#ready", true);
+        await until('!pending && state.status==="playing"');
       }
       await click(".wg-sheet-close", true);
     }

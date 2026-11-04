@@ -51,6 +51,21 @@ function allCells(room, mark) {
     cellsOf(ship, room.fleet[ship.id], PRESETS[room.rules.mode].size),
   );
 }
+function assertFinalFleets(room) {
+  assert.equal(room.status, "finished");
+  for (const user of [x.id, o.id, "viewer", null]) {
+    const final = store.snapshot(room, user);
+    assert.deepEqual(final.revealedPlacements, room.placements);
+    // Revealing ships must not invent shots, hits or sunk ships.
+    assert.equal(final.boards.X.length, room.shots.O.length);
+    assert.equal(final.boards.O.length, room.shots.X.length);
+  }
+  const copy = store.snapshot(room, null).revealedPlacements;
+  if (copy.X.length) {
+    copy.X[0].cell = -1;
+    assert.notEqual(room.placements.X[0].cell, -1);
+  }
+}
 async function main() {
   for (const mode of ["bad", null, 1, "Nhỏ"]) {
     if (mode !== null) code(() => normalizeRules({ mode }), "INVALID_RULES");
@@ -246,6 +261,7 @@ async function main() {
   );
   for (const user of [null, o.id, "viewer"]) {
     const view = store.snapshot(room, user);
+    assert.equal(view.revealedPlacements, null);
     assert.equal(view.boards.O.length, 1);
     assert.deepEqual(view.boards.O[0], shotView(targets[0], po, room.fleet, 8));
   }
@@ -277,6 +293,7 @@ async function main() {
     ),
   );
   assert.deepEqual(store.snapshot(room, null).placements, []);
+  assertFinalFleets(room);
   assert.equal(
     db
       .prepare("SELECT count(*) n FROM battleship_seats WHERE room_id=?")
@@ -297,12 +314,14 @@ async function main() {
   clock += 200_000;
   code(() => store.randomize(room.id, x.id, 0), "NOT_SETUP");
   assert.equal(store.get(room.id).reason, "setup_expired");
+  assertFinalFleets(store.get(room.id));
   room = setup();
   room = store.randomize(room.id, x.id, 0);
   room = store.ready(room.id, x.id, 1);
   clock += 100_000;
   assert.equal(store.get(room.id).winner, "X");
   assert.equal(store.get(room.id).reason, "setup_timeout");
+  assertFinalFleets(store.get(room.id));
   room = create();
   clock += WAIT_MS;
   assert.equal(store.get(room.id).reason, "expired");
@@ -311,8 +330,10 @@ async function main() {
   code(() => store.shoot(room.id, x.id, 0, room.version), "ROOM_CLOSED");
   assert.equal(store.get(room.id).winner, "O");
   assert.equal(store.get(room.id).clocks.X, 0);
+  assertFinalFleets(store.get(room.id));
   room = setup();
   assert.equal(store.leave(room.id, o.id).winner, "X");
+  assertFinalFleets(store.get(room.id));
   room = create();
   assert.equal(store.leave(room.id, x.id).reason, "cancelled");
   room = battle();
@@ -456,6 +477,7 @@ async function main() {
   assert.deepEqual(values[1].placements, []);
   assert.deepEqual(values[2].placements, []);
   assert.deepEqual(values[2].boards, { X: [], O: [] });
+  for (const value of values) assert.equal(value.revealedPlacements, null);
   assert.deepEqual(
     (await request(`state?room=${room.id}`)).data.placements,
     [],
@@ -475,6 +497,20 @@ async function main() {
       .status,
     403,
   );
+  const closingUpdates = readers.map((reader) => reader.read());
+  store.leave(room.id, x.id);
+  const finalUpdates = await Promise.all(closingUpdates);
+  for (const update of finalUpdates) {
+    const final = JSON.parse(
+      new TextDecoder().decode(update.value).split("data: ")[1].split("\n")[0],
+    );
+    assert.equal(final.status, "finished");
+    assert.deepEqual(final.revealedPlacements, store.get(room.id).placements);
+  }
+  for (const cookie of [lx.cookie, lo.cookie, null]) {
+    const final = (await request(`state?room=${room.id}`, null, cookie)).data;
+    assert.deepEqual(final.revealedPlacements, store.get(room.id).placements);
+  }
   controllers.forEach((c) => c.abort());
   for (const reader of readers) await reader.cancel().catch(() => {});
   assert.equal(
@@ -580,6 +616,9 @@ async function main() {
   context.next = store.snapshot(uiRoom, x.id);
   vm.runInContext("accept(next); connection(true)", context);
   assert.equal(elements.get("setup-tools").hidden, false);
+  assert.equal(elements.get("panel-O").hidden, true);
+  assert.equal(elements.get("panel-X").hidden, false);
+  assert.equal(elements.get("view-tabs").hidden, true);
   assert.equal(
     elements
       .get("board-O")
@@ -658,6 +697,9 @@ async function main() {
   vm.runInContext("accept(next)", context);
   assert.equal(elements.get("setup-tools").hidden, true);
   assert.equal(elements.get("fleet").children.length, 0);
+  assert.equal(elements.get("setup-spectator").hidden, false);
+  assert.equal(elements.get("panel-X").hidden, true);
+  assert.equal(elements.get("panel-O").hidden, true);
   uiRoom = battle();
   context.next = store.snapshot(uiRoom, x.id);
   vm.runInContext("accept(next)", context);
@@ -669,6 +711,22 @@ async function main() {
   elements.get("auto-view").checked = false;
   elements.get("view-O").events.click();
   assert.equal(vm.runInContext("view", context), "O");
+
+  uiRoom = store.leave(uiRoom.id, o.id);
+  context.next = store.snapshot(uiRoom, null);
+  vm.runInContext("accept(next)", context);
+  for (const side of ["X", "O"]) {
+    const cells = elements
+      .get("board-" + side)
+      .children.filter((el) => el.dataset.cell != null);
+    assert.equal(
+      cells.filter((el) => el.classList.contains("ship")).length,
+      allCells(uiRoom, side).length,
+    );
+    assert(cells.every((el) => el.disabled));
+    assert.equal(elements.get("panel-" + side).hidden, false);
+  }
+  assert.equal(elements.get("view-tabs").hidden, false);
 
   const command = require("../src/commands/battleship"),
     runtime = require("../src/battleship/runtime"),

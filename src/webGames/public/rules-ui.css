@@ -1,0 +1,117 @@
+dialog.wg-rules-dialog {
+  box-sizing: border-box;
+  width: min(680px, calc(100% - 24px));
+  max-width: calc(100% - 24px);
+  max-height: calc(100dvh - 24px);
+  padding: 0;
+  margin: auto;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #526c6b;
+  border-radius: 14px;
+  background: #182925;
+  color: #eef5f2;
+  font:
+    400 15px/1.6 system-ui,
+    sans-serif;
+  text-align: left;
+}
+.wg-rules-dialog::backdrop {
+  background: #000b;
+}
+.wg-rules-heading {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid #526c6b;
+  background: #182925;
+}
+.wg-rules-heading h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.wg-rules-body {
+  padding: 0 20px 20px;
+}
+.wg-rules-body section {
+  margin-top: 20px;
+}
+.wg-rules-body h3 {
+  margin: 0 0 8px;
+  color: #d4eb9e;
+  font-size: 16px;
+}
+.wg-rules-body p {
+  margin: 0;
+}
+.wg-rules-body summary {
+  cursor: pointer;
+  color: #d4eb9e;
+  font-weight: 600;
+}
+.wg-rules-body details[open] summary {
+  margin-bottom: 10px;
+}
+.wg-rules-body ol,
+.wg-rules-body ul {
+  margin: 0;
+  padding-left: 23px;
+}
+.wg-rules-body li + li {
+  margin-top: 8px;
+}
+.wg-rules-dialog .wg-rules-close,
+#rules-help {
+  box-sizing: border-box;
+  flex: 0 0 auto;
+  min-width: 36px;
+  min-height: 36px;
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid #729187;
+  border-radius: 8px;
+  background: #28423b;
+  color: #f1faf8;
+  font:
+    600 14px/1.4 system-ui,
+    sans-serif;
+  cursor: pointer;
+}
+.wg-rules-dialog button:focus-visible,
+#rules-help:focus-visible {
+  outline: 2px solid #bdebad;
+  outline-offset: 2px;
+}
+#rules-help {
+  width: 33px;
+  min-width: 33px;
+  min-height: 31px;
+  height: 31px;
+  padding: 4px;
+}
+.wg-rules-body #rules-detail {
+  letter-spacing: normal;
+}
+.wg-rules-entry {
+  align-self: start;
+}
+.wg-rules-entry #rules-open {
+  width: 100%;
+  min-height: 44px;
+}
+@media (max-width: 480px) {
+  .wg-rules-heading {
+    padding: 12px 14px;
+  }
+  .wg-rules-heading h2 {
+    font-size: 16px;
+  }
+  .wg-rules-body {
+    padding: 0 14px 16px;
+  }
+}
