@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#171b19" />
+    <title>Cò quay Nga · Bàn đấu trực tiếp</title>
+    <link rel="stylesheet" href="/coquay/style.css" />
+    <link rel="stylesheet" href="/players.css" />
+    <link rel="stylesheet" href="/feedback.css" />
+    <script src="/players.js" defer></script>
+    <script src="/feedback.js" defer></script>
+    <script src="/coquay/app.js" defer></script>
+  </head>
+  <body>
+    <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <linearGradient id="steel" x2="0" y2="1">
+          <stop stop-color="#d2d6d4" />
+          <stop offset=".45" stop-color="#667074" />
+          <stop offset=".6" stop-color="#202a2e" />
+          <stop offset="1" stop-color="#949b98" />
+        </linearGradient>
+        <linearGradient id="wood" x2="1" y2="1">
+          <stop stop-color="#b16e3e" />
+          <stop offset="1" stop-color="#43271e" />
+        </linearGradient>
+        <symbol id="art-gun" viewBox="0 0 400 125">
+          <path
+            d="m16 30 245 0 3 22-246 0z"
+            fill="url(#steel)"
+            stroke="#111b1c"
+            stroke-width="3"
+          />
+          <path d="m24 24 237 0 0 7-238 0z" fill="#2b373a" />
+          <path
+            d="m57 53 103 0 0 23-107-1z"
+            fill="url(#wood)"
+            stroke="#301c13"
+            stroke-width="3"
+          />
+          <path
+            d="M64 56v15m8-15v15m8-15v15m8-15v15m8-15v15m8-15v15m8-15v15m8-15v15m8-15v15m8-15v15"
+            stroke="#d59153"
+            opacity=".4"
+          />
+          <path
+            d="m157 48 101 0 25 23-11 15-94-16z"
+            fill="url(#steel)"
+            stroke="#152024"
+            stroke-width="3"
+          />
+          <path
+            d="M204 68q-7 29 28 20l9-12m-20-5-3 11"
+            fill="none"
+            stroke="#81908e"
+            stroke-width="5"
+          />
+          <path
+            d="m259 51 34 20 71 13 20 31-59-2-64-34-19-7z"
+            fill="url(#wood)"
+            stroke="#251a14"
+            stroke-width="4"
+          />
+          <path d="m374 98 10 17-18 1-8-20" fill="#131b1e" />
+          <path d="m18 32 0 17" stroke="#0c1112" stroke-width="7" />
+          <circle cx="184" cy="56" r="3" fill="#d6c392" />
+        </symbol>
+        <symbol id="art-magnifier" viewBox="0 0 64 64">
+          <path
+            d="m35 37 18 18"
+            stroke="#bd8050"
+            stroke-width="11"
+            stroke-linecap="round"
+          />
+          <circle
+            cx="25"
+            cy="25"
+            r="17"
+            fill="#80bfbd"
+            fill-opacity=".3"
+            stroke="#ccbb87"
+            stroke-width="6"
+          />
+          <path
+            d="M15 24q1-10 11-10"
+            fill="none"
+            stroke="#e5f1dd"
+            stroke-width="3"
+          />
+        </symbol>
+        <symbol id="art-shield" viewBox="0 0 64 64">
+          <path
+            d="m32 5 23 10-3 25-20 19-20-19-3-25z"
+            fill="#66797a"
+            stroke="#c1c6af"
+            stroke-width="3"
+          />
+          <path d="M32 10v42M16 27h32" stroke="#a4b3a0" stroke-width="3" />
+          <circle
+            cx="32"
+            cy="28"
+            r="8"
+            fill="#273739"
+            stroke="#d6ba7d"
+            stroke-width="3"
+          />
+        </symbol>
+        <symbol id="art-saw" viewBox="0 0 64 64">
+          <path
+            d="m9 20 43 7-2 8-6-2-4 6-5-2-4 6-5-2-4 6-5-2-5 6z"
+            fill="#acb7b4"
+            stroke="#394546"
+            stroke-width="2"
+          />
+          <path
+            d="m43 8 16 5-6 19-13-4z"
+            fill="#995f38"
+            stroke="#d69b59"
+            stroke-width="3"
+          />
+          <path d="m48 15 5 2-2 8-6-2z" fill="#202e30" />
+        </symbol>
+        <symbol id="art-cuffs" viewBox="0 0 64 64">
+          <circle
+            cx="17"
+            cy="18"
+            r="12"
+            fill="none"
+            stroke="#b3c2bb"
+            stroke-width="6"
+          />
+          <circle
+            cx="47"
+            cy="46"
+            r="12"
+            fill="none"
+            stroke="#b3c2bb"
+            stroke-width="6"
+          />
+          <path
+            d="m25 27 5 7 7 4"
+            fill="none"
+            stroke="#899e9b"
+            stroke-width="5"
+          />
+          <path d="m9 7 6-3m35 53 4 5" stroke="#d7c589" stroke-width="4" />
+        </symbol>
+        <symbol id="art-medicine" viewBox="0 0 64 64">
+          <rect
+            x="14"
+            y="14"
+            width="36"
+            height="43"
+            rx="8"
+            fill="#c9c7a7"
+            stroke="#efdeac"
+            stroke-width="2"
+          />
+          <rect x="17" y="6" width="30" height="13" rx="3" fill="#697d77" />
+          <path d="M25 25h14v7h8v13h-8v7H25v-7h-8V32h8z" fill="#9d5343" />
+        </symbol>
+        <symbol id="art-beer" viewBox="0 0 64 64">
+          <rect
+            x="16"
+            y="6"
+            width="32"
+            height="51"
+            rx="7"
+            fill="#b39054"
+            stroke="#d6c79a"
+            stroke-width="3"
+          />
+          <path d="M17 20h30v24H17" fill="#425b52" />
+          <path d="m27 28 10 0-5 11z" fill="#d9d3ab" />
+          <ellipse cx="32" cy="10" rx="12" ry="3" fill="#aebbb0" />
+          <path d="M29 8h7" stroke="#3d4c49" stroke-width="2" />
+        </symbol>
+        <symbol id="art-inverter" viewBox="0 0 64 64">
+          <rect
+            x="8"
+            y="14"
+            width="48"
+            height="37"
+            rx="6"
+            fill="#4f6463"
+            stroke="#aabcae"
+            stroke-width="3"
+          />
+          <path
+            d="m17 26 23 0-5-5m12 18H24l5 5"
+            fill="none"
+            stroke="#e3bf76"
+            stroke-width="4"
+          />
+          <circle cx="15" cy="46" r="2" fill="#cbd9a0" />
+        </symbol>
+        <symbol id="art-box" viewBox="0 0 64 64">
+          <path
+            d="m8 20 24-12 24 12v32l-24 8-24-8z"
+            fill="#806141"
+            stroke="#c3a373"
+            stroke-width="3"
+          />
+          <path
+            d="m8 20 24 9 24-9M32 29v31"
+            fill="none"
+            stroke="#ceb184"
+            stroke-width="3"
+          />
+          <path d="m20 14 24 10v12l-10 4V28L13 20" fill="#b89d6f" />
+        </symbol>
+      </defs>
+    </svg>
+    <div class="shell">
+      <header class="topbar">
+        <a href="/" class="brand">◉ cò quay<span>.</span></a
+        ><span id="connection" role="status">Chưa kết nối</span>
+      </header>
+      <main>
+        <div class="heading">
+          <div>
+            <p class="eyebrow">HAI NGƯỜI · MỘT KHẨU SÚNG</p>
+            <h1>Mỗi viên. Một lựa chọn.</h1>
+          </div>
+          <button
+            id="rotate-table"
+            title="Xoay bàn 180 độ"
+            aria-pressed="false"
+          >
+            ↻ <span>Xoay bàn</span>
+          </button>
+        </div>
+        <div id="rule-badges" class="badges" aria-label="Cấu hình bàn"></div>
+        <div id="notice" role="alert" hidden></div>
+        <div class="status">
+          <strong id="status-title" aria-live="polite"
+            >Mở /coquay choi trong Discord</strong
+          ><span id="room-code"></span>
+        </div>
+        <section class="arena" aria-label="Bàn cò quay 2D">
+          <div class="felt" id="felt">
+            <section class="seat seat-O" id="seat-O" aria-label="Người chơi">
+              <div class="seat-info">
+                <span class="player-avatar"
+                  ><img
+                    id="avatar-O"
+                    alt=""
+                    hidden
+                    referrerpolicy="no-referrer"
+                  /><span id="avatar-fallback-O">?</span></span
+                >
+                <div class="identity">
+                  <strong id="name-O">Đang chờ</strong><span id="hp-O"></span>
+                </div>
+                <time id="clock-O">30:00</time>
+              </div>
+              <div
+                class="hp-bar"
+                id="bar-O"
+                role="progressbar"
+                aria-label="HP"
+              ></div>
+              <div class="tray" id="tray-O" aria-label="Đạo cụ"></div>
+              <p class="effects" id="effects-O"></p>
+            </section>
+            <div class="table-center">
+              <div class="round-label">
+                HIỆP <strong id="round">—</strong
+                ><span id="ammo">Đang chờ nạp đạn</span>
+              </div>
+              <div class="weapon" id="weapon">
+                <svg aria-label="Súng săn trên bàn" role="img">
+                  <use href="#art-gun" /></svg
+                ><span class="muzzle" aria-hidden="true"></span>
+              </div>
+              <p id="last-action" aria-live="polite">
+                Đạn thật. Đạn lép. Bạn sẽ chọn ai?
+              </p>
+            </div>
+            <section class="seat seat-X" id="seat-X" aria-label="Người chơi">
+              <div class="seat-info">
+                <span class="player-avatar"
+                  ><img
+                    id="avatar-X"
+                    alt=""
+                    hidden
+                    referrerpolicy="no-referrer"
+                  /><span id="avatar-fallback-X">?</span></span
+                >
+                <div class="identity">
+                  <strong id="name-X">Đang chờ</strong><span id="hp-X"></span>
+                </div>
+                <time id="clock-X">30:00</time>
+              </div>
+              <div
+                class="hp-bar"
+                id="bar-X"
+                role="progressbar"
+                aria-label="HP"
+              ></div>
+              <div class="tray" id="tray-X" aria-label="Đạo cụ"></div>
+              <p class="effects" id="effects-X"></p>
+            </section>
+          </div>
+        </section>
+        <div id="private-intel" class="intel" role="status" hidden></div>
+        <section id="controls" class="controls" aria-label="Bắn súng">
+          <button id="shoot-opponent" class="danger">Bắn đối thủ</button
+          ><button id="shoot-self">Tự bắn</button>
+        </section>
+        <p id="landscape-log" class="landscape-log" aria-hidden="true"></p>
+        <nav class="toolbar" aria-label="Menu bàn chơi">
+          <button id="inventory-open">
+            <svg class="button-icon" aria-hidden="true">
+              <use href="#art-box" />
+            </svg>
+            Đạo cụ & hộp đồ</button
+          ><button id="rules-open">Luật chơi</button
+          ><button id="connect-player" hidden>Kết nối</button
+          ><button id="leave" hidden>Đầu hàng</button>
+        </nav>
+        <section id="pair-panel" class="pair" hidden>
+          <p>Mã kết nối của tab này: <strong id="pair-code"></strong></p>
+          <p>
+            Trong tin phòng Discord, bấm Kết nối tài khoản và nhập mã. Không
+            chia sẻ mã này.
+          </p>
+          <p id="pair-status" role="status"></p>
+        </section>
+      </main>
+      <footer>
+        CHƠI VUI · KHÔNG CƯỢC XU · <span id="move-count">0 thao tác</span>
+      </footer>
+    </div>
+    <dialog id="item-dialog">
+      <div class="dialog-heading">
+        <h2 id="item-title">Đạo cụ</h2>
+        <button data-close="item-dialog" aria-label="Đóng">×</button>
+      </div>
+      <svg class="item-art" aria-hidden="true"><use id="item-art" /></svg>
+      <p id="item-description"></p>
+      <p id="item-note"></p>
+      <button id="use-item" class="primary">Sử dụng</button>
+    </dialog>
+    <dialog id="inventory-dialog">
+      <div class="dialog-heading">
+        <h2>Đạo cụ & hộp đồ</h2>
+        <button data-close="inventory-dialog" aria-label="Đóng">×</button>
+      </div>
+      <div id="inventory-detail"></div>
+      <p>
+        Đạo cụ công khai; nội dung soi nòng chỉ người dùng được biết. Đạo cụ
+        không chuyển ra túi Discord.
+      </p>
+    </dialog>
+    <dialog id="rules-dialog">
+      <div class="dialog-heading">
+        <h2>Luật chơi</h2>
+        <button data-close="rules-dialog" aria-label="Đóng">×</button>
+      </div>
+      <p id="rules-detail"></p>
+      <p>
+        Đạn thật gây 1 sát thương; cưa tăng lên 2. Tự bắn đạn lép giữ lượt, các
+        phát khác chuyển súng, trừ khi đối thủ bị còng. Đạo cụ không mất lượt.
+        Hiệp mới không hồi HP.
+      </p>
+      <p>
+        Đầu hiệp mỗi người mở hộp 1–2 đạo cụ ngẫu nhiên. Đạo cụ còn lại được
+        giữ; vượt sức chứa sẽ bỏ. Đạo cụ không dùng hết biến mất khi ván kết
+        thúc.
+      </p>
+      <p>
+        Hết HP, hết giờ hoặc đầu hàng thì thua. Đồng hồ chỉ giảm khi tới lượt,
+        không cộng giờ; mất mạng vẫn chạy. Phòng chờ đóng sau 10 phút. Khán giả
+        được xem trực tiếp.
+      </p>
+    </dialog>
+    <dialog id="leave-dialog">
+      <h2 id="leave-dialog-title">Đầu hàng ván đấu?</h2>
+      <p id="leave-dialog-detail"></p>
+      <div class="dialog-heading">
+        <button id="keep-playing">Tiếp tục chơi</button
+        ><button id="confirm-leave" class="danger">Đầu hàng</button>
+      </div>
+    </dialog>
+  </body>
+</html>

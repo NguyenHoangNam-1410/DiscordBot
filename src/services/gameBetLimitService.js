@@ -10,7 +10,6 @@ const BET_GAMES = Object.freeze([
   "poker",
   "duangua",
   "mines",
-  "coquay",
   "hardcore",
 ]);
 

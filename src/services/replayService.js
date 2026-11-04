@@ -11,12 +11,6 @@ const {
   minesEmbed,
   minesRows,
 } = require("./minesService");
-const {
-  startCoquay,
-  setMessageId: setCoquayMessage,
-  coquayEmbed,
-  coquayRows,
-} = require("./coquayService");
 const { openHardcoreSetup } = require("./hardcoreService");
 const {
   startPoker,
@@ -94,26 +88,11 @@ async function handleReplayButton(interaction, logger = console) {
       };
       setMessage = (id) => setMinesMessage(started.session.id, id);
     } else if (game === "coquay") {
-      started = startCoquay({
-        guildId: interaction.guildId,
-        userId: interaction.user.id,
-        channelId: interaction.channelId,
-        stake: Number(args[0]),
+      return interaction.reply({
+        content:
+          "Cò quay Nga đã chuyển sang web. Dùng /coquay choi để mở bàn mới.",
+        flags: MessageFlags.Ephemeral,
       });
-      payload = {
-        embeds: [
-          coquayEmbed(started.state, interaction.user.id, {
-            sessionId: started.session.id,
-          }),
-        ],
-        components: coquayRows(
-          started.session.id,
-          started.state,
-          interaction.user.id,
-          interaction.guildId,
-        ),
-      };
-      setMessage = (id) => setCoquayMessage(started.session.id, id);
     } else if (game === "poker") {
       started = startPoker({
         guildId: interaction.guildId,

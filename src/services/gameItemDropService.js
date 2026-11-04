@@ -12,7 +12,6 @@ const GAME_ITEM_DROP_CHANCE = Object.freeze({
   poker: 0.06,
   mines: 0.04,
   chinchiro: 0.04,
-  coquay: 0.05,
   vuatiengviet: 0.03,
   hardcore: 0,
 });
@@ -73,7 +72,10 @@ function questionRewardRates(game = "vuatiengviet", guildId = null) {
     items: items.filter((item) => item.rarity === tier),
   })).filter((entry) => entry.weight > 0 && entry.items.length);
   const total = tiers.reduce((sum, entry) => sum + entry.weight, 0);
-  return tiers.map((entry) => ({ ...entry, rate: (entry.weight / total) * 100 }));
+  return tiers.map((entry) => ({
+    ...entry,
+    rate: (entry.weight / total) * 100,
+  }));
 }
 function rollQuestionItem(
   game = "vuatiengviet",
@@ -83,7 +85,8 @@ function rollQuestionItem(
   const rates = questionRewardRates(game, guildId);
   if (!rates.length) return null;
   let roll = (randomInt(1_000_000) / 1_000_000) * 100;
-  const entry = rates.find((candidate) => (roll -= candidate.rate) < 0) || rates.at(-1);
+  const entry =
+    rates.find((candidate) => (roll -= candidate.rate) < 0) || rates.at(-1);
   return entry.items[randomInt(entry.items.length)];
 }
 // Cộng vật phẩm vào túi; lỗi cấp thưởng không được làm hỏng việc trả thưởng xu/kim cương đã trao.

@@ -115,7 +115,6 @@ assert.deepEqual(
     "poker",
     "duangua",
     "domin",
-    "coquay",
     "sinhton",
     "vtv",
   ],
@@ -859,7 +858,6 @@ const dropGames = [
   "poker",
   "mines",
   "chinchiro",
-  "coquay",
   "vuatiengviet",
 ];
 assert(
@@ -932,10 +930,7 @@ for (const game of dropGames) {
         hits += 1;
     return hits / n;
   };
-  assert(
-    Math.abs(rateOf("poker") - 0.06) < 0.01 &&
-      Math.abs(rateOf("coquay") - 0.05) < 0.01,
-  );
+  assert(Math.abs(rateOf("poker") - 0.06) < 0.01 && rateOf("coquay") === 0);
 }
 dropConfig.setGameConfig(
   "drop-rate-guild",

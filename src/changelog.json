@@ -1,5 +1,19 @@
 [
   {
+    "id": "92a3b54c-78ac-4a63-b22c-7090d0071ca0",
+    "updatedAt": "2026-11-04T02:55:59.891Z",
+    "auditedAt": "2026-11-04T02:55:59.891Z",
+    "title": "Cò quay Nga chuyển sang bàn web đối kháng",
+    "type": "feature",
+    "scope": "coquay",
+    "changes": [
+      "Đấu hai người trên web với khán giả trực tiếp; cấu hình HP tối đa (mặc định 5), sức chứa đạo cụ (mặc định 4) và đồng hồ riêng.",
+      "Đầu mỗi hiệp nạp đạn, hai người mở hộp nhận ngẫu nhiên 1–2 đạo cụ trong 7 loại; giữ món chưa dùng và bỏ món vượt sức chứa. Đạo cụ chỉ tồn tại trong ván.",
+      "Bàn 2D có hình súng và đạo cụ, thanh HP, xoay 180°, menu trên điện thoại, âm súng/đạn lép/nạp đạn và hiệu ứng khi trúng đạn; nút loa dùng chung.",
+      "Ngừng game cược Discord và thành tựu Cò quay Nga; gỡ bốn vật phẩm cũ khỏi túi, shop, hiệu ứng và gacha, không hoàn trả. Dùng /coquay choi để mở bàn web."
+    ]
+  },
+  {
     "id": "449f724d-b734-4bcc-928b-212197dd56c2",
     "updatedAt": "2026-11-03T13:25:40.141Z",
     "auditedAt": "2026-11-03T13:25:40.141Z",

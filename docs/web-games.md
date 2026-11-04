@@ -118,3 +118,7 @@ Các hàm `discord.pending()` trả các mã phòng chưa gửi; `acknowledge(ro
 ## Kiểm tra
 
 `npm run test:web:pairing` kiểm tra luồng Discord → web với HTTP thật và giao diện của cả Caro/Walls: mất phản hồi, tải lại tab, nhiều tab dùng chung cookie, thử lại, hết hạn, giới hạn poll qua cùng IP proxy và sự kiện SSE cũ. `npm run test:caro` kiểm tra luật tùy chọn, dữ liệu cũ, HTTP/SSE, khán giả, phiên xuyên game và cô lập mã kết nối/cập nhật Discord giữa game. `node scripts/test-env-example.js` kiểm tra cấu hình triển khai. Không đăng ký command thật hoặc chạm dữ liệu người chơi khi chạy các kiểm tra này.
+
+## Cò quay Nga
+
+`/coquay choi` mở bàn đấu súng hai người tại `/coquay/room/<UUID>`, dùng chung Tailscale, xác nhận tài khoản, khán giả và SSE. HP và giới hạn đạo cụ cấu hình theo phòng. Giữ engine gốc, chuyển đạo cụ sang từng ván web và gỡ cơ chế cược/thành tựu Discord cũ; xem [coquay-web.md](coquay-web.md) cho luật hộp, bảy đạo cụ, thay đổi dữ liệu không hoàn trả và triển khai.

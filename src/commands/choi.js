@@ -13,7 +13,6 @@ const games = {
   poker: require("./poker"),
   duangua: require("./duangua"),
   domin: require("./mines"),
-  coquay: require("./coquay"),
   sinhton: require("./hardcore"),
   vuatiengviet: require("./vuatiengviet"),
   2048: require("./2048"),
@@ -86,7 +85,6 @@ const options = [
   simpleGame("domin", games.domin, "Dò mìn và săn hệ số thưởng", {
     min: "somin",
   }),
-  simpleGame("coquay", games.coquay, "Cò quay Nga: đấu súng 3 máu với Bot"),
   gameGroup(
     "sinhton",
     games.sinhton,

@@ -300,42 +300,6 @@ const DEFAULT_ENTRIES = Object.freeze([
     weight: 1,
   },
   {
-    rewardKey: "coquay_magnifier",
-    kind: "item",
-    itemId: "coquay_magnifier",
-    name: "Kính Lúp Soi Nòng",
-    tier: "SR",
-    amount: 1,
-    weight: 1,
-  },
-  {
-    rewardKey: "coquay_decoy",
-    kind: "item",
-    itemId: "coquay_decoy",
-    name: "Bia Đỡ Đạn",
-    tier: "SR",
-    amount: 1,
-    weight: 1,
-  },
-  {
-    rewardKey: "coquay_saw",
-    kind: "item",
-    itemId: "coquay_saw",
-    name: "Cưa Cầm Tay",
-    tier: "SSR",
-    amount: 1,
-    weight: 1,
-  },
-  {
-    rewardKey: "coquay_cuffs",
-    kind: "item",
-    itemId: "coquay_cuffs",
-    name: "Còng Số 8",
-    tier: "UR",
-    amount: 1,
-    weight: 1,
-  },
-  {
     rewardKey: "vietnamese_extra_time",
     kind: "item",
     itemId: "vietnamese_extra_time",
@@ -409,7 +373,8 @@ function listGachaPool(
     .filter(
       (entry) =>
         entry.kind !== "item" ||
-        (getCatalogItem(entry.itemId)?.gachaEligible !== false &&
+        (getCatalogItem(entry.itemId) &&
+          getCatalogItem(entry.itemId)?.gachaEligible !== false &&
           getCatalogItem(entry.itemId)?.rarity !== "LR"),
     )
     .map((entry) =>

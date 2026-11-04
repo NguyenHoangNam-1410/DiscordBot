@@ -23,7 +23,6 @@ const {
 } = require("./services/horseRaceService");
 const { handleMinesButton } = require("./services/minesService");
 const { handleGame2048Button } = require("./services/game2048Service");
-const { handleCoquayButton } = require("./services/coquayService");
 const {
   handleHardcoreButton,
   handleHardcoreSetup,
@@ -332,7 +331,12 @@ const ROUTES = Object.freeze([
   { kind: "button", prefix: "hardcore-setup:", handle: handleHardcoreSetup },
   { kind: "button", prefix: "mines:", handle: handleMinesButton },
   { kind: "button", prefix: "g2048:", handle: handleGame2048Button },
-  { kind: "button", prefix: "coquay:", handle: handleCoquayButton },
+  ...["button", "modal"].map((kind) => ({
+    kind,
+    prefix: "coquay:",
+    handle: (interaction) =>
+      require("./commands/coquay").handleButton(interaction),
+  })),
   { kind: "button", prefix: "horserace:", handle: handleHorseButton },
   { kind: "button", prefix: "blackjack:", handle: handleBlackjackButton },
   {
@@ -380,7 +384,7 @@ async function routeComponentInteraction(interaction, logger) {
   );
   if (!route) return false;
   const gameAction =
-    /^(replay:|chinchiro:|bjduel:|poker:|poker-private:|hardcore-tower:|hardcore:|hardcore-setup:|hardcore-setup-modal:|mines:|g2048:|coquay:|horserace:|blackjack:|gamebet:|gamebet-modal:|poker-modal:|poker-private-modal:|horserace-modal:)/.test(
+    /^(replay:|chinchiro:|bjduel:|poker:|poker-private:|hardcore-tower:|hardcore:|hardcore-setup:|hardcore-setup-modal:|mines:|g2048:|horserace:|blackjack:|gamebet:|gamebet-modal:|poker-modal:|poker-private-modal:|horserace-modal:)/.test(
       interaction.customId,
     );
   if (

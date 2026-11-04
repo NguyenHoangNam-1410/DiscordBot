@@ -21,13 +21,6 @@ const WIN_MULTIPLIER_GAMES = Object.freeze([
     note: "Thắng khi điểm cao hơn nhà cái; Shigoro, Bão, Pin-Zoro giữ nguyên",
   },
   {
-    game: "coquay",
-    emoji: "🔫",
-    label: "Cò quay Nga",
-    fallback: 2,
-    note: "Hạ Bot về 0 máu",
-  },
-  {
     game: "taixiu",
     emoji: "🎯",
     label: "Tài xỉu · Tài/Xỉu/Chẵn/Lẻ",
@@ -113,7 +106,6 @@ function resetAllWinMultipliers(guildId) {
 
 // Ước tính RTP (%) khi người chơi chơi tối ưu, không dùng vật phẩm. Các công thức được test đối chiếu với mô phỏng/liệt kê thật.
 const TAIXIU_EVEN_WIN_PROBABILITY = 105 / 216; // Tài/Xỉu/Chẵn/Lẻ thua khi ra bộ ba
-const COQUAY_OPTIMAL_WIN_PROBABILITY = 0.5552; // người chơi đi trước, đánh tối ưu
 // Xì dách: RTP tuyến tính theo hệ số (mô phỏng 3.000.000 ván, chiến thuật cơ bản, không gấp đôi; Xì dách tự nhiên = hệ số + 0,5).
 const BLACKJACK_RTP_MODEL = Object.freeze({ intercept: 14.0, slope: 47.1 });
 
@@ -149,8 +141,6 @@ function chinchiroRtp(multiplier) {
 }
 function estimateRtp(game, multiplier) {
   if (game === "taixiu") return TAIXIU_EVEN_WIN_PROBABILITY * multiplier * 100;
-  if (game === "coquay")
-    return COQUAY_OPTIMAL_WIN_PROBABILITY * multiplier * 100;
   if (game === "blackjack")
     return (
       BLACKJACK_RTP_MODEL.intercept + BLACKJACK_RTP_MODEL.slope * multiplier
@@ -181,7 +171,6 @@ module.exports = {
   MAX_WIN_MULTIPLIER,
   WIN_MULTIPLIER_GAMES,
   TAIXIU_EVEN_WIN_PROBABILITY,
-  COQUAY_OPTIMAL_WIN_PROBABILITY,
   getWinMultiplier,
   setWinMultiplier,
   resetWinMultiplier,

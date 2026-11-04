@@ -1908,7 +1908,6 @@ const BETTING_GAMES = Object.freeze([
   "poker",
   "duangua",
   "mines",
-  "coquay",
 ]);
 const BETTING_SQL = BETTING_GAMES.map((game) => `'${game}'`).join(",");
 
@@ -1931,7 +1930,7 @@ function metrics(guildId, userId) {
       .get(guild, user) || {};
   const gameTypes = db
     .prepare(
-      "SELECT COUNT(*) count FROM game_player_stats WHERE guild_id=? AND user_id=? AND played>0",
+      "SELECT COUNT(*) count FROM game_player_stats WHERE guild_id=? AND user_id=? AND played>0 AND game<>'coquay'",
     )
     .get(guild, user).count;
   const hardcoreFloor =

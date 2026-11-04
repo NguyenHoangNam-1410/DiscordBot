@@ -19,7 +19,6 @@ const GAMES = Object.freeze([
   ["poker", "Poker", "♠️"],
   ["duangua", "Đua ngựa", "🏇"],
   ["mines", "Mines", "💣"],
-  ["coquay", "Cò quay Nga", "🔫"],
   ["hardcore", "Sinh tồn", "⚔️"],
   ["covua", "Cờ vua", "♟️"],
   ["cotuong", "Cờ tướng", "🀄"],

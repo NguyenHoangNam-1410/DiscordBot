@@ -16,7 +16,6 @@ const config = require("../src/services/gameConfigService");
 const wm = require("../src/services/winMultiplierService");
 const blackjack = require("../src/services/blackjackService");
 const chinchiro = require("../src/services/chinchiroService");
-const coquay = require("../src/services/coquayService");
 const multiplayer = require("../src/services/multiplayerGameService");
 const channels = require("../src/services/gameChannelService");
 const roleRewards = require("../src/services/weeklyRoleRewardService");
@@ -40,7 +39,7 @@ const noDrops = (guild) => {
         wm.getWinMultiplier("g1", item.game),
       ]),
     ),
-    { blackjack: 2, chinchiro: 1.8, coquay: 2, taixiu: 2 },
+    { blackjack: 2, chinchiro: 1.8, taixiu: 2 },
     "mặc định giữ nguyên như trước khi có lệnh",
   );
   assert.equal(wm.parseMultiplier("x1,9"), 1.9);
@@ -63,23 +62,16 @@ const noDrops = (guild) => {
     "mỗi server một cấu hình",
   );
   assert(wm.describeWinMultiplier("g1", "chinchiro").customized);
-  assert(!wm.describeWinMultiplier("g1", "coquay").customized);
+  assert.throws(
+    () => wm.describeWinMultiplier("g1", "coquay"),
+    /INVALID_WIN_MULTIPLIER_GAME/,
+  );
   assert.throws(
     () => wm.setWinMultiplier("g1", "mines", 2),
     /INVALID_WIN_MULTIPLIER_GAME/,
   );
-  assert.throws(
-    () => wm.setWinMultiplier("g1", "coquay", 9),
-    /INVALID_WIN_MULTIPLIER/,
-  );
-  assert.equal(
-    wm.getWinMultiplier("g1", "coquay"),
-    2,
-    "giá trị sai không được lưu",
-  );
   assert.equal(wm.resetWinMultiplier("g1", "chinchiro").value, 1.8);
   wm.setWinMultiplier("g1", "taixiu", 1.5);
-  wm.setWinMultiplier("g1", "coquay", 2.5);
   wm.resetAllWinMultipliers("g1");
   assert(wm.listWinMultipliers("g1").every((item) => !item.customized));
   assert.equal(wm.formatMultiplier(2), "x2");
@@ -87,7 +79,9 @@ const noDrops = (guild) => {
   // không làm tăng số mục cấu hình dùng chung (menu chọn của Discord tối đa 25 mục)
   assert(
     config.configKeysForScope("system").length <= 25 &&
-      !config.configKeysForScope("system").some((key) => key.startsWith("WIN_MULT_")),
+      !config
+        .configKeysForScope("system")
+        .some((key) => key.startsWith("WIN_MULT_")),
   );
 
   // ───── 2) Xì dách với bot ─────
@@ -193,50 +187,6 @@ const noDrops = (guild) => {
       .toJSON().footer.text,
     /Thắng x1,9/,
   );
-
-  // ───── 3) Cò quay Nga ─────
-  const cqGuild = "cq-guild";
-  noDrops(cqGuild);
-  fund(cqGuild, "cq1");
-  wm.setWinMultiplier(cqGuild, "coquay", 2.5, "boss");
-  const cq = coquay.startCoquay({
-    guildId: cqGuild,
-    userId: "cq1",
-    channelId: "c",
-    stake: 1000,
-  });
-  assert.equal(cq.state.winMultiplier, 2.5);
-  assert.match(
-    JSON.stringify(
-      coquay
-        .coquayEmbed(cq.state, "cq1", { sessionId: cq.session.id })
-        .toJSON(),
-    ),
-    /2\.500 :coin:\*\* \(x2,5\)/,
-  );
-  wm.setWinMultiplier(cqGuild, "coquay", 1.2, "boss");
-  const patch = (patchState) => {
-    const row = db
-      .prepare("SELECT state_json FROM coquay_sessions WHERE id=?")
-      .get(cq.session.id);
-    db.prepare("UPDATE coquay_sessions SET state_json=? WHERE id=?").run(
-      JSON.stringify({ ...JSON.parse(row.state_json), ...patchState }),
-      cq.session.id,
-    );
-  };
-  patch({ chamber: [true, false], hp: { player: 3, bot: 1 } });
-  const cqWin = coquay.playCoquay({
-    sessionId: cq.session.id,
-    userId: "cq1",
-    action: "shoot",
-    arg: "bot",
-  });
-  assert.equal(
-    cqWin.result.payout,
-    2500,
-    "thanh toán theo hệ số lúc bắt đầu (2,5)",
-  );
-  assert.equal(coquay.payoutFor(1000), 2000, "mặc định x2");
 
   // ───── 4) Chinchiro ─────
   const chGuild = "ch-guild";
@@ -499,15 +449,6 @@ const noDrops = (guild) => {
     /INVALID_WIN_MULTIPLIER_GAME/,
     "Oẳn tù tì đã bị gỡ",
   );
-  assert(
-    Math.abs(
-      require("../src/services/coquayEngine")
-        .solve()
-        .value(3, 3, 0, 0, "player", 1) - wm.COQUAY_OPTIMAL_WIN_PROBABILITY,
-    ) < 0.002,
-    "Cò quay: xác suất thắng tối ưu khớp lời giải",
-  );
-
   // ───── 8) Đăng ký lệnh: gộp 3 lệnh vai trò, thêm lệnh hệ số thắng ─────
   const names = quantri.data.toJSON().options.map((option) => option.name);
   assert(names.length <= 25 && names.length === new Set(names).size);
@@ -567,7 +508,7 @@ const noDrops = (guild) => {
   );
   const rows = panel.components.map((row) => row.toJSON());
   assert.equal(rows[0].components[0].type, 3);
-  assert.equal(rows[0].components[0].options.length, 4);
+  assert.equal(rows[0].components[0].options.length, 3);
   assert.equal(
     rows[1].components.find((button) => button.custom_id.endsWith(":reset"))
       .disabled,

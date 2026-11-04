@@ -3,6 +3,17 @@
 globalThis.WebGameFeedback = (() => {
   const STORAGE_KEY = "discord-games:sound-enabled";
   const PATTERNS = {
+    shot: [
+      [0, 95, 0.18, 28],
+      [0.01, 53, 0.14, 20],
+    ],
+    blank: [[0, 900, 0.025, 180]],
+    reload: [
+      [0, 210, 0.055],
+      [0.1, 330, 0.06],
+      [0.2, 440, 0.08],
+    ],
+    tool: [[0, 490, 0.05, 300]],
     join: [
       [0, 523, 0.09],
       [0.12, 784, 0.16],
@@ -176,6 +187,35 @@ globalThis.WebGameFeedback = (() => {
     for (const cue of cues) {
       const pattern = PATTERNS[cue];
       if (!pattern) continue;
+      if (
+        cue === "shot" &&
+        context.createBuffer &&
+        context.createBufferSource
+      ) {
+        const buffer = context.createBuffer(
+          1,
+          Math.ceil(context.sampleRate * 0.2),
+          context.sampleRate,
+        );
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < data.length; i++)
+          data[i] =
+            (Math.random() * 2 - 1) *
+            Math.exp(-i / (context.sampleRate * 0.045));
+        const burst = context.createBufferSource(),
+          envelope = context.createGain();
+        burst.buffer = buffer;
+        envelope.gain.value = 0.65;
+        burst.connect(envelope);
+        envelope.connect(master);
+        voices.add(burst);
+        burst.onended = () => {
+          voices.delete(burst);
+          burst.disconnect();
+          envelope.disconnect();
+        };
+        burst.start(context.currentTime + 0.015 + delay);
+      }
       for (const [offset, frequency, duration, end] of pattern) {
         const at = context.currentTime + 0.015 + delay + offset;
         const oscillator = context.createOscillator(),
@@ -219,9 +259,17 @@ globalThis.WebGameFeedback = (() => {
       next.version <= before.version
     )
       return [];
+    const gunCues = () => {
+      if (game !== "coquay" || next.moves <= before.moves) return [];
+      const a = next.lastAction;
+      const cues = [a?.type === "shoot" ? (a.live ? "shot" : "blank") : "tool"];
+      if (a?.reloaded) cues.push("reload");
+      return cues;
+    };
     if (before.status !== "finished" && next.status === "finished") {
       if (next.winner)
         return [
+          ...gunCues(),
           next.me ? (next.winner === next.me ? "win" : "lose") : "finish",
         ];
       return [next.reason === "draw" ? "draw" : "finish"];
@@ -235,7 +283,8 @@ globalThis.WebGameFeedback = (() => {
           last?.mark ||
           (game === "caro" ? next.board?.[next.lastCell] : before.turn),
         cues = [];
-      if (game === "battleship" && last?.sunk) cues.push("sunk");
+      if (game === "coquay") cues.push(...gunCues());
+      else if (game === "battleship" && last?.sunk) cues.push("sunk");
       else if (game === "battleship" && last?.hit) cues.push("hit");
       else if (game === "mecung" && last?.hit) cues.push("wall");
       else if (game === "dots" && last?.captured?.length) cues.push("capture");

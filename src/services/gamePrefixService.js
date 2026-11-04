@@ -10,7 +10,6 @@ const blackjack = require("../commands/blackjack");
 const poker = require("../commands/poker");
 const duangua = require("../commands/duangua");
 const mines = require("../commands/mines");
-const coquay = require("../commands/coquay");
 const hardcore = require("../commands/hardcore");
 const vuatiengviet = require("../commands/vuatiengviet");
 const trochoi = require("../commands/trochoi");
@@ -36,7 +35,6 @@ const COMMANDS = {
   poker,
   duangua,
   mines,
-  coquay,
   hardcore,
   vuatiengviet,
   trochoi,
@@ -102,7 +100,6 @@ function help(prefix, command) {
     return `Cách dùng: \`${prefix}poker <texas|sixplus|pineapple|omaha> [bot|banbe]\``;
   if (command === "chinchiro")
     return `Cách dùng: \`${prefix}chinchiro <số xu>\``;
-  if (command === "coquay") return `Cách dùng: \`${prefix}coquay <số xu>\``;
   if (command === "mines")
     return `Cách dùng: \`${prefix}domin <số xu> <số mìn 2–7>\``;
   if (command === "hardcore")
@@ -252,16 +249,6 @@ async function handleGamePrefix(message) {
         chedochoi: mode === "bot" ? "bot" : "nguoichoi",
       },
     };
-  } else if (name === "coquay") {
-    const amount = Number(parts[0]);
-    if (!Number.isSafeInteger(amount)) {
-      await message.reply({
-        content: help(prefix, name),
-        allowedMentions: { repliedUser: false },
-      });
-      return true;
-    }
-    options = { integers: { cuoc: amount } };
   } else if (name === "mines") {
     const amount = Number(parts[0]);
     const mineCount = Number(parts[1]);

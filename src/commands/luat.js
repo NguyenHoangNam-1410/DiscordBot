@@ -62,10 +62,7 @@ const RULES = {
     "Mines",
     "**Bắt đầu**\n- Bàn có **20 ô**, chọn **2–7 mìn** và đặt cược. Vị trí mìn và ô sao được giữ cố định trong ván.\n\n**Mở ô / rút thưởng**\n- Mở ô an toàn để tăng hệ số. Sau ít nhất một ô đã mở, bấm **Rút thưởng** để nhận số xu đang hiển thị.\n- Trúng mìn: mất cược và kết thúc. Mở hết ô còn an toàn: tự chốt thưởng. Bỏ ván: mất cược.\n- Ô sao nằm ở ô an toàn, nhân thêm **1,5** vào hệ số; hệ số trên bảng đã tính bonus này.\n\n**Giáp Chống Nổ**\n- Nếu có hiệu ứng đang hoạt động, vô hiệu hóa **một quả mìn trong ván** rồi hết tác dụng. Các quả mìn khác vẫn gây thua.",
   ],
-  coquay: [
-    "Cò quay Nga",
-    "**Mục tiêu và cược**\n- Bạn đấu Bot, mỗi bên **3 HP**; bạn cầm súng trước. Cược một lần khi bắt đầu. Hạ Bot: tổng nhận **2 lần cược**. Hết HP, bỏ cuộc hoặc không thao tác 10 phút: mất cược.\n\n**Lượt bắn**\n- **Tự bắn + đạn lép:** không mất HP, giữ lượt.\n- **Tự bắn + đạn thật:** mất 1 HP, chuyển súng sang Bot.\n- **Bắn Bot:** đạn thật gây 1 sát thương; đạn lép không gây sát thương. Sau phát bắn, luôn chuyển súng sang Bot.\n\n**Nạp đạn**\n- Công khai số đạn thật/lép, giấu thứ tự; luôn có ít nhất một viên mỗi loại. Đợt 1 có 2–3 viên, đợt 2 có 4–5, đợt 3 trở đi có 6–8. Hết đạn thì nạp mới; người đang cầm súng giữ lượt. Bot chỉ biết số đạn như bạn.\n\n**Vật phẩm Gacha: mỗi loại tối đa 1 lần/ván, dùng trong lượt bạn**\n- **Kính Lúp (SR):** xem riêng viên kế tiếp.\n- **Bia Đỡ Đạn (SR):** đỡ 1 sát thương khi Bot bắn vào bạn.\n- **Cưa (SSR):** nếu viên kế tiếp là thật, gây 2 sát thương, kể cả tự bắn.\n- **Còng (UR):** lần tiếp theo súng sang Bot, Bot mất lượt và trả súng cho bạn.",
-  ],
+  coquay: ["Cò quay Nga", require("../coquay/rules").RULES_TEXT],
   hardcore: [
     "Sinh tồn",
     "Chọn class, vượt tầng và rút thưởng trước khi chết. Xem các trang tiếp theo để đọc luật đầy đủ.",

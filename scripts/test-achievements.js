@@ -71,11 +71,11 @@ assert(progress("hc_escape_10").complete && !progress("hc_escape_30").complete);
 assert(progress("hc_clear_1").complete && !progress("hc_clear_5").complete);
 assert.equal(
   progress("bet_wins_50").progress,
-  18,
+  17,
   "chỉ cộng thắng ở game cược, bỏ Sinh tồn và Vua tiếng Việt",
 );
 assert(progress("bet_wins_10").complete && !progress("bet_wins_50").complete);
-assert.equal(progress("bet_types_9").progress, 3);
+assert.equal(progress("bet_types_9").progress, 2);
 assert(!progress("bet_types_5").complete);
 assert.equal(
   progress("bet_staked_100k").progress,

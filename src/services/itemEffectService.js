@@ -227,8 +227,6 @@ function useItem({ guildId, userId, channelId, itemId }) {
   if (SHARED_GAME_EFFECTS.has(item.effect))
     throw new Error("MULTIPLAYER_ITEMS_DISABLED");
   if (item.type === "gacha") throw new Error("ITEM_NOT_USABLE");
-  if (String(item.effect).startsWith("coquay_"))
-    throw new Error("COQUAY_IN_GAME_ITEM");
   if (item.type === "color" || item.type === "avatar_ring") {
     equipOwnedCosmetic(guildId, userId, item.id);
     const icon = item.emoji || "🎨";

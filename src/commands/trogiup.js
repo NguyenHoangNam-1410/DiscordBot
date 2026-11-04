@@ -91,7 +91,11 @@ const PAGES = Object.freeze({
         "🎲 Game cược",
         "`/baucua` · `/taixiu` · `/chinchiro` · `/xidach` · `/poker` — mở bàn hoặc chơi theo lựa chọn của từng game",
       ],
-      ["🏇 Thử thách khác", "`/duangua` · `/domin` · `/coquay`"],
+      ["🏇 Thử thách khác", "`/duangua` · `/domin`"],
+      [
+        "◉ Cò quay Nga",
+        "`/coquay choi [mau] [vatpham] [thoigian]` — đấu hai người trên web, mặc định 5 HP và 4 đạo cụ. Mở hộp mỗi hiệp nạp đạn, có khán giả, xoay bàn 180°, âm thanh và hiệu ứng. `/coquay phong` xem phòng; `/coquay luat` xem luật. Không cược xu, không thành tựu.",
+      ],
       [
         "⚓ Battleship / Bắn tàu",
         "`/battleship choi` — chọn `kichthuoc`: Nhỏ (8×8/5 thuyền), Vừa (10×10/7) hoặc Lớn (12×12/10). Hai bên bố trí và xác nhận hạm đội kín rồi luân phiên bắn. `/battleship phong` xem hoặc mở phòng; `/battleship luat` xem luật. Hỗ trợ điện thoại, khán giả và tiền tố `!`; không cược xu.",
