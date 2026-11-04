@@ -46,6 +46,8 @@ function createWebServer({
     ["mobile-ui.css", "text/css; charset=utf-8"],
     ["feedback.js", "text/javascript; charset=utf-8"],
     ["feedback.css", "text/css; charset=utf-8"],
+    ["pairing-ui.js", "text/javascript; charset=utf-8"],
+    ["pairing-ui.css", "text/css; charset=utf-8"],
   ]) {
     assets.set("/" + file, {
       type,

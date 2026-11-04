@@ -832,6 +832,10 @@ dialog::backdrop {
   body:not(.wg-mobile) .sidebar > * {
     grid-column: 1 / -1;
   }
+  body:not(.wg-mobile) .sidebar > #connect-player,
+  body:not(.wg-mobile) .sidebar > #pair-panel {
+    grid-column: 2;
+  }
   body:not(.wg-mobile) .sidebar > .players-card {
     grid-row: 1;
     display: grid;

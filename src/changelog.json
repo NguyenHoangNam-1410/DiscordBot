@@ -1,5 +1,29 @@
 [
   {
+    "id": "f40879bd-e104-4084-82d5-3a024fff29fe",
+    "updatedAt": "2026-11-04T06:41:14.365Z",
+    "auditedAt": "2026-11-04T06:41:14.365Z",
+    "title": "Sao chép mã xác nhận trong game web",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Thêm nút Sao chép cạnh mã xác nhận tài khoản cho cả 8 game web, hỗ trợ máy tính và điện thoại.",
+      "Hiển thị trạng thái sao chép; hướng dẫn sao chép thủ công khi trình duyệt không cho phép."
+    ]
+  },
+  {
+    "id": "15090b9c-c35c-44ac-a60b-fefc5706f584",
+    "updatedAt": "2026-11-04T06:32:59.780Z",
+    "auditedAt": "2026-11-04T06:32:59.780Z",
+    "title": "Caro: căn tâm và đồng bộ kích thước X/O",
+    "type": "fix",
+    "scope": "system",
+    "changes": [
+      "Quân X và O trên bàn caro dùng hình vector có cùng tâm, kích thước ngoài và độ dày nét, sửa vòng tròn lệch khỏi giao điểm lưới.",
+      "Kích thước quân tự co theo ô trên PC, điện thoại và khi phóng to bàn. Giữ màu quân, viền nước đi gần nhất và đánh dấu đường thắng."
+    ]
+  },
+  {
     "id": "e79cb108-03c5-4c98-8b8d-8aee1f1fd0d8",
     "updatedAt": "2026-11-04T05:09:10.936Z",
     "auditedAt": "2026-11-04T05:09:10.936Z",

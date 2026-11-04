@@ -195,10 +195,20 @@ h1 {
   background:
     linear-gradient(#c8c0ac, #c8c0ac) center/1px 100% no-repeat,
     linear-gradient(#c8c0ac, #c8c0ac) center/100% 1px no-repeat;
-  font-family: Arial, sans-serif;
-  font-size: clamp(18px, 2.8vw, 30px);
-  font-weight: 500;
-  line-height: 1;
+}
+.cell-mark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 82%;
+  height: 82%;
+  transform: translate(-50%, -50%);
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 3.2;
+  stroke-linecap: round;
+  pointer-events: none;
 }
 .cell:disabled {
   cursor: default;
@@ -209,7 +219,6 @@ h1 {
 }
 .cell.o {
   color: var(--o);
-  font-size: clamp(24px, 3.4vw, 36px);
 }
 .cell:not(:disabled):hover {
   background-color: #d9d6c4;
@@ -542,12 +551,6 @@ dialog p {
   .board.enlarged {
     min-width: 600px;
   }
-  .board.enlarged .cell {
-    font-size: 30px;
-  }
-  .board.enlarged .cell.o {
-    font-size: 36px;
-  }
   .zoom-button {
     display: block;
   }
@@ -631,12 +634,6 @@ dialog p {
   .board-footer {
     font-size: 9px;
     padding-top: 12px;
-  }
-  .cell {
-    font-size: 20px;
-  }
-  .cell.o {
-    font-size: 26px;
   }
   .page-footer {
     margin-top: 20px;

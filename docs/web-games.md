@@ -22,6 +22,8 @@ Mặc định bật âm thanh, bắt đầu phát sau lần chạm/bấm/phím �
 
 ## Cấu hình và đường dẫn
 
+Tất cả tám game web (Caro, Walls, Battleship, Dots, Blokus, Mê cung, Cò quay và Santorini) dùng chung `/pairing-ui.js` và `/pairing-ui.css`: nút **Sao chép** nằm cạnh mã xác nhận tài khoản, cả trên máy tính và menu tài khoản điện thoại. Chỉ sao chép mã đang hiển thị, không kèm token hay đường dẫn. Nút báo thành công sau khi sao chép; nếu trình duyệt chặn cả hai cách sao chép, giao diện chọn sẵn mã và hướng dẫn sao chép thủ công. Mã mới sẽ xóa thông báo của mã trước.
+
 | Biến mới         | Mặc định                | Biến cũ được hỗ trợ |
 | ---------------- | ----------------------- | ------------------- |
 | `WEB_ENABLED`    | `false`                 | `CARO_WEB_ENABLED`  |

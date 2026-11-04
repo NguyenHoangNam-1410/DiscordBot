@@ -15,6 +15,10 @@ let pairTimer = null,
   pairAttempt = 0,
   pairVisible = false;
 const cells = [];
+const MARK_SVG = Object.freeze({
+  X: '<svg class="cell-mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><path d="M6 6L26 26M26 6L6 26"/></svg>',
+  O: '<svg class="cell-mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><circle cx="16" cy="16" r="10"/></svg>',
+});
 $("zoom-board").addEventListener("click", () => {
   const enlarged = $("board").classList.toggle("enlarged");
   $("zoom-board").setAttribute("aria-pressed", String(enlarged));
@@ -183,7 +187,11 @@ function render() {
     : "Viền vàng: nước đi gần nhất";
   cells.forEach((button, index) => {
     const mark = state.board[index];
-    button.textContent = mark === "X" ? "✕" : mark === "O" ? "○" : "";
+    // Both vectors share their visual bounds and center, independent of fonts.
+    if (button.caroMark !== mark) {
+      button.innerHTML = MARK_SVG[mark] || "";
+      button.caroMark = mark;
+    }
     button.className = `cell${mark ? " " + mark.toLowerCase() : ""}${index === state.lastCell && mark ? " recent-action" : ""}${state.winningCells.includes(index) ? " winning" : ""}`;
     button.disabled = !connected || pending || !myTurn || Boolean(mark);
     button.setAttribute(
