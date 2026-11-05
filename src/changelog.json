@@ -1,5 +1,16 @@
 [
   {
+    "id": "1a19d365-8b7f-49fa-95df-f654e8556bba",
+    "updatedAt": "2026-11-05T05:33:16.942Z",
+    "auditedAt": "2026-11-05T05:33:16.942Z",
+    "title": "Cờ thú: sửa font tiêu đề tiếng Việt",
+    "type": "fix",
+    "scope": "system",
+    "changes": [
+      "Đồng bộ font tiêu đề Cờ thú với giao diện, sửa chữ có dấu bị tách và lệch trong dòng Vượt sông. Chiếm hang."
+    ]
+  },
+  {
     "id": "ef3b63d4-7141-4a05-8e0d-84e75cc0df5f",
     "updatedAt": "2026-11-05T05:03:34.746Z",
     "auditedAt": "2026-11-05T05:03:34.746Z",

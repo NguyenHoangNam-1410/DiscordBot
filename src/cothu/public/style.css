@@ -97,9 +97,10 @@ a:focus-visible {
   margin: 22px 0;
 }
 .heading h1 {
-  font:
-    600 34px/1.2 Georgia,
-    serif;
+  font-family: inherit;
+  font-size: 34px;
+  font-weight: 700;
+  line-height: 1.25;
   margin: 6px 0;
 }
 .heading p {
