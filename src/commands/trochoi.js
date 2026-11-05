@@ -33,7 +33,7 @@ function helpEmbed(prefix = process.env.COMMAND_PREFIX || "!") {
       {
         name: "📖 Trợ giúp",
         value:
-          "`/webgame` — danh sách game web và luật từng bước.\n`/batdau` · `/luat` · `/trogiup` · `/huongdan` · `/changelog`",
+          "`/webgame` — danh sách game web và luật từng bước; `/cothu choi` mở Cờ thú hai người.\n`/batdau` · `/luat` · `/trogiup` · `/huongdan` · `/changelog`",
       },
       {
         name: "⌨️ Prefix tùy chọn",

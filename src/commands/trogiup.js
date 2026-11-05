@@ -58,7 +58,7 @@ const PAGES = Object.freeze({
       ],
       [
         "🎮 Chơi game",
-        "`/huongdan` — xem danh sách game; `/webgame` — 8 game web và hướng dẫn từng bước; `/luat trochoi:<game>` — xem luật ngắn.",
+        "`/huongdan` — xem danh sách game; `/webgame` — các game web và hướng dẫn từng bước; `/luat trochoi:<game>` — xem luật ngắn.",
       ],
       [
         "🎒 Nhận và dùng vật phẩm",
@@ -95,6 +95,10 @@ const PAGES = Object.freeze({
       [
         "◉ Cò quay Nga",
         "`/coquay choi [mau] [vatpham] [thoigian]` — đấu hai người trên web, mặc định 5 HP và 4 đạo cụ. Mở hộp mỗi hiệp nạp đạn, có khán giả, xoay bàn 180°, âm thanh và hiệu ứng. `/coquay phong` xem phòng; `/coquay luat` xem luật. Không cược xu, không thành tựu.",
+      ],
+      [
+        "🐾 Cờ thú",
+        "`/cothu choi` — hai người, bàn 7×9, 8 thú/bên. Chọn `nguoitruoc`, `thoigian`; Đỏ đi trước, đồng hồ chạy khi đối thủ tham gia. `/cothu phong` xem phòng; `/cothu luat` đọc ngoại lệ Chuột/Voi, sông, bẫy và luật hòa. Có khán giả, lịch sử và UI PC/mobile; không cược hay thưởng tài nguyên.",
       ],
       [
         "◒ Santorini",

@@ -7,6 +7,14 @@ globalThis.WebGameBoardUI = (() => {
       text: `${rules.timeMinutes ?? 30} phút/người`,
       title: "Đồng hồ riêng, chỉ chạy khi tới lượt và không cộng giờ.",
     };
+    if (game === "cothu")
+      return [
+        { text: "Cờ thú · 7×9", key: true },
+        { text: "Đỏ đi trước" },
+        { text: "Chó 4 · Sói 3" },
+        { text: "Lặp 3 lần / 100 lượt không bắt: hòa" },
+        clock,
+      ];
     if (game === "santorini")
       return [
         { text: "5×5 · 2 thợ/người", key: true },

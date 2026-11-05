@@ -4,6 +4,39 @@
 ((root) => {
   const games = [
     {
+      id: "cothu",
+      name: "Cờ thú",
+      summary: "Dẫn 8 loài thú qua sông, vượt bẫy và chiếm hang địch.",
+      setup: [
+        "Bàn 7×9, mỗi bên 8 quân ở vị trí cố định, không có lượt bố trí. Người được chọn cầm Đỏ và đi trước.",
+        "Đồng hồ Đỏ bắt đầu ngay khi đối thủ tham gia. Mỗi người mặc định 30 phút, không cộng giờ.",
+      ],
+      play: [
+        "Chọn quân của mình → ô đích hợp lệ để xem trước → Xác nhận. Hủy/Escape chỉ bỏ xem trước.",
+        "Đi một ô ngang/dọc, không chéo, không bỏ lượt; không vào hang nhà hay ô quân mình. Mạnh ăn yếu hoặc bằng.",
+        "Voi 8 > Sư tử 7 > Hổ 6 > Báo 5 > Chó 4 > Sói 3 > Mèo 2 > Chuột 1. Số trên quân mắc bẫy địch là bậc hiệu dụng 0.",
+        "Nút Xoay bàn chỉ đổi góc nhìn; tọa độ a1–g9 không đổi. Lịch sử ghi ô đi/đến, nhảy và quân bị ăn.",
+      ],
+      special: [
+        "Chuột trên đất ăn Voi; Voi không ăn Chuột thường. Chuột vẫn thua Mèo.",
+        "Chỉ Chuột bơi; hai Chuột trong nước được ăn nhau. Không bắt quân qua bờ nước/đất theo cả hai chiều.",
+        "Sư tử/Hổ nhảy qua toàn dải sông ngang/dọc đến ô đất đầu tiên. Mọi Chuột đúng đường nhảy đều chặn, kể cả cùng bên.",
+        "Bẫy chỉ làm yếu quân địch về 0. Quân mắc bẫy không bắt được quân, chỉ ra ô trống; ra ngoài phục hồi bậc gốc.",
+        "Quân có sức mạnh >0 bắt được mọi thú mắc bẫy của mình, kể cả Voi bắt Chuột. Sức mạnh quân đánh được xét tại ô xuất phát.",
+      ],
+      win: [
+        "Vào hang địch.",
+        "Ăn hết quân địch, hoặc đối thủ không có nước đi hợp lệ.",
+      ],
+      lose: [
+        "Đối thủ chiếm hang, ăn hết quân của bạn hoặc bạn bí mọi nước đi.",
+      ],
+      draw: [
+        "Cùng thế cờ và cùng bên đến lượt xuất hiện lần thứ ba, tính cả thế ban đầu.",
+        "100 lượt đơn liên tiếp không ăn quân; bắt quân đặt lại bộ đếm. Thắng ưu tiên hơn hòa trong cùng nước đi.",
+      ],
+    },
+    {
       id: "caro",
       name: "Caro",
       summary: "Luân phiên đặt X/O và nối thành hàng.",

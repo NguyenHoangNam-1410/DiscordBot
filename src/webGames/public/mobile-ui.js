@@ -6,6 +6,7 @@ globalThis.WebGameMobile = (() => {
     "(max-width: 760px), (max-height: 520px) and (pointer: coarse)",
   );
   const configurations = {
+    cothu: [["history", "Lịch sử", ["#history-panel"]]],
     caro: [],
     dots: [],
     santorini: [],
@@ -235,10 +236,13 @@ globalThis.WebGameMobile = (() => {
       const rect = scroll.getBoundingClientRect();
       if (!rect.width || !rect.height) continue;
       const pad = game === "walls" ? 50 : 18;
+      const ratio = game === "cothu" ? 7 / 9 : 1;
       scroll.style.setProperty(
         "--wg-board-size",
-        Math.max(100, Math.floor(Math.min(rect.width - 6, rect.height - pad))) +
-          "px",
+        Math.max(
+          game === "cothu" ? 70 : 100,
+          Math.floor(Math.min(rect.width - 6, (rect.height - pad) * ratio)),
+        ) + "px",
       );
     }
     document.dispatchEvent(new Event("webgame:layout"));
@@ -309,7 +313,10 @@ globalThis.WebGameMobile = (() => {
     for (const mark of ["X", "O"]) {
       const item = clocks[mark],
         name = state.players[mark] || "Đang chờ đối thủ";
-      item.button.title = name;
+      item.button.dataset.side = state.sideBySeat?.[mark] || "";
+      item.button.title =
+        name +
+        (state.playerLabels?.[mark] ? " · " + state.playerLabels[mark] : "");
       item.button.setAttribute(
         "aria-label",
         name +

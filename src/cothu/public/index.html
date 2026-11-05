@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#102a38" />
+    <title>Cờ thú · Vượt sông, chiếm hang</title>
+    <link rel="stylesheet" href="/cothu/style.css" />
+    <link rel="stylesheet" href="/mobile-ui.css" />
+    <link rel="stylesheet" href="/players.css" />
+    <link rel="stylesheet" href="/board-ui.css" />
+    <link rel="stylesheet" href="/feedback.css" />
+    <script src="/players.js" defer></script>
+    <script src="/board-ui.js" defer></script>
+    <script src="/feedback.js" defer></script>
+    <link rel="stylesheet" href="/pairing-ui.css" />
+    <script src="/pairing-ui.js" defer></script>
+    <link rel="stylesheet" href="/rules-ui.css" />
+    <script src="/game-catalog.js" defer></script>
+    <script src="/rules-ui.js" defer></script>
+    <script src="/mobile-ui.js" defer></script>
+    <script src="/cothu/app.js" defer></script>
+  </head>
+  <body>
+    <!-- Animal illustrations and terrain symbols are original local SVG assets. -->
+    <svg class="sprite" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <symbol id="art-elephant" viewBox="0 0 64 64">
+          <ellipse cx="14" cy="30" rx="12" ry="18" fill="#789ba4" />
+          <ellipse cx="50" cy="30" rx="12" ry="18" fill="#789ba4" />
+          <ellipse cx="32" cy="29" rx="20" ry="22" fill="#a8bcc0" />
+          <path d="M27 31h10v20q0 10-10 6l-3-5q6 4 7-1z" fill="#7b9fa8" />
+          <path d="m20 36-4 12 8-6m20-6 4 12-8-6" fill="#fff1cd" />
+          <g fill="#252d2a">
+            <circle cx="24" cy="29" r="2.4" />
+            <circle cx="40" cy="29" r="2.4" />
+          </g>
+          <path
+            d="M27 42q5 5 10 0"
+            stroke="#4f3c32"
+            stroke-width="2"
+            fill="none"
+            stroke-linecap="round"
+          />
+        </symbol>
+        <symbol id="art-lion" viewBox="0 0 64 64">
+          <path
+            d="M32 2 41 7 51 6 55 17 63 24 58 34 61 44 49 49 44 60 32 57 20 60 15 49 3 44 6 34 1 24 9 17 13 6 24 7Z"
+            fill="#a86e32"
+          />
+          <circle cx="32" cy="30" r="22" fill="#edbd67" />
+          <ellipse cx="32" cy="39" rx="13" ry="11" fill="#f8dfa1" />
+          <path d="m27 34 5 6 5-6" fill="#67402e" />
+          <g fill="#252d2a">
+            <circle cx="24" cy="29" r="2.4" />
+            <circle cx="40" cy="29" r="2.4" />
+          </g>
+          <path
+            d="M27 42q5 5 10 0"
+            stroke="#4f3c32"
+            stroke-width="2"
+            fill="none"
+            stroke-linecap="round"
+          />
+        </symbol>
+        <symbol id="art-tiger" viewBox="0 0 64 64">
+          <circle cx="17" cy="14" r="10" fill="#9d5c2c" />
+          <circle cx="47" cy="14" r="10" fill="#9d5c2c" />
+          <ellipse cx="32" cy="31" rx="24" ry="24" fill="#edac4d" />
+          <ellipse cx="32" cy="41" rx="15" ry="11" fill="#fff0c1" />
+          <path
+            d="m26 8 6 15 6-15M9 22l11 5-10 3m45-8-11 5 10 3M11 37l10 1-7 6m39-7-10 1 7 6"
+            fill="#664533"
+          />
+          <path d="m28 35 4 5 4-5" fill="#60402f" />
+          <g fill="#252d2a">
+            <circle cx="24" cy="29" r="2.4" />
+            <circle cx="40" cy="29" r="2.4" />
+          </g>
+          <path
+            d="M27 42q5 5 10 0"
+            stroke="#4f3c32"
+            stroke-width="2"
+            fill="none"
+            stroke-linecap="round"
+          />
+        </symbol>
+        <symbol id="art-leopard" viewBox="0 0 64 64">
+          <circle cx="16" cy="15" r="9" fill="#a4823e" />
+          <circle cx="48" cy="15" r="9" fill="#a4823e" />
+          <ellipse cx="32" cy="31" rx="23" ry="24" fill="#f1d17a" />
+          <ellipse cx="32" cy="41" rx="14" ry="11" fill="#fff0bf" />
+          <g fill="#8b672d">
+            <circle cx="23" cy="16" r="3" />
+            <circle cx="40" cy="16" r="3" />
+            <circle cx="14" cy="32" r="3" />
+            <circle cx="49" cy="32" r="3" />
+            <circle cx="18" cy="44" r="2" />
+            <circle cx="46" cy="44" r="2" />
+          </g>
+          <path d="m28 35 4 5 4-5" fill="#654c2e" />
+          <g fill="#252d2a">
+            <circle cx="24" cy="29" r="2.4" />
+            <circle cx="40" cy="29" r="2.4" />
+          </g>
+          <path
+            d="M27 42q5 5 10 0"
+            stroke="#4f3c32"
+            stroke-width="2"
+            fill="none"
+            stroke-linecap="round"
+          />
+        </symbol>
+        <symbol id="art-dog" viewBox="0 0 64 64">
+          <path
+            d="M15 10Q1 12 3 34l11 7 5-24m30-7q14 2 12 24l-11 7-5-24"
+            fill="#795238"
+          />
+          <ellipse cx="32" cy="31" rx="21" ry="25" fill="#d2a675" />
+          <path d="M33 8q-1 16-1 25l14-4 3-11q-6-11-16-10" fill="#9a6e47" />
+          <ellipse cx="32" cy="40" rx="14" ry="12" fill="#f8dfad" />
+          <ellipse cx="32" cy="36" rx="5" ry="4" fill="#3d3b32" />
+          <path d="M29 46v5q3 7 6 0v-5" fill="#d6776e" />
+          <g fill="#252d2a">
+            <circle cx="24" cy="29" r="2.4" />
+            <circle cx="40" cy="29" r="2.4" />
+          </g>
+          <path
+            d="M27 42q5 5 10 0"
+            stroke="#4f3c32"
+            stroke-width="2"
+            fill="none"
+            stroke-linecap="round"
+          />
+        </symbol>
+        <symbol id="art-wolf" viewBox="0 0 64 64">
+          <path
+            d="m10 25-2-24 21 14h6L56 1l-2 24-5 23-17 13-17-13z"
+            fill="#8b9e9b"
+          />
+          <path d="m13 5 3 19 10-9m25-10-3 19-10-9" fill="#dfddd0" />
+          <path d="m13 32 19 6 19-6-6 18-13 10-13-10z" fill="#e4e3ce" />
+          <path d="m26 37 6 6 6-6" fill="#34433e" />
+          <g fill="#252d2a">
+            <circle cx="24" cy="29" r="2.4" />
+            <circle cx="40" cy="29" r="2.4" />
+          </g>
+          <path
+            d="M27 42q5 5 10 0"
+            stroke="#4f3c32"
+            stroke-width="2"
+            fill="none"
+            stroke-linecap="round"
+          />
+        </symbol>
+        <symbol id="art-cat" viewBox="0 0 64 64">
+          <path
+            d="M10 25 7 2l21 12h8L57 2l-3 23v18L43 56H21L10 43z"
+            fill="#edd0a0"
+          />
+          <path d="m12 7 3 15 10-7m27-8-3 15-10-7" fill="#d69684" />
+          <ellipse cx="32" cy="40" rx="14" ry="11" fill="#fff0cf" />
+          <path d="m28 35 4 5 4-5" fill="#b36e65" />
+          <path
+            d="m4 36 17 3M3 44l18-2m39-6-17 3m18 5-18-2"
+            stroke="#796044"
+            stroke-width="2"
+          />
+          <g fill="#252d2a">
+            <circle cx="24" cy="29" r="2.4" />
+            <circle cx="40" cy="29" r="2.4" />
+          </g>
+          <path
+            d="M27 42q5 5 10 0"
+            stroke="#4f3c32"
+            stroke-width="2"
+            fill="none"
+            stroke-linecap="round"
+          />
+        </symbol>
+        <symbol id="art-rat" viewBox="0 0 64 64">
+          <circle cx="14" cy="16" r="13" fill="#aaada6" />
+          <circle cx="50" cy="16" r="13" fill="#aaada6" />
+          <circle cx="14" cy="16" r="8" fill="#dfaca2" />
+          <circle cx="50" cy="16" r="8" fill="#dfaca2" />
+          <path
+            d="M11 31Q13 15 32 15t21 16Q49 49 32 59 15 49 11 31"
+            fill="#b9c0af"
+          />
+          <ellipse cx="32" cy="43" rx="12" ry="11" fill="#e0ddc0" />
+          <circle cx="32" cy="43" r="5" fill="#d48a83" />
+          <path
+            d="m3 38 18 4M4 48l17-3m40-7-18 4m17 6-17-3"
+            stroke="#6b7f70"
+            stroke-width="2"
+          />
+          <g fill="#252d2a">
+            <circle cx="24" cy="29" r="2.4" />
+            <circle cx="40" cy="29" r="2.4" />
+          </g>
+          <path
+            d="M27 42q5 5 10 0"
+            stroke="#4f3c32"
+            stroke-width="2"
+            fill="none"
+            stroke-linecap="round"
+          />
+        </symbol>
+        <symbol id="art-den" viewBox="0 0 64 64">
+          <path d="M6 56V32a26 26 0 0 1 52 0v24H42V35a10 10 0 0 0-20 0v21z" />
+          <path d="M24 52q8-13 16 0z" />
+          <circle cx="20" cy="44" r="2" />
+          <circle cx="28" cy="39" r="2" />
+          <circle cx="37" cy="39" r="2" />
+          <circle cx="44" cy="44" r="2" />
+        </symbol>
+        <symbol id="art-trap" viewBox="0 0 64 64">
+          <path
+            d="m32 5 27 27-27 27L5 32zM16 22l8 10-8 10m32-20-8 10 8 10M24 16l8 8 8-8m-16 32 8-8 8 8"
+          />
+        </symbol>
+      </defs>
+    </svg>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="/">♜ cờ thú<span>.</span></a
+        ><span class="tag">HAI NGƯỜI / COTHU-VN-V1</span
+        ><span id="connection" role="status">Chưa kết nối</span>
+      </header>
+      <main>
+        <div class="heading">
+          <div>
+            <p class="eyebrow">TÁM LOÀI THÚ. MỘT HANG ĐÍCH.</p>
+            <h1>Vượt sông. Chiếm hang.</h1>
+            <p>Dẫn bầy thú qua sông và bẫy để chiếm hang đối thủ.</p>
+          </div>
+          <div class="room-label">PHÒNG <strong id="room-code">—</strong></div>
+        </div>
+        <div id="notice" class="notice" role="alert" hidden></div>
+        <div class="game-layout">
+          <section class="board-panel" aria-label="Bàn Cờ thú">
+            <div class="board-toolbar">
+              <strong id="board-state" aria-live="polite"
+                >Mở /cothu choi trong Discord</strong
+              ><span id="move-count">0 lượt</span
+              ><button
+                id="rotate-board"
+                aria-pressed="false"
+                title="Chỉ xoay góc nhìn"
+              >
+                ↻ Xoay bàn
+              </button>
+            </div>
+            <div class="board-scroll">
+              <div
+                id="board"
+                class="board"
+                role="group"
+                aria-label="Cờ thú 7 cột 9 hàng"
+              ></div>
+            </div>
+            <section id="controls" class="controls">
+              <p id="instruction" aria-live="polite">
+                Chọn quân → Ô đích → Xác nhận
+              </p>
+              <div class="actions">
+                <button id="clear">Hủy</button
+                ><button id="confirm" class="primary" disabled>Xác nhận</button>
+              </div>
+            </section>
+            <p
+              id="last-action"
+              class="last-action"
+              role="status"
+              aria-live="polite"
+            >
+              Đỏ đi trước.
+            </p>
+            <div class="legend">
+              <span>○ Đi</span><span>◎ Ăn</span><span>⇢ Nhảy sông</span
+              ><span>Viền vàng: nước vừa đi</span>
+            </div>
+          </section>
+          <aside class="sidebar">
+            <section class="status-card">
+              <p class="eyebrow" id="status-label">CỜ THÚ</p>
+              <h2 id="status-title">Sẵn sàng vào rừng?</h2>
+              <p id="status-detail">Mở phòng từ Discord để bắt đầu.</p>
+            </section>
+            <section class="players-card" aria-label="Người chơi">
+              <div class="player" id="player-X">
+                <span class="player-avatar x"
+                  ><img
+                    id="avatar-X"
+                    alt=""
+                    referrerpolicy="no-referrer"
+                    decoding="async"
+                    draggable="false"
+                    hidden
+                  /><span id="avatar-fallback-X" aria-hidden="true"
+                    >?</span
+                  ></span
+                >
+                <div>
+                  <span class="player-label" id="role-X">CHỦ PHÒNG</span
+                  ><strong id="name-X">Chủ phòng</strong
+                  ><span class="player-summary" id="score-X">8 quân</span
+                  ><span class="you" id="you-X" hidden>BẠN</span>
+                </div>
+                <time id="clock-X" class="player-clock">30:00</time>
+              </div>
+              <div class="player" id="player-O">
+                <span class="player-avatar o"
+                  ><img
+                    id="avatar-O"
+                    alt=""
+                    referrerpolicy="no-referrer"
+                    decoding="async"
+                    draggable="false"
+                    hidden
+                  /><span id="avatar-fallback-O" aria-hidden="true"
+                    >?</span
+                  ></span
+                >
+                <div>
+                  <span class="player-label" id="role-O">KHÁCH</span
+                  ><strong id="name-O">Đang chờ đối thủ</strong
+                  ><span class="player-summary" id="score-O">8 quân</span
+                  ><span class="you" id="you-O" hidden>BẠN</span>
+                </div>
+                <time id="clock-O" class="player-clock">30:00</time>
+              </div>
+            </section>
+            <button id="connect-player" class="primary" hidden>
+              Xác nhận người chơi
+            </button>
+            <section id="pair-panel" class="status-card" hidden>
+              <p class="eyebrow">KẾT NỐI TÀI KHOẢN</p>
+              <h2 id="pair-code"></h2>
+              <p>
+                Trong tin phòng Discord, bấm
+                <strong>Kết nối tài khoản</strong> và nhập mã này. Mã có hiệu
+                lực 5 phút. Chỉ nhập mã từ tab bàn cờ của chính bạn.
+              </p>
+              <p id="pair-status" role="status">
+                Đang chờ bạn xác nhận trong Discord…
+              </p>
+            </section>
+            <button id="leave" class="leave-button" hidden>Đầu hàng</button>
+
+            <section class="rules">
+              <h3>Luật chơi</h3>
+              <p id="rules-detail">cothu-vn-v1 · Đỏ đi trước · Chó 4, Sói 3</p>
+            </section>
+            <div
+              id="rule-badges"
+              class="rule-badges"
+              aria-label="Cấu hình phòng"
+            ></div>
+            <section id="history-panel" class="history-panel">
+              <h2>Lịch sử nước đi</h2>
+              <p id="history-count">Chưa có nước đi</p>
+              <ol id="move-history" aria-label="Các nước mới nhất trước"></ol>
+              <h3>Quân đã mất</h3>
+              <div id="captured"></div>
+            </section>
+          </aside>
+        </div>
+      </main>
+      <footer class="page-footer">
+        <span>CHƠI VUI · KHÔNG CƯỢC XU</span><span>CỜ THÚ / CLASSIC</span>
+      </footer>
+    </div>
+    <dialog id="leave-dialog">
+      <h2 id="leave-dialog-title">Đầu hàng ván đấu?</h2>
+      <p id="leave-dialog-detail">Đối thủ sẽ được tính thắng ván này.</p>
+      <div class="actions">
+        <button id="keep-playing">Tiếp tục chơi</button
+        ><button id="confirm-leave" class="danger">Đầu hàng</button>
+      </div>
+    </dialog>
+  </body>
+</html>

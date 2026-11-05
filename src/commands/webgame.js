@@ -48,10 +48,15 @@ function payload(ownerId, selected = "list") {
         name: "Hòa / đóng phòng",
         value: game.draw.map((text) => `• ${text}`).join("\n"),
       });
+    if (game.special?.length)
+      embed.addFields({
+        name: "Ngoại lệ cần nhớ",
+        value: game.special.map((text) => `• ${text}`).join("\n"),
+      });
     embed.addFields({ name: "Đồng hồ và kết nối", value: catalog.clock });
   } else {
     embed
-      .setTitle("Game web · 8 trò chơi đối kháng")
+      .setTitle(`Game web · ${catalog.games.length} trò chơi đối kháng`)
       .setDescription(
         "Chọn game ở menu để xem các bước chuẩn bị, cách chơi và điều kiện thắng/thua. Tạo phòng bằng lệnh bên dưới; người còn lại bấm **Tham gia**, rồi mở bàn web.",
       )

@@ -1,5 +1,30 @@
 [
   {
+    "id": "ef3b63d4-7141-4a05-8e0d-84e75cc0df5f",
+    "updatedAt": "2026-11-05T05:03:34.746Z",
+    "auditedAt": "2026-11-05T05:03:34.746Z",
+    "title": "Cờ thú: đối kháng trên web",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Thêm /cothu choi, phong, luat và cauhinh; hai người, 8 thú/bên trên bàn 7×9, có khán giả và lệnh prefix !cothu.",
+      "Áp dụng cothu-vn-v1: Chuột/Voi, bẫy, bơi, nhảy sông, thắng do chiếm hang/ăn hết/bí nước và hòa do lặp ba lần hoặc 100 lượt không bắt.",
+      "Bàn PC/mobile có hình từng loài, sông/bẫy/hang, xoay góc nhìn, xem trước rồi xác nhận, lịch sử và quân đã mất; dùng chung mã kết nối, đồng hồ và âm báo.",
+      "Chọn ai cầm Đỏ và thời gian 1–180 phút/người. Đồng hồ chạy ngay khi đối thủ tham gia; kết quả được lưu, chơi lại mở phòng mới. Không cược hoặc thưởng tài nguyên."
+    ]
+  },
+  {
+    "id": "9918b3b0-75e0-48e1-b680-fd01318d4f9d",
+    "updatedAt": "2026-11-05T04:40:17.609Z",
+    "auditedAt": "2026-11-05T04:40:17.609Z",
+    "title": "Đặc tả web game Cờ thú",
+    "type": "maintenance",
+    "scope": "system",
+    "changes": [
+      "Bổ sung tài liệu luật và thiết kế Cờ thú hai người trên web, gồm ngoại lệ, giao diện, phòng đấu và tiêu chí kiểm thử; game chưa được phát hành."
+    ]
+  },
+  {
     "id": "0087e3be-b01a-45bd-87fd-c9f93bd6c578",
     "updatedAt": "2026-11-04T08:29:25.567Z",
     "auditedAt": "2026-11-04T08:29:25.567Z",

@@ -26,6 +26,10 @@ const { createGame: createSantoriniGame } = require("../santorini/webGame");
 // Register each new game here. Transport, browser sessions and Discord sync are shared.
 module.exports = createRuntime({
   games: [
+    require("../cothu/webGame").createGame({
+      store: require("../cothu/store").createStore(db),
+      db,
+    }),
     createGame({ store: createStore(db), db }),
     createWallsGame({ store: createWallsStore(db), db }),
     createBattleshipGame({ store: createBattleshipStore(db), db }),

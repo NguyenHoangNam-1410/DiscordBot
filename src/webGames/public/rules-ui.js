@@ -61,6 +61,7 @@
   body.append(configuration);
   section("1. Chuẩn bị", game.setup, true);
   section("2. Mỗi lượt", game.play, true);
+  if (game.special?.length) section("Ngoại lệ cần nhớ", game.special);
   section("Thắng nếu", [...game.win, catalog.commonWin]);
   section("Thua nếu", [...game.lose, catalog.commonLoss]);
   if (game.draw.length) section("Hòa / đóng phòng", game.draw);

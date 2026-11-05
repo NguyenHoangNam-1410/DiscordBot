@@ -1,10 +1,10 @@
 # Máy chủ web dùng chung cho game Discord
 
-Một tiến trình bot, một cổng HTTP, một địa chỉ HTTPS/Tailscale. Hiện có Caro, [Walls / Wall Go](walls-web.md), [Battleship / Bắn tàu](battleship-web.md), [Dots & Boxes](dots-web.md), [Blokus Duo](blokus-web.md) và [Mê cung](mecung-web.md). Không cần mở thêm Funnel hay server khi đăng ký game mới.
+Một tiến trình bot, một cổng HTTP, một địa chỉ HTTPS/Tailscale. Hiện có [Cờ thú](cothu-web.md), Santorini, Cò quay Nga, Caro, [Walls / Wall Go](walls-web.md), [Battleship / Bắn tàu](battleship-web.md), [Dots & Boxes](dots-web.md), [Blokus Duo](blokus-web.md) và [Mê cung](mecung-web.md). Không cần mở thêm Funnel hay server khi đăng ký game mới.
 
 ## Giao diện điện thoại
 
-`/webgame` (hoặc `!webgame` khi bật prefix) liệt kê 8 game web, lệnh mở/xem phòng và menu hướng dẫn từng trò. Danh sách dùng được cả khi web đang tắt; nút mở trang chủ chỉ xuất hiện khi đã bật cấu hình web. Sau khi thêm lệnh cần chạy `npm run register`.
+`/webgame` (hoặc `!webgame` khi bật prefix) liệt kê 9 game web, lệnh mở/xem phòng và menu hướng dẫn từng trò. Danh sách dùng được cả khi web đang tắt; nút mở trang chủ chỉ xuất hiện khi đã bật cấu hình web. Sau khi thêm lệnh cần chạy `npm run register`.
 
 Trên mọi bàn web, nút **Luật chơi** hoặc **?** ở thanh trên mở hộp thoại: chuẩn bị theo thứ tự, mỗi lượt làm gì, thắng nếu, thua nếu và hòa/đóng phòng khi có. Cấu hình bàn vẫn cập nhật trực tiếp trong hộp thoại; hướng dẫn mở phòng/kết nối được thu gọn ở cuối. Có nút Đóng/Escape; khi đang đọc, các phím chơi game không tác động tới bàn, đồng hồ vẫn chạy. Nội dung dùng chung với Discord trong `src/webGames/public/game-catalog.js`; tài nguyên giao diện là `/rules-ui.js` và `/rules-ui.css`.
 
@@ -26,7 +26,7 @@ Mặc định bật âm thanh, bắt đầu phát sau lần chạm/bấm/phím �
 
 ## Cấu hình và đường dẫn
 
-Tất cả tám game web (Caro, Walls, Battleship, Dots, Blokus, Mê cung, Cò quay và Santorini) dùng chung `/pairing-ui.js` và `/pairing-ui.css`: nút **Sao chép** nằm cạnh mã xác nhận tài khoản, cả trên máy tính và menu tài khoản điện thoại. Chỉ sao chép mã đang hiển thị, không kèm token hay đường dẫn. Nút báo thành công sau khi sao chép; nếu trình duyệt chặn cả hai cách sao chép, giao diện chọn sẵn mã và hướng dẫn sao chép thủ công. Mã mới sẽ xóa thông báo của mã trước.
+Tất cả chín game web (Cờ thú, Caro, Walls, Battleship, Dots, Blokus, Mê cung, Cò quay và Santorini) dùng chung `/pairing-ui.js` và `/pairing-ui.css`: nút **Sao chép** nằm cạnh mã xác nhận tài khoản, cả trên máy tính và menu tài khoản điện thoại. Chỉ sao chép mã đang hiển thị, không kèm token hay đường dẫn. Nút báo thành công sau khi sao chép; nếu trình duyệt chặn cả hai cách sao chép, giao diện chọn sẵn mã và hướng dẫn sao chép thủ công. Mã mới sẽ xóa thông báo của mã trước.
 
 | Biến mới         | Mặc định                | Biến cũ được hỗ trợ |
 | ---------------- | ----------------------- | ------------------- |
