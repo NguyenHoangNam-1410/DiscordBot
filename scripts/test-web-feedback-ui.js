@@ -238,7 +238,8 @@ async function main() {
   );
   assert.equal(
     await evaluate('$("sound-toggle").getAttribute("aria-pressed")'),
-    "true",
+    "false",
+    "Speaker shows that initial audio still needs activation",
   );
   const rect = await evaluate(
     '(()=>{const r=$("sound-toggle").getBoundingClientRect();return {left:r.left,right:r.right,top:r.top,w:innerWidth}})()',
@@ -366,12 +367,111 @@ async function main() {
     true,
   );
   await screenshot("sound-desktop.png");
+  // A fresh unauthenticated viewer can activate with one tap and hear both seats.
+  await send("Network.clearBrowserCookies");
+  const spectatorRoom = store.create({
+    guildId: "spectator-sound",
+    channelId: "c",
+    user: users.X,
+  });
+  await send("Page.navigate", {
+    url: config.origin + "/caro/room/" + spectatorRoom.id,
+  });
+  await until('typeof state!=="undefined"&&state?.me===null&&connected');
+  assert.equal(await evaluate("__audioContexts.length"), 0);
+  assert.equal(
+    await evaluate('$("sound-toggle").getAttribute("aria-pressed")'),
+    "false",
+  );
+  await evaluate("window.dispatchEvent(new Event('focus'))");
+  assert.equal(await evaluate("__audioContexts.length"), 0);
+  await click("#sound-toggle");
+  await until(
+    'WebGameFeedback.enabled()&&__audioContexts[0]?.state==="running"',
+  );
+  assert.equal(
+    await evaluate('$("sound-toggle").getAttribute("aria-pressed")'),
+    "true",
+  );
+  assert.equal(
+    await evaluate("__sounds"),
+    2,
+    "One click activates and plays the preview",
+  );
+  let watched = store.join(spectatorRoom.id, users.O);
+  await until('state.status==="playing"&&__sounds===4');
+  count = await evaluate("__sounds");
+  watched = store.move(watched.id, users.X.id, 0, watched.version);
+  await until("state.moves===1");
+  assert.equal(await evaluate("__sounds"), count + 1);
+  watched = store.move(watched.id, users.O.id, 15, watched.version);
+  await until("state.moves===2");
+  assert.equal(await evaluate("__sounds"), count + 2);
+  assert.equal(
+    await evaluate(
+      '[...document.querySelectorAll("#board .cell")].every(el=>el.disabled)',
+    ),
+    true,
+  );
+  await click("#sound-toggle");
+  count = await evaluate("__sounds");
+  watched = store.move(watched.id, users.X.id, 1, watched.version);
+  await until("state.moves===3");
+  assert.equal(await evaluate("__sounds"), count);
+  await click("#sound-toggle");
+  await until("WebGameFeedback.enabled()&&__sounds>" + count);
+  count = await evaluate("__sounds");
+  // Simulate a browser suspension and its subsequent focus event using a real AudioContext.
+  await evaluate("__audioContexts[0].suspend()");
+  await until('$("sound-toggle").dataset.soundState==="waiting"');
+  await evaluate("window.dispatchEvent(new Event('focus'))");
+  await until(
+    '__audioContexts[0].state==="running"&&$("sound-toggle").dataset.soundState==="running"',
+  );
+  assert.equal(
+    await evaluate("__sounds"),
+    count,
+    "Resuming never replays missed sounds",
+  );
+  watched = store.move(watched.id, users.O.id, 16, watched.version);
+  await until("state.moves===4");
+  assert.equal(await evaluate("__sounds"), count + 1);
+  for (const cell of [2, 17, 3, 18]) {
+    watched = store.move(
+      watched.id,
+      watched.players[watched.turn].id,
+      cell,
+      watched.version,
+    );
+    await until("state.moves===" + watched.moves);
+  }
+  count = await evaluate("__sounds");
+  watched = store.move(watched.id, users.X.id, 4, watched.version);
+  await until('state.status==="finished"');
+  assert.equal(
+    await evaluate("__sounds"),
+    count + 2,
+    "Spectators hear a neutral result",
+  );
+  await evaluate("accept({...state})");
+  await delay(60);
+  assert.equal(await evaluate("__sounds"), count + 2);
+  await send("Page.reload");
+  await until(
+    'typeof state!=="undefined"&&state?.status==="finished"&&connected',
+  );
+  assert.equal(await evaluate("__sounds"), 0);
+  await click("#sound-toggle");
+  await until("__sounds===2");
+  assert.equal(await evaluate("state.me"), null);
+  await screenshot("sound-spectator.png");
+
   assert.deepEqual(errors, []);
   console.log(
     JSON.stringify({
       ok: true,
       feedbackUI:
-        "real Web Audio after trusted gesture, join, live commits without duplicate ACK, mute/unmute, win, cross-game preference, reload without history replay, desktop/mobile header icons",
+        "real Web Audio, viewer first-click activation, join/both seats/result, suspended-context recovery, read-only spectators, mute/unmute, ACK deduplication, cross-game/reload preferences, desktop/mobile header icons",
     }),
   );
   await send("Browser.close").catch(() => {});

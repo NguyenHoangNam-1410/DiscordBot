@@ -69,6 +69,12 @@ const ROUTES = Object.freeze([
       require("./commands/cothu").handleButton(interaction),
   })),
   {
+    kind: "button",
+    prefix: "webgame:",
+    handle: (interaction) =>
+      require("./commands/webgame").handleButton(interaction),
+  },
+  {
     kind: "select",
     prefix: "webgame:",
     handle: (interaction) =>

@@ -238,6 +238,75 @@ async function main() {
     0,
     "Reopening a finished board never replays its result",
   );
+  const viewer = fixture();
+  const speaker = viewer.created.find((node) => node.id === "sound-toggle");
+  assert.equal(speaker.attrs["aria-pressed"], "false");
+  assert.equal(speaker.dataset.soundState, "waiting");
+  viewer.windowEvents.focus();
+  assert.equal(viewer.audio.length, 0, "Focusing a fresh tab never autoplays");
+  viewer.listeners.pointerdown({ isTrusted: true, target: speaker });
+  viewer.listeners.pointerup({ isTrusted: true, target: speaker });
+  assert.equal(
+    viewer.audio.length,
+    0,
+    "The sound button handles its own activation",
+  );
+  speaker.events.click();
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(
+    viewer.api.enabled(),
+    true,
+    "First click activates rather than mutes",
+  );
+  assert.equal(speaker.attrs["aria-pressed"], "true");
+  assert.equal(speaker.dataset.soundState, "running");
+  let viewerBefore = { ...before, me: null };
+  viewer.api.update("caro", viewerBefore);
+  const viewerCount = viewer.count();
+  let viewerNext = {
+    ...viewerBefore,
+    version: viewerBefore.version + 1,
+    moves: viewerBefore.moves + 1,
+    lastCell: 20,
+    board: [...viewerBefore.board],
+  };
+  viewerNext.board[20] = "X";
+  assert.deepEqual(cues(viewer, "caro", viewerBefore, viewerNext), ["move"]);
+  viewer.api.update("caro", viewerNext);
+  viewerBefore = viewerNext;
+  viewerNext = {
+    ...viewerBefore,
+    version: viewerBefore.version + 1,
+    moves: viewerBefore.moves + 1,
+    lastCell: 21,
+    board: [...viewerBefore.board],
+  };
+  viewerNext.board[21] = "O";
+  assert.deepEqual(cues(viewer, "caro", viewerBefore, viewerNext), [
+    "opponent",
+  ]);
+  viewer.api.update("caro", viewerNext);
+  assert.equal(viewer.count(), viewerCount + 2);
+  viewer.api.update("caro", { ...viewerNext });
+  assert.equal(
+    viewer.count(),
+    viewerCount + 2,
+    "Viewer snapshots are deduplicated",
+  );
+  viewer.audio[0].state = "suspended";
+  viewer.windowEvents.focus();
+  await Promise.resolve();
+  assert.equal(viewer.audio[0].state, "running");
+  assert.equal(
+    viewer.count(),
+    viewerCount + 2,
+    "Recovery does not replay history",
+  );
+  speaker.events.click();
+  assert.equal(viewer.api.enabled(), false);
+  viewer.audio[0].state = "suspended";
+  viewer.windowEvents.focus();
+  assert.equal(viewer.audio[0].state, "suspended", "Muted viewers stay muted");
   assert.deepEqual(
     cues(f, "caro", view(), { ...view(), version: room.version - 1 }),
     [],
@@ -403,7 +472,7 @@ async function main() {
     JSON.stringify({
       ok: true,
       feedback:
-        "seven real game stores, Santorini placement/start/turn, join/move/hit/capture/results, deduplication, no autoplay/history replay, mute persistence/storage sync, unsupported/blocked audio, connection icon",
+        "seven stores, spectator X/O cues, first-click activation and honest speaker state, focus recovery/mute, deduplication, no autoplay/history replay, storage sync and unsupported audio",
     }),
   );
 }

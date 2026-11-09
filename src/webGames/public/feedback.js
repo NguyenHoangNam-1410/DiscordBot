@@ -76,6 +76,7 @@ globalThis.WebGameFeedback = (() => {
     context = null,
     master = null,
     previous = null,
+    unlockedOnce = false,
     button;
   const voices = new Set();
   try {
@@ -100,9 +101,17 @@ globalThis.WebGameFeedback = (() => {
   }
   function paintSound() {
     if (!button) return;
+    const active = enabled && Boolean(Audio) && context?.state === "running";
+    button.dataset.soundState = !Audio
+      ? "unsupported"
+      : !enabled
+        ? "muted"
+        : active
+          ? "running"
+          : "waiting";
     button.replaceChildren(
       icon(
-        enabled
+        active
           ? [
               "M11 5 6 9H3v6h3l5 4V5Z",
               "M15 8a6 6 0 0 1 0 8M18 5a10 10 0 0 1 0 14",
@@ -110,22 +119,24 @@ globalThis.WebGameFeedback = (() => {
           : ["M11 5 6 9H3v6h3l5 4V5Z", "m16 9 6 6m0-6-6 6"],
       ),
     );
-    button.setAttribute("aria-pressed", String(enabled && Boolean(Audio)));
+    button.setAttribute("aria-pressed", String(active));
     button.setAttribute(
       "aria-label",
       Audio
-        ? enabled
+        ? active
           ? "Tắt âm thanh"
           : "Bật âm thanh"
         : "Thiết bị không hỗ trợ âm thanh",
     );
     button.title = !Audio
       ? "Thiết bị không hỗ trợ âm thanh"
-      : enabled
-        ? "Âm thanh bật · Chạm/bấm vào trang để kích hoạt"
-        : "Âm thanh đã tắt";
+      : active
+        ? "Âm thanh đang bật"
+        : enabled
+          ? "Bấm để kích hoạt âm thanh"
+          : "Âm thanh đã tắt";
     button.disabled = !Audio;
-    button.classList.toggle("muted", !enabled);
+    button.classList.toggle("muted", !active);
   }
   function connection(ok, label) {
     const el = document.getElementById("connection");
@@ -168,6 +179,7 @@ globalThis.WebGameFeedback = (() => {
     try {
       if (!context || context.state === "closed") {
         context = new Audio();
+        context.addEventListener?.("statechange", paintSound);
         master = context.createGain();
         master.gain.value = 0.14;
         master.connect(context.destination);
@@ -175,10 +187,17 @@ globalThis.WebGameFeedback = (() => {
       if (context.state !== "running") await context.resume();
       if (!enabled) return false;
       master.gain.setValueAtTime(0.14, context.currentTime);
+      if (context.state === "running") unlockedOnce = true;
+      paintSound();
       return context.state === "running";
     } catch {
+      paintSound();
       return false;
     }
+  }
+  function recoverAudio() {
+    if (enabled && unlockedOnce && document.visibilityState !== "hidden")
+      void unlock();
   }
   function schedule(cues) {
     // Never queue old notifications while the browser is waiting for a user gesture.
@@ -304,7 +323,11 @@ globalThis.WebGameFeedback = (() => {
         cues.push("capture");
       else if (game === "walls" && last?.type === "wall") cues.push("wall");
       else
-        cues.push(next.me && actor && actor !== next.me ? "opponent" : "move");
+        cues.push(
+          actor && (next.me ? actor !== next.me : actor === "O")
+            ? "opponent"
+            : "move",
+        );
       if (
         next.me &&
         before.turn !== next.me &&
@@ -359,13 +382,19 @@ globalThis.WebGameFeedback = (() => {
     button.className = "wg-sound-toggle";
     tools.append(el, button);
     button.addEventListener("click", () => {
-      void setEnabled(!enabled, true);
+      const active = enabled && context?.state === "running";
+      void setEnabled(!active, !active);
     });
   }
   connection(null);
   paintSound();
   const gesture = (event) => {
-    if (event.isTrusted !== false) void unlock();
+    if (
+      event.isTrusted !== false &&
+      event.target !== button &&
+      !button?.contains?.(event.target)
+    )
+      void unlock();
   };
   document.addEventListener("pointerdown", gesture, {
     capture: true,
@@ -378,6 +407,8 @@ globalThis.WebGameFeedback = (() => {
   });
   document.addEventListener("click", gesture, { capture: true });
   document.addEventListener("keydown", gesture, { capture: true });
+  document.addEventListener("visibilitychange", recoverAudio);
+  window.addEventListener("focus", recoverAudio);
   window.addEventListener("storage", (event) => {
     if (event.key !== STORAGE_KEY && event.key !== null) return;
     try {

@@ -1,5 +1,28 @@
 [
   {
+    "id": "f68c47fe-916b-43e1-85ae-410eea8d4dfb",
+    "updatedAt": "2026-11-09T10:46:33.751Z",
+    "auditedAt": "2026-11-09T10:46:33.751Z",
+    "title": "Âm thanh game web: hoàn thiện chế độ xem",
+    "type": "fix",
+    "scope": "system",
+    "changes": [
+      "Khán giả Caro nghe tiếng nước đi khác nhau cho X/O và tiếng kết thúc ván; không phát lại âm thanh lịch sử khi mở bàn.",
+      "Nút loa hiển thị đúng trạng thái và kích hoạt âm thanh ngay ở lần bấm đầu. Tự khôi phục âm thanh đã kích hoạt khi quay lại tab, vẫn giữ lựa chọn tắt tiếng."
+    ]
+  },
+  {
+    "id": "23a5dedb-7136-4933-92a0-cf1115147592",
+    "updatedAt": "2026-11-09T10:38:09.680Z",
+    "auditedAt": "2026-11-09T10:38:09.680Z",
+    "title": "Webgame: phân trang danh sách và luật",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Danh sách /webgame hiển thị 5 game mỗi trang, có nút Trước/Sau. Phần luật cũng chia thành trang ngắn và có nút quay lại đúng trang danh sách."
+    ]
+  },
+  {
     "id": "19c65e0d-b5aa-4fd8-a7c6-6f10c3cb0a29",
     "updatedAt": "2026-11-09T09:43:02.369Z",
     "auditedAt": "2026-11-09T09:43:02.369Z",
