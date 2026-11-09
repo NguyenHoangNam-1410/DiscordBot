@@ -353,6 +353,9 @@ async function main() {
   }
   await geometry();
   await screenshot("cotuong-desktop.png");
+  await click('[data-cell="70"]');
+  await screenshot("cotuong-move-hints-desktop.png");
+  await evaluate("resetPreview();render()");
   await drop(81, 73);
   assert.equal(await evaluate("state.ply"), 0);
   assert.equal(
@@ -446,6 +449,9 @@ async function main() {
     await delay(100);
     assert.equal(await evaluate("state.ply"), 4);
     assert.equal(await evaluate("ghost"), null);
+    await click('[data-cell="70"]', true);
+    await screenshot("cotuong-move-hints-" + width + "x" + height + ".png");
+    await evaluate("resetPreview();render()");
     await screenshot("cotuong-" + width + "x" + height + ".png");
   }
   await send("Emulation.setDeviceMetricsOverride", {

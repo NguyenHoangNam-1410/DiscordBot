@@ -414,29 +414,52 @@ dialog::backdrop {
 .cell.own-piece:active {
   cursor: grabbing;
 }
-.cell.selected {
-  background: #5fa88a65;
-  box-shadow: inset 0 0 0 2px #26826c;
-}
-.cell.legal {
-  background: #6da87245;
-  cursor: pointer;
-  box-shadow: inset 0 0 0 2px #448e6870;
-}
-.cell.legal-capture {
-  background: #ce6d4b50;
-  cursor: pointer;
-  box-shadow: inset 0 0 0 3px #be6d3c;
-}
+.cell.selected,
+.cell.legal,
+.cell.legal-capture,
 .cell.hover-target {
-  background: #b2cd7166;
-  box-shadow: inset 0 0 0 3px #f8ffba;
+  background: transparent;
+  box-shadow: none;
 }
-.cell.recent-from {
+.cell.legal,
+.cell.legal-capture {
+  cursor: pointer;
+}
+.cell.legal::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(5px, 16%, 11px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgb(92 98 104 / 42%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+.cell.legal.hover-target::after {
+  background: rgb(92 98 104 / 62%);
+  transform: translate(-50%, -50%) scale(1.15);
+}
+.cell.selected .piece .outer-ring {
+  stroke: #26826c;
+  stroke-width: 3.4;
+}
+.cell.legal-capture .piece .outer-ring {
+  stroke: #ff2448;
+  stroke-width: 3.6;
+  filter: drop-shadow(0 0 2px #ff1744) drop-shadow(0 0 5px #ff1744b3);
+}
+.cell.legal-capture.hover-target .piece .outer-ring {
+  stroke: #ff5671;
+  stroke-width: 4.2;
+  filter: drop-shadow(0 0 3px #ff1744) drop-shadow(0 0 7px #ff1744cc);
+}
+.cell.recent-from:not(.legal):not(.legal-capture):not(.selected) {
   background: #d5963970;
   box-shadow: inset 0 0 0 2px #ac742f;
 }
-.cell.recent-to {
+.cell.recent-to:not(.legal):not(.legal-capture):not(.selected) {
   background: #efb93985;
   box-shadow: inset 0 0 0 3px #9a6a24;
 }

@@ -1,5 +1,16 @@
 [
   {
+    "id": "553069fe-d5ad-4180-bdfb-c2e10baa3c04",
+    "updatedAt": "2026-11-09T09:15:35.891Z",
+    "auditedAt": "2026-11-09T09:15:35.891Z",
+    "title": "Cờ tướng: chấm nước đi và viền ăn quân",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Ô đi hợp lệ hiển thị bằng chấm xám mờ tại giao điểm; quân có thể ăn được tô viền đỏ neon để dễ nhận biết."
+    ]
+  },
+  {
     "id": "e474a208-e452-4596-bc35-2be7e35a1b30",
     "updatedAt": "2026-11-09T09:08:57.754Z",
     "auditedAt": "2026-11-09T09:08:57.754Z",
