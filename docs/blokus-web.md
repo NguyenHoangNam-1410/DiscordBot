@@ -7,7 +7,7 @@ Blokus dùng máy chủ web/Tailscale, xác nhận tài khoản, SSE, khán gi�
 - `/blokus choi`: mở phòng, mặc định 30 phút/người.
 - `/blokus choi thoigian:15`: chọn 1–180 phút/người, không cộng giờ.
 - `/blokus phong`: phòng đang chờ/đang đấu trong kênh, 5 phòng/trang.
-- `/blokus luat`, hoặc `/luat trochoi:Blokus Duo`: luật và cách tính điểm.
+- `/webgame`: luật và cách tính điểm.
 - `/blokus cauhinh phongtoida:10 kenh:#kenh`: quản trị đặt giới hạn 1–20 phòng/kênh, mặc định 5. Giảm giới hạn không đóng phòng đã mở. Mỗi người tối đa một phòng Blokus/server, độc lập game khác.
 
 Các lệnh có bản prefix tương ứng, ví dụ `!blokus choi thoigian=15`; `!blokus` cũng mở phòng mặc định.

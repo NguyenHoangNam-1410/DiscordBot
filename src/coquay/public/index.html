@@ -94,23 +94,6 @@
             stroke-width="3"
           />
         </symbol>
-        <symbol id="art-shield" viewBox="0 0 64 64">
-          <path
-            d="m32 5 23 10-3 25-20 19-20-19-3-25z"
-            fill="#66797a"
-            stroke="#c1c6af"
-            stroke-width="3"
-          />
-          <path d="M32 10v42M16 27h32" stroke="#a4b3a0" stroke-width="3" />
-          <circle
-            cx="32"
-            cy="28"
-            r="8"
-            fill="#273739"
-            stroke="#d6ba7d"
-            stroke-width="3"
-          />
-        </symbol>
         <symbol id="art-saw" viewBox="0 0 64 64">
           <path
             d="m9 20 43 7-2 8-6-2-4 6-5-2-4 6-5-2-4 6-5-2-5 6z"
@@ -151,7 +134,7 @@
           />
           <path d="m9 7 6-3m35 53 4 5" stroke="#d7c589" stroke-width="4" />
         </symbol>
-        <symbol id="art-medicine" viewBox="0 0 64 64">
+        <symbol id="art-cigarettes" viewBox="0 0 64 64">
           <rect
             x="12"
             y="14"
@@ -174,9 +157,77 @@
             stroke="#eee5cf"
             stroke-width="4"
           />
-          <path d="M24 32h12v7h7v10h-7v6H24v-6h-7V39h7z" fill="#587b59" />
+          <path
+            d="M20 35h19M20 41h15M20 47h19"
+            stroke="#805a43"
+            stroke-width="3"
+          />
           <path d="m45 46 9-30" stroke="#e7dfc7" stroke-width="5" />
           <path d="m45 46 3-9" stroke="#ae7950" stroke-width="5" />
+        </symbol>
+        <symbol id="art-adrenaline" viewBox="0 0 64 64">
+          <path d="m11 8 8-5 6 9-8 5z" fill="#a9baaa" />
+          <path
+            d="m17 17 11-7 20 29-11 8z"
+            fill="#c6c6a0"
+            stroke="#516458"
+            stroke-width="2"
+          />
+          <path d="m27 24 11-7 7 11-11 7z" fill="#b87050" />
+          <path d="m39 45 5-3 10 15-2 2z" fill="#d2d9c3" />
+          <path d="m13 13 15-10" stroke="#e1dfba" stroke-width="4" />
+          <path
+            d="m26 17 3-2m1 6 3-2m1 6 3-2"
+            stroke="#5b6e5f"
+            stroke-width="2"
+          />
+        </symbol>
+        <symbol id="art-phone" viewBox="0 0 64 64">
+          <rect
+            x="18"
+            y="8"
+            width="30"
+            height="51"
+            rx="6"
+            fill="#2d3b36"
+            stroke="#9aa98c"
+            stroke-width="3"
+          />
+          <path d="M23 10V2" stroke="#93a187" stroke-width="5" />
+          <rect x="24" y="16" width="18" height="15" rx="2" fill="#b5c886" />
+          <path
+            d="m27 24 3-3 3 4 5-5"
+            fill="none"
+            stroke="#566b4b"
+            stroke-width="2"
+          />
+          <g fill="#bcbca1">
+            <circle cx="26" cy="38" r="2" />
+            <circle cx="33" cy="38" r="2" />
+            <circle cx="40" cy="38" r="2" />
+            <circle cx="26" cy="45" r="2" />
+            <circle cx="33" cy="45" r="2" />
+            <circle cx="40" cy="45" r="2" />
+            <circle cx="26" cy="52" r="2" />
+            <circle cx="33" cy="52" r="2" />
+            <circle cx="40" cy="52" r="2" />
+          </g>
+        </symbol>
+        <symbol id="art-expired_medicine" viewBox="0 0 64 64">
+          <rect x="19" y="12" width="27" height="10" rx="2" fill="#aeb8a2" />
+          <rect
+            x="16"
+            y="21"
+            width="33"
+            height="37"
+            rx="5"
+            fill="#886443"
+            stroke="#c5a57e"
+            stroke-width="2"
+          />
+          <path d="M17 30h31v19H17z" fill="#ded0a1" />
+          <path d="m27 34 10 10m0-10-10 10" stroke="#9a4939" stroke-width="3" />
+          <path d="m25 51 14 3" stroke="#ac8961" stroke-width="2" />
         </symbol>
         <symbol id="art-shell" viewBox="0 0 32 48">
           <rect
@@ -402,6 +453,13 @@
       </div>
       <svg class="item-art" aria-hidden="true"><use id="item-art" /></svg>
       <p id="item-description"></p>
+      <div id="steal-panel" hidden>
+        <label for="steal-item"
+          >Đạo cụ đối thủ: chọn để cướp và dùng ngay</label
+        >
+        <select id="steal-item" aria-describedby="steal-description"></select>
+        <p id="steal-description"></p>
+      </div>
       <p id="item-note"></p>
       <button id="use-item" class="primary">Sử dụng</button>
     </dialog>
@@ -423,19 +481,8 @@
       </div>
       <p id="rules-detail"></p>
       <p>
-        Đạn thật gây 1 sát thương; cưa tăng lên 2. Tự bắn đạn lép giữ lượt, các
-        phát khác chuyển súng, trừ khi đối thủ bị còng. Đạo cụ không mất lượt.
-        Hiệp mới không hồi HP. Thuốc lá hồi 1 HP, không vượt HP tối đa.
-      </p>
-      <p>
-        Đầu hiệp mỗi người mở hộp 1–2 đạo cụ ngẫu nhiên. Đạo cụ còn lại được
-        giữ; vượt sức chứa sẽ bỏ. Đạo cụ không dùng hết biến mất khi ván kết
-        thúc.
-      </p>
-      <p>
-        Hết HP, hết giờ hoặc đầu hàng thì thua. Đồng hồ chỉ giảm khi tới lượt,
-        không cộng giờ; mất mạng vẫn chạy. Phòng chờ đóng sau 10 phút. Khán giả
-        được xem trực tiếp.
+        Bộ 9 đạo cụ Buckshot 1v1 + Double or Nothing. Xem công dụng từng món
+        trong Đạo cụ & hộp đồ; đọc hướng dẫn chi tiết tại nút Luật chơi.
       </p>
     </dialog>
     <dialog id="leave-dialog">

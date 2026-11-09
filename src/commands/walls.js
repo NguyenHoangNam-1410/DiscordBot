@@ -187,9 +187,6 @@ module.exports = {
         ),
     )
     .addSubcommand((sub) =>
-      sub.setName("luat").setDescription("Xem luật walls thử nghiệm"),
-    )
-    .addSubcommand((sub) =>
       sub
         .setName("phong")
         .setDescription("Xem các phòng walls đang mở trong kênh này"),
@@ -225,6 +222,12 @@ module.exports = {
         flags: MessageFlags.Ephemeral,
       });
     const subcommand = interaction.options.getSubcommand();
+    if (!["choi", "phong", "cauhinh"].includes(subcommand))
+      return interaction.reply({
+        content:
+          "Lệnh này đã thay đổi. Xem luật tại /webgame hoặc nút Luật chơi trên web.",
+        flags: MessageFlags.Ephemeral,
+      });
     if (subcommand === "cauhinh") {
       if (!isAdminInteraction(interaction))
         return interaction.reply({
@@ -263,12 +266,6 @@ module.exports = {
         flags: MessageFlags.Ephemeral,
       });
     }
-    if (subcommand === "luat")
-      return interaction.reply({
-        content:
-          "Walls: /walls choi mở bàn cố định 9×9. Hai người xuất phát ở giữa hai cạnh đối diện; Quân xanh đi trước. Đến hàng đối diện trước để thắng. Mỗi lượt đi 1 ô ngang/dọc hoặc đặt 1 tường; không đi xuyên tường hay đứng chung ô. Được nhảy qua đối thủ theo Quoridor: ưu tiên nhảy thẳng, chỉ đi chéo vòng sang bên khi sau đối thủ bị tường/mép bàn chặn. Tường dài 1 hoặc 2 ô, không chồng/cắt và phải giữ đường tới đích cho cả hai. Tường có thể chạm đầu nhau. /walls choi daituong:2 sotuong:10 cấu hình cho ván mới; mặc định mỗi người 10 tường. Xem hoặc tham gia qua /walls phong; khán giả mở bàn xem trực tiếp. Mặc định 5 phòng/kênh; quản trị dùng /walls cauhinh phongtoida. Đồng hồ riêng mặc định 30 phút/người; chọn thoigian (1–180 phút), chỉ giảm khi tới lượt, không cộng giờ. Hết thời gian của mình thì thua; phòng chờ 10 phút. Không cược, không thưởng xu.",
-        flags: MessageFlags.Ephemeral,
-      });
     if (!runtime.isAvailable())
       return interaction.reply({
         content: DISABLED,

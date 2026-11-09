@@ -380,7 +380,10 @@ async function main() {
   const command = require("../src/commands/dots"),
     runtime = require("../src/dots/runtime");
   assert.equal(command.data.toJSON().name, "dots");
-  assert.equal(command.data.toJSON().options.length, 4);
+  assert.deepEqual(
+    command.data.toJSON().options.map((option) => option.name),
+    ["choi", "phong", "cauhinh"],
+  );
   const previous = runtime.isAvailable;
   runtime.isAvailable = () => true;
   try {
@@ -434,7 +437,7 @@ async function main() {
       .loadCommands()
       .some((c) => c.data.toJSON().name === "dots"),
   );
-  assert.ok(require("../src/commands/luat").RULES.dots);
+  assert.ok(!require("../src/commands/luat").RULES.dots);
   const health = require("../src/services/operationalHealthService");
   store.sweep();
   const beforeHealth = health.getOperationalHealth().active.sessions;

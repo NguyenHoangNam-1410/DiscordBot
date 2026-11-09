@@ -10,7 +10,7 @@ Game đối kháng 2 người lấy cảm hứng từ việc dò mê cung trong 
 - `sotuong`: 0–60 đoạn/người; không bắt buộc đặt hết.
 - `thoigian`: 1–180 phút/người, không cộng giờ.
 - `/mecung phong`: danh sách phòng đang mở của kênh, 5 phòng/trang.
-- `/mecung luat`, hoặc `/luat trochoi:Mê cung`: luật và điều khiển.
+- `/webgame`: luật và điều khiển.
 - `/mecung cauhinh phongtoida:10 kenh:#kenh`: quản trị giới hạn 1–20 phòng/kênh, mặc định 5. Giảm giới hạn không đóng phòng đang mở. Mỗi người tối đa một phòng Mê cung/server, độc lập game khác.
 
 Có bản prefix tương ứng: `!mecung choi luat=turns kichthuoc=small sotuong=20 thoigian=15`. Giá trị `luat` trong prefix là `race` hoặc `turns`; cỡ bàn là `small`, `medium`, `large`. `!mecung` mở phòng mặc định.

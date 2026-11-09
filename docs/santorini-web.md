@@ -1,6 +1,6 @@
 # Santorini web · luật cơ bản, hai người
 
-Phạm vi đã chọn: bàn 5×5, hai người, mỗi người hai thợ; không Thần lực, không biến thể 3–4 người. Dùng `/santorini choi`, `/santorini phong`, `/santorini luat`, `/santorini cauhinh`.
+Phạm vi đã chọn: bàn 5×5, hai người, mỗi người hai thợ; không Thần lực, không biến thể 3–4 người. Dùng `/santorini choi`, `/santorini phong`, `/webgame`, `/santorini cauhinh`.
 
 ## Luật và thao tác
 

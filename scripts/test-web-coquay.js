@@ -154,20 +154,16 @@ async function main() {
     s.inventory.player = [...items];
     return s;
   };
-  let s = fresh(["magnifier", "inverter", "magnifier"]);
+  let s = fresh(["magnifier", "magnifier", "inverter", "magnifier"]);
   engine.act(s, "X", { type: "item", itemId: "magnifier" }, rules, () => 0);
   assert.equal(engine.view(s, "X", rules).knownShell, true);
   assert.equal(engine.view(s, "O", rules).knownShell, null);
   assert.equal(engine.view(s, null, rules).knownShell, null);
   assert(!JSON.stringify(engine.view(s, null, rules)).includes("chamber"));
-  code(
-    () =>
-      engine.act(s, "X", { type: "item", itemId: "magnifier" }, rules, () => 0),
-    "ITEM_UNAVAILABLE",
-  );
+  engine.act(s, "X", { type: "item", itemId: "magnifier" }, rules, () => 0);
   engine.act(s, "X", { type: "item", itemId: "inverter" }, rules, () => 0);
   assert.equal(s.chamber[0], false);
-  assert.deepEqual(s.knowledge, {});
+  assert.equal(engine.view(s, "X", rules).knownShell, false);
   engine.act(s, "X", { type: "item", itemId: "magnifier" }, rules, () => 0);
   assert.equal(engine.view(s, "X", rules).knownShell, false);
   engine.act(s, "X", { type: "shoot", target: "self" }, rules, () => 0);
@@ -184,20 +180,18 @@ async function main() {
     rules,
     () => 0,
   );
-  assert.equal(hit.damage, 1);
-  assert.equal(hit.blocked, 1);
+  assert.equal(hit.damage, 2);
+  assert.equal(hit.blocked, 0);
   assert(hit.cuffSkip);
   assert.equal(s.turn, "player");
   assert.equal(s.saw, false);
-  s = fresh(["medicine"]);
-  code(
-    () =>
-      engine.act(s, "X", { type: "item", itemId: "medicine" }, rules, () => 0),
-    "ITEM_UNAVAILABLE",
-  );
-  assert.equal(s.inventory.player.length, 1);
+  s = fresh(["cigarettes"]);
+  engine.act(s, "X", { type: "item", itemId: "cigarettes" }, rules, () => 0);
+  assert.equal(s.hp.player, 20);
+  assert.equal(s.inventory.player.length, 0);
+  s = fresh(["cigarettes"]);
   s.hp.player = 19;
-  engine.act(s, "X", { type: "item", itemId: "medicine" }, rules, () => 0);
+  engine.act(s, "X", { type: "item", itemId: "cigarettes" }, rules, () => 0);
   assert.equal(s.hp.player, 20);
   s = fresh(["beer"], [false]);
   const beer = engine.act(
@@ -216,7 +210,205 @@ async function main() {
     () => engine.act(s, "X", { type: "shoot", target: "evil" }, rules, () => 0),
     "INVALID_ACTION",
   );
+  // Authentic 1v1 + Double or Nothing: no shield, private future hints and atomic steals.
+  assert.deepEqual(
+    engine.ITEMS.map((i) => i.id).sort(),
+    [
+      "magnifier",
+      "saw",
+      "cuffs",
+      "cigarettes",
+      "beer",
+      "inverter",
+      "adrenaline",
+      "phone",
+      "expired_medicine",
+    ].sort(),
+  );
+  s = fresh(["phone", "inverter", "beer"], [false, true, false, true]);
+  const phone = engine.act(
+    s,
+    "X",
+    { type: "item", itemId: "phone" },
+    rules,
+    () => 1,
+  );
+  assert(!Object.hasOwn(phone, "live"));
+  assert(!Object.hasOwn(phone, "position"));
+  assert.deepEqual(engine.view(s, "X", rules).knownShells, [
+    { position: 3, live: false, source: "phone" },
+  ]);
+  assert.deepEqual(engine.view(s, "O", rules).knownShells, []);
+  assert.deepEqual(engine.view(s, null, rules).knownShells, []);
+  engine.act(s, "X", { type: "item", itemId: "inverter" }, rules, () => 0);
+  assert.equal(
+    engine.view(s, "X", rules).knownShells[0].live,
+    false,
+    "Inverter leaves a future hint intact",
+  );
+  engine.act(s, "X", { type: "item", itemId: "beer" }, rules, () => 0);
+  assert.deepEqual(engine.view(s, "X", rules).knownShells, [
+    { position: 2, live: false, source: "phone" },
+  ]);
+  engine.act(s, "X", { type: "shoot", target: "opponent" }, rules, () => 0);
+  assert.equal(
+    engine.view(s, "X", rules).knownShell,
+    false,
+    "Future hint becomes current after shells leave",
+  );
+  s.inventory.bot = ["inverter"];
+  engine.act(s, "O", { type: "item", itemId: "inverter" }, rules, () => 0);
+  assert.equal(
+    engine.view(s, "X", rules).knownShell,
+    true,
+    "Public inversion updates the other player's own knowledge without revealing it",
+  );
+  assert.equal(engine.view(s, "O", rules).knownShell, null);
+  s = fresh(["phone"], [true]);
+  assert.equal(
+    engine.act(s, "X", { type: "item", itemId: "phone" }, rules, () => 0)
+      .noPrediction,
+    true,
+  );
+  assert.equal(s.inventory.player.length, 0);
+  s = fresh(["expired_medicine"]);
+  s.hp.player = 17;
+  engine.act(
+    s,
+    "X",
+    { type: "item", itemId: "expired_medicine" },
+    rules,
+    () => 0,
+  );
+  assert.equal(s.hp.player, 19);
+  s = fresh(["expired_medicine"]);
+  s.hp.player = 19;
+  engine.act(
+    s,
+    "X",
+    { type: "item", itemId: "expired_medicine" },
+    rules,
+    () => 0,
+  );
+  assert.equal(s.hp.player, 20);
+  s = fresh(["expired_medicine"]);
+  s.hp.player = 1;
+  engine.act(
+    s,
+    "X",
+    { type: "item", itemId: "expired_medicine" },
+    rules,
+    () => 1,
+  );
+  assert.equal(s.hp.player, 0);
+  assert.equal(s.status, "lost");
+  s = fresh(["adrenaline", "saw", "cuffs", "beer"]);
+  s.inventory.bot = ["adrenaline", "magnifier", "cigarettes"];
+  const badSteal = JSON.stringify(s);
+  code(
+    () =>
+      engine.act(
+        s,
+        "X",
+        { type: "item", itemId: "adrenaline", stolenItemId: "adrenaline" },
+        rules,
+        () => 0,
+      ),
+    "INVALID_STEAL",
+  );
+  assert.equal(JSON.stringify(s), badSteal);
+  const steal = engine.act(
+    s,
+    "X",
+    { type: "item", itemId: "adrenaline", stolenItemId: "magnifier" },
+    rules,
+    () => 0,
+  );
+  assert.equal(steal.stolenItemId, "magnifier");
+  assert(!Object.hasOwn(steal, "live"));
+  assert.equal(s.inventory.player.length, 3);
+  assert.deepEqual(s.inventory.bot, ["adrenaline", "cigarettes"]);
+  assert.equal(engine.view(s, "X", rules).knownShell, true);
+  assert.equal(engine.view(s, "O", rules).knownShell, null);
+  s = fresh(["adrenaline"]);
+  s.inventory.bot = ["expired_medicine"];
+  s.hp.player = 1;
+  engine.act(
+    s,
+    "X",
+    { type: "item", itemId: "adrenaline", stolenItemId: "expired_medicine" },
+    rules,
+    () => 1,
+  );
+  assert.equal(s.status, "lost");
+  assert.deepEqual(s.inventory.bot, []);
+  s = fresh(["saw", "beer"]);
+  engine.act(s, "X", { type: "item", itemId: "saw" }, rules, () => 0);
+  engine.act(s, "X", { type: "item", itemId: "beer" }, rules, () => 0);
+  assert.equal(s.saw, false, "Ejecting the sawed shell resets saw effect");
+  s = fresh(["cuffs", "cuffs"], [true, false, true, false]);
+  engine.act(s, "X", { type: "item", itemId: "cuffs" }, rules, () => 0);
+  engine.act(s, "X", { type: "shoot", target: "opponent" }, rules, () => 0);
+  assert.equal(s.turn, "player");
+  code(
+    () => engine.act(s, "X", { type: "item", itemId: "cuffs" }, rules, () => 0),
+    "ITEM_UNAVAILABLE",
+  );
+  engine.act(s, "X", { type: "shoot", target: "opponent" }, rules, () => 0);
+  engine.act(s, "O", { type: "shoot", target: "opponent" }, rules, () => 0);
+  assert(engine.view(s, "X", rules).usableItems.includes("cuffs"));
   // Store: membership, versions, clocks, persistence, termination, no economy settlement.
+  let legacy = match();
+  const oldClock = legacy.clocks,
+    oldLoad = legacy.duel.loads,
+    oldHp = { ...legacy.duel.hp };
+  legacy.duel.inventory.player = ["shield", "medicine", "cuffs"];
+  legacy.duel.inventory.bot = ["shield"];
+  legacy.duel.shield = { player: true, bot: true };
+  legacy.duel.knowledge = { player: false };
+  delete legacy.duel.itemSetVersion;
+  db.prepare("UPDATE coquay_rooms SET data_json=? WHERE id=?").run(
+    JSON.stringify(legacy),
+    legacy.id,
+  );
+  const upgraded = store.get(legacy.id);
+  assert.deepEqual(upgraded.duel.inventory.player, ["cigarettes", "cuffs"]);
+  assert.deepEqual(upgraded.duel.inventory.bot, []);
+  assert.deepEqual(upgraded.duel.shield, { player: false, bot: false });
+  assert.deepEqual(upgraded.clocks, oldClock);
+  assert.deepEqual(upgraded.duel.hp, oldHp);
+  assert.equal(upgraded.duel.loads, oldLoad);
+  assert.equal(store.snapshot(upgraded, users.X.id).knownShell, false);
+  assert.equal(
+    store.get(legacy.id).version,
+    upgraded.version,
+    "Upgrade is idempotent",
+  );
+  store.leave(legacy.id, users.X.id);
+  const fatalStore = createStore(db, now, () => 1);
+  let fatal = fatalStore.join(
+    fatalStore.create({
+      guildId: "expired-fatal",
+      channelId: "c",
+      user: users.X,
+    }).id,
+    users.O,
+  );
+  fatal.duel.hp.player = 1;
+  fatal.duel.inventory.player = ["expired_medicine"];
+  db.prepare("UPDATE coquay_rooms SET data_json=? WHERE id=?").run(
+    JSON.stringify(fatal),
+    fatal.id,
+  );
+  fatal = fatalStore.move(
+    fatal.id,
+    users.X.id,
+    { type: "item", itemId: "expired_medicine" },
+    fatal.version,
+  );
+  assert.equal(fatal.status, "finished");
+  assert.equal(fatal.winner, "O");
+  assert.equal(fatal.duel.hp.player, 0);
   let r = match();
   assert.equal(r.duel.hp.bot, 5);
   assert.equal(r.duel.loads, 1);
@@ -424,6 +616,48 @@ async function main() {
     assert.match(texts[1], /"knownShell":null/);
     assert.match(texts[2], /"knownShell":null/);
     for (const text of texts) assert(!text.includes('"chamber"'));
+    r = patch(store.get(r.id), (s) => {
+      s.inventory.player = ["adrenaline"];
+      s.inventory.bot = ["phone", "adrenaline"];
+      s.knowledge = {};
+    });
+    const bad = {
+      roomId: r.id,
+      version: r.version,
+      type: "item",
+      itemId: "adrenaline",
+      stolenItemId: "adrenaline",
+    };
+    const unchanged = JSON.stringify(store.get(r.id));
+    assert.equal((await request("move", bad, cookies[0])).status, 409);
+    assert.equal(JSON.stringify(store.get(r.id)), unchanged);
+    const phoneEvents = readers.map((reader) => reader.read());
+    const stolen = await request(
+      "move",
+      { ...bad, stolenItemId: "phone" },
+      cookies[0],
+    );
+    assert.equal(stolen.status, 200);
+    assert.equal(stolen.data.version, r.version + 1);
+    assert.equal(stolen.data.inventories.X.length, 0);
+    assert.deepEqual(stolen.data.inventories.O, ["adrenaline"]);
+    assert.equal(stolen.data.knownShells.length, 1);
+    assert(stolen.data.knownShells[0].position > 1);
+    assert(!Object.hasOwn(stolen.data.lastAction, "live"));
+    assert(!Object.hasOwn(stolen.data.lastAction, "position"));
+    const projected = await Promise.all(
+      phoneEvents.map(async (event) =>
+        JSON.parse(
+          new TextDecoder()
+            .decode((await event).value)
+            .split("data: ")[1]
+            .split("\n")[0],
+        ),
+      ),
+    );
+    assert.equal(projected[0].knownShells.length, 1);
+    assert.deepEqual(projected[1].knownShells, []);
+    assert.deepEqual(projected[2].knownShells, []);
     assert.equal(
       (
         await request(
@@ -447,7 +681,7 @@ async function main() {
   const command = require("../src/commands/coquay"),
     runtime = require("../src/coquay/runtime"),
     schema = command.data.toJSON();
-  assert.equal(schema.options.length, 4);
+  assert.equal(schema.options.length, 3);
   assert.deepEqual(
     schema.options[0].options.map((o) => o.name),
     ["mau", "vatpham", "thoigian"],
@@ -576,7 +810,7 @@ async function main() {
     JSON.stringify({
       ok: true,
       coquay:
-        "7 tools, box capacity, secret shell, PvP, clocks, restart, locks, concurrent ACK/SSE, retirement, Discord and prefix",
+        "9 Buckshot tools, legacy upgrade, atomic adrenaline, phone privacy/SSE, expiry death, cuffs limit, box capacity, PvP, clocks, restart, locks, Discord and prefix",
     }),
   );
 }

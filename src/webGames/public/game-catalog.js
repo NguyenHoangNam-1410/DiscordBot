@@ -159,7 +159,7 @@
       name: "Cò quay Nga",
       summary: "Đọc đạn, dùng đạo cụ và sống sót sau mỗi phát bắn.",
       setup: [
-        "Bàn mặc định 5 HP và tối đa 4 đạo cụ chưa dùng mỗi người; chủ phòng có thể đổi cấu hình.",
+        "Bàn 2 người, bộ 9 đạo cụ 1v1 + Double or Nothing của Buckshot Roulette. Mặc định 5 HP và 4 đạo cụ chưa dùng/người; chủ phòng có thể đổi cấu hình.",
         "Mỗi hiệp nạp đạn thật và đạn lép theo thứ tự kín. Mở hộp để nhận 1–2 đạo cụ; đồ vượt sức chứa bị bỏ.",
       ],
       play: [
@@ -168,8 +168,15 @@
         "Hết đạn thì nạp hiệp mới và phát hộp đồ. Giữ HP và đạo cụ còn lại; không tự hồi máu.",
         "Nút xoay bàn 180° chỉ đổi góc nhìn. Đạo cụ chỉ tồn tại trong ván, không chuyển vào túi Discord.",
       ],
+      special: [
+        "Adrenaline cướp và dùng ngay một món bạn chọn của đối thủ; không cướp Adrenaline.",
+        "Điện thoại dùng một lần cho riêng bạn biết một viên ngẫu nhiên phía sau viên hiện tại; chỉ còn 1 viên thì không dự đoán được nhưng vẫn tiêu món.",
+        "Thuốc hết hạn: 50% hồi 2 HP, 50% mất 1 HP và có thể chết. Thuốc lá là món khác: hồi 1 HP.",
+        "Kính lúp/điện thoại chỉ bạn biết; vị trí dự đoán dịch theo các viên đã bắn/loại và cập nhật theo lần đảo đạn.",
+        "Mỗi lượt liên tục chỉ dùng một còng. Cưa hết hiệu ứng khi viên đó được bắn hoặc bị bia loại.",
+      ],
       win: ["Đưa HP đối thủ về 0."],
-      lose: ["HP của bạn về 0, kể cả do tự bắn."],
+      lose: ["HP của bạn về 0, kể cả do tự bắn hoặc dùng Thuốc hết hạn."],
       draw: [],
     },
     {

@@ -11,7 +11,7 @@ Game đấu hai người dùng chung máy chủ web, địa chỉ Tailscale, tà
 - Người chơi bấm **Xác nhận người chơi** trên web và nhập mã của tab mình qua nút **Kết nối tài khoản** trong tin Discord. Dùng chung phiên xác nhận của các game khác; vẫn phải có ghế trong phòng Dots & Boxes mới được nối cạnh hoặc đầu hàng.
 - `/dots phong`: danh sách phòng của kênh, phân trang 5 phòng/trang. Nút điều khiển danh sách chỉ dành cho người mở.
 - `/dots cauhinh phongtoida:10 kenh:#kenh`: quản trị đặt tối đa 1–20 phòng đang mở tại kênh, mặc định 5. Giảm giới hạn không đóng phòng đang chơi. Mỗi người tối đa một phòng Dots & Boxes/server, độc lập các game khác.
-- `/dots luat` hoặc `/luat trochoi:Dots & Boxes / Nối ô`: luật ngắn. Các lệnh có bản prefix tương ứng khi bot bật lệnh tin nhắn, ví dụ `!dots choi kichthuoc=3 thoigian=15`.
+- `/webgame`: luật ngắn. Các lệnh có bản prefix tương ứng khi bot bật lệnh tin nhắn, ví dụ `!dots choi kichthuoc=3 thoigian=15`.
 
 ## Luật
 

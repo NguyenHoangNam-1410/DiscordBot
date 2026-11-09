@@ -474,7 +474,10 @@ async function main() {
   const command = require("../src/commands/blokus"),
     runtime = require("../src/blokus/runtime");
   assert.equal(command.data.toJSON().name, "blokus");
-  assert.equal(command.data.toJSON().options.length, 4);
+  assert.deepEqual(
+    command.data.toJSON().options.map((option) => option.name),
+    ["choi", "phong", "cauhinh"],
+  );
   const previous = runtime.isAvailable;
   runtime.isAvailable = () => true;
   try {
@@ -567,7 +570,7 @@ async function main() {
       .loadCommands()
       .some((c) => c.data.toJSON().name === "blokus"),
   );
-  assert.ok(require("../src/commands/luat").RULES.blokus);
+  assert.ok(!require("../src/commands/luat").RULES.blokus);
   const health = require("../src/services/operationalHealthService");
   store.sweep();
   const beforeHealth = health.getOperationalHealth().active.sessions;

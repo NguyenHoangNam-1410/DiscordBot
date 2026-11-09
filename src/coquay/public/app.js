@@ -23,7 +23,12 @@ const canAct = () =>
     connected &&
     !pending
   );
-const item = (id) => state.items.find((i) => i.id === id);
+const item = (id) =>
+  state.items.find((i) => i.id === (id === "medicine" ? "cigarettes" : id)) || {
+    name: "Đạo cụ cũ đã ngừng dùng",
+    description: "Đạo cụ này không còn thuộc bộ Buckshot 1v1.",
+    englishName: "",
+  };
 const label = (side) => state.players[side] || "Đang chờ đối thủ";
 function art(id) {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
@@ -170,10 +175,21 @@ const tableMotion = (() => {
     }
     // Capture the consumed slot before render compacts the inventory.
     const action = moved ? next.lastAction : null;
-    let from = null;
+    let from = null,
+      stolenFrom = null;
     if (action?.type === "item") {
       const index = before.inventories[action.mark].indexOf(action.itemId);
       from = slotPoint(action.mark, Math.max(0, index));
+      if (action.stolenItemId) {
+        const opponent = action.mark === "X" ? "O" : "X";
+        stolenFrom = slotPoint(
+          opponent,
+          Math.max(
+            0,
+            before.inventories[opponent].indexOf(action.stolenItemId),
+          ),
+        );
+      }
     }
     reset();
     if (
@@ -201,11 +217,12 @@ const tableMotion = (() => {
     return {
       action,
       from,
+      stolenFrom,
       reload,
       grants,
       healed:
-        action?.itemId === "medicine"
-          ? next.hp[action.mark] - before.hp[action.mark]
+        action?.type === "item"
+          ? Math.max(0, next.hp[action.mark] - before.hp[action.mark])
           : 0,
     };
   }
@@ -235,7 +252,7 @@ const tableMotion = (() => {
   }
   function run(plan) {
     if (!plan) return;
-    const { action, from, reload, grants, healed } = plan;
+    const { action, from, stolenFrom, reload, grants, healed } = plan;
     if (action?.type === "item") {
       document.querySelector(".arena").dataset.phase = "use";
       fly(
@@ -245,10 +262,25 @@ const tableMotion = (() => {
         point($("avatar-" + action.mark).parentElement),
         0,
         () => {
-          if (healed > 0) heal(action.mark, healed);
+          if (healed > 0 && !stolenFrom) heal(action.mark, healed);
           if (!reload) delete document.querySelector(".arena").dataset.phase;
         },
       );
+      if (stolenFrom)
+        fly(
+          action.stolenItemId,
+          "steal",
+          stolenFrom,
+          point($("avatar-" + action.mark).parentElement),
+          180,
+          () => {
+            if (healed > 0) heal(action.mark, healed);
+          },
+        );
+      if (action.damage) {
+        $("seat-" + action.mark).classList.add("hit");
+        later(() => $("seat-" + action.mark).classList.remove("hit"), 650);
+      }
     }
     if (action?.type === "shoot") {
       void $("weapon").offsetWidth;
@@ -423,7 +455,7 @@ function render() {
           return b;
         }
         b.append(art(key));
-        if (key === "medicine") {
+        if (key === "cigarettes") {
           const badge = document.createElement("span");
           badge.className = "heal-badge";
           badge.textContent = "+1";
@@ -442,8 +474,9 @@ function render() {
       }),
     );
     const effects = [];
-    if (state.effects.shield[side]) effects.push("Chắn 1 DMG");
     if (state.effects.cuffed === side) effects.push("Bị còng · mất 1 lượt");
+    if (state.turn === side && state.effects.cuffsUsed?.[side])
+      effects.push("Đã dùng còng trong lượt này");
     $("effects-" + side).textContent = effects.join(" · ");
   }
   $("status-title").textContent =
@@ -463,11 +496,20 @@ function render() {
     ? "Bắn đối thủ · Cưa ×2"
     : "Bắn đối thủ";
   $("controls").hidden = !state.me || state.status !== "playing";
-  $("private-intel").hidden =
-    state.knownShell === null || state.status !== "playing";
+  const hints =
+    state.knownShells ||
+    (state.knownShell === null
+      ? []
+      : [{ position: 1, live: state.knownShell }]);
+  $("private-intel").hidden = !hints.length || state.status !== "playing";
   $("private-intel").textContent =
-    "Chỉ bạn biết: viên tiếp theo là " +
-    (state.knownShell ? "ĐẠN THẬT" : "ĐẠN LÉP");
+    "Chỉ bạn biết · " +
+    hints
+      .map(
+        (h) =>
+          `${h.position === 1 ? "Viên hiện tại" : "Viên thứ " + h.position + " tính từ hiện tại"}: ${h.live ? "ĐẠN THẬT" : "ĐẠN LÉP"}`,
+      )
+      .join(" · ");
   $("connect-player").hidden =
     !!state.me || !["waiting", "playing"].includes(state.status);
   $("leave").hidden =
@@ -484,22 +526,46 @@ function render() {
 function actionText(a) {
   if (!a) return "Đạn thật. Đạn lép. Bạn sẽ chọn ai?";
   const who = label(a.mark);
-  if (a.type === "item")
-    return `${who} dùng ${item(a.itemId).name}${a.itemId === "beer" ? `: loại đạn ${a.live ? "thật" : "lép"}` : ""}${a.reloaded ? " · Mở hộp hiệp mới" : ""}`;
-  return `${who} ${a.target === a.mark ? "tự bắn" : "bắn " + label(a.target)} · ${a.live ? "Đạn thật" : "Đạn lép"}${a.damage ? ` · −${a.damage} HP` : ""}${a.blocked ? " · Bia đỡ 1 DMG" : ""}${a.cuffSkip ? " · Bỏ lượt bị còng" : ""}${a.reloaded ? " · Sang hiệp mới, mở hộp đạo cụ" : ""}`;
+  if (a.type === "item") {
+    const effect = a.stolenItemId || a.itemId;
+    return `${who} dùng ${item(a.itemId).name}${a.stolenItemId ? ": cướp và dùng ngay " + item(a.stolenItemId).name : ""}${effect === "beer" ? ` · Loại đạn ${a.live ? "thật" : "lép"}` : ""}${a.healed ? ` · +${a.healed} HP` : ""}${a.damage ? ` · −${a.damage} HP` : ""}${a.noPrediction ? " · Không còn viên tương lai để dự đoán" : ""}${a.reloaded ? " · Mở hộp hiệp mới" : ""}`;
+  }
+  return `${who} ${a.target === a.mark ? "tự bắn" : "bắn " + label(a.target)} · ${a.live ? "Đạn thật" : "Đạn lép"}${a.damage ? ` · −${a.damage} HP` : ""}${a.cuffSkip ? " · Bỏ lượt bị còng" : ""}${a.reloaded ? " · Sang hiệp mới, mở hộp đạo cụ" : ""}`;
 }
 function updateItemButton() {
   const { key, side } = selectedItem;
+  const stealing = key === "adrenaline" && side === state.me;
+  $("steal-panel").hidden = !stealing;
+  if (stealing) {
+    const selected = $("steal-item").value;
+    $("steal-item").replaceChildren(
+      ...(state.stealableItems || []).map((id) => {
+        const option = document.createElement("option");
+        option.value = id;
+        option.textContent = item(id).name;
+        return option;
+      }),
+    );
+    if ((state.stealableItems || []).includes(selected))
+      $("steal-item").value = selected;
+    $("steal-description").textContent = $("steal-item").value
+      ? item($("steal-item").value).description
+      : "Đối thủ không có đạo cụ nào có thể cướp và dùng lúc này.";
+  }
   $("use-item").hidden = side !== state.me;
   $("use-item").disabled = !canAct() || !state.usableItems.includes(key);
+  $("use-item").textContent = stealing ? "Cướp và dùng ngay" : "Sử dụng";
   $("item-note").textContent =
     side !== state.me
       ? "Đạo cụ của " + label(side)
       : !canAct()
         ? "Chỉ dùng được khi đến lượt bạn."
         : !state.usableItems.includes(key)
-          ? "Không thể dùng lúc này: kiểm tra HP, hiệu ứng đang có hoặc thông tin đã soi."
-          : "Dùng một đạo cụ. Bạn tiếp tục giữ lượt.";
+          ? "Không thể dùng lúc này: kiểm tra cưa/còng đã dùng hoặc đạo cụ có thể cướp."
+          : key === "expired_medicine" ||
+              (stealing && $("steal-item").value === "expired_medicine")
+            ? "50% mất 1 HP, có thể chết. Bấm để xác nhận dùng."
+            : "Dùng một đạo cụ. Bạn tiếp tục giữ lượt.";
 }
 function openItem(key, side) {
   selectedItem = { key, side };
@@ -557,7 +623,11 @@ function renderInventory() {
       name = document.createElement("strong"),
       description = document.createElement("p");
     row.className = "catalog-row";
-    name.textContent = entry.name;
+    name.textContent =
+      entry.name +
+      (entry.englishName && entry.englishName !== entry.name
+        ? " · " + entry.englishName
+        : "");
     description.textContent = entry.description;
     body.append(name, description);
     row.append(art(entry.id), body);
@@ -614,9 +684,15 @@ $("use-item").addEventListener("click", () => {
   )
     return;
   const key = selectedItem.key;
+  const stolenItemId = key === "adrenaline" ? $("steal-item").value : null;
   $("item-dialog").close();
-  commit({ type: "item", itemId: key });
+  commit({
+    type: "item",
+    itemId: key,
+    ...(stolenItemId ? { stolenItemId } : {}),
+  });
 });
+$("steal-item").addEventListener("change", updateItemButton);
 $("rotate-table").addEventListener("click", () => {
   tableMotion.reset();
   rotated = !rotated;

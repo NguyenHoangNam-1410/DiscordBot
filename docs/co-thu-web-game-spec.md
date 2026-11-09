@@ -23,7 +23,7 @@ Các lệnh sau là **đầu việc cần bổ sung**, chưa được đăng ký
 | --- | --- |
 | `/cothu choi` | Tạo phòng, gửi tin mời với nút Tham gia, Mở bàn cờ, Kết nối tài khoản, Hủy phòng |
 | `/cothu phong` | Danh sách phòng của kênh, phân trang theo mẫu game web hiện có |
-| `/cothu luat` | Giải thích luật đã chốt, các ngoại lệ và điều kiện kết thúc |
+| `/webgame` | Giải thích luật đã chốt, các ngoại lệ và điều kiện kết thúc |
 | `/cothu cauhinh phongtoida:<n>` | Quản trị đặt giới hạn phòng/kênh, 1–20, mặc định 5 |
 
 - Tùy chọn `nguoitruoc`: `host` mặc định, `guest`, `random`. Người được chọn cầm Đỏ và đi trước; người còn lại cầm Xanh. Bốc ngẫu nhiên một lần, lưu kết quả, không bốc lại khi refresh/restart.

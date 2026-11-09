@@ -18,7 +18,6 @@ const {
 } = require("../battleship/discord");
 const { MESSAGES, MAX_ROOM_LIMIT } = require("../battleship/store");
 const { isAdminInteraction } = require("../utils/adminCheck");
-const { RULES_TEXT } = require("../battleship/rules");
 const { MAX_TIME_MINUTES } = require("../webGames/clock");
 
 const DISABLED =
@@ -187,9 +186,6 @@ module.exports = {
         ),
     )
     .addSubcommand((sub) =>
-      sub.setName("luat").setDescription("Xem luật battleship thử nghiệm"),
-    )
-    .addSubcommand((sub) =>
       sub
         .setName("phong")
         .setDescription("Xem các phòng battleship đang mở trong kênh này"),
@@ -225,6 +221,12 @@ module.exports = {
         flags: MessageFlags.Ephemeral,
       });
     const subcommand = interaction.options.getSubcommand();
+    if (!["choi", "phong", "cauhinh"].includes(subcommand))
+      return interaction.reply({
+        content:
+          "Lệnh này đã thay đổi. Xem luật tại /webgame hoặc nút Luật chơi trên web.",
+        flags: MessageFlags.Ephemeral,
+      });
     if (subcommand === "cauhinh") {
       if (!isAdminInteraction(interaction))
         return interaction.reply({
@@ -263,11 +265,6 @@ module.exports = {
         flags: MessageFlags.Ephemeral,
       });
     }
-    if (subcommand === "luat")
-      return interaction.reply({
-        content: RULES_TEXT,
-        flags: MessageFlags.Ephemeral,
-      });
     if (!runtime.isAvailable())
       return interaction.reply({
         content: DISABLED,

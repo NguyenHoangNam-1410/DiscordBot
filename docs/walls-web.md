@@ -8,7 +8,7 @@ Game đối kháng hai người trên web dùng chung với caro. Không thêm c
 - `/walls choi daituong:1 sotuong:10`: độ dài chỉ 1 hoặc 2; số tường mỗi người 0–20. Luật cố định theo phòng.
 - `/walls phong`: danh sách phân trang, mở đúng bàn hoặc tin phòng để tham gia. Mặc định 5 phòng/kênh; mỗi người tối đa một phòng Walls/server (độc lập caro).
 - `/walls cauhinh phongtoida:10 kenh:#kenh`: quản trị chỉnh 1–20 phòng đang mở theo kênh; bỏ tham số để xem cấu hình. Giảm giới hạn không đóng ván hiện có.
-- `/walls luat` hoặc `/luat trochoi:Walls`: luật ngắn. Mọi lệnh có bản `!walls ...` khi bật prefix, ví dụ `!walls choi daituong=1 sotuong=10`.
+- `/webgame`: luật ngắn. Mọi lệnh có bản `!walls ...` khi bật prefix, ví dụ `!walls choi daituong=1 sotuong=10`.
 
 ## Luật
 

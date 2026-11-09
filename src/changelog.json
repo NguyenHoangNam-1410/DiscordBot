@@ -1,5 +1,31 @@
 [
   {
+    "id": "5661727f-5f08-4b27-8737-c12b30eef01e",
+    "updatedAt": "2026-11-09T07:21:28.358Z",
+    "auditedAt": "2026-11-09T07:21:28.358Z",
+    "title": "Gọn lệnh luật cho game web",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Bỏ lệnh con luat khỏi 9 game web và gỡ các game này khỏi danh sách /luat. Xem luật tại /webgame hoặc nút Luật chơi trên bàn web.",
+      "Giữ tùy chọn điều kiện thắng của Mê cung; lệnh xem luật cũ chỉ dẫn đến hướng dẫn mới và không tạo phòng."
+    ]
+  },
+  {
+    "id": "8e6b7636-ebcb-4ae7-a99e-10cbc4e2ecb9",
+    "updatedAt": "2026-11-09T07:00:17.743Z",
+    "auditedAt": "2026-11-09T07:00:17.743Z",
+    "title": "Cò quay: bộ đạo cụ Buckshot 1v1 + Double or Nothing",
+    "type": "improvement",
+    "scope": "coquay",
+    "changes": [
+      "Bỏ Bia đỡ đạn; dùng đúng bộ 9 đạo cụ đã chọn, thêm Adrenaline, điện thoại dùng một lần và thuốc hết hạn. Gói thuốc lá hồi 1 HP là món riêng.",
+      "Adrenaline chọn đồ đối thủ rồi cướp và dùng ngay; điện thoại dự đoán riêng, cập nhật theo đạn đã bắn/loại và lần đảo. Thuốc hết hạn có 50% hồi 2 HP, 50% mất 1 HP và có thể chết.",
+      "Mỗi lượt liên tục chỉ dùng một còng; bia loại viên sẽ bỏ hiệu ứng cưa. Cập nhật hình đạo cụ, menu cướp đồ và hướng dẫn PC/mobile.",
+      "Đồ cũ tự chuyển sang bộ mới, bỏ chắn đạn, giữ HP/đạn/lượt và đồng hồ; không đổi lõi sự kiện Gambler Sinh tồn."
+    ]
+  },
+  {
     "id": "1a19d365-8b7f-49fa-95df-f654e8556bba",
     "updatedAt": "2026-11-05T05:33:16.942Z",
     "auditedAt": "2026-11-05T05:33:16.942Z",

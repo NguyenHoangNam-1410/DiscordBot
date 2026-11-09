@@ -15,19 +15,6 @@ const {
   ButtonStyle,
 } = require("discord.js");
 const RULES = {
-  mecung: ["Mê cung", require("../mecung/rules").RULES_TEXT],
-  santorini: ["Santorini", require("../santorini/rules").RULES_TEXT],
-  cothu: ["Cờ thú", require("../cothu/rules").RULES_TEXT],
-  blokus: ["Blokus Duo", require("../blokus/rules").RULES_TEXT],
-  dots: ["Dots & Boxes / Nối ô", require("../dots/rules").RULES_TEXT],
-  battleship: [
-    "Battleship / Bắn tàu",
-    require("../battleship/rules").RULES_TEXT,
-  ],
-  walls: [
-    "Walls / Wall Go",
-    "`/walls choi` mở bàn 9×9. Quân xanh và quân cam xuất phát ở giữa hai cạnh đối diện; ai chạm hàng bên kia trước thắng. Mỗi lượt di chuyển 1 ô ngang/dọc hoặc đặt 1 tường. Nhảy qua đối thủ theo Quoridor: ưu tiên nhảy thẳng; chỉ đi chéo vòng sang bên khi sau đối thủ bị tường hoặc mép bàn chặn. Tường dài 1 hoặc 2 ô, không chồng/cắt và phải giữ đường tới đích cho cả hai. Mặc định 10 tường/người; tùy chọn `daituong`, `sotuong` khi tạo phòng. `/walls phong` xem danh sách và mở bàn để chơi hoặc spectate. Đồng hồ riêng mặc định 30 phút/người, chọn `thoigian` (1–180 phút); chỉ giảm khi tới lượt, không cộng giờ, hết giờ thì thua; không cược, không thưởng xu.",
-  ],
   cotuong: [
     "Cờ tướng",
     "`/cotuong choi` mở thế cờ ngẫu nhiên, chiếu hết trong 1–4 nước. Mỗi kênh chỉ có một bàn cờ vua hoặc cờ tướng chưa giải. Nhập toàn bộ nước của bên cần giải trong một tin nhắn, không nhập nước đối phương. Nhận ICCS (`h2e2`, cột a–i, hàng 0–9) hoặc ký hiệu Việt (`P2.5`; `Pháo 2 bình 5`); dạng từ ngữ cách các nước bằng dấu chấm phẩy. `/cotuong huongdan` xem quy ước. Đúng đầu tiên nhận cơ sở × N² xu và thành tựu. Mỗi người nhận thưởng một lần cho mỗi thế; giải lại thế đã thưởng hiện ♻️ và giữ bàn cho người khác. Bàn đóng sau 1 giờ, không tự mở tiếp. Quản trị dùng `boqua`, `cauhinh`, hoặc `/quantri ketthucvan` theo mã ván.",
@@ -64,7 +51,6 @@ const RULES = {
     "Mines",
     "**Bắt đầu**\n- Bàn có **20 ô**, chọn **2–7 mìn** và đặt cược. Vị trí mìn và ô sao được giữ cố định trong ván.\n\n**Mở ô / rút thưởng**\n- Mở ô an toàn để tăng hệ số. Sau ít nhất một ô đã mở, bấm **Rút thưởng** để nhận số xu đang hiển thị.\n- Trúng mìn: mất cược và kết thúc. Mở hết ô còn an toàn: tự chốt thưởng. Bỏ ván: mất cược.\n- Ô sao nằm ở ô an toàn, nhân thêm **1,5** vào hệ số; hệ số trên bảng đã tính bonus này.\n\n**Giáp Chống Nổ**\n- Nếu có hiệu ứng đang hoạt động, vô hiệu hóa **một quả mìn trong ván** rồi hết tác dụng. Các quả mìn khác vẫn gây thua.",
   ],
-  coquay: ["Cò quay Nga", require("../coquay/rules").RULES_TEXT],
   hardcore: [
     "Sinh tồn",
     "Chọn class, vượt tầng và rút thưởng trước khi chết. Xem các trang tiếp theo để đọc luật đầy đủ.",
@@ -180,11 +166,11 @@ module.exports = {
   },
   data: new SlashCommandBuilder()
     .setName("luat")
-    .setDescription("Xem luật ngắn của từng game")
+    .setDescription("Xem luật ngắn của game chơi trong Discord")
     .addStringOption((option) =>
       option
         .setName("trochoi")
-        .setDescription("Trò chơi")
+        .setDescription("Trò chơi trong Discord; game web xem tại /webgame")
         .setRequired(true)
         .addChoices(
           ...Object.entries(RULES).map(([value, [name]]) => ({ name, value })),
@@ -195,6 +181,12 @@ module.exports = {
     if (key === "hardcore")
       return interaction.reply({
         ...survivalRulesPayload(interaction.user.id, 0, interaction.guildId),
+        flags: MessageFlags.Ephemeral,
+      });
+    if (!Object.hasOwn(RULES, key))
+      return interaction.reply({
+        content:
+          "Game web xem luật tại /webgame hoặc nút Luật chơi trên bàn web.",
         flags: MessageFlags.Ephemeral,
       });
     const [name, text] = RULES[key];

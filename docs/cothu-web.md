@@ -3,7 +3,7 @@
 Triển khai theo [đặc tả cothu-vn-v1](co-thu-web-game-spec.md). Dùng cùng máy chủ HTTP/SSE, Tailscale, phiên Discord, mã xác nhận có nút sao chép và âm báo của các game web khác. Hai người thật, có khán giả; không cược và không thưởng tài nguyên.
 
 - `/cothu choi [nguoitruoc:host|guest|random] [thoigian:1–180]`: mặc định chủ phòng cầm Đỏ và 30 phút/người. Người được chọn cầm Đỏ, đi trước; kết quả chọn được lưu ngay khi tạo phòng. Đồng hồ Đỏ bắt đầu khi người thứ hai tham gia.
-- `/cothu phong`: phòng đang mở trong kênh, phân trang; `/cothu luat` và `/webgame` đọc hướng dẫn. Có bản prefix `!cothu` và các lệnh con tương ứng.
+- `/cothu phong`: phòng đang mở trong kênh, phân trang; `/webgame` đọc hướng dẫn. Có bản prefix `!cothu` và các lệnh con tương ứng.
 - `/cothu cauhinh phongtoida:<1–20> [kenh]`: mặc định 5 phòng/kênh; mỗi người tối đa một phòng Cờ thú/server, không khóa game khác. Phòng chờ hết hạn sau 10 phút; giảm giới hạn không đóng phòng hiện có.
 
 ## Luật và bàn cờ

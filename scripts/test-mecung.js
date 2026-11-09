@@ -674,7 +674,7 @@ async function main() {
       .loadCommands()
       .some((c) => c.data.toJSON().name === "mecung"),
   );
-  assert(require("../src/commands/luat").RULES.mecung);
+  assert(!require("../src/commands/luat").RULES.mecung);
   store.sweep();
   const health = require("../src/services/operationalHealthService"),
     before = health.getOperationalHealth().active.sessions;

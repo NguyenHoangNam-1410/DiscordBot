@@ -338,6 +338,9 @@ a {
   background: #26342b;
 }
 .intel {
+  max-height: 56px;
+  overflow: auto;
+  overscroll-behavior: contain;
   text-align: center;
   background: #384a2e;
   color: #ead79c;
@@ -405,6 +408,24 @@ dialog h2 {
   width: 100px;
   height: 100px;
   margin: 20px auto;
+}
+#steal-panel {
+  padding: 12px;
+  background: #304333;
+  border-radius: 8px;
+  margin: 14px 0;
+}
+#steal-item {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 8px;
+  padding: 8px;
+  border: 1px solid #8c8760;
+  border-radius: 6px;
+  font: inherit;
+  background: #19271e;
+  color: var(--paper);
 }
 .catalog-row {
   display: flex;
@@ -631,6 +652,8 @@ dialog h2 {
     left: 68%;
     right: 12px;
     top: 58px;
+    max-height: 44px;
+    margin-top: 0;
     font-size: 11px;
   }
   .effects {

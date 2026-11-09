@@ -205,9 +205,6 @@ module.exports = {
         ),
     )
     .addSubcommand((sub) =>
-      sub.setName("luat").setDescription("Xem luật caro thử nghiệm"),
-    )
-    .addSubcommand((sub) =>
       sub
         .setName("phong")
         .setDescription("Xem các phòng caro đang mở trong kênh này"),
@@ -243,6 +240,12 @@ module.exports = {
         flags: MessageFlags.Ephemeral,
       });
     const subcommand = interaction.options.getSubcommand();
+    if (!["choi", "phong", "cauhinh"].includes(subcommand))
+      return interaction.reply({
+        content:
+          "Lệnh này đã thay đổi. Xem luật tại /webgame hoặc nút Luật chơi trên web.",
+        flags: MessageFlags.Ephemeral,
+      });
     if (subcommand === "cauhinh") {
       if (!isAdminInteraction(interaction))
         return interaction.reply({
@@ -281,12 +284,6 @@ module.exports = {
         flags: MessageFlags.Ephemeral,
       });
     }
-    if (subcommand === "luat")
-      return interaction.reply({
-        content:
-          "Caro thử nghiệm: /caro choi tạo phòng, tùy chọn kichthuoc (9–25), sothang (3–6), chan2dau, bienchan và dungsoquan. Mặc định bàn 15×15, từ 5 quân thắng, chặn hai đầu vẫn thắng. Nếu bật chan2dau, hai đầu đều bị quân đối thủ chặn thì không thắng; bienchan cho phép tính mép bàn là chặn. dungsoquan yêu cầu đúng số quân, dài hơn không thắng. Luật được chốt khi tạo phòng. Mặc định 5 phòng chờ/đang đấu mỗi kênh; mỗi người 1 phòng caro trong server. /caro phong xem danh sách phòng; quản trị dùng /caro cauhinh phongtoida để chỉnh giới hạn theo kênh. X đi trước. Đồng hồ riêng mặc định 30 phút/người; chọn thoigian (1–180 phút), chỉ giảm khi tới lượt, không cộng giờ. Hết thời gian của mình thì thua; phòng chờ 10 phút. Mở bàn cờ để chơi/xem; người chơi xác nhận bằng mã trên web tại Kết nối tài khoản. Không cược, không thưởng xu.",
-        flags: MessageFlags.Ephemeral,
-      });
     if (!runtime.isAvailable())
       return interaction.reply({
         content: DISABLED,

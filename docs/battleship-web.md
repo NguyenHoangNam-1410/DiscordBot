@@ -9,7 +9,7 @@ Dùng chung máy chủ web, Tailscale, phiên xác nhận Discord, cập nhật 
 - Tùy chọn `thoigian` là 1–180 phút **mỗi người khi chiến đấu**, mặc định 30; không thay đổi hạn bố trí. Đồng hồ chỉ chạy khi tới lượt, không cộng giờ, vẫn chạy khi mất mạng/bot dừng.
 - `/battleship phong`: danh sách phòng phân trang; mở trực tiếp bàn hoặc tin mời Discord để tham gia. Mặc định 5 phòng/kênh, mỗi người tối đa 1 phòng Battleship/server. Phòng chờ tự đóng sau 10 phút.
 - `/battleship cauhinh phongtoida:10 kenh:#kenh`: quản trị chỉnh 1–20 phòng đang mở (chờ/bố trí/chiến đấu). Giảm giới hạn không đóng ván cũ.
-- `/battleship luat` hoặc `/luat trochoi:Battleship / Bắn tàu`: đọc luật. Mọi lệnh có bản `!`.
+- `/webgame`: đọc luật. Mọi lệnh có bản `!`.
 
 | Cỡ bàn | Bàn   | Thuyền/người | Độ dài | Chuẩn bị |
 | ------ | ----- | ------------ | ------ | -------- |

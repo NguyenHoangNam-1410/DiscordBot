@@ -23,7 +23,7 @@ for (const id of ["coquay"]) {
   });
   room = store.join(room.id, users.O);
   room.duel.inventory.player = ["magnifier", "cuffs", "saw", "beer"];
-  room.duel.inventory.bot = ["shield", "medicine", "inverter"];
+  room.duel.inventory.bot = ["phone", "cigarettes", "inverter"];
   room.duel.chamber = [true, false, true, false];
   db.prepare("UPDATE coquay_rooms SET data_json=? WHERE id=?").run(
     JSON.stringify(room),
@@ -265,7 +265,7 @@ async function main() {
     motionCount,
     "ACK/SSE duplicates never replay item animation",
   );
-  await click('#tray-O [data-item="shield"]', true);
+  await click('#tray-O [data-item="phone"]', true);
   assert.equal(await evaluate('$("use-item").hidden'), true);
   await click('[data-close="item-dialog"]', true);
   await click("#rotate-table", true);
@@ -464,7 +464,7 @@ async function main() {
   });
   large = fixture.store.join(large.id, users.O);
   large.duel.inventory.player = Array(12).fill("magnifier");
-  large.duel.inventory.player[0] = "medicine";
+  large.duel.inventory.player[0] = "cigarettes";
   large.duel.hp.player = 19;
   db.prepare("UPDATE coquay_rooms SET data_json=? WHERE id=?").run(
     JSON.stringify(large),
@@ -487,13 +487,90 @@ async function main() {
   await click("#tray-X .slot:last-child", true);
   assert.equal(await evaluate('$("item-dialog").open'), true);
   await click('[data-close="item-dialog"]', true);
-  await click('#tray-X [data-item="medicine"]', true);
+  await click('#tray-X [data-item="cigarettes"]', true);
   assert.match(await evaluate('$("item-title").textContent'), /\+1 HP/);
   await click("#use-item", true);
   await until("state.hp.X===20 && !pending");
   await until('__motions.some(m=>m.kind==="heal")');
   await screenshot("coquay-heal.png");
   await until('!document.querySelector("#table-fx").children.length');
+  // All nine real items have local art; stealing is explicitly selected and server-confirmed.
+  large = fixture.store.get(large.id);
+  large.duel.inventory.player = [
+    "adrenaline",
+    "phone",
+    "expired_medicine",
+    "inverter",
+    "cigarettes",
+    "magnifier",
+    "magnifier",
+  ];
+  large.duel.inventory.bot = ["saw", "magnifier", "adrenaline"];
+  large.duel.chamber = [true, false, true, false];
+  large.duel.hp.player = 18;
+  large.duel.knowledge = {};
+  large.duel.saw = false;
+  large.version++;
+  db.prepare("UPDATE coquay_rooms SET data_json=? WHERE id=?").run(
+    JSON.stringify(large),
+    large.id,
+  );
+  fixture.store.events.emit(large.id, large);
+  await until('state.inventories.X.includes("adrenaline")');
+  assert.equal(await evaluate("state.items.length"), 9);
+  assert.equal(await evaluate('document.querySelector("#art-shield")'), null);
+  assert.equal(
+    await evaluate(
+      'state.items.every(i=>document.querySelector("#art-"+i.id))',
+    ),
+    true,
+  );
+  const beforeSteal = await evaluate("state.moves");
+  await click('#tray-X [data-item="adrenaline"]', true);
+  await until('$("item-dialog").open');
+  assert.equal(
+    await evaluate(
+      '[...$("steal-item").options].some(o=>o.value==="adrenaline")',
+    ),
+    false,
+  );
+  await evaluate(
+    '$("steal-item").value="magnifier";$("steal-item").dispatchEvent(new Event("change",{bubbles:true}))',
+  );
+  assert.equal(await evaluate("state.moves"), beforeSteal);
+  assert.match(
+    await evaluate('$("steal-description").textContent'),
+    /viên hiện tại/,
+  );
+  await screenshot("coquay-adrenaline-mobile.png");
+  await click("#use-item", true);
+  await until("state.moves===" + (beforeSteal + 1) + "&&!pending");
+  assert.equal(await evaluate("state.knownShell"), true);
+  assert.equal(
+    await evaluate('state.inventories.O.includes("magnifier")'),
+    false,
+  );
+  await until('__motions.some(m=>m.kind==="steal")');
+  await until('!document.querySelector("#table-fx").children.length');
+  await click('#tray-X [data-item="phone"]', true);
+  await click("#use-item", true);
+  await until('!pending&&state.lastAction.itemId==="phone"');
+  assert.match(await evaluate('$("private-intel").textContent'), /Viên thứ/);
+  assert.equal(await evaluate('Object.hasOwn(state.lastAction,"live")'), false);
+  await click('#tray-X [data-item="inverter"]', true);
+  await click("#use-item", true);
+  await until('!pending&&state.lastAction.itemId==="inverter"');
+  assert.equal(await evaluate("state.knownShell"), false);
+  await click('#tray-X [data-item="expired_medicine"]', true);
+  assert.match(await evaluate('$("item-note").textContent'), /có thể chết/);
+  await click("#use-item", true);
+  await until('!pending&&state.lastAction.itemId==="expired_medicine"');
+  assert([17, 20].includes(await evaluate("state.hp.X")));
+  await click("#inventory-open", true);
+  await until('$("inventory-dialog").open');
+  assert.match(await evaluate('$("inventory-detail").textContent'), /9 loại/);
+  await screenshot("coquay-buckshot-catalog-mobile.png");
+  await click('[data-close="inventory-dialog"]', true);
   // Reduced motion still applies server results, without flying sprites or timers.
   await send("Emulation.setEmulatedMedia", {
     features: [{ name: "prefers-reduced-motion", value: "reduce" }],

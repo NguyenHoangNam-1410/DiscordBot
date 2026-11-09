@@ -58,7 +58,7 @@ const PAGES = Object.freeze({
       ],
       [
         "🎮 Chơi game",
-        "`/huongdan` — xem danh sách game; `/webgame` — các game web và hướng dẫn từng bước; `/luat trochoi:<game>` — xem luật ngắn.",
+        "`/huongdan` — xem danh sách game; `/webgame` — các game web và hướng dẫn từng bước; `/luat trochoi:<game>` — luật các game chơi trong Discord.",
       ],
       [
         "🎒 Nhận và dùng vật phẩm",
@@ -94,31 +94,31 @@ const PAGES = Object.freeze({
       ["🏇 Thử thách khác", "`/duangua` · `/domin`"],
       [
         "◉ Cò quay Nga",
-        "`/coquay choi [mau] [vatpham] [thoigian]` — đấu hai người trên web, mặc định 5 HP và 4 đạo cụ. Mở hộp mỗi hiệp nạp đạn, có khán giả, xoay bàn 180°, âm thanh và hiệu ứng. `/coquay phong` xem phòng; `/coquay luat` xem luật. Không cược xu, không thành tựu.",
+        "`/coquay choi [mau] [vatpham] [thoigian]` — đấu hai người trên web, mặc định 5 HP và 4 đạo cụ. Mở hộp mỗi hiệp nạp đạn, có khán giả, xoay bàn 180°, âm thanh và hiệu ứng. `/coquay phong` xem phòng; `/webgame` xem luật. Không cược xu, không thành tựu.",
       ],
       [
         "🐾 Cờ thú",
-        "`/cothu choi` — hai người, bàn 7×9, 8 thú/bên. Chọn `nguoitruoc`, `thoigian`; Đỏ đi trước, đồng hồ chạy khi đối thủ tham gia. `/cothu phong` xem phòng; `/cothu luat` đọc ngoại lệ Chuột/Voi, sông, bẫy và luật hòa. Có khán giả, lịch sử và UI PC/mobile; không cược hay thưởng tài nguyên.",
+        "`/cothu choi` — hai người, bàn 7×9, 8 thú/bên. Chọn `nguoitruoc`, `thoigian`; Đỏ đi trước, đồng hồ chạy khi đối thủ tham gia. `/cothu phong` xem phòng; `/webgame` đọc ngoại lệ Chuột/Voi, sông, bẫy và luật hòa. Có khán giả, lịch sử và UI PC/mobile; không cược hay thưởng tài nguyên.",
       ],
       [
         "◒ Santorini",
-        "`/santorini choi` — hai người, bàn 5×5, 2 thợ/người, không Thần lực. Mỗi lượt đi rồi xây; đi từ tầng 2 lên tầng 3 thắng ngay. Chọn `nguoitruoc` và `thoigian`; `/santorini phong` xem phòng, `/santorini luat` xem luật. Có khán giả và giao diện mobile, không cần đặt kênh cũ.",
+        "`/santorini choi` — hai người, bàn 5×5, 2 thợ/người, không Thần lực. Mỗi lượt đi rồi xây; đi từ tầng 2 lên tầng 3 thắng ngay. Chọn `nguoitruoc` và `thoigian`; `/santorini phong` xem phòng, `/webgame` xem luật. Có khán giả và giao diện mobile, không cần đặt kênh cũ.",
       ],
       [
         "⚓ Battleship / Bắn tàu",
-        "`/battleship choi` — chọn `kichthuoc`: Nhỏ (8×8/5 thuyền), Vừa (10×10/7) hoặc Lớn (12×12/10). Hai bên bố trí và xác nhận hạm đội kín rồi luân phiên bắn. `/battleship phong` xem hoặc mở phòng; `/battleship luat` xem luật. Hỗ trợ điện thoại, khán giả và tiền tố `!`; không cược xu.",
+        "`/battleship choi` — chọn `kichthuoc`: Nhỏ (8×8/5 thuyền), Vừa (10×10/7) hoặc Lớn (12×12/10). Hai bên bố trí và xác nhận hạm đội kín rồi luân phiên bắn. `/battleship phong` xem hoặc mở phòng; `/webgame` xem luật. Hỗ trợ điện thoại, khán giả và tiền tố `!`; không cược xu.",
       ],
       [
         "🧩 Mê cung",
-        "`/mecung choi` — mỗi người dựng mê cung kín cho đối thủ; đi được thì tiếp tục, chạm tường thì lộ tường và đổi lượt. Chọn `luat` đến đích trước hoặc ít lượt hơn. `/mecung phong` xem phòng, `/mecung luat` xem luật. Có khán giả, không cược xu.",
+        "`/mecung choi` — mỗi người dựng mê cung kín cho đối thủ; đi được thì tiếp tục, chạm tường thì lộ tường và đổi lượt. Chọn `luat` đến đích trước hoặc ít lượt hơn. `/mecung phong` xem phòng, `/webgame` xem luật. Có khán giả, không cược xu.",
       ],
       [
         "▦ Blokus Duo",
-        "`/blokus choi` — xếp 21 quân trên bàn 14×14, chạm góc cùng màu, không chạm cạnh. Xoay/lật và xác nhận trên web. `/blokus phong` — chơi/xem trực tiếp; `/blokus luat` — luật và tính điểm. Đồng hồ riêng, không cược xu.",
+        "`/blokus choi` — xếp 21 quân trên bàn 14×14, chạm góc cùng màu, không chạm cạnh. Xoay/lật và xác nhận trên web. `/blokus phong` — chơi/xem trực tiếp; `/webgame` — luật và tính điểm. Đồng hồ riêng, không cược xu.",
       ],
       [
         "▥ Walls / Wall Go",
-        "`/walls choi` — đối kháng trên bàn 9×9, đi tới hàng đối diện hoặc đặt tường chặn đối thủ. Tùy chọn `daituong:1|2`, `sotuong:0–20` (mặc định 10/người). `/walls phong` mở/xem phòng trực tiếp; `/walls luat` xem luật nhảy Quoridor. Không cược xu.",
+        "`/walls choi` — đối kháng trên bàn 9×9, đi tới hàng đối diện hoặc đặt tường chặn đối thủ. Tùy chọn `daituong:1|2`, `sotuong:0–20` (mặc định 10/người). `/walls phong` mở/xem phòng trực tiếp; `/webgame` xem luật nhảy Quoridor. Không cược xu.",
       ],
       [
         "⚔️ Sinh tồn",
@@ -138,7 +138,7 @@ const PAGES = Object.freeze({
       ],
       [
         "📖 Xem luật",
-        "`/luat trochoi:<game>` — xem tóm tắt luật của một game.",
+        "`/luat trochoi:<game>` — luật các game chơi trong Discord; `/webgame` — luật game web.",
       ],
     ],
   },

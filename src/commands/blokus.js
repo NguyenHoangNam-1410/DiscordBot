@@ -174,9 +174,6 @@ module.exports = {
         ),
     )
     .addSubcommand((sub) =>
-      sub.setName("luat").setDescription("Xem luật blokus thử nghiệm"),
-    )
-    .addSubcommand((sub) =>
       sub
         .setName("phong")
         .setDescription("Xem các phòng blokus đang mở trong kênh này"),
@@ -212,6 +209,12 @@ module.exports = {
         flags: MessageFlags.Ephemeral,
       });
     const subcommand = interaction.options.getSubcommand();
+    if (!["choi", "phong", "cauhinh"].includes(subcommand))
+      return interaction.reply({
+        content:
+          "Lệnh này đã thay đổi. Xem luật tại /webgame hoặc nút Luật chơi trên web.",
+        flags: MessageFlags.Ephemeral,
+      });
     if (subcommand === "cauhinh") {
       if (!isAdminInteraction(interaction))
         return interaction.reply({
@@ -250,11 +253,6 @@ module.exports = {
         flags: MessageFlags.Ephemeral,
       });
     }
-    if (subcommand === "luat")
-      return interaction.reply({
-        content: require("../blokus/rules").RULES_TEXT,
-        flags: MessageFlags.Ephemeral,
-      });
     if (!runtime.isAvailable())
       return interaction.reply({
         content: DISABLED,

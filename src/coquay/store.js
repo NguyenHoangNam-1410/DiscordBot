@@ -39,6 +39,8 @@ const MESSAGES = {
   INVALID_RULES: "Cấu hình bàn chơi không hợp lệ.",
   INVALID_ACTION: "Thao tác không hợp lệ.",
   ITEM_UNAVAILABLE: "Đạo cụ không có trong túi hoặc không dùng được lúc này.",
+  INVALID_STEAL:
+    "Chọn một đạo cụ hiện có và dùng được của đối thủ; không thể cướp Adrenaline.",
 };
 function fail(code) {
   throw Object.assign(new Error(MESSAGES[code] || code), { code });
@@ -75,6 +77,10 @@ function createStore(db, now = Date.now, rng = (max) => randomInt(max)) {
   }
   function expire(room) {
     if (!room) return room;
+    if (engine.upgrade(room.duel)) {
+      save(room);
+      db.prepare("UPDATE coquay_rooms SET ui_dirty=1 WHERE id=?").run(room.id);
+    }
     const at = now();
     if (ensureClock(room, normalizeRules(room.rules).timeMinutes, at)) {
       save(room);
