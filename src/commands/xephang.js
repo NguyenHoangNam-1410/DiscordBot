@@ -21,7 +21,7 @@ const GAMES = Object.freeze([
   ["mines", "Mines", "💣"],
   ["hardcore", "Sinh tồn", "⚔️"],
   ["covua", "Cờ vua", "♟️"],
-  ["cotuong", "Cờ tướng", "🀄"],
+  ["cotuong", "Cờ tướng · Puzzle cũ", "🀄"],
 ]);
 const GAME_INFO = Object.fromEntries(
   GAMES.map(([id, label, emoji]) => [id, { label, emoji }]),

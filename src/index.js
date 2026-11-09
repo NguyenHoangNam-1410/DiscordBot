@@ -209,12 +209,6 @@ client.once(Events.ClientReady, async () => {
     require("./services/chessService").startChessMaintenance(client, logger),
   );
   maintenanceTimers.push(
-    require("./services/xiangqiService").startXiangqiMaintenance(
-      client,
-      logger,
-    ),
-  );
-  maintenanceTimers.push(
     require("./hardcore/replay/store").startReplayMaintenance(logger),
   );
   maintenanceTimers.push(

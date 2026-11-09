@@ -15,7 +15,7 @@ function helpEmbed(prefix = process.env.COMMAND_PREFIX || "!") {
       {
         name: "🎲 Lệnh trò chơi",
         value:
-          "`/baucua` · `/taixiu` · `/chinchiro` · `/xidach` · `/poker` · `/duangua` · `/domin`\n`/caro choi` · `/walls choi` · `/battleship choi` · `/dots choi` · `/blokus choi` · `/mecung choi` · `/coquay choi` · `/santorini choi` mở bàn web đối kháng, có khán giả; `phong` xem phòng.\n`/sinhton batdau` mở run; `/vtv batdau` dành cho admin.\n`/covua choi` mở puzzle; gửi toàn bộ nước UCI/SAN trong kênh.\n`/cotuong choi` mở thế cờ tướng; gửi nước ICCS hoặc ký hiệu Việt. Lệnh `huongdan` của mỗi game giải thích cách nhập.",
+          "`/baucua` · `/taixiu` · `/chinchiro` · `/xidach` · `/poker` · `/duangua` · `/domin`\n`/caro choi` · `/walls choi` · `/battleship choi` · `/dots choi` · `/blokus choi` · `/mecung choi` · `/coquay choi` · `/santorini choi` mở bàn web đối kháng, có khán giả; `phong` xem phòng.\n`/sinhton batdau` mở run; `/vtv batdau` dành cho admin.\n`/covua choi` mở puzzle; gửi toàn bộ nước UCI/SAN trong kênh.\n`/cotuong choi` mở bàn web hai người; kéo thả quân để đi ngay. `/cotuong phong` xem phòng, `/webgame` xem luật. `/covua huongdan` giải thích cách nhập lời giải cờ vua.",
       },
       {
         name: "🎒 /vatpham",

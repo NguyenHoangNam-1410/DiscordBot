@@ -18,6 +18,13 @@ globalThis.WebGameBoardUI = (() => {
         },
         clock,
       ];
+    if (game === "cotuong")
+      return [
+        { text: "Cờ tướng · 9×10", key: true },
+        { text: "Đỏ đi trước" },
+        { text: "Thả quân là đi ngay" },
+        clock,
+      ];
     if (game === "cothu")
       return [
         { text: "Cờ thú · 7×9", key: true },

@@ -300,7 +300,8 @@ globalThis.WebGameFeedback = (() => {
       else if (game === "battleship" && last?.hit) cues.push("hit");
       else if (game === "mecung" && last?.hit) cues.push("wall");
       else if (game === "dots" && last?.captured?.length) cues.push("capture");
-      else if (game === "cothu" && last?.capturedPieceId) cues.push("capture");
+      else if (["cothu", "cotuong"].includes(game) && last?.capturedPieceId)
+        cues.push("capture");
       else if (game === "walls" && last?.type === "wall") cues.push("wall");
       else
         cues.push(next.me && actor && actor !== next.me ? "opponent" : "move");

@@ -12,7 +12,7 @@ const GAME_LABELS = Object.freeze({
   hardcore: "⚔️ Sinh tồn",
   vuatiengviet: "🇻🇳 Vua tiếng Việt",
   covua: "♟️ Cờ vua",
-  cotuong: "🀄 Cờ tướng",
+  cotuong: "🀄 Cờ tướng · Puzzle cũ",
   2048: "🔢 2048",
 });
 

@@ -6,7 +6,7 @@ Một tiến trình bot, một cổng HTTP, một địa chỉ HTTPS/Tailscale. 
 
 Lệnh mỗi game web chỉ có `choi`, `phong`, `cauhinh`; không còn lệnh con `luat`. Xem luật tại nút **Luật chơi / ?** trên bàn hoặc menu `/webgame`. `/luat` chỉ liệt kê game chơi trong Discord. Tùy chọn `luat` của `/mecung choi` vẫn chọn điều kiện thắng, không phải lệnh xem luật.
 
-`/webgame` (hoặc `!webgame` khi bật prefix) liệt kê 10 game web, lệnh mở/xem phòng và menu hướng dẫn từng trò. Danh sách dùng được cả khi web đang tắt; nút mở trang chủ chỉ xuất hiện khi đã bật cấu hình web. Sau khi thêm lệnh cần chạy `npm run register`.
+`/webgame` (hoặc `!webgame` khi bật prefix) liệt kê 11 game web, lệnh mở/xem phòng và menu hướng dẫn từng trò. Danh sách dùng được cả khi web đang tắt; nút mở trang chủ chỉ xuất hiện khi đã bật cấu hình web. Sau khi thêm lệnh cần chạy `npm run register`.
 
 Trên mọi bàn web, nút **Luật chơi** hoặc **?** ở thanh trên mở hộp thoại: chuẩn bị theo thứ tự, mỗi lượt làm gì, thắng nếu, thua nếu và hòa/đóng phòng khi có. Cấu hình bàn vẫn cập nhật trực tiếp trong hộp thoại; hướng dẫn mở phòng/kết nối được thu gọn ở cuối. Có nút Đóng/Escape; khi đang đọc, các phím chơi game không tác động tới bàn, đồng hồ vẫn chạy. Nội dung dùng chung với Discord trong `src/webGames/public/game-catalog.js`; tài nguyên giao diện là `/rules-ui.js` và `/rules-ui.css`.
 

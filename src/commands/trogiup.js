@@ -138,7 +138,7 @@ const PAGES = Object.freeze({
       ],
       [
         "🀄 Cờ tướng",
-        "`/cotuong choi` — giải thế chiếu hết 1–4 nước bằng ICCS hoặc ký hiệu Việt. `xem` xem bàn/kết quả; `huongdan` xem cách nhập. Quản trị dùng `boqua` thay bàn, `cauhinh` đặt kênh và thưởng.",
+        "`/cotuong choi [nguoitruoc] [thoigian]` — đấu Đỏ–Đen trên web, kéo thả hoặc chạm quân rồi ô đích để đi ngay, không cần xác nhận. `/cotuong phong` xem phòng; `/cotuong cauhinh` chỉnh giới hạn phòng; `/webgame` xem luật. Có khán giả, không cược hay thưởng giải thế.",
       ],
       [
         "📖 Xem luật",

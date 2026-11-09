@@ -347,7 +347,6 @@ module.exports = {
         forceEndBlackjackDuel,
         forceEndSharedRound,
         require("../services/chessService").forceEndChess,
-        require("../services/xiangqiService").forceEndXiangqi,
       ];
       let result = null;
       for (const handler of handlers) {
@@ -359,19 +358,18 @@ module.exports = {
           content: `Không tìm thấy ván đang diễn ra với mã \`${id}\` trong server này.`,
           flags: MessageFlags.Ephemeral,
         });
-      if (result.chess || result.xiangqi) {
+      if (result.chess) {
         const reply = await interaction.reply({
           content: `🛑 Đã đóng bàn cờ \`${id}\`. Không tạo bàn mới.`,
           flags: MessageFlags.Ephemeral,
         });
-        await require(
-          result.xiangqi
-            ? "../services/xiangqiService"
-            : "../services/chessService",
-        ).updateBoard(interaction.client, {
-          ...result.session,
-          status: "admin_closed",
-        });
+        await require("../services/chessService").updateBoard(
+          interaction.client,
+          {
+            ...result.session,
+            status: "admin_closed",
+          },
+        );
         return reply;
       }
       const participantText =

@@ -7,6 +7,7 @@ globalThis.WebGameMobile = (() => {
   );
   const configurations = {
     oanquan: [["history", "Lịch sử", ["#history-panel"]]],
+    cotuong: [["history", "Lịch sử", ["#history-panel"]]],
     cothu: [["history", "Lịch sử", ["#history-panel"]]],
     caro: [],
     dots: [],
@@ -242,9 +243,11 @@ globalThis.WebGameMobile = (() => {
           ? innerWidth > innerHeight
             ? 3.1
             : 2 / 3.5
-          : game === "cothu"
-            ? 7 / 9
-            : 1;
+          : game === "cotuong"
+            ? 9 / 10
+            : game === "cothu"
+              ? 7 / 9
+              : 1;
       scroll.style.setProperty(
         "--wg-board-size",
         Math.max(

@@ -1742,4 +1742,16 @@ runMigration(71, "oanquan web duels", () => {
  CREATE TABLE oanquan_channel_settings(guild_id TEXT NOT NULL,channel_id TEXT NOT NULL,max_rooms INTEGER NOT NULL CHECK(max_rooms BETWEEN 1 AND 20),updated_by TEXT NOT NULL,updated_at INTEGER NOT NULL,PRIMARY KEY(guild_id,channel_id));`);
 });
 
+runMigration(72, "xiangqi web duels retire channel puzzles", () => {
+  db.exec(`CREATE TABLE cotuong_rooms(id TEXT PRIMARY KEY,guild_id TEXT NOT NULL,channel_id TEXT NOT NULL,status TEXT NOT NULL,data_json TEXT NOT NULL,ui_dirty INTEGER NOT NULL DEFAULT 1);
+ CREATE INDEX idx_cotuong_open_channel ON cotuong_rooms(guild_id,channel_id) WHERE status IN ('waiting','playing');
+ CREATE TABLE cotuong_seats(guild_id TEXT NOT NULL,user_id TEXT NOT NULL,room_id TEXT NOT NULL REFERENCES cotuong_rooms(id) ON DELETE CASCADE,PRIMARY KEY(guild_id,user_id));
+ CREATE TABLE cotuong_channel_settings(guild_id TEXT NOT NULL,channel_id TEXT NOT NULL,max_rooms INTEGER NOT NULL CHECK(max_rooms BETWEEN 1 AND 20),updated_by TEXT NOT NULL,updated_at INTEGER NOT NULL,PRIMARY KEY(guild_id,channel_id));
+ UPDATE xiangqi_rounds SET status='admin_closed',closed_at=CAST(strftime('%s','now') AS INTEGER)*1000 WHERE status='open';
+ DELETE FROM xiangqi_channel_locks;
+ DELETE FROM game_channels WHERE game='cotuong';
+ DELETE FROM game_rewards WHERE game='cotuong';
+ DELETE FROM game_settings WHERE setting_key='maintenance:cotuong';`);
+});
+
 module.exports = { db, dbPath, runMigration };

@@ -4,14 +4,8 @@ const engine = require("../src/xiangqi/engine");
 const { position } = require("./generate-xiangqi-puzzles");
 const { loadCatalog, loadPuzzle } = require("../src/xiangqi/puzzle");
 const { db } = require("../src/db");
-const service = require("../src/services/xiangqiService");
-const channels = require("../src/services/gameChannelService");
-const rewards = require("../src/services/gameRewardService");
-const { getAccount } = require("../src/services/economyService");
-const { getAchievements } = require("../src/services/achievementService");
 const {
   boardImage,
-  roundPayload,
   PIECE_CHARACTERS,
   drawPieceCharacter,
 } = require("../src/xiangqi/view");
@@ -158,133 +152,7 @@ async function run() {
   assert.ok(alternatives > 0);
   const selected = await loadPuzzle({ seen: () => true, randomInt: () => 0 });
   assert.ok(selected);
-  channels.addGameChannel(G, "cotuong", C);
-  rewards.setGameReward(G, "cotuong", 100);
   const first = catalog.find((p) => p.mate === 2);
-  const begin = (extra = {}) =>
-    service.startRound({
-      guildId: G,
-      channelId: C,
-      userId: U,
-      puzzleLoader: async () => first,
-      ...extra,
-    });
-  const solve = (user = U, text = moves(first)) =>
-    service.solveRound({
-      guildId: G,
-      channelId: C,
-      userId: user,
-      messageId: "answer",
-      text,
-    });
-  const round = await begin();
-  assert.equal(round.round.reward, 400);
-  assert.equal(round.round.expires_at - round.round.created_at, 3600000);
-  assert.equal((await begin()).existing.id, round.round.id);
-  channels.addGameChannel(G, "covua", C);
-  await assert.rejects(
-    require("../src/services/chessService").startRound({
-      guildId: G,
-      channelId: C,
-      userId: U,
-    }),
-    /BOARD_CHANNEL_BUSY/,
-  );
-  assert.equal(solve(U, "i0i1"), null);
-  const before = getAccount(G, U).balance;
-  assert.ok(solve());
-  assert.equal(getAccount(G, U).balance, before + 400);
-  assert.equal(solve(), null);
-  assert.equal(service.currentRound(G, C), null);
-  assert.ok(
-    getAchievements(G, U).find((a) => a.id === "xiangqi_solved_1").complete,
-  );
-  assert.equal(
-    db
-      .prepare(
-        "SELECT solved FROM xiangqi_records WHERE guild_id=? AND user_id=?",
-      )
-      .get(G, U).solved,
-    1,
-  );
-  await begin();
-  assert.ok(solve().alreadySolved);
-  assert.ok(service.currentRound(G, C));
-  let reaction;
-  assert.equal(
-    await service.handleXiangqiMessage({
-      guildId: G,
-      channelId: C,
-      author: { id: U },
-      id: "again",
-      content: moves(first),
-      react: async (x) => {
-        reaction = x;
-      },
-    }),
-    true,
-  );
-  assert.equal(reaction, "♻️");
-  assert.equal(getAccount(G, U).balance, before + 400);
-  assert.ok(solve(V));
-  assert.equal(service.currentRound(G, C), null);
-  const active = await begin({
-    puzzleLoader: async () => catalog.find((p) => p.mate === 3),
-  });
-  await assert.rejects(
-    begin({
-      replace: true,
-      puzzleLoader: async () => {
-        throw new Error("LOAD_FAILED");
-      },
-    }),
-    /LOAD_FAILED/,
-  );
-  assert.equal(service.currentRound(G, C).id, active.round.id);
-  const replacement = await begin({
-    replace: true,
-    puzzleLoader: async () => catalog.find((p) => p.mate === 4),
-  });
-  service.publicationFailed(replacement);
-  assert.equal(service.currentRound(G, C).id, active.round.id);
-  db.prepare("UPDATE xiangqi_rounds SET expires_at=? WHERE id=?").run(
-    Date.now() - 1,
-    active.round.id,
-  );
-  assert.equal(
-    service.solveRound({
-      guildId: G,
-      channelId: C,
-      userId: U,
-      messageId: "expired",
-      text: moves(JSON.parse(active.round.puzzle_json)),
-    }),
-    null,
-  );
-  assert.equal(service.currentRound(G, C), null);
-  // Rejected wallet writes must roll back the award marker and all statistics.
-  const atomic = await begin({
-    puzzleLoader: async () => catalog.find((p) => p.mate === 4),
-  });
-  db.exec(
-    "CREATE TRIGGER fail_xq_wallet BEFORE INSERT ON economy_transactions BEGIN SELECT RAISE(ABORT,'wallet failure'); END",
-  );
-  assert.throws(
-    () =>
-      service.solveRound({
-        guildId: G,
-        channelId: C,
-        userId: U,
-        messageId: "atomic",
-        text: moves(JSON.parse(atomic.round.puzzle_json)),
-      }),
-    /wallet failure/,
-  );
-  assert.ok(service.currentRound(G, C));
-  assert.equal(service.hasSolved(G, U, atomic.round.puzzle_id), false);
-  db.exec("DROP TRIGGER fail_xq_wallet");
-  assert.ok(service.forceEndXiangqi(atomic.round.id, G));
-  assert.equal(service.currentRound(G, C), null);
   // Chinese pieces must render from packaged outlines with no font/text API.
   assert.deepEqual(PIECE_CHARACTERS, {
     K: "帥",
@@ -336,7 +204,6 @@ async function run() {
   assert.equal(image.readUInt32BE(16), 544);
   assert.equal(image.readUInt32BE(20), 600);
   assert.ok(boardImage(catalog.find((p) => p.side === "b")).length > 1000);
-  assert.equal(roundPayload(round.round).files.length, 1);
   // Paginate arbitrarily long lists within a single menu; navigation never acts as a filter.
   const choices = Array.from({ length: 101 }, (_, i) => ({
     label: `Type ${i}`,
@@ -420,101 +287,23 @@ async function run() {
   const registry = require("../src/commandRegistry")
     .loadCommands()
     .map((c) => c.data.toJSON());
-  assert.equal(registry.filter((c) => c.name === "cotuong").length, 1);
   assert.deepEqual(
     registry.find((c) => c.name === "cotuong").options.map((o) => o.name),
-    ["choi", "boqua", "xem", "huongdan", "cauhinh"],
+    ["choi", "phong", "cauhinh"],
   );
-  const command = require("../src/commands/cotuong");
-  let response;
-  const mock = {
-    guildId: G,
-    channelId: C,
-    user: { id: U },
-    memberPermissions: { has: () => true },
-    reply: async (p) => {
-      response = p;
-      return p;
-    },
-    options: {
-      getSubcommand: () => "cauhinh",
-      getChannel: () => null,
-      getString: () => null,
-      getInteger: () => 200,
-    },
-  };
-  await command.execute(mock);
-  assert.equal(rewards.getGameReward(G, "cotuong"), 200);
-  assert.ok(
-    response.embeds[0].toJSON().description.includes("Cờ vua") === false,
+  assert(
+    !require("../src/services/gameChannelService").GAMES.includes("cotuong"),
   );
-  const originalStart = service.startRound;
-  service.startRound = (args) =>
-    originalStart({ ...args, puzzleLoader: async () => first });
-  try {
-    await command.execute({
-      ...mock,
-      options: { getSubcommand: () => "choi" },
-      deferReply: async () => {},
-      editReply: async (p) => {
-        response = p;
-        return { id: "xqBoard" };
-      },
-    });
-    assert.equal(service.currentRound(G, C).message_id, "xqBoard");
-    await command.execute({
-      ...mock,
-      options: { getSubcommand: () => "choi" },
-    });
-    assert.ok(response.content.includes("/cotuong xem"));
-    assert.ok(!response.content.includes("/covua"));
-    await command.execute({ ...mock, options: { getSubcommand: () => "xem" } });
-    assert.ok(
-      response.embeds[0]
-        .toJSON()
-        .fields.some((f) => f.name === "Thế đã nhận thưởng"),
-    );
-  } finally {
-    service.startRound = originalStart;
-  }
-  await command.execute({
-    ...mock,
-    user: { id: V },
-    memberPermissions: { has: () => false },
-    options: { getSubcommand: () => "boqua" },
-  });
-  assert.match(response.content, /Chỉ quản trị/);
-  const activeNow = service.currentRound(G, C);
-  db.prepare("UPDATE xiangqi_rounds SET expires_at=? WHERE id=?").run(
-    Date.now() - 1,
-    activeNow.id,
+  assert(
+    !require("../src/services/gameRewardService").REWARD_GAMES.includes(
+      "cotuong",
+    ),
   );
-  let closed = false;
-  const timer = service.startXiangqiMaintenance(
-    {
-      channels: {
-        fetch: async () => ({
-          messages: {
-            fetch: async () => ({
-              edit: async () => {
-                closed = true;
-              },
-            }),
-          },
-        }),
-      },
-    },
-    { warn() {}, error() {} },
-  );
-  clearInterval(timer);
-  await new Promise((resolve) => setTimeout(resolve, 20));
-  assert.equal(service.currentRound(G, C), null);
-  assert.equal(service.latestRound(G, C).status, "expired");
-  assert.ok(closed);
   console.log(
     JSON.stringify({
       ok: true,
-      xiangqi: true,
+      xiangqi:
+        "legacy engine proofs and glyphs remain valid; Discord puzzle retired",
       puzzles: catalog.length,
       alternatives,
       filterPagination: true,

@@ -4,6 +4,35 @@
 ((root) => {
   const games = [
     {
+      id: "cotuong",
+      name: "Cờ tướng",
+      summary: "Đấu Đỏ–Đen; kéo thả quân để đi ngay trên bàn 9×10.",
+      setup: [
+        "Bàn 9 cột × 10 hàng, mỗi bên 16 quân ở vị trí tiêu chuẩn. Người được chọn cầm Đỏ và đi trước.",
+        "Đồng hồ riêng mặc định 30 phút/người, chỉ giảm khi tới lượt, không cộng giờ. Bắt đầu ngay khi đối thủ tham gia.",
+      ],
+      play: [
+        "Kéo quân của bạn rồi thả vào giao điểm hợp lệ. Nước đi được ghi nhận ngay, không có nút xác nhận. Thả ra ngoài hoặc vào ô sai sẽ hủy thao tác.",
+        "Có thể chạm/click quân rồi chạm/click ô đích để đi ngay. Các giao điểm hợp lệ được tô sáng; quân không được đi nếu để Tướng của mình bị chiếu.",
+        "Xe đi thẳng; Pháo đi thẳng, khi ăn phải có đúng một quân làm ngòi. Mã đi chữ L và bị cản chân. Tượng đi chéo hai ô, bị cản mắt và không qua sông.",
+        "Sĩ đi chéo một ô trong cung. Tướng đi ngang/dọc một ô trong cung, không được để hai Tướng nhìn nhau. Tốt tiến một ô; qua sông được đi ngang, không lùi.",
+        "Xoay bàn chỉ đổi góc nhìn, tọa độ không đổi. Khi có nước mới, điểm đi và điểm đến được làm nổi; lịch sử và quân bị ăn nằm trong mục Lịch sử.",
+      ],
+      special: [
+        "Chiếu bí và hết nước đi hợp lệ đều xử thua. Không được bỏ lượt hoặc tự đi vào thế bị chiếu.",
+        "Ván tự chốt hòa khi lặp thế, đủ giới hạn không ăn quân hoặc không đủ lực chiếu hết; lặp chiếu/đuổi có thể bị xử thua theo toàn bộ lịch sử ván.",
+        "Chế độ puzzle Discord đã được thay thế: không còn boqua/xem/huongdan, trả lời bằng tin nhắn, thưởng giải thế hay cấu hình kênh/thưởng cũ. Thành tích đã nhận được giữ trong mục Puzzle cũ.",
+      ],
+      win: [
+        "Chiếu bí Tướng đối thủ hoặc khiến đối thủ hết mọi nước đi hợp lệ.",
+        "Engine xử đối thủ thua vì vi phạm lặp chiếu/đuổi.",
+      ],
+      lose: ["Bị chiếu bí, hết nước đi hợp lệ hoặc bị engine xử thua."],
+      draw: [
+        "Engine xác nhận hòa do lặp thế, giới hạn không ăn quân hoặc không đủ lực chiếu hết.",
+      ],
+    },
+    {
       id: "oanquan",
       name: "Ô ăn quan",
       summary: "Rải từng viên, tính nhịp đập ô và thu quan về kho.",

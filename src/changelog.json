@@ -1,5 +1,19 @@
 [
   {
+    "id": "046a16f0-43b1-41c5-8d7f-bcfa97a7f40b",
+    "updatedAt": "2026-11-09T08:57:12.071Z",
+    "auditedAt": "2026-11-09T08:57:12.071Z",
+    "title": "Cờ tướng: đấu hai người trên web",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Chuyển /cotuong choi từ giải thế Discord sang bàn web Đỏ–Đen; thêm danh sách phòng và cấu hình giới hạn phòng.",
+      "Dùng lại quân chữ Hán hiện có. Kéo thả hoặc chạm quân rồi chạm ô đích để đi ngay, không có nút xác nhận; ô sai và thao tác bị hủy không gửi nước đi.",
+      "Hỗ trợ PC/điện thoại, khán giả trực tiếp, đồng hồ riêng, lịch sử, đánh dấu nước vừa đi và chiếu tướng. Luật được kiểm tra tại máy chủ.",
+      "Đóng puzzle cờ tướng cũ và gỡ cấu hình kênh/thưởng của chế độ đó; giữ thưởng và thành tích đã nhận dưới mục Puzzle cũ. Cờ vua vẫn giữ chế độ puzzle."
+    ]
+  },
+  {
     "id": "e3bbefa5-3036-46af-9f8a-3f2c5599905f",
     "updatedAt": "2026-11-09T07:44:23.737Z",
     "auditedAt": "2026-11-09T07:44:23.737Z",

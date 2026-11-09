@@ -126,7 +126,7 @@ const ACHIEVEMENT_CATEGORIES = Object.freeze([
   { label: "Gacha · vật phẩm hiếm", value: "gachaRare" },
   { label: "Gacha · kim cương đã tiêu", value: "gachaSpent" },
   { label: "Cờ vua", value: "covua" },
-  { label: "Cờ tướng", value: "cotuong" },
+  { label: "Cờ tướng · Puzzle cũ", value: "cotuong" },
 ]);
 function selection(value, choices) {
   return choices.some((choice) => choice.value === value) ? value : "all";
