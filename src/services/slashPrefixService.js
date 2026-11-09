@@ -25,6 +25,7 @@ const SUB_ALIASES = {
 };
 const DEFAULT_SUBCOMMANDS = {
   cothu: "choi",
+  oanquan: "choi",
   dots: "choi",
   blokus: "choi",
   santorini: "choi",

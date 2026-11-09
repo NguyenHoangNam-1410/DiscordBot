@@ -6,6 +6,7 @@ globalThis.WebGameMobile = (() => {
     "(max-width: 760px), (max-height: 520px) and (pointer: coarse)",
   );
   const configurations = {
+    oanquan: [["history", "Lịch sử", ["#history-panel"]]],
     cothu: [["history", "Lịch sử", ["#history-panel"]]],
     caro: [],
     dots: [],
@@ -236,7 +237,14 @@ globalThis.WebGameMobile = (() => {
       const rect = scroll.getBoundingClientRect();
       if (!rect.width || !rect.height) continue;
       const pad = game === "walls" ? 50 : 18;
-      const ratio = game === "cothu" ? 7 / 9 : 1;
+      const ratio =
+        game === "oanquan"
+          ? innerWidth > innerHeight
+            ? 3.1
+            : 2 / 3.5
+          : game === "cothu"
+            ? 7 / 9
+            : 1;
       scroll.style.setProperty(
         "--wg-board-size",
         Math.max(

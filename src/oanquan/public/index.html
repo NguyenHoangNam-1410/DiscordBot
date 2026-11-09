@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#102a38" />
+    <title>Ô ăn quan · Rải sỏi, đón quan</title>
+    <link rel="stylesheet" href="/oanquan/style.css" />
+    <link rel="stylesheet" href="/mobile-ui.css" />
+    <link rel="stylesheet" href="/players.css" />
+    <link rel="stylesheet" href="/board-ui.css" />
+    <link rel="stylesheet" href="/feedback.css" />
+    <script src="/players.js" defer></script>
+    <script src="/board-ui.js" defer></script>
+    <script src="/feedback.js" defer></script>
+    <link rel="stylesheet" href="/pairing-ui.css" />
+    <script src="/pairing-ui.js" defer></script>
+    <link rel="stylesheet" href="/rules-ui.css" />
+    <script src="/game-catalog.js" defer></script>
+    <script src="/rules-ui.js" defer></script>
+    <script src="/mobile-ui.js" defer></script>
+    <script src="/oanquan/app.js" defer></script>
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <a class="brand" href="/">ô ăn quan<span>.</span></a
+        ><span class="tag">HAI NGƯỜI · NĂM MƯƠI DÂN, HAI QUAN</span
+        ><span id="connection" role="status">Chưa kết nối</span>
+      </header>
+      <main>
+        <div class="heading">
+          <div>
+            <p class="eyebrow">MỘT NẮM SỎI. CẢ MỘT NƯỚC ĐI.</p>
+            <h1>Rải sỏi. Đón quan.</h1>
+            <p>Chọn hướng rải, tính nhịp ăn và mang quân về kho.</p>
+          </div>
+          <div class="room-label">PHÒNG <strong id="room-code">—</strong></div>
+        </div>
+        <div id="notice" class="notice" role="alert" hidden></div>
+        <div class="game-layout">
+          <section class="board-panel" aria-label="Bàn Ô ăn quan">
+            <div class="board-toolbar">
+              <strong id="board-state" aria-live="polite"
+                >Mở /oanquan choi trong Discord</strong
+              ><span id="move-count">0 lượt</span
+              ><button
+                id="rotate-board"
+                title="Chỉ xoay góc nhìn"
+                aria-pressed="false"
+              >
+                ↻ Xoay bàn
+              </button>
+            </div>
+            <div class="score-strip">
+              <span id="bank-X">Xanh · 0 điểm</span
+              ><span id="hand-counter" role="status">50 dân · 2 quan</span
+              ><span id="bank-O">Cam · 0 điểm</span>
+            </div>
+            <div class="board-scroll">
+              <div
+                id="board"
+                class="board"
+                role="group"
+                aria-label="10 ô dân và 2 ô quan"
+              ></div>
+            </div>
+            <section id="controls" class="controls">
+              <p id="instruction" aria-live="polite">
+                Chọn ô dân → Chọn hướng rải → Xác nhận
+              </p>
+              <div class="directions">
+                <button id="direction-minus" aria-pressed="false">
+                  ← Rải trái</button
+                ><button id="direction-plus" aria-pressed="false">
+                  Rải phải →
+                </button>
+              </div>
+              <div class="actions">
+                <button id="clear">Hủy</button
+                ><button id="confirm" class="primary" disabled>Rải quân</button>
+              </div>
+            </section>
+            <p id="last-action" class="last-action" aria-live="polite">
+              Chưa có lượt rải.
+            </p>
+          </section>
+          <aside class="sidebar">
+            <section class="status-card">
+              <p class="eyebrow">DIỄN BIẾN</p>
+              <h2 id="status-title">Chờ người chơi</h2>
+              <p id="status-detail"></p>
+            </section>
+            <section class="players-card">
+              <div class="player" id="player-X">
+                <span class="player-avatar x"
+                  ><img
+                    id="avatar-X"
+                    alt=""
+                    referrerpolicy="no-referrer"
+                    draggable="false"
+                    hidden
+                  /><span id="avatar-fallback-X">?</span></span
+                >
+                <div>
+                  <span id="role-X" class="player-label"></span
+                  ><strong id="name-X">Đang chờ</strong
+                  ><span id="score-X" class="player-summary">0 điểm</span
+                  ><span id="you-X" class="you" hidden>BẠN</span>
+                </div>
+                <time id="clock-X" class="player-clock">30:00</time>
+              </div>
+              <div class="player" id="player-O">
+                <span class="player-avatar o"
+                  ><img
+                    id="avatar-O"
+                    alt=""
+                    referrerpolicy="no-referrer"
+                    draggable="false"
+                    hidden
+                  /><span id="avatar-fallback-O">?</span></span
+                >
+                <div>
+                  <span id="role-O" class="player-label"></span
+                  ><strong id="name-O">Đang chờ</strong
+                  ><span id="score-O" class="player-summary">0 điểm</span
+                  ><span id="you-O" class="you" hidden>BẠN</span>
+                </div>
+                <time id="clock-O" class="player-clock">30:00</time>
+              </div>
+            </section>
+            <button id="connect-player" class="primary" hidden>
+              Xác nhận người chơi
+            </button>
+            <section id="pair-panel" class="status-card" hidden>
+              <p class="eyebrow">KẾT NỐI TÀI KHOẢN</p>
+              <h2 id="pair-code"></h2>
+              <p>
+                Trong tin phòng Discord, bấm
+                <strong>Kết nối tài khoản</strong> và nhập mã này. Mã có hiệu
+                lực 5 phút. Chỉ nhập mã từ tab của chính bạn.
+              </p>
+              <p id="pair-status" role="status">
+                Đang chờ xác nhận trong Discord…
+              </p>
+            </section>
+            <button id="leave" class="leave-button" hidden>Đầu hàng</button>
+            <section class="rules">
+              <h3>Luật chơi</h3>
+              <p id="rules-detail">1 quan = 10 điểm · Cho ăn quan non</p>
+            </section>
+            <div
+              id="rule-badges"
+              class="rule-badges"
+              aria-label="Cấu hình phòng"
+            ></div>
+            <section id="history-panel" class="history-panel">
+              <h2>Lịch sử lượt rải</h2>
+              <p id="history-count">Chưa có lượt rải</p>
+              <ol id="move-history"></ol>
+              <p id="debt-detail"></p>
+            </section>
+          </aside>
+        </div>
+      </main>
+      <footer class="page-footer">
+        <span>CHƠI VUI · KHÔNG CƯỢC XU</span><span>Ô ĂN QUAN / HAI NGƯỜI</span>
+      </footer>
+    </div>
+    <dialog id="leave-dialog">
+      <h2 id="leave-dialog-title">Đầu hàng ván đấu?</h2>
+      <p id="leave-dialog-detail">Đối thủ sẽ được tính thắng ván này.</p>
+      <div class="actions">
+        <button id="keep-playing">Tiếp tục chơi</button
+        ><button id="confirm-leave" class="danger">Đầu hàng</button>
+      </div>
+    </dialog>
+  </body>
+</html>

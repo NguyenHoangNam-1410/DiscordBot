@@ -1,5 +1,18 @@
 [
   {
+    "id": "e3bbefa5-3036-46af-9f8a-3f2c5599905f",
+    "updatedAt": "2026-11-09T07:44:23.737Z",
+    "auditedAt": "2026-11-09T07:44:23.737Z",
+    "title": "Ô ăn quan: đối kháng hai người trên web",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Thêm /oanquan choi, phong và cauhinh; chơi hai người, có khán giả, avatar và giao diện PC/điện thoại.",
+      "Rải từng viên, bốc tiếp và đập ô ăn quân có hiệu ứng đồng bộ. Đồng hồ tạm dừng khi diễn hiệu ứng; tải lại trang tiếp tục đúng tiến độ.",
+      "Bàn 50 dân, 2 quan; 1 quan bằng 10 điểm, cho ăn quan non. Hỗ trợ ăn liên hoàn, rải lại/vay dân, thu quân và quyết toán nợ khi chốt ván; đọc luật tại /webgame hoặc nút Luật chơi."
+    ]
+  },
+  {
     "id": "5661727f-5f08-4b27-8737-c12b30eef01e",
     "updatedAt": "2026-11-09T07:21:28.358Z",
     "auditedAt": "2026-11-09T07:21:28.358Z",

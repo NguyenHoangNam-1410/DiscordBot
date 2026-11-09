@@ -21,6 +21,7 @@ function getOperationalHealth() {
     (SELECT COUNT(*) FROM walls_rooms WHERE status IN ('waiting','playing')) +
     (SELECT COUNT(*) FROM dots_rooms WHERE status IN ('waiting','playing')) +
     (SELECT COUNT(*) FROM santorini_rooms WHERE status IN ('waiting','playing')) +
+    (SELECT COUNT(*) FROM oanquan_rooms WHERE status IN ('waiting','playing')) +
     (SELECT COUNT(*) FROM cothu_rooms WHERE status IN ('waiting','playing')) +
     (SELECT COUNT(*) FROM blokus_rooms WHERE status IN ('waiting','playing')) +
     (SELECT COUNT(*) FROM coquay_rooms WHERE status IN ('waiting','playing')) +

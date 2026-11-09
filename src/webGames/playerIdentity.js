@@ -1,6 +1,7 @@
 "use strict";
 
 const PLAYER_LABELS = Object.freeze({
+  oanquan: Object.freeze({ X: "Bên xanh", O: "Bên cam" }),
   cothu: Object.freeze({ X: "Đỏ ●", O: "Xanh ◆" }),
   santorini: Object.freeze({ X: "Thợ xanh", O: "Thợ cam" }),
   coquay: Object.freeze({ X: "Chủ bàn", O: "Đối thủ" }),

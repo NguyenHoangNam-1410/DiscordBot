@@ -97,6 +97,10 @@ const PAGES = Object.freeze({
         "`/coquay choi [mau] [vatpham] [thoigian]` — đấu hai người trên web, mặc định 5 HP và 4 đạo cụ. Mở hộp mỗi hiệp nạp đạn, có khán giả, xoay bàn 180°, âm thanh và hiệu ứng. `/coquay phong` xem phòng; `/webgame` xem luật. Không cược xu, không thành tựu.",
       ],
       [
+        "◉ Ô ăn quan",
+        "`/oanquan choi [nguoitruoc] [thoigian]` — hai người trên web, rải từng viên và đập ô ăn quân. 1 quan = 10 điểm, cho ăn quan non; tự rải lại và tính nợ dân. `/oanquan phong` xem phòng, `/webgame` xem luật. Có khán giả và UI PC/mobile; không cược xu.",
+      ],
+      [
         "🐾 Cờ thú",
         "`/cothu choi` — hai người, bàn 7×9, 8 thú/bên. Chọn `nguoitruoc`, `thoigian`; Đỏ đi trước, đồng hồ chạy khi đối thủ tham gia. `/cothu phong` xem phòng; `/webgame` đọc ngoại lệ Chuột/Voi, sông, bẫy và luật hòa. Có khán giả, lịch sử và UI PC/mobile; không cược hay thưởng tài nguyên.",
       ],

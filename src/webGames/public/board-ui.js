@@ -7,6 +7,17 @@ globalThis.WebGameBoardUI = (() => {
       text: `${rules.timeMinutes ?? 30} phút/người`,
       title: "Đồng hồ riêng, chỉ chạy khi tới lượt và không cộng giờ.",
     };
+    if (game === "oanquan")
+      return [
+        { text: "10 ô dân · 2 ô quan", key: true },
+        { text: "1 quan = 10 điểm" },
+        { text: rules.allowYoungQuan ? "Cho ăn quan non" : "Quan cần ≥5 dân" },
+        {
+          text:
+            (state.playerLabels?.[state.first] || "Chủ phòng") + " đi trước",
+        },
+        clock,
+      ];
     if (game === "cothu")
       return [
         { text: "Cờ thú · 7×9", key: true },

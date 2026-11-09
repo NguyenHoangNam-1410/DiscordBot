@@ -4,6 +4,29 @@
 ((root) => {
   const games = [
     {
+      id: "oanquan",
+      name: "Ô ăn quan",
+      summary: "Rải từng viên, tính nhịp đập ô và thu quan về kho.",
+      setup: [
+        "Bàn có 10 ô dân (mỗi ô 5 dân) và 2 ô quan (mỗi ô 1 quan). Không cần bố trí. Xanh là chủ phòng; Cam là khách. Người đi trước được chọn khi mở phòng.",
+        "1 dân = 1 điểm; 1 quan = 10 điểm. Cho phép ăn quan non. Đồng hồ mặc định 30 phút/người, tạm dừng trong animation rải / ăn quân.",
+      ],
+      play: [
+        "Chọn một ô dân có quân ở phía mình → chọn hướng theo mũi tên → Rải quân. Chưa xác nhận thì chưa gửi nước đi.",
+        "Bốc toàn bộ dân trong ô, rải mỗi ô kế tiếp một viên, kể cả ô quan. Hết nắm mà ô kế là ô dân có quân: bốc ô đó và rải tiếp cùng hướng.",
+        "Nếu ô kế là ô dân trống, đập ô trống rồi ăn toàn bộ ô liền sau có quân. Tiếp tục ăn khi còn cặp ô dân trống → ô có quân.",
+        "Dừng khi ô kế là ô quan, hai ô liền nhau trống hoặc không còn chuỗi ăn. Quan non vẫn được ăn khi nằm sau ô dân trống.",
+      ],
+      special: [
+        "Đến lượt mà 5 ô dân của bạn trống: tự lấy 5 dân từ kho để đặt mỗi ô 1 dân. Thiếu thì vay đúng phần thiếu từ kho đối thủ; nợ được trừ/cộng vào điểm cuối. Không đổi quan thành dân để rải.",
+        "Hết cả hai quan: thu dân ở mỗi hàng về bên đó. Dân còn trong ô quan trái về Xanh, ô quan phải về Cam. Nếu không đủ dân để rải lại (kể cả vay), cũng thu quân và chốt điểm theo cách này.",
+        "Lặp cùng thế, kho, nợ và bên đến lượt 3 lần hoặc đạt 500 lượt: thu quân và chốt điểm. Mũi tên tự đổi theo góc nhìn; Xoay bàn chỉ đổi cách nhìn.",
+      ],
+      win: ["Nhiều điểm hơn sau khi thu quân và quyết toán nợ."],
+      lose: ["Ít điểm hơn sau khi thu quân và quyết toán nợ."],
+      draw: ["Bằng điểm sau khi chốt ván."],
+    },
+    {
       id: "cothu",
       name: "Cờ thú",
       summary: "Dẫn 8 loài thú qua sông, vượt bẫy và chiếm hang địch.",
