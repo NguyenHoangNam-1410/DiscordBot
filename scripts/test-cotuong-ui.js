@@ -218,7 +218,7 @@ async function main() {
   await send("Page.enable");
   await send("Page.addScriptToEvaluateOnNewDocument", {
     source:
-      "window.__motions=[];window.__layout=[];window.__posted=[];const nativeFetch=window.fetch;window.fetch=(url,opts)=>{if(String(url).endsWith('/move'))__posted.push(JSON.parse(opts.body));return nativeFetch(url,opts);};",
+      "window.__motions=[];window.__layout=[];window.__posted=[];window.__slides=[];const nativeAnimate=Element.prototype.animate;Element.prototype.animate=function(frames,options){if(this.classList.contains('piece'))__slides.push({frames,cell:this.closest('.cell')?.dataset.cell});return nativeAnimate.call(this,frames,options);};const nativeFetch=window.fetch;window.fetch=(url,opts)=>{if(String(url).endsWith('/move'))__posted.push(JSON.parse(opts.body));return nativeFetch(url,opts);};",
   });
   await send("Emulation.setDeviceMetricsOverride", {
     width: 1280,
@@ -351,6 +351,48 @@ async function main() {
     await travel(p, q, touch);
     await release(q, touch);
   }
+  async function rightStart(cell) {
+    const p = await point(cell);
+    await send("Input.dispatchMouseEvent", {
+      type: "mouseMoved",
+      buttons: 0,
+      ...p,
+    });
+    await send("Input.dispatchMouseEvent", {
+      type: "mousePressed",
+      button: "right",
+      buttons: 2,
+      clickCount: 1,
+      ...p,
+    });
+    return p;
+  }
+  async function rightTravel(a, b) {
+    for (let n = 1; n <= 4; n++)
+      await send("Input.dispatchMouseEvent", {
+        type: "mouseMoved",
+        button: "right",
+        buttons: 2,
+        x: a.x + ((b.x - a.x) * n) / 4,
+        y: a.y + ((b.y - a.y) * n) / 4,
+      });
+  }
+  async function rightRelease(p) {
+    await send("Input.dispatchMouseEvent", {
+      type: "mouseReleased",
+      button: "right",
+      buttons: 0,
+      clickCount: 1,
+      ...p,
+    });
+    await delay(40);
+  }
+  async function mark(a, b = a) {
+    const p = await rightStart(a),
+      q = await point(b);
+    if (a !== b) await rightTravel(p, q);
+    await rightRelease(q);
+  }
   await geometry();
   await screenshot("cotuong-desktop.png");
   await click('[data-cell="70"]');
@@ -369,8 +411,98 @@ async function main() {
   await drop(81, outside);
   assert.equal(await evaluate("state.ply"), 0);
   assert.equal(await evaluate("pieceAt(81)?.type"), "R");
+  // Returning to the source is a silent no-op, even after the drag threshold.
   let p = await press(81),
     q = await point(72);
+  await travel(p, q);
+  await travel(q, p);
+  await release(p);
+  assert.equal(await evaluate("state.ply"), 0);
+  assert.equal(await evaluate("__posted.length"), 0);
+  assert.equal(await evaluate('$("notice").hidden'), true);
+  // Right-button chord cancels a held piece and must not leave a planning mark.
+  p = await press(81);
+  q = await point(72);
+  await travel(p, q);
+  await send("Input.dispatchMouseEvent", {
+    type: "mousePressed",
+    button: "right",
+    buttons: 3,
+    clickCount: 1,
+    ...q,
+  });
+  await send("Input.dispatchMouseEvent", {
+    type: "mouseReleased",
+    button: "right",
+    buttons: 1,
+    clickCount: 1,
+    ...q,
+  });
+  await release(q);
+  assert.equal(await evaluate("ghost"), null);
+  assert.equal(await evaluate("state.ply"), 0);
+  assert.equal(await evaluate("annotations.size"), 0);
+  assert.equal(await evaluate('$("notice").hidden'), true);
+  // Native right-click toggles circles; right-drag toggles directed arrows.
+  await mark(40);
+  assert.equal(await evaluate("annotations.size"), 1);
+  assert.equal(
+    await evaluate('document.querySelectorAll(".plan-circle").length'),
+    1,
+  );
+  await mark(40);
+  assert.equal(await evaluate("annotations.size"), 0);
+  await mark(54, 36);
+  assert.equal(
+    await evaluate('document.querySelectorAll(".plan-arrow").length'),
+    1,
+  );
+  await mark(54, 36);
+  assert.equal(await evaluate("annotations.size"), 0);
+  for (const [to, path] of [
+    [21, "M450 450 L450 350 L350 250"],
+    [23, "M450 450 L450 350 L550 250"],
+    [57, "M450 450 L450 550 L350 650"],
+    [59, "M450 450 L450 550 L550 650"],
+    [29, "M450 450 L350 450 L250 350"],
+    [33, "M450 450 L550 450 L650 350"],
+    [47, "M450 450 L350 450 L250 550"],
+    [51, "M450 450 L550 450 L650 550"],
+  ]) {
+    await mark(40, to);
+    assert.equal(
+      await evaluate('document.querySelector(".plan-arrow").getAttribute("d")'),
+      path,
+    );
+    await mark(40, to);
+    assert.equal(await evaluate("annotations.size"), 0);
+  }
+  await mark(40);
+  await mark(54, 36);
+  await mark(82, 65);
+  assert.equal(await evaluate("annotations.size"), 3);
+  assert.equal(
+    await evaluate("__posted.length"),
+    0,
+    "Planning never posts a game move",
+  );
+  const annotationsBefore = await evaluate("JSON.stringify([...annotations])");
+  await click("#rotate-board");
+  assert.equal(
+    await evaluate("JSON.stringify([...annotations])"),
+    annotationsBefore,
+  );
+  assert.equal(
+    await evaluate(
+      '[...document.querySelectorAll(".plan-arrow")].at(-1).getAttribute("d")',
+    ),
+    "M750 50 L750 150 L650 250",
+  );
+  await screenshot("cotuong-planning-rotated.png");
+  await click("#rotate-board");
+  await screenshot("cotuong-planning.png");
+  p = await press(81);
+  q = await point(72);
   await travel(p, q);
   assert.equal(await evaluate("!!ghost"), true);
   await screenshot("cotuong-drag.png");
@@ -380,6 +512,22 @@ async function main() {
   assert.equal(await evaluate("ghost"), null);
   await drop(81, 72);
   await until("state.ply===1&&!pending");
+  assert.equal(
+    await evaluate("annotations.size"),
+    0,
+    "Own moves clear planning",
+  );
+  assert.equal(
+    await evaluate(
+      'document.querySelectorAll(".plan-arrow,.plan-circle").length',
+    ),
+    0,
+  );
+  assert.equal(
+    await evaluate("__slides.length"),
+    0,
+    "Dragging does not add a transition",
+  );
   assert.equal(await evaluate("__posted.length"), 1);
   assert.equal(await evaluate("state.history[0].iccs"), "a0a1");
   assert.equal(await evaluate("pieceAt(72)?.type"), "R");
@@ -403,6 +551,7 @@ async function main() {
   await until(
     'typeof state!=="undefined"&&state?.me==="X"&&state.ply===2&&connected',
   );
+  await mark(40);
   // A newer authoritative move while dragging cancels the old gesture.
   p = await press(72);
   q = await point(63);
@@ -411,12 +560,31 @@ async function main() {
   room = fixture.store.get(room.id);
   fixture.store.move(room.id, users.X.id, { from: 54, to: 45 }, room.version);
   await until("state.ply===3&&ghost===null");
+  assert.equal(await evaluate("annotations.size"), 0);
   await release(q);
   assert.equal(await evaluate("state.ply"), 3);
   assert.equal(await evaluate("__posted.length"), 0);
   // Restore the turn by going as Black in the server fixture, then use touch on mobile.
   room = fixture.store.get(room.id);
+  await mark(40);
+  const planStart = await rightStart(82),
+    planEnd = await point(65);
+  await rightTravel(planStart, planEnd);
+  assert.equal(await evaluate("!!planningGesture"), true);
   fixture.store.move(room.id, users.O.id, { from: 27, to: 36 }, room.version);
+  await until("state.ply===4&&planningGesture===null");
+  await rightRelease(planEnd);
+  assert.equal(
+    await evaluate("annotations.size"),
+    0,
+    "Opponent moves clear completed and unfinished marks",
+  );
+  assert.equal(
+    await evaluate(
+      'document.querySelectorAll(".plan-arrow,.plan-circle").length',
+    ),
+    0,
+  );
   await until("state.ply===4&&canAct()");
   for (const [width, height] of [
     [390, 844],
@@ -507,6 +675,87 @@ async function main() {
       ok: true,
       cotuongUI:
         "reused glyphs, centered intersection pieces, native mouse/touch drag, invalid/outside/cancel/stale gestures, immediate commit once, two seats/rotation, desktop/portrait/landscape, rules/history, live spectator/results",
+    }),
+  );
+  // A new fixture exercises tap transitions, captures, rejection and reduced motion.
+  fixture.room = fixture.store.join(
+    fixture.store.create({
+      guildId: "cotuong-tap",
+      channelId: "c",
+      user: users.X,
+    }).id,
+    users.O,
+  );
+  await send("Emulation.setDeviceMetricsOverride", {
+    width: 1280,
+    height: 950,
+    deviceScaleFactor: 1,
+    mobile: false,
+  });
+  await send("Emulation.setTouchEmulationEnabled", { enabled: false });
+  await send("Page.navigate", { url: config.origin + "/fixture/cotuong" });
+  await until('typeof state!=="undefined"&&state?.me==="X"&&connected');
+  await mark(40);
+  await click('[data-cell="81"]');
+  await click('[data-cell="72"]');
+  await until("state.ply===1&&!pending");
+  assert.equal(await evaluate("__slides.length"), 1);
+  assert.equal(await evaluate("__slides[0].cell"), "72");
+  assert.notEqual(
+    await evaluate("__slides[0].frames[0].transform"),
+    "translate(0,0)",
+  );
+  await delay(250);
+  assert.equal(await evaluate("slide"), null);
+  assert.equal(
+    await evaluate("__slides.length"),
+    1,
+    "SSE/POST echoes animate once",
+  );
+  assert.equal(await evaluate("annotations.size"), 0);
+  room = fixture.store.get(fixture.room.id);
+  fixture.store.move(room.id, users.O.id, { from: 0, to: 9 }, room.version);
+  await until("state.ply===2&&canAct()");
+  await click('[data-cell="70"]');
+  await click('[data-cell="7"]');
+  await until("state.ply===3&&!pending");
+  assert.equal(await evaluate("__slides.length"), 2);
+  assert.equal(await evaluate("state.lastMove.iccs"), "h2h9");
+  assert.equal(await evaluate("pieceAt(7)?.type"), "C");
+  room = fixture.store.get(fixture.room.id);
+  fixture.store.move(room.id, users.O.id, { from: 9, to: 18 }, room.version);
+  await until("state.ply===4&&canAct()");
+  await evaluate(
+    `window.__oldFetch=window.fetch;window.fetch=(url,options)=>String(url).endsWith('/move')?Promise.resolve(new Response(JSON.stringify({error:'Rejected test move'}),{status:409,headers:{'Content-Type':'application/json'}})):__oldFetch(url,options)`,
+  );
+  await click('[data-cell="72"]');
+  await click('[data-cell="63"]');
+  await until("!pending");
+  assert.equal(await evaluate("state.ply"), 4);
+  assert.equal(
+    await evaluate("__slides.length"),
+    2,
+    "Rejected moves do not animate",
+  );
+  assert.equal(await evaluate("pieceAt(72)?.type"), "R");
+  await evaluate("window.fetch=__oldFetch");
+  await send("Emulation.setEmulatedMedia", {
+    features: [{ name: "prefers-reduced-motion", value: "reduce" }],
+  });
+  await click('[data-cell="72"]');
+  await click('[data-cell="63"]');
+  await until("state.ply===5&&!pending");
+  assert.equal(
+    await evaluate("__slides.length"),
+    2,
+    "Reduced motion skips the transition",
+  );
+  assert.deepEqual(errors, []);
+  console.log(
+    JSON.stringify({
+      ok: true,
+      cotuongUX:
+        "silent return, right-button cancellation, local toggles, eight horse arrow bends/rotation, both sides clear planning, tap-only accepted transitions/captures/deduplication/reduced motion",
     }),
   );
   await send("Browser.close").catch(() => {});

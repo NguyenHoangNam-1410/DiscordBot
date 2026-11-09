@@ -21,6 +21,13 @@ let from = null,
   hover = null;
 const cells = [],
   coord = (n) => String.fromCharCode(97 + (n % 9)) + (9 - Math.floor(n / 9));
+const annotations = new Map();
+let planningGesture = null,
+  planningLayer = null,
+  planningKey = null,
+  moveIntent = null,
+  slide = null,
+  suppressContextUntil = 0;
 const canAct = () =>
   !!(
     state?.me &&
@@ -37,6 +44,7 @@ const legal = (a, b) =>
 function resetPreview() {
   from = null;
   cancelDrag();
+  cancelPlanningGesture();
 }
 function select(cell) {
   if (!canAct()) return;
@@ -102,6 +110,189 @@ function cancelDrag() {
   if (old && cells[old.cell]?.hasPointerCapture(old.id))
     cells[old.cell].releasePointerCapture(old.id);
 }
+function svgNode(tag, attributes = {}) {
+  const node = document.createElementNS("http://www.w3.org/2000/svg", tag);
+  for (const [key, value] of Object.entries(attributes))
+    node.setAttribute(key, value);
+  return node;
+}
+function planningPoint(cell) {
+  const view = rotated ? 89 - cell : cell;
+  return { x: 50 + (view % 9) * 100, y: 50 + Math.floor(view / 9) * 100 };
+}
+function planningPath(a, b) {
+  const start = planningPoint(a),
+    end = planningPoint(b);
+  const dx = end.x - start.x,
+    dy = end.y - start.y;
+  let path = `M${start.x} ${start.y}`;
+  if (Math.abs(dx) === 200 && Math.abs(dy) === 100)
+    path += ` L${start.x + Math.sign(dx) * 100} ${start.y}`;
+  else if (Math.abs(dx) === 100 && Math.abs(dy) === 200)
+    path += ` L${start.x} ${start.y + Math.sign(dy) * 100}`;
+  return path + ` L${end.x} ${end.y}`;
+}
+function renderPlanning() {
+  if (!planningLayer) {
+    const overlay = svgNode("svg", {
+      class: "board-planning",
+      viewBox: "0 0 900 1000",
+      "aria-hidden": "true",
+    });
+    const defs = svgNode("defs"),
+      marker = svgNode("marker", {
+        id: "cotuong-plan-head",
+        viewBox: "0 0 30 30",
+        refX: "26",
+        refY: "15",
+        markerWidth: "3",
+        markerHeight: "3",
+        orient: "auto",
+      });
+    marker.append(svgNode("path", { d: "M0 0 L30 15 L0 30 L7 15 Z" }));
+    defs.append(marker);
+    planningLayer = svgNode("g");
+    overlay.append(defs, planningLayer);
+    $("board").append(overlay);
+  }
+  const key = JSON.stringify([
+    rotated,
+    [...annotations.keys()],
+    planningGesture && [planningGesture.start, planningGesture.to],
+  ]);
+  if (key === planningKey) return;
+  planningKey = key;
+  planningLayer.replaceChildren();
+  const draw = (mark, draft = false) => {
+    const point = planningPoint(mark.from);
+    planningLayer.append(
+      mark.from === mark.to
+        ? svgNode("circle", {
+            cx: point.x,
+            cy: point.y,
+            r: "38",
+            class: "plan-circle" + (draft ? " plan-draft" : ""),
+          })
+        : svgNode("path", {
+            d: planningPath(mark.from, mark.to),
+            class: "plan-arrow" + (draft ? " plan-draft" : ""),
+            "marker-end": "url(#cotuong-plan-head)",
+          }),
+    );
+  };
+  for (const mark of annotations.values()) draw(mark);
+  if (planningGesture && planningGesture.to !== null)
+    draw({ from: planningGesture.start, to: planningGesture.to }, true);
+}
+function cancelPlanningGesture() {
+  const old = planningGesture;
+  planningGesture = null;
+  if (old && $("board").hasPointerCapture(old.id))
+    $("board").releasePointerCapture(old.id);
+}
+function cancelHeldPiece() {
+  suppressContextUntil = Date.now() + 800;
+  resetPreview();
+  render();
+}
+function cancelSlide() {
+  const old = slide;
+  slide = null;
+  old?.animation.cancel();
+  old?.cell.classList.remove("move-sliding");
+}
+function startSlide(intent) {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cell = cells[intent.to],
+    piece = cell?.querySelector(".piece");
+  if (!piece || !piece.animate) return;
+  cancelSlide();
+  const a = cells[intent.from].getBoundingClientRect();
+  const b = cell.getBoundingClientRect();
+  const dx = a.x + a.width / 2 - b.x - b.width / 2;
+  const dy = a.y + a.height / 2 - b.y - b.height / 2;
+  cell.classList.add("move-sliding");
+  const animation = piece.animate(
+    [
+      { transform: `translate(${dx}px,${dy}px)` },
+      { transform: "translate(0,0)" },
+    ],
+    { duration: 210, easing: "cubic-bezier(.2,.7,.25,1)" },
+  );
+  const current = (slide = { animation, cell });
+  const finish = () => {
+    if (slide === current) {
+      cell.classList.remove("move-sliding");
+      slide = null;
+    }
+  };
+  animation.onfinish = finish;
+  animation.oncancel = finish;
+}
+$("board").addEventListener("contextmenu", (e) => e.preventDefault());
+window.addEventListener(
+  "mousedown",
+  (e) => {
+    if (e.button === 2 && drag?.own) {
+      e.preventDefault();
+      cancelHeldPiece();
+    } else if (e.button === 0 && planningGesture) {
+      cancelPlanningGesture();
+      renderPlanning();
+    }
+  },
+  true,
+);
+window.addEventListener(
+  "contextmenu",
+  (e) => {
+    if (drag?.own) cancelHeldPiece();
+    if (Date.now() < suppressContextUntil) e.preventDefault();
+  },
+  true,
+);
+$("board").addEventListener("pointerdown", (e) => {
+  if (
+    e.button !== 2 ||
+    !state ||
+    document.querySelector("dialog[open]") ||
+    WebGameMobile.active()
+  )
+    return;
+  e.preventDefault();
+  if (drag?.own) return cancelHeldPiece();
+  const cell = cellAtPoint(e.clientX, e.clientY);
+  if (cell === null || planningGesture) return;
+  cancelDrag();
+  planningGesture = { id: e.pointerId, start: cell, to: cell };
+  $("board").setPointerCapture(e.pointerId);
+  renderPlanning();
+});
+$("board").addEventListener("pointermove", (e) => {
+  if (planningGesture?.id !== e.pointerId) return;
+  if (!(e.buttons & 2)) cancelPlanningGesture();
+  else planningGesture.to = cellAtPoint(e.clientX, e.clientY);
+  renderPlanning();
+});
+$("board").addEventListener("pointerup", (e) => {
+  if (planningGesture?.id !== e.pointerId || e.button !== 2) return;
+  e.preventDefault();
+  const start = planningGesture.start,
+    to = cellAtPoint(e.clientX, e.clientY);
+  cancelPlanningGesture();
+  if (to !== null) {
+    const key = start === to ? `circle:${start}` : `arrow:${start}:${to}`;
+    if (annotations.has(key)) annotations.delete(key);
+    else annotations.set(key, { from: start, to });
+  }
+  renderPlanning();
+});
+for (const event of ["pointercancel", "lostpointercapture"])
+  $("board").addEventListener(event, (e) => {
+    if (planningGesture?.id !== e.pointerId) return;
+    cancelPlanningGesture();
+    renderPlanning();
+  });
 function buildBoard() {
   if (cells.length) return;
   for (let i = 0; i < 90; i++) {
@@ -169,8 +360,12 @@ function buildBoard() {
         return;
       }
       if (d.moved) {
-        if (d.own && target !== null && legal(d.cell, target))
-          void commit(d.cell, target, d.version);
+        if (d.own && target === d.cell) {
+          from = d.cell;
+          notice("");
+          render();
+        } else if (d.own && target !== null && legal(d.cell, target))
+          void commit(d.cell, target, d.version, false);
         else {
           from = d.own ? d.cell : null;
           notice("Đã hủy: thả quân vào giao điểm hợp lệ.");
@@ -247,6 +442,7 @@ function renderBoard() {
     el.style.gridRow = 1 + Math.floor(v / 9);
     el.style.gridColumn = 1 + (v % 9);
     el.className = "cell";
+    if (slide?.cell === el) el.classList.add("move-sliding");
     if (p && canAct() && p.side === ownSide()) el.classList.add("own-piece");
     if (i === from) el.classList.add("selected");
     if (target) el.classList.add(p ? "legal-capture" : "legal");
@@ -283,6 +479,7 @@ function renderBoard() {
     "aria-label",
     "Cờ tướng 9 cột 10 hàng, " + (rotated ? "Đen" : "Đỏ") + " ở dưới",
   );
+  renderPlanning();
 }
 function moveText(m) {
   if (!m) return "Đỏ đi trước. Thả quân vào giao điểm hợp lệ để đi ngay.";
@@ -409,9 +606,18 @@ function render() {
   renderBoard();
   updateClock();
 }
-async function commit(a, b, version = state?.version) {
+async function commit(a, b, version = state?.version, animate = true) {
   if (!canAct() || version !== state.version || !legal(a, b)) return;
   const data = { roomId, version, from: a, to: b };
+  const intent = (moveIntent = {
+    roomId: state.id,
+    ply: state.ply + 1,
+    from: a,
+    to: b,
+    pieceId: pieceAt(a).id,
+    animate,
+    confirmed: false,
+  });
   cancelDrag();
   from = null;
   pending = true;
@@ -420,15 +626,17 @@ async function commit(a, b, version = state?.version) {
     accept(await api("/api/move", data));
     notice("");
   } catch (e) {
-    notice(e.message);
+    if (!intent.confirmed) notice(e.message);
     await refresh().catch(() => connection(false));
   } finally {
+    if (moveIntent === intent) moveIntent = null;
     pending = false;
     render();
   }
 }
 $("rotate-board").addEventListener("click", () => {
   resetPreview();
+  cancelSlide();
   rotated = !rotated;
   $("rotate-board").setAttribute("aria-pressed", String(rotated));
   render();
@@ -446,10 +654,17 @@ document.addEventListener("keydown", (e) => {
 for (const event of ["blur", "resize"])
   window.addEventListener(event, () => {
     cancelDrag();
+    cancelPlanningGesture();
+    cancelSlide();
     if (state) requestAnimationFrame(renderBoard);
   });
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) cancelDrag();
+  if (document.hidden) {
+    cancelDrag();
+    cancelPlanningGesture();
+    cancelSlide();
+    if (state) renderPlanning();
+  }
 });
 function accept(next) {
   if (
@@ -461,6 +676,30 @@ function accept(next) {
         next.serverNow <= state.serverNow))
   )
     return;
+  let transition = null;
+  if (!state || state.id !== next.id || next.ply > state.ply) {
+    annotations.clear();
+    cancelPlanningGesture();
+    cancelSlide();
+  }
+  if (
+    moveIntent &&
+    next.id === moveIntent.roomId &&
+    next.ply >= moveIntent.ply
+  ) {
+    const intent = moveIntent,
+      last = next.lastMove;
+    moveIntent = null;
+    if (
+      last?.ply === intent.ply &&
+      last.pieceId === intent.pieceId &&
+      last.from === intent.from &&
+      last.to === intent.to
+    ) {
+      intent.confirmed = true;
+      if (intent.animate) transition = intent;
+    }
+  }
   WebGameFeedback.update("cotuong", next);
   if (
     !state ||
@@ -486,6 +725,7 @@ function accept(next) {
     clearStoredPairing();
   }
   render();
+  if (transition) startSlide(transition);
 }
 function notice(message) {
   $("notice").textContent = message || "";
@@ -778,6 +1018,9 @@ async function pollPairing(attempt = pairAttempt) {
   pairTimer = setTimeout(() => pollPairing(attempt), 2000);
 }
 window.addEventListener("pagehide", () => {
+  cancelDrag();
+  cancelPlanningGesture();
+  cancelSlide();
   source?.close();
   source = null;
   pairing = false;

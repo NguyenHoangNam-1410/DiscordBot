@@ -1,5 +1,16 @@
 [
   {
+    "id": "19c65e0d-b5aa-4fd8-a7c6-6f10c3cb0a29",
+    "updatedAt": "2026-11-09T09:43:02.369Z",
+    "auditedAt": "2026-11-09T09:43:02.369Z",
+    "title": "Cờ tướng: tinh chỉnh thao tác",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Tinh chỉnh độ mượt và trải nghiệm thao tác trên bàn Cờ tướng."
+    ]
+  },
+  {
     "id": "553069fe-d5ad-4180-bdfb-c2e10baa3c04",
     "updatedAt": "2026-11-09T09:15:35.891Z",
     "auditedAt": "2026-11-09T09:15:35.891Z",

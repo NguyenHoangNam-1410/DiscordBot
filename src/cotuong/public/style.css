@@ -482,6 +482,38 @@ dialog::backdrop {
   width: 100%;
   height: 100%;
 }
+.cell.move-sliding {
+  z-index: 4;
+}
+.board-planning {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 6;
+  pointer-events: none;
+  fill: none;
+}
+.board-planning .plan-circle,
+.board-planning .plan-arrow {
+  stroke: #e99835;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.76;
+}
+.board-planning .plan-circle {
+  stroke-width: 7;
+}
+.board-planning .plan-arrow {
+  stroke-width: 10;
+}
+.board-planning marker path {
+  fill: #e99835;
+  stroke: none;
+}
+.board-planning .plan-draft {
+  opacity: 0.4;
+}
 .instruction {
   font-size: 12px;
   margin: 6px 0 0;
