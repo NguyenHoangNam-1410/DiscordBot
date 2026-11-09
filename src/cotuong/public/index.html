@@ -166,91 +166,98 @@
               </button>
             </div>
             <div class="board-scroll">
-              <div
-                id="board"
-                class="board"
-                role="group"
-                aria-label="Cờ tướng 9 cột 10 hàng"
-              >
-                <svg
-                  class="board-art"
-                  viewBox="0 0 900 1000"
-                  aria-hidden="true"
+              <div class="coordinate-frame">
+                <div
+                  id="board"
+                  class="board"
+                  role="group"
+                  aria-label="Cờ tướng 9 cột 10 hàng"
                 >
-                  <g>
-                    <path d="M50 50H850" />
-                    <path d="M50 150H850" />
-                    <path d="M50 250H850" />
-                    <path d="M50 350H850" />
-                    <path d="M50 450H850" />
-                    <path d="M50 550H850" />
-                    <path d="M50 650H850" />
-                    <path d="M50 750H850" />
-                    <path d="M50 850H850" />
-                    <path d="M50 950H850" />
-                    <path d="M50 50V450M50 550V950" />
-                    <path d="M150 50V450M150 550V950" />
-                    <path d="M250 50V450M250 550V950" />
-                    <path d="M350 50V450M350 550V950" />
-                    <path d="M450 50V450M450 550V950" />
-                    <path d="M550 50V450M550 550V950" />
-                    <path d="M650 50V450M650 550V950" />
-                    <path d="M750 50V450M750 550V950" />
-                    <path d="M850 50V450M850 550V950" />
-                    <path
-                      d="M50 450V550M850 450V550M350 50L550 250M550 50L350 250M350 750L550 950M550 750L350 950"
-                    />
-                    <path d="M131 243H143V231" />
-                    <path d="M131 257H143V269" />
-                    <path d="M169 243H157V231" />
-                    <path d="M169 257H157V269" />
-                    <path d="M731 243H743V231" />
-                    <path d="M731 257H743V269" />
-                    <path d="M769 243H757V231" />
-                    <path d="M769 257H757V269" />
-                    <path d="M131 743H143V731" />
-                    <path d="M131 757H143V769" />
-                    <path d="M169 743H157V731" />
-                    <path d="M169 757H157V769" />
-                    <path d="M731 743H743V731" />
-                    <path d="M731 757H743V769" />
-                    <path d="M769 743H757V731" />
-                    <path d="M769 757H757V769" />
-                    <path d="M69 343H57V331" />
-                    <path d="M69 357H57V369" />
-                    <path d="M231 343H243V331" />
-                    <path d="M231 357H243V369" />
-                    <path d="M269 343H257V331" />
-                    <path d="M269 357H257V369" />
-                    <path d="M431 343H443V331" />
-                    <path d="M431 357H443V369" />
-                    <path d="M469 343H457V331" />
-                    <path d="M469 357H457V369" />
-                    <path d="M631 343H643V331" />
-                    <path d="M631 357H643V369" />
-                    <path d="M669 343H657V331" />
-                    <path d="M669 357H657V369" />
-                    <path d="M831 343H843V331" />
-                    <path d="M831 357H843V369" />
-                    <path d="M69 643H57V631" />
-                    <path d="M69 657H57V669" />
-                    <path d="M231 643H243V631" />
-                    <path d="M231 657H243V669" />
-                    <path d="M269 643H257V631" />
-                    <path d="M269 657H257V669" />
-                    <path d="M431 643H443V631" />
-                    <path d="M431 657H443V669" />
-                    <path d="M469 643H457V631" />
-                    <path d="M469 657H457V669" />
-                    <path d="M631 643H643V631" />
-                    <path d="M631 657H643V669" />
-                    <path d="M669 643H657V631" />
-                    <path d="M669 657H657V669" />
-                    <path d="M831 643H843V631" />
-                    <path d="M831 657H843V669" />
-                  </g>
-                  <text x="450" y="515" text-anchor="middle">SÔNG</text>
-                </svg>
+                  <svg
+                    class="board-art"
+                    viewBox="0 0 900 1000"
+                    aria-hidden="true"
+                  >
+                    <g>
+                      <path d="M50 50H850" />
+                      <path d="M50 150H850" />
+                      <path d="M50 250H850" />
+                      <path d="M50 350H850" />
+                      <path d="M50 450H850" />
+                      <path d="M50 550H850" />
+                      <path d="M50 650H850" />
+                      <path d="M50 750H850" />
+                      <path d="M50 850H850" />
+                      <path d="M50 950H850" />
+                      <path d="M50 50V450M50 550V950" />
+                      <path d="M150 50V450M150 550V950" />
+                      <path d="M250 50V450M250 550V950" />
+                      <path d="M350 50V450M350 550V950" />
+                      <path d="M450 50V450M450 550V950" />
+                      <path d="M550 50V450M550 550V950" />
+                      <path d="M650 50V450M650 550V950" />
+                      <path d="M750 50V450M750 550V950" />
+                      <path d="M850 50V450M850 550V950" />
+                      <path
+                        d="M50 450V550M850 450V550M350 50L550 250M550 50L350 250M350 750L550 950M550 750L350 950"
+                      />
+                      <path d="M131 243H143V231" />
+                      <path d="M131 257H143V269" />
+                      <path d="M169 243H157V231" />
+                      <path d="M169 257H157V269" />
+                      <path d="M731 243H743V231" />
+                      <path d="M731 257H743V269" />
+                      <path d="M769 243H757V231" />
+                      <path d="M769 257H757V269" />
+                      <path d="M131 743H143V731" />
+                      <path d="M131 757H143V769" />
+                      <path d="M169 743H157V731" />
+                      <path d="M169 757H157V769" />
+                      <path d="M731 743H743V731" />
+                      <path d="M731 757H743V769" />
+                      <path d="M769 743H757V731" />
+                      <path d="M769 757H757V769" />
+                      <path d="M69 343H57V331" />
+                      <path d="M69 357H57V369" />
+                      <path d="M231 343H243V331" />
+                      <path d="M231 357H243V369" />
+                      <path d="M269 343H257V331" />
+                      <path d="M269 357H257V369" />
+                      <path d="M431 343H443V331" />
+                      <path d="M431 357H443V369" />
+                      <path d="M469 343H457V331" />
+                      <path d="M469 357H457V369" />
+                      <path d="M631 343H643V331" />
+                      <path d="M631 357H643V369" />
+                      <path d="M669 343H657V331" />
+                      <path d="M669 357H657V369" />
+                      <path d="M831 343H843V331" />
+                      <path d="M831 357H843V369" />
+                      <path d="M69 643H57V631" />
+                      <path d="M69 657H57V669" />
+                      <path d="M231 643H243V631" />
+                      <path d="M231 657H243V669" />
+                      <path d="M269 643H257V631" />
+                      <path d="M269 657H257V669" />
+                      <path d="M431 643H443V631" />
+                      <path d="M431 657H443V669" />
+                      <path d="M469 643H457V631" />
+                      <path d="M469 657H457V669" />
+                      <path d="M631 643H643V631" />
+                      <path d="M631 657H643V669" />
+                      <path d="M669 643H657V631" />
+                      <path d="M669 657H657V669" />
+                      <path d="M831 643H843V631" />
+                      <path d="M831 657H843V669" />
+                    </g>
+                    <text x="450" y="515" text-anchor="middle">SÔNG</text>
+                  </svg>
+                </div>
+                <div
+                  id="coordinate-axes"
+                  class="coordinate-axes"
+                  aria-hidden="true"
+                ></div>
               </div>
             </div>
             <p id="instruction" class="instruction" aria-live="polite">

@@ -1,5 +1,27 @@
 [
   {
+    "id": "e474a208-e452-4596-bc35-2be7e35a1b30",
+    "updatedAt": "2026-11-09T09:08:57.754Z",
+    "auditedAt": "2026-11-09T09:08:57.754Z",
+    "title": "Cờ tướng: tọa độ ngoài biên bàn",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Bỏ tọa độ chữ và số khỏi từng ô trên mặt bàn; đặt a–i và 0–9 ở bốn biên ngoài, thẳng theo giao điểm và tự đảo khi xoay bàn."
+    ]
+  },
+  {
+    "id": "82444401-c756-4fbe-881f-99b5f0b55451",
+    "updatedAt": "2026-11-09T09:05:06.814Z",
+    "auditedAt": "2026-11-09T09:05:06.814Z",
+    "title": "Cờ tướng: cân đối chữ trên quân",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Thu nhỏ chữ Hán trên quân cờ tướng khoảng 15%, giữ chữ ở giữa để thoáng và cân đối với viền quân trên PC và điện thoại."
+    ]
+  },
+  {
     "id": "046a16f0-43b1-41c5-8d7f-bcfa97a7f40b",
     "updatedAt": "2026-11-09T08:57:12.071Z",
     "auditedAt": "2026-11-09T08:57:12.071Z",

@@ -250,6 +250,40 @@ async function main() {
     assert(Math.abs(v.piece.w - v.piece.h) < 1);
     assert(Math.abs(v.piece.x + v.piece.w / 2 - v.cell.x - v.cell.w / 2) < 1);
     assert(Math.abs(v.piece.y + v.piece.h / 2 - v.cell.y - v.cell.h / 2) < 1);
+    const axes = await evaluate(`(() => {
+      const board = $('board').getBoundingClientRect();
+      const labels = [...document.querySelectorAll('#coordinate-axes .axis span')];
+      let aligned = true;
+      for (const edge of ['top','bottom','left','right']) {
+        const files = edge === 'top' || edge === 'bottom';
+        const spans = document.querySelectorAll('#coordinate-axes .axis-' + edge + ' span');
+        spans.forEach((span,i) => {
+          const view = files ? i : i * 9;
+          const cell = cells[rotated ? 89 - view : view].getBoundingClientRect();
+          const label = span.getBoundingClientRect();
+          if (Math.abs(files ? label.x+label.width/2-cell.x-cell.width/2 : label.y+label.height/2-cell.y-cell.height/2) > 1) aligned = false;
+        });
+      }
+      return {
+        count: labels.length,
+        inside: labels.some(el => { const r=el.getBoundingClientRect(); return Math.min(r.right,board.right)-Math.max(r.left,board.left)>.5 && Math.min(r.bottom,board.bottom)-Math.max(r.top,board.top)>.5; }),
+        aligned,
+        files: document.querySelector('#coordinate-axes .axis-top').textContent,
+        ranks: document.querySelector('#coordinate-axes .axis-left').textContent,
+        rotated,
+        onBoard: document.querySelectorAll('#board .coordinate').length
+      };
+    })()`);
+    assert.equal(axes.count, 38);
+    assert.equal(
+      axes.inside,
+      false,
+      "Coordinate labels stay outside the board",
+    );
+    assert.equal(axes.aligned, true, "Coordinates align with intersections");
+    assert.equal(axes.onBoard, 0);
+    assert.equal(axes.files, axes.rotated ? "ihgfedcba" : "abcdefghi");
+    assert.equal(axes.ranks, axes.rotated ? "0123456789" : "9876543210");
     return v;
   }
   async function point(cell) {

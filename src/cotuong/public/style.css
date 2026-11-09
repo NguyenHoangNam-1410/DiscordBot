@@ -329,7 +329,8 @@ dialog::backdrop {
   display: grid;
   grid-template-columns: repeat(9, minmax(0, 1fr));
   grid-template-rows: repeat(10, minmax(0, 1fr));
-  width: min(100%, 600px, max(240px, calc((100dvh - 310px) * 9 / 10)));
+  width: 100%;
+  height: 100%;
   aspect-ratio: 9/10;
   border: 3px solid #b58c52;
   border-radius: 9px;
@@ -378,15 +379,6 @@ dialog::backdrop {
 .cell:focus-visible {
   outline: 3px solid #318e88;
   outline-offset: -2px;
-}
-.cell .coordinate {
-  position: absolute;
-  bottom: 2px;
-  right: 3px;
-  color: #765c36;
-  font: clamp(7px, 1vw, 10px) monospace;
-  pointer-events: none;
-  z-index: 0;
 }
 .piece {
   width: 82%;
@@ -529,11 +521,6 @@ dialog::backdrop {
   padding-top: 4px;
   margin: 4px 0 0;
 }
-.wg-mobile[data-web-game="cotuong"] .cell .coordinate {
-  font-size: 6px;
-  right: 1px;
-  bottom: 0;
-}
 .wg-mobile[data-web-game="cotuong"] #move-history {
   max-height: none;
 }
@@ -584,5 +571,80 @@ dialog::backdrop {
     font-size: 12px;
     align-self: end;
     margin-bottom: 10px;
+  }
+}
+
+.coordinate-frame {
+  --axis-gutter: 14px;
+  position: relative;
+  width: min(
+    calc(100% - 2 * var(--axis-gutter)),
+    600px,
+    max(240px, calc((100dvh - 310px) * 9 / 10))
+  );
+  aspect-ratio: 9 / 10;
+  margin: var(--axis-gutter);
+}
+.coordinate-axes {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  color: var(--muted);
+  font: 11px/1 monospace;
+}
+.axis {
+  position: absolute;
+  display: grid;
+}
+.axis span {
+  display: grid;
+  place-items: center;
+}
+.axis-top,
+.axis-bottom {
+  left: 3px;
+  right: 3px;
+  height: var(--axis-gutter);
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+}
+.axis-top {
+  top: calc(-1 * var(--axis-gutter));
+}
+.axis-bottom {
+  bottom: calc(-1 * var(--axis-gutter));
+}
+.axis-left,
+.axis-right {
+  top: 3px;
+  bottom: 3px;
+  width: var(--axis-gutter);
+  grid-template-rows: repeat(10, minmax(0, 1fr));
+}
+.axis-left {
+  left: calc(-1 * var(--axis-gutter));
+}
+.axis-right {
+  right: calc(-1 * var(--axis-gutter));
+}
+.wg-mobile[data-web-game="cotuong"] .coordinate-frame {
+  --axis-gutter: 12px;
+  width: min(
+    calc(100% - 2 * var(--axis-gutter)),
+    calc(var(--wg-board-size, 100%) - 2 * var(--axis-gutter))
+  );
+}
+.wg-mobile[data-web-game="cotuong"] .coordinate-frame .board:not(.enlarged) {
+  width: 100%;
+  height: 100%;
+}
+.wg-mobile[data-web-game="cotuong"] .coordinate-axes {
+  font-size: 9px;
+}
+@media (orientation: landscape) {
+  .wg-mobile[data-web-game="cotuong"] .coordinate-frame {
+    --axis-gutter: 10px;
+  }
+  .wg-mobile[data-web-game="cotuong"] .coordinate-axes {
+    font-size: 8px;
   }
 }

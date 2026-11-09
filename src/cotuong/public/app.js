@@ -72,6 +72,10 @@ function pieceNode(p) {
     key = p.side === "red" ? p.type : p.type.toLowerCase(),
     ch = state.pieceCharacters[key];
   use.setAttribute("href", "#glyph-" + ch.codePointAt(0).toString(16));
+  use.setAttribute(
+    "transform",
+    "translate(32 32) scale(0.85) translate(-32 -32)",
+  );
   svg.append(use);
   return svg;
 }
@@ -211,9 +215,30 @@ function buildBoard() {
     $("board").append(el);
   }
 }
+function renderCoordinates() {
+  const target = $("coordinate-axes");
+  if (target.dataset.rotated === String(rotated)) return;
+  target.dataset.rotated = String(rotated);
+  target.replaceChildren();
+  for (const edge of ["top", "bottom", "left", "right"]) {
+    const axis = document.createElement("div");
+    axis.className = "axis axis-" + edge;
+    const files = edge === "top" || edge === "bottom";
+    const labels = files
+      ? [...(rotated ? "ihgfedcba" : "abcdefghi")]
+      : Array.from({ length: 10 }, (_, row) => String(rotated ? row : 9 - row));
+    for (const text of labels) {
+      const label = document.createElement("span");
+      label.textContent = text;
+      axis.append(label);
+    }
+    target.append(axis);
+  }
+}
 function renderBoard() {
   if (!state) return;
   buildBoard();
+  renderCoordinates();
   for (let i = 0; i < 90; i++) {
     const el = cells[i],
       v = rotated ? 89 - i : i,
@@ -240,11 +265,6 @@ function renderBoard() {
     if (el.dataset.piece !== key) {
       el.dataset.piece = key;
       el.replaceChildren();
-      const address = document.createElement("span");
-      address.className = "coordinate";
-      address.textContent = coord(i);
-      address.setAttribute("aria-hidden", "true");
-      el.append(address);
       if (p) el.append(pieceNode(p));
     }
     el.setAttribute(
