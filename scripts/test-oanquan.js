@@ -154,7 +154,17 @@ async function main() {
           direction: m.direction,
         });
       conserved(a.state);
-      assert(a.move.duration > 0 && a.move.duration <= 14000);
+      assert(a.move.duration > 0);
+      for (let i = 0; i < a.move.steps.length; i++) {
+        const step = a.move.steps[i],
+          span = (a.move.steps[i + 1]?.offset ?? a.move.duration) - step.offset;
+        if (step.type === "sow" || step.type === "seed")
+          assert.equal(
+            span,
+            1000,
+            "Each stone gets a full second, even on long turns",
+          );
+      }
       for (let n = 1; n < a.move.steps.length; n++)
         assert(a.move.steps[n].offset >= a.move.steps[n - 1].offset);
       if (!a.reason && !b.reason) {

@@ -163,23 +163,20 @@ function applyMove(input, { pit, direction }, inputRules = {}) {
           ? "X"
           : "O"
       : null;
-  // A bounded, server-timed replay; total duration includes the final settle frame.
+  // Keep a full second per pit; the server pauses both clocks for this timeline.
   const weights = {
-    pickup: 340,
-    sow: 180,
-    capture: 650,
-    refill: 500,
-    seed: 210,
-    collect: 300,
+    pickup: 1000,
+    sow: 1000,
+    capture: 1800,
+    refill: 1000,
+    seed: 1000,
+    collect: 1100,
   };
   let duration = 0;
   for (const step of steps) {
     step.offset = duration;
     duration += weights[step.type];
   }
-  const scale = Math.min(1, 14000 / duration);
-  for (const step of steps) step.offset = Math.round(step.offset * scale);
-  duration = Math.round(duration * scale);
   return {
     state: s,
     reason,

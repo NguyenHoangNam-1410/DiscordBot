@@ -67,19 +67,8 @@
             </div>
             <section id="controls" class="controls">
               <p id="instruction" aria-live="polite">
-                Chọn ô dân → Chọn hướng rải → Xác nhận
+                Kéo sang ô liền kề hoặc chọn ô rồi chọn ô liền kề để rải ngay.
               </p>
-              <div class="directions">
-                <button id="direction-minus" aria-pressed="false">
-                  ← Rải trái</button
-                ><button id="direction-plus" aria-pressed="false">
-                  Rải phải →
-                </button>
-              </div>
-              <div class="actions">
-                <button id="clear">Hủy</button
-                ><button id="confirm" class="primary" disabled>Rải quân</button>
-              </div>
             </section>
             <p id="last-action" class="last-action" aria-live="polite">
               Chưa có lượt rải.
@@ -167,6 +156,69 @@
         <span>CHƠI VUI · KHÔNG CƯỢC XU</span><span>Ô ĂN QUAN / HAI NGƯỜI</span>
       </footer>
     </div>
+    <div id="sowing-hand" class="sowing-hand" aria-hidden="true" hidden>
+      <svg class="hand-art" viewBox="0 0 100 120" fill="none">
+        <defs>
+          <linearGradient
+            id="hand-skin"
+            x1="22"
+            y1="20"
+            x2="82"
+            y2="108"
+            gradientUnits="userSpaceOnUse"
+          >
+            <stop stop-color="#ffe1b0" />
+            <stop offset=".55" stop-color="#eab17c" />
+            <stop offset="1" stop-color="#bb7953" />
+          </linearGradient>
+        </defs>
+        <g
+          fill="url(#hand-skin)"
+          stroke="#8f583e"
+          stroke-width="1.6"
+          stroke-linejoin="round"
+        >
+          <path d="M34 94 32 119H72L68 93" />
+          <g class="hand-finger little">
+            <path d="M68 68V40C68 31 80 31 80 40V76L69 85Z" />
+            <path d="M71 45H77M71 55H77" class="hand-crease" />
+          </g>
+          <g class="hand-finger ring">
+            <path d="M54 64V24C54 14 68 14 68 24V71L56 78Z" />
+            <path d="M57 32H65M57 45H65" class="hand-crease" />
+          </g>
+          <g class="hand-finger middle">
+            <path d="M40 64V17C40 6 54 6 54 17V69L41 78Z" />
+            <path d="M43 26H51M43 41H51" class="hand-crease" />
+          </g>
+          <g class="hand-finger index">
+            <path d="M26 71V28C26 18 40 18 40 28V72L29 82Z" />
+            <path d="M29 36H37M29 49H37" class="hand-crease" />
+          </g>
+          <path
+            d="M27 61C37 55 62 55 76 62L79 79C79 94 67 104 51 103 35 103 25 94 24 80Z"
+          />
+          <path
+            d="M32 81C25 80 20 75 14 67 8 59 16 53 23 59L39 72"
+            class="hand-thumb"
+          />
+          <path d="M35 82Q48 75 65 81M38 91Q51 94 62 88" class="hand-crease" />
+        </g>
+        <g class="held-stones" fill="#f2e1bc" stroke="#8d795c" stroke-width="1">
+          <ellipse cx="43" cy="67" rx="5" ry="4" />
+          <ellipse cx="54" cy="64" rx="5" ry="4" />
+          <ellipse cx="60" cy="72" rx="5" ry="4" />
+        </g>
+      </svg>
+      <span id="hand-release" class="hand-release"></span>
+      <span id="hand-load" class="hand-load">0</span>
+    </div>
+    <span
+      id="sowing-stone"
+      class="stone-flight hand-stone"
+      aria-hidden="true"
+      hidden
+    ></span>
     <dialog id="leave-dialog">
       <h2 id="leave-dialog-title">Đầu hàng ván đấu?</h2>
       <p id="leave-dialog-detail">Đối thủ sẽ được tính thắng ván này.</p>

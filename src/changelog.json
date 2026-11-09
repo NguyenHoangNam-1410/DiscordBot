@@ -1,5 +1,18 @@
 [
   {
+    "id": "c4d44f6c-a730-4817-a21d-d7a060c45431",
+    "updatedAt": "2026-11-09T13:23:11.415Z",
+    "auditedAt": "2026-11-09T13:23:11.415Z",
+    "title": "Ô ăn quan: kéo thả và bàn tay rải sỏi",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Đổi nhãn 10 ô dân thành a–j; bỏ nút chọn hướng, xác nhận và hủy nước đi.",
+      "Kéo thả vào ô liền kề hoặc chọn ô rồi chọn ô kế tiếp để rải ngay. Bấm lại ô đã chọn, chuột phải hoặc Escape để hủy; hỗ trợ cảm ứng và xoay bàn.",
+      "Thêm bàn tay gom, nắm, thả sỏi từng ô và đập ô trống khi ăn quân. Nhịp rải khoảng 1 giây/ô; sỏi rơi từ tay xuống bàn, đồng hồ tạm dừng đến hết hoạt ảnh."
+    ]
+  },
+  {
     "id": "f68c47fe-916b-43e1-85ae-410eea8d4dfb",
     "updatedAt": "2026-11-09T10:46:33.751Z",
     "auditedAt": "2026-11-09T10:46:33.751Z",

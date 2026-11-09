@@ -15,6 +15,8 @@ let pairTimer = null,
   pairVisible = false;
 let selected = null,
   direction = null,
+  drag = null,
+  suppressPointerClick = false,
   rotated = false,
   orientationOwner = null,
   replay = null,
@@ -39,22 +41,91 @@ const label = (i) =>
     : i === 6
       ? "Quan phải"
       : i < 6
-        ? "Xanh " + i
-        : "Cam " + (12 - i);
+        ? String.fromCharCode(96 + i)
+        : String.fromCharCode(113 - i);
 const choice = () =>
   state?.legalMoves.find(
     (m) => m.pit === selected && m.direction === direction,
   );
 function resetPreview() {
+  if (drag?.moved) suppressPointerClick = true;
+  cancelDrag();
   selected = null;
   direction = null;
 }
+function directionTo(i, origin = selected) {
+  if (origin === null) return null;
+  return [-1, 1].find((d) => (origin + d + 12) % 12 === i) ?? null;
+}
 function select(i) {
-  if (!canAct() || !state.legalMoves.some((m) => m.pit === i)) return;
-  selected = selected === i ? null : i;
-  direction = null;
+  if (!canAct()) return;
+  if (selected === i) {
+    resetPreview();
+  } else if (directionTo(i) !== null) {
+    direction = directionTo(i);
+    commitMove();
+    return;
+  } else if (state.legalMoves.some((m) => m.pit === i)) {
+    selected = i;
+    direction = null;
+  } else return;
   notice("");
   render();
+}
+function cancelDrag() {
+  if (!drag) return;
+  const gesture = drag;
+  drag = null;
+  if (cells[gesture.pit]?.hasPointerCapture(gesture.id))
+    cells[gesture.pit].releasePointerCapture(gesture.id);
+}
+function pitAt(e) {
+  const el = document
+    .elementFromPoint(e.clientX, e.clientY)
+    ?.closest("[data-pit]");
+  return el?.parentElement === $("board") ? Number(el.dataset.pit) : null;
+}
+function beginDrag(e, pit) {
+  if (e.button === 0 && e.isPrimary) suppressPointerClick = false;
+  if (
+    e.button !== 0 ||
+    !e.isPrimary ||
+    !canAct() ||
+    !state.legalMoves.some((m) => m.pit === pit)
+  )
+    return;
+  drag = { id: e.pointerId, pit, x: e.clientX, y: e.clientY, moved: false };
+  cells[pit].setPointerCapture(e.pointerId);
+}
+function moveDrag(e) {
+  if (!drag || drag.id !== e.pointerId) return;
+  if (!canAct()) {
+    resetPreview();
+    render();
+    return;
+  }
+  if (!drag.moved && Math.hypot(e.clientX - drag.x, e.clientY - drag.y) < 8)
+    return;
+  drag.moved = true;
+  selected = drag.pit;
+  direction = directionTo(pitAt(e));
+  if (e.pointerType !== "touch") e.preventDefault();
+  render();
+}
+function endDrag(e) {
+  if (!drag || drag.id !== e.pointerId) return;
+  const gesture = drag,
+    target = pitAt(e);
+  cancelDrag();
+  if (!gesture.moved) return;
+  suppressPointerClick = true;
+  selected = gesture.pit;
+  direction = directionTo(target);
+  if (canAct() && choice()) commitMove();
+  else {
+    resetPreview();
+    render();
+  }
 }
 function slot(i) {
   const n = (i + (rotated ? 6 : 0)) % 12,
@@ -76,26 +147,28 @@ function slot(i) {
         ? { r: 2, c: n + 1, rs: 1, cs: 1 }
         : { r: 1, c: 13 - n, rs: 1, cs: 1 };
 }
-function directionText(d) {
-  if (selected === null)
-    return d === 1 ? "Rải thuận vòng ↺" : "Rải ngược vòng ↻";
-  const a = slot(selected),
-    b = slot((selected + d + 12) % 12);
-  return b.c > a.c
-    ? "Rải sang phải →"
-    : b.c < a.c
-      ? "← Rải sang trái"
-      : b.r > a.r
-        ? "↓ Rải xuống"
-        : "↑ Rải lên";
-}
 function buildBoard() {
   if (cells.length) return;
   for (let i = 0; i < 12; i++) {
     const button = document.createElement("button");
     button.type = "button";
     button.dataset.pit = i;
-    button.addEventListener("click", () => select(i));
+    button.addEventListener("click", (e) => {
+      if (!e.detail || !suppressPointerClick) select(i);
+    });
+    button.addEventListener("pointerdown", (e) => beginDrag(e, i));
+    button.addEventListener("pointermove", moveDrag);
+    button.addEventListener("pointerup", endDrag);
+    button.addEventListener("pointercancel", () => {
+      resetPreview();
+      render();
+    });
+    button.addEventListener("lostpointercapture", () => {
+      if (drag?.pit === i) {
+        resetPreview();
+        render();
+      }
+    });
     cells.push(button);
     $("board").append(button);
   }
@@ -124,6 +197,7 @@ function renderBoard() {
       p = v.pits[i],
       s = slot(i),
       own = state.me && (state.me === "X" ? i > 0 && i < 6 : i > 6),
+      target = canAct() && directionTo(i) !== null,
       legal = canAct() && state.legalMoves.some((m) => m.pit === i);
     el.style.gridRow = s.r + " / span " + s.rs;
     el.style.gridColumn = s.c + " / span " + s.cs;
@@ -135,6 +209,7 @@ function renderBoard() {
       "pit" +
       (i === 0 || i === 6 ? " quan-pit" : i < 6 ? " home-x" : " home-o") +
       (legal ? " legal" : "") +
+      (target ? " direction-option" : "") +
       (selected === i ? " selected" : "") +
       (!replay && state.lastMove?.touched.includes(i) ? " recent" : "");
     if (
@@ -144,7 +219,7 @@ function renderBoard() {
     )
       el.classList.add("direction-target");
     for (const cls of transient) el.classList.add(cls);
-    el.setAttribute("aria-disabled", String(!legal));
+    el.setAttribute("aria-disabled", String(!legal && !target));
     el.setAttribute("aria-pressed", String(selected === i));
     el.setAttribute(
       "aria-label",
@@ -153,7 +228,8 @@ function renderBoard() {
         p.dan +
         " dân" +
         (p.quan ? ", 1 quan" : "") +
-        (own ? ", ô của bạn" : ""),
+        (own ? ", ô của bạn" : "") +
+        (target ? ", chọn để rải theo hướng này ngay" : ""),
     );
     if (el.dataset.contents !== p.dan + ":" + p.quan) {
       el.dataset.contents = p.dan + ":" + p.quan;
@@ -235,7 +311,11 @@ function applyStep(step, fx) {
     p.dan = 0;
     replay.origin = step.pit;
     replay.caption = "Bốc " + step.dan + " dân từ " + label(step.pit);
-    if (fx) pulse(cells[step.pit], "pickup-hit");
+    if (fx) {
+      pulse(cells[step.pit], "pickup-hit");
+      for (let n = 0; n < Math.min(3, step.dan); n++)
+        flight(cells[step.pit], $("hand-release"));
+    }
   }
   if (step.type === "sow") {
     p.dan++;
@@ -243,7 +323,6 @@ function applyStep(step, fx) {
     replay.caption =
       "Rải vào " + label(step.pit) + " · Còn " + step.hand + " dân trên tay";
     if (fx) {
-      flight(cells[replay.origin], cells[step.pit]);
       pulse(cells[step.pit], "sow-hit");
     }
     replay.origin = step.pit;
@@ -264,7 +343,6 @@ function applyStep(step, fx) {
       (step.quan ? " + 1 quan" : "");
     if (fx) {
       pulse(cells[step.pit], "capture-hit");
-      if (step.gap !== null) pulse(cells[step.gap], "capture-hit");
       flight(cells[step.pit], $("bank-" + step.mark), true);
       pulse($("bank-" + step.mark), "bank-hit");
     }
@@ -274,17 +352,178 @@ function applyStep(step, fx) {
     const lender = step.mark === "X" ? "O" : "X";
     v.captured[lender].dan -= step.loan;
     v.debt[step.mark] += step.loan;
+    replay.hand = 5;
     replay.caption =
       "Rải lại 5 dân" +
       (step.loan ? " · Vay " + step.loan + " dân" : " từ kho");
   }
   if (step.type === "seed") {
     p.dan = 1;
+    replay.hand--;
     if (fx) {
-      flight($("bank-" + step.mark), cells[step.pit]);
       pulse(cells[step.pit], "sow-hit");
     }
   }
+}
+// All poses and landings follow server time, including reconnects and background tabs.
+const settlePhase = (step) =>
+  ({
+    pickup: 0.62,
+    sow: 0.9,
+    capture: 0.94,
+    collect: 0.94,
+    refill: 0.55,
+    seed: 0.9,
+  })[step.type] ?? 0;
+function stepDuration(m, i) {
+  return (m.steps[i + 1]?.offset ?? m.duration) - m.steps[i].offset;
+}
+const clamp = (n) => Math.max(0, Math.min(1, n));
+const mix = (a, b, t) => ({
+  x: a.x + (b.x - a.x) * t,
+  y: a.y + (b.y - a.y) * t,
+});
+function point(el, raised = true) {
+  const r = el.getBoundingClientRect();
+  return {
+    x: r.left + r.width / 2,
+    y: r.top + r.height / 2 - (raised ? 26 : 0),
+  };
+}
+function stepEnd(step) {
+  return step.type === "capture" ||
+    step.type === "collect" ||
+    step.type === "refill"
+    ? $("bank-" + step.mark)
+    : cells[step.pit];
+}
+function hideHand() {
+  $("sowing-hand").hidden = true;
+  $("sowing-stone").hidden = true;
+  for (const el of effects) {
+    for (const animation of el.getAnimations()) animation.cancel();
+    el.remove();
+  }
+  effects.clear();
+}
+function renderHand(m, elapsed) {
+  const hand = $("sowing-hand"),
+    stone = $("sowing-stone");
+  if (document.hidden) {
+    hideHand();
+    return;
+  }
+  while (
+    replay.motionIndex + 1 < m.steps.length &&
+    m.steps[replay.motionIndex + 1].offset <= elapsed
+  )
+    replay.motionIndex++;
+  const i = replay.motionIndex,
+    step = m.steps[i];
+  if (!step) return;
+  if (replay.captionIndex !== i) {
+    replay.captionIndex = i;
+    replay.caption =
+      step.type === "pickup"
+        ? "Gom " + step.dan + " dân từ " + label(step.pit)
+        : step.type === "sow" || step.type === "seed"
+          ? "Rải từng viên vào " + label(step.pit)
+          : step.type === "capture"
+            ? "Đập " + label(step.gap) + " → Gom quân ở " + label(step.pit)
+            : step.type === "collect"
+              ? "Thu quân ở " + label(step.pit) + " về kho"
+              : "Lấy 5 dân để rải lại";
+    $("instruction").textContent = replay.caption;
+    $("last-action").textContent = replay.caption;
+  }
+  const t = clamp((elapsed - step.offset) / stepDuration(m, i)),
+    target = point(stepEnd(step)),
+    from = i ? point(stepEnd(m.steps[i - 1])) : target;
+  let pos = target,
+    curl = 1,
+    pose = "holding",
+    tilt = 0,
+    lift = 0;
+  if (step.type === "pickup") {
+    pos = mix(from, target, clamp(t / 0.3));
+    curl = clamp((t - 0.25) / 0.4);
+    lift = -Math.sin(clamp((t - 0.3) / 0.7) * Math.PI) * 9;
+    pose = t < 0.7 ? "gathering" : "holding";
+  } else if (step.type === "sow" || step.type === "seed") {
+    const travel = clamp(t / 0.62),
+      eased = travel * travel * (3 - 2 * travel);
+    pos = mix(from, target, eased);
+    lift = -Math.sin(travel * Math.PI) * (reduced.matches ? 0 : 15);
+    curl =
+      t < 0.62
+        ? 1
+        : t < 0.78
+          ? 1 - (t - 0.62) / 0.16
+          : clamp((t - 0.85) / 0.15);
+    pose = t < 0.62 ? "holding" : "sowing";
+    tilt = t > 0.62 ? -12 * Math.sin(((t - 0.62) / 0.38) * Math.PI) : 0;
+    if (t >= 0.64 && t < 0.9 && !reduced.matches) {
+      const fall = (t - 0.64) / 0.26,
+        release = { x: target.x - 8, y: target.y + 14 },
+        landing = point(cells[step.pit], false),
+        p = mix(release, landing, fall);
+      stone.hidden = false;
+      stone.style.left = p.x + "px";
+      stone.style.top = p.y - Math.sin(fall * Math.PI) * 7 + "px";
+      stone.style.transform =
+        "translate(-50%,-50%) rotate(" + fall * 90 + "deg)";
+    } else stone.hidden = true;
+  } else if (step.type === "capture") {
+    const gap = point(cells[step.gap]),
+      pile = point(cells[step.pit]);
+    if (t < 0.4) {
+      pos = mix(from, gap, clamp(t / 0.22));
+      curl = 0;
+      pose = "tapping";
+      lift = t > 0.22 ? 24 * Math.sin(((t - 0.22) / 0.18) * Math.PI) : 0;
+      if (replay.hitIndex !== i && t >= 0.28) {
+        replay.hitIndex = i;
+        if (t < 0.4) pulse(cells[step.gap], "capture-hit");
+      }
+    } else if (t < 0.8) {
+      pos = mix(gap, pile, clamp((t - 0.4) / 0.2));
+      curl = clamp((t - 0.6) / 0.2);
+      pose = "gathering";
+    } else {
+      pos = mix(pile, target, clamp((t - 0.8) / 0.2));
+      pose = "carrying";
+    }
+  } else if (step.type === "collect") {
+    const pile = point(cells[step.pit]);
+    pos =
+      t < 0.65
+        ? mix(from, pile, clamp(t / 0.3))
+        : mix(pile, target, clamp((t - 0.65) / 0.35));
+    curl = clamp((t - 0.3) / 0.3);
+    pose = t < 0.65 ? "gathering" : "carrying";
+  } else {
+    pos = mix(from, target, clamp(t / 0.4));
+    pose = "gathering";
+  }
+  if (step.type !== "sow" && step.type !== "seed") stone.hidden = true;
+  if (reduced.matches) {
+    pos = target;
+    lift = 0;
+    tilt = 0;
+  }
+  hand.hidden = false;
+  hand.dataset.pose = pose;
+  hand.dataset.step = step.type;
+  hand.style.left = pos.x + "px";
+  hand.style.top = pos.y + lift + "px";
+  hand.style.setProperty("--curl", curl);
+  hand.style.setProperty("--hand-tilt", tilt + "deg");
+  const carrying =
+      (step.type === "capture" && t >= 0.78) ||
+      (step.type === "collect" && t >= 0.6),
+    load = carrying ? step.dan + step.quan : replay.hand;
+  $("hand-load").textContent = load;
+  hand.classList.toggle("loaded", load > 0);
 }
 function replayTick() {
   cancelAnimationFrame(replayFrame);
@@ -293,21 +532,23 @@ function replayTick() {
   const m = state.lastMove,
     elapsed = serverNow() - m.at;
   let changed = false;
-  while (
-    replay.index < m.steps.length &&
-    m.steps[replay.index].offset <= elapsed
-  ) {
-    const step = m.steps[replay.index++];
-    applyStep(step, elapsed - step.offset < 250);
+  while (replay.index < m.steps.length) {
+    const step = m.steps[replay.index],
+      landing = step.offset + stepDuration(m, replay.index) * settlePhase(step);
+    if (elapsed < landing) break;
+    applyStep(step, elapsed - landing < 180 && !document.hidden);
+    replay.index++;
     changed = true;
   }
   if (serverNow() >= state.animationUntil) {
     replay = null;
+    hideHand();
     WebGameFeedback.update("oanquan", state);
     render();
     return;
   }
   if (changed) render();
+  renderHand(m, elapsed);
   replayFrame = requestAnimationFrame(replayTick);
 }
 function moveText(m) {
@@ -400,26 +641,13 @@ function render() {
             ? "Đang xác nhận…"
             : "Chờ lượt của bạn."
           : selected === null
-            ? "Chọn một ô dân được viền sáng."
-            : direction === null
-              ? "Chọn hướng rải; mũi tên theo góc nhìn hiện tại."
-              : label(selected) +
-                " · " +
-                directionText(direction) +
-                " · Bấm Rải quân.";
+            ? "Kéo ô dân sang ô liền kề, hoặc chọn ô rồi chọn ô liền kề để rải ngay."
+            : "Đã chọn " +
+              label(selected) +
+              " · Chọn ô liền kề để rải ngay. Bấm lại hoặc chuột phải để hủy.";
   $("last-action").textContent = running
     ? replay.caption
     : moveText(state.lastMove);
-  $("confirm").disabled = !canAct() || !choice();
-  $("clear").disabled = pending || selected === null;
-  for (const [d, id] of [
-    [-1, "direction-minus"],
-    [1, "direction-plus"],
-  ]) {
-    $(id).textContent = directionText(d);
-    $(id).disabled = !canAct() || selected === null;
-    $(id).setAttribute("aria-pressed", String(direction === d));
-  }
   const history = $("move-history");
   if (history.dataset.ply !== String(state.ply)) {
     history.dataset.ply = state.ply;
@@ -448,28 +676,24 @@ function render() {
   updateClock();
 }
 $("rotate-board").addEventListener("click", () => {
+  resetPreview();
   rotated = !rotated;
   $("rotate-board").setAttribute("aria-pressed", String(rotated));
   render();
 });
-$("clear").addEventListener("click", () => {
+document.addEventListener("contextmenu", (e) => {
+  if (selected === null && !drag && !e.target.closest("#board")) return;
+  e.preventDefault();
+  suppressPointerClick = true;
   resetPreview();
   notice("");
   render();
 });
-for (const [d, id] of [
-  [-1, "direction-minus"],
-  [1, "direction-plus"],
-])
-  $(id).addEventListener("click", () => {
-    if (!canAct() || selected === null) return;
-    direction = d;
-    render();
-  });
-$("confirm").addEventListener("click", async () => {
+async function commitMove() {
   if (!canAct() || !choice()) return;
   const data = { roomId, version: state.version, pit: selected, direction };
   pending = true;
+  resetPreview();
   render();
   try {
     accept(await api("/api/move", data));
@@ -482,7 +706,7 @@ $("confirm").addEventListener("click", async () => {
     pending = false;
     render();
   }
-});
+}
 document.addEventListener("keydown", (e) => {
   if (
     e.key === "Escape" &&
@@ -492,6 +716,16 @@ document.addEventListener("keydown", (e) => {
     resetPreview();
     render();
   }
+});
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    resetPreview();
+    hideHand();
+  } else if (replay) replayTick();
+});
+window.addEventListener("blur", () => {
+  resetPreview();
+  if (state) render();
 });
 window.addEventListener("resize", () => {
   if (state) requestAnimationFrame(renderBoard);
@@ -527,6 +761,8 @@ function accept(next) {
         ply: next.ply,
         view: structuredClone(next.lastMove.before),
         index: 0,
+        motionIndex: 0,
+        hitIndex: -1,
         hand: 0,
         origin: next.lastMove.pit,
         caption: "Bắt đầu rải quân…",
@@ -534,6 +770,7 @@ function accept(next) {
     }
   } else {
     replay = null;
+    hideHand();
     cancelAnimationFrame(replayFrame);
     WebGameFeedback.update("oanquan", next);
   }
@@ -554,6 +791,7 @@ function notice(message) {
 }
 function connection(ok) {
   connected = ok;
+  if (!ok) resetPreview();
   if (globalThis.WebGameFeedback) WebGameFeedback.connection(ok);
   else
     $("connection").textContent = ok

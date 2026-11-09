@@ -47,7 +47,7 @@ async function main() {
   profile = fs.mkdtempSync(path.join(os.tmpdir(), "oanquan-ui-"));
   const executable =
     process.env.CHROME_PATH ||
-    "C:/Program Files (x86)/Google/Chrome/Application/chrome.exe";
+    "C:/Program Files/Google/Chrome/Application/chrome.exe";
   assert(
     fs.existsSync(executable),
     "Set CHROME_PATH to a local Chrome executable",
@@ -128,8 +128,8 @@ async function main() {
       );
     return r.result.value;
   }
-  async function until(expression) {
-    for (let n = 0; n < 100; n++) {
+  async function until(expression, attempts = 550) {
+    for (let n = 0; n < attempts; n++) {
       if (await evaluate(expression)) return;
       await delay(100);
     }
@@ -141,7 +141,7 @@ async function main() {
         errors.join("\n") +
         " / " +
         (await evaluate(
-          `JSON.stringify({active:document.activeElement?.id,dialogs:[...document.querySelectorAll("dialog[open]")].map(d=>d.id),motions:__motions.map(m=>m.kind),layout:__layout,scroll:scrollY,board:$("board")?.getBoundingClientRect().toJSON()})`,
+          `JSON.stringify({active:document.activeElement?.id,dialogs:[...document.querySelectorAll("dialog[open]")].map(d=>d.id),motions:__motions.map(m=>m.kind),layout:__layout,input:__input,scroll:scrollY,board:$("board")?.getBoundingClientRect().toJSON()})`,
         )),
     );
   }
@@ -187,7 +187,7 @@ async function main() {
         ...point,
       });
     }
-    await delay(touch ? 140 : 50);
+    await delay(touch ? 360 : 50);
   }
   async function key(key, code, value) {
     await send("Input.dispatchKeyEvent", {
@@ -220,7 +220,7 @@ async function main() {
   await send("Page.enable");
   await send("Page.addScriptToEvaluateOnNewDocument", {
     source:
-      "window.__motions=[];window.__layout=[];window.__events=[];const nativeAnimate=Element.prototype.animate;Element.prototype.animate=function(frames,options){if(this.classList.contains('stone-flight'))__motions.push({className:this.className,at:performance.now()});return nativeAnimate.call(this,frames,options)};document.addEventListener('animationstart',e=>__events.push(e.animationName),true);",
+      "window.__input=[];['pointerdown','pointerup','pointercancel','lostpointercapture','click','contextmenu','touchstart','touchend'].forEach(k=>document.addEventListener(k,e=>{__input.push([k,e.target?.id||e.target?.dataset?.pit||e.target?.dataset?.panel||e.target?.tagName,Math.round(performance.now())]);if(__input.length>40)__input.shift()},true));window.__motions=[];window.__layout=[];window.__events=[];window.__poses=new Set();window.__drops=0;setInterval(()=>{const h=document.getElementById('sowing-hand'),s=document.getElementById('sowing-stone');if(h&&!h.hidden)__poses.add(h.dataset.pose);if(s&&!s.hidden)__drops++},25);const nativeAnimate=Element.prototype.animate;Element.prototype.animate=function(frames,options){if(this.classList.contains('stone-flight'))__motions.push({className:this.className,at:performance.now()});return nativeAnimate.call(this,frames,options)};document.addEventListener('animationstart',e=>__events.push(e.animationName),true);",
   });
   await send("Emulation.setDeviceMetricsOverride", {
     width: 1280,
@@ -238,31 +238,126 @@ async function main() {
   assert.equal(await evaluate('$("name-X").textContent'), users.X.username);
   async function geometry() {
     const result = await evaluate(
-      `(()=>{const rect=el=>{const r=el.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height,b:r.bottom,right:r.right}};return {board:rect($('board')),controls:rect($('controls')),confirm:rect($('confirm')),pit:rect(cells[1]),window:{w:innerWidth,h:innerHeight},scroll:document.documentElement.scrollWidth,overlap:cells.some((p,i)=>cells.some((q,j)=>i<j&&(()=>{const a=p.getBoundingClientRect(),b=q.getBoundingClientRect();return Math.min(a.right,b.right)-Math.max(a.left,b.left)>1&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>1})()))}})()`,
+      `(()=>{const rect=el=>{const r=el.getBoundingClientRect();return{x:r.x,y:r.y,w:r.width,h:r.height,b:r.bottom,right:r.right}};return {board:rect($('board')),controls:rect($('controls')),pit:rect(cells[1]),window:{w:innerWidth,h:innerHeight},scroll:document.documentElement.scrollWidth,overlap:cells.some((p,i)=>cells.some((q,j)=>i<j&&(()=>{const a=p.getBoundingClientRect(),b=q.getBoundingClientRect();return Math.min(a.right,b.right)-Math.max(a.left,b.left)>1&&Math.min(a.bottom,b.bottom)-Math.max(a.top,b.top)>1})()))}})()`,
     );
     assert(
       result.board.w > 100 && result.board.h > 100,
       JSON.stringify(result),
     );
     assert(result.pit.w > 30 && result.pit.h > 24);
-    assert(result.confirm.b <= result.window.h, "Confirmation is visible");
+    assert(result.controls.b <= result.window.h, "Instructions stay visible");
     assert(result.scroll <= result.window.w + 1, "No horizontal page overflow");
     assert.equal(result.overlap, false, "Pits never overlap");
     return result;
   }
   await geometry();
   await screenshot("oanquan-desktop.png");
+  assert.equal(
+    await evaluate('$("confirm") || $("direction-minus") || $("clear")'),
+    null,
+  );
+  assert.deepEqual(
+    await evaluate(
+      'cells.filter(c=>!c.classList.contains("quan-pit")).map(c=>c.querySelector(".pit-label").textContent).sort()',
+    ),
+    [..."abcdefghij"],
+  );
+  assert.equal(await evaluate('$("sowing-hand").hidden'), true);
   await click('[data-pit="1"]');
-  await click("#direction-minus");
-  assert.equal(await evaluate("state.ply"), 0);
-  assert.equal(await evaluate('$("confirm").disabled'), false);
-  await click("#clear");
+  assert.deepEqual(
+    await evaluate(
+      'cells.filter(c=>c.classList.contains("direction-option")).map(c=>Number(c.dataset.pit))',
+    ),
+    [0, 2],
+  );
+  await click('[data-pit="1"]');
   assert.equal(await evaluate("selected"), null);
   await click('[data-pit="1"]');
-  await click("#direction-minus");
-  await click("#confirm");
+  await evaluate(
+    '$("board").dispatchEvent(new MouseEvent("contextmenu",{bubbles:true,cancelable:true}))',
+  );
+  assert.equal(await evaluate("selected"), null);
+  await click('[data-pit="1"]');
+  await key("Escape", "Escape", 27);
+  assert.equal(await evaluate("selected"), null);
+  async function dragPit(from, to, touch = false, cancel = false) {
+    const points = await evaluate(
+      "(()=>{const p=i=>{const r=cells[i].getBoundingClientRect();return{x:r.x+r.width/2,y:r.y+r.height/2}};return [p(" +
+        from +
+        ")," +
+        (to === null ? "({x:2,y:2})" : "p(" + to + ")") +
+        "]})()",
+    );
+    if (touch)
+      await send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [points[0]],
+      });
+    else
+      await send("Input.dispatchMouseEvent", {
+        type: "mousePressed",
+        button: "left",
+        buttons: 1,
+        clickCount: 1,
+        ...points[0],
+      });
+    for (let i = 1; i <= 6; i++) {
+      const point = {
+        x: points[0].x + ((points[1].x - points[0].x) * i) / 6,
+        y: points[0].y + ((points[1].y - points[0].y) * i) / 6,
+      };
+      if (touch)
+        await send("Input.dispatchTouchEvent", {
+          type: "touchMove",
+          touchPoints: [point],
+        });
+      else
+        await send("Input.dispatchMouseEvent", {
+          type: "mouseMoved",
+          button: "left",
+          buttons: 1,
+          ...point,
+        });
+      await delay(25);
+    }
+    if (cancel)
+      await evaluate(
+        '$("board").dispatchEvent(new MouseEvent("contextmenu",{bubbles:true,cancelable:true}))',
+      );
+    if (touch)
+      await send("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+    else
+      await send("Input.dispatchMouseEvent", {
+        type: "mouseReleased",
+        button: "left",
+        buttons: 0,
+        clickCount: 1,
+        ...points[1],
+      });
+    // Let Chrome finish suppressing the compatibility click after a touch drag.
+    await delay(touch ? 700 : 100);
+  }
+  await dragPit(1, 4);
+  assert.equal(await evaluate("selected"), null);
+  assert.equal(await evaluate("state.ply"), 0);
+  await dragPit(1, 0, false, true);
+  assert.equal(await evaluate("selected"), null);
+  assert.equal(await evaluate("state.ply"), 0);
+  await dragPit(1, 0);
   await until("state.ply===1&&!pending&&replay!==null");
   assert.equal(await evaluate('$("clock-O").textContent'), "30:00");
+  assert.equal(await evaluate('$("sowing-hand").hidden'), false);
+  await until('replay?.motionIndex===1&&!$("sowing-stone").hidden');
+  assert.equal(
+    await evaluate("replay.view.pits[0].dan"),
+    0,
+    "Pit count waits for the stone to land",
+  );
+  await screenshot("oanquan-hand-sow.png");
+  await until("replay?.view.pits[0].dan===1");
   await evaluate("window.__savedReplay=replay;accept(structuredClone(state))");
   assert.equal(
     await evaluate("replay===__savedReplay"),
@@ -272,7 +367,16 @@ async function main() {
   await until('__events.includes("pit-hit")');
   await screenshot("oanquan-capture.png");
   await until("replay===null");
-  assert((await evaluate("__motions.length")) >= 10);
+  assert((await evaluate("__motions.length")) >= 6);
+  assert((await evaluate("__drops")) > 0);
+  assert.deepEqual(
+    (await evaluate("[...__poses]")).sort(),
+    ["carrying", "gathering", "holding", "sowing", "tapping"].sort(),
+  );
+  assert.equal(
+    await evaluate('$("sowing-hand").hidden&&$("sowing-stone").hidden'),
+    true,
+  );
   assert(await evaluate('__events.includes("pit-sow")'));
   assert.equal(
     await evaluate('$("score-X").textContent.startsWith("11 điểm")'),
@@ -327,11 +431,14 @@ async function main() {
     );
     const legal = await evaluate("state.legalMoves[0].pit");
     await click('[data-pit="' + legal + '"]', true);
-    await click("#direction-plus", true);
-    assert.equal(await evaluate('$("confirm").disabled'), false);
-    await click("#clear", true);
+    assert.equal(await evaluate("selected"), legal);
+    await click('[data-pit="' + legal + '"]', true);
+    assert.equal(await evaluate("selected"), null);
+    await dragPit(legal, null, true);
+    assert.equal(await evaluate("selected"), null);
+    assert.equal(await evaluate("state.ply"), 1);
     await click('[data-panel="history"]', true);
-    assert.equal(await evaluate("WebGameMobile.active()"), "history");
+    await until('WebGameMobile.active()==="history"', 80);
     await click(".wg-sheet-close", true);
     await until("!WebGameMobile.active()");
     await screenshot("oanquan-" + width + "x" + height + ".png");
@@ -344,30 +451,63 @@ async function main() {
   });
   await delay(200);
   const guestPit = await evaluate("state.legalMoves[0].pit");
-  await click('[data-pit="' + guestPit + '"]', true);
-  await click("#direction-plus", true);
-  await click("#confirm", true);
+  await dragPit(guestPit, (guestPit + 1) % 12, true);
   await until("state.ply===2&&replay!==null");
   await send("Page.reload");
   await until(
     'typeof state!=="undefined"&&state?.me==="O"&&state.ply===2&&connected',
   );
+  const replayDeadline = await evaluate("state.animationUntil");
+  await send("Emulation.setEmulatedMedia", {
+    features: [{ name: "prefers-reduced-motion", value: "reduce" }],
+  });
+  await delay(150);
+  assert.equal(
+    await evaluate('getComputedStyle($("sowing-stone")).display'),
+    "none",
+  );
+  assert.equal(
+    await evaluate("state.animationUntil"),
+    replayDeadline,
+    "Reduced motion preserves server deadline",
+  );
+  await send("Emulation.setEmulatedMedia", { features: [] });
+  await until("replay===null");
+  await send("Page.navigate", {
+    url: web.issueTicket("oanquan", room.id, users.X.id),
+  });
+  await until(
+    'typeof state!=="undefined"&&state?.me==="X"&&connected&&canAct()',
+  );
+  await click("#rotate-board");
+  const clickMove = await evaluate("state.legalMoves[0]");
+  await click('[data-pit="' + clickMove.pit + '"]', true);
+  await click(
+    '[data-pit="' + ((clickMove.pit + clickMove.direction + 12) % 12) + '"]',
+    true,
+  );
+  await until("state.ply===3&&replay!==null");
   await until("replay===null");
   await send("Network.clearBrowserCookies");
   await send("Page.navigate", {
     url: config.origin + "/oanquan/room/" + room.id,
   });
   await until(
-    'typeof state!=="undefined"&&state?.me===null&&state.ply===2&&connected',
+    'typeof state!=="undefined"&&state?.me===null&&state.ply===3&&connected',
   );
   assert.equal(await evaluate("canAct()"), false);
-  assert.equal(await evaluate('$("confirm").disabled'), true);
+  assert.equal(
+    await evaluate(
+      'cells.some(c=>c.classList.contains("legal")||c.classList.contains("direction-option"))',
+    ),
+    false,
+  );
   await click('[data-pit="1"]', true);
   assert.equal(await evaluate("selected"), null);
   room = fixture.store.get(room.id);
   const move = fixture.store.snapshot(room, users[room.turn].id).legalMoves[0];
   room = fixture.store.move(room.id, users[room.turn].id, move, room.version);
-  await until("state.ply===3&&replay!==null");
+  await until("state.ply===4&&replay!==null");
   await until("replay===null");
   fixture.store.leave(room.id, users.X.id);
   await until('state.status==="finished"');
@@ -376,14 +516,19 @@ async function main() {
       users.O.username,
     ),
   );
-  assert.equal(await evaluate('$("confirm").disabled'), true);
+  assert.equal(
+    await evaluate(
+      'cells.some(c=>c.classList.contains("legal")||c.classList.contains("direction-option"))',
+    ),
+    false,
+  );
   await screenshot("oanquan-result.png");
   assert.deepEqual(errors, []);
   console.log(
     JSON.stringify({
       ok: true,
       oanquanUI:
-        "desktop/portrait/landscape, touch directions, sow and capture motion, paused clocks, duplicate/reload replay, guest orientation, rules/history dialog, live spectator and result",
+        "desktop/portrait/landscape, mouse/touch drag, immediate click move, cancel/invalid drop, animated hand poses and delayed stone landing, paused clocks, duplicate/reload replay, guest orientation, rules/history dialog, live spectator and result",
     }),
   );
   await send("Browser.close").catch(() => {});
