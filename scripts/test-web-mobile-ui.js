@@ -14,13 +14,20 @@ const users = {
 };
 const fixtures = new Map(),
   games = [];
-for (const id of ["caro", "walls", "battleship", "dots", "blokus", "mecung"]) {
+for (const id of [
+  "caro",
+  "walls",
+  "battleship",
+  "dots",
+  "blokus",
+  "mecung",
+  "santorini",
+  "cothu",
+  "cotuong",
+  "oanquan",
+]) {
   const store = require("../src/" + id + "/store").createStore(db);
-  let room = store.join(
-    store.create({ guildId: "mobile-" + id, channelId: "c", user: users.X }).id,
-    users.O,
-  );
-  fixtures.set(id, { store, room });
+  fixtures.set(id, { store, room: null });
   games.push(require("../src/" + id + "/webGame").createGame({ store, db }));
 }
 const config = { origin: "", secure: false },
@@ -40,6 +47,15 @@ let profile, child, ws;
 const errors = [],
   delay = (ms) => new Promise((r) => setTimeout(r, ms));
 async function main() {
+  await require("../src/cotuong/engine").initialize();
+  for (const [id, fixture] of fixtures) {
+    const { store } = fixture;
+    fixture.room = store.join(
+      store.create({ guildId: "mobile-" + id, channelId: "c", user: users.X })
+        .id,
+      users.O,
+    );
+  }
   await new Promise((r) => web.server.listen(0, "127.0.0.1", r));
   config.origin = "http://127.0.0.1:" + web.server.address().port;
   profile = fs.mkdtempSync(path.join(os.tmpdir(), "web-mobile-ui-"));
@@ -241,6 +257,35 @@ async function main() {
       );
     }
     await bounds("initial");
+    assert.equal(
+      await evaluate('document.querySelectorAll("#rules-help").length'),
+      1,
+    );
+    assert.equal(
+      await evaluate(
+        'document.querySelector("#rules-open, .wg-rules-entry, .rules")',
+      ),
+      null,
+    );
+    await click("#rules-help", true);
+    assert.equal(
+      await evaluate('document.querySelector("#rules-dialog:modal") !== null'),
+      true,
+    );
+    assert.match(
+      await evaluate('document.querySelector("#rules-dialog").textContent'),
+      /Thắng nếu/,
+    );
+    await key("Escape", "Escape", 27);
+    assert.equal(
+      await evaluate('document.querySelector("#rules-dialog").open'),
+      false,
+    );
+    const boardRect = () =>
+      evaluate(
+        '(()=>{const b=(document.querySelector(".board-panel.selected .board")||document.querySelector(".board-panel .board")).getBoundingClientRect();return [b.x,b.y,b.width,b.height];})()',
+      );
+    const initialRect = await boardRect();
     if (id === "caro") {
       const clockSeconds = () =>
         evaluate(
@@ -262,14 +307,88 @@ async function main() {
     await delay(100);
     await bounds("info open");
     assert.equal(await evaluate("WebGameMobile.active()"), "info");
-    await click(".wg-sheet-close", true);
+    assert.equal(
+      await evaluate(
+        'document.querySelector("#wg-menu-dialog:modal") !== null',
+      ),
+      true,
+    );
+    assert.equal(
+      await evaluate('document.querySelector("#wg-sheet").hidden'),
+      true,
+    );
+    assert.equal(
+      await evaluate(
+        'document.querySelector("#wg-menu-dialog").contains(document.activeElement)',
+      ),
+      true,
+    );
+    assert.deepEqual(
+      await boardRect(),
+      initialRect,
+      id + " modal preserves board dimensions",
+    );
+    await screenshot(id + "-info-modal.png");
+    await key("Escape", "Escape", 27);
+    assert.equal(await evaluate("WebGameMobile.active()"), null);
+    assert.equal(
+      await evaluate("document.activeElement.dataset.panel"),
+      "info",
+    );
+    // Avatar is also an opener; closing must return focus to that avatar.
+    await click(".wg-player", true);
+    await click(
+      ".wg-sheet:not([hidden]) .wg-sheet-close, .wg-menu-dialog[open] .wg-modal-close",
+      true,
+    );
     await delay(100);
     await bounds("info closed");
+    assert.equal(
+      await evaluate('document.activeElement.classList.contains("wg-player")'),
+      true,
+    );
+    if (id === "caro") {
+      await click('[data-panel="info"]', true);
+      await evaluate('document.querySelector(".wg-nav-button").focus()');
+      assert.equal(
+        await evaluate(
+          'document.querySelector("#wg-menu-dialog").contains(document.activeElement)',
+        ),
+        true,
+      );
+      await send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [{ x: 1, y: 1 }],
+      });
+      await send("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+      await until("WebGameMobile.active()===null");
+    }
     await click('[data-panel="account"]', true);
+    assert.equal(
+      await evaluate('document.querySelector("#wg-menu-title").textContent'),
+      "Tài khoản",
+    );
+    assert.deepEqual(await boardRect(), initialRect);
     await click("#leave", true);
     assert.equal(await evaluate('$("leave-dialog").open'), true);
     await click("#keep-playing", true);
-    await click(".wg-sheet-close", true);
+    assert.equal(
+      await evaluate(
+        'document.querySelector("#wg-menu-dialog:modal") !== null',
+      ),
+      true,
+    );
+    assert.equal(
+      await evaluate('document.querySelectorAll("#leave").length'),
+      1,
+    );
+    await click(
+      ".wg-sheet:not([hidden]) .wg-sheet-close, .wg-menu-dialog[open] .wg-modal-close",
+      true,
+    );
     if (["walls", "blokus", "battleship", "mecung"].includes(id)) {
       const panel = id === "blokus" ? "pieces" : "actions";
       await click('[data-panel="' + panel + '"]', true);
@@ -299,14 +418,20 @@ async function main() {
         await click("#ready", true);
         await until('!pending && state.status==="playing"');
       }
-      await click(".wg-sheet-close", true);
+      await click(
+        ".wg-sheet:not([hidden]) .wg-sheet-close, .wg-menu-dialog[open] .wg-modal-close",
+        true,
+      );
     }
     if (id === "battleship") {
       await click('[data-panel="view"]', true);
       await click("#view-O", true);
       await delay(100);
       await bounds("second sea");
-      await click(".wg-sheet-close", true);
+      await click(
+        ".wg-sheet:not([hidden]) .wg-sheet-close, .wg-menu-dialog[open] .wg-modal-close",
+        true,
+      );
     }
     await screenshot(id + "-mobile.png");
     await send("Emulation.setDeviceMetricsOverride", {
@@ -320,7 +445,10 @@ async function main() {
     await click('[data-panel="info"]', true);
     await delay(100);
     await bounds("small phone menu");
-    await click(".wg-sheet-close", true);
+    await click(
+      ".wg-sheet:not([hidden]) .wg-sheet-close, .wg-menu-dialog[open] .wg-modal-close",
+      true,
+    );
     await send("Emulation.setDeviceMetricsOverride", {
       width: 844,
       height: 390,
@@ -332,7 +460,11 @@ async function main() {
     await click('[data-panel="info"]', true);
     await delay(100);
     await bounds("landscape menu");
-    await click(".wg-sheet-close", true);
+    await click(
+      ".wg-sheet:not([hidden]) .wg-sheet-close, .wg-menu-dialog[open] .wg-modal-close",
+      true,
+    );
+    await click('[data-panel="info"]', true);
     await send("Emulation.setTouchEmulationEnabled", { enabled: false });
     await send("Emulation.setDeviceMetricsOverride", {
       width: 1280,
@@ -353,14 +485,92 @@ async function main() {
       ),
       true,
     );
-    console.log(id + " mobile menus and desktop restoration passed");
+    assert.equal(
+      await evaluate('document.querySelector("#wg-menu-dialog").open'),
+      false,
+    );
+    assert.equal(
+      await evaluate(
+        'document.querySelector("#rules-help").closest(".wg-header-tools") !== null',
+      ),
+      true,
+    );
+    await click("#rules-help");
+    assert.equal(
+      await evaluate('document.querySelector("#rules-dialog:modal") !== null'),
+      true,
+    );
+    await click(".wg-rules-close");
+    // Re-enter mobile after closing a modal during desktop restoration.
+    await send("Emulation.setDeviceMetricsOverride", {
+      width: 390,
+      height: 844,
+      deviceScaleFactor: 1,
+      mobile: true,
+    });
+    await delay(160);
+    await click('[data-panel="account"]', true);
+    assert.equal(
+      await evaluate(
+        'document.querySelector("#wg-menu-dialog:modal #leave") !== null',
+      ),
+      true,
+    );
+    await key("Escape", "Escape", 27);
+    await bounds("mobile restored");
+    console.log(id + " rules, modal menus and desktop restoration passed");
   }
+  // Reconnect from a spectator tab through the actual live account controls.
+  await send("Network.clearBrowserCookies");
+  await send("Page.navigate", {
+    url: config.origin + "/caro/room/" + fixtures.get("caro").room.id,
+  });
+  await until(
+    'typeof state!=="undefined" && state?.me===null && connected && WebGameMobile.isMobile()',
+  );
+  await click('[data-panel="account"]', true);
+  await click("#connect-player", true);
+  await until(
+    '/^[A-F0-9]{8}$/.test(document.querySelector("#pair-code").textContent.trim())',
+  );
+  assert.equal(
+    await evaluate(
+      'document.querySelector("#wg-menu-dialog:modal #pair-panel").hidden',
+    ),
+    false,
+  );
+  await click("#copy-pair-code", true);
+  await until(
+    'document.querySelector("#pair-copy-status").textContent.includes("Đã sao chép")',
+  );
+  await screenshot("caro-account-pair-modal.png");
+  const pairCode = await evaluate(
+    'document.querySelector("#pair-code").textContent.trim()',
+  );
+  web.confirmPairing(
+    "caro",
+    fixtures.get("caro").room.id,
+    users.X.id,
+    pairCode,
+  );
+  await until('state.me==="X" && document.querySelector("#pair-panel").hidden');
+  assert.equal(
+    await evaluate(
+      'document.querySelectorAll("#pair-code, #leave, #copy-pair-code").length',
+    ),
+    3,
+  );
+  assert.equal(
+    await evaluate('document.querySelector("#wg-menu-dialog:modal") !== null'),
+    true,
+  );
+  await key("Escape", "Escape", 27);
   assert.deepEqual(errors, []);
   console.log(
     JSON.stringify({
       ok: true,
       mobile:
-        "six games, board/action coexistence, compact clocks/avatars, menus, 360px phones, landscape, live DOM restoration, account dialog, battleship randomize and sea switch",
+        "ten games, top-bar rules, native modal info/account, unchanged board dimensions, Escape/backdrop/focus, nested surrender, live pairing/copy, board/action coexistence, compact clocks/avatars, menus, 360px phones, landscape, live DOM restoration, account dialog, battleship randomize and sea switch",
     }),
   );
   await send("Browser.close").catch(() => {});

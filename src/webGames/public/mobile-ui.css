@@ -6,6 +6,62 @@
 .wg-mobile-ui {
   display: none;
 }
+dialog.wg-menu-dialog {
+  box-sizing: border-box;
+  width: min(600px, calc(100% - 24px));
+  max-width: calc(100% - 24px);
+  max-height: calc(100dvh - 24px);
+  margin: auto;
+  padding: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid #526c6b;
+  border-radius: 14px;
+  background: #182925;
+  color: #eef5f2;
+  text-align: left;
+  font:
+    400 15px/1.6 system-ui,
+    sans-serif;
+}
+.wg-menu-dialog::backdrop {
+  background: #000b;
+}
+.wg-modal-heading {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid #526c6b;
+  background: #182925;
+}
+.wg-modal-heading h2 {
+  margin: 0;
+  font-size: 18px;
+}
+.wg-modal-close {
+  flex: 0 0 auto;
+  min-height: 40px;
+  padding: 6px 12px;
+  border: 1px solid #729187;
+  border-radius: 8px;
+  background: #28423b;
+  color: #f1faf8;
+  font: inherit;
+  cursor: pointer;
+}
+.wg-modal-close:focus-visible {
+  outline: 2px solid #bdebad;
+  outline-offset: 2px;
+}
+.wg-modal-content {
+  padding: 16px;
+  overflow-wrap: anywhere;
+}
 @media (max-width: 760px), (max-height: 520px) and (pointer: coarse) {
   body.wg-mobile {
     overflow: hidden;

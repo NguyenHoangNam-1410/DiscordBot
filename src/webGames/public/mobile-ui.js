@@ -34,6 +34,10 @@ globalThis.WebGameMobile = (() => {
     sheet,
     content,
     title,
+    modal,
+    modalTitle,
+    modalContent,
+    opener,
     active = null,
     enabled = false,
     frame,
@@ -62,6 +66,8 @@ globalThis.WebGameMobile = (() => {
     for (const mark of ["X", "O"]) {
       const button = element("button", "wg-player");
       button.type = "button";
+      button.setAttribute("aria-haspopup", "dialog");
+      button.setAttribute("aria-controls", "wg-menu-dialog");
       const avatar = element("span", "player-avatar " + mark.toLowerCase());
       const img = element("img"),
         fallback = element("span");
@@ -71,7 +77,7 @@ globalThis.WebGameMobile = (() => {
       const clock = element("time", "wg-clock", "—");
       avatar.append(img, fallback);
       button.append(avatar, clock);
-      button.addEventListener("click", () => toggle("info"));
+      button.addEventListener("click", () => toggle("info", button));
       hud.append(button);
       clocks[mark] = { button, img, fallback, clock };
     }
@@ -93,6 +99,46 @@ globalThis.WebGameMobile = (() => {
     heading.append(title, close);
     content = element("div", "wg-sheet-content");
     sheet.append(heading, content);
+    modal = element("dialog", "wg-menu-dialog");
+    modal.id = "wg-menu-dialog";
+    modal.setAttribute("aria-labelledby", "wg-menu-title");
+    const modalHeading = element("div", "wg-modal-heading");
+    modalTitle = element("h2");
+    modalTitle.id = "wg-menu-title";
+    const modalClose = element("button", "wg-modal-close", "Đóng ✕");
+    modalClose.type = "button";
+    modalClose.setAttribute("aria-label", "Đóng menu");
+    modalClose.addEventListener("click", () => hide());
+    modalHeading.append(modalTitle, modalClose);
+    modalContent = element("div", "wg-modal-content");
+    modal.append(modalHeading, modalContent);
+    document.body.append(modal);
+    modal.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      hide();
+    });
+    modal.addEventListener("close", () => {
+      if (!modal.open && isModal(active)) hide();
+    });
+    modal.addEventListener("click", (event) => {
+      if (event.target !== modal) return;
+      const box = modal.getBoundingClientRect();
+      if (
+        event.clientX < box.left ||
+        event.clientX > box.right ||
+        event.clientY < box.top ||
+        event.clientY > box.bottom
+      )
+        hide();
+    });
+    // Native modal Escape/cancel still works; gameplay shortcuts stay inactive.
+    document.addEventListener(
+      "keydown",
+      (event) => {
+        if (modal.open) event.stopImmediatePropagation();
+      },
+      true,
+    );
     const sections = [
       ...(configurations[game] || []),
       [
@@ -105,7 +151,6 @@ globalThis.WebGameMobile = (() => {
           ".match-bar",
           ".players",
           "#rule-badges",
-          ".rules",
           ".legend",
           ".board-footer",
           "#board-help",
@@ -133,9 +178,10 @@ globalThis.WebGameMobile = (() => {
       const button = element("button", "wg-nav-button", label);
       button.type = "button";
       button.dataset.panel = id;
-      button.setAttribute("aria-controls", "wg-panel-" + id);
+      button.setAttribute("aria-controls", isModal(id) ? modal.id : panel.id);
+      if (isModal(id)) button.setAttribute("aria-haspopup", "dialog");
       button.setAttribute("aria-expanded", "false");
-      button.addEventListener("click", () => toggle(id));
+      button.addEventListener("click", () => toggle(id, button));
       buttons.set(id, button);
       bar.append(button);
     }
@@ -187,11 +233,16 @@ globalThis.WebGameMobile = (() => {
     }
     schedule();
   }
+  function isModal(id) {
+    return id === "info" || id === "account";
+  }
   function hide(focus = true) {
     if (!root) return;
     const previous = active;
     active = null;
     sheet.hidden = true;
+    if (modal.open) modal.close();
+    delete document.body.dataset.wgPanel;
     for (const [id, panel] of panels) {
       panel.hidden = true;
       buttons.get(id).setAttribute("aria-expanded", "false");
@@ -199,21 +250,31 @@ globalThis.WebGameMobile = (() => {
     document.body.style.setProperty("--wg-sheet-height", "0px");
     document.body.style.setProperty("--wg-side-width", "0px");
     if (focus && previous)
-      buttons.get(previous)?.focus({ preventScroll: true });
+      (opener?.isConnected ? opener : buttons.get(previous))?.focus({
+        preventScroll: true,
+      });
+    opener = null;
     schedule();
   }
-  function toggle(id) {
+  function toggle(id, source) {
     if (!enabled || !panels.has(id)) return;
     if (active === id) return hide();
     active = id;
-    title.textContent = buttons.get(id).textContent;
-    sheet.hidden = false;
+    opener = source || buttons.get(id);
+    const inDialog = isModal(id);
+    (inDialog ? modalTitle : title).textContent = buttons.get(id).textContent;
+    (inDialog ? modalContent : content).append(panels.get(id));
+    sheet.hidden = inDialog;
+    if (!inDialog && modal.open) modal.close();
     for (const [key, panel] of panels) {
       panel.hidden = key !== id;
       buttons.get(key).setAttribute("aria-expanded", String(key === id));
     }
     document.body.dataset.wgPanel = id;
-    sheet.querySelector(".wg-sheet-close").focus({ preventScroll: true });
+    if (inDialog && !modal.open) modal.showModal();
+    (inDialog ? modal : sheet)
+      .querySelector(inDialog ? ".wg-modal-close" : ".wg-sheet-close")
+      .focus({ preventScroll: true });
     schedule();
   }
   function schedule() {

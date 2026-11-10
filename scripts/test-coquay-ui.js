@@ -571,6 +571,28 @@ async function main() {
   assert.match(await evaluate('$("inventory-detail").textContent'), /9 loại/);
   await screenshot("coquay-buckshot-catalog-mobile.png");
   await click('[data-close="inventory-dialog"]', true);
+  assert.equal(
+    await evaluate('document.querySelectorAll("#rules-help").length'),
+    1,
+  );
+  assert.equal(
+    await evaluate('document.querySelector("#rules-open, .wg-rules-entry")'),
+    null,
+  );
+  await click("#rules-help", true);
+  assert.equal(
+    await evaluate('document.querySelector("#rules-dialog:modal") !== null'),
+    true,
+  );
+  assert.match(
+    await evaluate('document.querySelector("#rules-dialog").textContent'),
+    /Thắng nếu/,
+  );
+  await key("Escape", "Escape", 27);
+  assert.equal(
+    await evaluate('document.querySelector("#rules-dialog").open'),
+    false,
+  );
   // Reduced motion still applies server results, without flying sprites or timers.
   await send("Emulation.setEmulatedMedia", {
     features: [{ name: "prefers-reduced-motion", value: "reduce" }],

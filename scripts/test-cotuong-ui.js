@@ -643,7 +643,10 @@ async function main() {
   await click(".wg-rules-close", true);
   await click('[data-panel="history"]', true);
   assert.equal(await evaluate("WebGameMobile.active()"), "history");
-  await click(".wg-sheet-close", true);
+  await click(
+    ".wg-sheet:not([hidden]) .wg-sheet-close, .wg-menu-dialog[open] .wg-modal-close",
+    true,
+  );
   // Read-only spectator sees new moves and terminal state; no drag can commit.
   await send("Network.clearBrowserCookies");
   await send("Page.navigate", {

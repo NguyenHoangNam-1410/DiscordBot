@@ -97,13 +97,6 @@ dialog.wg-rules-dialog {
 .wg-rules-body #rules-detail {
   letter-spacing: normal;
 }
-.wg-rules-entry {
-  align-self: start;
-}
-.wg-rules-entry #rules-open {
-  width: 100%;
-  min-height: 44px;
-}
 @media (max-width: 480px) {
   .wg-rules-heading {
     padding: 12px 14px;

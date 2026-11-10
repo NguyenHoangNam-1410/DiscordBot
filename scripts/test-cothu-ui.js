@@ -564,10 +564,16 @@ async function main() {
         true,
         "Board fits with history menu",
       );
-      await click(".wg-sheet-close", true);
+      await click(
+        ".wg-sheet:not([hidden]) .wg-sheet-close, .wg-menu-dialog[open] .wg-modal-close",
+        true,
+      );
       await click('[data-panel="info"]', true);
       await delay(100);
-      await click(".wg-sheet-close", true);
+      await click(
+        ".wg-sheet:not([hidden]) .wg-sheet-close, .wg-menu-dialog[open] .wg-modal-close",
+        true,
+      );
     }
     await screenshot("cothu-" + metrics.width + "x" + metrics.height + ".png");
   }

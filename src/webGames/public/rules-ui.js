@@ -6,7 +6,6 @@
     (item) => item.id === location.pathname.split("/")[1],
   );
   if (!game) return;
-  const oldRules = document.querySelector(".rules");
   const current = document.getElementById("rules-detail");
   const label = document.getElementById("rules-label");
   const dialog =
@@ -82,21 +81,10 @@
   dialog.replaceChildren(header, body);
   document.body.append(dialog);
 
-  let open = document.getElementById("rules-open");
-  if (!open) {
-    open = document.createElement("button");
-    open.id = "rules-open";
-    open.type = "button";
-    open.textContent = "Luật chơi";
-    const entry = document.createElement("div");
-    entry.className = "rules wg-rules-entry";
-    entry.append(open);
-    if (oldRules) oldRules.replaceWith(entry);
-    else document.querySelector(".account, .heading, main")?.append(entry);
-  }
-  open.setAttribute("aria-haspopup", "dialog");
-  open.setAttribute("aria-controls", dialog.id);
-  open.addEventListener("click", () => dialog.showModal());
+  // Configuration nodes have moved into the dialog; discard the old entry cards.
+  document
+    .querySelectorAll(".rules, #rules-open")
+    .forEach((node) => node.remove());
   const tools = document.querySelector(".wg-header-tools");
   if (tools) {
     const help = document.createElement("button");

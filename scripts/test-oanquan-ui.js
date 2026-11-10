@@ -439,7 +439,10 @@ async function main() {
     assert.equal(await evaluate("state.ply"), 1);
     await click('[data-panel="history"]', true);
     await until('WebGameMobile.active()==="history"', 80);
-    await click(".wg-sheet-close", true);
+    await click(
+      ".wg-sheet:not([hidden]) .wg-sheet-close, .wg-menu-dialog[open] .wg-modal-close",
+      true,
+    );
     await until("!WebGameMobile.active()");
     await screenshot("oanquan-" + width + "x" + height + ".png");
   }

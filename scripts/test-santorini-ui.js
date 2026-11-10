@@ -317,7 +317,10 @@ async function main() {
         ),
         false,
       );
-      await click(".wg-sheet-close", true);
+      await click(
+        ".wg-sheet:not([hidden]) .wg-sheet-close, .wg-menu-dialog[open] .wg-modal-close",
+        true,
+      );
       assert.equal(await evaluate("WebGameMobile.active()"), null);
     } else {
       assert.equal(layout.mobile, false);
