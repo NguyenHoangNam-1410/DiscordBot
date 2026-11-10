@@ -165,3 +165,17 @@
   padding: 4px;
   font: 700 20px/1 system-ui;
 }
+
+/* Keep audio controls readable when game-specific pressed-button styles apply. */
+.shell > header #sound-toggle[aria-pressed="true"],
+.shell > header #bgm-toggle[aria-pressed="true"] {
+  background: var(--accent, #d7ecaa);
+  border-color: var(--accent, #d7ecaa);
+  color: var(--bg, #132020);
+}
+.shell > header #sound-toggle[aria-pressed="false"],
+.shell > header #bgm-toggle[aria-pressed="false"] {
+  background: var(--panel, #1c2934);
+  border-color: var(--line, #354756);
+  color: var(--muted, #a7bdb7);
+}

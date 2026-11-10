@@ -1,5 +1,16 @@
 [
   {
+    "id": "04df80ce-391c-4657-98ca-ed4cf436f714",
+    "updatedAt": "2026-11-10T15:12:14.191Z",
+    "auditedAt": "2026-11-10T15:12:14.191Z",
+    "title": "Web game: sửa hiển thị nút âm thanh",
+    "type": "fix",
+    "scope": "system",
+    "changes": [
+      "Nút hiệu ứng âm thanh khi bật có nền sáng và biểu tượng loa rõ ràng, đồng nhất với nút nhạc nền; trạng thái tắt dùng nền tối trên các game."
+    ]
+  },
+  {
     "id": "b0c4e082-1667-42c3-a979-b04adc5dc986",
     "updatedAt": "2026-11-10T15:07:21.850Z",
     "auditedAt": "2026-11-10T15:07:21.850Z",

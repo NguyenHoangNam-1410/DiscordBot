@@ -525,6 +525,65 @@ async function main() {
     await evaluate('localStorage.getItem("discord-games:bgm-enabled")'),
     "0",
   );
+  // Pressed-button rules in individual games must not hide the speaker icon.
+  for (const game of [
+    "caro",
+    "walls",
+    "battleship",
+    "dots",
+    "blokus",
+    "mecung",
+  ]) {
+    await send("Page.navigate", { url: config.origin + "/fixture/" + game });
+    await until(
+      'typeof state!=="undefined"&&connected&&document.getElementById("webgame-bgm")?.readyState>=1',
+    );
+    if (
+      await evaluate('$("sound-toggle").getAttribute("aria-pressed")==="false"')
+    )
+      await click("#sound-toggle");
+    await until('$("sound-toggle").getAttribute("aria-pressed")==="true"');
+    if (
+      await evaluate('$("bgm-toggle").getAttribute("aria-pressed")==="false"')
+    )
+      await click("#bgm-toggle");
+    await until('$("bgm-toggle").getAttribute("aria-pressed")==="true"');
+    const active = await evaluate(
+      '(()=>{const a=getComputedStyle($("sound-toggle")),b=getComputedStyle($("bgm-toggle"));return {fg:a.color,bg:a.backgroundColor,bgmFg:b.color,bgmBg:b.backgroundColor,stroke:getComputedStyle($("sound-toggle").querySelector("svg")).stroke}})()',
+    );
+    assert.equal(
+      active.fg,
+      active.bgmFg,
+      game + ": active audio controls share icon color",
+    );
+    assert.equal(
+      active.bg,
+      active.bgmBg,
+      game + ": active audio controls share background",
+    );
+    assert.notEqual(
+      active.fg,
+      active.bg,
+      game + ": speaker stays visible against its background",
+    );
+    assert.equal(
+      active.stroke,
+      active.fg,
+      game + ": speaker stroke inherits visible button color",
+    );
+    await click("#sound-toggle");
+    await until('$("sound-toggle").getAttribute("aria-pressed")==="false"');
+    const inactive = await evaluate(
+      '(()=>{const c=getComputedStyle($("sound-toggle"));return {fg:c.color,bg:c.backgroundColor}})()',
+    );
+    assert.notEqual(
+      inactive.bg,
+      active.bg,
+      game + ": switching off visibly changes the button",
+    );
+    assert.notEqual(inactive.fg, inactive.bg);
+  }
+  await screenshot("sound-controls-fixed.png");
   assert.deepEqual(errors, []);
   console.log(
     JSON.stringify({
