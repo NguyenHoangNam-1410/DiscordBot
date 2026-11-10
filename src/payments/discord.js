@@ -1,7 +1,6 @@
 "use strict";
 
 const { EmbedBuilder, AttachmentBuilder } = require("discord.js");
-const { generateQR, genQRText } = require("vietqr");
 const vnd = (value) => `${value.toLocaleString("vi-VN")}đ`;
 const vietTime = (value) =>
   new Intl.DateTimeFormat("vi-VN", {
@@ -30,9 +29,11 @@ function qrInput(order) {
   };
 }
 function qrText(order) {
-  return genQRText(qrInput(order));
+  return require("vietqr").genQRText(qrInput(order));
 }
 async function renderQR(order) {
+  // Optional QR support must not prevent unrelated games or the web server from starting.
+  const { generateQR } = require("vietqr");
   // Official VietQR 1.2+ generates both the payload and PNG locally, without an API key or network.
   const result = await generateQR(qrInput(order));
   if (

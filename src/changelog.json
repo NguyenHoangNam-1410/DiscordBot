@@ -1,5 +1,17 @@
 [
   {
+    "id": "6972f9c8-2191-4cbe-a075-025109b4fa24",
+    "updatedAt": "2026-11-10T02:52:58.016Z",
+    "auditedAt": "2026-11-10T02:52:58.016Z",
+    "title": "Giữ game web hoạt động khi phần QR chưa được cài đủ",
+    "type": "fix",
+    "scope": "system",
+    "changes": [
+      "Tách thư viện tạo QR khỏi lúc khởi động bot để phần chuyển khoản không làm dừng các game web khi máy chủ chưa cài đủ thư viện.",
+      "Lệnh /bet báo rõ cách cập nhật thư viện và giải phóng hạn mức nếu chưa tạo được QR."
+    ]
+  },
+  {
     "id": "240a6e08-8b94-45e3-8f4d-00491d2d7af5",
     "updatedAt": "2026-11-10T02:37:24.664Z",
     "auditedAt": "2026-11-10T02:37:24.664Z",

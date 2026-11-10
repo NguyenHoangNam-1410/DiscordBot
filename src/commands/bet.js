@@ -89,10 +89,13 @@ function createCommand(getRuntime = runtime, renderQR = ui.renderQR) {
           order = bank.store.get(order.id);
           payload = ui.payload(order);
           if (order.status === "pending") payload.files = [image];
-        } catch {
+        } catch (error) {
           const released = bank.store.expireUnpublished(order.id);
+          const missingQr =
+            error.code === "MODULE_NOT_FOUND" &&
+            error.message.includes("vietqr");
           return interaction.editReply({
-            content: `Chưa tạo được ảnh QR. Hãy thử lại.${released ? " Yêu cầu chưa hiển thị này đã được giải phóng hạn mức." : ""}`,
+            content: `${missingQr ? "Máy chủ chưa cài thư viện tạo QR. Chủ bot cần chạy `npm ci`, rồi khởi động lại bot." : "Chưa tạo được ảnh QR. Hãy thử lại."}${released ? " Yêu cầu chưa hiển thị này đã được giải phóng hạn mức." : ""}`,
             allowedMentions: { parse: [] },
           });
         }

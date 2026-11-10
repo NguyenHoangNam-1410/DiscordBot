@@ -3,6 +3,7 @@
 // Every bank event and Discord call below is simulated; never transfers money.
 const assert = require("node:assert/strict");
 const { createHmac } = require("node:crypto");
+const { spawnSync } = require("node:child_process");
 process.env.DB_PATH = ":memory:";
 process.env.COMMAND_PREFIX = "!";
 const { db } = require("../src/db");
@@ -107,6 +108,45 @@ function sign(data, key = secret) {
 }
 
 async function main() {
+  const missingQrStartup = spawnSync(
+    process.execPath,
+    [
+      "-e",
+      `
+    process.env.DB_PATH = ':memory:';
+    const assert = require('node:assert/strict');
+    const Module = require('node:module');
+    const original = Module._load;
+    Module._load = function(name,...args) {
+      if(name === 'vietqr') throw Object.assign(new Error("Cannot find module 'vietqr'"), {code:'MODULE_NOT_FOUND'});
+      return original.call(this,name,...args);
+    };
+    (async()=> {
+      assert(require('./src/commandRegistry').loadCommands().some(c=>c.data.name==='bet'));
+      require('./src/webGames');
+      require('./src/payments/runtime').runtime();
+      const {createWebServer}=require('./src/webGames/http');
+      const web=createWebServer({games:[],config:{origin:'http://127.0.0.1',secure:false}});
+      await new Promise(resolve=>web.server.listen(0,'127.0.0.1',resolve));
+      try { assert.equal((await fetch('http://127.0.0.1:'+web.server.address().port+'/healthz')).status,200); }
+      finally { await web.stop(); }
+      await assert.rejects(()=>require('./src/payments/discord').renderQR({}), {code:'MODULE_NOT_FOUND'});
+      console.log('startup and web health work without QR dependency');
+    })().catch(error=>{console.error(error);process.exitCode=1});
+  `,
+    ],
+    {
+      cwd: require("node:path").resolve(__dirname, ".."),
+      encoding: "utf8",
+      timeout: 20000,
+    },
+  );
+  assert.equal(
+    missingQrStartup.status,
+    0,
+    missingQrStartup.stderr || missingQrStartup.error?.message,
+  );
+  assert.match(missingQrStartup.stdout, /web health work/);
   assert.equal(config.closesAt, Date.parse("2026-11-14T19:00:00Z"));
   assert.equal(config.maxTransactionAmount, 20000);
   assert.equal(config.maxUserAmount, 50000);
@@ -619,6 +659,21 @@ async function main() {
   assert.match(calls.at(-1).content, /giải phóng hạn mức/);
   assert.equal(
     prefixRuntime.store.player(G, config.campaignId, "qr-error").rows[0].status,
+    "expired",
+  );
+  const missingQrCommand = createCommand(
+    () => prefixRuntime,
+    async () => {
+      throw Object.assign(new Error("Cannot find module 'vietqr'"), {
+        code: "MODULE_NOT_FOUND",
+      });
+    },
+  );
+  await missingQrCommand.execute(interaction(10000, "BLG", "missing-qr"));
+  assert.match(calls.at(-1).content, /npm ci/);
+  assert.equal(
+    prefixRuntime.store.player(G, config.campaignId, "missing-qr").rows[0]
+      .status,
     "expired",
   );
   const prefixMessage = {
