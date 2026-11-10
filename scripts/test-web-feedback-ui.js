@@ -466,6 +466,65 @@ async function main() {
   assert.equal(await evaluate("state.me"), null);
   await screenshot("sound-spectator.png");
 
+  await until('document.getElementById("webgame-bgm")?.readyState>=1');
+  await click("#bgm-toggle");
+  if (await evaluate('document.getElementById("webgame-bgm").paused'))
+    await click("#bgm-toggle");
+  await until('!document.getElementById("webgame-bgm").paused');
+  const bgmState = await evaluate(
+    '(()=>{const a=document.getElementById("webgame-bgm");a.currentTime=23; a.dispatchEvent(new Event("timeupdate"));return {src:a.getAttribute("src"),saved:JSON.parse(sessionStorage.getItem("discord-games:bgm-session-v1"))}})()',
+  );
+  await send("Page.reload");
+  await until('document.getElementById("webgame-bgm")?.readyState>=1');
+  assert.equal(
+    await evaluate(
+      'document.getElementById("webgame-bgm").getAttribute("src")',
+    ),
+    bgmState.src,
+  );
+  assert(
+    await evaluate('document.getElementById("webgame-bgm").currentTime>=23'),
+  );
+  assert.deepEqual(
+    await evaluate(
+      'JSON.parse(sessionStorage.getItem("discord-games:bgm-session-v1")).order',
+    ),
+    bgmState.saved.order,
+  );
+  await click("#bgm-toggle");
+  if (await evaluate('document.getElementById("webgame-bgm").paused'))
+    await click("#bgm-toggle");
+  await until('!document.getElementById("webgame-bgm").paused');
+  const bgmCycle = await evaluate(
+    'JSON.parse(sessionStorage.getItem("discord-games:bgm-session-v1")).order.length',
+  );
+  const heard = [];
+  for (let i = 0; i < bgmCycle; i++) {
+    const old = await evaluate(
+      'document.getElementById("webgame-bgm").getAttribute("src")',
+    );
+    heard.push(old);
+    await evaluate(
+      'document.getElementById("webgame-bgm").dispatchEvent(new Event("ended"))',
+    );
+    if (bgmCycle > 1)
+      await until(
+        'document.getElementById("webgame-bgm").getAttribute("src")!==' +
+          JSON.stringify(old),
+      );
+  }
+  assert.equal(
+    new Set(heard).size,
+    bgmCycle,
+    "All BGM tracks play before repeating",
+  );
+  await until('!document.getElementById("webgame-bgm").paused');
+  await click("#bgm-toggle");
+  assert(await evaluate('document.getElementById("webgame-bgm").paused'));
+  assert.equal(
+    await evaluate('localStorage.getItem("discord-games:bgm-enabled")'),
+    "0",
+  );
   assert.deepEqual(errors, []);
   console.log(
     JSON.stringify({

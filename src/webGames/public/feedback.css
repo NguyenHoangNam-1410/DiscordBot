@@ -152,3 +152,16 @@
   margin: 0;
   font-size: 0;
 }
+
+/* Background music has its own control and preference. */
+.shell > header #bgm-toggle {
+  box-sizing: border-box;
+  flex: 0 0 32px;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  margin: 0;
+  padding: 4px;
+  font: 700 20px/1 system-ui;
+}

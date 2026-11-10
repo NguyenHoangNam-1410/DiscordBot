@@ -1,5 +1,17 @@
 [
   {
+    "id": "20070232-781e-4e32-9053-6b8d096885f3",
+    "updatedAt": "2026-11-10T15:05:07.291Z",
+    "auditedAt": "2026-11-10T15:05:07.291Z",
+    "title": "Web game: nhạc nền ngẫu nhiên, giữ tiến trình khi tải lại",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Thêm nhạc nền từ danh sách BGM: thứ tự phát ngẫu nhiên, hết bài tự chuyển bài; phát hết danh sách mới xáo lại và tránh lặp ngay bài vừa nghe.",
+      "Giữ bài, vị trí và thứ tự khi tải lại trang hoặc chuyển game trong cùng tab. Nút ♫ bật/tắt nhạc riêng với hiệu ứng; tắt rồi bật tiếp tục bài đang nghe."
+    ]
+  },
+  {
     "id": "d7667c77-0d7d-4f61-8e2c-63410fcd3903",
     "updatedAt": "2026-11-10T14:34:15.280Z",
     "auditedAt": "2026-11-10T14:34:15.280Z",

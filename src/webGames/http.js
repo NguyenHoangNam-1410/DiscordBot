@@ -54,11 +54,29 @@ function createWebServer({
     sessions = new Map(),
     limits = new Map(),
     streams = new Map();
+  const bgmRoot = path.resolve(__dirname, "../../assets/bgm");
+  const bgmTypes = {
+    ".mp3": "audio/mpeg",
+    ".ogg": "audio/ogg",
+    ".wav": "audio/wav",
+    ".m4a": "audio/mp4",
+  };
+  const bgm = new Map();
+  if (fs.existsSync(bgmRoot))
+    for (const file of fs.readdirSync(bgmRoot, { withFileTypes: true })) {
+      const type = bgmTypes[path.extname(file.name).toLowerCase()];
+      if (file.isFile() && type)
+        bgm.set("/assets/bgm/" + encodeURIComponent(file.name), {
+          file: path.join(bgmRoot, file.name),
+          type,
+        });
+    }
   const assets = new Map();
   for (const [file, type] of [
     ["mobile-ui.js", "text/javascript; charset=utf-8"],
     ["mobile-ui.css", "text/css; charset=utf-8"],
     ["feedback.js", "text/javascript; charset=utf-8"],
+    ["bgm.js", "text/javascript; charset=utf-8"],
     ["feedback.css", "text/css; charset=utf-8"],
     ["pairing-ui.js", "text/javascript; charset=utf-8"],
     ["pairing-ui.css", "text/css; charset=utf-8"],
@@ -95,7 +113,17 @@ function createWebServer({
     ]) {
       const asset = {
         type,
-        data: fs.readFileSync(path.join(game.publicDir, file)),
+        data:
+          url === "/"
+            ? Buffer.from(
+                fs
+                  .readFileSync(path.join(game.publicDir, file), "utf8")
+                  .replace(
+                    "</head>",
+                    '<script src="/bgm.js" defer></script></head>',
+                  ),
+              )
+            : fs.readFileSync(path.join(game.publicDir, file)),
       };
       assets.set(`/${game.id}${url}`, asset);
       if (url === "/") assets.set(`/${game.id}`, asset);
@@ -209,9 +237,56 @@ function createWebServer({
     res.setHeader("X-Frame-Options", "DENY");
     res.setHeader(
       "Content-Security-Policy",
-      "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' https://cdn.discordapp.com; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
+      "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; media-src 'self'; img-src 'self' https://cdn.discordapp.com; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
     );
     const url = new URL(req.url, "http://localhost");
+    if (["GET", "HEAD"].includes(req.method) && url.pathname === "/api/bgm") {
+      res.writeHead(200, { "Content-Type": "application/json; charset=utf-8" });
+      return res.end(
+        req.method === "HEAD"
+          ? undefined
+          : JSON.stringify({ tracks: [...bgm.keys()] }),
+      );
+    }
+    if (["GET", "HEAD"].includes(req.method) && bgm.has(url.pathname)) {
+      const track = bgm.get(url.pathname),
+        size = fs.statSync(track.file).size;
+      let start = 0,
+        end = size - 1;
+      if (req.headers.range) {
+        const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
+        if (!range || (!range[1] && !range[2])) {
+          res.writeHead(416, { "Content-Range": "bytes */" + size });
+          return res.end();
+        }
+        if (range[1]) {
+          start = Number(range[1]);
+          end = range[2] ? Math.min(Number(range[2]), end) : end;
+        } else start = Math.max(0, size - Number(range[2]));
+        if (
+          !Number.isSafeInteger(start) ||
+          !Number.isSafeInteger(end) ||
+          start > end ||
+          start >= size
+        ) {
+          res.writeHead(416, { "Content-Range": "bytes */" + size });
+          return res.end();
+        }
+      }
+      const headers = {
+        "Content-Type": track.type,
+        "Content-Length": end - start + 1,
+        "Accept-Ranges": "bytes",
+      };
+      if (req.headers.range)
+        headers["Content-Range"] = "bytes " + start + "-" + end + "/" + size;
+      res.writeHead(req.headers.range ? 206 : 200, headers);
+      if (req.method === "HEAD") return res.end();
+      const stream = fs.createReadStream(track.file, { start, end });
+      stream.on("error", () => res.destroy());
+      res.on("close", () => stream.destroy());
+      return stream.pipe(res);
+    }
     // Provider callbacks authenticate their signed payload; browser origin checks stay intact.
     if (webhookRoutes.has(url.pathname)) {
       if (!allowed(`bank:${req.socket.remoteAddress}`, 300, 60_000))
