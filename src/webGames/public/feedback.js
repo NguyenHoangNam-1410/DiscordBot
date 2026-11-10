@@ -14,6 +14,14 @@ globalThis.WebGameFeedback = (() => {
       [0.2, 440, 0.08],
     ],
     tool: [[0, 490, 0.05, 300]],
+    stone: [
+      [0, 1560, 0.04, 1100],
+      [0.006, 2480, 0.025, 1900],
+    ],
+    slap: [
+      [0, 165, 0.09, 65],
+      [0.006, 320, 0.05, 120],
+    ],
     join: [
       [0, 523, 0.09],
       [0.12, 784, 0.16],
@@ -206,31 +214,57 @@ globalThis.WebGameFeedback = (() => {
     for (const cue of cues) {
       const pattern = PATTERNS[cue];
       if (!pattern) continue;
-      if (
-        cue === "shot" &&
-        context.createBuffer &&
-        context.createBufferSource
-      ) {
+      const impact =
+        cue === "stone"
+          ? {
+              duration: 0.055,
+              decay: 0.012,
+              gain: 0.24,
+              filter: "highpass",
+              frequency: 700,
+            }
+          : cue === "slap"
+            ? {
+                duration: 0.13,
+                decay: 0.03,
+                gain: 0.7,
+                filter: "lowpass",
+                frequency: 1200,
+              }
+            : cue === "shot"
+              ? { duration: 0.2, decay: 0.045, gain: 0.65 }
+              : null;
+      if (impact && context.createBuffer && context.createBufferSource) {
         const buffer = context.createBuffer(
           1,
-          Math.ceil(context.sampleRate * 0.2),
+          Math.ceil(context.sampleRate * impact.duration),
           context.sampleRate,
         );
         const data = buffer.getChannelData(0);
         for (let i = 0; i < data.length; i++)
           data[i] =
             (Math.random() * 2 - 1) *
-            Math.exp(-i / (context.sampleRate * 0.045));
+            Math.exp(-i / (context.sampleRate * impact.decay));
         const burst = context.createBufferSource(),
-          envelope = context.createGain();
+          envelope = context.createGain(),
+          filter =
+            impact.filter && context.createBiquadFilter
+              ? context.createBiquadFilter()
+              : null;
         burst.buffer = buffer;
-        envelope.gain.value = 0.65;
-        burst.connect(envelope);
+        envelope.gain.value = impact.gain;
+        if (filter) {
+          filter.type = impact.filter;
+          filter.frequency.value = impact.frequency;
+          burst.connect(filter);
+          filter.connect(envelope);
+        } else burst.connect(envelope);
         envelope.connect(master);
         voices.add(burst);
         burst.onended = () => {
           voices.delete(burst);
           burst.disconnect();
+          filter?.disconnect();
           envelope.disconnect();
         };
         burst.start(context.currentTime + 0.015 + delay);
@@ -239,12 +273,15 @@ globalThis.WebGameFeedback = (() => {
         const at = context.currentTime + 0.015 + delay + offset;
         const oscillator = context.createOscillator(),
           gain = context.createGain();
-        oscillator.type = "triangle";
+        oscillator.type = cue === "slap" ? "sine" : "triangle";
         oscillator.frequency.setValueAtTime(frequency, at);
         if (end)
           oscillator.frequency.exponentialRampToValueAtTime(end, at + duration);
         gain.gain.setValueAtTime(0, at);
-        gain.gain.linearRampToValueAtTime(0.4, at + 0.008);
+        gain.gain.linearRampToValueAtTime(
+          cue === "stone" ? 0.3 : cue === "slap" ? 0.6 : 0.4,
+          at + (impact?.filter ? 0.002 : 0.008),
+        );
         gain.gain.exponentialRampToValueAtTime(0.001, at + duration);
         oscillator.connect(gain);
         gain.connect(master);
@@ -269,6 +306,11 @@ globalThis.WebGameFeedback = (() => {
         stop();
       } catch {}
     }
+  }
+  // Replay callers emit at the visual impact; muted or missed sounds are never queued.
+  function effect(cue) {
+    if (document.hidden || !["stone", "slap"].includes(cue)) return;
+    play([cue]);
   }
   function eventsBetween(game, before, next) {
     if (
@@ -427,6 +469,7 @@ globalThis.WebGameFeedback = (() => {
   });
   return {
     update,
+    effect,
     connection,
     setEnabled,
     eventsBetween,

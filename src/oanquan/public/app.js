@@ -303,7 +303,7 @@ function flight(from, to, capture = false) {
   animation.onfinish = remove;
   animation.oncancel = remove;
 }
-function applyStep(step, fx) {
+function applyStep(step, fx, sound) {
   const v = replay.view,
     p = step.pit != null ? v.pits[step.pit] : null;
   if (step.type === "pickup") {
@@ -318,6 +318,7 @@ function applyStep(step, fx) {
     }
   }
   if (step.type === "sow") {
+    if (sound) WebGameFeedback.effect("stone");
     p.dan++;
     replay.hand = step.hand;
     replay.caption =
@@ -358,6 +359,7 @@ function applyStep(step, fx) {
       (step.loan ? " · Vay " + step.loan + " dân" : " từ kho");
   }
   if (step.type === "seed") {
+    if (sound) WebGameFeedback.effect("stone");
     p.dan = 1;
     replay.hand--;
     if (fx) {
@@ -483,7 +485,12 @@ function renderHand(m, elapsed) {
       lift = t > 0.22 ? 24 * Math.sin(((t - 0.22) / 0.18) * Math.PI) : 0;
       if (replay.hitIndex !== i && t >= 0.28) {
         replay.hitIndex = i;
-        if (t < 0.4) pulse(cells[step.gap], "capture-hit");
+        if (t < 0.4) {
+          pulse(cells[step.gap], "capture-hit");
+          const hitAt = step.offset + stepDuration(m, i) * 0.28;
+          if (hitAt > replay.soundAfter && elapsed - hitAt < 180)
+            WebGameFeedback.effect("slap");
+        }
       }
     } else if (t < 0.8) {
       pos = mix(gap, pile, clamp((t - 0.4) / 0.2));
@@ -536,7 +543,8 @@ function replayTick() {
     const step = m.steps[replay.index],
       landing = step.offset + stepDuration(m, replay.index) * settlePhase(step);
     if (elapsed < landing) break;
-    applyStep(step, elapsed - landing < 180 && !document.hidden);
+    const recent = elapsed - landing < 180 && !document.hidden;
+    applyStep(step, recent, recent && landing > replay.soundAfter);
     replay.index++;
     changed = true;
   }
@@ -721,7 +729,13 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden) {
     resetPreview();
     hideHand();
-  } else if (replay) replayTick();
+  } else if (replay) {
+    replay.soundAfter = Math.max(
+      replay.soundAfter,
+      serverNow() - state.lastMove.at,
+    );
+    replayTick();
+  }
 });
 window.addEventListener("blur", () => {
   resetPreview();
@@ -763,6 +777,7 @@ function accept(next) {
         index: 0,
         motionIndex: 0,
         hitIndex: -1,
+        soundAfter: Math.max(0, serverNow() - next.lastMove.at),
         hand: 0,
         origin: next.lastMove.pit,
         caption: "Bắt đầu rải quân…",

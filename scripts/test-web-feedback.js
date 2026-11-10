@@ -13,6 +13,7 @@ function fixture({
   unsupported = false,
   blocked = false,
   privateStorage = false,
+  sampled = false,
 } = {}) {
   const nodes = new Map(),
     listeners = {},
@@ -108,6 +109,33 @@ function fixture({
       return node;
     }
   }
+  if (sampled) {
+    Object.assign(AudioContext.prototype, {
+      sampleRate: 48000,
+      createBuffer(channels, length, rate) {
+        const data = new Float32Array(length);
+        return { duration: length / rate, getChannelData: () => data };
+      },
+      createBufferSource() {
+        const node = {
+          kind: "noise",
+          connect() {},
+          disconnect() {},
+          start() {
+            node.started = true;
+          },
+          stop() {
+            node.stopped = true;
+          },
+        };
+        this.created.push(node);
+        return node;
+      },
+      createBiquadFilter() {
+        return { frequency: { value: 0 }, connect() {}, disconnect() {} };
+      },
+    });
+  }
   const context = {
     document,
     AudioContext: unsupported ? undefined : AudioContext,
@@ -128,6 +156,7 @@ function fixture({
   const api = context.WebGameFeedback;
   return {
     api,
+    document,
     audio,
     nodes,
     created,
@@ -362,6 +391,60 @@ async function main() {
   assert(privateMode.count() > 0);
   f.windowEvents.pagehide();
   assert.equal(f.audio[0].state, "closed");
+  const impacts = fixture({ sampled: true });
+  impacts.api.effect("stone");
+  assert.equal(
+    impacts.audio.length,
+    0,
+    "Impact effects never autoplay before activation",
+  );
+  impacts.listeners.pointerdown({ isTrusted: true });
+  await Promise.resolve();
+  impacts.api.effect("stone");
+  impacts.api.effect("slap");
+  assert.equal(
+    impacts.count(),
+    6,
+    "Each impact has a noise transient and two resonances",
+  );
+  const noises = impacts.audio[0].created.filter((n) => n.kind === "noise");
+  assert.equal(noises.length, 2);
+  assert(
+    noises[0].buffer.duration < noises[1].buffer.duration,
+    "Pebble clicks are shorter than palm slaps",
+  );
+  assert(
+    noises.every(
+      (n) => n.started && n.buffer.getChannelData(0).some((v) => v !== 0),
+    ),
+  );
+  const impactCount = impacts.count();
+  impacts.document.hidden = true;
+  impacts.api.effect("stone");
+  assert.equal(impacts.count(), impactCount, "Hidden tabs drop impacts");
+  impacts.document.hidden = false;
+  await impacts.api.setEnabled(false);
+  impacts.api.effect("stone");
+  impacts.api.effect("slap");
+  assert.equal(
+    impacts.count(),
+    impactCount,
+    "Both effects respect the speaker mute",
+  );
+  assert(
+    impacts.audio[0].created.every((n) => n.stopped),
+    "Mute also stops active transients",
+  );
+  await impacts.api.setEnabled(true);
+  impacts.api.effect("unknown");
+  assert.equal(
+    impacts.count(),
+    impactCount,
+    "Unmuting never queues missed impacts",
+  );
+  impacts.api.effect("stone");
+  assert.equal(impacts.count(), impactCount + 3);
+  impacts.windowEvents.pagehide();
   for (const game of [
     "walls",
     "dots",
@@ -472,7 +555,7 @@ async function main() {
     JSON.stringify({
       ok: true,
       feedback:
-        "seven stores, spectator X/O cues, first-click activation and honest speaker state, focus recovery/mute, deduplication, no autoplay/history replay, storage sync and unsupported audio",
+        "stone/slap transients and mute, seven stores, spectator X/O cues, first-click activation and honest speaker state, focus recovery/mute, deduplication, no autoplay/history replay, storage sync and unsupported audio",
     }),
   );
 }

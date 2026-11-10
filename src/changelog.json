@@ -1,5 +1,17 @@
 [
   {
+    "id": "67a8155d-00f0-4863-94b1-90c97d4235e5",
+    "updatedAt": "2026-11-10T14:17:24.371Z",
+    "auditedAt": "2026-11-10T14:17:24.371Z",
+    "title": "Ô ăn quan: âm thanh rải sỏi và đập ô",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Thêm tiếng sỏi chạm ô theo từng viên được rải và tiếng đập riêng khi bàn tay đập ô trống để ăn quân.",
+      "Âm thanh khớp hoạt ảnh cho người chơi và khán giả, dùng chung nút loa. Không phát lại tiếng cũ khi tải lại trang hoặc quay về từ tab nền."
+    ]
+  },
+  {
     "id": "131b4b62-79e7-47dd-91e4-7a96dc6e7db1",
     "updatedAt": "2026-11-10T10:26:20.813Z",
     "auditedAt": "2026-11-10T10:26:20.813Z",

@@ -220,7 +220,7 @@ async function main() {
   await send("Page.enable");
   await send("Page.addScriptToEvaluateOnNewDocument", {
     source:
-      "window.__input=[];['pointerdown','pointerup','pointercancel','lostpointercapture','click','contextmenu','touchstart','touchend'].forEach(k=>document.addEventListener(k,e=>{__input.push([k,e.target?.id||e.target?.dataset?.pit||e.target?.dataset?.panel||e.target?.tagName,Math.round(performance.now())]);if(__input.length>40)__input.shift()},true));window.__motions=[];window.__layout=[];window.__events=[];window.__poses=new Set();window.__drops=0;setInterval(()=>{const h=document.getElementById('sowing-hand'),s=document.getElementById('sowing-stone');if(h&&!h.hidden)__poses.add(h.dataset.pose);if(s&&!s.hidden)__drops++},25);const nativeAnimate=Element.prototype.animate;Element.prototype.animate=function(frames,options){if(this.classList.contains('stone-flight'))__motions.push({className:this.className,at:performance.now()});return nativeAnimate.call(this,frames,options)};document.addEventListener('animationstart',e=>__events.push(e.animationName),true);",
+      "window.__sfx=[];window.__osc=0;const nativeOsc=AudioContext.prototype.createOscillator;AudioContext.prototype.createOscillator=function(...args){__osc++;return nativeOsc.apply(this,args)};document.addEventListener('DOMContentLoaded',()=>{const effect=WebGameFeedback.effect;WebGameFeedback.effect=cue=>{const before=__osc;effect(cue);__sfx.push({cue,at:serverNow()-state.lastMove.at,index:replay.motionIndex,voices:__osc-before})}});window.__input=[];['pointerdown','pointerup','pointercancel','lostpointercapture','click','contextmenu','touchstart','touchend'].forEach(k=>document.addEventListener(k,e=>{__input.push([k,e.target?.id||e.target?.dataset?.pit||e.target?.dataset?.panel||e.target?.tagName,Math.round(performance.now())]);if(__input.length>40)__input.shift()},true));window.__motions=[];window.__layout=[];window.__events=[];window.__poses=new Set();window.__drops=0;setInterval(()=>{const h=document.getElementById('sowing-hand'),s=document.getElementById('sowing-stone');if(h&&!h.hidden)__poses.add(h.dataset.pose);if(s&&!s.hidden)__drops++},25);const nativeAnimate=Element.prototype.animate;Element.prototype.animate=function(frames,options){if(this.classList.contains('stone-flight'))__motions.push({className:this.className,at:performance.now()});return nativeAnimate.call(this,frames,options)};document.addEventListener('animationstart',e=>__events.push(e.animationName),true);",
   });
   await send("Emulation.setDeviceMetricsOverride", {
     width: 1280,
@@ -358,6 +358,11 @@ async function main() {
   );
   await screenshot("oanquan-hand-sow.png");
   await until("replay?.view.pits[0].dan===1");
+  assert.equal(
+    await evaluate('__sfx.filter(s=>s.cue==="stone").length'),
+    1,
+    "First pebble sounds exactly on landing",
+  );
   await evaluate("window.__savedReplay=replay;accept(structuredClone(state))");
   assert.equal(
     await evaluate("replay===__savedReplay"),
@@ -368,6 +373,33 @@ async function main() {
   await screenshot("oanquan-capture.png");
   await until("replay===null");
   assert((await evaluate("__motions.length")) >= 6);
+  const firstSfx = await evaluate("__sfx");
+  assert.equal(
+    firstSfx.filter((s) => s.cue === "stone").length,
+    10,
+    "Each of ten stones sounds once",
+  );
+  assert.equal(
+    firstSfx.filter((s) => s.cue === "slap").length,
+    1,
+    "The empty pit is slapped once",
+  );
+  assert(
+    firstSfx.every((s) => s.voices === 2),
+    "Both cues reach the running audio engine",
+  );
+  const firstSteps = await evaluate("state.lastMove.steps");
+  for (const sound of firstSfx) {
+    const step = firstSteps[sound.index],
+      span =
+        (firstSteps[sound.index + 1]?.offset ??
+          (await evaluate("state.lastMove.duration"))) - step.offset;
+    const impactAt = step.offset + span * (sound.cue === "stone" ? 0.9 : 0.28);
+    assert(
+      sound.at >= impactAt && sound.at - impactAt < 180,
+      "Sound follows the visual impact, not move submission",
+    );
+  }
   assert((await evaluate("__drops")) > 0);
   assert.deepEqual(
     (await evaluate("[...__poses]")).sort(),
@@ -387,6 +419,11 @@ async function main() {
     await evaluate("replay"),
     null,
     "Late duplicate cannot restart animation",
+  );
+  assert.equal(
+    await evaluate("__sfx.length"),
+    firstSfx.length,
+    "Duplicate snapshots cannot repeat impacts",
   );
   assert(
     (await evaluate('cells.filter(c=>c.classList.contains("recent")).length')) >
@@ -456,10 +493,18 @@ async function main() {
   const guestPit = await evaluate("state.legalMoves[0].pit");
   await dragPit(guestPit, (guestPit + 1) % 12, true);
   await until("state.ply===2&&replay!==null");
+  await until('__sfx.filter(s=>s.cue==="stone").length>=2');
   await send("Page.reload");
   await until(
     'typeof state!=="undefined"&&state?.me==="O"&&state.ply===2&&connected',
   );
+  const soundCutoff = await evaluate("replay.soundAfter");
+  assert.equal(
+    await evaluate("__sfx.length"),
+    0,
+    "Reload skips the stones already played",
+  );
+  await click("#sound-toggle", true);
   const replayDeadline = await evaluate("state.animationUntil");
   await send("Emulation.setEmulatedMedia", {
     features: [{ name: "prefers-reduced-motion", value: "reduce" }],
@@ -475,7 +520,37 @@ async function main() {
     "Reduced motion preserves server deadline",
   );
   await send("Emulation.setEmulatedMedia", { features: [] });
+  const otherTab = await send("Target.createTarget", { url: "about:blank" });
+  await send("Target.activateTarget", { targetId: otherTab.targetId });
+  await until("document.hidden", 80);
+  const beforeBackground = await evaluate("__sfx.length");
+  await delay(1200);
+  assert.equal(
+    await evaluate("__sfx.length"),
+    beforeBackground,
+    "Hidden tabs do not emit impacts",
+  );
+  await send("Target.activateTarget", {
+    targetId: targets.find((t) => t.type === "page").id,
+  });
+  await until("!document.hidden", 80);
+  const resumedAt = await evaluate("replay.soundAfter");
+  await send("Target.closeTarget", { targetId: otherTab.targetId });
   await until("replay===null");
+  assert(
+    (await evaluate("__sfx"))
+      .slice(beforeBackground)
+      .every((s) => s.at > resumedAt),
+    "Returning to the tab skips all missed impacts",
+  );
+  assert(
+    await evaluate('__sfx.some(s=>s.cue==="stone"&&s.voices===2)'),
+    "Remaining stones still sound after activation",
+  );
+  assert(
+    (await evaluate("__sfx")).every((s) => s.at > soundCutoff),
+    "No impact before the reload cutoff is replayed",
+  );
   await send("Page.navigate", {
     url: web.issueTicket("oanquan", room.id, users.X.id),
   });
@@ -512,6 +587,10 @@ async function main() {
   room = fixture.store.move(room.id, users[room.turn].id, move, room.version);
   await until("state.ply===4&&replay!==null");
   await until("replay===null");
+  assert(
+    await evaluate('__sfx.some(s=>s.cue==="stone"&&s.voices===2)'),
+    "Spectators hear the same live pebble effects",
+  );
   fixture.store.leave(room.id, users.X.id);
   await until('state.status==="finished"');
   assert(
@@ -531,7 +610,7 @@ async function main() {
     JSON.stringify({
       ok: true,
       oanquanUI:
-        "desktop/portrait/landscape, mouse/touch drag, immediate click move, cancel/invalid drop, animated hand poses and delayed stone landing, paused clocks, duplicate/reload replay, guest orientation, rules/history dialog, live spectator and result",
+        "desktop/portrait/landscape, mouse/touch drag, immediate click move, cancel/invalid drop, animated hand poses, synchronized stone/slap audio without duplicate/reload sounds, and delayed stone landing, paused clocks, duplicate/reload replay, guest orientation, rules/history dialog, live spectator and result",
     }),
   );
   await send("Browser.close").catch(() => {});
