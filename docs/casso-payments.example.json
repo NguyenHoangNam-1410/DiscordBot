@@ -1,0 +1,18 @@
+{
+  "enabled": false,
+  "guildId": "",
+  "campaignId": "blg-geng-20261115",
+  "title": "BLG vs GENG",
+  "bankBin": "970448",
+  "bankCode": "OCB",
+  "accountNumber": "CASSDEMO",
+  "mainAccountNumber": "0000000000",
+  "accountName": "NGUYEN VAN A",
+  "sides": ["BLG", "GENG"],
+  "minAmount": 1,
+  "maxTransactionAmount": 20000,
+  "maxUserAmount": 50000,
+  "maxTransactions": 3,
+  "waitMinutes": 15,
+  "closesAt": "2026-11-15T02:00:00+07:00"
+}

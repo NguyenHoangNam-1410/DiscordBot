@@ -1,5 +1,19 @@
 [
   {
+    "id": "240a6e08-8b94-45e3-8f4d-00491d2d7af5",
+    "updatedAt": "2026-11-10T02:37:24.664Z",
+    "auditedAt": "2026-11-10T02:37:24.664Z",
+    "title": "Chuyển khoản theo phe BLG/GENG",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Thêm /bet và !bet để tạo QR chuyển khoản theo phe BLG/GENG, tự xác nhận tiền vào và xem thống kê.",
+      "Mỗi người tối đa 50.000đ, 3 giao dịch; mỗi giao dịch tối đa 20.000đ. Chốt sổ lúc 02:00 ngày 15/11/2026 theo giờ Việt Nam.",
+      "Toàn bộ tiền đã xác nhận thuộc phe trong giao dịch hợp lệ cuối cùng; xử lý giao dịch đến trễ và tránh ghi nhận trùng.",
+      "Tạo ảnh QR trực tiếp trong bot; giao dịch sai thông tin hoặc quá hạn được giữ để đối soát."
+    ]
+  },
+  {
     "id": "c4d44f6c-a730-4817-a21d-d7a060c45431",
     "updatedAt": "2026-11-09T13:23:11.415Z",
     "auditedAt": "2026-11-09T13:23:11.415Z",

@@ -25,6 +25,13 @@ const { createGame: createSantoriniGame } = require("../santorini/webGame");
 
 // Register each new game here. Transport, browser sessions and Discord sync are shared.
 module.exports = createRuntime({
+  webhooks: [
+    {
+      path: require("../payments/casso").ENDPOINT,
+      handle: (req, res) =>
+        require("../payments/runtime").runtime().handle(req, res),
+    },
+  ],
   games: [
     require("../cotuong/webGame").createGame({
       store: require("../cotuong/store").createStore(db),

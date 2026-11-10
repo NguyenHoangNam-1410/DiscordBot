@@ -18,7 +18,20 @@ function createWebServer({
   config,
   logger,
   now = Date.now,
+  webhooks = [],
 }) {
+  const webhookRoutes = new Map(
+    webhooks.map((hook) => [hook.path, hook.handle]),
+  );
+  if (
+    webhookRoutes.size !== webhooks.length ||
+    webhooks.some(
+      (hook) =>
+        !/^\/api\/bank\/[a-z]+$/.test(hook.path) ||
+        typeof hook.handle !== "function",
+    )
+  )
+    throw new Error("Invalid bank webhook route");
   const registry = new Map();
   for (const game of games) {
     if (!/^[a-z][a-z0-9-]{0,31}$/.test(game.id) || registry.has(game.id))
@@ -193,6 +206,12 @@ function createWebServer({
       "default-src 'none'; script-src 'self'; style-src 'self'; connect-src 'self'; img-src 'self' https://cdn.discordapp.com; base-uri 'none'; frame-ancestors 'none'; form-action 'none'",
     );
     const url = new URL(req.url, "http://localhost");
+    // Provider callbacks authenticate their signed payload; browser origin checks stay intact.
+    if (webhookRoutes.has(url.pathname)) {
+      if (!allowed(`bank:${req.socket.remoteAddress}`, 300, 60_000))
+        return json(res, 429, { success: false });
+      return webhookRoutes.get(url.pathname)(req, res);
+    }
     if (req.method === "GET" && url.pathname === "/healthz")
       return json(res, 200, { ok: true });
     if (["GET", "HEAD"].includes(req.method)) {

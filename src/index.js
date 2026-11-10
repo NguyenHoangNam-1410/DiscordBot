@@ -62,6 +62,7 @@ const maintenanceTimers = [startEconomyMaintenance(logger)];
 const rateLimiter = createRateLimiter();
 let backupManager = null;
 const webGameRuntime = require("./webGames");
+const bankPayments = require("./payments/runtime").runtime();
 let shuttingDown = false;
 let activeInteractions = 0;
 const activeMessageTasks = new Set();
@@ -105,6 +106,7 @@ async function shutdown(signal, exitCode = 0) {
   logger.info({ signal }, "game bot shutting down");
   for (const timer of maintenanceTimers) clearInterval(timer);
   rateLimiter.stop();
+  await bankPayments.stop();
   await webGameRuntime.stop();
   // Reject new work and give ongoing handlers a bounded chance to persist their action.
   const drainDeadline = Date.now() + 10_000;
@@ -191,6 +193,14 @@ client.once(Events.ClientReady, async () => {
     );
   if (shuttingDown) return;
   const resumedHorseRaces = resumeHorseRaces(client, logger);
+  try {
+    bankPayments.start(client, logger, webGameRuntime.isAvailable("caro"));
+  } catch (error) {
+    logger.error(
+      { code: error.code || error.name, message: error.message },
+      "could not start bank payment reconciliation",
+    );
+  }
   try {
     const refunded =
       require("./hardcore/inventory/service").refundRetiredReviveTickets();

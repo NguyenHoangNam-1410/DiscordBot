@@ -1754,4 +1754,34 @@ runMigration(72, "xiangqi web duels retire channel puzzles", () => {
  DELETE FROM game_settings WHERE setting_key='maintenance:cotuong';`);
 });
 
+runMigration(73, "bank transfer betting reconciliation", () => {
+  db.exec(`CREATE TABLE bank_bet_orders (
+    id TEXT PRIMARY KEY, request_id TEXT NOT NULL UNIQUE,
+    guild_id TEXT NOT NULL, channel_id TEXT NOT NULL, user_id TEXT NOT NULL,
+    campaign_id TEXT NOT NULL, campaign_title TEXT NOT NULL, side TEXT NOT NULL,
+    amount INTEGER NOT NULL CHECK(amount>0), memo TEXT NOT NULL UNIQUE,
+    bank_code TEXT NOT NULL, bank_bin TEXT NOT NULL, account_number TEXT NOT NULL,
+    main_account_number TEXT NOT NULL, account_name TEXT NOT NULL,
+    created_at INTEGER NOT NULL, expires_at INTEGER NOT NULL, closes_at INTEGER NOT NULL,
+    max_user_amount INTEGER NOT NULL, max_transactions INTEGER NOT NULL,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending','paid','expired','review')),
+    paid_at INTEGER, provider_id INTEGER UNIQUE, message_id TEXT,
+    ui_dirty INTEGER NOT NULL DEFAULT 1, revision INTEGER NOT NULL DEFAULT 1,
+    next_attempt_at INTEGER NOT NULL DEFAULT 0,
+    CHECK((status='paid') = (paid_at IS NOT NULL AND provider_id IS NOT NULL))
+  );
+  CREATE INDEX idx_bank_bet_user ON bank_bet_orders(guild_id,campaign_id,user_id,status,paid_at DESC);
+  CREATE INDEX idx_bank_bet_ui ON bank_bet_orders(ui_dirty,next_attempt_at);
+  CREATE TABLE bank_bet_receipts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT, provider_id INTEGER NOT NULL UNIQUE CHECK(provider_id>0),
+    reference TEXT, bank_code TEXT NOT NULL, receiver TEXT NOT NULL,
+    amount INTEGER NOT NULL CHECK(amount>0), description TEXT NOT NULL,
+    happened_at INTEGER, received_at INTEGER NOT NULL,
+    order_id TEXT REFERENCES bank_bet_orders(id), reason TEXT NOT NULL
+  );
+  CREATE UNIQUE INDEX idx_bank_bet_bank_reference ON bank_bet_receipts(bank_code,receiver,reference) WHERE reference IS NOT NULL;
+  CREATE INDEX idx_bank_bet_review ON bank_bet_receipts(reason,received_at);
+  `);
+});
+
 module.exports = { db, dbPath, runMigration };

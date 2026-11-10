@@ -3,7 +3,7 @@
 const { createWebServer } = require("./http");
 const { readConfig } = require("./config");
 
-function createRuntime({ games, legacyGame = null }) {
+function createRuntime({ games, legacyGame = null, webhooks = [] }) {
   const registry = new Map(games.map((game) => [game.id, game]));
   function game(id) {
     const module = registry.get(id);
@@ -113,7 +113,13 @@ function createRuntime({ games, legacyGame = null }) {
     startPending = (async () => {
       const config = readConfig();
       if (!config.enabled) return;
-      const candidate = createWebServer({ games, legacyGame, config, logger });
+      const candidate = createWebServer({
+        games,
+        legacyGame,
+        config,
+        logger,
+        webhooks,
+      });
       try {
         await new Promise((resolve, reject) => {
           candidate.server.once("error", reject);

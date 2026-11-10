@@ -12,6 +12,7 @@ data/*.sqlite-shm
 data/*.sqlite-wal
 data/*.db
 data/backups/
+data/bank-payments.json
 
 # Logs
 logs/

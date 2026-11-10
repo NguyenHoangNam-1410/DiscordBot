@@ -191,6 +191,10 @@ const PAGES = Object.freeze({
     description: "Hồ sơ, số dư và các bảng xếp hạng là riêng cho từng server.",
     fields: [
       [
+        "🏦 Chuyển khoản theo phe",
+        "`/bet sotien:10000 phe:BLG` — tạo QR; `/bet` — xem thống kê và trạng thái. Chỉ dùng khi người vận hành đã bật nhận tiền.",
+      ],
+      [
         "👤 Hồ sơ và xếp hạng",
         "`/hoso` — xem hồ sơ và thống kê từng game; `/xephang` — chọn tài sản hoặc game bằng menu.",
       ],
