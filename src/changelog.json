@@ -1,5 +1,16 @@
 [
   {
+    "id": "b0c4e082-1667-42c3-a979-b04adc5dc986",
+    "updatedAt": "2026-11-10T15:07:21.850Z",
+    "auditedAt": "2026-11-10T15:07:21.850Z",
+    "title": "Web game: tooltip nhạc nền gọn hơn",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Nút nhạc nền chỉ hiển thị trạng thái bật/tắt trong tooltip, không kèm tên bài hát."
+    ]
+  },
+  {
     "id": "20070232-781e-4e32-9053-6b8d096885f3",
     "updatedAt": "2026-11-10T15:05:07.291Z",
     "auditedAt": "2026-11-10T15:05:07.291Z",

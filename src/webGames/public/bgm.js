@@ -41,19 +41,13 @@
     button.setAttribute("aria-pressed", String(active));
     button.setAttribute("aria-label", active ? "Tắt nhạc nền" : "Bật nhạc nền");
     button.classList.toggle("muted", !active);
-    const name = order[index]
-      ? decodeURIComponent(order[index].split("/").pop()).replace(
-          /\.[^.]+$/,
-          "",
-        )
-      : "";
     button.title = unavailable
       ? "Không có nhạc nền phát được"
-      : (active
-          ? "Tắt nhạc nền"
-          : enabled
-            ? "Bấm để phát nhạc nền"
-            : "Bật nhạc nền") + (name ? " · " + name : "");
+      : active
+        ? "Tắt nhạc nền"
+        : enabled
+          ? "Bấm để phát nhạc nền"
+          : "Bật nhạc nền";
   }
   function save() {
     if (!ready) return;
