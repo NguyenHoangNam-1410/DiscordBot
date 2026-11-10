@@ -27,7 +27,9 @@ function createRuntime({ db, read = readConfig, now = Date.now }) {
           let edited = false;
           if (editor) {
             try {
-              await editor.edit(ui.payload(order));
+              await editor.edit(
+                ui.payload(order, store.estimateOrder(order.id, config.sides)),
+              );
               edited = true;
             } catch (error) {
               if (![10015, 10062, 50027].includes(error.code)) throw error;
@@ -37,7 +39,10 @@ function createRuntime({ db, read = readConfig, now = Date.now }) {
           if (!edited) {
             const channel = await client.channels.fetch(order.channel_id);
             if (stopping) break;
-            await channel.messages.edit(order.message_id, ui.payload(order));
+            await channel.messages.edit(
+              order.message_id,
+              ui.payload(order, store.estimateOrder(order.id, config.sides)),
+            );
           }
           if (stopping) break;
           store.acknowledge(order);

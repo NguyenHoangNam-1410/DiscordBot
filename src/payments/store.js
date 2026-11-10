@@ -1,6 +1,7 @@
 "use strict";
 
 const { randomBytes } = require("node:crypto");
+const { calculatePayouts, estimatePayout } = require("./payout");
 
 function createStore(db, { now = Date.now } = {}) {
   const orderById = db.prepare("SELECT * FROM bank_bet_orders WHERE id=?");
@@ -198,31 +199,70 @@ function createStore(db, { now = Date.now } = {}) {
       )
       .all(guildId, campaignId);
   }
-  function player(guildId, campaignId, userId) {
+  function wallets(guildId, campaignId) {
+    return db
+      .prepare(
+        `WITH paid AS (
+      SELECT user_id,side,amount,paid_at,provider_id,
+      ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY paid_at DESC,provider_id DESC) AS rank
+      FROM bank_bet_orders WHERE guild_id=? AND campaign_id=? AND status='paid'
+    ), sums AS (SELECT user_id,SUM(amount) AS amount,COUNT(*) AS transactions FROM paid GROUP BY user_id)
+    SELECT paid.user_id AS userId,paid.side,sums.amount,sums.transactions
+    FROM paid JOIN sums USING(user_id) WHERE paid.rank=1 ORDER BY paid.user_id`,
+      )
+      .all(guildId, campaignId);
+  }
+  function player(guildId, campaignId, userId, sides = ["BLG", "GENG"]) {
     const rows = db
       .prepare(
         `SELECT * FROM bank_bet_orders WHERE guild_id=? AND campaign_id=? AND user_id=?
       ORDER BY created_at DESC,id DESC LIMIT 10`,
       )
       .all(guildId, campaignId, userId);
-    const latest = db
-      .prepare(
-        `SELECT side FROM bank_bet_orders WHERE guild_id=? AND campaign_id=? AND user_id=? AND status='paid'
-      ORDER BY paid_at DESC,provider_id DESC LIMIT 1`,
-      )
-      .get(guildId, campaignId, userId);
+    const confirmed = wallets(guildId, campaignId);
+    const own = confirmed.find((wallet) => wallet.userId === userId);
     return {
-      ...usage(guildId, campaignId, userId),
-      side: latest?.side || null,
+      amount: own?.amount || 0,
+      count: own?.transactions || 0,
+      side: own?.side || null,
       rows,
+      payout: estimatePayout(confirmed, sides, userId),
     };
   }
+  const overview = db.transaction((guildId, campaignId, userId, sides) => ({
+    totals: totals(guildId, campaignId),
+    player: player(guildId, campaignId, userId, sides),
+  }));
+  const estimateOrder = db.transaction((id, sides = ["BLG", "GENG"]) => {
+    const order = orderById.get(id);
+    if (!order || !["paid", "pending"].includes(order.status)) return null;
+    const confirmed = wallets(order.guild_id, order.campaign_id);
+    const projected = order.status === "pending";
+    if (projected) {
+      const own = confirmed.find((wallet) => wallet.userId === order.user_id);
+      if (own) {
+        own.amount += order.amount;
+        own.side = order.side;
+      } else
+        confirmed.push({
+          userId: order.user_id,
+          amount: order.amount,
+          side: order.side,
+        });
+    }
+    const estimate = estimatePayout(confirmed, sides, order.user_id);
+    return estimate ? { ...estimate, projected } : null;
+  });
   return {
     create: (...args) => create.immediate(...args),
     receive: (...args) => receive.immediate(...args),
     expire,
     totals,
     player,
+    overview,
+    estimateOrder,
+    payouts: (guildId, campaignId, sides, winner) =>
+      calculatePayouts(wallets(guildId, campaignId), sides, winner),
     get: (id) => orderById.get(id),
     bindMessage(id, messageId) {
       db.prepare(

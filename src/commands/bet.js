@@ -49,12 +49,14 @@ function createCommand(getRuntime = runtime, renderQR = ui.renderQR) {
       const side = interaction.options.getString("phe");
       if (amount === null && side === null) {
         bank.store.expire();
+        const overview = bank.store.overview(
+          c.guildId,
+          c.campaignId,
+          interaction.user.id,
+          c.sides,
+        );
         return interaction.reply({
-          ...ui.summary(
-            c,
-            bank.store.totals(c.guildId, c.campaignId),
-            bank.store.player(c.guildId, c.campaignId, interaction.user.id),
-          ),
+          ...ui.summary(c, overview.totals, overview.player),
           flags: MessageFlags.Ephemeral,
         });
       }
@@ -81,13 +83,19 @@ function createCommand(getRuntime = runtime, renderQR = ui.renderQR) {
         });
       }
       // A public bot message can be updated after interaction credentials expire and after restart.
-      let payload = ui.payload(order);
+      let payload = ui.payload(
+        order,
+        bank.store.estimateOrder(order.id, c.sides),
+      );
       if (order.status === "pending") {
         try {
           const image = await renderQR(order);
           bank.store.expire();
           order = bank.store.get(order.id);
-          payload = ui.payload(order);
+          payload = ui.payload(
+            order,
+            bank.store.estimateOrder(order.id, c.sides),
+          );
           if (order.status === "pending") payload.files = [image];
         } catch (error) {
           const released = bank.store.expireUnpublished(order.id);

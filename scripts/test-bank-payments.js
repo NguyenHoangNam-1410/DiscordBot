@@ -713,6 +713,102 @@ async function main() {
   const unavailable = createRuntime({ db, read: () => config, now });
   assert.throws(() => unavailable.start(client, null, false), /WEB_ENABLED/);
   assert.equal(unavailable.ready(), false);
+
+  reset();
+  paid(order(20000, "BLG", "winner-large"));
+  paid(order(10000, "BLG", "winner-small"));
+  paid(order(20000, "GENG", "opponent"));
+  time += 1000;
+  paid(order(10000, "GENG", "opponent"));
+  const snapshot = store.overview(
+    G,
+    config.campaignId,
+    "winner-large",
+    config.sides,
+  );
+  assert.equal(snapshot.player.payout.payout, 40000);
+  assert.equal(snapshot.player.payout.profit, 20000);
+  assert.equal(snapshot.player.payout.stake, 20000);
+  assert.equal(snapshot.player.payout.mode, "split");
+  const settlement = store.payouts(G, config.campaignId, config.sides, "BLG");
+  assert.equal(
+    settlement.payouts.reduce((sum, row) => sum + row.payout, 0),
+    60000,
+  );
+  assert.equal(
+    settlement.payouts.find((row) => row.userId === "opponent").payout,
+    0,
+  );
+  const view = ui
+    .summary(config, snapshot.totals, snapshot.player, time)
+    .embeds[0].toJSON();
+  const payoutField = view.fields.find(
+    (field) => field.name === "Dự tính nếu BLG thắng",
+  );
+  assert.match(payoutField.value, /40.000đ/);
+  assert.match(payoutField.value, /gốc 20.000đ \+ lãi 20.000đ/);
+  assert.match(payoutField.value, /66,67%/);
+  const projection = order(10000, "GENG", "winner-large");
+  const projected = store.estimateOrder(projection.id, config.sides);
+  assert.equal(projected.projected, true);
+  assert.equal(projected.stake, 30000);
+  assert.equal(projected.payout, 35000);
+  assert.equal(projected.side, "GENG");
+  assert.equal(
+    store.player(G, config.campaignId, "winner-large").payout.payout,
+    40000,
+    "QR preview does not alter confirmed wagers",
+  );
+  const preview = ui.payload(projection, projected).embeds[0].toJSON();
+  assert(
+    preview.fields.some(
+      (field) =>
+        field.name.includes("Dự tính sau khi chuyển") &&
+        field.value.includes("35.000đ"),
+    ),
+  );
+  paid(projection);
+  assert.equal(
+    store.player(G, config.campaignId, "winner-large").payout.payout,
+    35000,
+    "latest paid side moves all principal before estimating",
+  );
+  const extra = order(1, "BLG", "pending-only");
+  assert.equal(store.player(G, config.campaignId, "pending-only").payout, null);
+  store.receive(config, event(extra, { amount: 2 }));
+  assert.equal(
+    store.estimateOrder(extra.id, config.sides),
+    null,
+    "unmatched receipt never estimates a confirmed payout",
+  );
+  assert.equal(
+    store.payouts(G, "other-campaign", config.sides, "BLG").totalPool,
+    0,
+  );
+  assert.equal(
+    store.payouts("other-guild", config.campaignId, config.sides, "BLG")
+      .totalPool,
+    0,
+  );
+  reset();
+  paid(order(20000, "BLG"));
+  for (const winner of config.sides)
+    assert.equal(
+      store.payouts(G, config.campaignId, config.sides, winner).payouts[0]
+        .payout,
+      20000,
+    );
+  const refund = store.overview(G, config.campaignId, U, config.sides);
+  assert.equal(refund.player.payout.mode, "refund");
+  assert.equal(refund.player.payout.profit, 0);
+  assert(
+    ui
+      .summary(config, refund.totals, refund.player, time)
+      .embeds[0].data.fields.some((field) =>
+        /bất kể đội thắng/.test(field.value),
+      ),
+  );
+
   const fetchOriginal = globalThis.fetch;
   globalThis.fetch = async () => {
     throw new Error("QR must not make network requests");

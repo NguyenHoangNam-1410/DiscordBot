@@ -10,7 +10,17 @@
 - Phe của người chơi là phe trong **giao dịch hợp lệ mới nhất theo thời gian ngân hàng**. Toàn bộ tiền đã nhận chuyển sang phe đó: BLG 20.000, sau đó GENG 10.000 => GENG 30.000. Casso gửi đảo thứ tự không làm đổi kết quả. Nếu hai giao dịch cùng giây, ID giao dịch Casso lớn hơn được xem là mới hơn.
 - Nội dung có cả mã phe và mã đối soát ngẫu nhiên, ví dụ `BLG BET0123456789ABCDEF`. Giữ nguyên nội dung khi chuyển. Chỉ chọn phe/tạo QR chưa làm đổi phe.
 - Tin QR công khai tự đổi thành trạng thái đã nhận/hết hạn/cần đối soát. `/bet` dạng slash trả thống kê riêng; prefix trả tin bình thường trong kênh.
-- Đây là sổ ghi nhận chuyển khoản. Bot chưa có cơ chế xác định đội thắng, chia tiền, trả thưởng, hoàn tiền hoặc quy đổi sang xu/kim cương.
+- `/bet` hiển thị tiền dự tính nhận nếu phe hiện tại thắng, tách rõ gốc và lãi; chỉ dùng tiền đã xác nhận. Tin QR có thêm dự tính giả sử khoản chuyển đó được xác nhận mới nhất, chưa tính QR đang chờ khác.
+- Bot tính tiền dự kiến và bảng chia theo đội thắng được truyền vào hàm tính; chưa tự xác định kết quả trận hoặc thực hiện chuyển tiền/hoàn tiền ngân hàng.
+
+## Cách chia tiền
+
+- Khi cả hai phe có cược: **tiền nhận = tiền gốc + tổng tiền bên thua × tiền cược của người thắng / tổng tiền phe thắng**. Người bên thua nhận 0; người bên thắng luôn nhận lại ít nhất tiền gốc. Chia hết tổng quỹ, không khấu trừ phí.
+- Ví dụ BLG có hai người cược 20.000đ và 10.000đ, GENG có tổng 30.000đ. Nếu BLG thắng, hai người lần lượt nhận 40.000đ và 20.000đ, đã gồm tiền gốc.
+- Nếu **bất kỳ phe nào không có tiền cược hợp lệ**, hoàn đủ tiền gốc cho toàn bộ người đã cược, bất kể BLG hay GENG thắng.
+- Cược của mỗi người là tổng tất cả giao dịch hợp lệ của họ, xếp toàn bộ theo phe trong giao dịch hợp lệ cuối cùng. QR chưa thanh toán và giao dịch cần đối soát không tham gia tính quỹ.
+- Tiền là số nguyên VND. Hoàn gốc trước, chia phần lãi nguyên đồng rồi phân số đồng dư cho các người thắng có phần thập phân lớn nhất; nếu bằng nhau, dùng thứ tự ID người chơi để kết quả ổn định. Tổng tiền chia luôn bằng tổng tiền đã nhận, không phát sinh hoặc mất tiền do làm tròn. Phép nhân/chia tiền dùng BigInt.
+- Dự tính thay đổi khi có giao dịch mới hoặc thông báo ngân hàng đến trễ. Gọi lại `/bet` để lấy số mới nhất; các tin QR/xác nhận cũ không cập nhật theo mọi người khác.
 
 Ảnh QR PNG và nội dung VietQR được tạo ngay trên máy chạy bot bằng thư viện VietQR chính thức, không cần gọi dịch vụ tạo ảnh bên ngoài hoặc thêm API key.
 
@@ -50,4 +60,4 @@ Webhook thường (`secure-token`) không được chấp nhận; chọn đúng 
 - Việc ghi nhận và cập nhật Discord độc lập: hàng đợi cập nhật tin được lưu trong SQLite; lỗi tạm thời được thử lại, kể cả sau khi bot khởi động lại. Nếu tin/kênh đã bị xóa, vẫn tra được trạng thái và số tiền qua `/bet`.
 - Không sửa `campaignId`, tài khoản nhận, hai phe hoặc các giới hạn giữa đợt đang hoạt động. Để mở một đợt mới cần cấu hình ID mới; dữ liệu đợt cũ được giữ lại.
 
-Kiểm tra: `npm run test:payments`, `npm run test:changelog`, `npm run test:web:public`.
+Kiểm tra: `npm run test:payments` (gồm phép tính tiền nhận và tích hợp UI), `npm run test:changelog`, `npm run test:web:public`.

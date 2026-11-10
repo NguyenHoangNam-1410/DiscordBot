@@ -49,7 +49,33 @@ async function renderQR(order) {
     { name: "bank-qr.png" },
   );
 }
-function payload(order) {
+function payoutField(estimate, projected = false) {
+  if (!estimate)
+    return {
+      name: "Tiền dự tính nếu thắng",
+      value:
+        "Chưa có tiền cược được xác nhận. Dự tính sẽ hiển thị sau khi bot nhận được giao dịch hợp lệ.",
+    };
+  const share = ((estimate.stake / estimate.winningPool) * 100).toLocaleString(
+    "vi-VN",
+    { maximumFractionDigits: 2 },
+  );
+  return {
+    name: projected
+      ? `Dự tính sau khi chuyển · ${estimate.side} thắng`
+      : `Dự tính nếu ${estimate.side} thắng`,
+    value:
+      `**Nhận ${vnd(estimate.payout)}** = gốc ${vnd(estimate.stake)} + lãi ${vnd(estimate.profit)}.\n` +
+      (estimate.mode === "refund"
+        ? "Hiện một phe chưa có cược: nếu giữ tình trạng này đến chốt sổ, mọi người được hoàn đủ gốc, bất kể đội thắng."
+        : `Bạn đóng góp **${share}%** tiền phe ${estimate.side}. Tổng quỹ hiện tại: **${vnd(estimate.totalPool)}**.`) +
+      (projected
+        ? "\nGiả sử khoản chuyển này được xác nhận mới nhất; QR đang chờ khác chưa được tính."
+        : "") +
+      "\nƯớc tính thay đổi theo giao dịch hợp lệ; dùng `/bet` để cập nhật.",
+  };
+}
+function payload(order, estimate = null) {
   const embed = new EmbedBuilder()
     .setTitle(
       `${order.status === "paid" ? "✅" : "🏦"} ${STATUS[order.status]}`,
@@ -101,6 +127,7 @@ function payload(order) {
         "Không chuyển tiền vào QR này. Giao dịch được ngân hàng ghi nhận trước hạn vẫn có thể được xác nhận khi thông báo đến trễ.",
     });
   }
+  if (estimate) embed.addFields(payoutField(estimate, estimate.projected));
   return {
     content: "",
     embeds: [embed],
@@ -133,6 +160,12 @@ function summary(config, totals, player, now = Date.now()) {
     {
       name: "Của bạn",
       value: `Đã nhận **${vnd(player.amount)}** · **${player.count}/${config.maxTransactions} giao dịch** · Phe **${player.side || "Chưa chọn"}**`,
+    },
+    payoutField(player.payout),
+    {
+      name: "Quy tắc chia tiền",
+      value:
+        "Khi hai phe đều có cược, người bên thắng nhận lại gốc và chia toàn bộ tiền bên thua theo tỷ lệ đóng góp. Nếu một phe không có cược, hoàn đủ gốc cho mọi người, bất kể đội thắng. Làm tròn đến từng đồng, chia hết tổng quỹ.",
     },
   );
   if (player.rows.length)
