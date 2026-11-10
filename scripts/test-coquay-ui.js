@@ -313,6 +313,28 @@ async function main() {
     const bounds = await evaluate(
       '(()=>{const a=document.querySelector(".arena").getBoundingClientRect(),c=$("controls").getBoundingClientRect();return {scroll:document.documentElement.scrollWidth,w:innerWidth,bottom:Math.max(a.bottom,c.bottom),h:innerHeight,page:document.documentElement.scrollHeight,seats:[...document.querySelectorAll(".seat")].map(s=>{const r=s.getBoundingClientRect();return {top:r.top,bottom:r.bottom}}),arena:{top:a.top,bottom:a.bottom}}})()',
     );
+    const header = await evaluate(
+      '(()=>{const h=document.querySelector(".shell > header"),r=h.getBoundingClientRect(),a=h.querySelector(":scope > a").getBoundingClientRect(),tools=[...h.querySelectorAll("#rotate-table,#connection,#sound-toggle,#rules-help")].map(n=>{const b=n.getBoundingClientRect();return {x:b.x,y:b.y,right:b.right,bottom:b.bottom,width:b.width,height:b.height};});return {height:r.height,left:a.left-r.left,right:r.right-tools.at(-1).right,top:r.top,bottom:r.bottom,tools};})()',
+    );
+    const compact = metrics.mobile;
+    assert.equal(header.height, compact ? 40 : 64);
+    assert(
+      header.left >= (compact ? 8 : 16) && header.right >= (compact ? 8 : 16),
+      "Cò quay top-bar padding matches other games",
+    );
+    for (const [i, tool] of header.tools.entries()) {
+      assert.equal(tool.width, 32);
+      assert.equal(tool.height, 32);
+      assert(
+        tool.y >= header.top + 3 && tool.bottom <= header.bottom - 3,
+        "Cò quay buttons stay within padded top bar",
+      );
+      if (i)
+        assert(
+          tool.x - header.tools[i - 1].right >= 6,
+          "Cò quay rotation and tools do not overlap",
+        );
+    }
     assert(bounds.scroll <= bounds.w + 1, "No horizontal page overflow");
     await screenshot(`coquay-${metrics.width}x${metrics.height}.png`);
     assert(

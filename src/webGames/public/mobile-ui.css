@@ -78,19 +78,7 @@ dialog.wg-menu-dialog {
   .wg-mobile .topbar {
     position: fixed;
     inset: 0 8px auto;
-    height: 35px;
-    min-height: 35px;
     z-index: 12;
-    background: var(--bg, #132020);
-    gap: 8px;
-    border-bottom: 1px solid var(--line, #354756);
-  }
-  .wg-mobile header .brand,
-  .wg-mobile header > a {
-    font-size: 18px;
-  }
-  .wg-mobile header .tag {
-    display: none;
   }
   .wg-mobile #connection {
     font-size: 9px;
@@ -101,10 +89,10 @@ dialog.wg-menu-dialog {
   }
   .wg-hud {
     position: fixed;
-    top: 39px;
+    top: 44px;
     left: 8px;
     right: 8px;
-    height: 39px;
+    height: 36px;
     display: flex;
     align-items: center;
     gap: 7px;

@@ -257,7 +257,36 @@ async function main() {
         id + " main page needs no scrolling",
       );
     }
+    async function headerBounds(compact) {
+      const b = await evaluate(
+        '(()=>{const h=document.querySelector(".shell > header"),r=h.getBoundingClientRect(),a=h.querySelector(":scope > a").getBoundingClientRect(),tools=[...h.querySelectorAll("#connection,#sound-toggle,#rules-help")].map(n=>{const b=n.getBoundingClientRect();return {x:b.x,y:b.y,right:b.right,bottom:b.bottom,width:b.width,height:b.height};});return {height:r.height,left:a.left-r.left,right:r.right-tools.at(-1).right,top:r.top,bottom:r.bottom,tools,overflow:document.documentElement.scrollWidth>innerWidth};})()',
+      );
+      const pad = compact ? 8 : 16;
+      assert.equal(
+        b.height,
+        compact ? 40 : 64,
+        id + " consistent top-bar height",
+      );
+      assert(
+        b.left >= pad && b.right >= pad && !b.overflow,
+        id + " padded top-bar edges: " + JSON.stringify(b),
+      );
+      for (const [i, tool] of b.tools.entries()) {
+        assert.equal(tool.width, 32);
+        assert.equal(tool.height, 32);
+        assert(
+          tool.y >= b.top + 3 && tool.bottom <= b.bottom - 3,
+          id + " tools have vertical breathing room",
+        );
+        if (i)
+          assert(
+            tool.x - b.tools[i - 1].right >= 6,
+            id + " tools do not overlap",
+          );
+      }
+    }
     await bounds("initial");
+    await headerBounds(true);
     assert.equal(
       await evaluate('document.querySelectorAll("#rules-help").length'),
       1,
@@ -443,6 +472,7 @@ async function main() {
     });
     await delay(160);
     await bounds("small phone");
+    await headerBounds(true);
     await click('[data-panel="info"]', true);
     await delay(100);
     await bounds("small phone menu");
@@ -458,6 +488,7 @@ async function main() {
     });
     await delay(200);
     await bounds("landscape");
+    await headerBounds(true);
     await click('[data-panel="info"]', true);
     await delay(100);
     await bounds("landscape menu");
@@ -496,6 +527,8 @@ async function main() {
       ),
       true,
     );
+    await headerBounds(false);
+    await screenshot(id + "-desktop-topbar.png");
     // Scroll the real desktop page, keeping the shared top-bar tools reachable.
     await send("Emulation.setDeviceMetricsOverride", {
       width: 1280,
@@ -601,7 +634,7 @@ async function main() {
     JSON.stringify({
       ok: true,
       mobile:
-        "ten games, sticky desktop top bar with clickable help after scrolling, fixed mobile top bar, top-bar rules, native modal info/account, unchanged board dimensions, Escape/backdrop/focus, nested surrender, live pairing/copy, board/action coexistence, compact clocks/avatars, menus, 360px phones, landscape, live DOM restoration, account dialog, battleship randomize and sea switch",
+        "ten games, consistent padded top bars and square tools across desktop/portrait/landscape, sticky desktop top bar with clickable help after scrolling, fixed mobile top bar, top-bar rules, native modal info/account, unchanged board dimensions, Escape/backdrop/focus, nested surrender, live pairing/copy, board/action coexistence, compact clocks/avatars, menus, 360px phones, landscape, live DOM restoration, account dialog, battleship randomize and sea switch",
     }),
   );
   await send("Browser.close").catch(() => {});

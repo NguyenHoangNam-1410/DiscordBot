@@ -1,5 +1,17 @@
 [
   {
+    "id": "e6c3e6f4-becc-4e9f-a7e0-f4f07868b47d",
+    "updatedAt": "2026-11-10T07:21:08.193Z",
+    "auditedAt": "2026-11-10T07:21:08.193Z",
+    "title": "Web game: đồng nhất thiết kế topbar",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Đồng nhất chiều cao, khoảng đệm hai bên, cỡ chữ và nút trên thanh công cụ của mọi web game; logo và nút không còn sát mép.",
+      "Căn lại thanh trên cùng và đồng hồ trên điện thoại, giữ bàn cờ vừa màn hình dọc và ngang."
+    ]
+  },
+  {
     "id": "ced0f283-9b22-4df3-843f-5dcf71b1eba2",
     "updatedAt": "2026-11-10T07:10:55.143Z",
     "auditedAt": "2026-11-10T07:10:55.143Z",
