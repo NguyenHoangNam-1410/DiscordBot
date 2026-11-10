@@ -1030,7 +1030,7 @@ async function main() {
     const link = messages[0].components[0]
       .toJSON()
       .components.find((c) => c.style === 5);
-    assert.ok(link.url.endsWith(`/room/${lobby.id}`));
+    assert.ok(link.url.endsWith(`/room/${lobby.roomCode}`));
     assert.equal(link.custom_id, undefined);
     let modal;
     await command.handleButton({

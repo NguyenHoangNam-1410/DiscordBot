@@ -40,7 +40,7 @@ Tất cả chín game web (Cờ thú, Caro, Walls, Battleship, Dots, Blokus, Mê
 Biến mới được ưu tiên khi tồn tại, kể cả `WEB_ENABLED=false`. URL phải là HTTPS gốc (HTTP chỉ cho localhost). Giữ cổng cũ thì không cần đổi Tailscale. Sau khi cập nhật code, khởi động lại bot. Chạy thêm `npm run register` nếu cập nhật có thêm hoặc đổi lệnh Discord; chỉ cập nhật trang web thì không cần đăng ký lại lệnh.
 
 - `/`: danh sách game đã đăng ký.
-- `/<game>/`, `/<game>/room/<UUID>`: trang game và phòng.
+- `/<game>/`, `/<game>/room/<mã phòng>`: trang game và phòng mới; phòng cũ tiếp tục dùng UUID.
 - `/<game>/app.js`, `/<game>/style.css`: tài nguyên theo game.
 - `/api/games/<game>/state?room=<UUID>` và `events?room=<UUID>`: đọc trạng thái và SSE.
 - POST `/api/games/<game>/pair`, `pair/status`, `login`: mã kết nối/vé và phiên Discord dùng chung.
@@ -66,6 +66,12 @@ Thông tin công khai nằm trong `src/webGames/publicSite.json`: tên ứng d�
 Chính sách mô tả các dữ liệu đang được xử lý, hồ sơ/kết quả công khai, việc chuyển nội dung cho nhà cung cấp AI khi dùng chatbot, phiên web, lưu giữ và sao lưu. Kênh liên hệ dùng thông tin được chủ bot cung cấp. Yêu cầu xem/sửa/xóa được gửi tới người vận hành để xác minh và xử lý thủ công; việc xuất bản trang không tạo thêm chức năng tự động xóa dữ liệu. Khi thay đổi nội dung hoặc cách xử lý dữ liệu, cập nhật nội dung và `updatedAt` tương ứng.
 
 Kiểm tra bằng `npm run test:web:public`. Bộ kiểm tra không dùng database hay Discord thật; kiểm tra truy cập ẩn danh, liên hệ, GET/HEAD, đường dẫn có dấu `/` cuối, header bảo vệ và tương thích trang chủ cũ. Discord yêu cầu chính sách mô tả đúng cách xử lý dữ liệu và cách yêu cầu xóa: [Discord Developer Terms](https://support-dev.discord.com/hc/en-us/articles/8562894815383-Discord-Developer-Terms-of-Service). Trang công khai không thay thế quy trình xác minh ứng dụng riêng của Discord.
+
+## URL phòng mới
+
+Phòng tạo mới lưu `roomCode` gồm 8 ký tự hex viết hoa trong JSON của phòng và mở bằng `/<game>/room/<mã phòng>` (ví dụ `/cothu/room/A1B2C3D4`). Mã trùng với mã hiển thị trên bàn; tra cứu chấp nhận cả chữ thường. UUID nội bộ, ghế, quyền chơi và dữ liệu ván giữ nguyên. Mã được tạo trong giao dịch mở phòng, kiểm tra trùng tiền tố qua chỉ mục khóa chính; không đổi khi khởi động lại.
+
+Phòng đã tồn tại không được bổ sung mã URL: nút Discord, liên kết đã chia sẻ và địa chỉ trình duyệt tiếp tục dùng UUID. Không có bước chuyển dữ liệu hoặc đổi URL phòng cũ. API hỗ trợ cả hai dạng tham chiếu; trình duyệt dùng UUID sau khi đọc trạng thái để xác nhận tài khoản, gửi nước đi và đăng ký SSE. Thêm game mới cần dùng `createRoomIdentity`/`resolveRoomId` từ `src/webGames/roomLinks.js` trong store và trả `roomCode` trong snapshot. Kiểm tra bằng `npm run test:web:rooms`.
 
 ## Tương thích dữ liệu và phòng cũ
 

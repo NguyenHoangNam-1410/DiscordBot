@@ -573,7 +573,7 @@ async function main() {
       replies[0].components[0]
         .toJSON()
         .components.find((c) => c.style === 5)
-        .url.endsWith(`/walls/room/${lobby.id}`),
+        .url.endsWith(`/walls/room/${lobby.roomCode}`),
       true,
     );
     await router.routeComponentInteraction({

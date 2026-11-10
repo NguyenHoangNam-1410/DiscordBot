@@ -5,8 +5,9 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { randomBytes } = require("node:crypto");
 const { createPublicPages } = require("./publicPages");
+const { roomReference } = require("./roomLinks");
 
-const ROOM = /^\/room\/([a-f0-9-]{36})$/;
+const ROOM = /^\/room\/([a-f0-9-]{36}|[a-fA-F0-9]{8})$/;
 const MAX_BODY = 2048;
 const TICKET_MS = 5 * 60_000;
 const SESSION_MS = 12 * 60 * 60_000;
@@ -115,7 +116,7 @@ function createWebServer({
   }
   function issueTicket(gameId, roomId, userId) {
     const { store, errors } = getGame(gameId);
-    const room = store.get(roomId);
+    const room = findRoom(getGame(gameId), roomId);
     if (!room || !store.seat(room, userId))
       throw Object.assign(
         new Error(
@@ -125,6 +126,7 @@ function createWebServer({
           code: "NOT_PLAYER",
         },
       );
+    roomId = room.id;
     prune(tickets);
     for (const [key, value] of tickets)
       if (
@@ -184,12 +186,16 @@ function createWebServer({
       { httpStatus: 401 },
     );
   }
+  function findRoom(game, reference) {
+    const id =
+      typeof reference === "string" && /^[a-f0-9-]{36}$/.test(reference)
+        ? reference
+        : game.store.resolveId?.(reference);
+    return id ? game.store.get(id) : null;
+  }
   function roomFor(game, id, userId) {
     const { store } = game;
-    const room =
-      typeof id === "string" && /^[a-f0-9-]{36}$/.test(id)
-        ? store.get(id)
-        : null;
+    const room = findRoom(game, id);
     if (!room || !store.seat(room, userId))
       throw Object.assign(new Error("Bạn không có quyền vào phòng này."), {
         httpStatus: 403,
@@ -241,11 +247,14 @@ function createWebServer({
       res.writeHead(302, { Location: `/${legacyGame}/room/${legacyRoom[1]}` });
       return res.end();
     }
-    const gameRoom = /^\/([a-z][a-z0-9-]{0,31})\/room\/([a-f0-9-]{36})$/.exec(
-      url.pathname,
-    );
+    const gameRoom =
+      /^\/([a-z][a-z0-9-]{0,31})\/room\/([a-f0-9-]{36}|[a-fA-F0-9]{8})$/.exec(
+        url.pathname,
+      );
     const roomAsset =
-      gameRoom && registry.has(gameRoom[1])
+      gameRoom &&
+      registry.has(gameRoom[1]) &&
+      (gameRoom[2].length === 36 || findRoom(getGame(gameRoom[1]), gameRoom[2]))
         ? assets.get(`/${gameRoom[1]}/`)
         : null;
     if (req.method === "GET" && (assets.has(url.pathname) || roomAsset)) {
@@ -274,8 +283,9 @@ function createWebServer({
     if (req.method === "POST" && route === "/api/pair") {
       if (!allowed(`pair:${req.socket.remoteAddress}`, 20, 60_000))
         return json(res, 429, { error: "Hãy đợi một phút rồi thử lại." });
-      const { roomId } = await body(req);
-      const room = store.get(typeof roomId === "string" ? roomId : "");
+      const data = await body(req);
+      const room = findRoom(game, data.roomId);
+      const roomId = room?.id;
       if (!room || !game.isOpen(room))
         return json(res, 409, { error: "Phòng đã đóng hoặc không tồn tại." });
       prune(pairings);
@@ -332,7 +342,8 @@ function createWebServer({
       }
       if (
         pairing.gameId !== game.id ||
-        (data.roomId !== undefined && data.roomId !== pairing.roomId)
+        (data.roomId !== undefined &&
+          findRoom(game, data.roomId)?.id !== pairing.roomId)
       )
         return json(res, 410, {
           error: "Mã kết nối không thuộc phòng hoặc trò chơi này.",
@@ -374,7 +385,7 @@ function createWebServer({
       });
     if (req.method === "GET" && ["/api/state", "/api/events"].includes(route)) {
       const id = url.searchParams.get("room");
-      const room = id && /^[a-f0-9-]{36}$/.test(id) ? store.get(id) : null;
+      const room = findRoom(game, id);
       if (!room) return json(res, 404, { error: "Không tìm thấy phòng." });
       if (route === "/api/state")
         return json(res, 200, store.snapshot(room, session.userId));
@@ -420,11 +431,11 @@ function createWebServer({
       Object.hasOwn(game.actions, route.slice("/api/".length))
     ) {
       const data = await body(req);
-      roomFor(game, data.roomId, session.userId);
+      const room = roomFor(game, data.roomId, session.userId);
       const updated = await game.actions[route.slice("/api/".length)](
-        data.roomId,
+        room.id,
         session.userId,
-        data,
+        { ...data, roomId: room.id },
       );
       return json(res, 200, store.snapshot(updated, session.userId));
     }
@@ -462,7 +473,8 @@ function createWebServer({
     return sid;
   }
   function confirmPairing(gameId, roomId, userId, input) {
-    roomFor(getGame(gameId), roomId, userId);
+    const room = roomFor(getGame(gameId), roomId, userId);
+    roomId = room.id;
     if (!allowed(`confirm:${userId}`, 5, 60_000))
       throw Object.assign(
         new Error("Bạn nhập quá nhiều lần. Hãy đợi một phút."),
@@ -532,8 +544,8 @@ function createWebServer({
     issueTicket,
     confirmPairing,
     roomUrl: (gameId, id) => {
-      getGame(gameId);
-      return `${config.origin}/${gameId}/room/${id}`;
+      const room = findRoom(getGame(gameId), id);
+      return `${config.origin}/${gameId}/room/${roomReference(room, id)}`;
     },
     stop,
   };

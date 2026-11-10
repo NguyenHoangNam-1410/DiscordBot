@@ -1,5 +1,17 @@
 [
   {
+    "id": "131b4b62-79e7-47dd-91e4-7a96dc6e7db1",
+    "updatedAt": "2026-11-10T10:26:20.813Z",
+    "auditedAt": "2026-11-10T10:26:20.813Z",
+    "title": "Web game: URL phòng mới dùng mã ngắn",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Phòng web game tạo mới dùng mã phòng 8 ký tự trong URL, trùng mã hiển thị trên bàn và giữ nguyên sau khi bot khởi động lại.",
+      "Phòng đã tồn tại tiếp tục dùng liên kết UUID cũ; giữ nguyên quyền chơi, xác nhận tài khoản và chế độ khán giả."
+    ]
+  },
+  {
     "id": "e6c3e6f4-becc-4e9f-a7e0-f4f07868b47d",
     "updatedAt": "2026-11-10T07:21:08.193Z",
     "auditedAt": "2026-11-10T07:21:08.193Z",

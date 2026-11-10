@@ -2,6 +2,7 @@
 
 const { createWebServer } = require("./http");
 const { readConfig } = require("./config");
+const { roomReference } = require("./roomLinks");
 
 function createRuntime({ games, legacyGame = null, webhooks = [] }) {
   const registry = new Map(games.map((game) => [game.id, game]));
@@ -204,10 +205,10 @@ function createRuntime({ games, legacyGame = null, webhooks = [] }) {
     return web.issueTicket(gameId, roomId, userId);
   }
   function roomUrl(gameId, id) {
-    game(gameId);
+    const module = game(gameId);
     return web
       ? web.roomUrl(gameId, id)
-      : `${readConfig().origin || "http://127.0.0.1:3000"}/${gameId}/room/${id}`;
+      : `${readConfig().origin || "http://127.0.0.1:3000"}/${gameId}/room/${roomReference(module.store.get(id), id)}`;
   }
   function confirmPairing(gameId, id, userId, code) {
     if (!web)

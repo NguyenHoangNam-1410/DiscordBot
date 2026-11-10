@@ -285,6 +285,17 @@ async function main() {
           );
       }
     }
+    const expectedPath = "/" + id + "/room/" + fixtures.get(id).room.roomCode;
+    assert.equal(
+      await evaluate("location.pathname"),
+      expectedPath,
+      id + " ticket opens short room URL",
+    );
+    assert.equal(
+      await evaluate("roomId"),
+      fixtures.get(id).room.id,
+      "Internal requests keep the canonical UUID",
+    );
     await bounds("initial");
     await headerBounds(true);
     assert.equal(
@@ -578,7 +589,20 @@ async function main() {
     );
     await key("Escape", "Escape", 27);
     await bounds("mobile restored");
-    console.log(id + " rules, modal menus and desktop restoration passed");
+    await send("Page.navigate", {
+      url: config.origin + expectedPath.toLowerCase(),
+    });
+    await until('typeof state!=="undefined" && state?.me==="X" && connected');
+    assert.equal(await evaluate("location.pathname"), expectedPath);
+    await send("Network.clearBrowserCookies");
+    await send("Page.reload");
+    await until('typeof state!=="undefined" && state?.me===null && connected');
+    assert.equal(await evaluate("location.pathname"), expectedPath);
+    assert.equal(await evaluate("roomId"), fixtures.get(id).room.id);
+    console.log(
+      id +
+        " short room URLs, reload/spectating, rules, modal menus and desktop restoration passed",
+    );
   }
   assert(
     scrolledGames > 0,

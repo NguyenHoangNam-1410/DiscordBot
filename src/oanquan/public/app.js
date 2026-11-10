@@ -890,15 +890,16 @@ $("confirm-leave").addEventListener("click", async () => {
 async function init() {
   const ticket = new URLSearchParams(location.hash.slice(1)).get("ticket");
   history.replaceState(null, "", location.pathname);
-  const pathId = /^\/(?:oanquan\/)?room\/([a-f0-9-]{36})$/.exec(
+  const pathId = /^\/(?:oanquan\/)?room\/([a-f0-9-]{36}|[a-fA-F0-9]{8})$/.exec(
     location.pathname,
   )?.[1];
   if (!ticket && !pathId) return;
   connection(false);
   try {
     roomId = ticket ? (await api("/api/login", { ticket })).roomId : pathId;
-    history.replaceState(null, "", `/oanquan/room/${roomId}`);
     await refresh();
+    roomId = state.id;
+    history.replaceState(null, "", `/oanquan/room/${state.roomCode || roomId}`);
     subscribe();
     if (state.me) clearStoredPairing();
     else restorePairing();

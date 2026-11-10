@@ -1,6 +1,6 @@
 "use strict";
 
-const { randomUUID } = require("node:crypto");
+const { createRoomIdentity, resolveRoomId } = require("../webGames/roomLinks");
 const { EventEmitter } = require("node:events");
 const {
   makePlayer: player,
@@ -170,7 +170,7 @@ function createStore(db, now = Date.now) {
             { code: "CHANNEL_FULL" },
           );
         const room = {
-          id: randomUUID(),
+          ...createRoomIdentity(db, "mecung"),
           guildId: options.guildId,
           channelId: options.channelId,
           messageId: null,
@@ -413,6 +413,7 @@ function createStore(db, now = Date.now) {
     const mapsRevealed = room.status === "finished" && Boolean(room.winner);
     return {
       id: room.id,
+      ...(room.roomCode ? { roomCode: room.roomCode } : {}),
       size,
       rules,
       rulesLabel: rulesText(rules),
@@ -461,6 +462,7 @@ function createStore(db, now = Date.now) {
     };
   }
   return {
+    resolveId: (reference) => resolveRoomId(db, "mecung", reference),
     create,
     get,
     join,

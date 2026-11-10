@@ -642,6 +642,17 @@ async function main() {
   assert.equal(await evaluate('$("private-intel").hidden'), true);
   await click('#tray-X [data-item="magnifier"]', true);
   assert.equal(await evaluate('$("use-item").hidden'), true);
+  assert.equal(
+    await evaluate("location.pathname"),
+    "/coquay/room/" + large.roomCode,
+  );
+  await send("Page.reload");
+  await until('typeof state!=="undefined" && state?.me===null && connected');
+  assert.equal(
+    await evaluate("location.pathname"),
+    "/coquay/room/" + large.roomCode,
+  );
+  assert.equal(await evaluate("roomId"), large.id);
   assert.deepEqual(errors, []);
   console.log(
     JSON.stringify({
