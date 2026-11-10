@@ -35,12 +35,15 @@ function createState(stake) {
     status: "playing",
   };
 }
+// Web rooms opt into balanced loads; Survival keeps its original distribution.
 // Mỗi đợt nạp luôn có ít nhất 1 đạn thật và 1 đạn lép.
-function loadChamber(state, rng) {
+function loadChamber(state, rng, { maxImbalance = Infinity } = {}) {
   const loadNumber = state.loads + 1;
   const [min, max] = stageRange(loadNumber);
   const size = min + rng(max - min + 1, `load-size-${loadNumber}`);
-  const live = 1 + rng(size - 1, `load-live-${loadNumber}`);
+  const minLive = Math.max(1, Math.ceil((size - maxImbalance) / 2));
+  const maxLive = Math.min(size - 1, Math.floor((size + maxImbalance) / 2));
+  const live = minLive + rng(maxLive - minLive + 1, `load-live-${loadNumber}`);
   const shells = [...Array(live).fill(true), ...Array(size - live).fill(false)];
   for (let index = shells.length - 1; index > 0; index -= 1) {
     const target = rng(index + 1, `load-shuffle-${loadNumber}-${index}`);

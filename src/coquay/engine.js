@@ -109,11 +109,12 @@ function create(rules) {
   return s;
 }
 function load(s, rules, rng) {
-  core.loadChamber(s, rng);
+  core.loadChamber(s, rng, { maxImbalance: 2 });
   s.knowledge = {};
+  const itemCount = 1 + rng(2, `load-item-count-${s.loads}`);
   for (const side of ["player", "bot"]) {
     const drawn = Array.from(
-      { length: 1 + rng(2) },
+      { length: itemCount },
       () => ITEMS[rng(ITEMS.length)].id,
     );
     const space = Math.max(0, rules.itemLimit - s.inventory[side].length),

@@ -212,7 +212,7 @@
       summary: "Đọc đạn, dùng đạo cụ và sống sót sau mỗi phát bắn.",
       setup: [
         "Bàn 2 người, bộ 9 đạo cụ 1v1 + Double or Nothing của Buckshot Roulette. Mặc định 5 HP và 4 đạo cụ chưa dùng/người; chủ phòng có thể đổi cấu hình.",
-        "Mỗi hiệp nạp đạn thật và đạn lép theo thứ tự kín. Mở hộp để nhận 1–2 đạo cụ; đồ vượt sức chứa bị bỏ.",
+        "Mỗi hiệp nạp đạn thật và đạn lép theo thứ tự kín; số lượng hai loại chênh nhau tối đa 2 viên lúc nạp. Hai bên cùng bốc 1 hoặc 2 đạo cụ mỗi hiệp; loại đồ ngẫu nhiên riêng, mỗi bên tự bỏ phần vượt sức chứa.",
       ],
       play: [
         "Chọn bắn đối thủ hoặc tự bắn. Đạn thật gây 1 sát thương; tự bắn đạn lép giữ lượt, các phát khác đổi lượt trừ khi đối thủ bị còng.",

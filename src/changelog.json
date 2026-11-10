@@ -1,5 +1,17 @@
 [
   {
+    "id": "d7667c77-0d7d-4f61-8e2c-63410fcd3903",
+    "updatedAt": "2026-11-10T14:34:15.280Z",
+    "auditedAt": "2026-11-10T14:34:15.280Z",
+    "title": "Cò quay Nga: cân bằng đạn và chia đạo cụ",
+    "type": "balance",
+    "scope": "coquay",
+    "changes": [
+      "Mỗi lần nạp đạn, số đạn thật và đạn lép chênh nhau tối đa 2 viên; áp dụng cả lúc bắn hết đạn hoặc dùng bia để nạp hiệp mới.",
+      "Mỗi hiệp bốc chung số lượng 1 hoặc 2 đạo cụ cho cả hai bên. Loại đạo cụ ngẫu nhiên riêng; mỗi bên tự bỏ phần vượt sức chứa túi."
+    ]
+  },
+  {
     "id": "67a8155d-00f0-4863-94b1-90c97d4235e5",
     "updatedAt": "2026-11-10T14:17:24.371Z",
     "auditedAt": "2026-11-10T14:17:24.371Z",

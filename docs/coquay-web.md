@@ -10,15 +10,15 @@ Mở bằng `/coquay choi mau:5 vatpham:4 thoigian:30`, hoặc `!coquay choi mau
 
 ## Engine và hiệp đấu
 
-`src/services/coquayEngine.js` giữ nguyên lõi luật thuần, cũng đang được sự kiện Gambler của Sinh tồn dùng. `src/coquay/engine.js` ánh xạ hai ghế vào các khóa nội bộ player/bot; không có AI trong phòng web.
+`src/services/coquayEngine.js` chứa lõi luật thuần, cũng đang được sự kiện Gambler của Sinh tồn dùng; giới hạn cân bằng đạn được bật riêng cho bàn web, phân bố đạn của Gambler giữ nguyên. `src/coquay/engine.js` ánh xạ hai ghế vào các khóa nội bộ player/bot; không có AI trong phòng web.
 
-Mỗi hiệp là một đợt nạp đạn: 2–3 viên ở hiệp 1, 4–5 ở hiệp 2, 6–8 từ hiệp 3. Mỗi đợt có ít nhất một viên thật và một viên lép, thứ tự xáo trộn phía máy chủ. HP được giữ giữa các hiệp. Không nạp tiếp khi một người đã chết.
+Mỗi hiệp là một đợt nạp đạn: 2–3 viên ở hiệp 1, 4–5 ở hiệp 2, 6–8 từ hiệp 3. Mỗi đợt có ít nhất một viên thật và một viên lép; số lượng hai loại chênh nhau tối đa 2 viên khi nạp, áp dụng cả lần nạp do bắn hết đạn hoặc dùng bia. Chọn ngẫu nhiên đều trong các cách chia hợp lệ, rồi xáo trộn thứ tự phía máy chủ. Ví dụ 8 viên chỉ có 3 thật/5 lép, 4 thật/4 lép hoặc 5 thật/3 lép. Đạn còn lại sau khi bắn, loại hoặc đảo đạn vẫn theo kết quả thao tác. HP được giữ giữa các hiệp. Không nạp tiếp khi một người đã chết.
 
 Bắn đạn thật gây 1 DMG. Tự bắn đạn lép giữ lượt; các phát bắn còn lại chuyển súng, trừ khi đối thủ đang bị còng. Cưa tăng DMG lên 2 cho phát tiếp theo và bị tiêu hiệu ứng kể cả khi gặp lép. Chết, hết đồng hồ hoặc đầu hàng kết thúc ván.
 
 ## Hộp đạo cụ
 
-Đầu hiệp 1 và ngay khi nạp hiệp tiếp theo, mỗi người tự mở một hộp: ngẫu nhiên đều 1 hoặc 2 món, mỗi món chọn đều trong 9 loại, có thể trùng. Món cũ chưa dùng được giữ; món vượt sức chứa bị bỏ, không chuyển thành tiền hay thưởng khác. Giao diện Đạo cụ & hộp đồ ghi món nhận và số món bị bỏ ở hiệp mới nhất.
+Đầu hiệp 1 và ngay khi nạp hiệp tiếp theo, máy chủ bốc chung một số lượng (ngẫu nhiên đều 1 hoặc 2 món) cho cả hai người. Mỗi bên mở một hộp cùng số món; từng món chọn độc lập, ngẫu nhiên đều trong 9 loại, có thể trùng. Số món bốc được bằng nhau trước khi xét sức chứa; mỗi bên tự bỏ phần vượt sức chứa, nên số món thực nhận có thể khác nhau nếu túi còn số chỗ trống khác nhau. Món cũ chưa dùng được giữ; phần bị bỏ không chuyển thành tiền hay thưởng khác. Giao diện Đạo cụ & hộp đồ ghi món nhận và số món bị bỏ ở hiệp mới nhất.
 
 Bộ dùng cho bàn hai người là **1v1 + Double or Nothing**. Không trộn Jammer/Remote của Multiplayer. Giấy General Release of Liability và khẩu súng không phải đạo cụ tiêu hao để phát vào hộp.
 

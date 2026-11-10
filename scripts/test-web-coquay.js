@@ -128,6 +128,130 @@ async function main() {
     code(() => normalizeRules({ itemLimit: v }), "INVALID_RULES");
   const rules = normalizeRules({ maxHp: 20, itemLimit: 4 }),
     g = engine.create(rules);
+  // Exhaust all allowed ammo counts and both shuffle extremes for every loading path.
+  const liveCounts = {
+    2: [1],
+    3: [1, 2],
+    4: [1, 2, 3],
+    5: [2, 3],
+    6: [2, 3, 4],
+    7: [3, 4],
+    8: [3, 4, 5],
+  };
+  for (const loadNumber of [1, 2, 3, 4, 25]) {
+    const sizes =
+      loadNumber === 1 ? [2, 3] : loadNumber === 2 ? [4, 5] : [6, 7, 8];
+    for (const size of sizes)
+      for (let pick = 0; pick < liveCounts[size].length; pick++)
+        for (const reverse of [false, true])
+          for (const path of ["begin", "shoot", "beer"]) {
+            const chamber = engine.create(rules);
+            chamber.loads = loadNumber - 1;
+            chamber.chamber = [false];
+            chamber.inventory.player = ["beer"];
+            const draw = (max, tag) => {
+              if (tag?.startsWith("load-size-")) return size - sizes[0];
+              if (tag?.startsWith("load-live-")) {
+                assert.equal(
+                  max,
+                  liveCounts[size].length,
+                  "Draw uniformly from valid compositions",
+                );
+                return pick;
+              }
+              return reverse ? max - 1 : 0;
+            };
+            if (path === "begin") engine.begin(chamber, rules, draw);
+            else
+              engine.act(
+                chamber,
+                "X",
+                path === "shoot"
+                  ? { type: "shoot", target: "self" }
+                  : { type: "item", itemId: "beer" },
+                rules,
+                draw,
+              );
+            const live = liveCounts[size][pick],
+              blank = size - live;
+            assert.deepEqual(
+              chamber.lastLoad,
+              { live, blank },
+              path + " load " + loadNumber,
+            );
+            assert.equal(chamber.loads, loadNumber);
+            assert(Math.abs(live - blank) <= 2);
+            assert.equal(chamber.chamber.length, size);
+            assert.equal(chamber.chamber.filter(Boolean).length, live);
+          }
+  }
+  // One shared count roll per load; item types and overflow stay per-player.
+  for (const count of [1, 2])
+    for (let heldX = 0; heldX <= rules.itemLimit; heldX++)
+      for (let heldO = 0; heldO <= rules.itemLimit; heldO++)
+        for (const path of ["begin", "shoot", "beer"]) {
+          const chamber = engine.create(rules);
+          chamber.inventory.player = Array(heldX).fill("magnifier");
+          chamber.inventory.bot = Array(heldO).fill("cuffs");
+          chamber.chamber = [false];
+          if (path === "beer" && heldX === rules.itemLimit) continue;
+          // The triggering beer is consumed before the common deal.
+          if (path === "beer") chamber.inventory.player.push("beer");
+          let countRolls = 0,
+            typeRolls = 0;
+          const draw = (max, tag) => {
+            if (tag?.startsWith("load-item-count-")) {
+              countRolls++;
+              assert.equal(max, 2);
+              return count - 1;
+            }
+            if (!tag) return typeRolls++ < count ? 0 : max - 1;
+            return 0;
+          };
+          if (path === "begin") engine.begin(chamber, rules, draw);
+          else
+            engine.act(
+              chamber,
+              "X",
+              path === "shoot"
+                ? { type: "shoot", target: "self" }
+                : { type: "item", itemId: "beer" },
+              rules,
+              draw,
+            );
+          assert.equal(
+            countRolls,
+            1,
+            "A single roll gives both players the same item count",
+          );
+          assert.equal(
+            typeRolls,
+            count * 2,
+            "Item types are still drawn separately",
+          );
+          for (const [mark, side, held] of [
+            ["X", "player", heldX],
+            ["O", "bot", heldO],
+          ]) {
+            const received = Math.min(count, rules.itemLimit - held),
+              box = chamber.boxes[mark];
+            assert.equal(box.received.length, received);
+            assert.equal(box.discarded, count - received);
+            assert.equal(
+              box.received.length + box.discarded,
+              count,
+              "Both sides draw the same total before discards",
+            );
+            assert.equal(chamber.inventory[side].length, held + received);
+            assert(
+              box.received.every(
+                (id) =>
+                  id === (mark === "X" ? "magnifier" : "expired_medicine"),
+              ),
+              "Types do not have to match across seats",
+            );
+          }
+        }
   engine.begin(g, rules, () => 0);
   assert.equal(g.hp.player, 20);
   assert.equal(g.loads, 1);

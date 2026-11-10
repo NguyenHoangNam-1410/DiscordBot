@@ -23,6 +23,18 @@ assert.deepEqual([...seen[1]].sort(), [2, 3]);
 assert.deepEqual([...seen[2]].sort(), [4, 5]);
 assert.deepEqual([...seen[3]].sort(), [6, 7, 8]);
 
+// The default loader used by Survival still allows the original extreme compositions.
+for (const high of [false, true]) {
+  const state = engine.createState(100);
+  state.loads = 2;
+  const ammo = engine.loadChamber(state, (max, tag) =>
+    tag?.startsWith("load-size-") || (high && tag?.startsWith("load-live-"))
+      ? max - 1
+      : 0,
+  );
+  assert.deepEqual(ammo, high ? { live: 7, blank: 1 } : { live: 1, blank: 7 });
+}
+
 // 2) Luật bắn
 const fixed = (chamber) => {
   const state = engine.createState(100);
