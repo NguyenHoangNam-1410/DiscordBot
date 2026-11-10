@@ -203,6 +203,98 @@ async function main() {
       windowsVirtualKeyCode: value,
     });
   }
+  async function axesGeometry() {
+    const axes = await evaluate(`(()=>{
+      const board=$('board').getBoundingClientRect(),scroll=$('board').closest('.board-scroll').getBoundingClientRect();
+      const labels=[...document.querySelectorAll('#coordinate-axes .axis span')];
+      let aligned=true;
+      for(const edge of ['top','bottom','left','right']) {
+        const files=edge==='top'||edge==='bottom';
+        document.querySelectorAll('#coordinate-axes .axis-'+edge+' span').forEach((span,i)=>{
+          const view=files?i:i*7,cell=cells[rotated?62-view:view].getBoundingClientRect(),r=span.getBoundingClientRect();
+          if(Math.abs(files?r.x+r.width/2-cell.x-cell.width/2:r.y+r.height/2-cell.y-cell.height/2)>1)aligned=false;
+        });
+      }
+      return {count:labels.length,aligned,rotated,
+        inside:labels.some(el=>{const r=el.getBoundingClientRect();return Math.min(r.right,board.right)-Math.max(r.left,board.left)>.5&&Math.min(r.bottom,board.bottom)-Math.max(r.top,board.top)>.5}),
+        clipped:labels.some(el=>{const r=el.getBoundingClientRect();return r.left<Math.max(0,scroll.left)-1||r.right>Math.min(innerWidth,scroll.right)+1||r.top<Math.max(0,scroll.top)-1||r.bottom>Math.min(innerHeight,scroll.bottom)+1}),
+        files:document.querySelector('#coordinate-axes .axis-top').textContent,
+        ranks:document.querySelector('#coordinate-axes .axis-left').textContent,
+        internal:document.querySelectorAll('#board .coordinate').length};
+    })()`);
+    assert.equal(axes.count, 32);
+    assert.equal(axes.aligned, true, "Axes align with cell centers");
+    assert.equal(axes.inside, false, "No coordinates inside the board");
+    assert.equal(axes.clipped, false, JSON.stringify(axes));
+    assert.equal(axes.files, axes.rotated ? "gfedcba" : "abcdefg");
+    assert.equal(axes.ranks, axes.rotated ? "123456789" : "987654321");
+    assert.equal(axes.internal, 0);
+  }
+  async function point(cell) {
+    return evaluate(
+      `(()=>{const r=cells[${cell}].getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}})()`,
+    );
+  }
+  async function press(cell, touch = false) {
+    const p = await point(cell);
+    if (touch)
+      await send("Input.dispatchTouchEvent", {
+        type: "touchStart",
+        touchPoints: [p],
+      });
+    else
+      await send("Input.dispatchMouseEvent", {
+        type: "mousePressed",
+        button: "left",
+        buttons: 1,
+        clickCount: 1,
+        ...p,
+      });
+    return p;
+  }
+  async function travel(a, b, touch = false) {
+    for (let i = 1; i <= 5; i++) {
+      const p = {
+        x: a.x + ((b.x - a.x) * i) / 5,
+        y: a.y + ((b.y - a.y) * i) / 5,
+      };
+      if (touch)
+        await send("Input.dispatchTouchEvent", {
+          type: "touchMove",
+          touchPoints: [p],
+        });
+      else
+        await send("Input.dispatchMouseEvent", {
+          type: "mouseMoved",
+          button: "left",
+          buttons: 1,
+          ...p,
+        });
+      await delay(20);
+    }
+  }
+  async function release(p, touch = false) {
+    if (touch)
+      await send("Input.dispatchTouchEvent", {
+        type: "touchEnd",
+        touchPoints: [],
+      });
+    else
+      await send("Input.dispatchMouseEvent", {
+        type: "mouseReleased",
+        button: "left",
+        buttons: 0,
+        clickCount: 1,
+        ...p,
+      });
+    await delay(80);
+  }
+  async function drop(a, b, touch = false) {
+    const p = await press(a, touch),
+      q = typeof b === "number" ? await point(b) : b;
+    await travel(p, q, touch);
+    await release(q, touch);
+  }
   async function screenshot(name) {
     if (!process.env.COTHU_SCREENSHOT_DIR) return;
     const dir = path.resolve(process.env.COTHU_SCREENSHOT_DIR);
@@ -219,7 +311,8 @@ async function main() {
   await send("Runtime.enable");
   await send("Page.enable");
   await send("Page.addScriptToEvaluateOnNewDocument", {
-    source: "window.__motions=[];window.__layout=[];",
+    source:
+      "window.__motions=[];window.__layout=[];window.__slides=[];window.__moveRequests=[];\nconst nativeAnimate=Element.prototype.animate;Element.prototype.animate=function(...args){if(this.classList.contains('animal'))__slides.push({cell:this.parentElement.dataset.cell,frames:args[0],zIndex:Number(getComputedStyle(this.parentElement).zIndex),overflow:getComputedStyle(this.parentElement).overflow});return nativeAnimate.apply(this,args)};\nconst nativeFetch=window.fetch;window.fetch=async function(...args){\nif(String(args[0]).includes('/api/games/cothu/move')){__moveRequests.push(JSON.parse(args[1].body));if(window.__rejectNextMove){window.__rejectNextMove=false;return new Response(JSON.stringify({error:'Nước đi bị từ chối để kiểm tra'}),{status:409,headers:{'content-type':'application/json'}})}const r=await nativeFetch.apply(this,args);if(window.__delayMoveReply)await new Promise(resolve=>setTimeout(resolve,300));return r;}\nreturn nativeFetch.apply(this,args);};",
   });
   await send("Emulation.setDeviceMetricsOverride", {
     width: 1280,
@@ -259,26 +352,122 @@ async function main() {
     ),
     true,
   );
+  await axesGeometry();
+  assert.equal(await evaluate('$("confirm")'), null);
+  assert.equal(await evaluate('$("clear")'), null);
+  assert.equal(
+    await evaluate('document.querySelector(".board-planning")'),
+    null,
+  );
   await click('[data-cell="42"]');
-  await click('[data-cell="35"]');
-  assert.equal(await evaluate("state.ply"), 0, "Preview does not send a move");
-  assert.equal(await evaluate('$("confirm").disabled'), false);
-  await click("#clear");
+  assert.equal(await evaluate("from"), 42);
+  await click('[data-cell="42"]');
   assert.equal(await evaluate("from"), null);
   await evaluate("cells[42].focus()");
   await key("Enter", "Enter", 13);
   assert.equal(await evaluate("from"), 42);
-  assert.equal(await evaluate("document.activeElement.dataset.cell"), "42");
-  await click("#clear");
+  await key("Escape", "Escape", 27);
+  assert.equal(await evaluate("from"), null);
+  const start = await press(42),
+    destination = await point(35);
+  await travel(start, destination);
+  assert.equal(await evaluate("!!ghost"), true);
+  await travel(destination, start);
+  await release(start);
+  assert.equal(await evaluate("state.ply"), 0);
+  assert.equal(await evaluate("__moveRequests.length"), 0);
+  assert.equal(
+    await evaluate('$("notice").hidden'),
+    true,
+    "Returning to source is quiet",
+  );
+  await key("Escape", "Escape", 27);
+  const held = await press(42);
+  await travel(held, destination);
+  await send("Input.dispatchMouseEvent", {
+    type: "mousePressed",
+    button: "right",
+    buttons: 3,
+    clickCount: 1,
+    ...destination,
+  });
+  await send("Input.dispatchMouseEvent", {
+    type: "mouseReleased",
+    button: "right",
+    buttons: 1,
+    clickCount: 1,
+    ...destination,
+  });
+  await release(destination);
+  assert.equal(
+    await evaluate("drag===null && ghost===null && from===null"),
+    true,
+  );
+  assert.equal(
+    await evaluate("__moveRequests.length"),
+    0,
+    "Right click cancels held move",
+  );
+  assert.equal(
+    await evaluate('document.querySelector(".board-planning")'),
+    null,
+  );
+  await drop(42, { x: -20, y: -20 });
+  assert.equal(await evaluate("__moveRequests.length"), 0);
+  await key("Escape", "Escape", 27);
+  const staleStart = await press(42);
+  await travel(staleStart, destination);
+  const beforeStale = fixtures
+    .get("cothu")
+    .store.get(fixtures.get("cothu").room.id);
+  beforeStale.version++;
+  db.prepare("UPDATE cothu_rooms SET data_json=? WHERE id=?").run(
+    JSON.stringify(beforeStale),
+    beforeStale.id,
+  );
+  fixtures.get("cothu").store.events.emit(beforeStale.id, beforeStale);
+  await until("drag===null && ghost===null");
+  await release(destination);
+  assert.equal(
+    await evaluate("__moveRequests.length"),
+    0,
+    "A new state cancels an active drag",
+  );
+  await click('[data-cell="42"]');
+  await evaluate("window.__rejectNextMove=true");
+  await click('[data-cell="35"]');
+  await until('!pending && !$("notice").hidden');
+  assert.equal(await evaluate("state.ply"), 0);
+  assert.equal(
+    await evaluate("__slides.length"),
+    0,
+    "Rejected moves do not animate",
+  );
   await click("#rotate-board");
   assert.equal(
     await evaluate('$("board").firstElementChild.dataset.cell'),
     "62",
   );
+  await axesGeometry();
+  await evaluate("window.__delayMoveReply=true");
   await click('[data-cell="42"]');
   await click('[data-cell="35"]');
-  await click("#confirm");
   await until("state.ply===1 && !pending");
+  assert.equal(
+    await evaluate("__slides.length"),
+    1,
+    "SSE and HTTP start only one slide",
+  );
+  assert.equal(
+    await evaluate("__slides[0].zIndex"),
+    10,
+    "Moving animal stays above the board cells",
+  );
+  assert.equal(
+    await evaluate("__slides[0].overflow"),
+    "visible",
+    "Moving animal is not clipped",
+  );
   assert.equal(await evaluate("state.history[0].from"), 42);
   assert.equal(await evaluate("state.history[0].to"), 35);
   assert.equal(
@@ -296,9 +485,12 @@ async function main() {
     true,
     "Blue automatically faces their pieces",
   );
-  await click('[data-cell="20"]');
-  await click('[data-cell="27"]');
-  await click("#confirm");
+  await drop(20, 27);
+  assert.equal(
+    await evaluate("__slides.length"),
+    0,
+    "Rotated drag has no extra slide",
+  );
   await until("state.ply===2&&!pending");
   await send("Page.navigate", { url: config.origin + "/fixture/cothu" });
   await until(
@@ -328,8 +520,9 @@ async function main() {
       deviceScaleFactor: 1,
     });
     await delay(200);
+    await axesGeometry();
     const bounds = await evaluate(
-      `(()=>{const board=$('board').getBoundingClientRect(),scroll=$('board').parentElement.getBoundingClientRect(),confirm=$('confirm').getBoundingClientRect();return{board:board.toJSON(),scroll:scroll.toJSON(),confirm:confirm.toJSON(),width:innerWidth,height:innerHeight}})()`,
+      `(()=>{const board=$('board').getBoundingClientRect(),scroll=$('board').closest('.board-scroll').getBoundingClientRect(),controls=$('controls').getBoundingClientRect();return{board:board.toJSON(),scroll:scroll.toJSON(),controls:controls.toJSON(),width:innerWidth,height:innerHeight}})()`,
     );
     assert(
       Math.abs(bounds.board.width / bounds.board.height - 7 / 9) < 0.01,
@@ -341,17 +534,32 @@ async function main() {
       "Full board visible " + metrics.width + " " + JSON.stringify(bounds),
     );
     assert(
-      bounds.confirm.bottom <= bounds.height && bounds.confirm.top >= 0,
+      bounds.controls.bottom <= bounds.height && bounds.controls.top >= 0,
       "Actions visible with board",
     );
+    if (metrics.width === 360) {
+      const slides = await evaluate("__slides.length");
+      await drop(48, 41, true);
+      await until("state.ply===3 && !pending");
+      assert.equal(
+        await evaluate("__slides.length"),
+        slides,
+        "Touch drag does not slide again",
+      );
+      assert.equal(
+        await evaluate('document.querySelectorAll(".drag-ghost").length'),
+        0,
+      );
+    }
     if (metrics.mobile) {
       await click('[data-panel="history"]', true);
       await until('WebGameMobile.active()==="history"');
-      assert.equal(await evaluate('$("move-history").children.length'), 2);
+      assert.equal(await evaluate('$("move-history").children.length'), 3);
       await delay(80);
+      await axesGeometry();
       assert.equal(
         await evaluate(
-          `(()=>{const r=$('board').getBoundingClientRect(),s=$('board').parentElement.getBoundingClientRect();return r.top>=s.top-1&&r.bottom<=s.bottom+1})()`,
+          `(()=>{const r=$('board').getBoundingClientRect(),s=$('board').closest('.board-scroll').getBoundingClientRect();return r.top>=s.top-1&&r.bottom<=s.bottom+1})()`,
         ),
         true,
         "Board fits with history menu",
@@ -422,18 +630,19 @@ async function main() {
     ]),
   );
   await until('state.pieces[0].type==="lion"');
-  await click('[data-cell="43"]');
-  await click('[data-cell="15"]');
+  const jumpStart = await press(43),
+    jumpTarget = await point(15);
+  await travel(jumpStart, jumpTarget);
   assert.equal(
     await evaluate('document.querySelectorAll(".cell.jump-path").length'),
     3,
   );
   assert.equal(
-    await evaluate('document.querySelectorAll(".capture-preview").length'),
-    1,
+    await evaluate('cells[15].classList.contains("legal-capture")'),
+    true,
   );
-  await screenshot("cothu-jump-preview.png");
-  await click("#confirm");
+  await screenshot("cothu-jump-drag.png");
+  await release(jumpTarget);
   await until("state.ply===1&&!pending");
   assert.equal(await evaluate("state.lastMove.jumped"), true);
   assert.match(await evaluate('$("captured").textContent'), /Mèo/);
@@ -446,7 +655,6 @@ async function main() {
   await until('state.pieces[0].type==="rat"&&state.ply===0');
   await click('[data-cell="10"]');
   await click('[data-cell="3"]');
-  await click("#confirm");
   await until('state.status==="finished"');
   assert.equal(await evaluate("state.endReason"), "den");
   await screenshot("cothu-victory.png");
@@ -455,7 +663,7 @@ async function main() {
     url: config.origin + "/cothu/room/" + room.id,
   });
   await until('typeof state!=="undefined"&&state?.me===null&&connected');
-  assert.equal(await evaluate('$("confirm").disabled'), true);
+  assert.equal(await evaluate("canAct()"), false);
   assert.equal(await evaluate("state.history.length"), 1);
   await click('[data-cell="3"]');
   assert.equal(await evaluate("from"), null);
@@ -474,7 +682,7 @@ async function main() {
   await until('typeof state!=="undefined"&&state?.me==="X"&&connected');
   assert.equal(await evaluate("rotated"), true);
   assert.equal(await evaluate("state.sideBySeat.X"), "blue");
-  assert.equal(await evaluate('$("confirm").disabled'), true);
+  assert.equal(await evaluate("canAct()"), false);
   assert.match(await evaluate('$("role-X").textContent'), /Xanh/);
   await send("Network.clearBrowserCookies");
   await send("Page.navigate", {
@@ -493,7 +701,6 @@ async function main() {
   await until('state.me==="O"&&canAct()');
   await click('[data-cell="42"]');
   await click('[data-cell="35"]');
-  await click("#confirm");
   await until("state.ply===1&&!pending");
   assert.equal(await evaluate("state.history[0].side"), "red");
   assert.deepEqual(errors, []);
@@ -501,7 +708,7 @@ async function main() {
     JSON.stringify({
       ok: true,
       cothuUI:
-        "original animal SVGs, terrain, rotate/absolute coords, preview/cancel/confirm, two seats, captured/jump/den result, rules/keyboard/history, portrait/landscape/desktop, read-only spectator",
+        "original animal SVGs, terrain, rotate/absolute coords, immediate click/drag commits, quiet return/right cancel, stale gestures, single acknowledged click slide, rotated mouse/touch, two seats, captured/jump/den result, rules/keyboard/history, portrait/landscape/desktop, read-only spectator",
     }),
   );
   await send("Browser.close").catch(() => {});

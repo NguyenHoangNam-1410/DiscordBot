@@ -64,7 +64,7 @@
         "Đồng hồ Đỏ bắt đầu ngay khi đối thủ tham gia. Mỗi người mặc định 30 phút, không cộng giờ.",
       ],
       play: [
-        "Chọn quân của mình → ô đích hợp lệ để xem trước → Xác nhận. Hủy/Escape chỉ bỏ xem trước.",
+        "Kéo thả quân vào ô đích hoặc chạm quân rồi chạm ô đích. Nước hợp lệ được thực hiện ngay.",
         "Đi một ô ngang/dọc, không chéo, không bỏ lượt; không vào hang nhà hay ô quân mình. Mạnh ăn yếu hoặc bằng.",
         "Voi 8 > Sư tử 7 > Hổ 6 > Báo 5 > Chó 4 > Sói 3 > Mèo 2 > Chuột 1. Số trên quân mắc bẫy địch là bậc hiệu dụng 0.",
         "Nút Xoay bàn chỉ đổi góc nhìn; tọa độ a1–g9 không đổi. Lịch sử ghi ô đi/đến, nhảy và quân bị ăn.",

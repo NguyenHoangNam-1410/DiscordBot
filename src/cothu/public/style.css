@@ -156,17 +156,35 @@ a:focus-visible {
   overflow: auto;
   padding: 12px 4px;
 }
+.coordinate-frame {
+  --axis-gutter: 14px;
+  --grid-border: 4px;
+  --grid-padding: 6px;
+  --grid-gap: 2px;
+  position: relative;
+  width: min(
+    calc(100% - 2 * var(--axis-gutter)),
+    510px,
+    max(245px, calc((100dvh - 430px) * 7 / 9))
+  );
+  aspect-ratio: 7/9;
+  margin: var(--axis-gutter);
+}
 .board {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   grid-template-rows: repeat(9, minmax(0, 1fr));
-  width: min(100%, 510px, max(245px, calc((100dvh - 430px) * 7 / 9)));
+  width: 100%;
+  height: 100%;
   aspect-ratio: 7/9;
-  gap: 2px;
-  padding: 6px;
-  border: 4px solid #a98c52;
+  gap: var(--grid-gap);
+  padding: var(--grid-padding);
+  border: var(--grid-border) solid #a98c52;
   border-radius: 9px;
   background: #655b36;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
   box-shadow:
     inset 0 0 0 1px #e8cf94,
     0 8px 20px #0004;
@@ -184,6 +202,8 @@ a:focus-visible {
   background: #d4cc9c;
   color: #223e31;
   opacity: 1 !important;
+  touch-action: none;
+  cursor: default;
 }
 .cell.land:nth-child(even) {
   background: #e2d6a4;
@@ -210,14 +230,46 @@ a:focus-visible {
 .cell.den.terrain-blue {
   background: #94b9b3;
 }
-.coordinate {
+.coordinate-axes {
   position: absolute;
-  top: 1px;
-  left: 2px;
-  font-size: clamp(6px, 0.7vw, 9px);
-  line-height: 1;
-  z-index: 1;
-  color: #274a40;
+  inset: 0;
+  pointer-events: none;
+  color: var(--muted);
+  font: 10px/1 monospace;
+}
+.axis {
+  position: absolute;
+  display: grid;
+}
+.axis span {
+  display: grid;
+  place-items: center;
+}
+.axis-top,
+.axis-bottom {
+  left: calc(var(--grid-border) + var(--grid-padding) - var(--grid-gap) / 2);
+  right: calc(var(--grid-border) + var(--grid-padding) - var(--grid-gap) / 2);
+  height: var(--axis-gutter);
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+.axis-top {
+  top: calc(-1 * var(--axis-gutter));
+}
+.axis-bottom {
+  bottom: calc(-1 * var(--axis-gutter));
+}
+.axis-left,
+.axis-right {
+  top: calc(var(--grid-border) + var(--grid-padding) - var(--grid-gap) / 2);
+  bottom: calc(var(--grid-border) + var(--grid-padding) - var(--grid-gap) / 2);
+  width: var(--axis-gutter);
+  grid-template-rows: repeat(9, minmax(0, 1fr));
+}
+.axis-left {
+  left: calc(-1 * var(--axis-gutter));
+}
+.axis-right {
+  right: calc(-1 * var(--axis-gutter));
 }
 .terrain-art {
   position: absolute;
@@ -332,22 +384,35 @@ a:focus-visible {
   content: "⇢";
   color: #194d8a;
 }
-.cell.preview-target {
+.cell.hover-target {
   box-shadow: inset 0 0 0 3px #fffba6;
-}
-.cell.preview-target::after {
-  display: none;
 }
 .cell.jump-path {
   background: #abe0cb;
   box-shadow: inset 0 0 0 2px #267690;
 }
-.animal-preview {
-  z-index: 6;
-  opacity: 0.85;
+.cell.own-piece {
+  cursor: grab;
 }
-.capture-preview > .animal:not(.animal-preview) {
-  opacity: 0.2;
+.cell.drag-source > .animal {
+  opacity: 0.25;
+}
+.drag-ghost {
+  position: fixed;
+  z-index: 70;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  filter: drop-shadow(0 6px 5px #0008);
+}
+.drag-ghost .animal {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.board .cell.move-sliding {
+  overflow: visible;
+  z-index: 10;
+  isolation: auto;
 }
 .cell.recent {
   outline: 3px solid #ffdc70;
@@ -548,9 +613,26 @@ dialog::backdrop {
   aspect-ratio: 7/9;
   grid-template-columns: repeat(7, minmax(0, 1fr));
   grid-template-rows: repeat(9, minmax(0, 1fr));
-  padding: 3px;
-  gap: 1px;
-  border-width: 2px;
+  padding: var(--grid-padding);
+  gap: var(--grid-gap);
+  border-width: var(--grid-border);
+}
+.wg-mobile[data-web-game="cothu"] .coordinate-frame {
+  --axis-gutter: 12px;
+  --grid-border: 2px;
+  --grid-padding: 3px;
+  --grid-gap: 1px;
+  width: min(
+    calc(100% - 2 * var(--axis-gutter)),
+    calc(var(--wg-board-size, 100%) - (2 * var(--axis-gutter) - 12px) * 7 / 9)
+  );
+}
+.wg-mobile[data-web-game="cothu"] .coordinate-frame .board:not(.enlarged) {
+  width: 100%;
+  height: 100%;
+}
+.wg-mobile[data-web-game="cothu"] .coordinate-axes {
+  font-size: 9px;
 }
 .wg-mobile[data-web-game="cothu"] .controls {
   flex-shrink: 0;
@@ -582,9 +664,6 @@ dialog::backdrop {
   font-size: 6px;
   left: -2px;
   top: -2px;
-}
-.wg-mobile[data-web-game="cothu"] .coordinate {
-  font-size: 6px;
 }
 .wg-mobile[data-web-game="cothu"] #move-history {
   max-height: none;

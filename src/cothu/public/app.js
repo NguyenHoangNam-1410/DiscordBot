@@ -14,9 +14,14 @@ let pairTimer = null,
   pairAttempt = 0,
   pairVisible = false;
 let from = null,
-  to = null,
   rotated = false,
-  orientationOwner = null;
+  orientationOwner = null,
+  drag = null,
+  ghost = null,
+  hover = null,
+  moveIntent = null,
+  slide = null,
+  suppressContextUntil = 0;
 const cells = [];
 const coord = (cell) =>
   String.fromCharCode(97 + (cell % 7)) + (9 - Math.floor(cell / 7));
@@ -30,40 +35,195 @@ const canAct = () =>
   );
 const ownSide = () => state?.sideBySeat[state.me];
 const sideLabel = (side) => (side === "red" ? "Đỏ ●" : "Xanh ◆");
-const choice = () =>
-  state?.legalMoves.find((m) => m.from === from && m.to === to);
+const legal = (a, b) =>
+  state?.legalMoves.some((m) => m.from === a && m.to === b);
 const pieceAt = (cell) => state.pieces.find((p) => p.cell === cell);
 function resetPreview() {
   from = null;
-  to = null;
+  cancelDrag();
 }
 function select(cell) {
   if (!canAct()) return;
   const piece = pieceAt(cell);
   if (piece?.side === ownSide()) {
-    from = cell;
-    to = null;
-  } else if (
-    from !== null &&
-    state.legalMoves.some((m) => m.from === from && m.to === cell)
-  )
-    to = to === cell ? null : cell;
-  else
-    return notice(
-      from === null
-        ? "Chọn một quân của bạn."
-        : "Ô đích không hợp lệ. Xem các ô được tô sáng.",
-    );
+    from = from === cell ? null : cell;
+    notice("");
+    render();
+    return;
+  }
+  if (from !== null && legal(from, cell)) void commit(from, cell);
+  else if (from !== null) notice("Ô đích không hợp lệ. Chọn ô được tô sáng.");
+}
+function cellAtPoint(x, y) {
+  const target = document.elementFromPoint(x, y)?.closest(".cell");
+  return target && $("board").contains(target)
+    ? Number(target.dataset.cell)
+    : null;
+}
+function cancelDrag() {
+  const old = drag;
+  drag = null;
+  hover = null;
+  ghost?.remove();
+  ghost = null;
+  if (old && cells[old.cell]?.hasPointerCapture(old.id))
+    cells[old.cell].releasePointerCapture(old.id);
+}
+function cancelHeldPiece() {
+  suppressContextUntil = Date.now() + 800;
+  resetPreview();
   notice("");
   render();
 }
+function cancelSlide() {
+  const old = slide;
+  slide = null;
+  old?.animation.cancel();
+  old?.cell.classList.remove("move-sliding");
+}
+function startSlide(intent) {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const cell = cells[intent.to],
+    piece = cell?.querySelector(".animal");
+  if (!piece?.animate) return;
+  cancelSlide();
+  const a = cells[intent.from].getBoundingClientRect(),
+    b = cell.getBoundingClientRect();
+  const dx = a.x + a.width / 2 - b.x - b.width / 2;
+  const dy = a.y + a.height / 2 - b.y - b.height / 2;
+  cell.classList.add("move-sliding");
+  const animation = piece.animate(
+    [
+      { transform: `translate(${dx}px,${dy}px)` },
+      { transform: "translate(0,0)" },
+    ],
+    { duration: 210, easing: "cubic-bezier(.2,.7,.25,1)" },
+  );
+  const current = (slide = { animation, cell });
+  const finish = () => {
+    if (slide === current) {
+      cell.classList.remove("move-sliding");
+      slide = null;
+    }
+  };
+  animation.onfinish = finish;
+  animation.oncancel = finish;
+}
+$("board").addEventListener("contextmenu", (event) => {
+  event.preventDefault();
+  if (drag?.own || from !== null) cancelHeldPiece();
+});
+window.addEventListener(
+  "mousedown",
+  (event) => {
+    if (event.button === 2 && drag?.own) {
+      event.preventDefault();
+      cancelHeldPiece();
+    }
+  },
+  true,
+);
+window.addEventListener(
+  "contextmenu",
+  (event) => {
+    if (drag?.own) cancelHeldPiece();
+    if (Date.now() < suppressContextUntil) event.preventDefault();
+  },
+  true,
+);
 function buildBoard() {
   if (cells.length) return;
   for (let i = 0; i < 63; i++) {
     const button = document.createElement("button");
     button.type = "button";
     button.dataset.cell = String(i);
-    button.addEventListener("click", () => select(i));
+    button.addEventListener("click", (event) => {
+      if (event.detail === 0) select(i);
+    });
+    button.addEventListener("pointerdown", (event) => {
+      if (
+        !canAct() ||
+        event.button !== 0 ||
+        drag ||
+        document.querySelector("dialog[open]") ||
+        WebGameMobile.active()
+      )
+        return;
+      event.preventDefault();
+      drag = {
+        id: event.pointerId,
+        cell: i,
+        own: pieceAt(i)?.side === ownSide(),
+        x: event.clientX,
+        y: event.clientY,
+        moved: false,
+        version: state.version,
+        me: state.me,
+      };
+      button.setPointerCapture(event.pointerId);
+    });
+    button.addEventListener("pointermove", (event) => {
+      if (drag?.id !== event.pointerId) return;
+      const d = drag;
+      if (Math.hypot(event.clientX - d.x, event.clientY - d.y) > 6)
+        d.moved = true;
+      if (!d.moved || !d.own) return;
+      event.preventDefault();
+      if (!ghost) {
+        from = d.cell;
+        ghost = document.createElement("div");
+        ghost.className = "drag-ghost";
+        ghost.setAttribute("aria-hidden", "true");
+        const rect = button.getBoundingClientRect();
+        ghost.style.width = rect.width * 0.82 + "px";
+        ghost.style.height = rect.height * 0.83 + "px";
+        ghost.append(pieceNode(pieceAt(d.cell)));
+        document.body.append(ghost);
+      }
+      ghost.style.left = event.clientX + "px";
+      ghost.style.top = event.clientY + "px";
+      hover = cellAtPoint(event.clientX, event.clientY);
+      renderBoard();
+    });
+    button.addEventListener("pointerup", (event) => {
+      if (drag?.id !== event.pointerId) return;
+      event.preventDefault();
+      const d = drag,
+        target = cellAtPoint(event.clientX, event.clientY);
+      const valid =
+        canAct() &&
+        d.version === state.version &&
+        d.me === state.me &&
+        !document.querySelector("dialog[open]") &&
+        !WebGameMobile.active();
+      cancelDrag();
+      if (!valid) {
+        from = null;
+        render();
+        return;
+      }
+      if (!d.moved) return select(d.cell);
+      if (d.own && target === d.cell) {
+        from = d.cell;
+        notice("");
+        render();
+      } else if (d.own && target !== null && legal(d.cell, target))
+        void commit(d.cell, target, d.version, false);
+      else {
+        from = d.own ? d.cell : null;
+        notice("Đã hủy: thả quân vào ô hợp lệ.");
+        render();
+      }
+    });
+    const cancelled = (event) => {
+      if (drag?.id === event.pointerId) {
+        cancelDrag();
+        from = null;
+        render();
+      }
+    };
+    button.addEventListener("pointercancel", cancelled);
+    button.addEventListener("lostpointercapture", cancelled);
     button.addEventListener("keydown", (e) => {
       if (
         document.querySelector("dialog[open]") ||
@@ -103,9 +263,9 @@ function art(id, className) {
   svg.append(use);
   return svg;
 }
-function pieceNode(p, preview = false) {
+function pieceNode(p) {
   const el = document.createElement("span");
-  el.className = `animal ${p.side}${preview ? " animal-preview" : ""}${p.effectiveRank === 0 ? " trapped" : ""}`;
+  el.className = `animal ${p.side}${p.effectiveRank === 0 ? " trapped" : ""}`;
   el.append(art("art-" + p.type, "animal-art"));
   const name = document.createElement("span"),
     rank = document.createElement("b"),
@@ -120,11 +280,42 @@ function pieceNode(p, preview = false) {
   el.title = `${state.animals[p.type].name} ${sideLabel(p.side)}, bậc gốc ${p.rank}${p.effectiveRank === 0 ? ", mắc bẫy: sức mạnh 0" : ""}`;
   return el;
 }
+function renderCoordinates() {
+  const target = $("coordinate-axes");
+  if (target.dataset.rotated === String(rotated)) return;
+  target.dataset.rotated = String(rotated);
+  target.replaceChildren();
+  for (const edge of ["top", "bottom", "left", "right"]) {
+    const axis = document.createElement("div");
+    axis.className = "axis axis-" + edge;
+    const files = edge === "top" || edge === "bottom";
+    const labels = files
+      ? [...(rotated ? "gfedcba" : "abcdefg")]
+      : Array.from({ length: 9 }, (_, row) =>
+          String(rotated ? row + 1 : 9 - row),
+        );
+    for (const text of labels) {
+      const label = document.createElement("span");
+      label.textContent = text;
+      axis.append(label);
+    }
+    target.append(axis);
+  }
+}
 function renderBoard() {
   buildBoard();
-  const m = choice(),
+  renderCoordinates();
+  const m =
+      (canAct() &&
+        from !== null &&
+        hover !== null &&
+        state.legalMoves.find(
+          (move) => move.from === from && move.to === hover,
+        )) ||
+      null,
     order = rotated ? [...cells].reverse() : cells;
   const board = $("board");
+  $("rotate-board").setAttribute("aria-pressed", String(rotated));
   if (board.dataset.rotated !== String(rotated)) {
     const focus = document.activeElement?.dataset.cell;
     board.append(...order);
@@ -138,6 +329,8 @@ function renderBoard() {
         canAct() &&
         state.legalMoves.find((m) => m.from === from && m.to === cell);
     el.className = `cell ${t.kind}${t.owner ? " terrain-" + t.owner : ""}`;
+    if (slide?.cell === el) el.classList.add("move-sliding");
+    if (p && canAct() && p.side === ownSide()) el.classList.add("own-piece");
     if (cell === from) el.classList.add("selected");
     if (target)
       el.classList.add(
@@ -147,34 +340,28 @@ function renderBoard() {
             ? "legal-jump"
             : "legal",
       );
-    if (cell === to) el.classList.add("preview-target");
+    if (target && cell === hover) el.classList.add("hover-target");
+    if (drag?.moved && drag.own && cell === drag.cell)
+      el.classList.add("drag-source");
     if (m?.path.includes(cell)) el.classList.add("jump-path");
     if (
       state.lastMove &&
       (cell === state.lastMove.from || cell === state.lastMove.to)
     )
       el.classList.add("recent");
-    if (p && m?.capturedPieceId === p.id) el.classList.add("capture-preview");
-    el.replaceChildren();
-    const address = document.createElement("span");
-    address.className = "coordinate";
-    address.textContent = coord(cell);
-    el.append(address);
-    if (t.kind === "den" || t.kind === "trap")
-      el.append(art("art-" + t.kind, "terrain-art"));
-    if (p) el.append(pieceNode(p));
-    if (m && cell === m.to) {
-      const moving = state.pieces.find((p) => p.id === m.pieceId);
-      el.append(
-        pieceNode(
-          {
-            ...moving,
-            effectiveRank:
-              t.kind === "trap" && t.owner !== moving.side ? 0 : moving.rank,
-          },
-          true,
-        ),
-      );
+    const terrainKey = `${t.kind}:${t.owner || ""}`;
+    if (el.dataset.terrain !== terrainKey) {
+      el.dataset.terrain = terrainKey;
+      el.dataset.piece = "";
+      el.replaceChildren();
+      if (t.kind === "den" || t.kind === "trap")
+        el.append(art("art-" + t.kind, "terrain-art"));
+    }
+    const pieceKey = p ? `${p.id}:${p.effectiveRank}` : "";
+    if (el.dataset.piece !== pieceKey) {
+      el.dataset.piece = pieceKey;
+      el.querySelector(".animal")?.remove();
+      if (p) el.append(pieceNode(p));
     }
     const terrain =
       t.kind === "water"
@@ -188,7 +375,7 @@ function renderBoard() {
       "aria-label",
       `${coord(cell)}, ${terrain}${p ? ", " + state.animals[p.type].name + " " + sideLabel(p.side) + " bậc " + p.effectiveRank : ""}${target ? ", đích hợp lệ" : ""}`,
     );
-    el.setAttribute("aria-pressed", String(cell === from || cell === to));
+    el.setAttribute("aria-pressed", String(cell === from));
     el.title =
       el.getAttribute("aria-label") + (p ? ` (bậc gốc ${p.rank})` : "");
     el.tabIndex = cell === (from ?? (rotated ? 62 : 0)) ? 0 : -1;
@@ -199,13 +386,14 @@ function renderBoard() {
   );
 }
 function moveText(m) {
-  if (!m) return "Đỏ đi trước. Chọn quân → Ô đích → Xác nhận.";
+  if (!m) return "Đỏ đi trước. Kéo thả hoặc chạm quân rồi chạm ô đích.";
   const p = state.pieces.find((p) => p.id === m.pieceId),
     captured = state.pieces.find((p) => p.id === m.capturedPieceId);
   return `${m.ply}. ${sideLabel(m.side)} · ${state.animals[p.type].name} ${coord(m.from)} → ${coord(m.to)}${m.jumped ? " · Nhảy sông" : ""}${captured ? " · Ăn " + state.animals[captured.type].name : ""}`;
 }
 function render() {
   if (!state) return;
+  if (drag && !canAct()) cancelDrag();
   WebGamePlayers.render(state);
   WebGameBoardUI.renderRules("cothu", state);
   $("room-code").textContent = state.id.slice(0, 8).toUpperCase();
@@ -256,23 +444,17 @@ function render() {
         (p) => p.side === state.sideBySeat[seat] && p.cell !== null,
       ).length + "/8 quân";
   }
-  const m = choice(),
-    t = m ? state.terrain[m.to] : null;
   $("instruction").textContent = !playing
     ? reason || "Chờ người thứ hai tham gia."
     : !state.me
       ? "Kết nối tài khoản nếu bạn là người chơi; khán giả chỉ xem."
       : !canAct()
         ? pending
-          ? "Đang xác nhận…"
+          ? "Đang thực hiện nước đi…"
           : "Đang chờ lượt của bạn."
         : from === null
           ? "Chọn một quân của bạn."
-          : to === null
-            ? "Chọn ô đi, ăn hoặc nhảy được tô sáng."
-            : `${coord(from)} → ${coord(to)}${m.jumped ? " · Nhảy sông" : ""}${m.capturedPieceId ? " · Ăn quân" : ""}${t.kind === "trap" && t.owner !== ownSide() ? " · Vào bẫy địch: sức mạnh 0" : ""}${t.kind === "den" ? " · Chiếm hang để thắng" : ""}. Bấm Xác nhận.`;
-  $("confirm").disabled = !canAct() || !m;
-  $("clear").disabled = pending || from === null;
+          : "Chọn ô đi, ăn hoặc nhảy được tô sáng để đi ngay.";
   $("last-action").textContent = moveText(state.lastMove);
   const history = $("move-history");
   if (history.dataset.version !== String(state.version)) {
@@ -310,32 +492,39 @@ function render() {
   WebGameMobile.update("cothu", state);
 }
 $("rotate-board").addEventListener("click", () => {
+  resetPreview();
+  cancelSlide();
   rotated = !rotated;
   $("rotate-board").setAttribute("aria-pressed", String(rotated));
   renderBoard();
 });
-$("clear").addEventListener("click", () => {
+async function commit(a, b, version = state?.version, animate = true) {
+  if (!canAct() || version !== state.version || !legal(a, b)) return;
+  const data = { roomId, version, from: a, to: b };
+  const intent = (moveIntent = {
+    roomId: state.id,
+    ply: state.ply + 1,
+    from: a,
+    to: b,
+    pieceId: pieceAt(a).id,
+    animate,
+    confirmed: false,
+  });
   resetPreview();
-  notice("");
-  render();
-});
-$("confirm").addEventListener("click", async () => {
-  if (!canAct() || !choice()) return;
-  const data = { roomId, version: state.version, from, to };
   pending = true;
   render();
   try {
     accept(await api("/api/move", data));
     notice("");
   } catch (e) {
-    resetPreview();
-    notice(e.message);
+    if (!intent.confirmed) notice(e.message);
     await refresh().catch(() => connection(false));
   } finally {
+    if (moveIntent === intent) moveIntent = null;
     pending = false;
     render();
   }
-});
+}
 document.addEventListener("keydown", (e) => {
   if (
     e.key === "Escape" &&
@@ -346,8 +535,48 @@ document.addEventListener("keydown", (e) => {
     render();
   }
 });
+for (const event of ["blur", "resize"])
+  window.addEventListener(event, () => {
+    cancelDrag();
+    cancelSlide();
+    if (state) requestAnimationFrame(renderBoard);
+  });
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    cancelDrag();
+    cancelSlide();
+  }
+});
 function accept(next) {
-  if (state && next.id === state.id && next.version < state.version) return;
+  if (
+    state &&
+    next.id === state.id &&
+    (next.version < state.version ||
+      (next.version === state.version &&
+        next.me === state.me &&
+        next.serverNow <= state.serverNow))
+  )
+    return;
+  let transition = null;
+  if (!state || state.id !== next.id || next.ply > state.ply) cancelSlide();
+  if (
+    moveIntent &&
+    next.id === moveIntent.roomId &&
+    next.ply >= moveIntent.ply
+  ) {
+    const intent = moveIntent,
+      last = next.lastMove;
+    moveIntent = null;
+    if (
+      last?.ply === intent.ply &&
+      last.pieceId === intent.pieceId &&
+      last.from === intent.from &&
+      last.to === intent.to
+    ) {
+      intent.confirmed = true;
+      if (intent.animate) transition = intent;
+    }
+  }
   WebGameFeedback.update("cothu", next);
   if (
     !state ||
@@ -372,6 +601,7 @@ function accept(next) {
     clearStoredPairing();
   }
   render();
+  if (transition) startSlide(transition);
 }
 
 function notice(message) {
@@ -665,6 +895,8 @@ async function pollPairing(attempt = pairAttempt) {
   pairTimer = setTimeout(() => pollPairing(attempt), 2000);
 }
 window.addEventListener("pagehide", () => {
+  cancelDrag();
+  cancelSlide();
   source?.close();
   source = null;
   pairing = false;

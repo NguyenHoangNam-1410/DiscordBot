@@ -1,5 +1,18 @@
 [
   {
+    "id": "993a7939-27ed-428b-8bcd-8acff0c5acba",
+    "updatedAt": "2026-11-10T06:17:40.191Z",
+    "auditedAt": "2026-11-10T06:17:40.191Z",
+    "title": "Cờ thú: đi quân trực tiếp và tọa độ ngoài bàn",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Kéo thả hoặc chạm quân rồi chạm ô đích để đi ngay; bỏ nút xác nhận và hủy nước đi.",
+      "Chạm chọn ô đích có animation sau khi nước được chấp nhận; kéo thả không chạy animation lặp. Hỗ trợ đặt lại ô cũ và hủy quân đang kéo.",
+      "Đưa tọa độ a–g và 1–9 ra ngoài bốn cạnh viền bàn, căn tâm theo ô và cập nhật khi xoay trên PC, điện thoại dọc và ngang."
+    ]
+  },
+  {
     "id": "19e39770-58f8-49f3-9d38-00e22d04c262",
     "updatedAt": "2026-11-10T03:22:26.577Z",
     "auditedAt": "2026-11-10T03:22:26.577Z",

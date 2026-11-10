@@ -252,21 +252,24 @@
               </button>
             </div>
             <div class="board-scroll">
-              <div
-                id="board"
-                class="board"
-                role="group"
-                aria-label="Cờ thú 7 cột 9 hàng"
-              ></div>
+              <div class="coordinate-frame">
+                <div
+                  id="board"
+                  class="board"
+                  role="group"
+                  aria-label="Cờ thú 7 cột 9 hàng"
+                ></div>
+                <div
+                  id="coordinate-axes"
+                  class="coordinate-axes"
+                  aria-hidden="true"
+                ></div>
+              </div>
             </div>
             <section id="controls" class="controls">
               <p id="instruction" aria-live="polite">
-                Chọn quân → Ô đích → Xác nhận
+                Kéo thả hoặc chạm quân rồi chạm ô đích
               </p>
-              <div class="actions">
-                <button id="clear">Hủy</button
-                ><button id="confirm" class="primary" disabled>Xác nhận</button>
-              </div>
             </section>
             <p
               id="last-action"

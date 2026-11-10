@@ -170,23 +170,24 @@ Ngoài bàn: đầu hàng (`resign`) hoặc hết giờ (`timeout`) đều thua.
 - Đỏ ở dưới với người cầm Đỏ; Xanh ở dưới với người cầm Xanh; khán giả mặc định Đỏ ở dưới. Cho xoay bàn thủ công, chỉ thay cách nhìn, không đổi tọa độ hoặc dữ liệu.
 - Quân có icon thú, tên và số bậc; phân biệt bên bằng màu và viền/ký hiệu, không chỉ màu. Tài nguyên SVG/CSS hoặc icon tự có; chưa yêu cầu bộ ảnh riêng.
 - Nước có nền xanh, bẫy có biểu tượng riêng và màu chủ sở hữu, hang khác biệt rõ. Quân mắc bẫy hiển thị bậc hiệu dụng 0, tooltip vẫn nêu bậc gốc.
+- Tọa độ a–g và 1–9 đặt ngoài bốn cạnh viền bàn, căn tâm theo từng ô và cập nhật khi xoay; không ghi tọa độ trên mặt ô.
 - Hiển thị nước vừa đi bằng viền ở ô đi/đến; quân bị ăn xuất hiện trong danh sách quân đã mất.
 
 ### 6.2. Một lượt thao tác
 
 1. Chọn quân của mình trong lượt mình.
 2. Tô sáng các ô đi hợp lệ từ engine: đi thường, ăn quân và nhảy sông có ký hiệu phân biệt.
-3. Chọn ô đích để xem trước; đánh dấu quân sắp bị ăn, đường nhảy hoặc cảnh báo đi vào bẫy.
-4. Bấm **Xác nhận** gửi đúng một hành động. Hủy/Escape chỉ hủy lựa chọn cục bộ, không tác động bàn hoặc đồng hồ.
-5. Trong lúc chờ phản hồi, khóa nút gửi lặp. Nếu thất bại do version cũ, lấy snapshot mới và xóa preview; không tự áp lại nước cũ.
+3. Kéo thả quân vào ô hợp lệ hoặc chạm quân rồi chạm ô đích để gửi ngay đúng một hành động; không có nút xác nhận/hủy nước đi. Các ô đi/ăn/nhảy hợp lệ vẫn được đánh dấu; kéo qua đường nhảy sẽ tô đường đi.
+4. Chạm chọn ô đích có animation trượt sau khi máy chủ chấp nhận; kéo thả không chạy thêm animation. Đặt lại ô cũ không gửi nước và không báo lỗi. Chuột phải khi đang giữ quân hoặc Escape hủy thao tác cục bộ; không có chức năng vẽ nhẩm.
+5. Trong lúc chờ phản hồi, khóa gửi lặp. Nếu thất bại do version cũ, lấy snapshot mới và xóa lựa chọn; không tự áp lại nước cũ. Thay đổi trạng thái/phiên hoặc hủy pointer phải dọn quân đang kéo. HTTP và SSE của cùng nước chỉ phát animation một lần.
 
-Không tự gửi nước đi chỉ vì nhấp quân/ô đích. Không tự đổi lượt lạc quan trước xác nhận máy chủ. Khi khán giả hoặc chưa kết nối tài khoản, có thể xem luật/lịch sử nhưng không gửi thao tác chơi.
+Chọn riêng quân chưa gửi nước; thả hoặc chạm ô đích hợp lệ sẽ gửi ngay. Không tự đổi lượt lạc quan trước xác nhận máy chủ. Khi khán giả hoặc chưa kết nối tài khoản, có thể xem luật/lịch sử nhưng không gửi thao tác chơi.
 
 ### 6.3. Thông tin và hỗ trợ tiếp cận
 
 - Luôn thấy bên đến lượt, đồng hồ hai người, trạng thái kết nối và kết quả.
 - Nút Luật chơi dùng rules UI chung, nêu rõ Chuột/Voi, bẫy, nước, nhảy sông và luật hòa v1.
-- Phím mũi tên đổi focus theo hướng nhìn, Enter/Space chọn quân/ô, Escape hủy preview hoặc đóng menu.
+- Phím mũi tên đổi focus theo hướng nhìn, Enter/Space chọn quân/ô để đi ngay, Escape hủy chọn hoặc đóng menu.
 - Khi menu/ô nhập mở, phím bàn cờ không được xử lý.
 - Nhãn ô ví dụ: “b5, nước, Chuột Xanh bậc 1”. Kết quả nước đi dùng vùng thông báo để trình đọc màn hình đọc được.
 - Âm báo dùng feedback chung, tắt/mở được, không phát lặp khi refresh hoặc nhận lại cùng SSE version.
@@ -266,7 +267,7 @@ DTO công khai chỉ gồm dữ liệu hiển thị, bên đến lượt, cấu 
 | Quyền | Khán giả, tài khoản khác, đúng tài khoản nhưng sai phòng/game không được đi hoặc đầu hàng; client không tự chọn side |
 | Lưu trữ | Restart giữ bàn, ghế, version, clocks, repetition và lịch sử; phòng kết thúc vẫn xem được; Chơi lại không sửa phòng cũ |
 | Discord | Tạo/tham gia/hủy, danh sách phòng, giới hạn kênh/người, thiếu quyền kênh, cập nhật kết quả và khôi phục hàng đợi sau restart |
-| Web | Desktop, mobile dọc/ngang; xoay bàn vẫn gửi đúng tọa độ; preview không gửi nước; xác nhận/hủy; keyboard/menu; luật/avatar/âm báo |
+| Web | Desktop, mobile dọc/ngang; xoay bàn vẫn gửi đúng tọa độ; kéo thả/chạm đi ngay; hủy thao tác; animation sau chấp nhận và chống lặp; keyboard/menu; luật/avatar/âm báo |
 
 Cần kiểm tra engine với một bộ xét nước độc lập hoặc bảng fixture tự tính, không chỉ dùng `legalMoves` để chứng minh lại `applyMove`. Những ca bẫy, bờ nước và nhảy sông phải có assertion rõ ô đi/đến, quân bị bắt và bên thắng.
 
@@ -275,7 +276,7 @@ Cần kiểm tra engine với một bộ xét nước độc lập hoặc bảng
 1. Engine thuần + fixture luật/biên và khóa thế cờ.
 2. Store/migration + ghế/version/đồng hồ + rollback/restart.
 3. Adapter web/Discord + quyền xem/quyền đánh + SSE.
-4. Bàn 7×9 responsive, preview/xác nhận, highlight, lịch sử, luật chơi và tài khoản dùng chung.
+4. Bàn 7×9 responsive, kéo thả/chạm đi ngay, animation, highlight, lịch sử, luật chơi và tài khoản dùng chung.
 5. Kiểm thử tích hợp, Chrome thật trên desktop/mobile, audit DTO và giới hạn phòng.
 6. Changelog đúng loại/scope, đăng ký lệnh và deploy theo quy trình web game hiện có.
 

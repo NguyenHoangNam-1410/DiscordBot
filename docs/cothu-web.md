@@ -8,13 +8,13 @@ Triển khai theo [đặc tả cothu-vn-v1](co-thu-web-game-spec.md). Dùng cùn
 
 ## Luật và bàn cờ
 
-Đỏ ở dưới theo tọa độ tuyệt đối a1–g9; Xanh là phép quay 180°. Mọi quân có hình SVG riêng, tên, ký hiệu màu và bậc. Sông, bẫy và hang có nền/biểu tượng riêng. Người cầm Xanh tự nhìn quân mình ở dưới; nút xoay chỉ đổi góc nhìn. Bàn luôn giữ tỷ lệ 7:9 trên PC và điện thoại dọc/ngang, điều khiển vẫn ở cạnh bàn; thông tin/lịch sử/tài khoản trong menu mobile.
+Đỏ ở dưới theo tọa độ tuyệt đối a1–g9; Xanh là phép quay 180°. Chữ a–g và số 1–9 nằm ngoài viền ở cả bốn cạnh, căn tâm theo ô và đổi theo hướng nhìn; không còn tọa độ trên mặt ô. Mọi quân có hình SVG riêng, tên, ký hiệu màu và bậc. Sông, bẫy và hang có nền/biểu tượng riêng. Người cầm Xanh tự nhìn quân mình ở dưới; nút xoay chỉ đổi góc nhìn. Bàn luôn giữ tỷ lệ 7:9 trên PC và điện thoại dọc/ngang, điều khiển vẫn ở cạnh bàn; thông tin/lịch sử/tài khoản trong menu mobile.
 
 Đi ngang/dọc một ô, không vào hang nhà. Chó 4, Sói 3. Chuột đất ăn Voi; Voi không ăn Chuột bình thường. Chỉ Chuột bơi; không bắt qua bờ nước/đất. Sư tử/Hổ nhảy qua toàn dải sông ngang/dọc, mọi Chuột đúng đường đều chặn. Quân mắc bẫy địch có bậc hiệu dụng 0 tại ô xuất phát: không bắt được quân, chỉ ra ô trống rồi phục hồi; bẫy ưu tiên hơn ngoại lệ Chuột/Voi.
 
 Vào hang, ăn hết quân hoặc làm đối thủ bí nước thì thắng, xét trước hòa. Cùng thế cờ và bên đến lượt xuất hiện lần ba, hoặc 100 lượt đơn không ăn quân thì hòa. Hết giờ/đầu hàng thì thua; mất mạng và đọc luật không dừng đồng hồ.
 
-Chọn quân → ô đích để xem trước → Xác nhận mới gửi nước. Có dấu đi/ăn/nhảy, đường nhảy, cảnh báo bẫy, highlight ô đi/đến gần nhất, danh sách quân đã mất và lịch sử mới nhất trước. Hủy/Escape không gửi nước; phím mũi tên đổi focus theo góc nhìn, Enter/Space chọn ô. Hộp thoại/menu chặn phím chơi. Khán giả chỉ xem, không có nước hợp lệ để gửi.
+Kéo thả quân vào ô hợp lệ hoặc chạm quân rồi chạm ô đích để gửi nước ngay, không có nút xác nhận/hủy nước đi. Nước chạm chọn có animation trượt sau khi máy chủ chấp nhận; kéo thả không chạy thêm animation. Đặt lại ô cũ không đổi bàn và không báo lỗi; chuột phải khi đang giữ quân hoặc Escape hủy chọn. Không có chức năng vẽ nhẩm. Có dấu đi/ăn/nhảy, đường nhảy khi kéo, highlight ô đi/đến gần nhất, danh sách quân đã mất và lịch sử mới nhất trước. Đổi trạng thái/phiên, mất kết nối, hủy pointer hoặc xoay bàn sẽ hủy thao tác kéo; phím mũi tên đổi focus theo góc nhìn, Enter/Space chọn ô. Hộp thoại/menu chặn phím chơi. Khán giả chỉ xem, không có nước hợp lệ để gửi.
 
 ## Dữ liệu và triển khai
 
@@ -22,4 +22,4 @@ Migration 70 tạo `cothu_rooms`, `cothu_seats`, `cothu_channel_settings`. Phòn
 
 Đường `/cothu/room/<UUID>`, API `/api/games/cothu/{state,events,move,leave,pair,pair/status,login}`. Web dùng cấu hình `WEB_*` hiện tại. Sau khi triển khai, chạy `npm run register`, khởi động lại bot, tải lại web. Không cần thêm cổng hay Funnel.
 
-Kiểm tra: `npm run test:cothu` gồm fixture ngoại lệ, bộ xét nước độc lập, timeout/rollback/restart, HTTP và ba SSE, Discord/prefix/chơi lại, health/reset. `npm run test:cothu:ui` dùng Chrome thật kiểm tra SVG, preview/cancel/confirm, hai bên, xoay/tọa độ, bàn chữ nhật ở 360×640, 390×844, 844×390, 1280×900, menu/lịch sử, bẫy/nhảy/chiếm hang và khán giả. Đặt `COTHU_SCREENSHOT_DIR` là thư mục sẵn có để lưu ảnh; `CHROME_PATH` tùy chọn.
+Kiểm tra: `npm run test:cothu` gồm fixture ngoại lệ, bộ xét nước độc lập, timeout/rollback/restart, HTTP và ba SSE, Discord/prefix/chơi lại, health/reset. `npm run test:cothu:ui` dùng Chrome thật kiểm tra SVG, kéo thả/chạm đi ngay, hủy thao tác, animation sau xác nhận máy chủ, hai bên, xoay/tọa độ, bàn chữ nhật ở 360×640, 390×844, 844×390, 1280×900, menu/lịch sử, bẫy/nhảy/chiếm hang và khán giả. Đặt `COTHU_SCREENSHOT_DIR` là thư mục sẵn có để lưu ảnh; `CHROME_PATH` tùy chọn.
