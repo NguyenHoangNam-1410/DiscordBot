@@ -1,5 +1,16 @@
 [
   {
+    "id": "ced0f283-9b22-4df3-843f-5dcf71b1eba2",
+    "updatedAt": "2026-11-10T07:10:55.143Z",
+    "auditedAt": "2026-11-10T07:10:55.143Z",
+    "title": "Web game: cố định thanh công cụ khi cuộn",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Thanh trên cùng của mọi web game luôn hiển thị khi cuộn trang, giữ nút luật ?, bật/tắt âm thanh và trạng thái kết nối trong tầm thao tác trên máy tính và điện thoại."
+    ]
+  },
+  {
     "id": "a255ab80-f621-4ce6-8699-8b3eba3a78e0",
     "updatedAt": "2026-11-10T06:48:18.463Z",
     "auditedAt": "2026-11-10T06:48:18.463Z",

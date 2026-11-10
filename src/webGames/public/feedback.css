@@ -1,3 +1,9 @@
+.shell > header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--bg, #111816);
+}
 .wg-header-tools {
   display: flex;
   align-items: center;

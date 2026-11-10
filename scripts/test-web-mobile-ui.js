@@ -227,6 +227,7 @@ async function main() {
   await send("Runtime.enable");
   await send("Page.enable");
   await send("Emulation.setTouchEmulationEnabled", { enabled: true });
+  let scrolledGames = 0;
   for (const id of fixtures.keys()) {
     await send("Emulation.setTouchEmulationEnabled", { enabled: true });
     await send("Emulation.setDeviceMetricsOverride", {
@@ -495,6 +496,32 @@ async function main() {
       ),
       true,
     );
+    // Scroll the real desktop page, keeping the shared top-bar tools reachable.
+    await send("Emulation.setDeviceMetricsOverride", {
+      width: 1280,
+      height: 600,
+      deviceScaleFactor: 1,
+      mobile: false,
+    });
+    await delay(150);
+    await send("Input.dispatchMouseEvent", {
+      type: "mouseWheel",
+      x: 1278,
+      y: 580,
+      deltaX: 0,
+      deltaY: 280,
+    });
+    await delay(200);
+    const sticky = await evaluate(
+      '(()=>{const h=document.querySelector(".shell > header"),r=h.getBoundingClientRect(),help=document.querySelector("#rules-help"),b=help.getBoundingClientRect();return {top:r.top,scroll:scrollY,visible:document.elementFromPoint(b.x+b.width/2,b.y+b.height/2)===help};})()',
+    );
+    if (sticky.scroll > 0) scrolledGames++;
+    assert(
+      Math.abs(sticky.top) < 1 && sticky.visible,
+      id +
+        " top-bar tools stay visible over scrolled content: " +
+        JSON.stringify(sticky),
+    );
     await click("#rules-help");
     assert.equal(
       await evaluate('document.querySelector("#rules-dialog:modal") !== null'),
@@ -520,6 +547,10 @@ async function main() {
     await bounds("mobile restored");
     console.log(id + " rules, modal menus and desktop restoration passed");
   }
+  assert(
+    scrolledGames > 0,
+    "Desktop fixtures must exercise actual page scrolling",
+  );
   // Reconnect from a spectator tab through the actual live account controls.
   await send("Network.clearBrowserCookies");
   await send("Page.navigate", {
@@ -570,7 +601,7 @@ async function main() {
     JSON.stringify({
       ok: true,
       mobile:
-        "ten games, top-bar rules, native modal info/account, unchanged board dimensions, Escape/backdrop/focus, nested surrender, live pairing/copy, board/action coexistence, compact clocks/avatars, menus, 360px phones, landscape, live DOM restoration, account dialog, battleship randomize and sea switch",
+        "ten games, sticky desktop top bar with clickable help after scrolling, fixed mobile top bar, top-bar rules, native modal info/account, unchanged board dimensions, Escape/backdrop/focus, nested surrender, live pairing/copy, board/action coexistence, compact clocks/avatars, menus, 360px phones, landscape, live DOM restoration, account dialog, battleship randomize and sea switch",
     }),
   );
   await send("Browser.close").catch(() => {});
