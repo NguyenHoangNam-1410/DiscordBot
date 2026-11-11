@@ -73,6 +73,10 @@ const PAGES = Object.freeze({
         "Hỏi bằng `/chatbot hoi` (hoặc `!hoi <câu hỏi>`; admin dạy bot về server bằng `/chatbot nho`) ở bất kỳ kênh nào (admin có thể giới hạn một kênh bằng `/chatbot kenh`); xem số lượt còn lại bằng `/chatbot luot`.",
       ],
       [
+        "🖼️ Xuất sticker",
+        "Reply tin nhắn chứa sticker Discord rồi gửi `!steal` (dùng prefix của server). Bot trả file PNG cho sticker tĩnh và GIF cho sticker động; cần bật lệnh tin nhắn.",
+      ],
+      [
         "📋 Cập nhật",
         "`/changelog` — xem cập nhật mới nhất, chuyển trang hoặc lọc theo loại thay đổi và trò chơi.",
       ],

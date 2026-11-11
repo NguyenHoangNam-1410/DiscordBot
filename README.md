@@ -48,6 +48,7 @@ Công cụ tự ghi thời gian cập nhật và audit. Khi bổ sung lịch s�
 Mọi lệnh slash đang đăng ký đều có bản prefix dùng chung handler, quyền quản trị, kiểm tra bảo trì và tham số với slash. Đặt `ENABLE_MESSAGE_COMMANDS=true` (hoặc `ENABLE_PREFIX_COMMANDS=true`) và bật Message Content Intent; `COMMAND_PREFIX` mặc định là `!`.
 
 - Game: `!baucua`, `!taixiu`, `!chinchiro`, `!xidach`, `!poker`, `!duangua`, `!domin`, `!coquay`, `!sinhton`, `!vtv`.
+- Sticker: reply tin nhắn chứa sticker Discord rồi gửi `!steal`. Bot đính kèm PNG cho sticker tĩnh, giữ file GIF gốc và chuyển APNG/Lottie thành GIF (tối đa 30 fps); lấy tối đa 3 sticker trong tin được reply, tối đa 8 MiB/file. Dùng prefix đã cấu hình nếu khác `!`. Bot cần View Channel, Send Messages (Send Messages in Threads nếu trong thread), Read Message History và Attach Files; xử lý tệp trong bộ nhớ, không thêm sticker vào server.
 - Người chơi: `!batdau`, `!hoso`, `!xu`, `!vatpham`, `!nhiemvu`, `!xephang`, `!anxin`, `!gacha`.
 - Hướng dẫn/quản trị: `!trogiup`, `!huongdan`, `!luat`, `!quantri`.
 - Chức năng con giữ nguyên tên slash: `!sinhton batdau`, `!sinhton thap`, `!sinhton tieptuc`, `!nhiemvu diemdanh`, `!gacha lichsu`, `!quantri baotri`.

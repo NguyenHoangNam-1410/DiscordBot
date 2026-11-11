@@ -19,6 +19,7 @@ const { handlePrefixMessage } = require("./services/prefixCommandService");
 const { handleGameMessage } = require("./services/gameMessageService");
 const { handleEmbedMessage } = require("./services/embedLinkService");
 const { handleGamePrefix } = require("./services/gamePrefixService");
+const { handleStickerMessage } = require("./services/stickerStealService");
 const { resumeOpenRounds } = require("./services/multiplayerGameService");
 const {
   startBlackjackDuelMaintenance,
@@ -244,6 +245,7 @@ client.on(Events.MessageCreate, (message) => {
   const task = (async () => {
     if (messageCommandsEnabled) {
       if (await handlePrefixMessage(message, logger)) return;
+      if (await handleStickerMessage(message, logger)) return;
       if (await handleGamePrefix(message)) return;
       if (await handleEmbedMessage(message)) return;
     }

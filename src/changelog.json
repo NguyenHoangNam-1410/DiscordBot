@@ -1,5 +1,17 @@
 [
   {
+    "id": "691bedd4-8192-401f-b538-d5e0ca98fb93",
+    "updatedAt": "2026-11-11T10:50:58.902Z",
+    "auditedAt": "2026-11-11T10:50:58.902Z",
+    "title": "Xuất sticker bằng lệnh !steal",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Reply tin nhắn chứa sticker Discord rồi dùng !steal để nhận file PNG hoặc GIF; hỗ trợ sticker động APNG và Lottie.",
+      "Hiển thị hướng dẫn khi thiếu sticker, tin gốc đã bị xóa hoặc bot thiếu quyền đọc lịch sử/đính kèm tệp; hỗ trợ prefix tùy chỉnh và kênh thread."
+    ]
+  },
+  {
     "id": "04df80ce-391c-4657-98ca-ed4cf436f714",
     "updatedAt": "2026-11-10T15:12:14.191Z",
     "auditedAt": "2026-11-10T15:12:14.191Z",
