@@ -3,7 +3,8 @@ const assert = require("node:assert/strict");
 process.env.DB_PATH = ":memory:";
 const { db } = require("../src/db"),
   E = require("../src/gunny/engine"),
-  { normalizeRules, WEAPONS } = require("../src/gunny/rules"),
+  { normalizeRules, WEAPONS, PHYSICS, STAMINA } = require("../src/gunny/rules"),
+  Terrain = require("../src/gunny/public/terrain"),
   { createStore } = require("../src/gunny/store"),
   { createGame } = require("../src/gunny/webGame"),
   { createWebServer } = require("../src/webGames/http");
@@ -30,7 +31,7 @@ const firingData = (r, m, data) =>
     ? {
         ...data,
         angle: Aim.solution(
-          r.heights,
+          r.terrain,
           r.fighters[m],
           WEAPONS[data.weapon],
           data.direction,
@@ -47,7 +48,7 @@ function started(rules = {}) {
 }
 function flat() {
   const s = E.createState(1);
-  s.heights.fill(250);
+  s.terrain = s.terrain.map(() => [350, 600]);
   s.wind = 0;
   for (const [m, x] of [
     ["X", 480],
@@ -96,7 +97,7 @@ async function main() {
   );
   assert.equal(zero.shot.power, 0);
   assert.deepEqual(E.createState(123), E.createState(123));
-  assert.notDeepEqual(E.createState(123).heights, E.createState(124).heights);
+  assert.notDeepEqual(E.createState(123).terrain, E.createState(124).terrain);
   for (const opts of [
     { turnSeconds: 14 },
     { turnSeconds: 121 },
@@ -138,9 +139,14 @@ async function main() {
     assert.deepEqual(a, b);
     assert.deepEqual(s, clone);
     assert.equal(a.shot.impact.target, "O");
-    assert.equal(a.shot.damage.O, w.damage);
-    assert.equal(s.fighters.O.hp, 100 - w.damage);
-    assert(s.heights.some((v, i) => v < a.shot.before.heights[i]));
+    const direct = Math.min(
+      100,
+      a.shot.crit.O ? Math.round(w.damage * 1.5) : w.damage,
+    );
+    assert.equal(a.shot.damage.O, direct);
+    assert.equal(s.fighters.O.hp, 100 - direct);
+    // Body hits explode 20 px above the feet: small blasts may not reach the ground.
+    if (w.radius >= 35) assert.notDeepEqual(s.terrain, a.shot.before.terrain);
     assert(a.shot.path.every((p) => p.every(Number.isFinite)));
     assert.equal(s.fighters.X.ammo[weapon], w.ammo < 0 ? -1 : w.ammo - 1);
   }
@@ -159,34 +165,37 @@ async function main() {
   );
   s = flat();
   s.fighters.O.x = 1120;
-  for (let n = 0; n < 6; n++) assert.equal(E.walk(s, "X", 10), null);
-  assert.equal(s.fighters.X.moveRemaining, 0);
-  assert.equal(E.walk(s, "X", 1), "BLOCKED_MOVE");
+  for (let n = 0; n < STAMINA / 20; n++) assert.equal(E.walk(s, "X", 10), null);
+  assert.equal(s.fighters.X.stamina, 0);
+  assert.equal(E.walk(s, "X", 1), "NO_STAMINA");
   assert.equal(E.walk(s, "X", 11), "INVALID_MOVE");
   s = flat();
   s.fighters.O.x = 514;
   assert.equal(E.walk(s, "X", 1), "BLOCKED_MOVE");
-  const h = Array(1600).fill(250);
+  const h = Array.from({ length: 1600 }, () => [350, 600]);
   E.crater(h, 500, 350, 40);
-  assert.equal(h[500], 210);
-  assert.equal(h[400], 250);
+  assert.deepEqual(h[500], [390, 600]);
+  assert.deepEqual(h[400], [350, 600]);
   // Independent analytic ramps verify slope, facing and the world-space launch vector.
   const near = (a, b, message) =>
     assert(Math.abs(a - b) < 1e-8, message + `: ${a} vs ${b}`);
   for (const gradient of [-0.5, 0, 0.5]) {
     const r = flat();
-    r.heights = r.heights.map((_, x) =>
-      Math.max(100, Math.min(400, 250 + (x - 480) * gradient)),
+    r.terrain = Terrain.fromHeights(
+      r.terrain.map((_, x) =>
+        Math.max(100, Math.min(400, 250 + (x - 480) * gradient)),
+      ),
+      600,
     );
     r.fighters.X.y = 350;
     const beta = (Math.atan(gradient) * 180) / Math.PI;
     near(
-      Aim.terrainTilt(r.heights, 480),
+      Aim.terrainTilt(r.terrain, r.fighters.X),
       beta,
       "Tangent over the character footprint",
     );
     for (const d of [-1, 1]) {
-      const g = Aim.solution(r.heights, r.fighters.X, WEAPONS.basic, d, 45),
+      const g = Aim.solution(r.terrain, r.fighters.X, WEAPONS.basic, d, 45),
         expected = 45 + d * beta,
         world = d === 1 ? expected : 180 - expected;
       near(
@@ -224,10 +233,17 @@ async function main() {
         "Muzzle and red needle agree on Y",
       );
       const dx = result.shot.path[1][0] - result.shot.path[0][0],
-        dy = result.shot.path[1][1] - result.shot.path[0][1];
-      assert(Math.abs(dx - 5 * Math.cos((world * Math.PI) / 180)) < 0.02);
+        dy = result.shot.path[1][1] - result.shot.path[0][1],
+        v = 10 * PHYSICS.speed,
+        keep = 1 - PHYSICS.drag;
       assert(
-        Math.abs(dy - (-5 * Math.sin((world * Math.PI) / 180) + 0.15)) < 0.02,
+        Math.abs(dx - v * Math.cos((world * Math.PI) / 180) * keep) < 0.02,
+      );
+      assert(
+        Math.abs(
+          dy -
+            (-v * Math.sin((world * Math.PI) / 180) + PHYSICS.gravity) * keep,
+        ) < 0.02,
         "Authoritative projectile follows the displayed bearing",
       );
     }
@@ -247,9 +263,13 @@ async function main() {
       );
     }
   const steep = flat();
-  steep.heights = steep.heights.map((_, x) =>
-    Math.max(100, Math.min(400, 250 + (x - 480) * 0.8)),
+  steep.terrain = Terrain.fromHeights(
+    steep.terrain.map((_, x) =>
+      Math.max(100, Math.min(400, 250 + (x - 480) * 0.8)),
+    ),
+    600,
   );
+  steep.fighters.X.y = 350;
   assert.equal(
     E.fire(steep, "X", {
       angle: 20,
@@ -269,13 +289,26 @@ async function main() {
       dir = seed % 2 ? 1 : -1;
     const local = w.minAngle + (seed % (w.maxAngle - w.minAngle + 1));
     const shot = {
-      angle: Aim.solution(a.heights, a.fighters.X, w, dir, local).horizontal,
+      angle: Aim.solution(a.terrain, a.fighters.X, w, dir, local).horizontal,
       power: 1 + (seed % 20),
       weapon: id,
       direction: dir,
     };
     assert.deepEqual(E.fire(a, "X", shot), E.fire(b, "X", shot));
-    assert(a.heights.every((x) => Number.isInteger(x) && x >= 0 && x <= 400));
+    assert(
+      a.terrain.every(
+        (runs) =>
+          runs.length % 2 === 0 &&
+          runs.every(
+            (y, i) =>
+              Number.isInteger(y) &&
+              y >= 0 &&
+              y <= 600 &&
+              (i === 0 || y > runs[i - 1]),
+          ),
+      ),
+      "Terrain columns stay sorted, disjoint integer runs",
+    );
     assert(Object.values(a.fighters).every((f) => f.hp >= 0 && f.hp <= 100));
   }
   let r = make();
@@ -310,7 +343,7 @@ async function main() {
   );
   time += 4000;
   r = act(r, "X", { type: "walk", dx: 5 });
-  assert.equal(r.fighters.X.moveRemaining, 55);
+  assert.equal(r.fighters.X.stamina, STAMINA - 10);
   r = act(r, "X", {
     type: "fire",
     angle: 80,
@@ -331,7 +364,7 @@ async function main() {
   assert.equal(r.phase, "aim");
   assert.equal(r.turn, "O");
   assert.equal(r.clocks.X, 1796000);
-  assert.equal(r.fighters.O.moveRemaining, 60);
+  assert.equal(r.fighters.O.stamina, STAMINA);
   assert.equal(
     createStore(db, () => time).get(r.id).turn,
     "O",
@@ -456,6 +489,7 @@ async function main() {
     "/gunny/room/" + r.roomCode,
     "/gunny/app.js",
     "/gunny/aim.js",
+    "/gunny/terrain.js",
     "/gunny/style.css",
   ]) {
     const res = await fetch(config.origin + route);

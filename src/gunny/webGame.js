@@ -9,7 +9,7 @@ function createGame({ store, db }) {
     id: "gunny",
     name: "Gunny",
     publicDir: path.join(__dirname, "public"),
-    browserScripts: ["aim.js"],
+    browserScripts: ["terrain.js", "aim.js"],
     store,
     errors: MESSAGES,
     isOpen: (room) => ["waiting", "setup", "playing"].includes(room.status),

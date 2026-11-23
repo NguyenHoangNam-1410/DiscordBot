@@ -18,6 +18,7 @@
     <script src="/pairing-ui.js" defer></script>
     <script src="/game-catalog.js" defer></script>
     <script src="/rules-ui.js" defer></script>
+    <script src="/gunny/terrain.js" defer></script>
     <script src="/gunny/aim.js" defer></script>
     <script src="/gunny/app.js" defer></script>
   </head>
@@ -150,7 +151,8 @@
                 </div>
                 <div class="numbers">
                   <strong id="score-X">100 HP</strong
-                  ><time id="clock-X">30:00</time>
+                  ><time id="clock-X">30:00</time
+                  ><small id="delay-X" class="delay">Delay 0</small>
                 </div>
               </div>
               <div class="player" id="player-O">
@@ -167,7 +169,8 @@
                 </div>
                 <div class="numbers">
                   <strong id="score-O">100 HP</strong
-                  ><time id="clock-O">30:00</time>
+                  ><time id="clock-O">30:00</time
+                  ><small id="delay-O" class="delay">Delay 0</small>
                 </div>
               </div>
             </section>
@@ -188,9 +191,14 @@
               </div>
               <div class="unit-vitals stamina">
                 <span class="unit-energy"><i id="unit-energy-X"></i></span
-                ><small id="unit-energy-text-X">60/60</small>
+                ><small id="unit-energy-text-X">200</small>
               </div>
-              <span class="stamina-caption">THỂ LỰC</span>
+              <div class="unit-vitals pow">
+                <span class="unit-pow"><i id="unit-pow-X"></i></span
+                ><small id="unit-pow-text-X">0</small>
+              </div>
+              <span class="stamina-caption">THỂ LỰC · NỘ</span>
+              <span class="unit-tags" id="unit-tags-X"></span>
             </div>
             <div id="unit-O" class="unit-status rival" hidden>
               <strong id="unit-name-O"></strong>
@@ -200,9 +208,14 @@
               </div>
               <div class="unit-vitals stamina">
                 <span class="unit-energy"><i id="unit-energy-O"></i></span
-                ><small id="unit-energy-text-O">60/60</small>
+                ><small id="unit-energy-text-O">200</small>
               </div>
-              <span class="stamina-caption">THỂ LỰC</span>
+              <div class="unit-vitals pow">
+                <span class="unit-pow"><i id="unit-pow-O"></i></span
+                ><small id="unit-pow-text-O">0</small>
+              </div>
+              <span class="stamina-caption">THỂ LỰC · NỘ</span>
+              <span class="unit-tags" id="unit-tags-O"></span>
             </div>
             <div class="battle-controls" aria-label="Điều khiển chiến trường">
               <section id="setup" class="setup-card" hidden>
@@ -238,6 +251,12 @@
                 </div>
                 <div class="arsenal">
                   <div id="weapons" class="weapons"></div>
+                  <div
+                    id="items"
+                    class="items"
+                    role="group"
+                    aria-label="Đạo cụ (tốn thể lực)"
+                  ></div>
                   <div class="power-row">
                     <label for="power"
                       >LỰC <output id="power-value">0%</output></label
@@ -262,7 +281,14 @@
                       </button>
                     </div>
                     <p id="action-hint">A/D · ↑/↓ · Space</p>
-                    <button id="direction">Hướng →</button>
+                    <button
+                      id="pow"
+                      class="pow"
+                      aria-label="Tuyệt kỹ (cần nộ 100)"
+                    >
+                      NỘ 0</button
+                    ><button id="pass" aria-label="Bỏ lượt">Bỏ lượt</button
+                    ><button id="direction">Hướng →</button>
                   </div>
                 </div>
                 <button

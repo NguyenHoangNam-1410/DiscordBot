@@ -1,5 +1,20 @@
 [
   {
+    "id": "3b5fbb2f-e542-4b57-9db8-04907ba9ffbf",
+    "updatedAt": "2026-11-23T10:56:11.600Z",
+    "auditedAt": "2026-11-23T10:56:11.600Z",
+    "title": "Gunny: địa hình 2D, đạo cụ, delay và nộ",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Bản đồ Gunny thành địa hình 2D thật: có đảo nổi, nổ đào được hang, đường hầm và mái treo; mất chỗ đứng sẽ rơi xuống nền bên dưới, hết đất bên dưới thì rơi khỏi bản đồ",
+      "Thể lực 200 mỗi lượt dùng chung cho đi bộ và 7 đạo cụ: Đạn chùm ×3, Bắn liên tiếp ×2, Tăng lực +30%, Đạn băng, Đạn độc, Hồi máu +25 (2 lần/trận), Bay tới điểm đạn rơi (hồi 2 lượt)",
+      "Lượt đi theo delay: bắn, đạo cụ và ngắm lâu cộng delay, người delay thấp hơn đi trước; thêm nút Bỏ lượt",
+      "Thêm nộ (POW): đủ 100 dùng tuyệt kỹ ×1,5 sát thương, ×1,25 bán kính nổ, không chịu gió",
+      "Hiệu chỉnh vật lý và sát thương: có cản khí và hệ số gió riêng từng vũ khí, sát thương còn 50% ở mép vụ nổ, bạo kích 8%, tự trúng nổ chỉ nhận 50% và không tự hạ mình; thêm trạng thái đóng băng và trúng độc"
+    ]
+  },
+  {
     "id": "5317207d-c297-42b6-b98a-a74dada4760d",
     "updatedAt": "2026-11-23T10:22:20.669Z",
     "auditedAt": "2026-11-23T10:22:20.669Z",

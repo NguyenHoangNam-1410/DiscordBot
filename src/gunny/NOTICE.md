@@ -5,7 +5,7 @@ https://github.com/maycuatroi1/gunny-game
 
 Upstream declares the MIT license in README and project/package metadata. The local source reviewed for this port is `D:/gunny-game`.
 
-The browser renderer and authoritative JavaScript room/physics implementation are part of this Discord bot integration. No Pygame runtime or upstream TCP networking code is distributed or required.
+The browser renderer and authoritative JavaScript room/physics implementation are part of this Discord bot integration. The 2D digging terrain, shared stamina, items, delay turn order, POW and status effects follow classic Gunny gameplay concepts and were written from scratch for this bot; no code or data tables from any Gunny server distribution are included. No Pygame runtime or upstream TCP networking code is distributed or required.
 
 MIT License — upstream author: maycuatroi1
 
