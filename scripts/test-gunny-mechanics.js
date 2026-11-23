@@ -519,11 +519,74 @@ const legal = (s, mark, weapon, direction, local) =>
   assert(store.snapshot(r).terrain.length === 1600);
 }
 
-console.log(
-  JSON.stringify({
-    ok: true,
-    gunnyMechanics:
-      "2D terrain/tunnels/islands, dig+fall, walking, physics calibration, damage/crit/self/frozen, items+stamina, ×3/×2 shots, fly, freeze/poison, POW, delay order, legacy upgrade, store flow",
-  }),
-);
-db.close();
+// ---- Snapshots skip known terrain; rooms wake at their own deadlines -----
+(async () => {
+  const store = createStore(db), // real clock: deadline wakeups enabled
+    users = {
+      X: { id: "300000000000000001", username: "An" },
+      O: { id: "300000000000000002", username: "Bình" },
+    };
+  const act = (r, m, data) => store.move(r.id, users[m].id, data, r.version);
+  let r = store.create({
+    guildId: "wake",
+    channelId: "c",
+    user: users.X,
+    rules: {},
+    seed: 4,
+  });
+  r = store.join(r.id, users.O);
+  r = act(r, "X", { type: "ready", character: "bear" });
+  r = act(r, "O", { type: "ready", character: "cat" });
+  const memo = {};
+  assert.equal(
+    store.snapshot(r, users.X.id, { stream: memo }).terrain.length,
+    1600,
+  );
+  assert.equal(memo.terrainRev, 0);
+  r = act(r, "X", { type: "walk", dx: 5 });
+  const light = store.snapshot(r, users.X.id, { stream: memo });
+  assert.equal(light.terrain, null, "same terrain is not resent");
+  assert(JSON.stringify(light).length < 8000, "walk updates stay small");
+  assert.equal(
+    store.snapshot(r, users.X.id, { request: { terrainRev: 0 } }).terrain,
+    null,
+  );
+  assert.equal(store.snapshot(r, users.X.id).terrain.length, 1600);
+  const changed = new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(Error("no wakeup")), 8000);
+    store.events.on(r.id, (room) => {
+      if (room.phase === "aim" && room.turnNo === 2) {
+        clearTimeout(timer);
+        resolve(room);
+      }
+    });
+  });
+  r = act(r, "X", {
+    type: "fire",
+    angle: Aim.solution(r.terrain, r.fighters.X, R.WEAPONS.nuke, 1, 60)
+      .horizontal,
+    power: 8,
+    weapon: "nuke",
+    direction: 1,
+  });
+  const next = await changed;
+  assert.equal(next.turn, "O", "the turn changes without anyone polling");
+  assert(next.terrainRev > 0, "digging bumps the terrain revision");
+  assert.equal(
+    store.snapshot(next, users.X.id, { stream: memo }).terrain.length,
+    1600,
+    "a new revision is sent again",
+  );
+  store.leave(r.id, users.X.id);
+  console.log(
+    JSON.stringify({
+      ok: true,
+      gunnyMechanics:
+        "2D terrain/tunnels/islands, dig+fall, walking, physics calibration, damage/crit/self/frozen, items+stamina, ×3/×2 shots, fly, freeze/poison, POW, delay order, legacy upgrade, store flow, terrain-skipping snapshots, deadline wakeups",
+    }),
+  );
+  db.close();
+})().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

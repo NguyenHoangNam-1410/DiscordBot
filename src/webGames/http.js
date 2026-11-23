@@ -483,11 +483,13 @@ function createWebServer({
         "X-Accel-Buffering": "no",
       });
       res.flushHeaders();
+      // Per-stream memo: a game may skip data this stream already has.
+      const memo = {};
       const send = (updated) => {
         if (res.writableEnded || res.destroyed) return;
         if (res.writableLength > 64 * 1024) return res.destroy();
         res.write(
-          `data: ${JSON.stringify(store.snapshot(updated, session.userId))}\n\n`,
+          `data: ${JSON.stringify(store.snapshot(updated, session.userId, { stream: memo }))}\n\n`,
         );
       };
       peers.add(res);
@@ -517,7 +519,11 @@ function createWebServer({
         session.userId,
         { ...data, roomId: room.id },
       );
-      return json(res, 200, store.snapshot(updated, session.userId));
+      return json(
+        res,
+        200,
+        store.snapshot(updated, session.userId, { request: data }),
+      );
     }
     return json(res, 404, { error: "Không tìm thấy chức năng." });
   }

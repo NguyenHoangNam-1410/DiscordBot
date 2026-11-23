@@ -391,6 +391,7 @@ async function main() {
   for (let col = Math.floor(x) - 55; col <= Math.ceil(x) + 55; col++)
     ramp.terrain[col] = [350 - (col - x) * Math.tan((26 * Math.PI) / 180), 600];
   ramp.fighters.X.y = 350;
+  ramp.terrainRev = (ramp.terrainRev || 0) + 1;
   ramp.version++;
   db.prepare("UPDATE gunny_rooms SET data_json=? WHERE id=?").run(
     JSON.stringify(ramp),
@@ -411,6 +412,7 @@ async function main() {
   );
   await screenshot("gunny-angle-left64.png");
   original.version = ramp.version + 1;
+  original.terrainRev = ramp.terrainRev + 1;
   db.prepare("UPDATE gunny_rooms SET data_json=? WHERE id=?").run(
     JSON.stringify(original),
     original.id,
@@ -448,7 +450,9 @@ async function main() {
     windowsVirtualKeyCode: 68,
   });
   assert(midWalk > walkStart.x, "Prediction moves while the key is held");
-  await until("!walkBusy && !walkQueue.unsent && !walking && !pending");
+  await until(
+    "!walkBusy && !walkQueue.segments.length && !walking && !pending",
+  );
   const walked = await evaluate(
     "({x:state.fighters.X.x,stamina:state.fighters.X.stamina,direction,predicted:scene(Date.now()+offset).fighters.X.x})",
   );
@@ -457,6 +461,87 @@ async function main() {
   assert.equal(walked.stamina, walkStart.stamina - steps * 2);
   assert.equal(walked.predicted, walked.x, "Prediction matches the server");
   assert.equal(walked.direction, 1);
+  // Turning around mid-walk keeps every shown step: no jump back to the start.
+  const track = [];
+  const sample = async (ms) => {
+    for (let t = 0; t < ms; t += 30) {
+      track.push(await evaluate("scene(Date.now()+offset).fighters.X.x"));
+      await delay(30);
+    }
+  };
+  // Simulate a slow link (250 ms each way) like a remote server.
+  await send("Network.enable");
+  await send("Network.emulateNetworkConditions", {
+    offline: false,
+    latency: 250,
+    downloadThroughput: -1,
+    uploadThroughput: -1,
+  });
+  const turnStart = await evaluate("state.fighters.X.x");
+  await send("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "d",
+    code: "KeyD",
+    windowsVirtualKeyCode: 68,
+  });
+  await sample(200);
+  await send("Input.dispatchKeyEvent", {
+    type: "keyUp",
+    key: "d",
+    code: "KeyD",
+    windowsVirtualKeyCode: 68,
+  });
+  const peak = track.length;
+  await send("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "a",
+    code: "KeyA",
+    windowsVirtualKeyCode: 65,
+  });
+  await sample(150);
+  await send("Input.dispatchKeyEvent", {
+    type: "keyUp",
+    key: "a",
+    code: "KeyA",
+    windowsVirtualKeyCode: 65,
+  });
+  await until(
+    "!walkBusy && !walkQueue.segments.length && !walking && !pending",
+  );
+  const settled = await evaluate("state.fighters.X.x");
+  await send("Network.emulateNetworkConditions", {
+    offline: false,
+    latency: 0,
+    downloadThroughput: -1,
+    uploadThroughput: -1,
+  });
+  for (let i = 1; i < peak; i++)
+    assert(track[i] >= track[i - 1], "Forward walk never jumps back: " + track);
+  for (let i = peak + 1; i < track.length; i++)
+    assert(
+      track[i] <= track[i - 1] && track[i] > turnStart - 15,
+      "Reverse walk is smooth: " + track,
+    );
+  assert.equal(
+    settled,
+    await evaluate("scene(Date.now()+offset).fighters.X.x"),
+  );
+  assert(
+    Array.isArray(await evaluate("state.terrain")),
+    "terrain kept while walking",
+  );
+  // Refill stamina so the item checks below start from a known value.
+  {
+    const refill = fixture.store.get(fixture.room.id);
+    refill.fighters.X.stamina = 200;
+    refill.version++;
+    db.prepare("UPDATE gunny_rooms SET data_json=? WHERE id=?").run(
+      JSON.stringify(refill),
+      refill.id,
+    );
+    fixture.store.events.emit(refill.id, refill);
+    await until("state.fighters.X.stamina===200");
+  }
   await evaluate('$("angle").value=45;$("angle").oninput()');
   const angleBefore = await evaluate('Number($("angle").value)');
   await key("w", "KeyW", 87);
@@ -479,10 +564,7 @@ async function main() {
   );
   await click('[data-item="triple"]', true);
   await until("!pending && state.fighters.X.armed.triple===true");
-  assert.equal(
-    await evaluate("state.fighters.X.stamina"),
-    walked.stamina - 100,
-  );
+  assert.equal(await evaluate("state.fighters.X.stamina"), 100);
   assert.equal(
     await evaluate(
       '$("items").querySelector("[data-item=triple]").classList.contains("armed")',
