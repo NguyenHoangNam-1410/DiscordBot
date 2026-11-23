@@ -346,6 +346,15 @@ function fire(state, mark, data) {
   const localAngle = angle - direction * Aim.terrainTilt(state.terrain, actor),
     first = Aim.solution(state.terrain, actor, w, direction, localAngle);
   actor.direction = direction;
+  // Remembered for the faint "previous shot" marks on the dial and power bar.
+  actor.lastShot = {
+    angle,
+    localAngle,
+    worldAngle: first.world,
+    power,
+    weapon,
+    direction,
+  };
   if (!fly && actor.ammo[weapon] > 0) actor.ammo[weapon]--;
   const spread =
       !fly && armed.triple ? BALLS.triple : { angles: [0], power: [1] },

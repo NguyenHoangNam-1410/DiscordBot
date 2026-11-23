@@ -238,6 +238,12 @@ const legal = (s, mark, weapon, direction, local) =>
   });
   assert.equal(r.shot.projectiles.length, 3);
   assert.deepEqual(
+    Object.keys(s.fighters.X.lastShot),
+    ["angle", "localAngle", "worldAngle", "power", "weapon", "direction"],
+    "the last shot is remembered for the ghost marks",
+  );
+  assert.equal(s.fighters.X.lastShot.power, 20);
+  assert.deepEqual(
     r.shot.projectiles.map((p) => p.volley),
     [0, 0, 0],
   );

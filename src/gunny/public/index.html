@@ -417,6 +417,7 @@
                       <path id="terrain-plane" d="M8 50A42 42 0 0 0 92 50Z" />
                       <path id="terrain-line" d="M8 50H92" />
                       <path id="angle-zone" />
+                      <path id="angle-ghost" d="M42 50H84" hidden />
                       <path id="angle-needle" d="M42 50H84" />
                       <circle class="dial-center" cx="50" cy="50" r="4" /></svg
                     ><output id="angle-value">45°</output>
@@ -435,16 +436,21 @@
                   <div class="power-row">
                     <label for="power"
                       >LỰC <output id="power-value">0%</output></label
-                    ><input
-                      type="range"
-                      id="power"
-                      min="0"
-                      max="100"
-                      step="0.1"
-                      value="0"
-                      disabled
-                      aria-label="Lực bắn hiện tại, từ 0 đến 100 phần trăm"
-                    />
+                    ><span class="power-track"
+                      ><input
+                        type="range"
+                        id="power"
+                        min="0"
+                        max="100"
+                        step="0.1"
+                        value="0"
+                        disabled
+                        aria-label="Lực bắn hiện tại, từ 0 đến 100 phần trăm" /><i
+                        id="power-ghost"
+                        class="power-ghost"
+                        hidden
+                      ></i
+                    ></span>
                   </div>
                   <div class="move-row">
                     <div class="movement">

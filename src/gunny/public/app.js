@@ -758,6 +758,18 @@ function syncAim() {
       `${display} độ so với phương ngang`,
     );
   }
+  const last = state?.me ? state.fighters[state.me]?.lastShot : null;
+  $("angle-ghost").toggleAttribute("hidden", !last);
+  $("power-ghost").hidden = !last;
+  if (last) {
+    $("angle-ghost").setAttribute(
+      "transform",
+      `rotate(${-last.worldAngle} 50 50)`,
+    );
+    $("power-ghost").style.left = `${last.power * 5}%`;
+    $("power-ghost").title =
+      `Lần trước: ${Math.round(last.angle)}° · ${Math.round(last.power * 5)}% lực`;
+  }
   $("power-value").textContent = Math.round(Number($("power").value)) + "%";
   $("power").style.setProperty("--power-fill", `${Number($("power").value)}%`);
 }

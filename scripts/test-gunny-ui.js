@@ -692,6 +692,14 @@ async function main() {
     3,
     "Three balls are replayed together",
   );
+  // The previous shot leaves faint marks on the dial and the power bar.
+  const ghost = await evaluate(
+    '({needle:$("angle-ghost").hasAttribute("hidden"),bar:$("power-ghost").hidden,left:parseFloat($("power-ghost").style.left),transform:$("angle-ghost").getAttribute("transform"),world:state.shot.worldAngle,power:state.shot.power})',
+  );
+  assert.equal(ghost.needle, false);
+  assert.equal(ghost.bar, false);
+  assert(Math.abs(ghost.left - ghost.power * 5) < 0.01);
+  assert.equal(ghost.transform, `rotate(${-ghost.world} 50 50)`);
   await screenshot("gunny-projectile.png");
   await until("Date.now()+offset>=state.shot.startedAt+state.shot.flightMs");
   await screenshot("gunny-impact.png");
