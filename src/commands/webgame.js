@@ -55,7 +55,10 @@ function ruleFields(game) {
       name: "Ngoại lệ cần nhớ",
       value: game.special.map((text) => `• ${text}`).join("\n"),
     });
-  fields.push({ name: "Đồng hồ và kết nối", value: catalog.clock });
+  fields.push({
+    name: "Đồng hồ và kết nối",
+    value: game.clock || catalog.clock,
+  });
   return splitRuleFields(fields);
 }
 function pageButton(ownerId, selected, page, label) {

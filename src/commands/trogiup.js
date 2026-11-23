@@ -109,6 +109,10 @@ const PAGES = Object.freeze({
         "`/cothu choi` — hai người, bàn 7×9, 8 thú/bên. Chọn `nguoitruoc`, `thoigian`; Đỏ đi trước, đồng hồ chạy khi đối thủ tham gia. `/cothu phong` xem phòng; `/webgame` đọc ngoại lệ Chuột/Voi, sông, bẫy và luật hòa. Có khán giả, lịch sử và UI PC/mobile; không cược hay thưởng tài nguyên.",
       ],
       [
+        "◎ Gunny",
+        "`/gunny choi` — đấu pháo hai người trên web: chọn nhân vật, ngắm theo gió, bắn và phá địa hình. Chọn `nguoitruoc`, `thoigian` và `luot`; `/gunny phong` xem phòng, `/webgame` xem luật. Có khán giả, giao diện PC/mobile và tiền tố `!`; không cược xu.",
+      ],
+      [
         "◒ Santorini",
         "`/santorini choi` — hai người, bàn 5×5, 2 thợ/người, không Thần lực. Mỗi lượt đi rồi xây; đi từ tầng 2 lên tầng 3 thắng ngay. Chọn `nguoitruoc` và `thoigian`; `/santorini phong` xem phòng, `/webgame` xem luật. Có khán giả và giao diện mobile, không cần đặt kênh cũ.",
       ],

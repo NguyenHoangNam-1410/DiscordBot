@@ -65,7 +65,7 @@
   section("Thua nếu", [...game.lose, catalog.commonLoss]);
   if (game.draw.length) section("Hòa / đóng phòng", game.draw);
   section("Đồng hồ", [
-    catalog.clock,
+    game.clock || catalog.clock,
     "Mở luật chơi không tạm dừng đồng hồ. Đọc badge cấu hình trên bàn để biết luật đang áp dụng.",
   ]);
   const access = section(

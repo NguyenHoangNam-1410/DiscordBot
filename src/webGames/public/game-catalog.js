@@ -256,6 +256,33 @@
       draw: [],
     },
   ];
+  games.push({
+    id: "gunny",
+    clock:
+      "Đồng hồ riêng mặc định 30 phút/người, không cộng giờ; chỉ chạy khi ngắm bắn, dừng khi đạn bay. Mỗi lượt có thêm giới hạn 15–120 giây theo cấu hình phòng, mặc định 30 giây. Hết giới hạn lượt tự bỏ lượt; hết đồng hồ riêng thì thua. Mất mạng thời gian vẫn chạy.",
+    name: "Gunny",
+    summary: "Ngắm theo gió, bắn phá địa hình và hạ gục đối thủ.",
+    setup: [
+      "Mỗi người chọn Gấu, Mèo hoặc Robot rồi Sẵn sàng trong 3 phút. Nhân vật chỉ khác ngoại hình, cùng 100 HP.",
+      "Mỗi người có đạn thường vô hạn, 3 lựu đạn, 2 tên lửa và 1 bom hạt nhân.",
+    ],
+    play: [
+      "Di chuyển tối đa 60 bước mỗi lượt. Chọn hướng, góc và vũ khí rồi giữ Bắn/Space: lực tăng 0→100%, giảm 100→0% và lặp lại tới khi thả. Mỗi chiều mất 2,5 giây. Thả ở mức nào thì bắn ở mức đó; Esc hủy, không bắn.",
+      "Nhân vật nghiêng theo mặt đất. Đồng hồ có nền đất mờ, vùng xanh theo vũ khí và kim đỏ theo hướng nhìn; con số là góc bắn so với phương ngang, có thể âm hoặc lớn hơn 90° trên dốc.",
+      "Góc nâng theo thân: đạn thường 0–90°, lựu đạn 20–80°, tên lửa 10–70°, bom hạt nhân 30–75°. Độ dốc và hướng nhìn làm dịch vùng xanh, không đổi giới hạn riêng của vũ khí.",
+      "Gió đổi sau mỗi lượt. Đạn nổ khoét địa hình, có thể gây sát thương cho cả người bắn.",
+      "Mỗi lượt ngắm mặc định 30 giây; hết giờ tự bỏ lượt. Đồng hồ riêng chỉ chạy khi ngắm, dừng trong lúc đạn bay. Mất kết nối thời gian vẫn chạy.",
+    ],
+    win: [
+      "HP đối thủ về 0 hoặc đối thủ rơi khỏi địa hình.",
+      "Đối thủ chưa sẵn sàng khi hết 3 phút, còn bạn đã sẵn sàng.",
+    ],
+    lose: ["HP về 0 hoặc rơi khỏi địa hình, kể cả do phát bắn của mình."],
+    draw: [
+      "Cả hai cùng bị hạ trong một phát bắn.",
+      "Không ai thao tác trong 5 phút hoặc cả hai chưa sẵn sàng khi hết giờ: đóng phòng.",
+    ],
+  });
   const guide = Object.freeze({
     games,
     commonWin: "Đối thủ hết thời gian hoặc đầu hàng trong ván đang đấu.",

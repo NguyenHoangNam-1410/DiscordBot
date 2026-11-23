@@ -29,6 +29,7 @@ const DEFAULT_SUBCOMMANDS = {
   dots: "choi",
   blokus: "choi",
   santorini: "choi",
+  gunny: "choi",
   mecung: "choi",
   caro: "choi",
   walls: "choi",

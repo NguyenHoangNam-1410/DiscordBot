@@ -1,5 +1,56 @@
 [
   {
+    "id": "ccafe5e5-7862-4f0c-8377-2d7d7dc4bb2d",
+    "updatedAt": "2026-11-23T10:17:23.512Z",
+    "auditedAt": "2026-11-23T10:17:23.512Z",
+    "title": "Gunny: thanh lực tăng giảm liên tục khi giữ bắn",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Giữ nút Bắn hoặc Space để lực tăng 0→100%, giảm 100→0% rồi lặp lại liên tục; mỗi chiều mất 2,5 giây và mỗi lần giữ bắt đầu từ 0%.",
+      "Thả ở mức nào sẽ bắn với lực ở mức đó, kể cả 0%; lấy lực ngay lúc thả để tránh lệch theo khung hình. Esc hoặc hủy thao tác không bắn."
+    ]
+  },
+  {
+    "id": "a397e967-3353-4c4f-ac86-f4f5b67d638e",
+    "updatedAt": "2026-11-23T10:09:12.764Z",
+    "auditedAt": "2026-11-23T10:09:12.764Z",
+    "title": "Gunny: độ nghiêng và đồng hồ góc bắn",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Nhân vật và nòng súng nghiêng theo địa hình; đồng hồ thể hiện nền đất mờ, vùng ngắm xanh, kim đỏ và góc bắn so với phương ngang, cập nhật khi di chuyển hoặc đổi hướng.",
+      "Góc nâng theo thân: đạn thường 0–90°, lựu đạn 20–80°, tên lửa 10–70°, bom hạt nhân 30–75°. Độ dốc làm dịch vùng ngắm hợp lệ.",
+      "Đồng bộ góc hiển thị với hướng đạn và vị trí nòng; máy chủ kiểm tra giới hạn góc theo vũ khí và địa hình trước khi tiêu đạn."
+    ]
+  },
+  {
+    "id": "36e0a38f-a766-4704-8fb7-34b4ab4c32cd",
+    "updatedAt": "2026-11-23T09:51:21.105Z",
+    "auditedAt": "2026-11-23T09:51:21.105Z",
+    "title": "Gunny: chiến trường và điều khiển trong màn chơi",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Bỏ cột điều khiển bên phải; đưa HUD, đồng hồ, vũ khí, góc, lực và nút Bắn vào chiến trường, phù hợp PC và điện thoại.",
+      "Hiển thị HP và thể lực ngay dưới nhân vật, bám theo di chuyển và cập nhật số lượt di chuyển còn lại.",
+      "Đổi cảnh đảo nhiệt đới và di tích đá; thêm mây, lá chuyển động, hào quang tích lực, vệt đạn, mảnh vỡ, rung nhẹ và số sát thương nổi. Hỗ trợ giảm chuyển động theo thiết bị."
+    ]
+  },
+  {
+    "id": "fb261649-e427-4de0-9794-047076e205e3",
+    "updatedAt": "2026-11-23T09:31:13.803Z",
+    "auditedAt": "2026-11-23T09:31:13.803Z",
+    "title": "Gunny: đấu pháo hai người trên web",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Thêm /gunny choi, phong và cauhinh, hỗ trợ cả tiền tố !; chọn nhân vật, ngắm theo gió và phá hủy địa hình bằng 4 vũ khí.",
+      "Có khán giả trực tiếp, xác nhận tài khoản Discord, giao diện PC/điện thoại, hiệu ứng đạn bay, vụ nổ và âm thanh.",
+      "Lưu trạng thái trận đấu để tiếp tục sau khi bot khởi động lại; cấu hình người đi trước, đồng hồ riêng và thời gian mỗi lượt."
+    ]
+  },
+  {
     "id": "691bedd4-8192-401f-b538-d5e0ca98fb93",
     "updatedAt": "2026-11-11T10:50:58.902Z",
     "auditedAt": "2026-11-11T10:50:58.902Z",

@@ -53,6 +53,10 @@ module.exports = createRuntime({
     createMazeGame({ store: createMazeStore(db), db }),
     createCoquayGame({ store: createCoquayStore(db), db }),
     createSantoriniGame({ store: createSantoriniStore(db), db }),
+    require("../gunny/webGame").createGame({
+      store: require("../gunny/store").createStore(db),
+      db,
+    }),
   ],
   legacyGame: "caro",
 });

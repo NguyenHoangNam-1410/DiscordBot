@@ -110,6 +110,11 @@ function createWebServer({
       ["/", ["index.html", "text/html; charset=utf-8"]],
       ["/app.js", ["app.js", "text/javascript; charset=utf-8"]],
       ["/style.css", ["style.css", "text/css; charset=utf-8"]],
+      ...(game.browserScripts || []).map((file) => {
+        if (!/^[a-z][a-z0-9-]*\.js$/.test(file))
+          throw new Error("Invalid browser script filename");
+        return ["/" + file, [file, "text/javascript; charset=utf-8"]];
+      }),
     ]) {
       const asset = {
         type,

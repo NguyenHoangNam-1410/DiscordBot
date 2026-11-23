@@ -309,7 +309,8 @@ globalThis.WebGameFeedback = (() => {
   }
   // Replay callers emit at the visual impact; muted or missed sounds are never queued.
   function effect(cue) {
-    if (document.hidden || !["stone", "slap"].includes(cue)) return;
+    if (document.hidden || !["stone", "slap", "shot", "hit"].includes(cue))
+      return;
     play([cue]);
   }
   function eventsBetween(game, before, next) {
@@ -350,6 +351,7 @@ globalThis.WebGameFeedback = (() => {
       next.lastAction.mark !== before.lastAction?.mark
     )
       return ["ready"];
+    if (game === "gunny" && next.moves > before.moves) return []; // Gunny emits sounds at replay timestamps.
     if (next.moves > before.moves) {
       const last = next.lastAction,
         actor =
