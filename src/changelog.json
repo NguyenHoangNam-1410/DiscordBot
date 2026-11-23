@@ -1,5 +1,16 @@
 [
   {
+    "id": "5317207d-c297-42b6-b98a-a74dada4760d",
+    "updatedAt": "2026-11-23T10:22:20.669Z",
+    "auditedAt": "2026-11-23T10:22:20.669Z",
+    "title": "Sửa avatar Gunny bị méo oval",
+    "type": "fix",
+    "scope": "system",
+    "changes": [
+      "Avatar hai người chơi giữ khung tròn với chiều rộng và chiều cao bằng nhau trên PC, điện thoại dọc và ngang; không bị co méo khi thanh người chơi thu hẹp."
+    ]
+  },
+  {
     "id": "ccafe5e5-7862-4f0c-8377-2d7d7dc4bb2d",
     "updatedAt": "2026-11-23T10:17:23.512Z",
     "auditedAt": "2026-11-23T10:17:23.512Z",
