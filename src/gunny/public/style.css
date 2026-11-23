@@ -1383,9 +1383,10 @@ dialog .close {
   line-height: 1.05;
   font-size: 8px;
 }
-.items button b {
-  font-size: 13px;
-  line-height: 1;
+.items button svg {
+  width: 20px;
+  height: 20px;
+  filter: drop-shadow(0 1px 1px #17332c);
 }
 .items button small {
   font-size: 7px;
@@ -1482,8 +1483,9 @@ dialog .close {
     gap: 3px;
     padding: 0 2px;
   }
-  .items button b {
-    font-size: 10px;
+  .items button svg {
+    width: 15px;
+    height: 15px;
   }
   .items button small {
     font-size: 6px;

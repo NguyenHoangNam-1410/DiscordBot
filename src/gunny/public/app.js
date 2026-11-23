@@ -137,7 +137,8 @@ function scene(at) {
       inFlight: false,
       elapsed: Infinity,
       terrain: state.terrain || replayCache.terrain || [],
-      fighters: state.fighters,
+      terrainKey: state.terrain ? "live:" + state.terrainKey : replayCache.key,
+      fighters: withPrediction(state.fighters),
       active: [],
       blasts: [],
     };
@@ -163,6 +164,7 @@ function scene(at) {
     inFlight: elapsed < shot.flightMs,
     elapsed,
     terrain: replayCache.terrain,
+    terrainKey: "replay:" + replayCache.key,
     fighters,
     active: shot.projectiles.filter(
       (p) => elapsed >= p.startMs && elapsed < p.startMs + p.flightMs,
@@ -171,6 +173,149 @@ function scene(at) {
       .map((p, index) => ({ p, index, t: elapsed - p.startMs - p.flightMs }))
       .filter(({ p, t }) => t >= 0 && t < BLAST_MS && p.impact.type !== "miss"),
   };
+}
+// Cheap content hash so the painted terrain is reused across snapshots that
+// did not change the ground (walking, items, turn changes).
+function terrainHash(terrain) {
+  let h = 2166136261;
+  for (const runs of terrain)
+    for (let i = 0; i < runs.length; i++)
+      h = Math.imul(h ^ Math.round(runs[i] * 4) ^ (i << 11), 16777619);
+  return (h >>> 0).toString(36) + ":" + terrain.length;
+}
+// Hold-to-walk: the browser predicts the path with the shared Terrain.step
+// rules and streams small batches to the server, one request in flight at a
+// time. The server stays authoritative; prediction is replayed from its state.
+const WALK_SPEED = 60,
+  WALK_BATCH = 10,
+  TAP_STEPS = 5;
+let walking = null,
+  walkBusy = false,
+  lastHoldEnd = 0;
+const walkQueue = { sign: 1, unsent: 0, inflight: 0, inflightVersion: -1 };
+function walkOthers(mark) {
+  return Object.entries(state.fighters)
+    .filter(([side, f]) => side !== mark && f.hp > 0)
+    .map(([, f]) => f);
+}
+function predictedSteps(f, steps) {
+  const others = walkOthers(state.me);
+  let p = { x: f.x, y: f.y },
+    done = 0;
+  for (; done < steps; done++) {
+    const next = Terrain.step(state.terrain, p, walkQueue.sign, others);
+    if (!next) break;
+    p = next;
+  }
+  return { p, done };
+}
+function pendingSteps() {
+  const inflight =
+    state.version > walkQueue.inflightVersion ? 0 : walkQueue.inflight;
+  return inflight + walkQueue.unsent;
+}
+function withPrediction(fighters) {
+  const me = state.me;
+  if (!me || !state.terrain || !fighters[me] || !pendingSteps())
+    return fighters;
+  const f = fighters[me],
+    { p, done } = predictedSteps(f, pendingSteps()),
+    cost = state.limits?.walkCost || 2;
+  return {
+    ...fighters,
+    [me]: {
+      ...f,
+      x: p.x,
+      y: p.y,
+      direction: walkQueue.sign,
+      stamina: Math.max(0, f.stamina - done * cost),
+    },
+  };
+}
+function walkCapacity() {
+  const f = state.fighters[state.me],
+    cost = state.limits?.walkCost || 2;
+  if (!f || f.locked) return 0;
+  const queued = pendingSteps(),
+    affordable = Math.floor(f.stamina / cost) - queued;
+  if (affordable <= 0) return 0;
+  return Math.max(0, predictedSteps(f, queued + affordable).done - queued);
+}
+function queueSteps(count) {
+  const add = Math.min(count, walkCapacity());
+  walkQueue.unsent += add;
+  pumpWalk();
+  return add;
+}
+function startWalk(sign) {
+  if (!canAim() || state.fighters[state.me]?.locked) return;
+  if (walkQueue.sign !== sign) walkQueue.unsent = 0;
+  walkQueue.sign = sign;
+  direction = sign;
+  walking = {
+    sign,
+    last: performance.now(),
+    started: performance.now(),
+    carry: 0,
+    added: 0,
+  };
+  render();
+}
+function stopWalk() {
+  if (!walking) return;
+  const tap =
+    performance.now() - walking.started < 220 && walking.added < TAP_STEPS;
+  if (tap) walking.added += queueSteps(TAP_STEPS - walking.added);
+  walking = null;
+  lastHoldEnd = performance.now();
+  pumpWalk();
+}
+function tickWalk(now) {
+  if (!walking) return;
+  if (!canAim()) {
+    walking = null;
+    return;
+  }
+  walking.carry += ((now - walking.last) * WALK_SPEED) / 1000;
+  walking.last = now;
+  const whole = Math.floor(walking.carry);
+  if (whole > 0) {
+    walking.carry -= whole;
+    walking.added += queueSteps(whole);
+  }
+}
+async function pumpWalk() {
+  if (walkBusy || !walkQueue.unsent || !state?.me || !connected) return;
+  const dx = Math.min(WALK_BATCH, walkQueue.unsent);
+  walkBusy = true;
+  walkQueue.unsent -= dx;
+  walkQueue.inflight = dx;
+  walkQueue.inflightVersion = state.version;
+  try {
+    accept(
+      await api("/api/move", {
+        roomId,
+        version: state.version,
+        type: "walk",
+        dx: walkQueue.sign * dx,
+      }),
+    );
+  } catch (e) {
+    walkQueue.unsent = 0;
+    walking = null;
+    if (!/BLOCKED|thể lực|Không thể đi/.test(e.message)) notice(e.message);
+    await refresh().catch(() => connection(false));
+  } finally {
+    walkQueue.inflight = 0;
+    walkBusy = false;
+    if (walkQueue.unsent) pumpWalk();
+    else render();
+  }
+}
+async function walkSettled() {
+  walking = null;
+  for (let n = 0; n < 200 && (walkBusy || walkQueue.unsent); n++)
+    await new Promise((r) => setTimeout(r, 25));
 }
 function canAim() {
   return !!(
@@ -191,6 +336,7 @@ function accept(next) {
   )
     return;
   const previous = state;
+  if (next.terrain) next.terrainKey = terrainHash(next.terrain);
   state = next;
   offset = state.serverNow - Date.now();
   if (
@@ -400,11 +546,15 @@ function renderItems(mine, limits) {
   box.replaceChildren();
   for (const [id, item] of Object.entries(state.items || {})) {
     const b = document.createElement("button"),
-      icon = document.createElement("b"),
+      icon = document.createElementNS("http://www.w3.org/2000/svg", "svg"),
+      use = document.createElementNS("http://www.w3.org/2000/svg", "use"),
       label = document.createElement("small"),
       uses = mine?.itemUses?.[id] || 0,
       left = item.perMatch ? item.perMatch - uses : null;
-    icon.textContent = ITEM_ICONS[id] || "•";
+    icon.setAttribute("viewBox", "0 0 48 48");
+    icon.setAttribute("aria-hidden", "true");
+    use.setAttribute("href", "#item-" + id);
+    icon.append(use);
     label.textContent =
       id === "fly" && mine?.flyCooldown > 0
         ? `Hồi ${mine.flyCooldown}`
@@ -443,6 +593,7 @@ $("pass").onclick = () => action({ type: "pass" });
 async function action(data) {
   if (pending || !connected || !state?.me) return;
   pending = true;
+  await walkSettled();
   render();
   try {
     accept(await api("/api/move", { roomId, version: state.version, ...data }));
@@ -537,8 +688,26 @@ $("direction").onclick = () => {
   direction *= -1;
   render();
 };
-$("move-left").onclick = () => action({ type: "walk", dx: -5 });
-$("move-right").onclick = () => action({ type: "walk", dx: 5 });
+for (const [id, sign] of [
+  ["move-left", -1],
+  ["move-right", 1],
+]) {
+  const b = $(id);
+  b.addEventListener("pointerdown", (e) => {
+    if (e.button !== 0) return;
+    e.preventDefault();
+    startWalk(sign);
+    if (walking) b.setPointerCapture(e.pointerId);
+  });
+  for (const name of ["pointerup", "pointercancel", "lostpointercapture"])
+    b.addEventListener(name, stopWalk);
+  // Keyboard activation or a synthetic click is a single short step.
+  b.addEventListener("click", () => {
+    if (performance.now() - lastHoldEnd < 400) return;
+    startWalk(sign);
+    stopWalk();
+  });
+}
 function cancelCharge() {
   charge = null;
   $("fire").classList.remove("charging");
@@ -600,45 +769,54 @@ $("fire").addEventListener("click", (e) => {
 });
 $("fire").addEventListener("pointercancel", cancelCharge);
 $("fire").addEventListener("lostpointercapture", cancelCharge);
-window.addEventListener("blur", cancelCharge);
+window.addEventListener("blur", () => {
+  cancelCharge();
+  stopWalk();
+});
 document.addEventListener("visibilitychange", () => {
-  if (document.hidden) cancelCharge();
+  if (document.hidden) {
+    cancelCharge();
+    stopWalk();
+  }
 });
 window.addEventListener("keydown", (e) => {
   if (e.key === "Escape") {
     cancelCharge();
     return;
   }
-  if (
-    document.querySelector("dialog[open]") ||
-    /INPUT|BUTTON|SELECT|TEXTAREA/.test(e.target.tagName) ||
-    !canAim()
-  )
-    return;
-  if (e.code === "Space") {
+  const typing =
+    e.target.tagName === "TEXTAREA" ||
+    e.target.tagName === "SELECT" ||
+    (e.target.tagName === "INPUT" && e.target.type !== "range");
+  if (document.querySelector("dialog[open]") || typing || !canAim()) return;
+  // A/D walk while held, W/S tilt the barrel (held keys repeat).
+  if (e.code === "KeyA" || e.code === "KeyD") {
     e.preventDefault();
-    if (!e.repeat) beginCharge();
-  } else if (e.key.toLowerCase() === "a" || e.key.toLowerCase() === "d") {
-    e.preventDefault();
-    if (!e.repeat)
-      action({ type: "walk", dx: e.key.toLowerCase() === "a" ? -5 : 5 });
-  } else if (["ArrowUp", "ArrowDown"].includes(e.key)) {
+    if (!e.repeat) startWalk(e.code === "KeyA" ? -1 : 1);
+  } else if (e.code === "KeyW" || e.code === "KeyS") {
     e.preventDefault();
     $("angle").value = Math.max(
       Number($("angle").min),
       Math.min(
         Number($("angle").max),
-        Number($("angle").value) + (e.key === "ArrowUp" ? 1 : -1),
+        Number($("angle").value) + (e.code === "KeyW" ? 1 : -1),
       ),
     );
     $("angle").oninput();
+  } else if (e.code === "Space" && !/INPUT|BUTTON/.test(e.target.tagName)) {
+    e.preventDefault();
+    if (!e.repeat) beginCharge();
   }
 });
 window.addEventListener("keyup", (e) => {
   if (e.code === "Space") {
     e.preventDefault();
     releaseCharge();
-  }
+  } else if (
+    (e.code === "KeyA" && walking?.sign === -1) ||
+    (e.code === "KeyD" && walking?.sign === 1)
+  )
+    stopWalk();
 });
 $("overview").onclick = () => {
   manualCamera = false;
@@ -1008,9 +1186,9 @@ function ruins(c, at, terrain) {
 // The terrain is painted once per shape into an offscreen canvas: solid runs
 // form a mask, then earth, stones and strata are drawn inside it, grass on
 // every exposed top and a shadow under every overhang.
-let terrainArt = { terrain: null, canvas: null };
-function terrainCanvas(terrain) {
-  if (terrainArt.terrain === terrain && terrainArt.canvas)
+let terrainArt = { key: null, canvas: null };
+function terrainCanvas(terrain, key) {
+  if (key && terrainArt.key === key && terrainArt.canvas)
     return terrainArt.canvas;
   const off = terrainArt.canvas || document.createElement("canvas");
   off.width = 1600;
@@ -1100,11 +1278,11 @@ function terrainCanvas(terrain) {
       }
     }
   }
-  terrainArt = { terrain, canvas: off };
+  terrainArt = { key, canvas: off };
   return off;
 }
-function drawTerrain(c, terrain) {
-  c.drawImage(terrainCanvas(terrain), 0, 0);
+function drawTerrain(c, terrain, key) {
+  c.drawImage(terrainCanvas(terrain, key), 0, 0);
 }
 function fighterArt(c, f, mark, at, terrain) {
   const t = ART[f.character] || ART.bear,
@@ -1404,6 +1582,7 @@ function drawFrame() {
     at = Date.now() + offset;
   drawSky(ctx, w, h, at);
   if (state && w && h) {
+    tickWalk(performance.now());
     const shot = state.shot,
       view = scene(at),
       { terrain, fighters, inFlight, elapsed } = view;
@@ -1455,7 +1634,7 @@ function drawFrame() {
     ctx.translate(-left * zoom + shakeX, top + shakeY);
     ctx.scale(zoom, zoom);
     ruins(ctx, at, terrain);
-    drawTerrain(ctx, terrain);
+    drawTerrain(ctx, terrain, view.terrainKey);
     for (const m of ["X", "O"]) {
       if (state.players[m] && fighters[m].hp > 0)
         fighterArt(ctx, fighters[m], m, at, terrain);

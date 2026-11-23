@@ -119,8 +119,21 @@
       if (solid(cols, x, yy)) return false;
     return !solid(cols, x, y - 1);
   }
+  // One column of walking, shared by the server and the browser's prediction:
+  // climb steps up to `climb`, never into a wall or under a low ceiling, drop
+  // off ledges onto the ground below. Returns the next {x, y} or null.
+  function step(cols, f, sign, others = [], climb = 16) {
+    const x = f.x + sign;
+    if (x < 16 || x > cols.length - 17) return null;
+    const y = support(cols, x, f.y - 1);
+    if (y === null || f.y - y > climb || !headroom(cols, x, y)) return null;
+    if (others.some((o) => Math.abs(x - o.x) < 34 && Math.abs(y - o.y) < 40))
+      return null;
+    return { x, y };
+  }
   return Object.freeze({
     BODY,
+    step,
     solid,
     fromHeights,
     clone,

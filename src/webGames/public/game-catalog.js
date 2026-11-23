@@ -268,7 +268,7 @@
       "Bản đồ 2D có đồi và đảo nổi; nổ khoét đất tạo hang, đường hầm và mái treo.",
     ],
     play: [
-      "Mỗi lượt có 200 thể lực dùng chung cho đi bộ (2/bước) và đạo cụ. Leo bậc tối đa 16, không chui dưới trần thấp; đi ra mép đảo thì rơi xuống. Chọn hướng, góc và vũ khí rồi giữ Bắn/Space: lực tăng 0→100%, giảm 100→0% và lặp lại tới khi thả. Mỗi chiều mất 2,5 giây. Thả ở mức nào thì bắn ở mức đó; Esc hủy, không bắn.",
+      "Mỗi lượt có 200 thể lực dùng chung cho đi bộ (2/bước) và đạo cụ. Giữ A/D hoặc nút ◀ ▶ để đi liên tục, W/S chỉnh góc. Leo bậc tối đa 16, không chui dưới trần thấp; đi ra mép đảo thì rơi xuống. Chọn hướng, góc và vũ khí rồi giữ Bắn/Space: lực tăng 0→100%, giảm 100→0% và lặp lại tới khi thả. Mỗi chiều mất 2,5 giây. Thả ở mức nào thì bắn ở mức đó; Esc hủy, không bắn.",
       "Nhân vật nghiêng theo mặt đất. Đồng hồ có nền đất mờ, vùng xanh theo vũ khí và kim đỏ theo hướng nhìn; con số là góc bắn so với phương ngang, có thể âm hoặc lớn hơn 90° trên dốc.",
       "Góc nâng theo thân: đạn thường 0–90°, lựu đạn 20–80°, tên lửa 10–70°, bom hạt nhân 30–75°. Độ dốc và hướng nhìn làm dịch vùng xanh, không đổi giới hạn riêng của vũ khí.",
       "Gió đổi sau mỗi lượt. Sát thương giảm từ 100% ở tâm còn 50% ở mép vụ nổ; bạo kích 8% (×1,5). Tự trúng nổ chỉ nhận 50% và không tự hạ mình.",
