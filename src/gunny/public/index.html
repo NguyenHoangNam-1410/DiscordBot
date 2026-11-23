@@ -480,6 +480,14 @@
                 <p id="waiting-detail">
                   Gửi link phòng cho bạn bè hoặc tham gia từ Discord.
                 </p>
+                <button
+                  id="verify-cta"
+                  class="primary attention verify-cta"
+                  type="button"
+                  hidden
+                >
+                  Xác nhận người chơi
+                </button>
               </section>
             </div>
             <div id="result" class="result" hidden>
@@ -504,29 +512,47 @@
         Kết quả phát bắn do máy chủ tính. Khán giả theo dõi trực tiếp.
       </p>
     </dialog>
-    <dialog id="account-dialog">
+    <dialog id="account-dialog" class="account-dialog">
       <button class="close" data-close="account-dialog" aria-label="Đóng">
         ×
       </button>
-      <h2>Tài khoản</h2>
+      <p class="eyebrow">TÀI KHOẢN</p>
+      <h2 id="account-title">Xác nhận người chơi</h2>
       <p id="account-status">Bạn đang xem với tư cách khán giả.</p>
-      <button id="connect-player" class="primary">Xác nhận người chơi</button>
-      <section id="pair-panel" hidden>
+      <ol id="pair-steps" class="pair-steps">
+        <li><span>1</span>Bấm <strong>Lấy mã xác nhận</strong> bên dưới.</li>
+        <li>
+          <span>2</span>Trong tin phòng Discord, bấm
+          <strong>Kết nối tài khoản</strong> và nhập mã.
+        </li>
+        <li><span>3</span>Trang tự nhận quyền chơi, không cần tải lại.</li>
+      </ol>
+      <button id="connect-player" class="primary attention" type="button">
+        Lấy mã xác nhận
+      </button>
+      <section id="pair-panel" class="pair-panel" hidden>
+        <p class="pair-label">MÃ CỦA BẠN</p>
         <h2 id="pair-code"></h2>
-        <p>
-          Trong tin phòng Discord, bấm <strong>Kết nối tài khoản</strong> rồi
-          nhập mã này. Chỉ dùng mã từ tab của chính bạn.
-        </p>
+        <p id="pair-expiry" class="pair-expiry"></p>
         <p id="pair-status" role="status"></p>
+        <p class="muted">Chỉ dùng mã hiện trên tab của chính bạn.</p>
       </section>
-      <button id="leave" class="danger" hidden>Đầu hàng</button>
+      <div id="danger-zone" class="danger-zone" hidden>
+        <p class="muted" id="danger-note">
+          Đầu hàng luôn cần xác nhận thêm một lần.
+        </p>
+        <button id="leave" class="danger" type="button">Đầu hàng</button>
+      </div>
     </dialog>
-    <dialog id="leave-dialog">
+    <dialog id="leave-dialog" class="leave-dialog">
+      <p class="eyebrow">XÁC NHẬN</p>
       <h2 id="leave-dialog-title">Đầu hàng?</h2>
       <p id="leave-dialog-detail">Đối thủ được tính thắng.</p>
       <div class="actions">
-        <button id="keep-playing">Chơi tiếp</button
-        ><button id="confirm-leave" class="danger">Đầu hàng</button>
+        <button id="keep-playing" type="button" autofocus>Chơi tiếp</button
+        ><button id="confirm-leave" class="danger" type="button">
+          Đầu hàng
+        </button>
       </div>
     </dialog>
     <p id="rules-detail"></p>

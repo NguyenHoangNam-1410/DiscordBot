@@ -531,14 +531,7 @@ function render() {
   renderItems(mine, limits);
   $("direction").textContent = "Hướng " + (direction === 1 ? "→" : "←");
   syncAim();
-  $("connect-player").hidden = !!me || !open;
-  $("pair-panel").hidden = !!me || !open || !pairVisible;
-  $("leave").hidden = !me || !open;
-  $("leave").textContent =
-    state.status === "waiting" ? "Hủy phòng" : "Đầu hàng";
-  $("account-status").textContent = me
-    ? `Đã xác nhận: ${state.players[me]}`
-    : "Bạn đang xem với tư cách khán giả.";
+  renderAccount(me, open);
   $("rule-badges").replaceChildren(
     ...[
       `${limits.hp ?? 100} HP`,
@@ -639,6 +632,43 @@ function renderItems(mine, limits) {
 }
 $("pow").onclick = () => action({ type: "pow" });
 $("pass").onclick = () => action({ type: "pass" });
+// Unverified viewers of an open room see a pulsing account button and a
+// call-to-action; the dialog walks them through the three pairing steps.
+function renderAccount(me, open) {
+  const needsVerify = !me && open;
+  $("account").classList.toggle("needs-verify", needsVerify);
+  $("account").setAttribute(
+    "aria-label",
+    needsVerify ? "Tài khoản: chưa xác nhận người chơi" : "Tài khoản",
+  );
+  $("verify-cta").hidden = !needsVerify;
+  $("account-title").textContent = me ? "Tài khoản" : "Xác nhận người chơi";
+  $("account-status").textContent = me
+    ? `Đã xác nhận: ${state.players[me]}`
+    : open
+      ? "Bạn đang xem với tư cách khán giả. Nếu bạn là người chơi, hãy xác nhận để điều khiển pháo."
+      : "Phòng đã kết thúc.";
+  $("pair-steps").hidden = !needsVerify;
+  $("connect-player").hidden = !needsVerify;
+  $("connect-player").textContent = pairVisible
+    ? "Lấy mã mới"
+    : "Lấy mã xác nhận";
+  $("connect-player").classList.toggle("attention", !pairVisible);
+  $("pair-panel").hidden = !needsVerify || !pairVisible;
+  const canLeave = !!me && open;
+  $("danger-zone").hidden = !canLeave;
+  $("leave").hidden = !canLeave;
+  $("leave").textContent =
+    state.status === "waiting" ? "Hủy phòng" : "Đầu hàng";
+  $("danger-note").textContent =
+    state.status === "waiting"
+      ? "Hủy phòng chờ luôn cần xác nhận thêm một lần."
+      : "Đầu hàng luôn cần xác nhận thêm một lần; đối thủ được tính thắng.";
+}
+$("verify-cta").onclick = () => {
+  $("account-dialog").showModal();
+  $("connect-player").focus();
+};
 async function action(data) {
   if (pending || !connected || !state?.me) return;
   pending = true;
@@ -1876,6 +1906,11 @@ function updateClock() {
 function tickTurn() {
   if (!state) return;
   updateClock();
+  const left = Math.max(0, Math.ceil((pairExpiresAt - Date.now()) / 1000));
+  $("pair-expiry").textContent =
+    pairing && left
+      ? `Mã hết hạn sau ${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`
+      : "";
   const at = Date.now() + offset;
   const deadline =
     state.status === "setup" ? state.setupDeadline : state.turnDeadline;
@@ -1894,9 +1929,14 @@ async function refresh() {
   accept(await api(`/api/state?room=${encodeURIComponent(roomId)}`));
 }
 
+// Leaving is two explicit clicks: the leave button only opens the
+// confirmation, and only its confirm button (never Enter/Esc) sends it.
+let leaveArmed = false;
 $("leave").addEventListener("click", () => {
   if (!state?.me || !["waiting", "setup", "playing"].includes(state.status))
     return;
+  if ($("account-dialog").open) $("account-dialog").close();
+  leaveArmed = true;
   const waiting = state.status === "waiting";
   $("leave-dialog-title").textContent = waiting
     ? "Hủy phòng chờ?"
@@ -1906,11 +1946,17 @@ $("leave").addEventListener("click", () => {
     : "Đối thủ sẽ được tính thắng ván này.";
   $("confirm-leave").textContent = waiting ? "Hủy phòng" : "Đầu hàng";
   $("leave-dialog").showModal();
+  $("keep-playing").focus();
+});
+$("leave-dialog").addEventListener("close", () => {
+  leaveArmed = false;
 });
 $("keep-playing").addEventListener("click", () => $("leave-dialog").close());
 $("confirm-leave").addEventListener("click", async () => {
+  const armed = leaveArmed && $("leave-dialog").open;
   $("leave-dialog").close();
   if (
+    !armed ||
     pending ||
     !connected ||
     !state?.me ||
@@ -2052,7 +2098,7 @@ $("connect-player").addEventListener("click", async () => {
   } catch (error) {
     if (attempt !== pairAttempt) return;
     $("pair-status").textContent =
-      error.message + " Bấm Xác nhận người chơi để lấy mã mới.";
+      error.message + " Bấm Lấy mã mới để thử lại.";
     notice(error.message);
   } finally {
     if (attempt === pairAttempt) $("connect-player").disabled = false;
@@ -2064,8 +2110,7 @@ async function pollPairing(attempt = pairAttempt) {
     pairing = false;
     pairingToken = null;
     clearStoredPairing();
-    $("pair-status").textContent =
-      "Mã đã hết hạn. Bấm Xác nhận người chơi để lấy mã mới.";
+    $("pair-status").textContent = "Mã đã hết hạn. Bấm Lấy mã mới để thử lại.";
     return;
   }
   try {
@@ -2107,9 +2152,7 @@ async function pollPairing(attempt = pairAttempt) {
     const terminal = [400, 401, 403, 404, 409, 410].includes(error.status);
     $("pair-status").textContent =
       error.message +
-      (terminal
-        ? " Bấm Xác nhận người chơi để lấy mã mới."
-        : " Đang tự thử lại…");
+      (terminal ? " Bấm Lấy mã mới để thử lại." : " Đang tự thử lại…");
     if (!source) subscribe();
     if (terminal) {
       pairing = false;
