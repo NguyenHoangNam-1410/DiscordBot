@@ -1,5 +1,16 @@
 [
   {
+    "id": "3408f2be-58dc-45a3-8428-97218efa818d",
+    "updatedAt": "2026-11-23T16:25:24.658Z",
+    "auditedAt": "2026-11-23T16:25:24.658Z",
+    "title": "Gunny: vệt mờ góc và lực của phát trước",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Đồng hồ góc hiện kim mờ theo hướng nòng của phát bắn trước, thanh lực hiện vạch mờ ở mức lực trước đó; hai vệt giữ nguyên cho tới khi bắn phát mới để dễ canh lại"
+    ]
+  },
+  {
     "id": "6f1ce026-56c8-48ae-ac8d-5aa46220d9c5",
     "updatedAt": "2026-11-23T16:20:59.961Z",
     "auditedAt": "2026-11-23T16:20:59.961Z",

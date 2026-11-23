@@ -506,6 +506,14 @@ canvas {
   stroke-linecap: round;
   filter: drop-shadow(0 0 1px #fff4c1);
 }
+/* Faint marks of the previous shot (needle and power), kept until the next one. */
+.angle-dial #angle-ghost {
+  stroke: #ffffff;
+  stroke-width: 3;
+  stroke-linecap: round;
+  opacity: 0.35;
+  stroke-dasharray: 3 2;
+}
 .angle-dial .dial-center {
   fill: #ee7b4c;
   stroke: #9b3327;
@@ -1643,4 +1651,24 @@ dialog .close {
     animation: none;
     box-shadow: 0 0 0 3px #ffd56b88;
   }
+}
+.power-track {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.power-ghost {
+  position: absolute;
+  top: 50%;
+  width: 4px;
+  height: 18px;
+  margin-left: -2px;
+  transform: translateY(-50%);
+  border-radius: 2px;
+  background: #ffffff;
+  opacity: 0.4;
+  box-shadow: 0 0 4px #fff6c8;
+  pointer-events: none;
 }
