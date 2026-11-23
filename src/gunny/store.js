@@ -67,9 +67,46 @@ const MESSAGES = {
 function fail(code) {
   throw Object.assign(new Error(MESSAGES[code]), { code });
 }
-function createStore(db, now = Date.now) {
+function createStore(db, now = Date.now, options = {}) {
   const events = new EventEmitter();
   events.setMaxListeners(0);
+  // With the real clock, wake each open room at its next deadline (shot end,
+  // turn limit, clock flag, idle) so every viewer gets the new turn at once
+  // instead of waiting for someone to poll.
+  const wakeups = options.wakeups ?? now === Date.now,
+    timers = new Map();
+  function nextWake(room) {
+    if (room.status === "waiting") return room.createdAt + WAIT_MS;
+    if (room.status === "setup") return room.setupDeadline;
+    if (room.status !== "playing") return null;
+    if (room.phase === "firing") return room.shot?.endsAt ?? null;
+    const r = normalizeRules(room.rules);
+    return Math.min(
+      room.clockStartedAt + room.clocks[room.turn],
+      room.turnStartedAt + r.turnSeconds * 1000,
+      room.lastInputAt + IDLE_MS,
+    );
+  }
+  function schedule(room) {
+    if (!wakeups) return;
+    clearTimeout(timers.get(room.id));
+    timers.delete(room.id);
+    const at = nextWake(room);
+    if (!Number.isFinite(at)) return;
+    const timer = setTimeout(
+      () => {
+        timers.delete(room.id);
+        try {
+          get(room.id);
+        } catch {
+          // A later request or sweep retries.
+        }
+      },
+      Math.min(2 ** 31 - 1, Math.max(0, at - now()) + 25),
+    );
+    timer.unref?.();
+    timers.set(room.id, timer);
+  }
   const raw = (id) => {
     const row = db
       .prepare("SELECT data_json FROM gunny_rooms WHERE id=?")
@@ -83,6 +120,7 @@ function createStore(db, now = Date.now) {
     ).run(room.status, room.status, JSON.stringify(room), room.id);
     if (!["waiting", "setup", "playing"].includes(room.status))
       db.prepare("DELETE FROM gunny_seats WHERE room_id=?").run(room.id);
+    schedule(room);
     return room;
   }
   function dirty(room) {
@@ -442,7 +480,14 @@ function createStore(db, now = Date.now) {
       return save(room);
     });
   }
-  function snapshot(room, userId) {
+  // The terrain (~16 KB) is only sent when the receiver does not already
+  // have this revision, so walking and item updates stay a few KB.
+  function snapshot(room, userId, context = {}) {
+    const rev = room.terrainRev || 0,
+      known = context.stream?.terrainRev ?? context.request?.terrainRev,
+      firing = room.phase === "firing",
+      sendTerrain = !firing && known !== rev;
+    if (sendTerrain && context.stream) context.stream.terrainRev = rev;
     const at = now(),
       rules = normalizeRules(room.rules),
       me = seat(room, userId);
@@ -463,9 +508,10 @@ function createStore(db, now = Date.now) {
       me,
       ready: room.ready,
       fighters: room.fighters,
-      // While a shot replays, clients rebuild the result from shot.before plus
-      // its craters, which keeps each SSE message well under 64 KB.
-      terrain: room.phase === "firing" ? null : room.terrain,
+      // null while a shot replays (clients rebuild it from shot.before and the
+      // craters) or when the receiver already has this terrainRev.
+      terrain: sendTerrain ? room.terrain : null,
+      terrainRev: rev,
       wind: room.wind,
       weapons: WEAPONS,
       items: ITEMS,

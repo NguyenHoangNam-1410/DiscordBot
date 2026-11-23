@@ -1,5 +1,18 @@
 [
   {
+    "id": "fcddc675-e818-405b-8e0f-c1a939a951b7",
+    "updatedAt": "2026-11-23T13:00:59.221Z",
+    "auditedAt": "2026-11-23T13:00:59.221Z",
+    "title": "Gunny: sửa giật khi di chuyển và đổi lượt",
+    "type": "fix",
+    "scope": "system",
+    "changes": [
+      "Sửa lỗi nhân vật bị kéo về vị trí cũ sau khi di chuyển, kể cả khi đổi hướng giữa chừng hoặc mạng chậm",
+      "Cập nhật khi đi bộ và dùng đạo cụ nhẹ hơn nhiều: bản đồ chỉ được gửi lại khi bị đào",
+      "Đổi lượt hiện ngay đúng lúc đạn rơi xong hoặc hết giờ, đồng hồ chạy đều không còn nhảy số"
+    ]
+  },
+  {
     "id": "1adef08c-834d-4c39-afa7-e5681646429c",
     "updatedAt": "2026-11-23T11:03:59.945Z",
     "auditedAt": "2026-11-23T11:03:59.945Z",

@@ -185,41 +185,52 @@ function terrainHash(terrain) {
 }
 // Hold-to-walk: the browser predicts the path with the shared Terrain.step
 // rules and streams small batches to the server, one request in flight at a
-// time. The server stays authoritative; prediction is replayed from its state.
+// time. Steps are queued as segments of one direction, so turning around
+// never drops steps that were already shown. The server stays authoritative:
+// the prediction is always replayed on top of its latest state.
 const WALK_SPEED = 60,
   WALK_BATCH = 10,
   TAP_STEPS = 5;
 let walking = null,
   walkBusy = false,
   lastHoldEnd = 0;
-const walkQueue = { sign: 1, unsent: 0, inflight: 0, inflightVersion: -1 };
+const walkQueue = { segments: [], inflight: null };
 function walkOthers(mark) {
   return Object.entries(state.fighters)
     .filter(([side, f]) => side !== mark && f.hp > 0)
     .map(([, f]) => f);
 }
-function predictedSteps(f, steps) {
+// Steps the server has not applied yet: the batch in flight (until a state
+// with a newer version arrives) followed by the unsent segments.
+function pendingSegments() {
+  const list = [];
+  const sent = walkQueue.inflight;
+  if (sent && state.version <= sent.version) list.push(sent);
+  return list.concat(walkQueue.segments);
+}
+function predict(f, segments) {
   const others = walkOthers(state.me);
   let p = { x: f.x, y: f.y },
-    done = 0;
-  for (; done < steps; done++) {
-    const next = Terrain.step(state.terrain, p, walkQueue.sign, others);
-    if (!next) break;
-    p = next;
-  }
-  return { p, done };
-}
-function pendingSteps() {
-  const inflight =
-    state.version > walkQueue.inflightVersion ? 0 : walkQueue.inflight;
-  return inflight + walkQueue.unsent;
+    done = 0,
+    sign = f.direction;
+  for (const segment of segments)
+    for (let i = 0; i < segment.steps; i++) {
+      const next = Terrain.step(state.terrain, p, segment.sign, others);
+      if (!next) break;
+      p = next;
+      sign = segment.sign;
+      done++;
+    }
+  return { p, done, sign };
 }
 function withPrediction(fighters) {
   const me = state.me;
-  if (!me || !state.terrain || !fighters[me] || !pendingSteps())
+  if (!me || !state.terrain || !fighters[me] || state.turn !== me)
     return fighters;
+  const segments = pendingSegments();
+  if (!segments.length) return fighters;
   const f = fighters[me],
-    { p, done } = predictedSteps(f, pendingSteps()),
+    { p, done, sign } = predict(f, segments),
     cost = state.limits?.walkCost || 2;
   return {
     ...fighters,
@@ -227,30 +238,37 @@ function withPrediction(fighters) {
       ...f,
       x: p.x,
       y: p.y,
-      direction: walkQueue.sign,
+      direction: sign,
       stamina: Math.max(0, f.stamina - done * cost),
     },
   };
 }
-function walkCapacity() {
+function queueSteps(sign, count) {
   const f = state.fighters[state.me],
     cost = state.limits?.walkCost || 2;
-  if (!f || f.locked) return 0;
-  const queued = pendingSteps(),
-    affordable = Math.floor(f.stamina / cost) - queued;
+  if (!f || f.locked || count <= 0) return 0;
+  const segments = pendingSegments(),
+    queued = segments.reduce((sum, x) => sum + x.steps, 0),
+    affordable = Math.min(count, Math.floor(f.stamina / cost) - queued);
   if (affordable <= 0) return 0;
-  return Math.max(0, predictedSteps(f, queued + affordable).done - queued);
-}
-function queueSteps(count) {
-  const add = Math.min(count, walkCapacity());
-  walkQueue.unsent += add;
+  // Only queue steps the terrain actually allows from the predicted end.
+  const end = predict(f, segments).p,
+    add = predict({ ...f, x: end.x, y: end.y }, [
+      { sign, steps: affordable },
+    ]).done;
+  if (!add) return 0;
+  const last = walkQueue.segments[walkQueue.segments.length - 1];
+  if (last && last.sign === sign) last.steps += add;
+  else walkQueue.segments.push({ sign, steps: add });
   pumpWalk();
   return add;
 }
+function clearWalk() {
+  walking = null;
+  walkQueue.segments = [];
+}
 function startWalk(sign) {
   if (!canAim() || state.fighters[state.me]?.locked) return;
-  if (walkQueue.sign !== sign) walkQueue.unsent = 0;
-  walkQueue.sign = sign;
   direction = sign;
   walking = {
     sign,
@@ -265,7 +283,7 @@ function stopWalk() {
   if (!walking) return;
   const tap =
     performance.now() - walking.started < 220 && walking.added < TAP_STEPS;
-  if (tap) walking.added += queueSteps(TAP_STEPS - walking.added);
+  if (tap) walking.added += queueSteps(walking.sign, TAP_STEPS - walking.added);
   walking = null;
   lastHoldEnd = performance.now();
   pumpWalk();
@@ -281,40 +299,42 @@ function tickWalk(now) {
   const whole = Math.floor(walking.carry);
   if (whole > 0) {
     walking.carry -= whole;
-    walking.added += queueSteps(whole);
+    walking.added += queueSteps(walking.sign, whole);
   }
 }
 async function pumpWalk() {
-  if (walkBusy || !walkQueue.unsent || !state?.me || !connected) return;
-  const dx = Math.min(WALK_BATCH, walkQueue.unsent);
+  const head = walkQueue.segments[0];
+  if (walkBusy || !head || !state?.me || !connected) return;
+  if (state.turn !== state.me || state.phase !== "aim") return clearWalk();
+  const steps = Math.min(WALK_BATCH, head.steps);
+  head.steps -= steps;
+  if (!head.steps) walkQueue.segments.shift();
   walkBusy = true;
-  walkQueue.unsent -= dx;
-  walkQueue.inflight = dx;
-  walkQueue.inflightVersion = state.version;
+  walkQueue.inflight = { sign: head.sign, steps, version: state.version };
   try {
     accept(
       await api("/api/move", {
         roomId,
         version: state.version,
+        terrainRev: state.terrainRev,
         type: "walk",
-        dx: walkQueue.sign * dx,
+        dx: head.sign * steps,
       }),
     );
   } catch (e) {
-    walkQueue.unsent = 0;
-    walking = null;
-    if (!/BLOCKED|thể lực|Không thể đi/.test(e.message)) notice(e.message);
+    clearWalk();
+    if (!/thể lực|Không thể đi/.test(e.message)) notice(e.message);
     await refresh().catch(() => connection(false));
   } finally {
-    walkQueue.inflight = 0;
+    walkQueue.inflight = null;
     walkBusy = false;
-    if (walkQueue.unsent) pumpWalk();
+    if (walkQueue.segments.length) pumpWalk();
     else render();
   }
 }
 async function walkSettled() {
   walking = null;
-  for (let n = 0; n < 200 && (walkBusy || walkQueue.unsent); n++)
+  for (let n = 0; n < 200 && (walkBusy || walkQueue.segments.length); n++)
     await new Promise((r) => setTimeout(r, 25));
 }
 function canAim() {
@@ -327,6 +347,19 @@ function canAim() {
     !pending
   );
 }
+// Server time = Date.now() + offset. Each snapshot gives serverNow minus the
+// network delay, so the highest recent sample is the closest estimate; using
+// every raw sample made clocks and the replay jump with each packet.
+const offsetSamples = [];
+function syncOffset(serverNow) {
+  if (!Number.isFinite(serverNow)) return;
+  const at = Date.now();
+  offsetSamples.push({ at, value: serverNow - at });
+  while (offsetSamples.length && offsetSamples[0].at < at - 60_000)
+    offsetSamples.shift();
+  if (offsetSamples.length > 40) offsetSamples.shift();
+  offset = Math.max(...offsetSamples.map((x) => x.value));
+}
 function accept(next) {
   if (
     state &&
@@ -337,15 +370,28 @@ function accept(next) {
     return;
   const previous = state;
   if (next.terrain) next.terrainKey = terrainHash(next.terrain);
+  else if (
+    next.phase !== "firing" &&
+    previous?.terrain &&
+    previous.id === next.id &&
+    previous.terrainRev === next.terrainRev
+  ) {
+    // The server skips terrain we already have.
+    next.terrain = previous.terrain;
+    next.terrainKey = previous.terrainKey;
+  } else if (next.phase !== "firing")
+    queueMicrotask(() => refresh().catch(() => {}));
   state = next;
-  offset = state.serverNow - Date.now();
+  syncOffset(state.serverNow);
   if (
     previous &&
     (previous.turnNo !== next.turnNo ||
       previous.phase !== next.phase ||
       previous.me !== next.me)
-  )
+  ) {
     cancelCharge();
+    clearWalk();
+  }
   if (next.me && next.turnNo !== lastTurn) {
     lastTurn = next.turnNo;
     manualCamera = false;
@@ -354,6 +400,9 @@ function accept(next) {
   if (
     next.me &&
     previous &&
+    !walking &&
+    !walkBusy &&
+    !walkQueue.segments.length &&
     previous.fighters[next.me].x !== next.fighters[next.me].x
   )
     direction = next.fighters[next.me].direction;
@@ -1762,7 +1811,9 @@ function notice(message) {
   $("notice").hidden = !message;
 }
 function connection(ok) {
+  const was = connected;
   connected = ok;
+  if (ok && !was) pumpWalk();
   if (globalThis.WebGameFeedback) WebGameFeedback.connection(ok);
   else
     $("connection").textContent = ok
@@ -1824,6 +1875,7 @@ function updateClock() {
 }
 function tickTurn() {
   if (!state) return;
+  updateClock();
   const at = Date.now() + offset;
   const deadline =
     state.status === "setup" ? state.setupDeadline : state.turnDeadline;
@@ -2079,5 +2131,5 @@ window.addEventListener("pagehide", () => {
 window.addEventListener("pageshow", (event) => {
   if (event.persisted) location.reload();
 });
-setInterval(updateClock, 1000);
+
 init();

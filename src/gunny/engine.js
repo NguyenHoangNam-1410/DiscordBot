@@ -410,6 +410,7 @@ function fire(state, mark, data) {
           entry,
           explode(state, mark, sim.impact, radius, base, armed),
         );
+        if (entry.dig) state.terrainRev = (state.terrainRev || 0) + 1;
         for (const side of settle(state)) fallen.push(side);
       }
       for (const side of ["X", "O"]) {
