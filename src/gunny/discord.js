@@ -10,6 +10,7 @@ const LABELS = require("../webGames/playerIdentity").PLAYER_LABELS.gunny;
 const REASONS = {
   hp: "Hạ gục đối thủ",
   fall: "Rơi khỏi địa hình",
+  poison: "Gục vì trúng độc",
   draw: "Cả hai cùng bị hạ",
   resign: "Đối thủ đầu hàng",
   timeout: "Hết thời gian trên đồng hồ riêng",

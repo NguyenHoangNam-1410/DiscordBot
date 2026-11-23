@@ -1362,3 +1362,140 @@ dialog .close {
     scroll-behavior: auto !important;
   }
 }
+/* Items, POW, delay and status tags */
+.items {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin-top: 5px;
+}
+.items button {
+  min-width: 0;
+  padding: 2px 3px;
+  min-height: 30px;
+  border-radius: 6px;
+  border: 1px solid #7e8a5e;
+  background: linear-gradient(#4b5f47, #26413a);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.05;
+  font-size: 8px;
+}
+.items button b {
+  font-size: 13px;
+  line-height: 1;
+}
+.items button small {
+  font-size: 7px;
+  color: #f1d995;
+  white-space: nowrap;
+}
+.items button.armed {
+  border-color: #9ff3ff;
+  background: linear-gradient(#3f7a80, #24504f);
+  box-shadow:
+    inset 0 0 0 1px #c4fbff,
+    0 0 7px #8be8ff55;
+}
+.pow {
+  font-size: 9px;
+  font-weight: 850;
+  padding: 4px 8px;
+  min-height: 26px;
+  border-color: #c08a3c;
+  background: linear-gradient(#6d4a2b, #3e2c23);
+  --pow: 0%;
+  background-image: linear-gradient(
+    90deg,
+    #f0a23c99 var(--pow),
+    transparent var(--pow)
+  );
+}
+.pow.ready {
+  border-color: #ffe08a;
+  box-shadow: 0 0 9px #ffb44a88;
+  color: #fff3c4;
+}
+.pow.armed {
+  border-color: #fff;
+  background: linear-gradient(#e2862d, #9c4a1e);
+}
+#pass {
+  font-size: 9px;
+  padding: 4px 8px;
+  min-height: 26px;
+}
+.move-row {
+  flex-wrap: wrap;
+}
+.numbers .delay {
+  font-size: 9px;
+  color: #cfe3c0;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.unit-vitals .unit-pow i {
+  background: linear-gradient(#ffcf7a, #f07a2c);
+}
+.unit-tags {
+  display: block;
+  font-size: 9px;
+  line-height: 1.1;
+  min-height: 0;
+}
+.unit-tags:empty {
+  display: none;
+}
+@media (max-width: 700px) and (orientation: portrait) {
+  .items {
+    gap: 2px;
+    margin-top: 3px;
+  }
+  .items button {
+    min-height: 26px;
+    font-size: 0;
+    padding: 1px;
+  }
+  .items button small {
+    font-size: 6px;
+  }
+  .pow,
+  #pass {
+    font-size: 7px;
+    padding: 3px 5px;
+    min-height: 24px;
+  }
+  .numbers .delay {
+    font-size: 8px;
+  }
+}
+@media (max-height: 550px) and (orientation: landscape) {
+  .items {
+    gap: 3px;
+    margin-top: 3px;
+  }
+  .items button {
+    min-height: 19px;
+    flex-direction: row;
+    gap: 3px;
+    padding: 0 2px;
+  }
+  .items button b {
+    font-size: 10px;
+  }
+  .items button small {
+    font-size: 6px;
+  }
+  .pow,
+  #pass {
+    min-height: 21px;
+    padding: 2px 7px;
+    font-size: 8px;
+  }
+  .unit-status .pow small,
+  .unit-tags {
+    font-size: 7px;
+  }
+}

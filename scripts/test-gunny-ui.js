@@ -259,7 +259,7 @@ async function main() {
   assert.equal(await evaluate('$("connect-player").hidden'), true);
   await click('[data-close="account-dialog"]', true);
   await click("#move-left", true);
-  await until("!pending && state.fighters.X.moveRemaining===55");
+  await until("!pending && state.fighters.X.stamina===190");
   const leftDial = await evaluate(
     '({...document.querySelector(".angle-dial").dataset,plane:$("terrain-plane").getAttribute("transform"),zone:$("angle-zone").getAttribute("d"),number:$("angle-value").textContent})',
   );
@@ -347,7 +347,7 @@ async function main() {
       "Fire visible " + JSON.stringify(layout),
     );
     await until(
-      '!$("unit-X").hidden && $("unit-X").dataset.stamina==="55" && Number.isFinite(parseFloat($("unit-X").style.top))',
+      '!$("unit-X").hidden && $("unit-X").dataset.stamina==="190" && Number.isFinite(parseFloat($("unit-X").style.top))',
     );
     const embedded = await evaluate(
       '(()=>{const a=document.querySelector(".arena").getBoundingClientRect(),u=$("unit-X").getBoundingClientRect(),f=$("fire").getBoundingClientRect();return {inside:$("fire").closest(".arena")!==null,sidebar:document.querySelector("aside.console")!==null,u:u.toJSON(),a:a.toJSON(),f:f.toJSON(),caption:$("unit-X").textContent}})()',
@@ -361,8 +361,12 @@ async function main() {
       "Stamina follows the fighter above the controls " +
         JSON.stringify(embedded),
     );
-    assert.match(embedded.caption, /55\/60/);
-    assert.match(embedded.caption, /THỂ LỰC/);
+    assert.match(embedded.caption, /190/);
+    assert.match(embedded.caption, /THỂ LỰC · NỘ/);
+    const controlsFit = await evaluate(
+      '(()=>{const a=$("aim").getBoundingClientRect(),i=$("items").getBoundingClientRect(),p=$("pass").getBoundingClientRect(),w=$("pow").getBoundingClientRect();return {ok:i.width>0&&i.bottom<=a.bottom+1&&p.right<=a.right+1&&w.width>0&&document.querySelectorAll("#items button").length===7}})()',
+    );
+    assert(controlsFit.ok, "Items, POW and pass fit inside the controls");
     await screenshot(`gunny-${metrics.width}x${metrics.height}.png`);
   }
   await click("#overview");
@@ -385,7 +389,7 @@ async function main() {
     ramp = structuredClone(original),
     x = ramp.fighters.X.x;
   for (let col = Math.floor(x) - 55; col <= Math.ceil(x) + 55; col++)
-    ramp.heights[col] = 250 + (col - x) * Math.tan((26 * Math.PI) / 180);
+    ramp.terrain[col] = [350 - (col - x) * Math.tan((26 * Math.PI) / 180), 600];
   ramp.fighters.X.y = 350;
   ramp.version++;
   db.prepare("UPDATE gunny_rooms SET data_json=? WHERE id=?").run(
@@ -422,6 +426,23 @@ async function main() {
     ),
     [0, 100, true],
     "The read-only power bar displays the complete percent range",
+  );
+  // Items: shared stamina, armed state and the POW button.
+  assert.equal(await evaluate('$("pow").disabled'), true, "POW needs 100");
+  assert.match(await evaluate('$("pow").textContent'), /NỘ 0/);
+  await click('[data-item="triple"]', true);
+  await until("!pending && state.fighters.X.armed.triple===true");
+  assert.equal(await evaluate("state.fighters.X.stamina"), 90);
+  assert.equal(
+    await evaluate(
+      '$("items").querySelector("[data-item=triple]").classList.contains("armed")',
+    ),
+    true,
+  );
+  assert.equal(
+    await evaluate('$("items").querySelector("[data-item=double]").disabled'),
+    true,
+    "Items the stamina cannot pay for are disabled",
   );
   await evaluate(
     '$("angle").value=80;$("angle").oninput();direction=-1;$("power").value=15;$("power").oninput()',
@@ -532,6 +553,13 @@ async function main() {
     "Server receives the percentage captured at release, converted to its power scale",
   );
 
+  assert.equal(await evaluate("state.shot.projectiles.length"), 3);
+  assert.equal(await evaluate("state.terrain"), null);
+  assert.equal(
+    await evaluate("scene(state.shot.startedAt+10).active.length"),
+    3,
+    "Three balls are replayed together",
+  );
   await screenshot("gunny-projectile.png");
   await until("Date.now()+offset>=state.shot.startedAt+state.shot.flightMs");
   await screenshot("gunny-impact.png");
@@ -552,8 +580,8 @@ async function main() {
       angle:
         60 +
         require("../src/gunny/public/aim").terrainTilt(
-          room.heights,
-          room.fighters.O.x,
+          room.terrain,
+          room.fighters.O,
         ),
       power: 10,
       weapon: "grenade",

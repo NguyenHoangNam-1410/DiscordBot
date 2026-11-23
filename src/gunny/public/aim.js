@@ -1,42 +1,49 @@
 "use strict";
 // Shared geometry for the server, the character pose and the browser angle dial.
 ((root, factory) => {
-  const api = factory();
+  const api =
+    typeof module === "object" && module.exports
+      ? factory(require("./terrain"))
+      : factory(root.GunnyTerrain);
   if (typeof module === "object" && module.exports) module.exports = api;
   else root.GunnyAim = api;
-})(globalThis, () => {
+})(globalThis, (Terrain) => {
   const RAD = Math.PI / 180,
     FOOTPRINT = 16;
-  function terrainTilt(heights, x) {
+  // Slope under the feet: surfaces near the fighter's own ledge, so a cave
+  // roof or a floating island above never tilts the body.
+  function terrainTilt(terrain, f) {
     const sample = (center) => {
       let sum = 0;
       for (let i = -2; i <= 2; i++) {
         const column = Math.max(
           0,
-          Math.min(heights.length - 1, Math.round(center + i)),
+          Math.min(terrain.length - 1, Math.round(center + i)),
         );
-        sum += heights[column] || 0;
+        sum += Terrain.surfaceNear(terrain, column, f.y, 24);
       }
       return sum / 5;
     };
     return (
-      Math.atan2(sample(x + FOOTPRINT) - sample(x - FOOTPRINT), FOOTPRINT * 2) /
-      RAD
+      Math.atan2(
+        sample(f.x - FOOTPRINT) - sample(f.x + FOOTPRINT),
+        FOOTPRINT * 2,
+      ) / RAD
     );
   }
-  function bodyCenter(heights, f) {
-    const tilt = terrainTilt(heights, f.x) * RAD;
+  function bodyCenter(terrain, f) {
+    const tilt = terrainTilt(terrain, f) * RAD;
     return { x: f.x - 20 * Math.sin(tilt), y: f.y - 20 * Math.cos(tilt) };
   }
   function limits(weapon) {
     return { min: weapon.minAngle ?? 0, max: weapon.maxAngle ?? 90 };
   }
-  function solution(heights, f, weapon, direction, localAngle) {
-    const tilt = terrainTilt(heights, f.x),
+  function solution(terrain, f, weapon, direction, localAngle) {
+    const tilt = terrainTilt(terrain, f),
       range = limits(weapon),
       horizontal = localAngle + direction * tilt,
       world = direction === 1 ? horizontal : 180 - horizontal,
-      center = bodyCenter(heights, f);
+      center = bodyCenter(terrain, f);
     return {
       tilt,
       localAngle,
@@ -52,10 +59,10 @@
       },
     };
   }
-  function allowed(heights, f, weapon, direction, horizontal) {
+  function allowed(terrain, f, weapon, direction, horizontal) {
     if (!Number.isFinite(horizontal) || ![1, -1].includes(direction))
       return false;
-    const local = horizontal - direction * terrainTilt(heights, f.x),
+    const local = horizontal - direction * terrainTilt(terrain, f),
       r = limits(weapon);
     return local >= r.min - 1e-7 && local <= r.max + 1e-7;
   }

@@ -1,7 +1,18 @@
 "use strict";
 const $ = (id) => document.getElementById(id),
   API = "/api/games/gunny";
-const Aim = globalThis.GunnyAim;
+const Aim = globalThis.GunnyAim,
+  Terrain = globalThis.GunnyTerrain;
+const ITEM_ICONS = {
+    triple: "⁂",
+    double: "⇉",
+    power: "✊",
+    freeze: "❄",
+    poison: "☠",
+    heal: "✚",
+    fly: "➶",
+  },
+  BLAST_MS = 900;
 let state = null,
   roomId = null,
   connected = false,
@@ -22,8 +33,6 @@ let character = "bear",
   zoom = 1,
   charge = null,
   drag = null,
-  lastShot = 0,
-  impactSound = 0,
   refreshing = false,
   lastTurn = 0,
   manualCamera = false,
@@ -114,6 +123,55 @@ const ART = {
 const canvas = $("battlefield"),
   ctx = canvas.getContext("2d"),
   names = { bear: "Gấu", cat: "Mèo", robot: "Robot" };
+// Replays a shot on the client: terrain starts from shot.before and each
+// crater is carved when its projectile lands; fighters follow the server's
+// per-impact snapshots. Outside a shot this is simply the live state.
+let replayCache = { key: null, terrain: null };
+function scene(at) {
+  const shot = state.shot,
+    firing =
+      state.phase === "firing" && shot && Array.isArray(shot.projectiles);
+  if (!firing)
+    return {
+      firing: false,
+      inFlight: false,
+      elapsed: Infinity,
+      terrain: state.terrain || replayCache.terrain || [],
+      fighters: state.fighters,
+      active: [],
+      blasts: [],
+    };
+  const elapsed = at - shot.startedAt,
+    landed = shot.projectiles.filter(
+      (p) => elapsed >= p.startMs + p.flightMs,
+    ).length,
+    key = shot.id + ":" + landed;
+  if (replayCache.key !== key) {
+    const terrain = Terrain.clone(shot.before.terrain);
+    for (const p of shot.projectiles.slice(0, landed))
+      if (p.dig) Terrain.carve(terrain, p.impact.x, p.impact.y, p.radius);
+    replayCache = { key, terrain };
+  }
+  const view = landed
+    ? shot.projectiles[landed - 1].after
+    : shot.before.fighters;
+  const fighters = Object.fromEntries(
+    ["X", "O"].map((m) => [m, { ...state.fighters[m], ...view[m] }]),
+  );
+  return {
+    firing: true,
+    inFlight: elapsed < shot.flightMs,
+    elapsed,
+    terrain: replayCache.terrain,
+    fighters,
+    active: shot.projectiles.filter(
+      (p) => elapsed >= p.startMs && elapsed < p.startMs + p.flightMs,
+    ),
+    blasts: shot.projectiles
+      .map((p, index) => ({ p, index, t: elapsed - p.startMs - p.flightMs }))
+      .filter(({ p, t }) => t >= 0 && t < BLAST_MS && p.impact.type !== "miss"),
+  };
+}
 function canAim() {
   return !!(
     state?.me &&
@@ -164,11 +222,8 @@ function render() {
   globalThis.WebGamePlayers?.render(state);
   $("room-code").textContent =
     "PHÒNG " + (state.roomCode || state.id.slice(0, 8));
-  const displayFighters =
-    state.phase === "firing" &&
-    Date.now() + offset < state.shot.startedAt + state.shot.flightMs
-      ? state.shot.before.fighters
-      : state.fighters;
+  const displayFighters = scene(Date.now() + offset).fighters,
+    limits = state.limits || { stamina: 200, pow: 100, walkCost: 2 };
   for (const m of ["X", "O"]) {
     $("name-" + m).textContent = state.players[m] || "Đang chờ";
     $("role-" + m).textContent =
@@ -179,14 +234,26 @@ function render() {
     );
     $("hp-" + m).style.width = displayFighters[m].hp + "%";
     $("score-" + m).textContent = displayFighters[m].hp + " HP";
+    $("delay-" + m).textContent =
+      state.status === "playing" ? `Delay ${state.fighters[m].delay ?? 0}` : "";
   }
+  const report = state.turnReport,
+    reportText =
+      state.status === "playing" && state.phase === "aim" && report
+        ? [
+            report.poison ? `☠ −${report.poison} HP do độc` : "",
+            report.frozen ? "❄ bị đóng băng" : "",
+          ]
+            .filter(Boolean)
+            .join(" · ")
+        : "";
   $("board-state").textContent =
     state.status === "waiting"
       ? "Chờ đối thủ tham gia"
       : state.status === "setup"
         ? "Chọn nhân vật · Sẵn sàng"
         : state.status === "playing"
-          ? `Lượt ${state.turnNo} · ${state.phase === "firing" ? "Đạn đang bay" : state.players[state.turn] + " ngắm bắn"}`
+          ? `Lượt ${state.turnNo} · ${state.phase === "firing" ? "Đạn đang bay" : state.players[state.turn] + " ngắm bắn"}${reportText ? " · " + reportText : ""}`
           : "Trận đấu kết thúc";
   $("wind").textContent =
     `Gió ${state.wind < 0 ? "←" : "→"} ${Math.abs(state.wind).toFixed(2)}`;
@@ -251,12 +318,22 @@ function render() {
     };
     $("weapons").append(b);
   }
-  for (const id of ["angle", "direction", "move-left", "move-right", "fire"])
+  for (const id of [
+    "angle",
+    "direction",
+    "move-left",
+    "move-right",
+    "fire",
+    "pass",
+  ])
     $(id).disabled = !canAim();
-  if (me) {
+  const mine = me ? state.fighters[me] : null;
+  if (mine) {
     for (const id of ["move-left", "move-right"])
-      $(id).disabled = !canAim() || state.fighters[me].moveRemaining <= 0;
+      $(id).disabled =
+        !canAim() || mine.locked || mine.stamina < limits.walkCost;
   }
+  renderItems(mine, limits);
   $("direction").textContent = "Hướng " + (direction === 1 ? "→" : "←");
   syncAim();
   $("connect-player").hidden = !!me || !open;
@@ -269,10 +346,11 @@ function render() {
     : "Bạn đang xem với tư cách khán giả.";
   $("rule-badges").replaceChildren(
     ...[
-      "100 HP",
-      `60 bước/lượt`,
+      `${limits.hp ?? 100} HP`,
+      `${limits.stamina} thể lực/lượt`,
       `${state.rules.turnSeconds} giây/lượt`,
       `${state.rules.timeMinutes} phút/người`,
+      "Delay & nộ",
     ].map((t) => {
       const x = document.createElement("span");
       x.textContent = t;
@@ -286,7 +364,11 @@ function render() {
       .reverse()
       .map((h) => {
         const x = document.createElement("li");
-        x.textContent = `Lượt ${h.turn} · ${state.players[h.mark]} · ${state.weapons[h.weapon].name} · Gây ${h.damage.X + h.damage.O} DMG`;
+        const extras = [
+          ...(h.items || []).map((id) => state.items?.[id]?.name || id),
+          h.pow ? "Tuyệt kỹ" : "",
+        ].filter(Boolean);
+        x.textContent = `Lượt ${h.turn} · ${state.players[h.mark]} · ${h.fly ? "Bay" : state.weapons[h.weapon].name}${extras.length ? " + " + extras.join(", ") : ""} · Gây ${h.damage.X + h.damage.O} DMG`;
         return x;
       }),
   );
@@ -301,6 +383,7 @@ function render() {
       {
         hp: "Hạ gục đối thủ",
         fall: "Rơi khỏi địa hình",
+        poison: "Gục vì trúng độc",
         timeout: "Hết thời gian",
         idle: "Không thao tác trong 5 phút",
         resign: "Đầu hàng",
@@ -312,6 +395,51 @@ function render() {
   }
   updateClock();
 }
+function renderItems(mine, limits) {
+  const box = $("items");
+  box.replaceChildren();
+  for (const [id, item] of Object.entries(state.items || {})) {
+    const b = document.createElement("button"),
+      icon = document.createElement("b"),
+      label = document.createElement("small"),
+      uses = mine?.itemUses?.[id] || 0,
+      left = item.perMatch ? item.perMatch - uses : null;
+    icon.textContent = ITEM_ICONS[id] || "•";
+    label.textContent =
+      id === "fly" && mine?.flyCooldown > 0
+        ? `Hồi ${mine.flyCooldown}`
+        : `${item.cost}${left !== null ? ` · ${left}` : ""}`;
+    b.append(icon, label);
+    b.dataset.item = id;
+    b.title = `${item.name} · ${item.cost} thể lực · +${item.delay} delay · ${item.description}`;
+    b.setAttribute("aria-label", b.title);
+    const armed = !!(mine?.armed?.[id] || mine?.used?.includes(id));
+    b.classList.toggle("armed", armed);
+    b.disabled =
+      !canAim() ||
+      !mine ||
+      armed ||
+      mine.locked ||
+      mine.stamina < item.cost ||
+      (left !== null && left <= 0) ||
+      (id === "fly" && mine.flyCooldown > 0);
+    b.onclick = () => action({ type: "item", item: id });
+    box.append(b);
+  }
+  const pow = mine?.pow ?? 0;
+  $("pow").textContent = mine?.armed?.pow ? "TUYỆT KỸ ✓" : `NỘ ${pow}`;
+  $("pow").style.setProperty("--pow", `${(pow / limits.pow) * 100}%`);
+  $("pow").classList.toggle("ready", pow >= limits.pow);
+  $("pow").classList.toggle("armed", !!mine?.armed?.pow);
+  $("pow").disabled =
+    !canAim() ||
+    !mine ||
+    pow < limits.pow ||
+    !!mine.armed?.pow ||
+    !!mine.armed?.fly;
+}
+$("pow").onclick = () => action({ type: "pow" });
+$("pass").onclick = () => action({ type: "pass" });
 async function action(data) {
   if (pending || !connected || !state?.me) return;
   pending = true;
@@ -335,13 +463,9 @@ for (const b of document.querySelectorAll("[data-character]"))
   };
 function currentAim() {
   if (!state) return null;
-  const inFlight =
-    state.phase === "firing" &&
-    Date.now() + offset < state.shot.startedAt + state.shot.flightMs;
-  const heights = inFlight ? state.shot.before.heights : state.heights,
-    fighters = inFlight ? state.shot.before.fighters : state.fighters;
+  const { terrain, fighters } = scene(Date.now() + offset);
   return Aim.solution(
-    heights,
+    terrain,
     fighters[state.me || state.turn],
     state.weapons[weapon],
     direction,
@@ -708,7 +832,7 @@ function palm(c, x, y, scale, at) {
   }
   c.restore();
 }
-function ruins(c, at, heights) {
+function ruins(c, at, terrain) {
   c.save();
   c.globalAlpha = 0.92;
   // Stone foundations continue behind the island; decorations never float above a valley.
@@ -877,24 +1001,42 @@ function ruins(c, at, heights) {
     [1275, 0.77],
     [1470, 1.15],
   ])
-    if (heights[x] > 10) palm(c, x, 600 - heights[x] + 7, size, at);
+    if ((Terrain.topSurface(terrain, x) ?? 600) < 590)
+      palm(c, x, Terrain.topSurface(terrain, x) + 7, size, at);
   c.restore();
 }
-function drawTerrain(c, heights) {
-  c.beginPath();
-  c.moveTo(0, 650);
-  for (let x = 0; x < 1600; x++) c.lineTo(x, 600 - heights[x]);
-  c.lineTo(1600, 650);
-  c.closePath();
+// The terrain is painted once per shape into an offscreen canvas: solid runs
+// form a mask, then earth, stones and strata are drawn inside it, grass on
+// every exposed top and a shadow under every overhang.
+let terrainArt = { terrain: null, canvas: null };
+function terrainCanvas(terrain) {
+  if (terrainArt.terrain === terrain && terrainArt.canvas)
+    return terrainArt.canvas;
+  const off = terrainArt.canvas || document.createElement("canvas");
+  off.width = 1600;
+  off.height = 650;
+  const c = off.getContext("2d");
+  c.clearRect(0, 0, 1600, 650);
+  c.fillStyle = "#000";
+  for (let x = 0; x < terrain.length; x++) {
+    const runs = terrain[x];
+    for (let i = 0; i < runs.length; i += 2)
+      c.fillRect(
+        x,
+        runs[i],
+        1.02,
+        (runs[i + 1] >= 600 ? 650 : runs[i + 1]) - runs[i],
+      );
+  }
+  c.globalCompositeOperation = "source-in";
   const earth = c.createLinearGradient(0, 150, 0, 650);
   earth.addColorStop(0, "#a19a50");
   earth.addColorStop(0.35, "#777a42");
   earth.addColorStop(0.7, "#414f35");
   earth.addColorStop(1, "#193536");
   c.fillStyle = earth;
-  c.fill();
-  c.save();
-  c.clip();
+  c.fillRect(0, 0, 1600, 650);
+  c.globalCompositeOperation = "source-atop";
   for (let i = 0; i < 105; i++) {
     const x = sceneNoise(i + 10) * 1600,
       y = 240 + sceneNoise(i + 610) * 450,
@@ -924,36 +1066,47 @@ function drawTerrain(c, heights) {
     }
     c.stroke();
   }
-  c.restore();
-  for (const [width, color] of [
-    [13, "#304c30"],
-    [8, "#829c35"],
-    [2, "#d4d879"],
-  ]) {
-    c.beginPath();
-    for (let x = 0; x < 1600; x++)
-      x ? c.lineTo(x, 600 - heights[x]) : c.moveTo(x, 600 - heights[x]);
-    c.lineWidth = width;
-    c.strokeStyle = color;
-    c.stroke();
+  // Overhangs and cave roofs get a dark rim.
+  c.fillStyle = "#1b2f2a";
+  for (let x = 0; x < terrain.length; x++) {
+    const runs = terrain[x];
+    for (let i = 1; i < runs.length; i += 2)
+      if (runs[i] < 600) c.fillRect(x, runs[i] - 3, 1.02, 3);
   }
-  for (let x = 3; x < 1600; x += 9) {
-    if (heights[x] < 5) continue;
-    const y = 600 - heights[x];
-    c.beginPath();
-    c.moveTo(x - 4, y + 2);
-    c.quadraticCurveTo(
-      x - 4,
-      y - 7,
-      x - 6 + sceneNoise(x) * 12,
-      y - 6 - sceneNoise(x + 1) * 6,
-    );
-    c.lineTo(x + 4, y + 2);
-    c.fillStyle = x % 3 ? "#acbf46" : "#bfd362";
-    c.fill();
+  c.globalCompositeOperation = "source-over";
+  for (let x = 0; x < terrain.length; x++) {
+    const runs = terrain[x];
+    for (let i = 0; i < runs.length; i += 2) {
+      const y = runs[i];
+      if (y >= 598) continue;
+      c.fillStyle = "#304c30";
+      c.fillRect(x, y - 3, 1.02, 7);
+      c.fillStyle = "#829c35";
+      c.fillRect(x, y - 2, 1.02, 4);
+      c.fillStyle = "#d4d879";
+      c.fillRect(x, y - 1, 1.02, 1);
+      if (x % 9 === 3 && runs[i + 1] - y > 6) {
+        c.beginPath();
+        c.moveTo(x - 4, y + 2);
+        c.quadraticCurveTo(
+          x - 4,
+          y - 7,
+          x - 6 + sceneNoise(x + y) * 12,
+          y - 6 - sceneNoise(x + y + 1) * 6,
+        );
+        c.lineTo(x + 4, y + 2);
+        c.fillStyle = x % 3 ? "#acbf46" : "#bfd362";
+        c.fill();
+      }
+    }
   }
+  terrainArt = { terrain, canvas: off };
+  return off;
 }
-function fighterArt(c, f, mark, at, heights) {
+function drawTerrain(c, terrain) {
+  c.drawImage(terrainCanvas(terrain), 0, 0);
+}
+function fighterArt(c, f, mark, at, terrain) {
   const t = ART[f.character] || ART.bear,
     p = ART.palettes[f.character],
     active = state.status === "playing" && state.turn === mark,
@@ -964,7 +1117,7 @@ function fighterArt(c, f, mark, at, heights) {
       : active && state.me === mark
         ? direction
         : f.direction,
-    tilt = Aim.terrainTilt(heights, f.x),
+    tilt = Aim.terrainTilt(terrain, f),
     recoil = firing ? Math.max(0, 1 - (at - shot.startedAt) / 170) * 5 : 0;
   c.save();
   c.translate(f.x, f.y);
@@ -999,9 +1152,26 @@ function fighterArt(c, f, mark, at, heights) {
         );
       }
     }
+  if (f.status?.frozen > 0 || f.locked) {
+    c.fillStyle = "#bdf3ff66";
+    c.strokeStyle = "#e9fdffcc";
+    c.lineWidth = 2;
+    c.beginPath();
+    c.roundRect(-27, -52, 54, 54, 8);
+    c.fill();
+    c.stroke();
+  }
+  if (f.status?.poison > 0 && !reducedMotion.matches)
+    for (let i = 0; i < 4; i++) {
+      const rise = ((at / 900 + i / 4) % 1) * 30;
+      c.fillStyle = `rgba(120,220,90,${0.8 - rise / 40})`;
+      c.beginPath();
+      c.arc(-14 + i * 9, -50 - rise, 3, 0, Math.PI * 2);
+      c.fill();
+    }
   c.restore();
   const g = Aim.solution(
-      heights,
+      terrain,
       f,
       state.weapons.basic,
       facing,
@@ -1066,7 +1236,7 @@ function unitOverlay(mark, f, left, top, w, h, shakeX, shakeY, bottom) {
     x < 15 ||
     x > w - 15 ||
     y < 48 ||
-    y + 51 > h - bottom;
+    y + 61 > h - bottom;
   if (el.hidden) return;
   el.style.left = Math.round(x * 10) / 10 + "px";
   el.style.top = Math.round(y * 10) / 10 + "px";
@@ -1074,30 +1244,55 @@ function unitOverlay(mark, f, left, top, w, h, shakeX, shakeY, bottom) {
     "active",
     state.status === "playing" && state.turn === mark,
   );
-  const fuel = f.moveRemaining,
+  const limits = state.limits || { stamina: 200, pow: 100 },
+    fuel = f.stamina ?? limits.stamina,
+    pow = f.pow ?? 0,
+    tags = [
+      f.status?.frozen > 0 || f.locked ? "❄" : "",
+      f.status?.poison > 0 ? "☠" + f.status.poison : "",
+      f.flyCooldown > 0 ? "➶" + f.flyCooldown : "",
+      ...Object.keys(f.armed || {})
+        .filter((k) => f.armed[k])
+        .map((k) => (k === "pow" ? "🔥" : ITEM_ICONS[k] || "")),
+    ]
+      .filter(Boolean)
+      .join(" "),
     name = state.players[mark],
-    hp = String(f.hp);
-  if (
-    el.dataset.name !== name ||
-    el.dataset.hp !== hp ||
-    el.dataset.stamina !== String(fuel)
-  ) {
+    hp = String(f.hp),
+    signature = [name, hp, fuel, pow, tags].join("|");
+  if (el.dataset.signature !== signature) {
     $("unit-name-" + mark).textContent = name;
     $("unit-hp-" + mark).style.width = f.hp + "%";
     $("unit-hp-text-" + mark).textContent = f.hp + " HP";
-    $("unit-energy-" + mark).style.width = (fuel / 60) * 100 + "%";
-    $("unit-energy-text-" + mark).textContent = fuel + "/60";
-    el.dataset.name = name;
-    el.dataset.hp = hp;
+    $("unit-energy-" + mark).style.width = (fuel / limits.stamina) * 100 + "%";
+    $("unit-energy-text-" + mark).textContent = String(fuel);
+    $("unit-pow-" + mark).style.width = (pow / limits.pow) * 100 + "%";
+    $("unit-pow-text-" + mark).textContent = String(pow);
+    $("unit-tags-" + mark).textContent = tags;
+    el.dataset.signature = signature;
     el.dataset.stamina = String(fuel);
-    el.setAttribute("aria-label", `${name}: ${f.hp} HP, thể lực ${fuel}/60`);
+    el.setAttribute(
+      "aria-label",
+      `${name}: ${f.hp} HP, thể lực ${fuel}/${limits.stamina}, nộ ${pow}/${limits.pow}${tags ? ", " + tags : ""}`,
+    );
   }
 }
-function explosion(c, shot, progress, fighters) {
-  const r = state.weapons[shot.weapon].radius,
-    x = shot.impact.x,
-    y = shot.impact.y;
+function explosion(c, p, progress, fighters, seed) {
+  const r = p.radius || 18,
+    x = p.impact.x,
+    y = p.impact.y;
   c.save();
+  if (p.teleport !== undefined) {
+    // Fly: a soft ring where the shooter lands instead of a blast.
+    c.globalAlpha = Math.max(0, 1 - progress);
+    c.strokeStyle = "#bff6ff";
+    c.lineWidth = 3;
+    c.beginPath();
+    c.arc(x, y, 12 + progress * 30, 0, Math.PI * 2);
+    c.stroke();
+    c.restore();
+    return;
+  }
   const size = r * (0.6 + progress * 1.7);
   c.globalAlpha = Math.max(0, 1 - progress);
   c.strokeStyle = "#fff4a1";
@@ -1121,7 +1316,7 @@ function explosion(c, shot, progress, fighters) {
   c.fillRect(x - size, y - size, size * 2, size * 2);
   if (!reducedMotion.matches)
     for (let i = 0; i < 20; i++) {
-      const a = sceneNoise(i + shot.id * 23) * Math.PI * 2,
+      const a = sceneNoise(i + seed * 23) * Math.PI * 2,
         speed = 35 + sceneNoise(i + 90) * 100,
         px = x + Math.cos(a) * progress * speed,
         py = y + Math.sin(a) * progress * speed + progress * progress * 35;
@@ -1133,30 +1328,66 @@ function explosion(c, shot, progress, fighters) {
       c.restore();
     }
   c.restore();
-  for (const m of ["X", "O"])
-    if (shot.damage[m]) {
-      const f = fighters[m],
-        rise = reducedMotion.matches ? 0 : progress * 38,
-        px = f.x,
-        py = f.y - 65 - rise;
-      c.save();
-      c.translate(px, py);
-      c.rotate(-0.09);
-      c.globalAlpha = Math.min(1, (1 - progress) * 2);
-      c.font = "italic 950 38px system-ui";
-      c.textAlign = "center";
-      c.lineJoin = "round";
-      c.strokeStyle = "#493c23";
-      c.lineWidth = 9;
-      c.strokeText("−" + shot.damage[m], 0, 0);
-      c.strokeStyle = "#fff2a7";
+  for (const m of ["X", "O"]) {
+    const effects = p.effects?.[m] || [],
+      label = p.damage[m]
+        ? "−" + p.damage[m]
+        : effects.includes("freeze")
+          ? "❄"
+          : "";
+    if (!label) continue;
+    const f = fighters[m],
+      rise = reducedMotion.matches ? 0 : progress * 38,
+      px = f.x + (p.ball - 1 || 0) * 14,
+      py = f.y - 65 - rise - (p.volley || 0) * 18;
+    c.save();
+    c.translate(px, py);
+    c.rotate(-0.09);
+    c.globalAlpha = Math.min(1, (1 - progress) * 2);
+    c.font = "italic 950 34px system-ui";
+    c.textAlign = "center";
+    c.lineJoin = "round";
+    c.strokeStyle = "#493c23";
+    c.lineWidth = 9;
+    c.strokeText(label, 0, 0);
+    c.strokeStyle = "#fff2a7";
+    c.lineWidth = 4;
+    c.strokeText(label, 0, 0);
+    c.fillStyle = p.crit?.[m] ? "#ff2d55" : "#ed5d2c";
+    c.fillText(label, 0, 0);
+    const notes = [
+      p.crit?.[m] ? "BẠO KÍCH!" : "",
+      effects.includes("freeze") && p.damage[m] ? "❄ ĐÓNG BĂNG" : "",
+      effects.includes("poison") ? "☠ TRÚNG ĐỘC" : "",
+      effects.includes("thaw") ? "VỠ BĂNG" : "",
+    ].filter(Boolean);
+    if (notes.length) {
+      c.font = "900 13px system-ui";
       c.lineWidth = 4;
-      c.strokeText("−" + shot.damage[m], 0, 0);
-      c.fillStyle = "#ed5d2c";
-      c.fillText("−" + shot.damage[m], 0, 0);
-      c.restore();
+      c.strokeStyle = "#2a2116";
+      c.strokeText(notes.join(" · "), 0, -30);
+      c.fillStyle = "#fff6c8";
+      c.fillText(notes.join(" · "), 0, -30);
     }
+    c.restore();
+  }
 }
+function projectileAt(p, elapsed) {
+  const local = elapsed - p.startMs,
+    index = Math.max(0, (local / p.flightMs) * (p.path.length - 1)),
+    i = Math.min(p.path.length - 2, Math.floor(index)),
+    t = Math.min(1, index - Math.max(0, i)),
+    a = p.path[Math.max(0, i)],
+    b = p.path[Math.max(0, i) + 1] || a;
+  return {
+    i: Math.max(0, i),
+    x: a[0] + (b[0] - a[0]) * t,
+    y: a[1] + (b[1] - a[1]) * t,
+    angle: Math.atan2(b[1] - a[1], b[0] - a[0]),
+    local,
+  };
+}
+const played = new Set();
 function drawFrame() {
   const rect = canvas.getBoundingClientRect(),
     dpr = Math.min(2, devicePixelRatio || 1);
@@ -1174,10 +1405,8 @@ function drawFrame() {
   drawSky(ctx, w, h, at);
   if (state && w && h) {
     const shot = state.shot,
-      elapsed = shot ? at - shot.startedAt : Infinity,
-      inFlight = state.phase === "firing" && elapsed < shot.flightMs;
-    const heights = inFlight ? shot.before.heights : state.heights,
-      fighters = inFlight ? shot.before.fighters : state.fighters;
+      view = scene(at),
+      { terrain, fighters, inFlight, elapsed } = view;
     const portrait = w < 700 && h > w,
       short = h < 430,
       topHud = portrait ? 142 : short ? 82 : 115;
@@ -1191,15 +1420,11 @@ function drawFrame() {
       ? Math.min(w / 1600, playHeight / 350)
       : Math.max(w / 1600, Math.min(1.5, playHeight / 280), 0.75);
     const visible = w / zoom,
-      point = inFlight
-        ? shot.path[
-            Math.min(
-              shot.path.length - 1,
-              Math.max(
-                0,
-                Math.floor((elapsed / shot.flightMs) * (shot.path.length - 1)),
-              ),
-            )
+      flying = view.active.map((p) => ({ p, at: projectileAt(p, elapsed) })),
+      point = flying.length
+        ? [
+            flying.reduce((sum, f) => sum + f.at.x, 0) / flying.length,
+            flying.reduce((sum, f) => sum + f.at.y, 0) / flying.length,
           ]
         : null;
     if (!drag && (!manualCamera || inFlight)) {
@@ -1217,26 +1442,23 @@ function drawFrame() {
         ? (1600 - visible) / 2
         : Math.max(Math.min(camera - visible / 2, 1600 - visible), 0),
       top = topHud + playHeight * 0.5 - cameraY * zoom;
-    const blastProgress = shot ? (elapsed - shot.flightMs) / 900 : -1,
-      impact =
-        shot &&
-        shot.impact.type !== "miss" &&
-        blastProgress >= 0 &&
-        blastProgress < 1;
-    const quake =
-        impact && !reducedMotion.matches
-          ? Math.max(0, 1 - blastProgress * 2)
+    const freshest = view.blasts.length
+        ? Math.min(...view.blasts.map((b) => b.t)) / BLAST_MS
+        : -1,
+      quake =
+        freshest >= 0 && !reducedMotion.matches
+          ? Math.max(0, 1 - freshest * 2)
           : 0,
       shakeX = quake ? Math.sin(elapsed * 0.06) * 4 * quake : 0,
       shakeY = quake ? Math.cos(elapsed * 0.08) * 3 * quake : 0;
     ctx.save();
     ctx.translate(-left * zoom + shakeX, top + shakeY);
     ctx.scale(zoom, zoom);
-    ruins(ctx, at, heights);
-    drawTerrain(ctx, heights);
+    ruins(ctx, at, terrain);
+    drawTerrain(ctx, terrain);
     for (const m of ["X", "O"]) {
       if (state.players[m] && fighters[m].hp > 0)
-        fighterArt(ctx, fighters[m], m, at, heights);
+        fighterArt(ctx, fighters[m], m, at, terrain);
       unitOverlay(m, fighters[m], left, top, w, h, shakeX, shakeY, bottom);
     }
     if (canAim() && !inFlight) {
@@ -1255,45 +1477,37 @@ function drawFrame() {
       ctx.stroke();
       ctx.restore();
     }
-    if (inFlight) {
-      const index = Math.max(
-          0,
-          (elapsed / shot.flightMs) * (shot.path.length - 1),
-        ),
-        i = Math.min(shot.path.length - 2, Math.floor(index)),
-        t = Math.min(1, index - i),
-        a = shot.path[i],
-        b = shot.path[i + 1] || a,
-        px = a[0] + (b[0] - a[0]) * t,
-        py = a[1] + (b[1] - a[1]) * t;
+    for (const { p, at: pos } of flying) {
+      const glow =
+        p.teleport !== undefined ? "#b9f3ff" : shot.pow ? "#ff9b3d" : "#ffe07f";
       for (const [line, color] of [
         [9, "#eab84b25"],
         [4, "#fff0a799"],
       ]) {
         ctx.beginPath();
-        for (let n = Math.max(0, i - 13); n <= i; n++)
-          n === Math.max(0, i - 13)
-            ? ctx.moveTo(...shot.path[n])
-            : ctx.lineTo(...shot.path[n]);
+        const from = Math.max(0, pos.i - 13);
+        for (let n = from; n <= pos.i; n++)
+          n === from ? ctx.moveTo(...p.path[n]) : ctx.lineTo(...p.path[n]);
+        ctx.lineTo(pos.x, pos.y);
         ctx.strokeStyle = color;
         ctx.lineWidth = line;
         ctx.stroke();
       }
       ctx.save();
-      ctx.translate(px, py);
-      ctx.rotate(Math.atan2(b[1] - a[1], b[0] - a[0]));
+      ctx.translate(pos.x, pos.y);
+      ctx.rotate(pos.angle);
       ctx.shadowBlur = 16;
-      ctx.shadowColor = "#ffe07f";
-      ctx.fillStyle = "#fff7be";
+      ctx.shadowColor = glow;
+      ctx.fillStyle = p.teleport !== undefined ? "#e5fbff" : "#fff7be";
       ctx.beginPath();
       ctx.ellipse(0, 0, 7, 4, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
-      if (elapsed < 180 && !reducedMotion.matches) {
-        const p = 1 - elapsed / 180;
+      if (pos.local < 180 && !reducedMotion.matches) {
+        const q = 1 - pos.local / 180,
+          a = p.path[0];
         ctx.save();
-        ctx.globalAlpha = p;
-        const a = shot.path[0];
+        ctx.globalAlpha = q;
         polygon(
           ctx,
           [
@@ -1307,33 +1521,38 @@ function drawFrame() {
         ctx.restore();
       }
     }
-    if (impact) explosion(ctx, shot, blastProgress, fighters);
+    for (const { p, index, t } of view.blasts)
+      explosion(ctx, p, t / BLAST_MS, fighters, shot.id * 7 + index);
     ctx.restore();
-    if (impact && blastProgress < 0.2 && !reducedMotion.matches) {
-      ctx.fillStyle = `rgba(255,238,174,${(0.2 - blastProgress) * 0.4})`;
+    if (freshest >= 0 && freshest < 0.2 && !reducedMotion.matches) {
+      ctx.fillStyle = `rgba(255,238,174,${(0.2 - freshest) * 0.4})`;
       ctx.fillRect(0, 0, w, h);
     }
-    if (
-      shot &&
-      state.phase === "firing" &&
-      elapsed >= 0 &&
-      elapsed < 500 &&
-      lastShot !== shot.id
-    ) {
-      lastShot = shot.id;
-      globalThis.WebGameFeedback?.effect("shot");
-    }
-    if (
-      shot &&
-      state.phase === "firing" &&
-      elapsed >= shot.flightMs &&
-      elapsed < shot.flightMs + 650 &&
-      impactSound !== shot.id
-    ) {
-      impactSound = shot.id;
-      render();
-      if (shot.impact.type !== "miss")
-        globalThis.WebGameFeedback?.effect("hit");
+    if (view.firing) {
+      shot.projectiles.forEach((p, index) => {
+        const launch = `${shot.id}:${index}:shot`,
+          land = `${shot.id}:${index}:hit`;
+        if (
+          p.ball === 0 &&
+          elapsed >= p.startMs &&
+          elapsed < p.startMs + 500 &&
+          !played.has(launch)
+        ) {
+          played.add(launch);
+          globalThis.WebGameFeedback?.effect("shot");
+        }
+        if (
+          elapsed >= p.startMs + p.flightMs &&
+          elapsed < p.startMs + p.flightMs + 650 &&
+          !played.has(land)
+        ) {
+          played.add(land);
+          render();
+          if (p.impact.type !== "miss" && p.teleport === undefined)
+            globalThis.WebGameFeedback?.effect("hit");
+        }
+      });
+      if (played.size > 200) played.clear();
     }
     const deadline =
       state.phase === "firing"

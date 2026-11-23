@@ -4,7 +4,15 @@ const { createRoomIdentity, resolveRoomId } = require("../webGames/roomLinks");
 const { EventEmitter } = require("node:events");
 const engine = require("./engine");
 const { randomInt } = require("node:crypto");
-const { CHARACTERS, WEAPONS, MOVE } = require("./rules");
+const {
+  CHARACTERS,
+  WEAPONS,
+  ITEMS,
+  STAMINA,
+  POW_MAX,
+  WALK_COST,
+  HP,
+} = require("./rules");
 const {
   makePlayer: player,
   playerIdentityView,
@@ -38,7 +46,17 @@ const MESSAGES = {
   INVALID_ACTION: "Thao tác không hợp lệ trong giai đoạn này.",
   INVALID_CHARACTER: "Chọn Gấu, Mèo hoặc Robot.",
   ALREADY_READY: "Bạn đã sẵn sàng.",
-  INVALID_MOVE: "Mỗi bước đi phải từ 1 đến 10 và còn năng lượng.",
+  INVALID_MOVE: "Mỗi bước đi phải từ 1 đến 10 và còn thể lực.",
+  NO_STAMINA: "Không đủ thể lực cho thao tác này.",
+  FROZEN:
+    "Bạn đang bị đóng băng: lượt này không di chuyển hoặc dùng đạo cụ được.",
+  INVALID_ITEM: "Đạo cụ không hợp lệ.",
+  ITEM_USED: "Mỗi đạo cụ chỉ dùng một lần mỗi lượt.",
+  ITEM_LIMIT: "Đạo cụ này đã hết lượt dùng trong trận.",
+  ITEM_CONFLICT: "Bay không dùng chung với đạo cụ đạn hoặc tuyệt kỹ.",
+  FULL_HP: "Máu đã đầy.",
+  FLY_COOLDOWN: "Bay đang hồi, chờ thêm lượt.",
+  POW_NOT_READY: "Nộ chưa đầy 100.",
   BLOCKED_MOVE: "Không thể đi thêm theo hướng này.",
   INVALID_SHOT:
     "Góc bắn phải nằm trong vùng xanh của vũ khí theo độ nghiêng hiện tại; kiểm tra lại lực và hướng.",
@@ -56,7 +74,7 @@ function createStore(db, now = Date.now) {
     const row = db
       .prepare("SELECT data_json FROM gunny_rooms WHERE id=?")
       .get(id);
-    return row ? JSON.parse(row.data_json) : null;
+    return row ? engine.upgradeState(JSON.parse(row.data_json)) : null;
   };
   function save(room) {
     room.version++;
@@ -80,13 +98,25 @@ function createStore(db, now = Date.now) {
     dirty(room);
     return save(room);
   }
+  // The fighter with the lowest delay acts next; poison can end the match
+  // at the start of a turn.
   function nextTurn(room, at) {
-    room.turn = room.turn === "X" ? "O" : "X";
+    const last = room.turn;
+    room.turn = engine.chooseNext(room, last) || (last === "X" ? "O" : "X");
     room.turnNo++;
-    room.fighters[room.turn].moveRemaining = MOVE;
+    const report = engine.startTurn(room, room.turn);
+    room.turnReport = report;
     room.phase = "aim";
     room.turnStartedAt = at;
     engine.wind(room);
+    if (room.fighters[room.turn].hp <= 0) {
+      room.lastAction = {
+        type: "poison",
+        mark: room.turn,
+        damage: report.poison,
+      };
+      return finish(room, "poison", room.turn === "X" ? "O" : "X", at);
+    }
     startClock(room, at);
     dirty(room);
     return save(room);
@@ -128,6 +158,7 @@ function createStore(db, now = Date.now) {
       if (bank <= deadline)
         return finish(room, "timeout", room.turn === "X" ? "O" : "X", bank);
       stopClock(room, deadline);
+      engine.addDelay(room, room.turn, "timeout");
       room.lastAction = {
         type: "skip",
         mark: room.turn,
@@ -246,6 +277,8 @@ function createStore(db, now = Date.now) {
           lastAction: null,
         };
         room.turn = room.first;
+        // The second player starts one point behind so the first move is fixed.
+        room.fighters[room.first === "X" ? "O" : "X"].delay = 1;
         db.prepare(
           "INSERT INTO gunny_rooms(id,guild_id,channel_id,status,data_json) VALUES(?,?,?,?,?)",
         ).run(
@@ -307,6 +340,7 @@ function createStore(db, now = Date.now) {
           room.phase = "aim";
           room.turnNo = 1;
           room.turnStartedAt = at;
+          room.turnReport = engine.startTurn(room, room.turn);
           startClock(room, at);
         }
         dirty(room);
@@ -320,9 +354,32 @@ function createStore(db, now = Date.now) {
         room.lastInputAt = at;
         return save(room);
       }
+      if (data.type === "item" || data.type === "pow") {
+        const error =
+          data.type === "pow"
+            ? engine.usePow(room, mark)
+            : engine.useItem(room, mark, data.item);
+        if (error) fail(error);
+        room.lastInputAt = at;
+        room.lastAction = { type: data.type, mark, item: data.item || "pow" };
+        dirty(room);
+        return save(room);
+      }
+      if (data.type === "pass") {
+        stopClock(room, at);
+        engine.addDelay(room, mark, "pass");
+        room.lastInputAt = at;
+        room.lastAction = { type: "pass", mark };
+        return nextTurn(room, at);
+      }
       if (data.type !== "fire") fail("INVALID_ACTION");
       const result = engine.fire(room, mark, data);
       if (result.error) fail(result.error);
+      engine.addDelay(room, mark, "fire", {
+        weapon: data.weapon,
+        aimMs: at - room.turnStartedAt,
+        turnSeconds: normalizeRules(room.rules).turnSeconds,
+      });
       stopClock(room, at);
       room.phase = "firing";
       room.moves++;
@@ -331,7 +388,7 @@ function createStore(db, now = Date.now) {
         ...result.shot,
         id: room.moves,
         startedAt: at,
-        endsAt: at + result.shot.flightMs + 500,
+        endsAt: at + result.shot.flightMs + 900,
       };
       room.pendingOutcome = result.outcome;
       room.lastAction = {
@@ -344,6 +401,9 @@ function createStore(db, now = Date.now) {
         turn: room.turnNo,
         mark,
         weapon: data.weapon,
+        items: result.shot.items,
+        pow: result.shot.pow,
+        fly: result.shot.fly,
         damage: result.shot.damage,
       });
       room.history = room.history.slice(-12);
@@ -403,9 +463,14 @@ function createStore(db, now = Date.now) {
       me,
       ready: room.ready,
       fighters: room.fighters,
-      heights: room.heights,
+      // While a shot replays, clients rebuild the result from shot.before plus
+      // its craters, which keeps each SSE message well under 64 KB.
+      terrain: room.phase === "firing" ? null : room.terrain,
       wind: room.wind,
       weapons: WEAPONS,
+      items: ITEMS,
+      limits: { hp: HP, stamina: STAMINA, pow: POW_MAX, walkCost: WALK_COST },
+      turnReport: room.turnReport || null,
       shot: room.shot,
       history: room.history,
       lastAction: room.lastAction,
