@@ -105,37 +105,23 @@ function createState(seed) {
   wind(s);
   return s;
 }
-function blockedByOther(state, mark, x, y) {
-  return Object.entries(state.fighters).some(
-    ([side, o]) =>
-      side !== mark &&
-      o.hp > 0 &&
-      Math.abs(x - o.x) < 34 &&
-      Math.abs(y - o.y) < 40,
-  );
-}
-// One column at a time: climb steps up to 16 px, never walk into a wall or
-// under a ceiling lower than the body, and drop off ledges onto ground below.
+// Walking moves one column at a time with the shared Terrain.step rules.
 function walk(state, mark, dx) {
   if (!Number.isInteger(dx) || !dx || Math.abs(dx) > 10) return "INVALID_MOVE";
   const f = state.fighters[mark],
-    cols = state.terrain,
     sign = Math.sign(dx);
   if (f.locked) return "FROZEN";
   const budget = Math.min(Math.abs(dx), Math.floor(f.stamina / WALK_COST));
   if (budget <= 0) return "NO_STAMINA";
+  const others = Object.entries(state.fighters)
+    .filter(([side, o]) => side !== mark && o.hp > 0)
+    .map(([, o]) => o);
   let moved = 0;
   for (let i = 0; i < budget; i++) {
-    const x = f.x + sign;
-    if (x < 16 || x > WIDTH - 17) break;
-    // A solid cell just above the feet is a step (or a wall); otherwise this
-    // returns the ground at or below the feet, so walking off a ledge drops.
-    const y = Terrain.support(cols, x, f.y - 1);
-    if (y === null || y >= HEIGHT || f.y - y > CLIMB) break;
-    if (!Terrain.headroom(cols, x, y) || blockedByOther(state, mark, x, y))
-      break;
-    f.x = x;
-    f.y = y;
+    const next = Terrain.step(state.terrain, f, sign, others, CLIMB);
+    if (!next) break;
+    f.x = next.x;
+    f.y = next.y;
     moved++;
   }
   if (!moved) return "BLOCKED_MOVE";

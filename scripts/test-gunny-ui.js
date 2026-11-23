@@ -427,12 +427,62 @@ async function main() {
     [0, 100, true],
     "The read-only power bar displays the complete percent range",
   );
+  // Holding D walks continuously with client prediction; W/S tilt the barrel.
+  await evaluate("document.activeElement?.blur()");
+  const walkStart = await evaluate(
+    "({x:state.fighters.X.x,stamina:state.fighters.X.stamina})",
+  );
+  await send("Input.dispatchKeyEvent", {
+    type: "keyDown",
+    key: "d",
+    code: "KeyD",
+    windowsVirtualKeyCode: 68,
+  });
+  await delay(250);
+  const midWalk = await evaluate("scene(Date.now()+offset).fighters.X.x");
+  await delay(200);
+  await send("Input.dispatchKeyEvent", {
+    type: "keyUp",
+    key: "d",
+    code: "KeyD",
+    windowsVirtualKeyCode: 68,
+  });
+  assert(midWalk > walkStart.x, "Prediction moves while the key is held");
+  await until("!walkBusy && !walkQueue.unsent && !walking && !pending");
+  const walked = await evaluate(
+    "({x:state.fighters.X.x,stamina:state.fighters.X.stamina,direction,predicted:scene(Date.now()+offset).fighters.X.x})",
+  );
+  const steps = walked.x - walkStart.x;
+  assert(steps >= 15 && steps <= 45, "Held walk covers ~60/s: " + steps);
+  assert.equal(walked.stamina, walkStart.stamina - steps * 2);
+  assert.equal(walked.predicted, walked.x, "Prediction matches the server");
+  assert.equal(walked.direction, 1);
+  await evaluate('$("angle").value=45;$("angle").oninput()');
+  const angleBefore = await evaluate('Number($("angle").value)');
+  await key("w", "KeyW", 87);
+  await key("w", "KeyW", 87);
+  await key("s", "KeyS", 83);
+  assert.equal(await evaluate('Number($("angle").value)'), angleBefore + 1);
+  await key("ArrowUp", "ArrowUp", 38);
+  assert.equal(
+    await evaluate('Number($("angle").value)'),
+    angleBefore + 1,
+    "Arrow keys no longer change the angle",
+  );
   // Items: shared stamina, armed state and the POW button.
   assert.equal(await evaluate('$("pow").disabled'), true, "POW needs 100");
   assert.match(await evaluate('$("pow").textContent'), /NỘ 0/);
+  assert.equal(
+    await evaluate('$("items").querySelectorAll("svg use").length'),
+    7,
+    "Every item button shows its icon",
+  );
   await click('[data-item="triple"]', true);
   await until("!pending && state.fighters.X.armed.triple===true");
-  assert.equal(await evaluate("state.fighters.X.stamina"), 90);
+  assert.equal(
+    await evaluate("state.fighters.X.stamina"),
+    walked.stamina - 100,
+  );
   assert.equal(
     await evaluate(
       '$("items").querySelector("[data-item=triple]").classList.contains("armed")',

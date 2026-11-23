@@ -1,5 +1,19 @@
 [
   {
+    "id": "1adef08c-834d-4c39-afa7-e5681646429c",
+    "updatedAt": "2026-11-23T11:03:59.945Z",
+    "auditedAt": "2026-11-23T11:03:59.945Z",
+    "title": "Gunny: icon đạo cụ, giữ phím để đi, W/S chỉnh góc",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Thêm bộ icon riêng cho 7 đạo cụ: Đạn chùm ×3, Bắn liên tiếp ×2, Tăng lực, Đạn băng, Đạn độc, Hồi máu và Bay",
+      "Giữ A/D hoặc giữ nút ◀ ▶ để đi liên tục; nhân vật di chuyển mượt ngay trên màn hình, chạm nhanh vẫn đi 5 bước",
+      "Chỉnh góc bắn bằng W/S thay cho phím mũi tên",
+      "Giảm giật khi di chuyển: không vẽ lại địa hình nếu mặt đất không đổi"
+    ]
+  },
+  {
     "id": "3b5fbb2f-e542-4b57-9db8-04907ba9ffbf",
     "updatedAt": "2026-11-23T10:56:11.600Z",
     "auditedAt": "2026-11-23T10:56:11.600Z",
