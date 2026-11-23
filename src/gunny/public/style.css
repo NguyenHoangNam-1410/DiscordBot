@@ -1501,3 +1501,146 @@ dialog .close {
     font-size: 7px;
   }
 }
+/* Player verification: highlight until confirmed, guided steps, big code. */
+@keyframes verify-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 #ffd56b99,
+      0 0 0 0 #ffd56b55;
+  }
+  50% {
+    box-shadow:
+      0 0 0 4px #ffd56b66,
+      0 0 14px 6px #ffd56b33;
+  }
+}
+.header-actions #account.needs-verify {
+  position: relative;
+  border-color: #ffe08a;
+  background: linear-gradient(#a9873f, #6b5a2c);
+  color: #fff6d2;
+  animation: verify-pulse 1.6s ease-in-out infinite;
+}
+.header-actions #account.needs-verify::after {
+  content: "!";
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #e5533b;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 15px;
+  text-align: center;
+  box-shadow: 0 0 0 2px #1b332e;
+}
+.attention {
+  animation: verify-pulse 1.6s ease-in-out infinite;
+  border-color: #ffe7a0;
+}
+.verify-cta {
+  margin-top: 10px;
+  padding: 9px 12px;
+  font-size: 13px;
+}
+.account-dialog {
+  width: min(440px, 94vw);
+}
+.account-dialog h2 {
+  margin: 0 0 6px;
+}
+.pair-steps {
+  list-style: none;
+  padding: 0;
+  margin: 12px 0 14px;
+}
+.pair-steps li {
+  position: relative;
+  margin: 7px 0;
+  padding: 8px 10px 8px 42px;
+  border: 1px solid #5d7458;
+  border-radius: 10px;
+  background: #1c3a34aa;
+}
+.pair-steps li > span {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #d9bf73;
+  color: #233a2f;
+  font-weight: 900;
+  font-size: 12px;
+  line-height: 22px;
+  text-align: center;
+}
+.account-dialog #connect-player {
+  padding: 11px;
+  font-size: 14px;
+}
+.pair-panel {
+  margin-top: 14px;
+  padding: 12px;
+  text-align: center;
+  border: 1px dashed #d2bc7d;
+  border-radius: 12px;
+  background: #102b2a99;
+}
+.pair-label {
+  font-size: 10px !important;
+  letter-spacing: 3px;
+  color: var(--gold);
+  margin: 0;
+}
+.pair-panel #pair-code {
+  font-size: 34px;
+  letter-spacing: 6px;
+  margin: 4px 0;
+  color: #fff0b0;
+  font-variant-numeric: tabular-nums;
+}
+.pair-expiry {
+  font-size: 11px !important;
+  color: #ffd77a;
+  margin: 0;
+}
+.danger-zone {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid #ffffff22;
+}
+.danger-zone .danger {
+  width: 100%;
+  margin-top: 6px;
+}
+.leave-dialog {
+  width: min(380px, 94vw);
+  text-align: center;
+}
+.leave-dialog .actions {
+  justify-content: center;
+}
+.leave-dialog .actions button {
+  flex: 1;
+  padding: 10px;
+}
+.leave-dialog #keep-playing {
+  background: linear-gradient(#a6bc6d, #4a733f);
+  border-color: #dacd89;
+  color: #fff9d9;
+  font-weight: 850;
+}
+@media (prefers-reduced-motion: reduce) {
+  .attention,
+  .header-actions #account.needs-verify {
+    animation: none;
+    box-shadow: 0 0 0 3px #ffd56b88;
+  }
+}

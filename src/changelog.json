@@ -1,5 +1,18 @@
 [
   {
+    "id": "6f1ce026-56c8-48ae-ac8d-5aa46220d9c5",
+    "updatedAt": "2026-11-23T16:20:59.961Z",
+    "auditedAt": "2026-11-23T16:20:59.961Z",
+    "title": "Gunny: xác nhận người chơi rõ ràng, đầu hàng luôn hỏi lại",
+    "type": "improvement",
+    "scope": "system",
+    "changes": [
+      "Khi chưa xác nhận người chơi, nút tài khoản nhấp nháy kèm dấu ! và có nút Xác nhận người chơi ngay trên màn hình",
+      "Hộp xác nhận hướng dẫn 3 bước, hiện mã lớn kèm thời gian hết hạn và nút lấy mã mới",
+      "Đầu hàng và hủy phòng luôn cần xác nhận lại; mặc định chọn Chơi tiếp, Esc hoặc đóng hộp sẽ hủy"
+    ]
+  },
+  {
     "id": "fcddc675-e818-405b-8e0f-c1a939a951b7",
     "updatedAt": "2026-11-23T13:00:59.221Z",
     "auditedAt": "2026-11-23T13:00:59.221Z",

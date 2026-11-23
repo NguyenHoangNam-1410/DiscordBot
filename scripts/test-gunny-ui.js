@@ -697,12 +697,57 @@ async function main() {
   await screenshot("gunny-impact.png");
   await until('state.phase==="aim" && state.turn==="O"');
   assert.equal(await evaluate('$("fire").disabled'), true);
+  // Surrender always needs the explicit confirm button.
+  assert.equal(
+    await evaluate('$("account").classList.contains("needs-verify")'),
+    false,
+    "Verified players are not nagged",
+  );
+  await click("#account", true);
+  assert.equal(await evaluate('$("danger-zone").hidden'), false);
+  await click("#leave", true);
+  assert.deepEqual(
+    await evaluate(
+      '[$("account-dialog").open,$("leave-dialog").open,document.activeElement.id]',
+    ),
+    [false, true, "keep-playing"],
+    "Leave opens only the confirmation, focused on Chơi tiếp",
+  );
+  await click("#keep-playing", true);
+  await until('!$("leave-dialog").open');
+  await evaluate('$("confirm-leave").click()');
+  await delay(300);
+  assert.equal(
+    await evaluate("state.status"),
+    "playing",
+    "Chơi tiếp keeps playing; an unarmed confirm does nothing",
+  );
+  await click("#account", true);
+  await click("#leave", true);
+  await key("Escape", "Escape", 27);
+  await until('!$("leave-dialog").open');
+  assert.equal(await evaluate("state.status"), "playing");
   // Audience can watch with no player controls, reload restores live battle.
   await send("Network.clearBrowserCookies");
   await send("Page.reload");
   await until('typeof state!=="undefined" && state?.me===null && connected');
   assert.equal(await evaluate('$("aim").hidden'), true);
   assert.equal(await evaluate('$("setup").hidden'), true);
+  assert.equal(
+    await evaluate('$("account").classList.contains("needs-verify")'),
+    true,
+    "Unverified viewers see the highlighted account button",
+  );
+  assert.equal(await evaluate('$("verify-cta").hidden'), false);
+  await click("#verify-cta", true);
+  assert.deepEqual(
+    await evaluate(
+      '[$("account-dialog").open,$("pair-steps").hidden,$("connect-player").hidden,$("connect-player").classList.contains("attention"),$("danger-zone").hidden]',
+    ),
+    [true, false, false, true, true],
+  );
+  await screenshot("gunny-verify.png");
+  await click('[data-close="account-dialog"]', true);
   room = fixture.store.get(fixture.room.id);
   room = fixture.store.move(
     room.id,
