@@ -9,14 +9,14 @@ Mở bằng `/gunny choi [nguoitruoc] [thoigian] [luot]` hoặc `!gunny choi`. N
 
 ## Luật đã triển khai
 
-Nhân vật chỉ khác ngoại hình; mỗi bên 100 HP và 200 **thể lực** mỗi lượt (đi bộ và đạo cụ dùng chung, mỗi pixel đi bộ tốn 2). Chọn hướng, góc nâng và vũ khí rồi giữ nút Bắn hoặc Space để canh lực. Thanh lực chạy 0 → 100% trong 2,5 giây, giảm 100 → 0% trong 2,5 giây và lặp lại liên tục tới khi thả; mỗi lần giữ bắt đầu từ 0%. Thả ở mức nào thì bắn với lực ở mức đó, kể cả 0%; Esc, mất focus hoặc hủy thao tác sẽ không bắn. Lực được lấy lại chính xác lúc thả, không phụ thuộc khung hình cuối. Thanh lực là chỉ báo, không kéo chỉnh bằng tay. Sau mỗi phát bắn, đồng hồ góc giữ một kim trắng mờ (nét đứt) theo hướng nòng của phát trước và thanh lực giữ một vạch trắng mờ ở mức lực trước đó; hai vệt này chỉ thay đổi khi bắn phát mới (rê chuột vào vạch để xem góc và % lực). Máy chủ dùng tốc độ lực 0–20 tương ứng 0–100%, giữ nguyên tốc độ tối đa. Giữ A/D (hoặc giữ nút ◀ ▶) để đi liên tục khoảng 60 đơn vị/giây, chạm nhanh đi 5 bước; giữ W/S để nâng/hạ góc. Trình duyệt dự đoán đường đi bằng đúng luật bước chân của máy chủ (`Terrain.step`) nên nhân vật đi mượt ngay, và gửi lên máy chủ từng gói tối đa 10 bước, mỗi lúc một yêu cầu; máy chủ vẫn là kết quả cuối cùng. Di chuyển chỉ trừ quãng đường thực tế: leo được bậc tối đa 16 đơn vị, không đi xuyên vách, không chui dưới trần thấp hơn thân, đi ra mép đảo/hang thì rơi xuống nền bên dưới (cột không còn đất bên dưới thì bị chặn).
+Nhân vật chỉ khác ngoại hình; mỗi bên 500 HP và 200 **thể lực** mỗi lượt (đi bộ và đạo cụ dùng chung, mỗi pixel đi bộ tốn 2). Chọn hướng, góc nâng và vũ khí rồi giữ nút Bắn hoặc Space để canh lực. Thanh lực chạy 0 → 100% trong 2,5 giây, giảm 100 → 0% trong 2,5 giây và lặp lại liên tục tới khi thả; mỗi lần giữ bắt đầu từ 0%. Thả ở mức nào thì bắn với lực ở mức đó, kể cả 0%; Esc, mất focus hoặc hủy thao tác sẽ không bắn. Lực được lấy lại chính xác lúc thả, không phụ thuộc khung hình cuối. Thanh lực là chỉ báo, không kéo chỉnh bằng tay. Sau mỗi phát bắn, đồng hồ góc giữ một kim trắng mờ (nét đứt) theo hướng nòng của phát trước và thanh lực giữ một vạch trắng mờ ở mức lực trước đó; hai vệt này chỉ thay đổi khi bắn phát mới (rê chuột vào vạch để xem góc và % lực). Máy chủ dùng tốc độ lực 0–20 tương ứng 0–100%, giữ nguyên tốc độ tối đa. Giữ A/D (hoặc giữ nút ◀ ▶) để đi liên tục khoảng 60 đơn vị/giây, chạm nhanh đi 5 bước; giữ W/S để nâng/hạ góc. Trình duyệt dự đoán đường đi bằng đúng luật bước chân của máy chủ (`Terrain.step`) nên nhân vật đi mượt ngay, và gửi lên máy chủ từng gói tối đa 10 bước, mỗi lúc một yêu cầu; máy chủ vẫn là kết quả cuối cùng. Di chuyển chỉ trừ quãng đường thực tế: leo được bậc tối đa 16 đơn vị, không đi xuyên vách, không chui dưới trần thấp hơn thân, đi ra mép đảo/hang thì rơi xuống nền bên dưới (cột không còn đất bên dưới thì bị chặn).
 
-| Vũ khí       | Sát thương trực tiếp | Bán kính nổ | Đạn/người | Góc nâng theo thân | Trọng lực |  Gió | Cản khí | Delay |
-| ------------ | -------------------: | ----------: | --------: | -----------------: | --------: | ---: | ------: | ----: |
-| Đạn thường   |                   25 |          20 |    Vô hạn |              0–90° |        1× |   1× |      1× |   200 |
-| Lựu đạn      |                   40 |          35 |         3 |             20–80° |        1× | 1,2× |    1,2× |   280 |
-| Tên lửa      |                   50 |          25 |         2 |             10–70° |      0,5× | 0,6× |    0,5× |   320 |
-| Bom hạt nhân |                   80 |          60 |         1 |             30–75° |        1× | 0,8× |      1× |   500 |
+| Vũ khí       | Sát thương trực tiếp | Bán kính nổ | Đạn/người | Góc nâng theo thân | Khối lượng | Trọng lượng | Gió | Cản | Delay |
+| ------------ | -------------------: | ----------: | --------: | -----------------: | ---------: | ----------: | --: | --: | ----: |
+| Đạn thường   |                   25 |          20 |    Vô hạn |              0–90° |          1 |           1 |   1 |   1 |   200 |
+| Lựu đạn      |                   40 |          35 |         3 |             20–80° |        0,9 |         1,1 | 1,2 | 1,3 |   280 |
+| Tên lửa      |                   50 |          25 |         2 |             10–70° |        1,2 |         0,5 | 0,6 | 0,6 |   320 |
+| Bom hạt nhân |                   80 |          60 |         1 |             30–75° |          2 |        1,05 |   1 |   1 |   500 |
 
 Nhân vật nghiêng theo tiếp tuyến mặt đất dưới hai chân (lấy mẫu cách tâm 16 đơn vị mỗi bên và làm mượt mỗi đầu bằng 5 cột). Khi di chuyển, quay hướng hoặc địa hình bị khoét, tư thế và đồng hồ cập nhật theo địa hình hiện tại. Mảng đen mờ là nửa mặt phẳng đất; vòng xanh thể hiện vùng ngắm hợp lệ của vũ khí; kim đỏ chỉ hướng nòng thực tế. Số màu xanh dương là góc bắn **so với phương ngang**, có thể âm hoặc lớn hơn 90° trên dốc.
 
@@ -28,7 +28,7 @@ Gọi độ nghiêng mặt đất là β (dương khi lên dốc về phải), g
 
 ### Vật lý và sát thương
 
-Bước cố định 60 Hz: vận tốc đầu = lực × 0,55; trọng lực 0,15; gió 0,01 × sức gió (−3…3) × hệ số gió của đạn; cản khí 0,12% vận tốc mỗi bước × hệ số cản. Đạn thường lực tối đa 45°, không gió bay khoảng 760 đơn vị (hai người cách nhau 640). Sát thương giảm tuyến tính từ 100% ở tâm xuống 50% ở mép bán kính nổ; trúng thẳng thân luôn đủ 100%. Bạo kích 8%, ×1,5 (theo RNG của phòng nên phát lại giống hệt). Tự trúng nổ chỉ nhận 50% và không bao giờ tự hạ mình (còn tối thiểu 1 HP); rơi khỏi bản đồ vẫn thua. HP về 0, rơi khỏi bản đồ hoặc gục vì độc là thua; cả hai cùng bị loại là hòa.
+Mô hình bay theo kiểu Gunny cổ điển: **mọi vũ khí ném cùng một lực**. Lực ném F = % lực × 760 (đơn vị/giây) là vận tốc đầu (vx = F·cos θ, vy = F·sin θ). Mỗi bước 0,04 giây tính gia tốc a = (lực tác dụng − cản khí × v) / khối lượng cho từng trục: lực dọc = 420 × trọng lượng × khối lượng, lực ngang = 22 × sức gió (−3…3) × hệ số gió; cản khí = 0,06 × hệ số cản. Vì vậy đạn nặng (bom) ít bị gió và cản khí đẩy lệch, tên lửa trọng lượng thấp bay xa và thẳng hơn, lựu đạn nhẹ chịu gió và cản nhiều hơn. Đạn thường lực tối đa 45°, không gió bay khoảng 1240 đơn vị trong ~2,5 giây (hai người cách nhau 640). Sát thương giảm tuyến tính từ 100% ở tâm xuống 50% ở mép bán kính nổ; trúng thẳng thân luôn đủ 100%. Bạo kích 8%, ×1,5 (theo RNG của phòng nên phát lại giống hệt). Tự trúng nổ chỉ nhận 50% và không bao giờ tự hạ mình (còn tối thiểu 1 HP); rơi khỏi bản đồ vẫn thua. HP về 0, rơi khỏi bản đồ hoặc gục vì độc là thua; cả hai cùng bị loại là hòa.
 
 ### Đạo cụ (tốn thể lực, cộng delay)
 
@@ -41,7 +41,7 @@ Mỗi đạo cụ dùng tối đa một lần mỗi lượt, trước khi bắn.
 | Tăng lực         |      60 |    80 | +30% sát thương                                                               |
 | Đạn băng         |      80 |   100 | Mục tiêu trúng đạn bị đóng băng 1 lượt                                        |
 | Đạn độc          |      70 |    90 | Mục tiêu trúng đạn mất 6 HP đầu mỗi lượt của họ, 3 lượt                       |
-| Hồi máu          |      90 |   100 | +25 HP ngay (tối đa 100), 2 lần mỗi trận                                      |
+| Hồi máu          |      90 |   100 | +25 HP ngay (không vượt máu tối đa), 2 lần mỗi trận                           |
 | Bay              |     120 |   150 | Phát bắn không gây sát thương/không đào; bạn bay tới điểm đạn rơi; hồi 2 lượt |
 
 Thể lực 200 nên ×3 và ×2 không dùng chung được. Bay không dùng chung với đạo cụ đạn hoặc tuyệt kỹ; bay ra ngoài bản đồ thì giữ nguyên chỗ.

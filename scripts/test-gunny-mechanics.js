@@ -58,7 +58,7 @@ const legal = (s, mark, weapon, direction, local) =>
   T.carve(s.terrain, 480, 380, 32);
   E.settle(s);
   assert(s.fighters.X.y > 400, "losing the ground drops you into the cave");
-  assert.equal(s.fighters.X.hp, 100, "falling into a cave is not damage");
+  assert.equal(s.fighters.X.hp, R.HP, "falling into a cave is not damage");
   for (let x = 470; x <= 490; x++) s.terrain[x] = [];
   assert.deepEqual(E.settle(s), ["X"], "nothing below: fall out of the map");
   assert.equal(s.fighters.X.hp, 0);
@@ -98,7 +98,7 @@ const legal = (s, mark, weapon, direction, local) =>
     range = (weapon, angle, wind = 0, windFactor) => {
       s.wind = wind;
       const w = R.WEAPONS[weapon],
-        v = 20 * R.PHYSICS.speed,
+        v = R.PHYSICS.maxForce,
         a = (angle * Math.PI) / 180;
       return (
         E.flight(
@@ -112,9 +112,12 @@ const legal = (s, mark, weapon, direction, local) =>
       );
     };
   const basic = range("basic", 45);
-  assert(basic > 700 && basic < 820, `basic max range ${basic}`);
+  assert(basic > 1150 && basic < 1350, `basic max range ${basic}`);
+  // Every weapon shares the throw force; only mass/weight/wind/drag differ.
+  for (const w of Object.values(R.WEAPONS))
+    assert(w.mass > 0 && w.weight > 0 && !("speed" in w));
   assert(range("basic", 45) > range("basic", 65), "45° outranges 65°");
-  assert(range("missile", 45) > basic * 1.6, "missile flies flatter");
+  assert(range("missile", 45) > basic * 1.2, "missile flies flatter");
   assert(range("grenade", 45) < basic, "grenade has more drag");
   assert(range("basic", 45, 3) > basic + 40, "tailwind carries further");
   assert(range("basic", 45, -3) < basic - 40, "headwind shortens");
@@ -206,7 +209,7 @@ const legal = (s, mark, weapon, direction, local) =>
   assert.equal(E.useItem(s, "X", "fly"), "ITEM_CONFLICT");
   assert.equal(E.useItem(s, "X", "heal"), "FULL_HP");
   f.hp = 50;
-  assert.equal(E.useItem(s, "X", "heal"), null, "heal fits the 100 left");
+  assert.equal(E.useItem(s, "X", "heal"), null, "heal fits the stamina left");
   assert.equal(f.hp, 50 + R.HEAL);
   assert.equal(f.stamina, R.STAMINA - R.ITEMS.triple.cost - R.ITEMS.heal.cost);
   assert.equal(E.useItem(s, "X", "power"), "NO_STAMINA");

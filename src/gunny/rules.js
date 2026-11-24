@@ -2,7 +2,7 @@
 const { timeMinutes } = require("../webGames/clock");
 const WIDTH = 1600,
   HEIGHT = 600,
-  HP = 100,
+  HP = 500,
   STAMINA = 200,
   WALK_COST = 2,
   POW_MAX = 100;
@@ -14,13 +14,17 @@ const DELAY = Object.freeze({
   pass: 400,
   timeout: 900,
 });
-// Projectile physics at a fixed 60 Hz step: v = power * SPEED per tick,
-// gravity and wind are accelerations, drag is a per-tick velocity loss.
+// Classic Gunny projectile model: every weapon leaves the barrel with the same
+// throw force (initial speed in px/s, vx = F·cos, vy = F·sin), then each
+// 0.04 s Euler step applies a = (force − air·v) / mass on both axes, where the
+// vertical force is gravity × weight × mass and the horizontal one is
+// wind × windFactor. Weapons differ only by mass, weight, wind and drag.
 const PHYSICS = Object.freeze({
-  speed: 0.55,
-  gravity: 0.15,
-  wind: 0.01,
-  drag: 0.0012,
+  dt: 0.04,
+  maxForce: 760, // px/s at 100% power
+  gravity: 420, // px/s² for weight 1
+  wind: 22, // px/s² per wind unit for windFactor 1 and mass 1
+  air: 0.06, // air resistance per second for drag 1
 });
 const DAMAGE = Object.freeze({
   edge: 0.5, // fraction of damage left at the edge of the blast radius
@@ -38,7 +42,8 @@ const WEAPONS = Object.freeze({
     damage: 25,
     radius: 20,
     ammo: -1,
-    gravity: 1,
+    mass: 1,
+    weight: 1,
     windFactor: 1,
     drag: 1,
     delay: 200,
@@ -50,9 +55,10 @@ const WEAPONS = Object.freeze({
     damage: 40,
     radius: 35,
     ammo: 3,
-    gravity: 1,
+    mass: 0.9,
+    weight: 1.1,
     windFactor: 1.2,
-    drag: 1.2,
+    drag: 1.3,
     delay: 280,
   },
   missile: {
@@ -62,9 +68,10 @@ const WEAPONS = Object.freeze({
     damage: 50,
     radius: 25,
     ammo: 2,
-    gravity: 0.5,
+    mass: 1.2,
+    weight: 0.5,
     windFactor: 0.6,
-    drag: 0.5,
+    drag: 0.6,
     delay: 320,
   },
   nuke: {
@@ -74,8 +81,9 @@ const WEAPONS = Object.freeze({
     damage: 80,
     radius: 60,
     ammo: 1,
-    gravity: 1,
-    windFactor: 0.8,
+    mass: 2,
+    weight: 1.05,
+    windFactor: 1,
     drag: 1,
     delay: 500,
   },
@@ -121,7 +129,7 @@ const ITEMS = Object.freeze({
     cost: 90,
     delay: 100,
     perMatch: 2,
-    description: "Hồi ngay 25 HP (tối đa 100). Mỗi trận dùng 2 lần.",
+    description: "Hồi ngay 25 HP (không vượt máu tối đa). Mỗi trận dùng 2 lần.",
   },
   fly: {
     name: "Bay",
