@@ -148,27 +148,31 @@ function crater(terrain, x, y, r) {
   return Terrain.carve(terrain, x, y, r);
 }
 const round2 = (v) => Math.round(v * 100) / 100;
+// One projectile: semi-implicit Euler at PHYSICS.dt with mass, weight, wind
+// and air resistance. Collisions are swept in ≤3 px sub-steps.
 function flight(state, mark, start, velocity, w, windFactor) {
   const bodies = Object.entries(state.fighters)
       .filter(([side, f]) => side !== mark && f.hp > 0)
       .map(([side, f]) => [side, Aim.bodyCenter(state.terrain, f)]),
-    drag = PHYSICS.drag * w.drag;
+    { dt } = PHYSICS,
+    mass = w.mass,
+    air = PHYSICS.air * w.drag,
+    fy = PHYSICS.gravity * w.weight * mass,
+    fx = state.wind * PHYSICS.wind * windFactor;
   let { x, y } = start,
     { vx, vy } = velocity,
     impact = null,
-    ticks = 0;
+    steps = 0;
   const path = [[x, y]];
-  for (; ticks < 900 && !impact; ticks++) {
-    vx += state.wind * PHYSICS.wind * windFactor;
-    vy += PHYSICS.gravity * w.gravity;
-    vx -= vx * drag;
-    vy -= vy * drag;
-    const nx = x + vx,
-      ny = y + vy,
-      steps = Math.max(1, Math.ceil(Math.hypot(vx, vy) / 3));
-    for (let step = 1; step <= steps; step++) {
-      const px = x + ((nx - x) * step) / steps,
-        py = y + ((ny - y) * step) / steps;
+  for (; steps < 375 && !impact; steps++) {
+    vx += ((fx - air * vx) / mass) * dt;
+    vy += ((fy - air * vy) / mass) * dt;
+    const nx = x + vx * dt,
+      ny = y + vy * dt,
+      sub = Math.max(1, Math.ceil(Math.hypot(nx - x, ny - y) / 3));
+    for (let i = 1; i <= sub; i++) {
+      const px = x + ((nx - x) * i) / sub,
+        py = y + ((ny - y) * i) / sub;
       const hit = bodies.find(
         ([, b]) => Math.hypot(px - b.x, py - b.y) <= HIT_RADIUS,
       );
@@ -187,13 +191,13 @@ function flight(state, mark, start, velocity, w, windFactor) {
     }
     x = nx;
     y = ny;
-    if (ticks % 2 === 0) path.push([round2(x), round2(y)]);
+    path.push([round2(x), round2(y)]);
   }
   if (!impact) impact = { type: "miss", x, y };
   impact.x = round2(impact.x);
   impact.y = round2(impact.y);
   path.push([impact.x, impact.y]);
-  return { path, impact, ticks };
+  return { path, impact, ticks: steps, ms: Math.round(steps * dt * 1000) };
 }
 // Damage keeps half its strength at the blast edge; a direct hit lands in full.
 function blastDamage(base, distance, radius, direct) {
@@ -380,7 +384,7 @@ function fire(state, mark, data) {
     const flights = spread.angles
       .map((offset, ball) => {
         const world = ((g.world + offset) * Math.PI) / 180,
-          speed = power * PHYSICS.speed * spread.power[ball];
+          speed = (power / 20) * PHYSICS.maxForce * spread.power[ball];
         return {
           ball,
           ...flight(
@@ -396,7 +400,7 @@ function fire(state, mark, data) {
       .sort((a, b) => a.ticks - b.ticks || a.ball - b.ball);
     let end = clock;
     for (const sim of flights) {
-      const flightMs = Math.max(120, Math.round((sim.ticks * 1000) / 60)),
+      const flightMs = Math.max(120, sim.ms),
         entry = {
           volley,
           ball: sim.ball,

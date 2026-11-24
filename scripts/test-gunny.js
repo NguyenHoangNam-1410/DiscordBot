@@ -3,7 +3,13 @@ const assert = require("node:assert/strict");
 process.env.DB_PATH = ":memory:";
 const { db } = require("../src/db"),
   E = require("../src/gunny/engine"),
-  { normalizeRules, WEAPONS, PHYSICS, STAMINA } = require("../src/gunny/rules"),
+  {
+    normalizeRules,
+    WEAPONS,
+    PHYSICS,
+    STAMINA,
+    HP,
+  } = require("../src/gunny/rules"),
   Terrain = require("../src/gunny/public/terrain"),
   { createStore } = require("../src/gunny/store"),
   { createGame } = require("../src/gunny/webGame"),
@@ -140,11 +146,11 @@ async function main() {
     assert.deepEqual(s, clone);
     assert.equal(a.shot.impact.target, "O");
     const direct = Math.min(
-      100,
+      HP,
       a.shot.crit.O ? Math.round(w.damage * 1.5) : w.damage,
     );
     assert.equal(a.shot.damage.O, direct);
-    assert.equal(s.fighters.O.hp, 100 - direct);
+    assert.equal(s.fighters.O.hp, HP - direct);
     // Body hits explode 20 px above the feet: small blasts may not reach the ground.
     if (w.radius >= 35) assert.notDeepEqual(s.terrain, a.shot.before.terrain);
     assert(a.shot.path.every((p) => p.every(Number.isFinite)));
@@ -234,16 +240,15 @@ async function main() {
       );
       const dx = result.shot.path[1][0] - result.shot.path[0][0],
         dy = result.shot.path[1][1] - result.shot.path[0][1],
-        v = 10 * PHYSICS.speed,
-        keep = 1 - PHYSICS.drag;
+        // Same throw force for every weapon: power 10 of 20 is half of
+        // maxForce, then one Euler step of a = (F − air·v) / mass (mass 1).
+        v = (10 / 20) * PHYSICS.maxForce,
+        { dt, air, gravity } = PHYSICS,
+        vx = v * Math.cos((world * Math.PI) / 180),
+        vy = -v * Math.sin((world * Math.PI) / 180);
+      assert(Math.abs(dx - (vx - air * vx * dt) * dt) < 0.02);
       assert(
-        Math.abs(dx - v * Math.cos((world * Math.PI) / 180) * keep) < 0.02,
-      );
-      assert(
-        Math.abs(
-          dy -
-            (-v * Math.sin((world * Math.PI) / 180) + PHYSICS.gravity) * keep,
-        ) < 0.02,
+        Math.abs(dy - (vy + (gravity - air * vy) * dt) * dt) < 0.02,
         "Authoritative projectile follows the displayed bearing",
       );
     }
@@ -309,7 +314,7 @@ async function main() {
       ),
       "Terrain columns stay sorted, disjoint integer runs",
     );
-    assert(Object.values(a.fighters).every((f) => f.hp >= 0 && f.hp <= 100));
+    assert(Object.values(a.fighters).every((f) => f.hp >= 0 && f.hp <= HP));
   }
   let r = make();
   assert.match(r.roomCode, /^[a-f0-9]{8}$/i);

@@ -263,7 +263,7 @@
     name: "Gunny",
     summary: "Ngắm theo gió, bắn phá địa hình và hạ gục đối thủ.",
     setup: [
-      "Mỗi người chọn Gấu, Mèo hoặc Robot rồi Sẵn sàng trong 3 phút. Nhân vật chỉ khác ngoại hình, cùng 100 HP.",
+      "Mỗi người chọn Gấu, Mèo hoặc Robot rồi Sẵn sàng trong 3 phút. Nhân vật chỉ khác ngoại hình, cùng 500 HP.",
       "Mỗi người có đạn thường vô hạn, 3 lựu đạn, 2 tên lửa và 1 bom hạt nhân.",
       "Bản đồ 2D có đồi và đảo nổi; nổ khoét đất tạo hang, đường hầm và mái treo.",
     ],

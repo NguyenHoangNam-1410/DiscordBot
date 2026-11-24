@@ -1,5 +1,18 @@
 [
   {
+    "id": "0ba88a8a-453b-44f7-819b-0fa1144ae545",
+    "updatedAt": "2026-11-24T03:58:20.958Z",
+    "auditedAt": "2026-11-24T03:58:20.958Z",
+    "title": "Gunny: 500 máu, lực ném mạnh hơn và đồng nhất",
+    "type": "balance",
+    "scope": "system",
+    "changes": [
+      "Máu mặc định mỗi người chơi tăng từ 100 lên 500",
+      "Cả 4 vũ khí ném cùng một lực; lực ném mạnh hơn: đạn thường lực tối đa, góc 45°, không gió bay khoảng 1240 thay vì 760",
+      "Đường bay tính theo khối lượng, trọng lượng, gió và cản khí của từng loại đạn: bom nặng ít bị gió đẩy, tên lửa bay xa và thẳng, lựu đạn nhẹ chịu gió và cản nhiều hơn"
+    ]
+  },
+  {
     "id": "3408f2be-58dc-45a3-8428-97218efa818d",
     "updatedAt": "2026-11-23T16:25:24.658Z",
     "auditedAt": "2026-11-23T16:25:24.658Z",

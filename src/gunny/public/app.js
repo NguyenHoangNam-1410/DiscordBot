@@ -337,6 +337,7 @@ async function walkSettled() {
   for (let n = 0; n < 200 && (walkBusy || walkQueue.segments.length); n++)
     await new Promise((r) => setTimeout(r, 25));
 }
+const maxHp = () => state?.limits?.hp || 500;
 function canAim() {
   return !!(
     state?.me &&
@@ -427,7 +428,7 @@ function render() {
       "active",
       state.status === "playing" && state.turn === m,
     );
-    $("hp-" + m).style.width = displayFighters[m].hp + "%";
+    $("hp-" + m).style.width = (displayFighters[m].hp / maxHp()) * 100 + "%";
     $("score-" + m).textContent = displayFighters[m].hp + " HP";
     $("delay-" + m).textContent =
       state.status === "playing" ? `Delay ${state.fighters[m].delay ?? 0}` : "";
@@ -534,7 +535,7 @@ function render() {
   renderAccount(me, open);
   $("rule-badges").replaceChildren(
     ...[
-      `${limits.hp ?? 100} HP`,
+      `${maxHp()} HP`,
       `${limits.stamina} thể lực/lượt`,
       `${state.rules.turnSeconds} giây/lượt`,
       `${state.rules.timeMinutes} phút/người`,
@@ -1531,7 +1532,7 @@ function unitOverlay(mark, f, left, top, w, h, shakeX, shakeY, bottom) {
     signature = [name, hp, fuel, pow, tags].join("|");
   if (el.dataset.signature !== signature) {
     $("unit-name-" + mark).textContent = name;
-    $("unit-hp-" + mark).style.width = f.hp + "%";
+    $("unit-hp-" + mark).style.width = (f.hp / maxHp()) * 100 + "%";
     $("unit-hp-text-" + mark).textContent = f.hp + " HP";
     $("unit-energy-" + mark).style.width = (fuel / limits.stamina) * 100 + "%";
     $("unit-energy-text-" + mark).textContent = String(fuel);
