@@ -13,10 +13,10 @@ Nhân vật chỉ khác ngoại hình; mỗi bên 500 HP và 200 **thể lực**
 
 | Vũ khí       | Sát thương trực tiếp | Bán kính nổ | Đạn/người | Góc nâng theo thân | Khối lượng | Trọng lượng | Gió | Cản | Delay |
 | ------------ | -------------------: | ----------: | --------: | -----------------: | ---------: | ----------: | --: | --: | ----: |
-| Đạn thường   |                   25 |          20 |    Vô hạn |              0–90° |          1 |           1 |   1 |   1 |   200 |
-| Lựu đạn      |                   40 |          35 |         3 |             20–80° |        0,9 |         1,1 | 1,2 | 1,3 |   280 |
-| Tên lửa      |                   50 |          25 |         2 |             10–70° |        1,2 |         0,5 | 0,6 | 0,6 |   320 |
-| Bom hạt nhân |                   80 |          60 |         1 |             30–75° |          2 |        1,05 |   1 |   1 |   500 |
+| Đạn thường   |                  125 |          20 |    Vô hạn |              0–90° |          1 |           1 |   1 |   1 |   200 |
+| Lựu đạn      |                  200 |          35 |         3 |             20–80° |        0,9 |         1,1 | 1,2 | 1,3 |   280 |
+| Tên lửa      |                  250 |          25 |         2 |             10–70° |        1,2 |         0,5 | 0,6 | 0,6 |   320 |
+| Bom hạt nhân |                  400 |          60 |         1 |             30–75° |          2 |        1,05 |   1 |   1 |   500 |
 
 Nhân vật nghiêng theo tiếp tuyến mặt đất dưới hai chân (lấy mẫu cách tâm 16 đơn vị mỗi bên và làm mượt mỗi đầu bằng 5 cột). Khi di chuyển, quay hướng hoặc địa hình bị khoét, tư thế và đồng hồ cập nhật theo địa hình hiện tại. Mảng đen mờ là nửa mặt phẳng đất; vòng xanh thể hiện vùng ngắm hợp lệ của vũ khí; kim đỏ chỉ hướng nòng thực tế. Số màu xanh dương là góc bắn **so với phương ngang**, có thể âm hoặc lớn hơn 90° trên dốc.
 
@@ -40,8 +40,8 @@ Mỗi đạo cụ dùng tối đa một lần mỗi lượt, trước khi bắn.
 | Bắn liên tiếp ×2 |     110 |   150 | 2 loạt cùng góc/lực, loạt sau bắn khi loạt trước nổ xong, mỗi loạt 70%        |
 | Tăng lực         |      60 |    80 | +30% sát thương                                                               |
 | Đạn băng         |      80 |   100 | Mục tiêu trúng đạn bị đóng băng 1 lượt                                        |
-| Đạn độc          |      70 |    90 | Mục tiêu trúng đạn mất 6 HP đầu mỗi lượt của họ, 3 lượt                       |
-| Hồi máu          |      90 |   100 | +25 HP ngay (không vượt máu tối đa), 2 lần mỗi trận                           |
+| Đạn độc          |      70 |    90 | Mục tiêu trúng đạn mất 30 HP đầu mỗi lượt của họ, 3 lượt                      |
+| Hồi máu          |      90 |   100 | +125 HP ngay (không vượt máu tối đa), 2 lần mỗi trận                          |
 | Bay              |     120 |   150 | Phát bắn không gây sát thương/không đào; bạn bay tới điểm đạn rơi; hồi 2 lượt |
 
 Thể lực 200 nên ×3 và ×2 không dùng chung được. Bay không dùng chung với đạo cụ đạn hoặc tuyệt kỹ; bay ra ngoài bản đồ thì giữ nguyên chỗ.
@@ -50,12 +50,12 @@ Thể lực 200 nên ×3 và ×2 không dùng chung được. Bay không dùng c
 
 Lượt không còn luân phiên cố định: ai có **delay** thấp hơn được đi tiếp, hòa thì người vừa đi nhường. Sau mỗi lượt delay cộng thêm: bắn = 600 + delay vũ khí + delay đạo cụ + 10 × số giây ngắm; bỏ lượt = 400 (+ đạo cụ đã dùng); hết giờ lượt = 900. Vì vậy lượt nặng (bom, nhiều đạo cụ, ngắm lâu) có thể cho đối thủ đi hai lượt liên tiếp. Delay hiện ở góc thẻ người chơi.
 
-Nộ 0–100: +12 mỗi phát bắn thường, +8 khi bỏ lượt, +60% sát thương nhận vào (tối đa +30 mỗi vụ nổ). Đủ 100 thì bấm **NỘ** để bật tuyệt kỹ cho phát bắn kế: ×1,5 sát thương, ×1,25 bán kính nổ, không chịu gió; dùng xong nộ về 0.
+Nộ 0–100: +12 mỗi phát bắn thường, +8 khi bỏ lượt, +12% sát thương nhận vào (tối đa +30 mỗi vụ nổ). Đủ 100 thì bấm **NỘ** để bật tuyệt kỹ cho phát bắn kế: ×1,5 sát thương, ×1,25 bán kính nổ, không chịu gió; dùng xong nộ về 0.
 
 ### Hiệu ứng trạng thái
 
 - **Đóng băng**: lượt kế của mục tiêu không di chuyển, không dùng đạo cụ (vẫn bắn được). Đòn kế tiếp trúng mục tiêu đang đóng băng chỉ gây 50% và làm vỡ băng.
-- **Độc**: đầu mỗi lượt của mục tiêu mất 6 HP, 3 lượt; độc có thể hạ gục.
+- **Độc**: đầu mỗi lượt của mục tiêu mất 30 HP, 3 lượt; độc có thể hạ gục.
 - **Hồi bay**: biểu tượng ➶ kèm số lượt còn phải chờ.
 
 Biểu tượng trạng thái và đạo cụ đang bật hiện ngay dưới thanh HP/thể lực/nộ của từng nhân vật.

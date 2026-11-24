@@ -272,10 +272,10 @@
       "Nhân vật nghiêng theo mặt đất. Đồng hồ có nền đất mờ, vùng xanh theo vũ khí và kim đỏ theo hướng nhìn; con số là góc bắn so với phương ngang, có thể âm hoặc lớn hơn 90° trên dốc.",
       "Góc nâng theo thân: đạn thường 0–90°, lựu đạn 20–80°, tên lửa 10–70°, bom hạt nhân 30–75°. Độ dốc và hướng nhìn làm dịch vùng xanh, không đổi giới hạn riêng của vũ khí.",
       "Gió đổi sau mỗi lượt. Sát thương giảm từ 100% ở tâm còn 50% ở mép vụ nổ; bạo kích 8% (×1,5). Tự trúng nổ chỉ nhận 50% và không tự hạ mình.",
-      "Đạo cụ (một lần mỗi lượt, tốn thể lực và cộng delay): Đạn chùm ×3, Bắn liên tiếp ×2, Tăng lực +30%, Đạn băng, Đạn độc, Hồi máu +25 (2 lần/trận), Bay tới điểm đạn rơi (hồi 2 lượt).",
+      "Đạo cụ (một lần mỗi lượt, tốn thể lực và cộng delay): Đạn chùm ×3, Bắn liên tiếp ×2, Tăng lực +30%, Đạn băng, Đạn độc, Hồi máu +125 (2 lần/trận), Bay tới điểm đạn rơi (hồi 2 lượt).",
       "Lượt theo delay: ai delay thấp hơn đi trước. Bắn cộng 600 + delay vũ khí + đạo cụ + 10/giây ngắm; Bỏ lượt cộng 400; hết giờ cộng 900. Lượt nặng có thể cho đối thủ đi 2 lượt liền.",
       "Nộ tăng khi bắn, khi bỏ lượt và khi trúng đòn. Đủ 100 bấm NỘ: phát kế ×1,5 sát thương, ×1,25 bán kính, không chịu gió.",
-      "Đóng băng: lượt kế không đi bộ, không dùng đạo cụ; đòn kế chỉ gây 50% và phá băng. Độc: mất 6 HP đầu mỗi lượt trong 3 lượt.",
+      "Đóng băng: lượt kế không đi bộ, không dùng đạo cụ; đòn kế chỉ gây 50% và phá băng. Độc: mất 30 HP đầu mỗi lượt trong 3 lượt.",
       "Mỗi lượt ngắm mặc định 30 giây; hết giờ tự bỏ lượt. Đồng hồ riêng chỉ chạy khi ngắm, dừng trong lúc đạn bay. Mất kết nối thời gian vẫn chạy.",
     ],
     win: [

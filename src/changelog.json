@@ -1,5 +1,18 @@
 [
   {
+    "id": "e5aa889c-6534-4549-98fc-7dcdf79cd617",
+    "updatedAt": "2026-11-24T04:01:42.417Z",
+    "auditedAt": "2026-11-24T04:01:42.417Z",
+    "title": "Gunny: sát thương, hồi máu và độc ×5",
+    "type": "balance",
+    "scope": "system",
+    "changes": [
+      "Sát thương vũ khí nhân 5 theo máu 500: Đạn thường 125, Lựu đạn 200, Tên lửa 250, Bom hạt nhân 400",
+      "Hồi máu +125 HP, Đạn độc mất 30 HP mỗi lượt trong 3 lượt",
+      "Nộ nhận khi trúng đòn tính theo 12% sát thương (tối đa +30) để tốc độ tích nộ giữ như trước"
+    ]
+  },
+  {
     "id": "0ba88a8a-453b-44f7-819b-0fa1144ae545",
     "updatedAt": "2026-11-24T03:58:20.958Z",
     "auditedAt": "2026-11-24T03:58:20.958Z",

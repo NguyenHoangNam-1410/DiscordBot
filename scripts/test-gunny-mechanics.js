@@ -163,8 +163,11 @@ const legal = (s, mark, weapon, direction, local) =>
     assert.deepEqual(a, b, "seeded crits are deterministic");
     if (a.shot.crit.O) {
       crits++;
-      assert.equal(a.shot.damage.O, Math.round(25 * R.DAMAGE.critMultiplier));
-    } else assert.equal(a.shot.damage.O, 25);
+      assert.equal(
+        a.shot.damage.O,
+        Math.round(R.WEAPONS.basic.damage * R.DAMAGE.critMultiplier),
+      );
+    } else assert.equal(a.shot.damage.O, R.WEAPONS.basic.damage);
   }
   assert(crits > 4 && crits < 35, `crit rate ~8%: ${crits}/200`);
   s = flat();
@@ -186,7 +189,11 @@ const legal = (s, mark, weapon, direction, local) =>
   });
   assert.equal(
     hit.shot.damage.O,
-    Math.round((hit.shot.crit.O ? 1.5 : 1) * 25 * R.DAMAGE.frozenMultiplier),
+    Math.round(
+      (hit.shot.crit.O ? 1.5 : 1) *
+        R.WEAPONS.basic.damage *
+        R.DAMAGE.frozenMultiplier,
+    ),
   );
   assert.equal(s.fighters.O.status.frozen, 0, "damage breaks the ice");
   assert.deepEqual(hit.shot.projectiles[0].effects.O, ["thaw"]);
@@ -257,7 +264,10 @@ const legal = (s, mark, weapon, direction, local) =>
   );
   for (const p of r.shot.projectiles)
     if (p.impact.target === "O")
-      assert.equal(p.damage.O, Math.round((p.crit.O ? 1.5 : 1) * 25 * 0.6));
+      assert.equal(
+        p.damage.O,
+        Math.round((p.crit.O ? 1.5 : 1) * R.WEAPONS.basic.damage * 0.6),
+      );
   s = flat();
   s.terrain = s.terrain.map(() => [500, 600]);
   Object.assign(s.fighters.X, { y: 500 });
@@ -356,7 +366,9 @@ const legal = (s, mark, weapon, direction, local) =>
   assert.equal(r.shot.projectiles[0].radius, Math.round(20 * R.POW.radius));
   assert.equal(
     r.shot.damage.O,
-    Math.round((r.shot.crit.O ? 1.5 : 1) * 25 * R.POW.damage),
+    Math.round(
+      (r.shot.crit.O ? 1.5 : 1) * R.WEAPONS.basic.damage * R.POW.damage,
+    ),
   );
   assert.equal(s.fighters.X.pow, 0, "POW is spent");
   E.addDelay(s, "X", "fire", { weapon: "basic" });
