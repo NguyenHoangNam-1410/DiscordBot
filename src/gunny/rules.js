@@ -39,7 +39,7 @@ const WEAPONS = Object.freeze({
     minAngle: 0,
     maxAngle: 90,
     name: "Đạn thường",
-    damage: 25,
+    damage: 125,
     radius: 20,
     ammo: -1,
     mass: 1,
@@ -52,7 +52,7 @@ const WEAPONS = Object.freeze({
     minAngle: 20,
     maxAngle: 80,
     name: "Lựu đạn",
-    damage: 40,
+    damage: 200,
     radius: 35,
     ammo: 3,
     mass: 0.9,
@@ -65,7 +65,7 @@ const WEAPONS = Object.freeze({
     minAngle: 10,
     maxAngle: 70,
     name: "Tên lửa",
-    damage: 50,
+    damage: 250,
     radius: 25,
     ammo: 2,
     mass: 1.2,
@@ -78,7 +78,7 @@ const WEAPONS = Object.freeze({
     minAngle: 30,
     maxAngle: 75,
     name: "Bom hạt nhân",
-    damage: 80,
+    damage: 400,
     radius: 60,
     ammo: 1,
     mass: 2,
@@ -122,14 +122,15 @@ const ITEMS = Object.freeze({
     cost: 70,
     delay: 90,
     description:
-      "Mục tiêu trúng đạn mất 6 HP đầu mỗi lượt của họ trong 3 lượt.",
+      "Mục tiêu trúng đạn mất 30 HP đầu mỗi lượt của họ trong 3 lượt.",
   },
   heal: {
-    name: "Hồi máu +25",
+    name: "Hồi máu +125",
     cost: 90,
     delay: 100,
     perMatch: 2,
-    description: "Hồi ngay 25 HP (không vượt máu tối đa). Mỗi trận dùng 2 lần.",
+    description:
+      "Hồi ngay 125 HP (không vượt máu tối đa). Mỗi trận dùng 2 lần.",
   },
   fly: {
     name: "Bay",
@@ -154,17 +155,17 @@ const BALLS = Object.freeze({
 const STATUS = Object.freeze({
   freezeTurns: 1,
   poisonTurns: 3,
-  poisonDamage: 6,
+  poisonDamage: 30,
 });
 const POW = Object.freeze({
   damage: 1.5,
   radius: 1.25,
   perShot: 12,
   perPass: 8,
-  damageTaken: 0.6,
+  damageTaken: 0.12, // damage is ×5 for 500 HP: same POW pace as before
   damageTakenCap: 30,
 });
-const HEAL = 25;
+const HEAL = 125;
 function normalizeRules(input = {}) {
   const first = input.first ?? "host",
     turnSeconds = input.turnSeconds ?? 30;
