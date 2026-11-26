@@ -3,6 +3,13 @@ const path = require("node:path");
 const { Worker } = require("node:worker_threads");
 const { PermissionFlagsBits: Flags } = require("discord.js");
 const MAX_BYTES = 8 * 1024 * 1024;
+// Guild expression limits (Discord): emoji per category (static / animated)
+// and stickers by boost tier; upload size caps.
+const EMOJI_SLOTS = [50, 100, 150, 250],
+  STICKER_SLOTS = [5, 15, 30, 60],
+  EMOJI_BYTES = 256 * 1024,
+  STICKER_BYTES = 512 * 1024,
+  DEFAULT_STICKER_TAG = "🙂";
 const MESSAGES = {
   FILE_TOO_LARGE:
     "Sticker hoặc file xuất vượt giới hạn tải lên. Hãy thử sticker nhỏ hơn.",
@@ -16,7 +23,167 @@ const MESSAGES = {
   INVALID_STICKER: "Dữ liệu sticker không hợp lệ hoặc bị hỏng.",
   CONVERSION_TIMEOUT:
     "Chuyển sticker mất quá lâu. Hãy thử lại hoặc chọn sticker nhỏ hơn.",
+  EMOJI_TOO_LARGE:
+    "Ảnh động vượt 256 KB nên không làm emoji được. Hãy thử sticker/emoji khác.",
+  STICKER_TOO_LARGE: "File vượt 512 KB nên không làm sticker được.",
 };
+const IMPORT_USAGE = (prefix) =>
+  "Hãy reply tin nhắn chứa sticker rồi nhập `" +
+  prefix +
+  "steal` để lấy file. Admin có thể reply tin có đúng 1 emoji tùy chỉnh hoặc 1 sticker rồi nhập `" +
+  prefix +
+  "steal emo TÊN` hoặc `" +
+  prefix +
+  "steal sticker TÊN [emoji]` để thêm thẳng vào server.";
+// `steal emo NAME` / `steal sticker NAME [emoji]`; null means "not an import".
+function parseImport(args) {
+  const kind = String(args[0] || "").toLowerCase();
+  if (["emo", "emoji"].includes(kind)) {
+    if (args.length !== 2) return { error: "USAGE" };
+    if (!/^[A-Za-z0-9_]{2,32}$/.test(args[1])) return { error: "EMOJI_NAME" };
+    return { target: "emoji", name: args[1] };
+  }
+  if (kind === "sticker") {
+    if (args.length < 2 || args.length > 3) return { error: "USAGE" };
+    const name = args[1];
+    if (name.length < 2 || name.length > 30) return { error: "STICKER_NAME" };
+    let tag = DEFAULT_STICKER_TAG;
+    if (args[2]) {
+      tag = args[2].replace(/^:|:$/g, "");
+      if (
+        !/^(?:\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*|[A-Za-z0-9_]{2,32})$/u.test(
+          tag,
+        )
+      )
+        return { error: "STICKER_TAG" };
+    }
+    return { target: "sticker", name, tag };
+  }
+  return null;
+}
+const CUSTOM_EMOJI = /<(a?):([A-Za-z0-9_]{2,32}):(\d{17,20})>/g;
+// Exactly one stealable thing: a custom emoji in the text or a sticker.
+function importSource(reference) {
+  const emojis = [...String(reference.content || "").matchAll(CUSTOM_EMOJI)],
+    stickers = [...(reference.stickers?.values() || [])];
+  if (emojis.length + stickers.length !== 1) return null;
+  if (stickers.length) return { type: "sticker", sticker: stickers[0] };
+  const [, animated, name, id] = emojis[0];
+  return {
+    type: "emoji",
+    id,
+    name,
+    animated: !!animated,
+    url:
+      "https://cdn.discordapp.com/emojis/" + id + (animated ? ".gif" : ".png"),
+  };
+}
+const isGif = (data) => /^GIF8[79]a$/.test(data.toString("ascii", 0, 6));
+// Static images are fitted (centered, transparent padding) to a square.
+async function fitPng(data, size) {
+  const { createCanvas, loadImage } = require("@napi-rs/canvas");
+  const image = await loadImage(data),
+    canvas = createCanvas(size, size),
+    scale = Math.min(size / image.width, size / image.height),
+    w = Math.round(image.width * scale),
+    h = Math.round(image.height * scale);
+  canvas
+    .getContext("2d")
+    .drawImage(image, (size - w) >> 1, (size - h) >> 1, w, h);
+  return canvas.encode("png");
+}
+// Turns the source into an uploadable file for the target kind.
+async function importAsset(source, target, { fetcher, convert }) {
+  const limit = target === "emoji" ? EMOJI_BYTES : STICKER_BYTES,
+    tooLarge = target === "emoji" ? "EMOJI_TOO_LARGE" : "STICKER_TOO_LARGE";
+  let data;
+  if (source.type === "emoji") {
+    data = await download(source.url, fetcher, STICKER_BYTES * 2);
+    if (target === "sticker" && !source.animated)
+      data = await fitPng(data, 320);
+  } else {
+    const info = stickerSource(source.sticker),
+      raw = await download(info.url, fetcher, MAX_BYTES);
+    // Emoji cannot be APNG and nobody but Discord can upload Lottie stickers:
+    // both become GIF. PNG, APNG (sticker) and GIF upload as they are.
+    data =
+      info.format === 3 || (info.format === 2 && target === "emoji")
+        ? await convert(raw, info.format, MAX_BYTES)
+        : raw;
+  }
+  if (data.length > limit && !isGif(data))
+    data = await fitPng(data, target === "emoji" ? 128 : 320);
+  if (data.length > limit) throw Error(tooLarge);
+  return { data, animated: isGif(data) };
+}
+const API_ERRORS = {
+  30008: "Server đã hết slot emoji cho loại này.",
+  30039: "Server đã hết slot sticker.",
+  50013: "Bot thiếu quyền Quản lý biểu cảm (Manage Expressions) trong server.",
+  50045: "File vượt giới hạn dung lượng của Discord.",
+  50046:
+    "Discord từ chối file này (định dạng hoặc kích thước không hợp lệ; sticker cần ảnh 320×320).",
+  50035: "Tên hoặc dữ liệu không hợp lệ theo Discord.",
+};
+function isImportAdmin(message) {
+  const ids = String(process.env.ADMIN_USER_ID || "")
+    .split(/[,;\n]/)
+    .map((id) => id.trim())
+    .filter(Boolean);
+  const perms = message.member?.permissions;
+  return (
+    ids.includes(message.author.id) ||
+    !!perms?.has?.(Flags.Administrator) ||
+    !!perms?.has?.(Flags.ManageGuildExpressions)
+  );
+}
+function botCanUpload(guild) {
+  const perms = guild?.members?.me?.permissions;
+  return (
+    !!perms?.has?.(Flags.ManageGuildExpressions) ||
+    !!perms?.has?.(Flags.CreateGuildExpressions)
+  );
+}
+async function importExpression(message, reference, request, deps) {
+  const source = importSource(reference);
+  if (!source)
+    return "Tin được reply phải có **đúng 1** emoji tùy chỉnh hoặc 1 sticker (emoji Unicode mặc định không lấy được).";
+  const guild = message.guild,
+    tier = Math.max(0, Math.min(3, Number(guild.premiumTier) || 0));
+  const asset = await importAsset(source, request.target, deps),
+    reason = "!steal bởi " + message.author.id;
+  if (request.target === "emoji") {
+    const all = await guild.emojis.fetch(),
+      used = [...all.values()].filter(
+        (e) => !!e.animated === asset.animated,
+      ).length,
+      slots = EMOJI_SLOTS[tier];
+    if (used >= slots)
+      return `Server đã dùng hết ${slots}/${slots} slot emoji ${asset.animated ? "động" : "tĩnh"}.`;
+    const emoji = await guild.emojis.create({
+      attachment: asset.data,
+      name: request.name,
+      reason,
+    });
+    return `Đã thêm emoji ${emoji} \`:${request.name}:\` vào mục **emoji ${asset.animated ? "động" : "tĩnh"}** (${used + 1}/${slots}).`;
+  }
+  const all = await guild.stickers.fetch(),
+    used = all.size,
+    slots = STICKER_SLOTS[tier];
+  if (used >= slots)
+    return `Server đã dùng hết ${slots}/${slots} slot sticker.`;
+  await guild.stickers.create({
+    file: {
+      attachment: asset.data,
+      name: "sticker." + (isGif(asset.data) ? "gif" : "png"),
+    },
+    name: request.name,
+    tags: request.tag,
+    description: "",
+    reason,
+  });
+  return `Đã thêm sticker **${request.name}** (emoji mô tả ${request.tag}) vào server (${used + 1}/${slots}).`;
+}
 function stickerSource(sticker) {
   if (!/^\d{17,20}$/.test(String(sticker.id))) throw Error("INVALID_STICKER");
   const format = sticker.format;
@@ -125,19 +292,42 @@ function createStickerHandler({
       });
       return true;
     }
+    const request = args.length ? parseImport(args) : null;
     if (
-      args.length ||
+      (args.length && (!request || request.error === "USAGE")) ||
       !message.reference?.messageId ||
       message.reference.type === 1 ||
       (message.reference.channelId &&
         message.reference.channelId !== message.channelId)
     ) {
+      await reply(IMPORT_USAGE(prefix));
+      return true;
+    }
+    if (request?.error) {
       await reply(
-        "Hãy reply tin nhắn chứa sticker rồi nhập `" + prefix + "steal`.",
+        {
+          EMOJI_NAME:
+            "Tên emoji phải dài 2–32 ký tự, chỉ gồm chữ không dấu, số và dấu gạch dưới.",
+          STICKER_NAME: "Tên sticker phải dài 2–30 ký tự.",
+          STICKER_TAG:
+            "Emoji mô tả sticker phải là một emoji (ví dụ 😀) hoặc tên emoji như smile.",
+        }[request.error],
       );
       return true;
     }
-    if (!perms.has(Flags.AttachFiles)) {
+    if (request && !isImportAdmin(message)) {
+      await reply(
+        "Chỉ admin (quyền Quản trị hoặc Quản lý biểu cảm) mới thêm emoji/sticker vào server được.",
+      );
+      return true;
+    }
+    if (request && !botCanUpload(message.guild)) {
+      await reply(
+        "Bot cần quyền **Quản lý biểu cảm** (Manage Expressions) hoặc **Tạo biểu cảm** (Create Expressions) để thêm emoji/sticker.",
+      );
+      return true;
+    }
+    if (!request && !perms.has(Flags.AttachFiles)) {
       await reply("Bot cần quyền Đính kèm tệp để gửi PNG/GIF.");
       return true;
     }
@@ -165,6 +355,27 @@ function createStickerHandler({
         await reply(
           "Không đọc được tin nhắn gốc: tin có thể đã bị xóa hoặc bot không có quyền truy cập.",
         );
+        return true;
+      }
+      if (request) {
+        try {
+          await reply(
+            await importExpression(message, reference, request, {
+              fetcher,
+              convert,
+            }),
+          );
+        } catch (error) {
+          if (MESSAGES[error.message]) throw error;
+          logger.warn?.(
+            { code: error.code || error.name },
+            "expression import failed",
+          );
+          await reply(
+            API_ERRORS[error.code] ||
+              "Discord từ chối thêm biểu cảm này. Hãy thử lại sau.",
+          ).catch(() => {});
+        }
         return true;
       }
       const stickers = [...(reference.stickers?.values() || [])].slice(0, 3);
@@ -217,6 +428,11 @@ function createStickerHandler({
 const handleStickerMessage = createStickerHandler();
 module.exports = {
   handleStickerMessage,
+  parseImport,
+  importSource,
+  importAsset,
+  EMOJI_SLOTS,
+  STICKER_SLOTS,
   createStickerHandler,
   stickerSource,
   download,
