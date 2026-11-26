@@ -9,6 +9,10 @@ const {
   stickerSource,
   download,
   convertSticker,
+  parseImport,
+  importSource,
+  EMOJI_SLOTS,
+  STICKER_SLOTS,
 } = require("../src/services/stickerStealService");
 const A = "123456789012345678",
   B = "223456789012345678";
@@ -559,6 +563,205 @@ async function main() {
           6000,
       );
     }
+    // ---- Admin import: `steal emo NAME` / `steal sticker NAME [emoji]` ----
+    assert.deepEqual(parseImport(["emo", "Meo_1"]), {
+      target: "emoji",
+      name: "Meo_1",
+    });
+    assert.equal(parseImport(["emo", "mèo"]).error, "EMOJI_NAME");
+    assert.equal(parseImport(["emo"]).error, "USAGE");
+    assert.deepEqual(parseImport(["sticker", "Meo"]), {
+      target: "sticker",
+      name: "Meo",
+      tag: "🙂",
+    });
+    assert.equal(parseImport(["sticker", "Meo", ":smile:"]).tag, "smile");
+    assert.equal(parseImport(["sticker", "Meo", "😎"]).tag, "😎");
+    assert.equal(parseImport(["sticker", "Meo", "!!"]).error, "STICKER_TAG");
+    assert.equal(parseImport(["other"]), null);
+    assert.equal(
+      importSource({ content: "<:a1:" + A + "> <:b2:" + B + ">" }),
+      null,
+      "exactly one emoji or sticker",
+    );
+    assert.equal(importSource({ content: "😀 only unicode" }), null);
+    assert.equal(
+      importSource({ content: "<a:dance:" + A + ">" }).url,
+      "https://cdn.discordapp.com/emojis/" + A + ".gif",
+    );
+    function importMessage(content, reference, options = {}) {
+      const created = { emojis: [], stickers: [] };
+      const existing = options.existing || [];
+      const f = message({
+        content,
+        member: {
+          permissions: {
+            has: (bit) =>
+              (options.memberBits || [F.ManageGuildExpressions]).includes(bit),
+          },
+        },
+        fetchReference: async () => ({
+          stickers: new Collection(),
+          ...reference,
+        }),
+      });
+      f.msg.guild = {
+        ...f.msg.guild,
+        premiumTier: options.tier ?? 0,
+        members: {
+          me: {
+            id: "bot",
+            permissions: {
+              has: (bit) =>
+                (options.botBits || [F.ManageGuildExpressions]).includes(bit),
+            },
+          },
+        },
+        emojis: {
+          fetch: async () =>
+            new Collection(existing.map((e, i) => [String(i), e])),
+          create: async (p) => {
+            if (options.apiError) throw options.apiError;
+            created.emojis.push(p);
+            return { toString: () => "<:" + p.name + ":1>" };
+          },
+        },
+        stickers: {
+          fetch: async () =>
+            new Collection(
+              (options.stickers || []).map((e, i) => [String(i), e]),
+            ),
+          create: async (p) => {
+            created.stickers.push(p);
+            return p;
+          },
+        },
+      };
+      return { ...f, created };
+    }
+    const fetchAny = async (url) => response(url.endsWith(".gif") ? gif : png);
+    // Animated emoji → animated emoji slot, named as requested.
+    let imp = importMessage("!steal emo Nhay_Mua", {
+      content: "<a:dance:" + A + ">",
+    });
+    await createStickerHandler({ fetcher: fetchAny })(imp.msg);
+    assert.equal(imp.created.emojis[0].name, "Nhay_Mua");
+    assert.deepEqual(imp.created.emojis[0].attachment, gif);
+    assert.match(imp.replies[0].content, /emoji động/);
+    assert(!imp.replies[0].files, "imports never send a file back");
+    // Static sticker → static emoji.
+    imp = importMessage("!steal emoji Meo", {
+      stickers: new Collection([[A, { id: A, name: "x", format: 1 }]]),
+    });
+    await createStickerHandler({ fetcher: fetchAny })(imp.msg);
+    assert.deepEqual(imp.created.emojis[0].attachment, png);
+    assert.match(imp.replies[0].content, /emoji tĩnh/);
+    // Static emoji → 320×320 PNG sticker with the default tag.
+    imp = importMessage("!steal sticker Meo", { content: "<:cat:" + A + ">" });
+    await createStickerHandler({ fetcher: fetchAny })(imp.msg);
+    const made = imp.created.stickers[0];
+    assert.equal(made.name, "Meo");
+    assert.equal(made.tags, "🙂");
+    assert.equal(made.file.name, "sticker.png");
+    assert.equal(made.file.attachment.readUInt32BE(16), 320);
+    assert.equal(made.file.attachment.readUInt32BE(20), 320);
+    // APNG sticker → GIF emoji (emoji cannot be APNG).
+    imp = importMessage("!steal emo Dong", {
+      stickers: new Collection([[B, { id: B, name: "b", format: 2 }]]),
+    });
+    await createStickerHandler({ fetcher: async () => response(apng) })(
+      imp.msg,
+    );
+    assert.match(
+      imp.created.emojis[0].attachment.toString("ascii", 0, 6),
+      /^GIF8/,
+    );
+    // Slot limits per category and per boost tier.
+    imp = importMessage(
+      "!steal emo Full",
+      { content: "<a:dance:" + A + ">" },
+      {
+        existing: Array.from({ length: EMOJI_SLOTS[0] }, () => ({
+          animated: true,
+        })),
+      },
+    );
+    await createStickerHandler({ fetcher: fetchAny })(imp.msg);
+    assert.match(imp.replies[0].content, /hết 50\/50 slot emoji động/);
+    assert.equal(imp.created.emojis.length, 0);
+    imp = importMessage(
+      "!steal emo StillRoom",
+      { content: "<:cat:" + A + ">" },
+      {
+        existing: Array.from({ length: EMOJI_SLOTS[0] }, () => ({
+          animated: true,
+        })),
+      },
+    );
+    await createStickerHandler({ fetcher: fetchAny })(imp.msg);
+    assert.equal(imp.created.emojis.length, 1, "static slots are separate");
+    imp = importMessage(
+      "!steal sticker Full",
+      { content: "<:cat:" + A + ">" },
+      { tier: 1, stickers: Array(STICKER_SLOTS[1]).fill({}) },
+    );
+    await createStickerHandler({ fetcher: fetchAny })(imp.msg);
+    assert.match(imp.replies[0].content, /15\/15 slot sticker/);
+    // Permissions, wrong sources and Discord errors.
+    imp = importMessage(
+      "!steal emo Meo",
+      { content: "<:cat:" + A + ">" },
+      { memberBits: [] },
+    );
+    await createStickerHandler({ fetcher: fetchAny })(imp.msg);
+    assert.match(imp.replies[0].content, /Chỉ admin/);
+    assert.equal(imp.fetches.length, 0);
+    const adminId = process.env.ADMIN_USER_ID;
+    process.env.ADMIN_USER_ID = "user";
+    imp = importMessage(
+      "!steal emo Meo",
+      { content: "<:cat:" + A + ">" },
+      { memberBits: [] },
+    );
+    await createStickerHandler({ fetcher: fetchAny })(imp.msg);
+    assert.equal(imp.created.emojis.length, 1, "ADMIN_USER_ID may import");
+    if (adminId === undefined) delete process.env.ADMIN_USER_ID;
+    else process.env.ADMIN_USER_ID = adminId;
+    imp = importMessage(
+      "!steal emo Meo",
+      { content: "<:cat:" + A + ">" },
+      { botBits: [] },
+    );
+    await createStickerHandler({ fetcher: fetchAny })(imp.msg);
+    assert.match(imp.replies[0].content, /Quản lý biểu cảm/);
+    imp = importMessage(
+      "!steal emo Meo",
+      { content: "<:cat:" + A + ">" },
+      { botBits: [F.CreateGuildExpressions] },
+    );
+    await createStickerHandler({ fetcher: fetchAny })(imp.msg);
+    assert.equal(imp.created.emojis.length, 1, "Create Expressions suffices");
+    imp = importMessage("!steal emo Meo", {
+      content: "<:a1:" + A + "> <:b2:" + B + ">",
+    });
+    await createStickerHandler({ fetcher: fetchAny })(imp.msg);
+    assert.match(imp.replies[0].content, /đúng 1/);
+    imp = importMessage("!steal emo mèo", { content: "<:cat:" + A + ">" });
+    await createStickerHandler({ fetcher: fetchAny })(imp.msg);
+    assert.match(imp.replies[0].content, /2–32 ký tự/);
+    imp = importMessage(
+      "!steal emo Meo",
+      { content: "<:cat:" + A + ">" },
+      { apiError: Object.assign(Error("max"), { code: 30008 }) },
+    );
+    await createStickerHandler({ fetcher: fetchAny })(imp.msg);
+    assert.match(imp.replies[0].content, /hết slot emoji/);
+    imp = importMessage("!steal emo Big", { content: "<a:dance:" + A + ">" });
+    await createStickerHandler({
+      fetcher: async () =>
+        response(Buffer.concat([gif.subarray(0, 13), Buffer.alloc(300_000)])),
+    })(imp.msg);
+    assert.match(imp.replies[0].content, /256 KB/);
     const index = fs.readFileSync(require.resolve("../src/index.js"), "utf8");
     assert(index.includes("await handleStickerMessage(message, logger)"));
     assert(
@@ -569,7 +772,7 @@ async function main() {
       JSON.stringify({
         ok: true,
         sticker:
-          "reply/prefix routing, actual PNG/GIF export, APNG frame pixels/delays/transparency/disposal, Lottie animation, permissions/threads, no pings, CDN-only bounded downloads, worker limits, cooldown/concurrency/recovery",
+          "reply/prefix routing, actual PNG/GIF export, APNG frame pixels/delays/transparency/disposal, Lottie animation, permissions/threads, no pings, CDN-only bounded downloads, worker limits, cooldown/concurrency/recovery, admin emoji/sticker import with slots, permissions, resize and API errors",
       }),
     );
   } finally {

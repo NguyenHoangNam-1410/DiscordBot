@@ -74,7 +74,7 @@ const PAGES = Object.freeze({
       ],
       [
         "🖼️ Xuất sticker",
-        "Reply tin nhắn chứa sticker Discord rồi gửi `!steal` (dùng prefix của server). Bot trả file PNG cho sticker tĩnh và GIF cho sticker động; cần bật lệnh tin nhắn.",
+        "Reply tin nhắn chứa sticker Discord rồi gửi `!steal` (dùng prefix của server). Bot trả file PNG cho sticker tĩnh và GIF cho sticker động; cần bật lệnh tin nhắn. Admin reply tin có đúng 1 emoji tùy chỉnh hoặc 1 sticker rồi gửi `!steal emo TÊN` hoặc `!steal sticker TÊN [emoji]` để thêm thẳng vào server (emoji động vào mục emoji động; sticker mặc định emoji mô tả 🙂).",
       ],
       [
         "📋 Cập nhật",

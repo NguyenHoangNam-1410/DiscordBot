@@ -1,5 +1,18 @@
 [
   {
+    "id": "564ee8f9-95df-4886-aec5-5c7ef0987d61",
+    "updatedAt": "2026-11-26T07:43:28.548Z",
+    "auditedAt": "2026-11-26T07:43:28.548Z",
+    "title": "!steal thêm emoji/sticker thẳng vào server",
+    "type": "feature",
+    "scope": "system",
+    "changes": [
+      "Admin reply tin có đúng 1 emoji tùy chỉnh hoặc 1 sticker rồi gõ !steal emo TÊN hoặc !steal sticker TÊN [emoji] để bot tự thêm vào server thay vì gửi file",
+      "Emoji động tự vào mục emoji động; sticker dùng emoji mô tả 🙂 nếu không nhập; emoji có thể chuyển thành sticker và ngược lại",
+      "Bot kiểm tra slot trống theo cấp boost trước khi thêm và báo rõ khi hết slot, thiếu quyền hoặc file quá lớn"
+    ]
+  },
+  {
     "id": "e5aa889c-6534-4549-98fc-7dcdf79cd617",
     "updatedAt": "2026-11-24T04:01:42.417Z",
     "auditedAt": "2026-11-24T04:01:42.417Z",
